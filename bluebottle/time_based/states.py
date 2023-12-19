@@ -46,6 +46,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         full,
         ActivityStateMachine.open,
         name=_("Unlock"),
+        passed_label=_('unlocked'),
         description=_(
             "The number of participants has fallen below the required number. "
             "People can sign up again for the task."
@@ -56,6 +57,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
         ActivityStateMachine.draft,
         name=_("Reopen"),
+        passed_label=_('reopened'),
         permission=ActivityStateMachine.is_owner,
         automatic=False,
         description=_(
@@ -95,6 +97,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         description_front_end=_(
             'The activity will not be executed. Any contributions will be cancelled too.'
         ),
+        passed_label=_('cancelled'),
         automatic=False,
         permission=ActivityStateMachine.is_owner,
     )
@@ -124,6 +127,7 @@ class DateStateMachine(TimeBasedStateMachine):
         description=_('Publish your activity and let people participate.'),
         automatic=False,
         name=_('Publish'),
+        passed_label=_('published'),
         permission=ActivityStateMachine.is_owner,
         conditions=[
             ActivityStateMachine.is_complete,
@@ -411,6 +415,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         accepted,
         name=_('Accept'),
         description=_("Accept this person as a participant to the Activity."),
+        passed_label=_('accepted'),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -443,6 +448,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         rejected,
         name=_('Remove'),
+        passed_label=_('removed'),
         description=_("Remove this person as a participant from the activity."),
         automatic=False,
         permission=can_accept_participant,
@@ -455,6 +461,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         withdrawn,
         name=_('Withdraw'),
+        passed_label=_('withdrawn'),
         description=_("Stop your participation in the activity. "
                       "Any hours spent will be kept, but no new hours will be allocated."),
         automatic=False,
@@ -466,6 +473,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         ContributorStateMachine.new,
         name=_('Reapply'),
+        passed_label=_('reapplied'),
         description=_("User re-applies for the activity after previously withdrawing."),
         description_front_end=_("Do you want to sign up for this activity again?"),
         automatic=False,
@@ -572,6 +580,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
+        passed_label=_('accepted'),
         description=_("Accept the previously rejected person as a participant."),
         description_front_end=_("Do you want to accept this person as a participant?"),
         automatic=False,
@@ -582,6 +591,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         removed,
         name=_('Remove'),
+        passed_label=_('removed'),
         description=_("Remove this person as a participant."),
         automatic=False,
         permission=can_accept_participant,
@@ -591,6 +601,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         withdrawn,
         name=_('Withdraw'),
+        passed_label=_('withdrawn'),
         description=_("Cancel the participation."),
         description_front_end=_(
             "Cancel your participation. "
@@ -605,6 +616,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
         withdrawn,
         registered,
         name=_('Reapply'),
+        passed_label=_('reapplied'),
         description=_("User re-applies after previously withdrawing."),
         description_front_end=_(
             "Do you want to join this time slot again?"

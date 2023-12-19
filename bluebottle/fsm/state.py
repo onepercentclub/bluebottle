@@ -27,7 +27,7 @@ def register(model_cls):
 @python_2_unicode_compatible
 class BaseTransition(object):
     def __init__(self, sources, target, name='', description='', description_front_end='',
-                 automatic=True, conditions=None, effects=None, **options):
+                 passed_label=None, automatic=True, conditions=None, effects=None, **options):
         self.name = name
 
         if not isinstance(sources, (list, tuple)):
@@ -40,6 +40,7 @@ class BaseTransition(object):
         self.effects = effects or []
         self.description = description
         self.description_front_end = description_front_end or description
+        self.passed_label = passed_label
 
         assert not (
             not self.automatic and not self.name), 'Automatic transitions should have a name'

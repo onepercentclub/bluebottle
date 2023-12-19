@@ -108,6 +108,7 @@ class CollectActivity(Activity):
             self.pk,
             self.slug
         )
+
     @property
     def uid(self):
         return '{}-collect-{}'.format(connection.tenant.client_name, self.pk)

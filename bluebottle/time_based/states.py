@@ -275,6 +275,9 @@ class ActivitySlotStateMachine(ModelStateMachine):
         description=_(
             'Reopen a cancelled slot. People can apply again. Contributions are counted again'
         ),
+        description_front_end=_(
+            "Reopening a time slot will allow people to join again and their contributions will be counted."
+        )
     )
 
     lock = Transition(
@@ -604,8 +607,8 @@ class SlotParticipantStateMachine(ModelStateMachine):
         passed_label=_('withdrawn'),
         description=_("Cancel the participation."),
         description_front_end=_(
-            "Cancel your participation. "
-            "You can rejoin the time slot as long as the activity is open."
+            "You will no longer participate in this time slot. "
+            "You can rejoin as long as the activity is open."
         ),
         automatic=False,
         permission=is_user,

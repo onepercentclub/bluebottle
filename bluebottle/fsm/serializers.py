@@ -27,7 +27,7 @@ class AvailableTransitionsField(ReadOnlyField):
                 'name': transition.field,
                 'target': transition.target.value,
                 'label': transition.name,
-                'passed_label': transition.passed_label or transition.name,
+                'passed_label': transition.passed_label,
                 'description': transition.description_front_end,
                 'available': True,
             }

@@ -40,7 +40,7 @@ class BaseTransition(object):
         self.effects = effects or []
         self.description = description
         self.description_front_end = description_front_end or description
-        self.passed_label = passed_label or name
+        self.passed_label = passed_label
 
         assert not (
             not self.automatic and not self.name), 'Automatic transitions should have a name'

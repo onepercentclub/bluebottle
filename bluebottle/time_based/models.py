@@ -731,8 +731,8 @@ class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
     @property
     def calculated_status(self):
         if self.participant.status != 'accepted':
-            return self.participant.status
-        return self.status
+            return str(self.participant.states.current_state.name)
+        return str(self.states.current_state.name)
 
     class Meta():
         verbose_name = _("Slot participant")

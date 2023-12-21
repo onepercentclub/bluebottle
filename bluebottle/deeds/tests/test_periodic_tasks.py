@@ -1,11 +1,13 @@
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 import mock
 from django.core import mail
 from django.db import connection
+from django.utils.timezone import now, get_current_timezone 
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.deeds.tasks import deed_tasks
+from bluebottle.activities.periodic_tasks import timezone
 from bluebottle.deeds.tests.factories import (
     DeedFactory, DeedParticipantFactory
 )
@@ -33,9 +35,14 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
 
     def run_tasks(self, when):
         with mock.patch('bluebottle.deeds.periodic_tasks.date') as mock_date:
-            mock_date.today.return_value = when
-            mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-            deed_tasks()
+            now_return_value = datetime.combine(
+                when, datetime.min.time()
+            ).astimezone(get_current_timezone())
+
+            with mock.patch.object(timezone, 'now', return_value=now_return_value):
+                mock_date.today.return_value = when
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                deed_tasks()
 
     def test_nothing(self):
         self.assertEqual(self.activity.status, 'open')
@@ -115,3 +122,33 @@ class DeedPeriodicTasksTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0)
         self.run_tasks(self.activity.start - timedelta(days=1))
         self.assertEqual(len(mail.outbox), 0, 'Should not send reminder mail again.')
+
+    def test_reminder_unpublished(self):
+        self.activity.created = now()
+        self.activity.status = 'draft'
+        self.activity.save()
+
+        mail.outbox = []
+        self.run_tasks(now() + timedelta(days=2))
+        self.assertEqual(len(mail.outbox), 0, 'activities need to be older then 3 days')
+
+        self.run_tasks(now() + timedelta(days=4))
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to[0], self.activity.owner.email)
+        self.assertEqual(mail.outbox[0].subject, f'Publish your activity "{self.activity.title}"')
+
+        mail.outbox = []
+        self.run_tasks(now() + timedelta(days=4))
+        self.assertEqual(len(mail.outbox), 0, 'Should not send reminder mail again.')
+
+    def test_reminder_unpublished_not_draft(self):
+        self.activity.created = now()
+        self.activity.status = 'open'
+        self.activity.save()
+
+        mail.outbox = []
+
+        self.run_tasks(now() + timedelta(days=4))
+
+        self.assertEqual(len(mail.outbox), 0)

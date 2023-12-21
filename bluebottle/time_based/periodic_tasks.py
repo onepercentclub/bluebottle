@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from django.db.models import DateTimeField, ExpressionWrapper, F, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from bluebottle.activities.periodic_tasks import UnpublishedActivitiesReminderTask
 
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
@@ -212,6 +213,7 @@ class TeamSlotFinishedTask(SlotFinishedTask):
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
     DateActivityFinishedTask,
+    UnpublishedActivitiesReminderTask
 ]
 
 DateActivitySlot.periodic_tasks = [

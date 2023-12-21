@@ -388,7 +388,7 @@ class DateActivitySlot(ActivitySlot):
         if self.is_online:
             location = _('Anywhere/Online')
         elif self.location:
-            location = self.location.locality
+            location = self.location.locality or self.location.formatted_address or ''
             if self.location_hint:
                 location += f" {self.location_hint}"
 

@@ -357,7 +357,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             inlines.append(impact_goal_inline)
 
-        if obj and (
+        if not obj or (
             obj.team_activity != Activity.TeamActivityChoices.teams or
             obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):

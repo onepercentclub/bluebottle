@@ -47,7 +47,13 @@ class StateMachineAdminMixin(object):
         """
         Determines the HttpResponse for the change_view stage.
         """
-        if object_id and request.method == 'POST' and not request.POST.get('post', False):
+        if (
+            object_id and 
+            request.method == 'POST' and 
+            not request.POST.get('post', False) and
+            '_saveasnew' not in request.POST
+        ):
+            __import__('ipdb').set_trace()
             obj = self.model.objects.get(pk=object_id)
             ModelForm = self.get_form(request, obj)
             form = ModelForm(request.POST, request.FILES, instance=obj)

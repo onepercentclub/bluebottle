@@ -1,20 +1,18 @@
 from builtins import str
+
 from django.http import HttpResponse
 from django.views.generic import View
-
 from moneyed import Money
-
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-
 from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.models import Donor
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding.models import Donor
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
 )
@@ -27,7 +25,7 @@ from bluebottle.funding_stripe.serializers import (
 from bluebottle.funding_stripe.utils import stripe
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
+    RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView, RetrieveAPIView,
 )
 
 
@@ -51,6 +49,23 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     )
 
     permission_classes = (PaymentPermission, )
+
+
+class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = PaymentIntentSerializer
+
+    authentication_classes = (
+        JSONWebTokenAuthentication, DonorAuthentication,
+    )
+
+    lookup_field = 'intent_id'
+
+    def get_object(self):
+        obj = super().get_object()
+        payment = obj.get_payment()
+        payment.update()
+        return obj
 
 
 class StripePaymentList(PaymentList):
@@ -204,7 +219,8 @@ class IntentWebHookView(View):
                 intent.donation.payment.save()
                 return intent.payment
             except Donor.payment.RelatedObjectDoesNotExist:
-                return StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                return payment
 
 
 class SourceWebHookView(View):

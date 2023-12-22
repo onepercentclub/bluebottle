@@ -44,7 +44,10 @@ class PaymentIntent(models.Model):
                 },
                 statement_descriptor=statement_descriptor,
                 statement_descriptor_suffix=statement_descriptor[:18],
-                metadata=self.metadata
+                metadata=self.metadata,
+                automatic_payment_methods={
+                    'enabled': True,
+                },
             )
             if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                 intent_args['on_behalf_of'] = connect_account.account_id
@@ -73,6 +76,17 @@ class PaymentIntent(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'payments/stripe-payment-intents'
+
+    def get_payment(self):
+        try:
+            return self.payment
+        except StripePayment.DoesNotExist:
+            try:
+                self.donation.payment.payment_intent = self
+                self.donation.payment.save()
+                return self.payment
+            except Donor.payment.RelatedObjectDoesNotExist:
+                return StripePayment.objects.create(payment_intent=self, donation=self.donation)
 
     def __str__(self):
         return self.intent_id

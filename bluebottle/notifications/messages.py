@@ -5,6 +5,7 @@ from operator import attrgetter
 from functools import partial
 import logging
 
+import icalendar
 from celery import shared_task
 
 from django.db import connection
@@ -13,6 +14,7 @@ from django.core.cache import cache
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import loader
 from django.utils.html import format_html
+from django.utils.timezone import now
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
@@ -98,6 +100,46 @@ class TransitionMessage(object):
     def get_content_text(self, recipient):
         return to_text.handle(self.get_content_html(recipient))
 
+    def get_event_data(self, recipient):
+        return None
+
+    def get_event_item(self, event):
+        event_item = icalendar.Event()
+        event_item.add('prodid', 'goodup')
+        event_item.add('version', '2.0')
+        event_item.add('method', 'request')
+
+        event_item.add('uid', event['uid'])
+        event_item.add('sequence', now().timestamp())
+        event_item.add('summary', event['summary'])
+        event_item.add('organizer', event['organizer'])
+        event_item.add('description', event['description'])
+        event_item.add('url', event['url'])
+        event_item.add('location', event['location'])
+        event_item.add('dtstamp', now())
+        event_item.add('dtstart', event['start_time'])
+        event_item.add('dtend', event['end_time'])
+        return event_item
+
+    def get_calendar_attachments(self, recipient):
+        events = []
+        event_data = self.get_event_data(recipient)
+        if type(event_data) == list:
+            for event in event_data:
+                if not event:
+                    continue
+                cal = icalendar.Calendar()
+                cal.add_component(self.get_event_item(event))
+                ical_data = cal.to_ical()
+                events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
+        else:
+            event = event_data
+            cal = icalendar.Calendar()
+            cal.add_component(self.get_event_item(event))
+            ical_data = cal.to_ical()
+            events.append((f"event-{event['uid']}.ics", ical_data, 'text/calendar'))
+        return events
+
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
@@ -118,6 +160,9 @@ class TransitionMessage(object):
 
         if 'context' in self.options:
             context.update(self.options['context'])
+
+        if self.get_event_data(recipient):
+            context['attachments'] = self.get_calendar_attachments(recipient)
 
         return context
 
@@ -190,6 +235,7 @@ class TransitionMessage(object):
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
             message.save()
+
             message.send(**context)
 
     @property

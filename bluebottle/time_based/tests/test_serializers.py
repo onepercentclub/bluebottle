@@ -30,6 +30,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
     def test_date_info_no_slots(self):
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 0,
             'first': None,
             'end': None,
@@ -42,6 +43,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
     def test_date_info_single_slot(self):
         slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 1,
             'first': slot.start,
             'end': slot.end,
@@ -59,6 +61,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
             'end': max(slot.end.date() for slot in slots),
@@ -82,6 +85,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
             'end': max(slot.end.date() for slot in slots),
@@ -99,7 +103,8 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
-            'count': 2,
+            'capacity': None,
+            'count': 3,
             'first': min(slot.start.date() for slot in slots),
             'end': max(slot.end.date() for slot in slots),
             'duration': None,
@@ -118,6 +123,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute(
             'date_info',
             {
+                'capacity': None,
                 'count': 2,
                 'duration': None,
                 'is_full': False,

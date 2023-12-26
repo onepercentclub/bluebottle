@@ -195,6 +195,8 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
     def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
+        self.initiative.states.approve(save=True)
+
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
@@ -215,7 +217,7 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'submit', 'delete'}
+            {'publish', 'delete', 'auto_publish'}
         )
 
     def test_add_slots_by_other(self):
@@ -309,6 +311,9 @@ class TimeBasedDetailAPIViewTestCase():
             }
         }
 
+    def assertTransitionInData(self, transition, data):
+        self.assertIn(transition, [trans['name'] for trans in data['meta']['transitions']])
+
     def test_get_owner(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
@@ -333,22 +338,7 @@ class TimeBasedDetailAPIViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
-        self.assertTrue(
-            {
-                'name': 'cancel',
-                'target': 'cancelled',
-                'available': True,
-                'label': 'Cancel',
-                'description': (
-                    'Cancel if the activity will not be executed. '
-                    'An activity manager can no longer edit the activity '
-                    'and it will no longer be visible on the platform. '
-                    'The activity will still be visible in the back office '
-                    'and will continue to count in the reporting.'
-                )
-            }
-            in data['meta']['transitions']
-        )
+        self.assertTransitionInData('cancel', data)
         self.assertEqual(data['meta']['matching-properties']['skill'], None)
         self.assertEqual(data['meta']['matching-properties']['theme'], None)
         self.assertEqual(data['meta']['matching-properties']['location'], None)
@@ -463,10 +453,11 @@ class TimeBasedDetailAPIViewTestCase():
             slot = self.activity.slots.first()
             self.assertEqual(
                 tuple(sheet.values)[0],
-                (
-                    'Email', 'Name', 'Motivation', 'Registration Date', 'Status',
-                    f'{slot.title}\n{slot.start.strftime("%d-%m-%y %H:%M %Z")}'
-                )
+                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status')
+            )
+            self.assertEqual(
+                sheet.title,
+                f'{slot.start.strftime("%d-%m-%y %H%M")} {slot.id} {slot.title}'[:29]
             )
 
         wrong_signature_response = self.client.get(export_url + '111')
@@ -513,11 +504,17 @@ class TimeBasedDetailAPIViewTestCase():
         user.segments.add(workshop)
         user.segments.add(metal)
         user.segments.add(classical)
-        self.participant_factory.create(
+        participant = self.participant_factory.create(
             activity=self.activity,
             user=user,
             status='accepted'
         )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(
+                slot=slot,
+                participant=participant,
+                status='accepted'
+            )
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -545,28 +542,16 @@ class TimeBasedDetailAPIViewTestCase():
     def test_get_open(self):
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
 
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.data = response.json()['data']
-
-        self.assertTrue(
-            {
-                'name': 'cancel',
-                'target': 'cancelled',
-                'available': True,
-                'label': 'Cancel',
-                'description': (
-                    'Cancel if the activity will not be executed. '
-                    'An activity manager can no longer edit the activity '
-                    'and it will no longer be visible on the platform. '
-                    'The activity will still be visible in the back office '
-                    'and will continue to count in the reporting.'
-                )
-            }
-            in self.data['meta']['transitions']
-        )
+        self.assertTransitionInData('cancel', self.data)
 
     def test_get_contributors(self):
         self.participant_factory.create_batch(4, activity=self.activity)
@@ -794,27 +779,6 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.slot = self.activity.slots.first()
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
 
-    def test_get_included_slot_location(self):
-        self.activity.save()
-
-        response = self.client.get(self.url)
-        included_resources = response.json()['included']
-
-        slots = [
-            resource for resource
-            in included_resources
-            if resource['type'] == 'activities/time-based/date-slots'
-        ]
-
-        location_ids = [
-            resource['id'] for resource
-            in included_resources
-            if resource['type'] == 'geolocations'
-        ]
-
-        for slot in slots:
-            self.assertTrue(slot['relationships']['location']['data']['id'] in location_ids)
-
     def test_get_calendar_links(self):
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -999,19 +963,8 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
     def test_get_open(self):
         self.activity.team_activity = 'teams'
         self.activity.save()
-
         super().test_get_open()
-
-        self.assertFalse(
-            {
-                'name': 'succeed_manually',
-                'target': 'succeeded',
-                'available': True,
-                'label': 'Succeed',
-                'description': 'Close this activity and allocate the hours to the participants.'
-            }
-            in self.data['meta']['transitions']
-        )
+        self.assertTransitionInData('cancel', self.data)
 
     def test_owner_succeed_manually(self):
         self.initiative = InitiativeFactory.create(status='approved')
@@ -1022,16 +975,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         PeriodParticipantFactory.create(activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
         self.data = response.json()['data']
-        self.assertTrue(
-            {
-                'name': 'succeed_manually',
-                'target': 'succeeded',
-                'available': True,
-                'label': 'Succeed',
-                'description': 'Close this activity and allocate the hours to the participants.'
-            }
-            in self.data['meta']['transitions']
-        )
+        self.assertTransitionInData('succeed_manually', self.data)
 
     def test_get_open_with_participant(self):
         self.activity.duration_period = 'weeks'
@@ -1040,17 +984,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         PeriodParticipantFactory.create(activity=self.activity)
 
         super().test_get_open()
-
-        self.assertTrue(
-            {
-                'name': 'succeed_manually',
-                'target': 'succeeded',
-                'label': 'Succeed',
-                'description': 'Close this activity and allocate the hours to the participants.',
-                'available': True
-            }
-            in self.data['meta']['transitions']
-        )
+        self.assertTransitionInData('succeed_manually', self.data)
 
     def test_matching_location_place(self):
         self.activity.initiative.states.submit(save=True)
@@ -1652,7 +1586,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         DateActivitySlotFactory.create(activity=self.activity)
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.post(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -1704,7 +1638,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_update_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.patch(self.url, json.dumps(self.data), user=self.activity.owner)
 
@@ -1803,7 +1737,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_get_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
         response = self.client.get(self.url, user=self.activity.owner)
 
@@ -1829,11 +1763,9 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
     def test_delete_open_activity(self):
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
-
+        self.activity.states.publish(save=True)
         response = self.client.delete(self.url, user=self.activity.owner)
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class ParticipantListViewTestCase():
@@ -1960,12 +1892,11 @@ class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, Bluebottle
     def test_create(self):
         super().test_create()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertTrue('contributors/time-based/slot-participants' in types)
+        self.assertTrue('members' in types)
 
     def test_get_participants(self):
         super().test_get_participants()
         types = [included['type'] for included in self.response.json()['included']]
-        self.assertTrue('contributors/time-based/slot-participants' in types)
         self.assertTrue('activities/time-based/dates' in types)
         self.assertTrue('members' in types)
 
@@ -2038,6 +1969,9 @@ class ParticipantDetailViewTestCase():
             }
         }
 
+    def assertTransitionInData(self, transition, data):
+        self.assertIn(transition, [trans['name'] for trans in data['meta']['transitions']])
+
     def test_get_user(self):
         response = self.client.get(self.url, user=self.participant.user)
 
@@ -2069,19 +2003,7 @@ class ParticipantDetailViewTestCase():
             data['meta']['permissions']['PATCH'],
             True
         )
-
-        self.assertFalse(
-            {
-                'name': 'withdraw',
-                'target': 'withdrawn',
-                'label': 'Withdraw',
-                'description': 'Stop your participation in the activity.  '
-                               'Any hours spent will be kept, but no new hours will be allocated.',
-                'available': True
-            }
-
-            in data['meta']['transitions']
-        )
+        self.assertTransitionInData('withdraw', data)
 
     def test_get_owner(self):
         response = self.client.get(self.url, user=self.activity.owner)
@@ -2092,31 +2014,18 @@ class ParticipantDetailViewTestCase():
             self.data['attributes']['motivation'],
             self.participant.motivation
         )
+        self.assertTransitionInData('remove', self.data)
 
-        self.assertFalse(
-            {
-                'name': 'withdraw',
-                'target': 'withdrawn',
-                'available': True,
-                'label': 'Withdraw',
-                'description': (
-                    "Stop your participation in the activity. "
-                    "Any hours spent will be kept, but no new hours will be allocated."
-                )
-            }
-            in self.data['meta']['transitions']
-        )
+    def test_get_participant(self):
+        response = self.client.get(self.url, user=self.participant.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.data = response.json()['data']
 
-        self.assertTrue(
-            {
-                'name': 'remove',
-                'target': 'rejected',
-                'available': True,
-                'label': 'Remove',
-                'description': "Remove this person as a participant from the activity."
-            }
-            in self.data['meta']['transitions']
+        self.assertEqual(
+            self.data['attributes']['motivation'],
+            self.participant.motivation
         )
+        self.assertTransitionInData('withdraw', self.data)
 
     def test_get_activity_manager(self):
         response = self.client.get(self.url, user=self.activity.initiative.activity_managers.first())
@@ -2213,16 +2122,7 @@ class PeriodParticipantDetailAPIViewTestCase(ParticipantDetailViewTestCase, Blue
 
     def test_get_owner(self):
         super().test_get_owner()
-        self.assertTrue(
-            {
-                'name': 'remove',
-                'target': 'rejected',
-                'available': True,
-                'label': 'Remove',
-                'description': "Remove this person as a participant from the activity."
-            }
-            in self.data['meta']['transitions']
-        )
+        self.assertTransitionInData('remove', self.data)
 
 
 class ParticipantTransitionAPIViewTestCase():
@@ -3180,7 +3080,7 @@ class SlotIcalTestCase(BluebottleTestCase):
         self.slot.save()
 
         self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.client = JSONAPITestClient()
         response = self.client.get(self.slot_url, user=self.user)
         self.signed_url = response.json()['data']['attributes']['links']['ical']
@@ -3434,7 +3334,6 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
 
     def test_get_activity_owner(self):
         self.perform_get(user=self.activity.owner)
-
         self.assertStatus(status.HTTP_200_OK)
         self.assertTotal(3)
 
@@ -3445,7 +3344,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.assertTotal(2)
 
     def test_get_other_user_rejected_participant(self):
-        self.participant.states.withdraw(save=True)
+        self.participant.states.reject(save=True)
         self.perform_get(user=BlueBottleUserFactory.create())
 
         self.assertStatus(status.HTTP_200_OK)

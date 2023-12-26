@@ -11,7 +11,7 @@ from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
 )
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, TeamTriggers
+    ActivityTriggers, ContributorTriggers, TeamTriggers, has_organizer
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -33,7 +33,7 @@ from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
-    NewParticipantNotification, ParticipantAddedOwnerNotification,
+    NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
@@ -156,6 +156,19 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+            ]
+        ),
+        TransitionTrigger(
+            DeedStateMachine.publish,
+            effects=[
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
             ]
         ),
 
@@ -305,7 +318,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_user]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification,
+                    ManagerParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
                 ),
                 NotificationEffect(

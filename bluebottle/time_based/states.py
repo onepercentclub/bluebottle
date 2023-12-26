@@ -113,6 +113,40 @@ class DateStateMachine(TimeBasedStateMachine):
         )
     )
 
+    submit = None
+
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Publish your activity and let people participate.'),
+        automatic=False,
+        name=_('Publish'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_approved
+        ],
+    )
+
+    auto_publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=False,
+        name=_('Auto-publish'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+        ],
+    )
+
 
 @register(PeriodActivity)
 class PeriodStateMachine(TimeBasedStateMachine):
@@ -170,7 +204,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
     )
 
     finished = State(
-        _('finished'),
+        _('succeeded'),
         'finished',
         _('The slot has ended.')
     )
@@ -225,7 +259,7 @@ class ActivitySlotStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_activity_owner,
         description=_(
-            'Cancel the slot. People can no longer apply. Contributions are not counted anymore.'
+            'This time slot will not take place. People can no longer join and contributions will not be counted.'
         ),
     )
 
@@ -237,6 +271,9 @@ class ActivitySlotStateMachine(ModelStateMachine):
         description=_(
             'Reopen a cancelled slot. People can apply again. Contributions are counted again'
         ),
+        description_front_end=_(
+            "Reopening a time slot will allow people to join again and their contributions will be counted."
+        )
     )
 
     lock = Transition(
@@ -322,7 +359,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         _('This person takes part in the activity.')
     )
     rejected = State(
-        _('removed'),
+        _('rejected'),
         'rejected',
         _("This person's contribution is removed and the spent hours are reset to zero.")
     )
@@ -353,10 +390,6 @@ class ParticipantStateMachine(ContributorStateMachine):
             user.is_staff or
             user in self.instance.activity.initiative.activity_managers.all()
         )
-
-    def can_reject_participant(self, user):
-        """can accept participant"""
-        return self.can_accept_participant(user) and not user == self.instance.user
 
     def activity_is_open(self):
         """task is open"""
@@ -398,12 +431,13 @@ class ParticipantStateMachine(ContributorStateMachine):
     reject = Transition(
         [
             ContributorStateMachine.new,
+            accepted
         ],
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
         automatic=False,
-        permission=can_reject_participant,
+        permission=can_accept_participant,
     )
 
     remove = Transition(
@@ -414,7 +448,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Remove'),
         description=_("Remove this person as a participant from the activity."),
         automatic=False,
-        permission=can_reject_participant,
+        permission=can_accept_participant,
     )
 
     withdraw = Transition(
@@ -435,7 +469,8 @@ class ParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         ContributorStateMachine.new,
         name=_('Reapply'),
-        description=_("User re-applies for the task after previously withdrawing."),
+        description=_("User re-applies for the activity after previously withdrawing."),
+        description_front_end=_("Do you want to sign up for this activity again?"),
         automatic=False,
         conditions=[activity_is_open],
         permission=is_user,
@@ -483,7 +518,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
     registered = State(
         _('registered'),
         'registered',
-        _("This person registered to this slot.")
+        _("This person registered.")
     )
     succeeded = State(
         _('succeeded'),
@@ -493,17 +528,17 @@ class SlotParticipantStateMachine(ModelStateMachine):
     removed = State(
         _('removed'),
         'removed',
-        _('This person no longer takes part in this slot.')
+        _('This person no longer takes part.')
     )
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',
-        _('This person has withdrawn from this slot. Spent hours are retained.')
+        _('This person has withdrawn. Spent hours are retained.')
     )
     cancelled = State(
         _('cancelled'),
         'cancelled',
-        _("The slot has been cancelled. This person's contribution "
+        _("The contribution was cancelled. This person's contribution "
           "is removed and the spent hours are reset to zero.")
     )
 
@@ -521,10 +556,6 @@ class SlotParticipantStateMachine(ModelStateMachine):
             user.is_staff or
             user in self.instance.activity.initiative.activity_managers.all()
         )
-
-    def can_reject_participant(self, user):
-        """can accept participant"""
-        return self.can_accept_participant(user) and not user == self.instance.user
 
     def slot_is_open(self):
         """task is open"""
@@ -544,7 +575,8 @@ class SlotParticipantStateMachine(ModelStateMachine):
         [removed, withdrawn, cancelled],
         registered,
         name=_('Accept'),
-        description=_("Accept the previously rejected person as a participant to the slot."),
+        description=_("Accept the previously rejected person as a participant."),
+        description_front_end=_("Do you want to accept this person as a participant?"),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -553,17 +585,20 @@ class SlotParticipantStateMachine(ModelStateMachine):
         registered,
         removed,
         name=_('Remove'),
-        description=_("Remove this person as a participant from the slot."),
+        description=_("Remove this person as a participant."),
         automatic=False,
-        permission=can_reject_participant,
+        permission=can_accept_participant,
     )
 
     withdraw = Transition(
         registered,
         withdrawn,
         name=_('Withdraw'),
-        description=_("Cancel the participation in this slot."),
-        description_front_end=_("Cancel your participation in this slot."),
+        description=_("Cancel the participation."),
+        description_front_end=_(
+            "You will no longer participate in this time slot. "
+            "You can rejoin as long as the activity is open."
+        ),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,
@@ -573,7 +608,10 @@ class SlotParticipantStateMachine(ModelStateMachine):
         withdrawn,
         registered,
         name=_('Reapply'),
-        description=_("User re-applies to the slot after previously withdrawing."),
+        description=_("User re-applies after previously withdrawing."),
+        description_front_end=_(
+            "Do you want to join this time slot again?"
+        ),
         automatic=False,
         conditions=[slot_is_open],
         permission=is_user,

@@ -461,6 +461,7 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'status',
+            'current_status',
             'team',
             'accepted_invite',
             'invite',

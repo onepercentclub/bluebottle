@@ -29,6 +29,7 @@ class StripePaymentAdmin(PaymentChildAdmin):
 class StripePaymentIntentAdmin(admin.ModelAdmin):
     model = PaymentIntent
     raw_id_fields = ['donation']
+    list_display = ['intent_id', 'created', 'donation']
 
 
 @admin.register(StripeSourcePayment)

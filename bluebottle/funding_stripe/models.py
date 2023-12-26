@@ -29,6 +29,8 @@ class PaymentIntent(models.Model):
     client_secret = models.CharField(max_length=100)
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
 
+    created = models.DateTimeField(auto_now_add=True)
+
     def save(self, *args, **kwargs):
         if not self.pk:
             # FIXME: First verify that the funding activity has a valid Stripe account connected.

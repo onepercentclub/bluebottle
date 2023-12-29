@@ -10,6 +10,7 @@ from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class CollectType(SortableTranslatableModel):
@@ -98,6 +99,15 @@ class CollectActivity(Activity):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/details/collect/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     @property
     def uid(self):

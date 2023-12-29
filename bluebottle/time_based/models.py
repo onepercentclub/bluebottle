@@ -388,7 +388,7 @@ class DateActivitySlot(ActivitySlot):
         if self.is_online:
             location = _('Anywhere/Online')
         elif self.location:
-            location = self.location.locality
+            location = self.location.locality or self.location.formatted_address or ''
             if self.location_hint:
                 location += f" {self.location_hint}"
 
@@ -731,8 +731,8 @@ class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
     @property
     def calculated_status(self):
         if self.participant.status != 'accepted':
-            return self.participant.status
-        return self.status
+            return str(self.participant.states.current_state.name)
+        return str(self.states.current_state.name)
 
     class Meta():
         verbose_name = _("Slot participant")

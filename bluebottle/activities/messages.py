@@ -529,8 +529,6 @@ class PublishActivityReminderNotification(TransitionMessage):
         return [self.obj.owner]
 
 
-
-
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "It’s a new year, let's make some impact!")
     template = 'messages/do-good-hours/reminder-q1'

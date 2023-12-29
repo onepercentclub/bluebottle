@@ -3,11 +3,11 @@ from datetime import timedelta, date, datetime
 import mock
 from django.core import mail
 from django.db import connection
-from django.utils.timezone import now, get_current_timezone 
+from django.utils.timezone import now, get_current_timezone
 
+from bluebottle.activities.periodic_tasks import timezone
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.deeds.tasks import deed_tasks
-from bluebottle.activities.periodic_tasks import timezone
 from bluebottle.deeds.tests.factories import (
     DeedFactory, DeedParticipantFactory
 )

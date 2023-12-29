@@ -513,7 +513,7 @@ class TimeBasedDetailAPIViewTestCase():
             SlotParticipantFactory.create(
                 slot=slot,
                 participant=participant,
-                status='accepted'
+                status='registered'
             )
 
         response = self.client.get(self.url, user=self.activity.owner)

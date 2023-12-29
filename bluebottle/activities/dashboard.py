@@ -7,6 +7,18 @@ from jet.dashboard.modules import DashboardModule
 from bluebottle.activities.models import Activity, Contributor
 
 
+class UnPublishedActivities(DashboardModule):
+    title = _('Unpublished activities')
+    title_url = "{}?status[]=draft&status[]=needs_work".format(reverse('admin:activities_activity_changelist'))
+    template = 'dashboard/unpublished_activities.html'
+    limit = 5
+    column = 0
+
+    def init_with_context(self, context):
+        activities = Activity.objects.filter(status__in=['draft', 'needs_work']).order_by('-created')
+        self.children = activities[:self.limit]
+
+
 class RecentActivities(DashboardModule):
     title = _('Recently submitted activities')
     title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:activities_activity_changelist'))

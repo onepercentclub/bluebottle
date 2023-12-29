@@ -48,8 +48,8 @@ class StateMachineAdminMixin(object):
         Determines the HttpResponse for the change_view stage.
         """
         if (
-            object_id and 
-            request.method == 'POST' and 
+            object_id and
+            request.method == 'POST' and
             not request.POST.get('post', False) and
             '_saveasnew' not in request.POST
         ):

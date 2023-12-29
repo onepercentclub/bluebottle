@@ -104,7 +104,7 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
         self.assertAttribute('date_info', {
             'capacity': None,
-            'count': 2,
+            'count': 3,
             'first': min(slot.start.date() for slot in slots),
             'end': max(slot.end.date() for slot in slots),
             'duration': None,

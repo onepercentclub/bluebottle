@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-25 14:57+0200\n"
-"PO-Revision-Date: 2023-10-26 09:46\n"
+"POT-Creation-Date: 2023-12-15 08:38+0100\n"
+"PO-Revision-Date: 2023-12-15 09:46\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -40,7 +40,7 @@ msgstr "detalhes"
 #: bluebottle/funding/admin.py:419 bluebottle/funding/admin.py:564
 #: bluebottle/funding/admin.py:727 bluebottle/funding_stripe/admin.py:163
 #: bluebottle/initiatives/admin.py:187 bluebottle/time_based/admin.py:552
-#: bluebottle/time_based/admin.py:980
+#: bluebottle/time_based/admin.py:983
 msgid "Super admin"
 msgstr "Super administrador"
 
@@ -63,8 +63,8 @@ msgstr ""
 msgid "Add time slot"
 msgstr ""
 
-#: bluebottle/activities/admin.py:280 bluebottle/time_based/admin.py:270
-#: bluebottle/time_based/admin.py:271
+#: bluebottle/activities/admin.py:280 bluebottle/time_based/admin.py:272
+#: bluebottle/time_based/admin.py:273
 msgid "Time slot"
 msgstr ""
 
@@ -73,7 +73,7 @@ msgid "Initiative"
 msgstr "Iniciativa"
 
 #: bluebottle/activities/admin.py:435 bluebottle/time_based/admin.py:547
-#: bluebottle/time_based/admin.py:975
+#: bluebottle/time_based/admin.py:978
 msgid "Detail"
 msgstr "Detalhe"
 
@@ -85,7 +85,7 @@ msgstr "Descrição:"
 
 #: bluebottle/activities/admin.py:437 bluebottle/funding/filters.py:11
 #: bluebottle/initiatives/admin.py:178 bluebottle/pages/admin.py:141
-#: bluebottle/time_based/admin.py:548 bluebottle/time_based/admin.py:976
+#: bluebottle/time_based/admin.py:548 bluebottle/time_based/admin.py:979
 msgid "Status"
 msgstr "SItuação"
 
@@ -212,11 +212,11 @@ msgstr ""
 msgid "As an individual"
 msgstr ""
 
-#: bluebottle/activities/filters.py:236
+#: bluebottle/activities/filters.py:237
 msgid "In-person"
 msgstr ""
 
-#: bluebottle/activities/filters.py:236
+#: bluebottle/activities/filters.py:237
 msgid "Online/remote"
 msgstr ""
 
@@ -247,10 +247,10 @@ msgid "Update from '{title}'"
 msgstr "Atualização de '{title}'"
 
 #: bluebottle/activities/messages.py:90 bluebottle/collect/messages.py:56
-#: bluebottle/deeds/messages.py:56 bluebottle/time_based/messages.py:395
-#: bluebottle/time_based/messages.py:417 bluebottle/time_based/messages.py:720
-#: bluebottle/time_based/messages.py:742 bluebottle/time_based/messages.py:767
-#: bluebottle/time_based/messages.py:807
+#: bluebottle/deeds/messages.py:56 bluebottle/time_based/messages.py:409
+#: bluebottle/time_based/messages.py:431 bluebottle/time_based/messages.py:751
+#: bluebottle/time_based/messages.py:778 bluebottle/time_based/messages.py:828
+#: bluebottle/time_based/messages.py:853 bluebottle/time_based/messages.py:893
 msgctxt "email"
 msgid "Open your activity"
 msgstr "Abra sua atividade"
@@ -339,14 +339,14 @@ msgstr "inicia imediatamente"
 #: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
 #: bluebottle/time_based/messages.py:85 bluebottle/time_based/messages.py:128
 #: bluebottle/time_based/messages.py:180 bluebottle/time_based/messages.py:219
-#: bluebottle/time_based/messages.py:242 bluebottle/time_based/messages.py:265
-#: bluebottle/time_based/messages.py:300 bluebottle/time_based/messages.py:323
-#: bluebottle/time_based/messages.py:346 bluebottle/time_based/messages.py:371
-#: bluebottle/time_based/messages.py:439 bluebottle/time_based/messages.py:462
-#: bluebottle/time_based/messages.py:485 bluebottle/time_based/messages.py:508
-#: bluebottle/time_based/messages.py:547 bluebottle/time_based/messages.py:569
-#: bluebottle/time_based/messages.py:592 bluebottle/time_based/messages.py:613
-#: bluebottle/time_based/messages.py:677 bluebottle/time_based/messages.py:698
+#: bluebottle/time_based/messages.py:242 bluebottle/time_based/messages.py:276
+#: bluebottle/time_based/messages.py:314 bluebottle/time_based/messages.py:337
+#: bluebottle/time_based/messages.py:360 bluebottle/time_based/messages.py:385
+#: bluebottle/time_based/messages.py:453 bluebottle/time_based/messages.py:487
+#: bluebottle/time_based/messages.py:510 bluebottle/time_based/messages.py:533
+#: bluebottle/time_based/messages.py:572 bluebottle/time_based/messages.py:594
+#: bluebottle/time_based/messages.py:617 bluebottle/time_based/messages.py:638
+#: bluebottle/time_based/messages.py:708 bluebottle/time_based/messages.py:729
 msgctxt "email"
 msgid "View activity"
 msgstr "Visualizar atividade"
@@ -438,7 +438,7 @@ msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
 msgstr ""
 
-#: bluebottle/activities/models.py:27 bluebottle/notifications/models.py:57
+#: bluebottle/activities/models.py:27 bluebottle/notifications/models.py:58
 msgid "Teams"
 msgstr "Times"
 
@@ -486,7 +486,7 @@ msgstr ""
 #: bluebottle/cms/models.py:120 bluebottle/cms/models.py:132
 #: bluebottle/funding/models.py:278 bluebottle/news/models.py:21
 #: bluebottle/pages/models.py:205 bluebottle/slides/models.py:36
-#: bluebottle/statistics/models.py:213
+#: bluebottle/statistics/models.py:219
 msgid "Title"
 msgstr "Título"
 
@@ -540,7 +540,7 @@ msgid "Contribution"
 msgstr "Contribuição"
 
 #: bluebottle/activities/models.py:243 bluebottle/activities/models.py:306
-#: bluebottle/funding/models.py:509 bluebottle/time_based/models.py:707
+#: bluebottle/funding/models.py:509 bluebottle/time_based/models.py:781
 msgid "Contributions"
 msgstr "Contribuições"
 
@@ -581,7 +581,7 @@ msgstr "Organizador de Atividades"
 msgid "Deed particpant"
 msgstr "Partícula de fundo"
 
-#: bluebottle/activities/models.py:299 bluebottle/time_based/models.py:691
+#: bluebottle/activities/models.py:299 bluebottle/time_based/models.py:765
 msgid "Contribution type"
 msgstr "Tipo de contribuição"
 
@@ -598,8 +598,8 @@ msgstr ""
 msgid "Team {name}"
 msgstr ""
 
-#: bluebottle/activities/states.py:9 bluebottle/initiatives/states.py:13
-#: bluebottle/time_based/states.py:147 bluebottle/utils/transitions.py:10
+#: bluebottle/activities/states.py:9 bluebottle/time_based/states.py:183
+#: bluebottle/utils/transitions.py:10
 msgid "draft"
 msgstr "rascunho"
 
@@ -607,8 +607,7 @@ msgstr "rascunho"
 msgid "The activity has been created, but not yet completed. An activity manager is still editing the activity."
 msgstr "A atividade foi criada, mas ainda não concluída. Um gerenciador de atividades ainda está editando a atividade."
 
-#: bluebottle/activities/states.py:14 bluebottle/initiatives/states.py:18
-#: bluebottle/utils/transitions.py:11
+#: bluebottle/activities/states.py:14 bluebottle/utils/transitions.py:11
 msgid "submitted"
 msgstr "enviado"
 
@@ -616,8 +615,7 @@ msgstr "enviado"
 msgid "The activity is ready to go online once the initiative has been approved."
 msgstr "A actividade está pronta para entrar em linha assim que a iniciativa for aprovada."
 
-#: bluebottle/activities/states.py:19 bluebottle/initiatives/states.py:23
-#: bluebottle/utils/transitions.py:12
+#: bluebottle/activities/states.py:19 bluebottle/utils/transitions.py:12
 msgid "needs work"
 msgstr "precisa ser trabalhado"
 
@@ -626,7 +624,7 @@ msgid "The activity has been submitted but needs adjustments in order to be appr
 msgstr "A atividade foi apresentada, mas precisa de ajustes para ser aprovada."
 
 #: bluebottle/activities/states.py:24 bluebottle/funding/states.py:517
-#: bluebottle/funding/states.py:571 bluebottle/initiatives/states.py:28
+#: bluebottle/funding/states.py:571 bluebottle/time_based/states.py:359
 msgid "rejected"
 msgstr "rejeitado"
 
@@ -635,8 +633,8 @@ msgid "The activity does not fit the programme or does not comply with the rules
 msgstr "A actividade não se enquadra no programa ou não cumpre as regras. A atividade não aparece na plataforma, mas conta no relatório. A atividade não pode ser editada por um gerente de atividade."
 
 #: bluebottle/activities/states.py:33 bluebottle/bb_accounts/models.py:129
-#: bluebottle/initiatives/states.py:44 bluebottle/wallposts/models.py:58
-#: bluebottle/wallposts/models.py:188 bluebottle/wallposts/models.py:286
+#: bluebottle/wallposts/models.py:58 bluebottle/wallposts/models.py:188
+#: bluebottle/wallposts/models.py:286
 msgid "deleted"
 msgstr "Excluído"
 
@@ -644,10 +642,9 @@ msgstr "Excluído"
 msgid "The activity has been removed. The activity does not appear on the platform and does not count in the report. The activity cannot be edited by an activity manager."
 msgstr "A atividade foi removida. A atividade não aparece na plataforma e não conta no relatório. A atividade não pode ser editada por um gerente de atividade."
 
-#: bluebottle/activities/states.py:42 bluebottle/activities/states.py:378
-#: bluebottle/funding/states.py:22 bluebottle/initiatives/states.py:36
-#: bluebottle/time_based/states.py:177 bluebottle/time_based/states.py:321
-#: bluebottle/time_based/states.py:489
+#: bluebottle/activities/states.py:42 bluebottle/activities/states.py:375
+#: bluebottle/funding/states.py:22 bluebottle/time_based/states.py:213
+#: bluebottle/time_based/states.py:369 bluebottle/time_based/states.py:536
 msgid "cancelled"
 msgstr "cancelado"
 
@@ -665,8 +662,8 @@ msgstr "expirado"
 msgid "The activity has ended, but did have any contributions . The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "A atividade terminou, mas tem qualquer contribuição. A atividade não aparece na plataforma, mas conta no relatório. A atividade não pode ser editada por um gerente de atividade."
 
-#: bluebottle/activities/states.py:59 bluebottle/activities/states.py:367
-#: bluebottle/time_based/states.py:153
+#: bluebottle/activities/states.py:59 bluebottle/activities/states.py:364
+#: bluebottle/time_based/states.py:189
 msgid "open"
 msgstr "Aberto"
 
@@ -674,10 +671,10 @@ msgstr "Aberto"
 msgid "The activity is accepting new contributions."
 msgstr "A atividade está aceitando novas contribuições."
 
-#: bluebottle/activities/states.py:64 bluebottle/activities/states.py:250
-#: bluebottle/activities/states.py:284 bluebottle/activities/states.py:314
+#: bluebottle/activities/states.py:64 bluebottle/activities/states.py:247
+#: bluebottle/activities/states.py:281 bluebottle/activities/states.py:311
 #: bluebottle/funding/states.py:329 bluebottle/funding/states.py:431
-#: bluebottle/time_based/states.py:474
+#: bluebottle/time_based/states.py:207 bluebottle/time_based/states.py:521
 msgid "succeeded"
 msgstr "sucedeu"
 
@@ -685,7 +682,7 @@ msgstr "sucedeu"
 msgid "The activity has ended successfully."
 msgstr "A atividade terminou com sucesso."
 
-#: bluebottle/activities/states.py:109 bluebottle/activities/states.py:409
+#: bluebottle/activities/states.py:109 bluebottle/activities/states.py:406
 msgid "Create"
 msgstr "Crio"
 
@@ -697,7 +694,7 @@ msgstr ""
 msgid "The activity will be submitted for review."
 msgstr ""
 
-#: bluebottle/activities/states.py:121 bluebottle/activities/states.py:149
+#: bluebottle/activities/states.py:121 bluebottle/activities/states.py:146
 #: bluebottle/funding/states.py:603 bluebottle/initiatives/states.py:88
 msgid "Submit"
 msgstr "submeter"
@@ -705,264 +702,264 @@ msgstr "submeter"
 #: bluebottle/activities/states.py:128 bluebottle/funding/states.py:140
 #: bluebottle/funding/states.py:540 bluebottle/funding/states.py:620
 #: bluebottle/funding/states.py:658 bluebottle/funding_stripe/states.py:111
-#: bluebottle/initiatives/states.py:125 bluebottle/time_based/states.py:388
+#: bluebottle/initiatives/states.py:125 bluebottle/time_based/states.py:434
 msgid "Reject"
 msgstr "Rejeitar"
 
 #: bluebottle/activities/states.py:130
-msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
-msgstr "Rejeitar a actividade se não se adequar ao programa ou se não cumprir as regras. Um gerenciador de atividades não pode mais editar a atividade e ela não ficará mais visível na plataforma. A actividade continuará visível na área administrativa e continuará a contar no relatório."
+msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. The activity manager can no longer edit the activity."
+msgstr ""
 
-#: bluebottle/activities/states.py:147
+#: bluebottle/activities/states.py:144
 msgid "Submit the activity for approval."
 msgstr "Envie a atividade para aprovação."
 
-#: bluebottle/activities/states.py:160 bluebottle/funding/states.py:77
+#: bluebottle/activities/states.py:157 bluebottle/funding/states.py:77
 #: bluebottle/funding/states.py:451 bluebottle/initiatives/states.py:97
 msgid "Approve"
 msgstr "Aprovar"
 
-#: bluebottle/activities/states.py:164
+#: bluebottle/activities/states.py:161
 msgid "The activity will be visible in the frontend and people can apply to the activity."
 msgstr "A atividade ficará visível no frontend e as pessoas podem se aplicar à atividade."
 
-#: bluebottle/activities/states.py:175 bluebottle/collect/states.py:80
-#: bluebottle/deeds/states.py:84 bluebottle/funding/states.py:93
+#: bluebottle/activities/states.py:172 bluebottle/collect/states.py:80
+#: bluebottle/deeds/states.py:103 bluebottle/funding/states.py:93
 #: bluebottle/initiatives/states.py:137 bluebottle/time_based/states.py:89
-#: bluebottle/time_based/states.py:212
+#: bluebottle/time_based/states.py:258
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:51
 msgid "Cancel"
 msgstr "cancelar"
 
-#: bluebottle/activities/states.py:177 bluebottle/collect/states.py:83
-#: bluebottle/deeds/states.py:87 bluebottle/time_based/states.py:91
+#: bluebottle/activities/states.py:174 bluebottle/collect/states.py:83
+#: bluebottle/deeds/states.py:106
 msgid "Cancel if the activity will not be executed. An activity manager can no longer edit the activity and it will no longer be visible on the platform. The activity will still be visible in the back office and will continue to count in the reporting."
 msgstr "Cancelar se a atividade não for executada. Um gerenciador de atividades não pode mais editar a atividade e ela não ficará mais visível na plataforma. A actividade continuará visível na área administrativa e continuará a contar no relatório."
 
-#: bluebottle/activities/states.py:184
+#: bluebottle/activities/states.py:181
 msgid "The activity ends and people no longer register. All current participants will fail too."
 msgstr ""
 
-#: bluebottle/activities/states.py:197 bluebottle/initiatives/states.py:162
+#: bluebottle/activities/states.py:194 bluebottle/initiatives/states.py:162
 msgid "Restore"
 msgstr "RESTAURAR"
 
-#: bluebottle/activities/states.py:199
+#: bluebottle/activities/states.py:196
 msgid "The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again."
 msgstr ""
 
-#: bluebottle/activities/states.py:203 bluebottle/deeds/states.py:73
+#: bluebottle/activities/states.py:200 bluebottle/deeds/states.py:92
 msgid "The activity will be set to the status ‘Needs work’. Then you can make changes to the activity and submit it again."
 msgstr ""
 
-#: bluebottle/activities/states.py:213 bluebottle/collect/states.py:34
-#: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:159
+#: bluebottle/activities/states.py:210 bluebottle/collect/states.py:34
+#: bluebottle/deeds/states.py:55 bluebottle/funding/states.py:159
 #: bluebottle/funding/states.py:310
 msgid "Expire"
 msgstr "Expirar"
 
-#: bluebottle/activities/states.py:215 bluebottle/deeds/states.py:38
+#: bluebottle/activities/states.py:212 bluebottle/deeds/states.py:57
 msgid "The activity will be cancelled because no one has signed up for the registration deadline."
 msgstr "A atividade será cancelada porque ninguém se inscreveu para o prazo de inscrição."
 
-#: bluebottle/activities/states.py:223
+#: bluebottle/activities/states.py:220
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:6
 #: bluebottle/initiatives/states.py:148 bluebottle/members/models.py:201
 msgid "Delete"
 msgstr "excluir"
 
-#: bluebottle/activities/states.py:228
+#: bluebottle/activities/states.py:225
 msgid "Delete the activity if you do not want it to be included in the report. The activity will no longer be visible on the platform, but will still be available in the back office."
 msgstr "Exclua a atividade se você não quiser que ela seja incluída no relatório. A atividade não estará mais visível na plataforma, mas ainda estará disponível na Área Administrativa."
 
-#: bluebottle/activities/states.py:232
+#: bluebottle/activities/states.py:229
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
 msgstr ""
 
-#: bluebottle/activities/states.py:238 bluebottle/collect/states.py:24
-#: bluebottle/collect/states.py:138 bluebottle/deeds/states.py:25
-#: bluebottle/deeds/states.py:47 bluebottle/deeds/states.py:145
+#: bluebottle/activities/states.py:235 bluebottle/collect/states.py:24
+#: bluebottle/collect/states.py:138 bluebottle/deeds/states.py:44
+#: bluebottle/deeds/states.py:66 bluebottle/deeds/states.py:164
 #: bluebottle/funding/states.py:191 bluebottle/funding/states.py:271
 #: bluebottle/funding/states.py:374 bluebottle/funding/states.py:485
 #: bluebottle/funding_stripe/states.py:47 bluebottle/time_based/states.py:74
-#: bluebottle/time_based/states.py:123
+#: bluebottle/time_based/states.py:159
 msgid "Succeed"
 msgstr "Sucesso"
 
-#: bluebottle/activities/states.py:245 bluebottle/activities/states.py:279
-#: bluebottle/activities/states.py:362 bluebottle/funding/states.py:319
+#: bluebottle/activities/states.py:242 bluebottle/activities/states.py:276
+#: bluebottle/activities/states.py:359 bluebottle/funding/states.py:319
 #: bluebottle/funding/states.py:411 bluebottle/funding/states.py:556
 msgid "new"
 msgstr "Novo"
 
-#: bluebottle/activities/states.py:247 bluebottle/activities/states.py:281
+#: bluebottle/activities/states.py:244 bluebottle/activities/states.py:278
 msgid "The user started a contribution"
 msgstr "O usuário iniciou uma contribuição"
 
-#: bluebottle/activities/states.py:252 bluebottle/activities/states.py:286
-#: bluebottle/time_based/states.py:476
+#: bluebottle/activities/states.py:249 bluebottle/activities/states.py:283
+#: bluebottle/time_based/states.py:523
 msgid "The contribution was successful."
 msgstr "A contribuição foi bem-sucedida."
 
-#: bluebottle/activities/states.py:255 bluebottle/activities/states.py:289
+#: bluebottle/activities/states.py:252 bluebottle/activities/states.py:286
 #: bluebottle/funding/states.py:334 bluebottle/funding/states.py:436
 msgid "failed"
 msgstr "falha"
 
-#: bluebottle/activities/states.py:257 bluebottle/activities/states.py:291
+#: bluebottle/activities/states.py:254 bluebottle/activities/states.py:288
 msgid "The contribution failed."
 msgstr "A contribuição falhou."
 
-#: bluebottle/activities/states.py:266 bluebottle/activities/states.py:300
-#: bluebottle/collect/states.py:131 bluebottle/deeds/states.py:138
+#: bluebottle/activities/states.py:263 bluebottle/activities/states.py:297
+#: bluebottle/collect/states.py:131 bluebottle/deeds/states.py:157
 msgid "initiate"
 msgstr "iniciar"
 
-#: bluebottle/activities/states.py:267 bluebottle/activities/states.py:301
-#: bluebottle/collect/states.py:132 bluebottle/deeds/states.py:139
+#: bluebottle/activities/states.py:264 bluebottle/activities/states.py:298
+#: bluebottle/collect/states.py:132 bluebottle/deeds/states.py:158
 msgid "The contribution was created."
 msgstr "A contribuição foi criada."
 
-#: bluebottle/activities/states.py:272 bluebottle/activities/states.py:307
-#: bluebottle/activities/states.py:340
+#: bluebottle/activities/states.py:269 bluebottle/activities/states.py:304
+#: bluebottle/activities/states.py:337
 msgid "fail"
 msgstr "falha"
 
-#: bluebottle/activities/states.py:273 bluebottle/activities/states.py:308
+#: bluebottle/activities/states.py:270 bluebottle/activities/states.py:305
 msgid "The contribution failed. It will not be visible in reports."
 msgstr "A contribuição falhou. Não será visível nos relatórios."
 
-#: bluebottle/activities/states.py:315
+#: bluebottle/activities/states.py:312
 msgid "The contribution succeeded. It will be visible in reports."
 msgstr "A contribuição foi bem-sucedida. Será visível nos relatórios."
 
-#: bluebottle/activities/states.py:321 bluebottle/activities/states.py:349
-#: bluebottle/activities/states.py:444
+#: bluebottle/activities/states.py:318 bluebottle/activities/states.py:346
+#: bluebottle/activities/states.py:441
 msgid "reset"
 msgstr "reset"
 
-#: bluebottle/activities/states.py:322
+#: bluebottle/activities/states.py:319
 msgid "The contribution is reset."
 msgstr "A contribuição foi redefinida."
 
-#: bluebottle/activities/states.py:334 bluebottle/collect/states.py:45
+#: bluebottle/activities/states.py:331 bluebottle/collect/states.py:45
 msgid "succeed"
 msgstr "sucesso"
 
-#: bluebottle/activities/states.py:335
+#: bluebottle/activities/states.py:332
 msgid "The organizer was successful in setting up the activity."
 msgstr "O organizador conseguiu configurar a atividade."
 
-#: bluebottle/activities/states.py:341
+#: bluebottle/activities/states.py:338
 msgid "The organizer failed to set up the activity."
 msgstr "O organizador não conseguiu configurar a atividade."
 
-#: bluebottle/activities/states.py:350
+#: bluebottle/activities/states.py:347
 msgid "The organizer is still busy setting up the activity."
 msgstr "O organizador ainda está ocupado configurando a atividade."
 
-#: bluebottle/activities/states.py:364
+#: bluebottle/activities/states.py:361
 msgid "The team has yet to be accepted"
 msgstr ""
 
-#: bluebottle/activities/states.py:369
+#: bluebottle/activities/states.py:366
 msgid "The team is open for contributors"
 msgstr ""
 
-#: bluebottle/activities/states.py:372 bluebottle/deeds/states.py:103
-#: bluebottle/time_based/states.py:316 bluebottle/time_based/states.py:484
+#: bluebottle/activities/states.py:369 bluebottle/deeds/states.py:122
+#: bluebottle/time_based/states.py:364 bluebottle/time_based/states.py:531
 msgid "withdrawn"
 msgstr "retirada"
 
-#: bluebottle/activities/states.py:374
+#: bluebottle/activities/states.py:371
 msgid "The team captain has withdrawn the team. Contributors can no longer register"
 msgstr ""
 
-#: bluebottle/activities/states.py:380
+#: bluebottle/activities/states.py:377
 msgid "The team is cancelled. Contributors can no longer register"
 msgstr ""
 
-#: bluebottle/activities/states.py:384 bluebottle/time_based/states.py:165
+#: bluebottle/activities/states.py:381 bluebottle/time_based/states.py:201
 msgid "running"
 msgstr "executando"
 
-#: bluebottle/activities/states.py:386
+#: bluebottle/activities/states.py:383
 msgid "The team is currently running the activity."
 msgstr ""
 
-#: bluebottle/activities/states.py:390 bluebottle/time_based/states.py:171
+#: bluebottle/activities/states.py:387
 msgid "finished"
 msgstr "finalizado"
 
-#: bluebottle/activities/states.py:392
+#: bluebottle/activities/states.py:389
 msgid "The team has completed the activity."
 msgstr ""
 
-#: bluebottle/activities/states.py:410
+#: bluebottle/activities/states.py:407
 msgid "The team will be created."
 msgstr ""
 
-#: bluebottle/activities/states.py:417 bluebottle/time_based/states.py:367
-#: bluebottle/time_based/states.py:531
+#: bluebottle/activities/states.py:414 bluebottle/time_based/states.py:412
+#: bluebottle/time_based/states.py:574
 msgid "Accept"
 msgstr "Aceitar"
 
-#: bluebottle/activities/states.py:418
+#: bluebottle/activities/states.py:415
 msgid "The team will be accepted."
 msgstr ""
 
-#: bluebottle/activities/states.py:426
+#: bluebottle/activities/states.py:423
 msgid "cancel"
 msgstr ""
 
-#: bluebottle/activities/states.py:427
+#: bluebottle/activities/states.py:424
 msgid "The team captain has withdrawn. Contributors can no longer apply"
 msgstr ""
 
-#: bluebottle/activities/states.py:435
+#: bluebottle/activities/states.py:432
 msgid "reopen"
 msgstr ""
 
-#: bluebottle/activities/states.py:436
+#: bluebottle/activities/states.py:433
 msgid "The team captain has reapplied. Contributors can apply again"
 msgstr ""
 
-#: bluebottle/activities/states.py:446
+#: bluebottle/activities/states.py:443
 msgid "The team captain has reset the team. All participants are removed, and the team start over fresh"
 msgstr ""
 
-#: bluebottle/activities/states.py:458
+#: bluebottle/activities/states.py:455
 msgid "reject"
 msgstr ""
 
-#: bluebottle/activities/states.py:459
+#: bluebottle/activities/states.py:456
 msgid "The team is cancelled. Contributors can no longer apply"
 msgstr ""
 
-#: bluebottle/activities/states.py:467
+#: bluebottle/activities/states.py:464
 msgid "accept"
 msgstr ""
 
-#: bluebottle/activities/states.py:468
+#: bluebottle/activities/states.py:465
 msgid "The team is reopened. Contributors can apply again"
 msgstr ""
 
-#: bluebottle/activities/states.py:474 bluebottle/funding/states.py:468
-#: bluebottle/initiatives/states.py:81 bluebottle/time_based/states.py:251
-#: bluebottle/time_based/states.py:459
+#: bluebottle/activities/states.py:471 bluebottle/funding/states.py:468
+#: bluebottle/initiatives/states.py:81 bluebottle/time_based/states.py:299
+#: bluebottle/time_based/states.py:506
 msgid "Start"
 msgstr "Iniciar"
 
-#: bluebottle/activities/states.py:476 bluebottle/time_based/states.py:167
-#: bluebottle/time_based/states.py:253
+#: bluebottle/activities/states.py:473 bluebottle/time_based/states.py:203
+#: bluebottle/time_based/states.py:301
 msgid "The slot is currently taking place."
 msgstr "O slot está atualmente em curso."
 
-#: bluebottle/activities/states.py:482 bluebottle/time_based/states.py:259
+#: bluebottle/activities/states.py:479 bluebottle/time_based/states.py:307
 msgid "Finish"
 msgstr "Acabamento"
 
-#: bluebottle/activities/states.py:484 bluebottle/time_based/states.py:261
+#: bluebottle/activities/states.py:481 bluebottle/time_based/states.py:309
 msgid "The slot has ended. Triggered when slot has ended."
 msgstr "O slot terminou. Acionado quando o slot terminar."
 
@@ -2133,7 +2130,7 @@ msgstr "Imagem do logotipo da categoria"
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:21 bluebottle/organizations/models.py:69
 #: bluebottle/segments/models.py:20 bluebottle/segments/models.py:93
-#: bluebottle/time_based/models.py:727
+#: bluebottle/time_based/models.py:801
 msgid "name"
 msgstr "Nome"
 
@@ -2142,7 +2139,7 @@ msgstr "Nome"
 #: bluebottle/geo/models.py:116 bluebottle/geo/models.py:154
 #: bluebottle/initiatives/models.py:430 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:23
-#: bluebottle/time_based/models.py:728
+#: bluebottle/time_based/models.py:802
 msgid "description"
 msgstr "Descrição"
 
@@ -2303,20 +2300,20 @@ msgstr "Link"
 msgid "Manual input"
 msgstr "Entrada manual"
 
-#: bluebottle/cms/models.py:146 bluebottle/statistics/models.py:75
-#: bluebottle/statistics/models.py:206
+#: bluebottle/cms/models.py:146 bluebottle/statistics/models.py:77
+#: bluebottle/statistics/models.py:212
 msgid "People involved"
 msgstr "Pessoas envolvidas"
 
 #: bluebottle/cms/models.py:147 bluebottle/deeds/admin.py:85
-#: bluebottle/deeds/models.py:115 bluebottle/statistics/models.py:76
-#: bluebottle/statistics/models.py:207 bluebottle/time_based/admin.py:97
-#: bluebottle/time_based/admin.py:125 bluebottle/time_based/admin.py:331
+#: bluebottle/deeds/models.py:115 bluebottle/statistics/models.py:78
+#: bluebottle/statistics/models.py:213 bluebottle/time_based/admin.py:99
+#: bluebottle/time_based/admin.py:127 bluebottle/time_based/admin.py:333
 #: bluebottle/time_based/admin.py:411 bluebottle/time_based/admin.py:427
 msgid "Participants"
 msgstr "Participantes"
 
-#: bluebottle/cms/models.py:149 bluebottle/statistics/models.py:78
+#: bluebottle/cms/models.py:149 bluebottle/statistics/models.py:80
 msgid "Activities succeeded"
 msgstr "Atividades bem-sucedidas"
 
@@ -2348,30 +2345,30 @@ msgstr "Tarefas online"
 msgid "Events online"
 msgstr "Eventos online"
 
-#: bluebottle/cms/models.py:159 bluebottle/statistics/models.py:87
+#: bluebottle/cms/models.py:159 bluebottle/statistics/models.py:89
 msgid "Funding activities online"
 msgstr "Atividades de financiamento online"
 
 #: bluebottle/cms/models.py:161 bluebottle/funding/admin.py:227
-#: bluebottle/funding/models.py:496 bluebottle/statistics/models.py:89
+#: bluebottle/funding/models.py:496 bluebottle/statistics/models.py:91
 msgid "Donations"
 msgstr "Doações"
 
-#: bluebottle/cms/models.py:162 bluebottle/statistics/models.py:90
-#: bluebottle/statistics/models.py:200
+#: bluebottle/cms/models.py:162 bluebottle/statistics/models.py:92
+#: bluebottle/statistics/models.py:206
 msgid "Donated total"
 msgstr "Total doado"
 
-#: bluebottle/cms/models.py:163 bluebottle/statistics/models.py:91
-#: bluebottle/statistics/models.py:201
+#: bluebottle/cms/models.py:163 bluebottle/statistics/models.py:93
+#: bluebottle/statistics/models.py:207
 msgid "Pledged total"
 msgstr "Total do terreno"
 
-#: bluebottle/cms/models.py:164 bluebottle/statistics/models.py:92
+#: bluebottle/cms/models.py:164 bluebottle/statistics/models.py:94
 msgid "Amount matched"
 msgstr "Quantidade correspondente"
 
-#: bluebottle/cms/models.py:165 bluebottle/statistics/models.py:93
+#: bluebottle/cms/models.py:165 bluebottle/statistics/models.py:95
 msgid "Activities Online"
 msgstr "Atividades Online"
 
@@ -2379,12 +2376,12 @@ msgstr "Atividades Online"
 msgid "Votes casts"
 msgstr "Votos expressos"
 
-#: bluebottle/cms/models.py:167 bluebottle/statistics/models.py:94
+#: bluebottle/cms/models.py:167 bluebottle/statistics/models.py:96
 msgid "Time spent"
 msgstr "Tempo gasto"
 
-#: bluebottle/cms/models.py:168 bluebottle/statistics/models.py:96
-#: bluebottle/statistics/models.py:211
+#: bluebottle/cms/models.py:168 bluebottle/statistics/models.py:98
+#: bluebottle/statistics/models.py:217
 msgid "Number of members"
 msgstr "Número de membros"
 
@@ -2635,8 +2632,8 @@ msgid "Add another %(verbose_name)s"
 msgstr "Adicionar outro %(verbose_name)s"
 
 #: bluebottle/cms/templates/admin/edit_inline/stacked-nested.html:88
-#: bluebottle/collect/states.py:175 bluebottle/deeds/states.py:182
-#: bluebottle/time_based/states.py:399 bluebottle/time_based/states.py:540
+#: bluebottle/collect/states.py:175 bluebottle/deeds/states.py:201
+#: bluebottle/time_based/states.py:445 bluebottle/time_based/states.py:584
 msgid "Remove"
 msgstr "Excluir"
 
@@ -2679,14 +2676,14 @@ msgid "Your activity \"{title}\" will start tomorrow!"
 msgstr "Sua atividade \"{title}\" vai começar amanhã!"
 
 #: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:67
-#: bluebottle/time_based/messages.py:450
+#: bluebottle/time_based/messages.py:464
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
 msgstr "Você entrou na atividade \"{title}\""
 
 #: bluebottle/collect/models.py:17 bluebottle/initiatives/models.py:426
-#: bluebottle/time_based/models.py:724
+#: bluebottle/time_based/models.py:798
 msgid "disabled"
 msgstr "desabilitado"
 
@@ -2723,7 +2720,7 @@ msgid "item"
 msgstr ""
 
 #: bluebottle/collect/models.py:67 bluebottle/time_based/models.py:246
-#: bluebottle/time_based/models.py:403
+#: bluebottle/time_based/models.py:441
 msgid "location hint"
 msgstr "dica de localização"
 
@@ -2785,12 +2782,12 @@ msgid "Succeed the activity."
 msgstr "Sucesso na atividade."
 
 #: bluebottle/collect/states.py:57 bluebottle/collect/states.py:64
-#: bluebottle/deeds/states.py:59 bluebottle/deeds/states.py:69
-#: bluebottle/time_based/states.py:58 bluebottle/time_based/states.py:222
+#: bluebottle/deeds/states.py:78 bluebottle/deeds/states.py:88
+#: bluebottle/time_based/states.py:58 bluebottle/time_based/states.py:269
 msgid "Reopen"
 msgstr "Reabrir"
 
-#: bluebottle/collect/states.py:58 bluebottle/deeds/states.py:60
+#: bluebottle/collect/states.py:58 bluebottle/deeds/states.py:79
 msgid "Reopen the activity."
 msgstr "Reabra a atividade."
 
@@ -2798,7 +2795,7 @@ msgstr "Reabra a atividade."
 msgid "Manually reopen the activity. This will unset the end date if the date is in the past. People can contribute again."
 msgstr ""
 
-#: bluebottle/collect/states.py:96
+#: bluebottle/collect/states.py:96 bluebottle/initiatives/states.py:36
 msgid "Cancelled"
 msgstr ""
 
@@ -2806,11 +2803,11 @@ msgstr ""
 msgid "This person has cancelled."
 msgstr ""
 
-#: bluebottle/collect/states.py:101 bluebottle/deeds/states.py:108
+#: bluebottle/collect/states.py:101 bluebottle/deeds/states.py:127
 msgid "Removed"
 msgstr "Removido"
 
-#: bluebottle/collect/states.py:103 bluebottle/deeds/states.py:110
+#: bluebottle/collect/states.py:103 bluebottle/deeds/states.py:129
 msgid "This person has been removed from the activity."
 msgstr "Essa pessoa foi removida da atividade."
 
@@ -2826,8 +2823,8 @@ msgstr ""
 msgid "Re-accept"
 msgstr "Reaceitar"
 
-#: bluebottle/collect/states.py:152 bluebottle/deeds/states.py:159
-#: bluebottle/time_based/states.py:411 bluebottle/time_based/states.py:549
+#: bluebottle/collect/states.py:152 bluebottle/deeds/states.py:178
+#: bluebottle/time_based/states.py:457 bluebottle/time_based/states.py:593
 msgid "Withdraw"
 msgstr "Sacar"
 
@@ -2835,8 +2832,8 @@ msgstr "Sacar"
 msgid "Cancel your contribution to this activity."
 msgstr ""
 
-#: bluebottle/collect/states.py:162 bluebottle/deeds/states.py:169
-#: bluebottle/time_based/states.py:422 bluebottle/time_based/states.py:559
+#: bluebottle/collect/states.py:162 bluebottle/deeds/states.py:188
+#: bluebottle/time_based/states.py:468 bluebottle/time_based/states.py:607
 msgid "Reapply"
 msgstr "Reaplicar"
 
@@ -2986,25 +2983,25 @@ msgstr "autor"
 
 #: bluebottle/contact/models.py:31
 #: bluebottle/organizations/templates/admin/merge_preview.html:11
-#: bluebottle/statistics/models.py:51 bluebottle/statistics/models.py:99
+#: bluebottle/statistics/models.py:51 bluebottle/statistics/models.py:101
 msgid "Name"
 msgstr "Nome:"
 
-#: bluebottle/contact/models.py:32 bluebottle/notifications/models.py:58
+#: bluebottle/contact/models.py:32 bluebottle/notifications/models.py:59
 #: bluebottle/organizations/templates/admin/merge_preview.html:12
 msgid "Email"
 msgstr "e-mail"
 
-#: bluebottle/contact/models.py:33 bluebottle/notifications/models.py:90
+#: bluebottle/contact/models.py:33 bluebottle/notifications/models.py:91
 msgid "Message"
 msgstr "mensagem"
 
-#: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:226
+#: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:232
 #: bluebottle/utils/models.py:190
 msgid "creation date"
 msgstr "data de criação"
 
-#: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:227
+#: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:233
 #: bluebottle/utils/models.py:191
 msgid "last modification"
 msgstr "última modificação"
@@ -3044,7 +3041,7 @@ msgid "Pictures"
 msgstr "Fotos"
 
 #: bluebottle/deeds/admin.py:57 bluebottle/deeds/admin.py:58
-#: bluebottle/time_based/admin.py:90
+#: bluebottle/time_based/admin.py:92
 msgid "Edit participant"
 msgstr "Editar participante"
 
@@ -3057,52 +3054,63 @@ msgstr "O número de usuários que você deseja participar."
 msgid "Deed"
 msgstr "Prova"
 
-#: bluebottle/deeds/models.py:114 bluebottle/time_based/admin.py:96
-#: bluebottle/time_based/admin.py:124 bluebottle/time_based/admin.py:426
+#: bluebottle/deeds/models.py:114 bluebottle/time_based/admin.py:98
+#: bluebottle/time_based/admin.py:126 bluebottle/time_based/admin.py:426
 msgid "Participant"
 msgstr "Participante"
 
-#: bluebottle/deeds/states.py:50
+#: bluebottle/deeds/states.py:27 bluebottle/time_based/states.py:124
+msgid "Publish your activity and let people participate."
+msgstr ""
+
+#: bluebottle/deeds/states.py:29
+#: bluebottle/news/templates/admin/blogs/change_form.html:119
+#: bluebottle/slides/templates/admin/banners/change_form.html:130
+#: bluebottle/time_based/states.py:126
+msgid "Publish"
+msgstr "Publicar"
+
+#: bluebottle/deeds/states.py:69
 msgid "The activity ends and people can no longer register. "
 msgstr ""
 
-#: bluebottle/deeds/states.py:94
+#: bluebottle/deeds/states.py:113
 msgid "The activity ends and people can no longer register."
 msgstr ""
 
-#: bluebottle/deeds/states.py:105
+#: bluebottle/deeds/states.py:124
 msgid "This person has withdrawn."
 msgstr "Esta pessoa se retirou."
 
-#: bluebottle/deeds/states.py:113 bluebottle/time_based/admin.py:845
+#: bluebottle/deeds/states.py:132 bluebottle/time_based/admin.py:844
 msgid "Participating"
 msgstr "Participante"
 
-#: bluebottle/deeds/states.py:115
+#: bluebottle/deeds/states.py:134
 msgid "This person has been signed up for the activity and was accepted automatically."
 msgstr "Esta pessoa foi inscrita na atividade e foi aceita automaticamente."
 
-#: bluebottle/deeds/states.py:152 bluebottle/deeds/states.py:191
+#: bluebottle/deeds/states.py:171 bluebottle/deeds/states.py:210
 msgid "Reaccept"
 msgstr ""
 
-#: bluebottle/deeds/states.py:153
+#: bluebottle/deeds/states.py:172
 msgid "Put a participant back as participating after it was successful."
 msgstr ""
 
-#: bluebottle/deeds/states.py:160
+#: bluebottle/deeds/states.py:179
 msgid "Stop your participation in the activity."
 msgstr "Impeça a sua participação na atividade."
 
-#: bluebottle/deeds/states.py:170
+#: bluebottle/deeds/states.py:189
 msgid "Reapply after previously withdrawing."
 msgstr ""
 
-#: bluebottle/deeds/states.py:183
+#: bluebottle/deeds/states.py:202
 msgid "Remove participant from the activity."
 msgstr "Remover participante da atividade."
 
-#: bluebottle/deeds/states.py:192
+#: bluebottle/deeds/states.py:211
 msgid "Reaccept user after previously withdrawing or rejecting."
 msgstr ""
 
@@ -3192,7 +3200,7 @@ msgstr "Baixar arquivo de exportação"
 msgid "Export database"
 msgstr "Exportar banco de dados"
 
-#: bluebottle/files/models.py:25 bluebottle/files/models.py:74
+#: bluebottle/files/models.py:25 bluebottle/files/models.py:80
 msgid "file"
 msgstr "arquivo"
 
@@ -3703,8 +3711,8 @@ msgstr "prazo"
 msgid "If you enter a deadline, leave the duration field empty. This will override the duration."
 msgstr "Se você inserir um prazo, deixe o campo duração vazio. Isto substituirá a duração."
 
-#: bluebottle/funding/models.py:132 bluebottle/time_based/models.py:320
-#: bluebottle/time_based/models.py:514
+#: bluebottle/funding/models.py:132 bluebottle/time_based/models.py:328
+#: bluebottle/time_based/models.py:552
 msgid "duration"
 msgstr "Duração"
 
@@ -3896,7 +3904,8 @@ msgstr "A campanha será visível no frontend e as pessoas podem doar."
 msgid "Cancel if the campaign will not be executed. The activity manager will not be able to edit the campaign and it won't show up on the search page in the front end. The campaign will still be available in the back office and appear in your reporting."
 msgstr "Cancelar se a campanha não será executada. O gerenciador de atividades não será capaz de editar a campanha e ela não aparecerá na página de busca no front-end. A campanha ainda estará disponível no Back office e aparecerá no seu relatório."
 
-#: bluebottle/funding/states.py:111 bluebottle/initiatives/states.py:110
+#: bluebottle/funding/states.py:111 bluebottle/initiatives/states.py:23
+#: bluebottle/initiatives/states.py:110
 msgid "Needs work"
 msgstr "Precisa ser trabalhado"
 
@@ -4003,7 +4012,7 @@ msgid "Payment was started."
 msgstr "Pagamento foi iniciado."
 
 #: bluebottle/funding/states.py:324 bluebottle/funding/states.py:561
-#: bluebottle/time_based/states.py:301
+#: bluebottle/time_based/states.py:349
 msgid "pending"
 msgstr "Pendente"
 
@@ -4033,9 +4042,9 @@ msgstr "A plataforma solicitou o pagamento a ser reembolsado. Aguardando o prove
 
 #: bluebottle/funding/states.py:359 bluebottle/funding/states.py:444
 #: bluebottle/funding/states.py:525 bluebottle/funding/states.py:596
-#: bluebottle/funding_stripe/states.py:101 bluebottle/time_based/states.py:185
-#: bluebottle/time_based/states.py:292 bluebottle/time_based/states.py:357
-#: bluebottle/time_based/states.py:524
+#: bluebottle/funding_stripe/states.py:101 bluebottle/time_based/states.py:231
+#: bluebottle/time_based/states.py:340 bluebottle/time_based/states.py:401
+#: bluebottle/time_based/states.py:567
 msgid "Initiate"
 msgstr "Iniciar"
 
@@ -5202,7 +5211,7 @@ msgstr "Localidade"
 msgid "Province"
 msgstr "província"
 
-#: bluebottle/geo/models.py:192 bluebottle/geo/models.py:236
+#: bluebottle/geo/models.py:192 bluebottle/geo/models.py:237
 #: bluebottle/members/models.py:154
 msgid "Address"
 msgstr "Endereço"
@@ -5506,7 +5515,7 @@ msgstr "Qualquer usuário autenticado pode iniciar uma atividade sob esta inicia
 msgid "Online / In-person"
 msgstr ""
 
-#: bluebottle/initiatives/models.py:251 bluebottle/time_based/models.py:738
+#: bluebottle/initiatives/models.py:251 bluebottle/time_based/models.py:812
 msgid "Skill"
 msgstr "Habilidade"
 
@@ -5522,7 +5531,7 @@ msgstr "Tema"
 msgid "Category"
 msgstr "categoria"
 
-#: bluebottle/initiatives/models.py:276 bluebottle/time_based/models.py:456
+#: bluebottle/initiatives/models.py:276 bluebottle/time_based/models.py:494
 msgid "Activity during a period"
 msgstr "Atividade durante um período"
 
@@ -5620,9 +5629,18 @@ msgstr "O nome é obrigatório"
 msgid "Email is required"
 msgstr "E-mail é obrigatório"
 
+#: bluebottle/initiatives/states.py:13 bluebottle/pages/models.py:203
+#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:165
+msgid "Draft"
+msgstr "Rascunho"
+
 #: bluebottle/initiatives/states.py:15
 msgid "The initiative has been created and is being worked on."
 msgstr "A iniciativa foi criada e está a ser trabalhada."
+
+#: bluebottle/initiatives/states.py:18
+msgid "Submitted"
+msgstr ""
 
 #: bluebottle/initiatives/states.py:20
 msgid "The initiative has been submitted and is ready to be reviewed."
@@ -5632,6 +5650,10 @@ msgstr "A iniciativa foi apresentada e está pronta para ser revista."
 msgid "The initiative has been submitted but needs adjustments in order to be approved."
 msgstr "A iniciativa foi apresentada, mas necessita de ajustamentos para poder ser aprovada."
 
+#: bluebottle/initiatives/states.py:28
+msgid "Rejected"
+msgstr ""
+
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "A iniciativa não se encaixa no programa nem nas regras do jogo. A iniciativa não aparecerá na página de busca no front-end, mas conta no relatório. A iniciativa não pode ser editada pelo iniciador."
@@ -5640,12 +5662,16 @@ msgstr "A iniciativa não se encaixa no programa nem nas regras do jogo. A inici
 msgid "The initiative is not executed. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "A iniciativa não é executada. A iniciativa não aparecerá na página de busca no front-end, mas conta no relatório. A iniciativa não pode ser editada pelo iniciador."
 
+#: bluebottle/initiatives/states.py:44 bluebottle/members/admin.py:390
+msgid "Deleted"
+msgstr "Excluído"
+
 #: bluebottle/initiatives/states.py:46
 msgid "The initiative is not visible in the frontend and does not count in the reporting. The initiative cannot be edited by the initiator."
 msgstr "A iniciativa não é visível no frontend e não conta nos relatórios. A iniciativa não pode ser editada pelo iniciador."
 
 #: bluebottle/initiatives/states.py:50
-msgid "Support needed"
+msgid "Approved"
 msgstr ""
 
 #: bluebottle/initiatives/states.py:52
@@ -5891,10 +5917,6 @@ msgstr "Campos de preenchimento obrigatório"
 #: bluebottle/members/admin.py:271 bluebottle/notifications/admin.py:81
 msgid "Are you sure?"
 msgstr "Você tem certeza?"
-
-#: bluebottle/members/admin.py:390
-msgid "Deleted"
-msgstr "Excluído"
 
 #: bluebottle/members/admin.py:459
 msgid "Permissions"
@@ -6393,7 +6415,7 @@ msgid "Shows at the top of your post."
 msgstr "Mostra no topo do seu post."
 
 #: bluebottle/news/models.py:37 bluebottle/pages/models.py:220
-#: bluebottle/slides/models.py:29 bluebottle/statistics/models.py:230
+#: bluebottle/slides/models.py:29 bluebottle/statistics/models.py:236
 msgid "language"
 msgstr "Idioma"
 
@@ -6419,11 +6441,6 @@ msgstr "Pré-visualizar"
 #: bluebottle/news/templates/admin/blogs/change_form.html:101
 msgid "Internal CMS error: failed to fetch preview data!"
 msgstr "Erro interno no CMS: falha ao buscar dados de pré-visualização!"
-
-#: bluebottle/news/templates/admin/blogs/change_form.html:119
-#: bluebottle/slides/templates/admin/banners/change_form.html:130
-msgid "Publish"
-msgstr "Publicar"
 
 #: bluebottle/news/templates/admin/blogs/change_form.html:120
 #: bluebottle/slides/templates/admin/banners/change_form.html:131
@@ -6487,48 +6504,48 @@ msgstr "Mensagem <em>{subject}</em> para {recipients}"
 msgid "to {}"
 msgstr "para {}"
 
-#: bluebottle/notifications/models.py:51
+#: bluebottle/notifications/models.py:52
 msgid "Twitter"
 msgstr "Twitter"
 
-#: bluebottle/notifications/models.py:52
+#: bluebottle/notifications/models.py:53
 msgid "Facebook"
 msgstr "Siga-nos"
 
-#: bluebottle/notifications/models.py:53
+#: bluebottle/notifications/models.py:54
 msgid "Facebook at Work"
 msgstr "Facebook no Trabalho"
 
-#: bluebottle/notifications/models.py:54
+#: bluebottle/notifications/models.py:55
 msgid "LinkedIn"
 msgstr "LinkedIn"
 
-#: bluebottle/notifications/models.py:55
+#: bluebottle/notifications/models.py:56
 msgid "Whatsapp"
 msgstr "WhatsApp"
 
-#: bluebottle/notifications/models.py:56
+#: bluebottle/notifications/models.py:57
 msgid "Yammer"
 msgstr "Yammer"
 
-#: bluebottle/notifications/models.py:68 bluebottle/notifications/models.py:69
+#: bluebottle/notifications/models.py:69 bluebottle/notifications/models.py:70
 msgid "notification settings"
 msgstr "configurações de notificação"
 
-#: bluebottle/notifications/models.py:86
+#: bluebottle/notifications/models.py:87
 msgid "Member activated"
 msgstr "Membro ativado"
 
-#: bluebottle/notifications/models.py:94
+#: bluebottle/notifications/models.py:95
 #: bluebottle/notifications/templates/admin/notifications/preview.html:3
 msgid "Subject"
 msgstr "Cargo"
 
-#: bluebottle/notifications/models.py:95
+#: bluebottle/notifications/models.py:96
 msgid "Body (html)"
 msgstr "Corpo (html)"
 
-#: bluebottle/notifications/models.py:96
+#: bluebottle/notifications/models.py:97
 msgid "Body (text)"
 msgstr "Corpo (texto)"
 
@@ -6726,11 +6743,6 @@ msgstr "Texto + Imagem redonda"
 #: bluebottle/utils/models.py:164
 msgid "Published"
 msgstr "Publicado"
-
-#: bluebottle/pages/models.py:203 bluebottle/slides/models.py:25
-#: bluebottle/utils/models.py:165
-msgid "Draft"
-msgstr "Rascunho"
 
 #: bluebottle/pages/models.py:208
 msgid "Page without sub-navigation"
@@ -7014,7 +7026,7 @@ msgstr "Confirgurações"
 msgid "Manage Reporting"
 msgstr "Gerenciar relatórios"
 
-#: bluebottle/settings/base.py:739 bluebottle/time_based/models.py:457
+#: bluebottle/settings/base.py:739 bluebottle/time_based/models.py:495
 msgid "Activities during a period"
 msgstr "Atividades durante um período"
 
@@ -7030,11 +7042,11 @@ msgstr "Atividades em uma data"
 msgid "Activity slots"
 msgstr "Espaços da atividade"
 
-#: bluebottle/settings/base.py:813 bluebottle/time_based/models.py:583
+#: bluebottle/settings/base.py:813 bluebottle/time_based/models.py:646
 msgid "Participants on a date"
 msgstr "Participantes em uma data"
 
-#: bluebottle/settings/base.py:832 bluebottle/time_based/models.py:662
+#: bluebottle/settings/base.py:832 bluebottle/time_based/models.py:735
 msgid "Slot participants"
 msgstr "Participantes do slot"
 
@@ -7126,11 +7138,11 @@ msgstr ""
 msgid "This is the URL to which the button links."
 msgstr ""
 
-#: bluebottle/statistics/admin.py:77 bluebottle/statistics/models.py:215
+#: bluebottle/statistics/admin.py:77 bluebottle/statistics/models.py:221
 msgid "Type"
 msgstr "tipo"
 
-#: bluebottle/statistics/models.py:26 bluebottle/statistics/models.py:224
+#: bluebottle/statistics/models.py:26 bluebottle/statistics/models.py:230
 msgid "Should this be shown or hidden."
 msgstr "Isto deve ser visível ou ocultado."
 
@@ -7142,83 +7154,83 @@ msgstr "Ordem em que as métricas são mostradas."
 msgid "Statistic"
 msgstr "Estatística"
 
-#: bluebottle/statistics/models.py:69
+#: bluebottle/statistics/models.py:71
 msgid "Custom statistic"
 msgstr "Estatística personalizada"
 
-#: bluebottle/statistics/models.py:70
+#: bluebottle/statistics/models.py:72
 msgid "Custom statistics"
 msgstr "Estatísticas personalizadas"
 
-#: bluebottle/statistics/models.py:79
+#: bluebottle/statistics/models.py:81
 msgid "Time based activities succeeded"
 msgstr "Atividades baseadas em tempo com sucesso"
 
-#: bluebottle/statistics/models.py:80
+#: bluebottle/statistics/models.py:82
 msgid "Crowdfunding campaigns succeeded"
 msgstr "Campanhas de Crowdfunding bem-sucedidas"
 
-#: bluebottle/statistics/models.py:81
+#: bluebottle/statistics/models.py:83
 msgid "Deeds succeeded"
 msgstr "Provas bem sucedidas"
 
-#: bluebottle/statistics/models.py:83
+#: bluebottle/statistics/models.py:85
 msgid "Activity Participants"
 msgstr "Participantes da atividade"
 
-#: bluebottle/statistics/models.py:85
+#: bluebottle/statistics/models.py:87
 msgid "Time based activities online"
 msgstr "Atividades de tempo baseadas em on-line"
 
-#: bluebottle/statistics/models.py:86
+#: bluebottle/statistics/models.py:88
 msgid "Deeds online"
 msgstr "Ofertas online"
 
-#: bluebottle/statistics/models.py:95
+#: bluebottle/statistics/models.py:97
 msgid "Deeds done"
 msgstr "Propostas feitas"
 
-#: bluebottle/statistics/models.py:104
+#: bluebottle/statistics/models.py:106
 msgid "query"
 msgstr "consulta"
 
-#: bluebottle/statistics/models.py:150
+#: bluebottle/statistics/models.py:153
 msgid "Engagement statistic"
 msgstr "Estatística de compromisso"
 
-#: bluebottle/statistics/models.py:151
+#: bluebottle/statistics/models.py:154
 msgid "Engagement statistics"
 msgstr "Estatísticas de engajamento"
 
-#: bluebottle/statistics/models.py:190
+#: bluebottle/statistics/models.py:196
 msgid "Impact statistic"
 msgstr "Estatísticas de impacto"
 
-#: bluebottle/statistics/models.py:191
+#: bluebottle/statistics/models.py:197
 msgid "Impact statistics"
 msgstr "Estatísticas de impacto"
 
-#: bluebottle/statistics/models.py:199
+#: bluebottle/statistics/models.py:205
 msgid "Manual"
 msgstr "Manualmente"
 
-#: bluebottle/statistics/models.py:203
+#: bluebottle/statistics/models.py:209
 msgid "Tasks realized"
 msgstr "Tarefas realizadas"
 
-#: bluebottle/statistics/models.py:204
+#: bluebottle/statistics/models.py:210
 msgid "Taskmembers"
 msgstr "Membros"
 
-#: bluebottle/statistics/models.py:209
+#: bluebottle/statistics/models.py:215
 msgid "Amount Matched"
 msgstr "Quantidade Correspondente"
 
-#: bluebottle/statistics/models.py:210
+#: bluebottle/statistics/models.py:216
 msgid "Number of votes cast"
 msgstr "Número de votos expressos"
 
-#: bluebottle/statistics/models.py:221
+#: bluebottle/statistics/models.py:227
 msgid "This overwrites the calculated value, if available"
 msgstr "Isto sobrescreve o valor calculado, se disponível"
 
@@ -7238,21 +7250,21 @@ msgstr "Contrato de termos"
 msgid "Term agreements"
 msgstr "Acordos de termo"
 
-#: bluebottle/time_based/admin.py:198 bluebottle/time_based/admin.py:403
+#: bluebottle/time_based/admin.py:200 bluebottle/time_based/admin.py:403
 #, python-brace-format
 msgid "{duration} per {time_unit}"
 msgstr "{duration} por {time_unit}"
 
-#: bluebottle/time_based/admin.py:202 bluebottle/time_based/admin.py:407
+#: bluebottle/time_based/admin.py:204 bluebottle/time_based/admin.py:407
 #: bluebottle/time_based/admin.py:499
 msgid "Duration"
 msgstr "Duração"
 
-#: bluebottle/time_based/admin.py:250 bluebottle/time_based/admin.py:300
+#: bluebottle/time_based/admin.py:252 bluebottle/time_based/admin.py:302
 msgid "Timezone"
 msgstr "Timezone"
 
-#: bluebottle/time_based/admin.py:327
+#: bluebottle/time_based/admin.py:329
 msgid "Slots"
 msgstr "Vagas"
 
@@ -7318,7 +7330,7 @@ msgstr ""
 msgid "Repeat"
 msgstr ""
 
-#: bluebottle/time_based/admin.py:626 bluebottle/time_based/models.py:412
+#: bluebottle/time_based/admin.py:626 bluebottle/time_based/models.py:450
 msgid "End date"
 msgstr "Data de término"
 
@@ -7363,27 +7375,27 @@ msgstr "Participantes aceitos"
 msgid "Edit duration"
 msgstr "Editar duração"
 
-#: bluebottle/time_based/admin.py:830
+#: bluebottle/time_based/admin.py:829
 msgid "Total contributed"
 msgstr "Total contribuído"
 
-#: bluebottle/time_based/admin.py:858 bluebottle/time_based/models.py:362
+#: bluebottle/time_based/admin.py:857 bluebottle/time_based/models.py:376
 msgid "Slot"
 msgstr "Espaço"
 
-#: bluebottle/time_based/admin.py:924 bluebottle/time_based/models.py:365
+#: bluebottle/time_based/admin.py:923 bluebottle/time_based/models.py:403
 msgid "slot"
 msgstr "item"
 
-#: bluebottle/time_based/admin.py:925 bluebottle/time_based/models.py:366
+#: bluebottle/time_based/admin.py:924 bluebottle/time_based/models.py:404
 msgid "slots"
 msgstr "vagas"
 
-#: bluebottle/time_based/admin.py:1003
+#: bluebottle/time_based/admin.py:1006
 msgid "users"
 msgstr "Usuários"
 
-#: bluebottle/time_based/admin.py:1005
+#: bluebottle/time_based/admin.py:1008
 msgid "Users with this skill"
 msgstr "Usuários com esta habilidade"
 
@@ -7427,7 +7439,7 @@ msgstr "Desbloquear espaços não preenchidos para {activity}"
 msgid "Lock filled slots for {activity}"
 msgstr "Bloquear espaços preenchidos por {activity}"
 
-#: bluebottle/time_based/effects.py:356 bluebottle/time_based/effects.py:377
+#: bluebottle/time_based/effects.py:353
 #, python-brace-format
 msgid "Reset slot selection to \"all\" for {activity}"
 msgstr "Redefinir a seleção de slot para \"todos\" para {activity}"
@@ -7472,126 +7484,143 @@ msgctxt "email"
 msgid "The team activity \"{title}\" will take place in a few days!"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:232 bluebottle/time_based/messages.py:255
+#: bluebottle/time_based/messages.py:232 bluebottle/time_based/messages.py:258
 #, python-brace-format
 msgctxt "email"
 msgid "The details of activity \"{title}\" have changed"
 msgstr "Os detalhes da atividade \"{title}\" foram alterados"
 
-#: bluebottle/time_based/messages.py:283
+#: bluebottle/time_based/messages.py:294
 #, python-brace-format
 msgctxt "email"
 msgid "The details of the team activity \"{title}\" have changed"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:313
+#: bluebottle/time_based/messages.py:327
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has succeeded 🎉"
 msgstr "A atividade \"{title}\" teve sucesso 🎉"
 
-#: bluebottle/time_based/messages.py:336
+#: bluebottle/time_based/messages.py:350
 #, python-brace-format
 msgctxt "email"
 msgid "You have been added to the activity \"{title}\" 🎉"
 msgstr "Você foi adicionado à atividade \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:360
+#: bluebottle/time_based/messages.py:374
 #, python-brace-format
 msgctxt "email"
 msgid "You have been added to a team for \"{title}\" 🎉"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:385
+#: bluebottle/time_based/messages.py:399
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new participant for your activity \"{title}\" 🎉"
 msgstr "Você tem um novo participante para sua atividade \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:406
+#: bluebottle/time_based/messages.py:420
 #, python-brace-format
 msgctxt "email"
 msgid "A new participant has joined your activity \"{title}\" 🎉"
 msgstr "Um novo participante juntou-se à sua atividade \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:473 bluebottle/time_based/messages.py:558
+#: bluebottle/time_based/messages.py:498 bluebottle/time_based/messages.py:583
 #, python-brace-format
 msgctxt "email"
 msgid "You have registered your team for \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages.py:496
+#: bluebottle/time_based/messages.py:521
 #, python-brace-format
 msgctxt "email"
 msgid "You have changed your application on the activity \"{title}\""
 msgstr "Você alterou sua aplicação na atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:536
+#: bluebottle/time_based/messages.py:561
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
 msgstr "Você se candidatou à atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:580
+#: bluebottle/time_based/messages.py:605
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined {team_name} for \"{title}\""
 msgstr ""
 
-#: bluebottle/time_based/messages.py:603
+#: bluebottle/time_based/messages.py:628
 #, python-brace-format
 msgctxt "email"
 msgid "You have been selected for the activity \"{title}\" 🎉"
 msgstr "Você foi selecionado para a atividade \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:624
+#: bluebottle/time_based/messages.py:655
 #, python-brace-format
 msgctxt "email"
 msgid "You have not been selected for the activity \"{title}\""
 msgstr "Você não foi selecionado para a atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:634 bluebottle/time_based/messages.py:655
+#: bluebottle/time_based/messages.py:665 bluebottle/time_based/messages.py:686
 msgctxt "email"
 msgid "View all activities"
 msgstr "Ver todas as atividades"
 
-#: bluebottle/time_based/messages.py:645
+#: bluebottle/time_based/messages.py:676
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed as participant for the activity \"{title}\""
 msgstr "Você foi removido como participante da atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:666
+#: bluebottle/time_based/messages.py:697
 #, python-brace-format
 msgctxt "email"
 msgid "Your team participation in ‘{title}’ has been cancelled"
 msgstr ""
 
-#: bluebottle/time_based/messages.py:688
+#: bluebottle/time_based/messages.py:719
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" is successful 🎉"
 msgstr "Sua contribuição para a atividade \"{title}\" é um sucesso 🎉"
 
-#: bluebottle/time_based/messages.py:709
+#: bluebottle/time_based/messages.py:740
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your activity \"{title}\""
 msgstr "Um usuário se retirou de sua atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:731
+#: bluebottle/time_based/messages.py:762
+#, python-brace-format
+msgctxt "email"
+msgid "A participant has withdrawn from a time slot for your activity \"{title}\""
+msgstr ""
+
+#: bluebottle/time_based/messages.py:789
+#, python-brace-format
+msgctxt "email"
+msgid "A participant has registered for a time slot for your activity \"{title}\""
+msgstr ""
+
+#: bluebottle/time_based/messages.py:805
+msgctxt "email"
+msgid "View your activity"
+msgstr ""
+
+#: bluebottle/time_based/messages.py:817
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr "Um participante foi adicionado à sua atividade \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages.py:756
+#: bluebottle/time_based/messages.py:842
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your activity \"{title}\""
 msgstr "Um usuário foi removido de sua atividade \"{title}\""
 
-#: bluebottle/time_based/messages.py:778
+#: bluebottle/time_based/messages.py:864
 #, python-brace-format
 msgctxt "email"
 msgid "A slot for your activity \"{title}\" has been cancelled"
@@ -7645,138 +7674,143 @@ msgstr "Todos: O participante vai se juntar a todos os intervalos de tempo. Livr
 msgid "online meeting link"
 msgstr "link de reunião on-line"
 
-#: bluebottle/time_based/models.py:229 bluebottle/time_based/models.py:398
+#: bluebottle/time_based/models.py:229 bluebottle/time_based/models.py:436
 msgid "is online"
 msgstr "está online"
 
-#: bluebottle/time_based/models.py:241 bluebottle/time_based/models.py:400
+#: bluebottle/time_based/models.py:241 bluebottle/time_based/models.py:438
 msgid "location"
 msgstr "Localização"
 
-#: bluebottle/time_based/models.py:275 bluebottle/time_based/views.py:485
-#: bluebottle/time_based/views.py:525
+#: bluebottle/time_based/models.py:283 bluebottle/time_based/views.py:527
+#: bluebottle/time_based/views.py:567
 #, python-brace-format
 msgid "\n"
 "Join: {url}"
 msgstr "\n"
 "Junte-se: {url}"
 
-#: bluebottle/time_based/models.py:319 bluebottle/time_based/models.py:492
-#: bluebottle/time_based/models.py:513
+#: bluebottle/time_based/models.py:327 bluebottle/time_based/models.py:530
+#: bluebottle/time_based/models.py:551
 msgid "start date and time"
 msgstr "data e hora de início"
 
-#: bluebottle/time_based/models.py:385
+#: bluebottle/time_based/models.py:385 bluebottle/time_based/models.py:603
+#: bluebottle/time_based/templates/mails/messages/partial/slot.html:16
+msgid "Anywhere/Online"
+msgstr "Em todo lugar/Online"
+
+#: bluebottle/time_based/models.py:423
 msgid "in total"
 msgstr "no total"
 
-#: bluebottle/time_based/models.py:386
+#: bluebottle/time_based/models.py:424
 msgid "per day"
 msgstr "por dia"
 
-#: bluebottle/time_based/models.py:387
+#: bluebottle/time_based/models.py:425
 msgid "per week"
 msgstr "por semana"
 
-#: bluebottle/time_based/models.py:388
+#: bluebottle/time_based/models.py:426
 msgid "per month"
 msgstr "por mês"
 
-#: bluebottle/time_based/models.py:406
+#: bluebottle/time_based/models.py:444
 msgid "Start date"
 msgstr "Data de início"
 
-#: bluebottle/time_based/models.py:418
+#: bluebottle/time_based/models.py:456
 msgid "Time per period"
 msgstr "Tempo por período"
 
-#: bluebottle/time_based/models.py:424
+#: bluebottle/time_based/models.py:462
 msgid "period"
 msgstr "menstruação"
 
-#: bluebottle/time_based/models.py:444
+#: bluebottle/time_based/models.py:482
 msgid "Online Meeting URL"
 msgstr "URL da Reunião Online"
 
-#: bluebottle/time_based/models.py:493
+#: bluebottle/time_based/models.py:531
 msgid "end date and time"
 msgstr "data e hora final"
 
-#: bluebottle/time_based/models.py:496
+#: bluebottle/time_based/models.py:534
 msgid "period activity slot"
 msgstr ""
 
-#: bluebottle/time_based/models.py:497
+#: bluebottle/time_based/models.py:535
 msgid "period activity slots"
 msgstr ""
 
-#: bluebottle/time_based/models.py:532
+#: bluebottle/time_based/models.py:570
 msgid "team slot"
 msgstr ""
 
-#: bluebottle/time_based/models.py:533
+#: bluebottle/time_based/models.py:571
 msgid "team slots"
 msgstr ""
 
-#: bluebottle/time_based/models.py:547
+#: bluebottle/time_based/models.py:585
 msgid "Time slot for {}"
 msgstr ""
 
-#: bluebottle/time_based/models.py:582
+#: bluebottle/time_based/models.py:645
 msgid "Participant on a date"
 msgstr "Usuário em uma data"
 
-#: bluebottle/time_based/models.py:607
+#: bluebottle/time_based/models.py:670
 msgid "Participant during a period"
 msgstr "Usuário durante um período"
 
-#: bluebottle/time_based/models.py:608
+#: bluebottle/time_based/models.py:671
 msgid "Participants during a period"
 msgstr "Participantes durante um período"
 
-#: bluebottle/time_based/models.py:661
+#: bluebottle/time_based/models.py:734
 msgid "Slot participant"
 msgstr "Slot participant"
 
-#: bluebottle/time_based/models.py:681
+#: bluebottle/time_based/models.py:755
 msgid "activity on a date"
 msgstr "atividade em uma data"
 
-#: bluebottle/time_based/models.py:682
+#: bluebottle/time_based/models.py:756
 msgid "activity over a period"
 msgstr "atividade ao longo de um período"
 
-#: bluebottle/time_based/models.py:683
+#: bluebottle/time_based/models.py:757
 msgid "preparation"
 msgstr "preparação"
 
-#: bluebottle/time_based/models.py:688
+#: bluebottle/time_based/models.py:762
 msgid "value"
 msgstr "Valor"
 
-#: bluebottle/time_based/models.py:706
+#: bluebottle/time_based/models.py:780
 msgid "Time contribution"
 msgstr "Contribuição por tempo"
 
-#: bluebottle/time_based/models.py:711
+#: bluebottle/time_based/models.py:785
 #, python-brace-format
 msgid "Contribution {name} {date}"
 msgstr "Contribuição {name} {date}"
 
-#: bluebottle/time_based/models.py:715
+#: bluebottle/time_based/models.py:789
 #, python-brace-format
 msgid "Contribution {date}"
 msgstr ""
 
-#: bluebottle/time_based/models.py:721
+#: bluebottle/time_based/models.py:795
 msgid "expertise based"
 msgstr "conhecimento baseado em"
 
-#: bluebottle/time_based/models.py:722
+#: bluebottle/time_based/models.py:796
 msgid "Is this skill expertise based, or could anyone do it?"
 msgstr "Será que esta competência especializada se baseia ou alguém poderia fazê-lo?"
 
-#: bluebottle/time_based/models.py:739
+#: bluebottle/time_based/models.py:813
 msgid "Skills"
 msgstr "Habilidades"
 
@@ -7816,15 +7850,15 @@ msgstr "Enviar lembrete cinco dias antes do slot da atividade."
 msgid "Send a reminder five days before the team activity slot."
 msgstr ""
 
-#: bluebottle/time_based/states.py:18 bluebottle/time_based/states.py:159
+#: bluebottle/time_based/states.py:18 bluebottle/time_based/states.py:195
 msgid "full"
 msgstr "Completo"
 
-#: bluebottle/time_based/states.py:20 bluebottle/time_based/states.py:161
+#: bluebottle/time_based/states.py:20 bluebottle/time_based/states.py:197
 msgid "The number of people needed is reached and people can no longer register."
 msgstr "Chegou-se ao número de pessoas necessárias e as pessoas já não podem registar-se."
 
-#: bluebottle/time_based/states.py:29 bluebottle/time_based/states.py:231
+#: bluebottle/time_based/states.py:29 bluebottle/time_based/states.py:279
 msgid "Lock"
 msgstr "Bloquear"
 
@@ -7833,7 +7867,7 @@ msgid "People can no longer join the event. Triggered when the attendee limit is
 msgstr "Pessoas não poderão mais participar do evento. Acionadas quando o limite de participantes for atingido."
 
 #: bluebottle/time_based/states.py:38 bluebottle/time_based/states.py:48
-#: bluebottle/time_based/states.py:241
+#: bluebottle/time_based/states.py:289
 msgid "Unlock"
 msgstr "Desbloquear"
 
@@ -7849,198 +7883,226 @@ msgstr "O número de participantes caiu abaixo do número necessário. As pessoa
 msgid "The activity ends and people can no longer register. Participants will keep their spent hours, but will no longer be allocated new hours."
 msgstr "A atividade termina e as pessoas não podem mais se cadastrar. Os participantes manterão suas horas gastas, mas deixarão de receber novas horas."
 
-#: bluebottle/time_based/states.py:106 bluebottle/time_based/states.py:136
-#: bluebottle/time_based/states.py:269
+#: bluebottle/time_based/states.py:91
+msgid "Cancel if the activity will not be executed. It will no longer be visible on the platform. Contributions will not be counted in reporting."
+msgstr ""
+
+#: bluebottle/time_based/states.py:96
+msgid "The activity will not be executed. Any contributions will be cancelled too."
+msgstr ""
+
+#: bluebottle/time_based/states.py:108 bluebottle/time_based/states.py:172
+#: bluebottle/time_based/states.py:317
 msgid "Reschedule"
 msgstr "Reagendar"
 
-#: bluebottle/time_based/states.py:110
+#: bluebottle/time_based/states.py:112
 msgid "The activity is reopened because the start date changed."
 msgstr "A atividade é reaberta porque a data de início mudou."
 
-#: bluebottle/time_based/states.py:125
+#: bluebottle/time_based/states.py:141
+msgid "Automatically publish activity when initiative is approved"
+msgstr ""
+
+#: bluebottle/time_based/states.py:143
+msgid "Auto-publish"
+msgstr ""
+
+#: bluebottle/time_based/states.py:161
 msgid "Close this activity and allocate the hours to the participants."
 msgstr ""
 
-#: bluebottle/time_based/states.py:138
+#: bluebottle/time_based/states.py:174
 msgid "The date of the activity has been changed to a date in the future. The status of the activity will be recalculated."
 msgstr "A data da atividade foi alterada para uma data no futuro. O status da atividade será recalculado."
 
-#: bluebottle/time_based/states.py:149
+#: bluebottle/time_based/states.py:185
 msgid "The slot is incomplete."
 msgstr "O slot está incompleto."
 
-#: bluebottle/time_based/states.py:155
+#: bluebottle/time_based/states.py:191
 msgid "The slot is accepting new participants."
 msgstr "O slot está aceitando novos participantes."
 
-#: bluebottle/time_based/states.py:173
+#: bluebottle/time_based/states.py:209
 msgid "The slot has ended."
 msgstr "O slot terminou."
 
-#: bluebottle/time_based/states.py:179
+#: bluebottle/time_based/states.py:215
 msgid "The slot is cancelled."
 msgstr "O slot está cancelado."
 
-#: bluebottle/time_based/states.py:187 bluebottle/time_based/states.py:294
+#: bluebottle/time_based/states.py:233 bluebottle/time_based/states.py:342
 msgid "The slot was created."
 msgstr "O slot foi criado."
 
-#: bluebottle/time_based/states.py:194
+#: bluebottle/time_based/states.py:240
 msgid "Complete"
 msgstr "Complete"
 
-#: bluebottle/time_based/states.py:196
+#: bluebottle/time_based/states.py:242
 msgid "The slot was completed."
 msgstr "O slot foi completado."
 
-#: bluebottle/time_based/states.py:203
+#: bluebottle/time_based/states.py:249
 msgid "Mark incomplete"
 msgstr "Marcar como incompleto"
 
-#: bluebottle/time_based/states.py:205
+#: bluebottle/time_based/states.py:251
 msgid "The slot was made incomplete."
 msgstr "O slot foi feito incompleto."
 
-#: bluebottle/time_based/states.py:215
-msgid "Cancel the slot. People can no longer apply. Contributions are not counted anymore."
-msgstr "Cancele o slot. As pessoas não podem mais se aplicar. Contribuições não são mais contadas."
+#: bluebottle/time_based/states.py:262
+msgid "This time slot will not take place. People can no longer join and contributions will not be counted."
+msgstr ""
 
-#: bluebottle/time_based/states.py:224
+#: bluebottle/time_based/states.py:272
 msgid "Reopen a cancelled slot. People can apply again. Contributions are counted again"
 msgstr "Reabrir um espaço cancelado. As pessoas podem se aplicar novamente. As contribuições são contadas novamente"
 
-#: bluebottle/time_based/states.py:233
+#: bluebottle/time_based/states.py:281
 msgid "People can no longer join the slot. Triggered when the attendee limit is reached."
 msgstr "Pessoas não podem mais entrar no slot. Acionado quando o limite de participantes é atingido."
 
-#: bluebottle/time_based/states.py:243
+#: bluebottle/time_based/states.py:291
 msgid "The number of participants has fallen below the required number. People can sign up again for the slot."
 msgstr "O número de participantes caiu abaixo do número necessário. As pessoas podem se inscrever novamente para a faixa horária."
 
-#: bluebottle/time_based/states.py:271
+#: bluebottle/time_based/states.py:319
 msgid "Reopen the slot. Triggered when start of the slot is changed."
 msgstr "Reabrir o slot. Acionada quando o início do slot é alterado."
 
-#: bluebottle/time_based/states.py:303
+#: bluebottle/time_based/states.py:351
 msgid "This person has applied and must be reviewed."
 msgstr "Esta pessoa inscreveu-se e deve ser revista."
 
-#: bluebottle/time_based/states.py:306
+#: bluebottle/time_based/states.py:354
 msgid "participating"
 msgstr "participando"
 
-#: bluebottle/time_based/states.py:308
+#: bluebottle/time_based/states.py:356
 msgid "This person takes part in the activity."
 msgstr "Essa pessoa participa da atividade."
 
-#: bluebottle/time_based/states.py:311 bluebottle/time_based/states.py:479
-msgid "removed"
-msgstr "removido"
-
-#: bluebottle/time_based/states.py:313
+#: bluebottle/time_based/states.py:361
 msgid "This person's contribution is removed and the spent hours are reset to zero."
 msgstr "A contribuição desta pessoa é removida e as horas passadas são redefinidas para zero."
 
-#: bluebottle/time_based/states.py:318
+#: bluebottle/time_based/states.py:366 bluebottle/time_based/states.py:533
 msgid "This person has withdrawn. Spent hours are retained."
 msgstr "Esta pessoa se retirou. Horas gastas são mantidas."
 
-#: bluebottle/time_based/states.py:323
+#: bluebottle/time_based/states.py:371
 msgid "The activity has been cancelled. This person's contribution is removed and the spent hours are reset to zero."
 msgstr "A atividade foi cancelada. A contribuição desta pessoa foi removida e as horas passadas são redefinidas para zero."
 
-#: bluebottle/time_based/states.py:358
+#: bluebottle/time_based/states.py:402
 msgid "User applied to join the task."
 msgstr "O usuário se candidatou para participar da tarefa."
 
-#: bluebottle/time_based/states.py:368
+#: bluebottle/time_based/states.py:413
 msgid "Accept this person as a participant to the Activity."
 msgstr "Aceitar esta pessoa como participante na Atividade."
 
-#: bluebottle/time_based/states.py:378
+#: bluebottle/time_based/states.py:423
 msgid "Add"
 msgstr "Adicionar"
 
-#: bluebottle/time_based/states.py:379
+#: bluebottle/time_based/states.py:424
 msgid "Add this person as a participant to the activity."
 msgstr "Adicionar esta pessoa como participante na atividade."
 
-#: bluebottle/time_based/states.py:389
+#: bluebottle/time_based/states.py:435
 msgid "Reject this person as a participant in the activity."
 msgstr "Rejeitar esta pessoa como participante na atividade."
 
-#: bluebottle/time_based/states.py:400
+#: bluebottle/time_based/states.py:446
 msgid "Remove this person as a participant from the activity."
 msgstr "Remover esta pessoa da atividade como participante."
 
-#: bluebottle/time_based/states.py:412
+#: bluebottle/time_based/states.py:458
 msgid "Stop your participation in the activity. Any hours spent will be kept, but no new hours will be allocated."
 msgstr "Impeça sua participação na atividade. Quaisquer horas gastas serão mantidas, mas não serão alocadas novas horas."
 
-#: bluebottle/time_based/states.py:423
-msgid "User re-applies for the task after previously withdrawing."
-msgstr "O usuário se aplica novamente para a tarefa após o saque anterior."
+#: bluebottle/time_based/states.py:469
+msgid "User re-applies for the activity after previously withdrawing."
+msgstr ""
 
-#: bluebottle/time_based/states.py:441
+#: bluebottle/time_based/states.py:470
+msgid "Do you want to sign up for this activity again?"
+msgstr ""
+
+#: bluebottle/time_based/states.py:488
 msgid "stopped"
 msgstr "interrompido"
 
-#: bluebottle/time_based/states.py:443
+#: bluebottle/time_based/states.py:490
 msgid "The participant (temporarily) stopped. Contributions will no longer be created."
 msgstr "O usuário (temporariamente) parou. Contribuições não serão mais criadas."
 
-#: bluebottle/time_based/states.py:449
+#: bluebottle/time_based/states.py:496
 msgid "Stop"
 msgstr "Interromper"
 
-#: bluebottle/time_based/states.py:451
+#: bluebottle/time_based/states.py:498
 msgid "Participant stopped contributing."
 msgstr "Usuário parou de contribuir."
 
-#: bluebottle/time_based/states.py:461
+#: bluebottle/time_based/states.py:508
 msgid "Participant started contributing again."
 msgstr "O usuário começou a contribuir novamente."
 
-#: bluebottle/time_based/states.py:469
+#: bluebottle/time_based/states.py:516
 msgid "registered"
 msgstr "registrado"
 
-#: bluebottle/time_based/states.py:471
-msgid "This person registered to this slot."
-msgstr "Esta pessoa se registrou neste slot."
+#: bluebottle/time_based/states.py:518
+msgid "This person registered."
+msgstr ""
 
-#: bluebottle/time_based/states.py:481
-msgid "This person no longer takes part in this slot."
-msgstr "Esta pessoa não participa mais deste slot."
+#: bluebottle/time_based/states.py:526
+msgid "removed"
+msgstr "removido"
 
-#: bluebottle/time_based/states.py:486
-msgid "This person has withdrawn from this slot. Spent hours are retained."
-msgstr "Esta pessoa se retirou deste slot. Horas gastas são mantidas."
+#: bluebottle/time_based/states.py:528
+msgid "This person no longer takes part."
+msgstr ""
 
-#: bluebottle/time_based/states.py:491
-msgid "The slot has been cancelled. This person's contribution is removed and the spent hours are reset to zero."
-msgstr "O slot foi cancelado. A contribuição da pessoa foi removida e as horas gastas são zeradas."
+#: bluebottle/time_based/states.py:538
+msgid "The contribution was cancelled. This person's contribution is removed and the spent hours are reset to zero."
+msgstr ""
 
-#: bluebottle/time_based/states.py:525
+#: bluebottle/time_based/states.py:568
 msgid "User registered to join the slot."
 msgstr "Usuário registrado para se juntar ao slot."
 
-#: bluebottle/time_based/states.py:532
-msgid "Accept the previously person as a participant to the slot."
-msgstr "Aceitar a pessoa anteriormente como participante do slot."
+#: bluebottle/time_based/states.py:575
+msgid "Accept the previously rejected person as a participant."
+msgstr ""
 
-#: bluebottle/time_based/states.py:541
-msgid "Remove this person as a participant from the slot."
-msgstr "Remover esta pessoa como participante do slot."
+#: bluebottle/time_based/states.py:576
+msgid "Do you want to accept this person as a participant?"
+msgstr ""
 
-#: bluebottle/time_based/states.py:550
-msgid "Stop your participation in the slot."
-msgstr "Pare sua participação no slot."
+#: bluebottle/time_based/states.py:585
+msgid "Remove this person as a participant."
+msgstr ""
 
-#: bluebottle/time_based/states.py:560
-msgid "User re-applies to the slot after previously withdrawing."
-msgstr "O usuário se aplica novamente ao slot após o saque anterior."
+#: bluebottle/time_based/states.py:594
+msgid "Cancel the participation."
+msgstr ""
+
+#: bluebottle/time_based/states.py:596
+msgid "Cancel your participation. You can rejoin the time slot as long as the activity is open."
+msgstr ""
+
+#: bluebottle/time_based/states.py:608
+msgid "User re-applies after previously withdrawing."
+msgstr "Usuário se aplica novamente após retirada anterior."
+
+#: bluebottle/time_based/states.py:610
+msgid "Do you want to join this time slot again?"
+msgstr ""
 
 #: bluebottle/time_based/templates/admin/clear_deadline.html:2
 msgid "Clear the deadline"
@@ -8318,6 +8380,20 @@ msgstr "\n"
 "<p>A atividade começa %(start)s e %(end)s.</p>\n\n"
 "<p>Se você não puder participar, retire-se através da página de atividades para que outros possam tomar o seu lugar.</p>\n"
 
+#: bluebottle/time_based/templates/mails/messages/manager/slot_participant_registered.html:4
+#, python-format
+msgctxt "email"
+msgid "\n"
+"<p>%(participant_name)s has registered for a time slot for your activity \"%(title)s\"!</p>\n"
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/manager/slot_participant_withdrew.html:4
+#, python-format
+msgctxt "email"
+msgid "\n"
+"<p>%(participant_name)s has withdrawn from a time slot for your activity \"%(title)s\"!</p>\n"
+msgstr ""
+
 #: bluebottle/time_based/templates/mails/messages/new_participant.html:4
 #, python-format
 msgctxt "email"
@@ -8364,19 +8440,15 @@ msgstr "\n"
 "            Esta atividade funciona indefinidamente.\n"
 "        "
 
-#: bluebottle/time_based/templates/mails/messages/partial/slots.html:7
+#: bluebottle/time_based/templates/mails/messages/partial/slot.html:5
 msgid "Changed"
 msgstr "Alterado"
 
-#: bluebottle/time_based/templates/mails/messages/partial/slots.html:15
+#: bluebottle/time_based/templates/mails/messages/partial/slot.html:13
 msgid "Meeting link"
 msgstr "Link da reunião"
 
-#: bluebottle/time_based/templates/mails/messages/partial/slots.html:18
-msgid "Anywhere/Online"
-msgstr "Em todo lugar/Online"
-
-#: bluebottle/time_based/templates/mails/messages/partial/slots.html:33
+#: bluebottle/time_based/templates/mails/messages/partial/slots.html:7
 msgid "Go to the activity page to see the times in your own timezone and add them to your calendar."
 msgstr "Vá para a página de atividades para ver os horários em seu próprio fuso horário e adicioná-los ao seu calendário."
 
@@ -8387,17 +8459,20 @@ msgid "\n"
 "    "
 msgstr ""
 
+#: bluebottle/time_based/templates/mails/messages/participant/slot_participant_registered.html:4
+#, python-format
+msgctxt "email"
+msgid "\n"
+"<p>You are registered for a time slot for your activity \"%(title)s\"!</p>\n"
+msgstr ""
+
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
 #, python-format
 msgctxt "email"
 msgid "\n"
-"        <p>Good news, you have been accepted for the activity \"%(title)s\"!</p>\n\n"
-"        <p>%(manager)s, the activity manager, will follow-up with more info soon.</p>\n"
+"        <p>Good news, you have been accepted for the activity \"%(title)s\"!</p>\n"
 "    "
-msgstr "\n"
-"        <p>Boas notícias, você foi aceito para a atividade \"%(title)s\"!</p>\n\n"
-"        <p>%(manager)s, o gerente de atividade, irá acompanhar com mais informações em breve.</p>\n"
-"    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_added.html:4
 #, python-format
@@ -8673,6 +8748,14 @@ msgstr "Todos os intervalos de tempo devem ter todos os campos obrigatórios pre
 #: bluebottle/time_based/validators.py:47
 msgid "Should have at least one time slot."
 msgstr "Deve ter pelo menos um intervalo de tempo."
+
+#: bluebottle/time_based/views.py:467
+msgid "Participant does not belong to this activity"
+msgstr ""
+
+#: bluebottle/time_based/views.py:474
+msgid "Participant already registered for this slot"
+msgstr ""
 
 #: bluebottle/updates/admin.py:40
 msgid "has images"

@@ -1,22 +1,16 @@
 from datetime import date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
     TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
-from bluebottle.time_based.messages import (
-    ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    TeamParticipantRemovedNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
-    ParticipantAddedNotification
-)
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers, TeamTriggers
 )
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-
 from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
@@ -29,8 +23,13 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.messages import (
+    ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
+    TeamParticipantRemovedNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
+    ParticipantAddedNotification
+)
 
 
 def is_finished(effect):
@@ -254,7 +253,7 @@ class CollectContributorTriggers(ContributorTriggers):
                     ]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification,
+                    ManagerParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
                 ),
                 NotificationEffect(

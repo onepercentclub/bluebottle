@@ -8,7 +8,7 @@ from bluebottle.initiatives.messages import (
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.time_based.states import DateStateMachine, TimeBasedStateMachine
 
 
 def reviewer_is_set(effect):
@@ -32,6 +32,10 @@ class InitiativeTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     'activities',
                     ActivityStateMachine.auto_approve,
+                ),
+                RelatedTransitionEffect(
+                    'activities',
+                    DateStateMachine.auto_publish,
                 ),
                 NotificationEffect(InitiativeApprovedOwnerMessage)
             ]

@@ -45,7 +45,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         slot = activity.slots.get()
         slot.start = timezone.now() - datetime.timedelta(hours=1)
@@ -148,7 +148,7 @@ class OldStatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         slot = activity.slots.get()
         slot.start = timezone.now() - datetime.timedelta(hours=1)

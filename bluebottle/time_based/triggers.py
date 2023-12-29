@@ -13,7 +13,7 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers, has_organizer
 )
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
@@ -30,22 +30,23 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-    ResetSlotSelectionEffect, UnsetCapacityEffect,
-    RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+    UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
-    ParticipantRemovedNotification, TeamParticipantRemovedNotification, NewParticipantNotification,
-    ParticipantFinishedNotification,
+    ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
     ActivitySucceededManuallyNotification, ParticipantChangedNotification,
-    ParticipantWithdrewNotification, ParticipantAddedOwnerNotification,
+    ParticipantWithdrewNotification, ManagerParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
-    ParticipantAppliedNotification, TeamParticipantAppliedNotification, SlotCancelledNotification,
-    TeamSlotChangedNotification, TeamMemberJoinedNotification
+    ParticipantRemovedOwnerNotification, ParticipantAppliedNotification, TeamParticipantAppliedNotification,
+    SlotCancelledNotification,
+    TeamSlotChangedNotification, TeamMemberJoinedNotification,
+    ManagerSlotParticipantRegisteredNotification,
+    NewParticipantNotification, ManagerSlotParticipantWithdrewNotification,
+    ParticipantSlotParticipantRegisteredNotification, ParticipantJoinedNotification
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
@@ -200,6 +201,27 @@ def start_is_not_passed(effect):
     )
 
 
+def activity_automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not effect.instance.review
+
+
+def automatically_accept(effect):
+    """
+    automatically accept participants
+    """
+    return not effect.instance.activity.review
+
+
+def needs_review(effect):
+    """
+    needs review
+    """
+    return effect.instance.activity.review
+
+
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
@@ -261,6 +283,16 @@ class TimeBasedTriggers(ActivityTriggers):
                 NotificationEffect(ActivityExpiredNotification),
             ]
         ),
+        ModelChangedTrigger(
+            'review',
+            effects=[
+                RelatedTransitionEffect(
+                    'pending_participants',
+                    ParticipantStateMachine.accept,
+                    conditions=[activity_automatically_accept]
+                ),
+            ]
+        ),
     ]
 
 
@@ -308,6 +340,42 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateStateMachine.auto_publish,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateStateMachine.publish,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+
+                TransitionEffect(
+                    DateStateMachine.succeed,
+                    conditions=[
+                        is_finished, has_participants
+                    ]
+                ),
+                TransitionEffect(
+                    DateStateMachine.expire,
+                    conditions=[
+                        is_finished, has_no_participants
+                    ]
+                ),
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
     ]
@@ -434,12 +502,20 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.reopen,
             effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
             ActivitySlotStateMachine.reschedule,
             effects=[
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
@@ -605,7 +681,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
         ),
         ModelDeletedTrigger(
             effects=[
-                ResetSlotSelectionEffect,
                 RelatedTransitionEffect(
                     'activity',
                     TimeBasedStateMachine.succeed,
@@ -954,20 +1029,6 @@ class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
 
 
-def automatically_accept(effect):
-    """
-    automatically accept participants
-    """
-    return not effect.instance.activity.review
-
-
-def needs_review(effect):
-    """
-    needs review
-    """
-    return effect.instance.activity.review
-
-
 def not_team_captain(effect):
     """
     not a team captain
@@ -1244,7 +1305,7 @@ class ParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification
+                    ManagerParticipantAddedOwnerNotification
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -1292,25 +1353,11 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
-                NotificationEffect(
-                    NewParticipantNotification,
-                    conditions=[
-                        is_not_team_activity,
-                        automatically_accept
-                    ]
-                ),
                 RelatedTransitionEffect(
                     'team',
                     TeamStateMachine.accept,
                     conditions=[
                         has_team
-                    ]
-                ),
-                NotificationEffect(
-                    ParticipantJoinedNotification,
-                    conditions=[
-                        automatically_accept,
-                        is_not_team_activity
                     ]
                 ),
                 NotificationEffect(
@@ -1488,12 +1535,6 @@ class DateParticipantTriggers(ParticipantTriggers):
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.reapply,
-            effects=[
-                LockFilledSlotsEffect,
-            ]
-        ),
-        TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[
                 LockFilledSlotsEffect,
@@ -1501,20 +1542,6 @@ class DateParticipantTriggers(ParticipantTriggers):
         ),
         TransitionTrigger(
             ParticipantStateMachine.reject,
-            effects=[
-                UnlockUnfilledSlotsEffect,
-            ]
-        ),
-
-        TransitionTrigger(
-            ParticipantStateMachine.remove,
-            effects=[
-                UnlockUnfilledSlotsEffect,
-            ]
-        ),
-
-        TransitionTrigger(
-            ParticipantStateMachine.withdraw,
             effects=[
                 UnlockUnfilledSlotsEffect,
             ]
@@ -1537,6 +1564,16 @@ def participant_will_not_be_attending(effect):
     return len(effect.instance.participant.slot_participants.filter(status='registered')) <= 1
 
 
+def applicant_is_accepted(effect):
+    return effect.instance.participant.status == 'accepted'
+
+
+def is_participant(effect):
+    if 'user' not in effect.options:
+        return False
+    return effect.instance.participant.user == effect.options['user']
+
+
 @register(SlotParticipant)
 class SlotParticipantTriggers(TriggerManager):
 
@@ -1555,7 +1592,20 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
-                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantSlotParticipantRegisteredNotification,
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
+                )
             ]
         ),
 
@@ -1570,11 +1620,6 @@ class SlotParticipantTriggers(TriggerManager):
                     'slot',
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
-                ),
-                RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.remove,
-                    conditions=[participant_will_not_be_attending]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
             ]
@@ -1593,10 +1638,6 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
-                RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.accept,
-                ),
                 NotificationEffect(ParticipantChangedNotification),
             ]
         ),
@@ -1613,12 +1654,9 @@ class SlotParticipantTriggers(TriggerManager):
                     ActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
                 ),
-                RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.withdraw,
-                    conditions=[participant_will_not_be_attending]
+                NotificationEffect(
+                    ManagerSlotParticipantWithdrewNotification,
                 ),
-                NotificationEffect(ParticipantChangedNotification),
             ]
         ),
 
@@ -1635,15 +1673,16 @@ class SlotParticipantTriggers(TriggerManager):
                     conditions=[participant_slot_will_be_full]
                 ),
                 RelatedTransitionEffect(
-                    'participant',
-                    ParticipantStateMachine.reapply,
-                ),
-                RelatedTransitionEffect(
                     'slot',
                     ActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                )
+
             ]
         ),
     ]
@@ -1657,6 +1696,25 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreatePeriodTimeContributionEffect,
                 CreateOverallTimeContributionEffect
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    NewParticipantNotification,
+                    conditions=[
+                        is_not_team_activity,
+                        automatically_accept
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantJoinedNotification,
+                    conditions=[
+                        automatically_accept,
+                        is_not_team_activity
+                    ]
+                ),
             ]
         ),
 

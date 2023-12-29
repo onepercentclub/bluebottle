@@ -9,7 +9,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
-    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
+    ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
     TeamSlotChangedNotification, TeamParticipantJoinedNotification
@@ -149,7 +149,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_participant_added_owner_notification(self):
-        self.message_class = ParticipantAddedOwnerNotification
+        self.message_class = ManagerParticipantAddedOwnerNotification
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A participant has been added to your activity "Save the world!" 🎉')

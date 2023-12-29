@@ -879,13 +879,11 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
                 "givenName": "Nick",
                 "familyName": "Baring"
             },
-            "emails": [
-                {
+            "emails": [{
                 "primary": True,
                 "type": "work",
                 "value": "nick.baring@pggm.nl"
-                }
-            ],
+            }],
             "active": True,
             "externalId": "109849",
             "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {

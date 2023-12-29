@@ -45,7 +45,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
             'description': 'Show some stash!'
         }
         activity = api_update_deed(self, activity, activity_data)
-        api_deed_transition(self, activity, 'submit')
+        api_deed_transition(self, activity, 'publish')
         assert_status(self, activity, 'open')
 
     def test_view_intiative_with_draft_deed(self):

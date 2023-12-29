@@ -16,6 +16,25 @@ class DeedStateMachine(ActivityStateMachine):
     def can_succeed(self):
         return len(self.instance.participants) > 0
 
+    submit = None
+
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Publish your activity and let people participate.'),
+        automatic=False,
+        name=_('Publish'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_approved
+        ],
+    )
+
     succeed = Transition(
         [
             ActivityStateMachine.open,

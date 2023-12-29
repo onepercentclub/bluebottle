@@ -22,6 +22,8 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
 )
 from bluebottle.activities.models import Team
+from bluebottle.files.fields import PrivateDocumentModelChoiceField
+from bluebottle.files.widgets import DocumentWidget
 from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -211,7 +213,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
         }
 
 
-class DateActivityASlotInline(TabularInlinePaginated):
+class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
     per_page = 20
     can_delete = True
@@ -304,7 +306,7 @@ class TeamSlotInline(admin.StackedInline):
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (TeamInline, DateActivityASlotInline, DateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (TeamInline, DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
 
     list_filter = TimeBasedAdmin.list_filter + [
@@ -331,8 +333,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
-        'slot_selection',
-
         'preparation',
         'registration_deadline',
 
@@ -926,6 +926,10 @@ class ParticipantSlotInline(admin.TabularInline):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
+
+    formfield_overrides = {
+        PrivateDocumentModelChoiceField: {'widget': DocumentWidget}
+    }
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)

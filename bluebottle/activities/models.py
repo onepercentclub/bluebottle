@@ -120,6 +120,15 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         blank=True,
         null=True,
         default='',
+        help_text=_("The title in the popup after a user joined the activity")
+    )
+
+    next_step_button_label = models.CharField(
+        _('Next step button label'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
         help_text=_("The title on the next link button")
     )
 

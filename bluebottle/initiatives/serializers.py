@@ -511,6 +511,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'activity_search_filters',
             'search_filters_activities',
             'search_filters_initiatives',
+            'include_full_activities',
             'require_organization',
             'team_activities',
             'contact_method',
@@ -521,7 +522,6 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_multiple_dates',
             'enable_participant_exports',
             'enable_open_initiatives',
-            'show_all_activities',
             'has_locations',
             'enable_matching_emails'
         )

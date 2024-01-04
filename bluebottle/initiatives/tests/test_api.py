@@ -1305,17 +1305,19 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.url = reverse('settings')
 
     def test_get_search_filter_settings(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertFalse(data['platform']['initiatives']['show_all_activities'])
-
-        self.settings.show_all_activities = True
+        self.settings.include_full_activities = False
         self.settings.save()
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertTrue(data['platform']['initiatives']['show_all_activities'])
+        self.assertFalse(data['platform']['initiatives']['include_full_activities'])
+
+        self.settings.include_full_activities = True
+        self.settings.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['platform']['initiatives']['include_full_activities'])
 
     def test_get_office_restriction_settings(self):
         response = self.client.get(self.url)

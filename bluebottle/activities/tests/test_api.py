@@ -979,14 +979,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             PeriodActivityFactory.create_batch(2, status='open') +
             PeriodActivityFactory.create_batch(2, status='full')
         )
-        other = PeriodActivityFactory.create_batch(2, status='succeeded')
-
+        PeriodActivityFactory.create_batch(2, status='succeeded')
         PeriodActivityFactory.create_batch(2, status='draft')
         PeriodActivityFactory.create_batch(2, status='needs_work')
 
         self.search({'upcoming': 1})
+        self.assertFound(matching)
 
-        self.assertFacets('upcoming', {0: ('No', len(other)), 1: ('Yes', len(matching))})
+    def test_filter_upcoming_hide_full(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.include_full_activities = False
+        initiative_settings.save()
+        matching = PeriodActivityFactory.create_batch(2, status='open')
+        PeriodActivityFactory.create_batch(2, status='full')
+        PeriodActivityFactory.create_batch(2, status='succeeded')
+        PeriodActivityFactory.create_batch(2, status='draft')
+        PeriodActivityFactory.create_batch(2, status='needs_work')
+
+        self.search({'upcoming': 1})
         self.assertFound(matching)
 
     def test_no_filter(self):

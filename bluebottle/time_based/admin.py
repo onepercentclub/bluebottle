@@ -175,22 +175,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         },
     }
 
-    registration_fields = [
-        'registration_deadline',
-        'capacity',
-        'review',
-        'review_title',
-        'review_description',
-        'review_document_enabled'
-    ]
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
-            _('Registration'), {'fields': self.registration_fields}
-        ))
-        return fieldsets
-
     search_fields = ['title', 'description']
     list_filter = [StateMachineFilter]
 

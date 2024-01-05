@@ -16,6 +16,26 @@ class DeedStateMachine(ActivityStateMachine):
     def can_succeed(self):
         return len(self.instance.participants) > 0
 
+    submit = None
+
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        passed_label=_('published'),
+        description=_('Publish your activity and let people participate.'),
+        automatic=False,
+        name=_('Publish'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_approved
+        ],
+    )
+
     succeed = Transition(
         [
             ActivityStateMachine.open,
@@ -45,6 +65,7 @@ class DeedStateMachine(ActivityStateMachine):
         ActivityStateMachine.succeeded,
         automatic=False,
         name=_("Succeed"),
+        passed_label=_('succeeded'),
         conditions=[has_no_end_date, can_succeed],
         permission=ActivityStateMachine.is_owner,
         description=_("The activity ends and people can no longer register. ")
@@ -67,6 +88,7 @@ class DeedStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
+        passed_label=_('reopened'),
         permission=ActivityStateMachine.is_owner,
         automatic=False,
         description=_(
@@ -82,6 +104,7 @@ class DeedStateMachine(ActivityStateMachine):
         ],
         ActivityStateMachine.cancelled,
         name=_('Cancel'),
+        passed_label=_('cancelled'),
         permission=ActivityStateMachine.is_owner,
         description=_(
             'Cancel if the activity will not be executed. '

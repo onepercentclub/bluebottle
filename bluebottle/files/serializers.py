@@ -103,7 +103,7 @@ class DocumentSerializer(ModelSerializer):
                 return reverse(self.content_view_name, args=(parent.pk, 'main'))
 
     def get_filename(self, instance):
-        return os.path.basename(instance.file.name)
+        return instance.name or os.path.basename(instance.file.name)
 
     class Meta(object):
         model = Document
@@ -117,9 +117,10 @@ class DocumentSerializer(ModelSerializer):
 class PrivateDocumentSerializer(DocumentSerializer):
 
     def get_link(self, obj):
-        parent = getattr(obj, self.relationship).first()
-        if parent:
-            return reverse_signed(self.content_view_name, args=(parent.pk,))
+        if self.relationship:
+            parent = getattr(obj, self.relationship).first()
+            if parent:
+                return reverse_signed(self.content_view_name, args=(parent.pk,))
 
     class Meta(object):
         model = PrivateDocument

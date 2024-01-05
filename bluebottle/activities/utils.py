@@ -252,7 +252,11 @@ class BaseActivitySerializer(ModelSerializer):
             'office_restriction',
             'segments',
             'team_activity',
-            'updates'
+            'updates',
+            'next_step_link',
+            'next_step_title',
+            'next_step_description',
+            'next_step_button_label',
         )
 
         meta_fields = (

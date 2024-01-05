@@ -1,11 +1,9 @@
 from datetime import timedelta, date
 
 import factory.fuzzy
-
-from bluebottle.fsm.factory import FSMModelFactory
-from bluebottle.utils.models import Language
 from django.utils.timezone import now
 
+from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
@@ -13,6 +11,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot
 )
+from bluebottle.utils.models import Language
 
 
 class SkillFactory(factory.DjangoModelFactory):
@@ -112,7 +111,7 @@ class ParticipationFactory(factory.DjangoModelFactory):
     end = now() + timedelta(weeks=3)
 
 
-class SlotParticipantFactory(factory.DjangoModelFactory):
+class SlotParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = SlotParticipant
 

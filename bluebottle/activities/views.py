@@ -3,7 +3,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.postgres.aggregates import BoolOr
 from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
 from django.utils import timezone
-from rest_framework import response
+from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
@@ -351,6 +351,9 @@ class TeamMembersExportView(ExportView):
 
 
 class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
+    search_fields = ['user__first_name', 'user__last_name']
+    filter_backends = [filters.SearchFilter]
+
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )

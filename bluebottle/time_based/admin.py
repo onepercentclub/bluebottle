@@ -351,7 +351,12 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     detail_fields = ActivityChildAdmin.detail_fields + (
         'preparation',
+        'registration_deadline',
+
         'expertise',
+        'capacity',
+        'review',
+
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields

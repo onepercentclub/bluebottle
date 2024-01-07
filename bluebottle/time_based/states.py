@@ -180,6 +180,41 @@ class PeriodStateMachine(TimeBasedStateMachine):
         ),
     )
 
+    submit = None
+
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Publish your activity and let people participate.'),
+        automatic=False,
+        name=_('Publish'),
+        passed_label=_('published'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_approved
+        ],
+    )
+
+    auto_publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=False,
+        name=_('Auto-publish'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+        ],
+    )
+
 
 class ActivitySlotStateMachine(ModelStateMachine):
 

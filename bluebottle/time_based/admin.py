@@ -364,14 +364,6 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = super().get_detail_fields(request, obj) + (
-            'start',
-            'deadline',
-            'registration_deadline',
-
-            'duration',
-            'duration_period',
-            'preparation',
-
             'is_online',
             'location',
             'location_hint',
@@ -385,6 +377,27 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         if initiative_settings.team_activities:
             fields += ('team_activity',)
         return fields
+
+    date_fields = [
+        'slot_type',
+        'duration_period',
+        'max_iterations',
+        'duration',
+
+        'start',
+        'deadline',
+        'registration_deadline',
+        'preparation',
+
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (_('Date & Time'), {
+            'fields': self.date_fields,
+            'description': _('The type of time slot determines how the activity is scheduled.')
+        }))
+        return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),

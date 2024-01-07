@@ -456,6 +456,30 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
+    SLOT_TYPE_CHOICES = (
+        (None, 'Not set yet'),
+        (
+            'free',
+            'Anytime. Participants will execute the task on their own time'
+        ),
+        (
+            'tailored',
+            'Tailored. After signing up, participants will be assigned a date and time by the activity manager.'
+        ),
+        (
+            'recurring',
+            'Recurring. Participants are expected to contribute every week or month.'
+        ),
+    )
+
+    slot_type = models.CharField(
+        _('Time slot type'),
+        help_text=_('How and when will participants contribute to this activity?'),
+        max_length=100,
+        choices=SLOT_TYPE_CHOICES,
+        null=True, default=None
+    )
+
     ONLINE_CHOICES = (
         (None, 'Not set yet'),
         (True, 'Yes, participants can join from anywhere or online'),
@@ -463,6 +487,7 @@ class PeriodActivity(TimeBasedActivity):
     )
 
     is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
         null=True, blank=True, on_delete=models.SET_NULL
@@ -471,28 +496,38 @@ class PeriodActivity(TimeBasedActivity):
 
     start = models.DateField(
         _('Start date'),
+        help_text=_('The first moment participants can start.'),
         null=True,
         blank=True
     )
 
     deadline = models.DateField(
         _('End date'),
+        help_text=_('Participants can contribute until this date.'),
         null=True,
         blank=True
     )
 
     duration = models.DurationField(
-        _('Time per period'),
+        _('Activity duration'),
+        help_text=_('How much time will a participant contribute?'),
         null=True,
         blank=True
     )
 
     duration_period = models.CharField(
-        _('period'),
+        _('Recurring period'),
         max_length=20,
         blank=True,
         null=True,
         choices=DurationPeriodChoices.choices,
+    )
+
+    max_iterations = models.PositiveIntegerField(
+        _('Max iterations'),
+        help_text=_('How many weeks/months will a participant contribute to this activity?'),
+        null=True,
+        blank=True
     )
 
     @property

@@ -618,6 +618,7 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
+            'slot_type',
             'start',
             'deadline',
             'duration',

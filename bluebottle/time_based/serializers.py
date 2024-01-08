@@ -577,7 +577,13 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         source='get_my_contributor'
     )
 
-    contributors = ParticipantsField()
+    contributors = SerializerMethodHyperlinkedRelatedField(
+        model=PeriodParticipant,
+        read_only=True,
+        many=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id'
+    )
 
     unreviewed_contributors = UnreviewedContributorsField(
         read_only=True,

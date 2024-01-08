@@ -831,7 +831,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
 
     @property
     def action_link(self):
-        return self.obj.slot.activity.get_absolute_url()
+        return self.obj.slot.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
 

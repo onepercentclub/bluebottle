@@ -299,9 +299,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
-    show_all_activities = models.BooleanField(
-        default=False,
-        help_text=_("In initial search show all activities, not only upcoming.")
+    include_full_activities = models.BooleanField(
+        default=True,
+        help_text=_("Include full activities in upcoming activities list")
     )
 
     enable_impact = models.BooleanField(

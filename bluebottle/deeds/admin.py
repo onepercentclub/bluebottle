@@ -79,6 +79,7 @@ class DeedAdmin(ActivityChildAdmin):
         'target',
         'participant_count',
     ]
+    save_as = True
 
     def participant_count(self, obj):
         return obj.participants.count() + obj.deleted_successful_contributors or 0

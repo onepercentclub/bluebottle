@@ -73,6 +73,30 @@ class OfficeRestrictionFacet(Facet):
         )
 
 
+class UpcomingFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def add_filter(self, filter_values):
+        if filter_values == ['1']:
+            settings = InitiativePlatformSettings.objects.get()
+            statuses = ['open', 'running']
+            if settings.include_full_activities:
+                statuses.append('full')
+            return Terms(
+                status=statuses
+            )
+        if filter_values == ['0']:
+            return Terms(
+                status=['succeeded', 'partially_funded']
+            )
+
+
 class BooleanFacet(Facet):
     agg_type = 'terms'
 
@@ -226,7 +250,7 @@ class ActivitySearch(Search):
 
     facets = {
         'initiative.id': InitiativeFacet(),
-        'upcoming': BooleanFacet(field='is_upcoming'),
+        'upcoming': UpcomingFacet(),
         'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
         'matching': MatchingFacet(field='matching'),
         'highlight': BooleanFacet(field='highlight'),

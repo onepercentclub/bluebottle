@@ -12,7 +12,7 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
-    TeamSlotChangedNotification, TeamParticipantJoinedNotification
+    TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
@@ -95,6 +95,16 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             activity=self.activity,
             user=self.supporter
         )
+
+    def test_participant_registered_notification(self):
+        self.obj = self.obj.slot_participants.first()
+        self.message_class = ParticipantSlotParticipantRegisteredNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You\'ve registered for a time slot for the activity "Save the world!"')
+        self.assertBodyContains('You are registered for a time slot for the activity')
+        self.assertActionLink(self.obj.slot.get_absolute_url())
+        self.assertActionTitle('View activity')
 
     def test_new_participant_notification(self):
         self.message_class = NewParticipantNotification

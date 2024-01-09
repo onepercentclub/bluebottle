@@ -404,6 +404,17 @@ class DateActivitySlot(ActivitySlot):
     def __str__(self):
         return "{} {}".format(_("Slot"), self.sequence)
 
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/date/{}/{}?slotId={}".format(
+            domain, language,
+            self.activity.pk,
+            self.activity.slug,
+            self.pk
+
+        )
+
     @property
     def event_data(self):
         if self.end < now() or self.status not in ['open', 'full']:

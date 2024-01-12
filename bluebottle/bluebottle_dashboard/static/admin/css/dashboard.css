@@ -312,3 +312,7 @@ fieldset {
         float: none
     }
 }
+
+.inline-description {
+    margin-top: 24px
+}

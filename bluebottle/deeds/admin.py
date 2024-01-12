@@ -12,7 +12,7 @@ from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.updates.admin import UpdateInline
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, admin_info_box
 
 
 class DeedAdminForm(ActivityForm):
@@ -71,7 +71,7 @@ class DeedAdmin(ActivityChildAdmin):
     inlines = (TeamInline, DeedParticipantInline, UpdateInline, FollowAdminInline)
     list_filter = ['status']
     search_fields = ['title', 'description']
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity', 'next_step_info']
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
@@ -90,6 +90,20 @@ class DeedAdmin(ActivityChildAdmin):
         'end',
         'enable_impact',
         'target',
+    )
+
+    def next_step_info(self, obj):
+        return admin_info_box(
+            _('Redirect participants when joining this activity')
+        )
+
+    description_fields = ActivityChildAdmin.description_fields + (
+        'next_step_info',
+        'next_step_title',
+        'next_step_description',
+        'next_step_button_label',
+        'next_step_link',
+
     )
 
     export_as_csv_fields = (

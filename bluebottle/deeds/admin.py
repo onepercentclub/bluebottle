@@ -94,7 +94,8 @@ class DeedAdmin(ActivityChildAdmin):
 
     def next_step_info(self, obj):
         return admin_info_box(
-            _('Redirect participants when joining this activity')
+            _('Redirect participants to an external website so '
+              'they can complete an action such as registering a vote.')
         )
 
     description_fields = ActivityChildAdmin.description_fields + (

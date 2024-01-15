@@ -152,7 +152,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)
-    about_me = models.TextField(_('about me'), blank=True, max_length=265)
+    about_me = models.TextField(_('about me'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(
         _('picture'), blank=True, upload_to='profiles',

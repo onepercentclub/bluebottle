@@ -212,7 +212,29 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'Go to the activity page to see the times in your own timezone and add them to your calendar.'
         )
+        for slot in self.activity.slots.all():
+            self.assertBodyContains(
+                slot.title
+            )
 
+    def test_participant_joined_single_slot_notification(self):
+        self.message_class = ParticipantJoinedNotification
+        for slot in self.slots[:2]:
+            slot.delete()
+
+        self.slots = [self.slots[0]]
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You have joined the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')
+        self.assertBodyContains(
+            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
+        )
+        for slot in self.activity.slots.all():
+            self.assertBodyNotContains(
+                slot.title
+            )
 
 class PeriodParticipantNotificationTestCase(NotificationTestCase):
 

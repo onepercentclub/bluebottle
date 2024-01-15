@@ -1,6 +1,6 @@
 {% load i18n %}
 {% for slot in slots %}
-    {% include 'mails/messages/partial/slot.html' %}
+    {% include 'mails/messages/partial/slot.html' with slot_count=slots|length %}
 {% endfor %}
 
 <p>

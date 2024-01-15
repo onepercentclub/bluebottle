@@ -1,6 +1,8 @@
 {% load i18n %}
 <p class="{% if slot.changed %}italic{% endif %}">
-    <b>{{ slot.title }}</b>
+    {% if slot_count > 1 %}
+      <b>{{ slot.title }}</b>
+    {% endif %}
     {% if slot.changed %}
         {% trans "Changed" %}
     {% endif %}

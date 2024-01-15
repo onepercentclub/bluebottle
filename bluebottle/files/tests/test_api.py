@@ -68,7 +68,27 @@ class FileListAPITestCase(TestCase):
 
         self.assertEqual(data['data']['type'], 'images')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
-        self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
+        self.assertTrue(file_field.file.name.startswith("files/filename"))
+
+    def test_create_image_long_file_name(self):
+        with open(self.image_path, 'rb') as test_file:
+            filename = "some-really-long-file-name-with-over-50-characters-so-that-it-does-not-fit.png"
+            response = self.client.post(
+                self.image_url,
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION=f'attachment; filename="{filename}"',
+                user=self.owner
+            )
+
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+
+        file_field = Image.objects.get(pk=data['data']['id'])
+
+        self.assertEqual(data['data']['type'], 'images')
+        self.assertEqual(data['data']['relationships']['owner']['data']['id'], str(self.owner.pk))
+        self.assertTrue(file_field.file.name.startswith(f'files/{filename[:50]}'))
 
     def test_create_image_anonymous(self):
         with open(self.image_path, 'rb') as test_file:

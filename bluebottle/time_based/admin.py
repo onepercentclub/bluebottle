@@ -336,10 +336,12 @@ class DateActivityAdmin(TimeBasedAdmin):
     detail_fields = ActivityChildAdmin.detail_fields + (
         'preparation',
         'registration_deadline',
-
         'expertise',
         'capacity',
         'review',
+        'review_title',
+        'review_description',
+        'review_link',
 
     )
 

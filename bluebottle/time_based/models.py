@@ -75,11 +75,11 @@ class TimeBasedActivity(Activity):
         help_text=_('Description of the registration step'),
         null=True, blank=True
     )
-
-    review_document_enabled = models.BooleanField(
-        _('Registration document enabled'),
-        help_text=_('Can participants upload a document in the registration step'),
-        null=True, default=False
+    review_link = models.URLField(
+        _('Registration link'),
+        help_text=_('External link where the participant should complete their registration'),
+        max_length=255,
+        null=True, blank=True
     )
 
     preparation = models.DurationField(

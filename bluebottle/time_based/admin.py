@@ -339,6 +339,7 @@ class DateActivityAdmin(TimeBasedAdmin):
         'expertise',
         'capacity',
         'review',
+        'registration_flow',
         'review_title',
         'review_description',
         'review_link',

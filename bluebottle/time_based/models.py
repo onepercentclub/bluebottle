@@ -58,6 +58,20 @@ class TimeBasedActivity(Activity):
         null=True, default=False
     )
 
+    REGISTRATION_FLOW_CHOICES = (
+        ('none', _('No question')),
+        ('question', _('Ask the participant a question on the platform.')),
+        ('link', _('Direct the participant to an external website e.g. a Google form.')),
+    )
+
+    registration_flow = models.CharField(
+        _('Registration flow'),
+        help_text=_('Do you want to ask any questions to your partipants when they join your activity?'),
+        choices=REGISTRATION_FLOW_CHOICES,
+        default='none',
+        max_length=100
+    )
+
     review = models.BooleanField(
         _('Review participants'),
         help_text=_('Activity manager accepts or rejects participants or teams'),

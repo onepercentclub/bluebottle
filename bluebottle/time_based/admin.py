@@ -342,6 +342,7 @@ class DateActivityAdmin(TimeBasedAdmin):
         'registration_flow',
         'review_title',
         'review_description',
+        'review_document_enabled',
         'review_link',
 
     )

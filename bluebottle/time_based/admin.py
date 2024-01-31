@@ -357,6 +357,7 @@ class PeriodActivityAdmin(TimeBasedAdmin):
 
     inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
+    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
@@ -384,6 +385,9 @@ class PeriodActivityAdmin(TimeBasedAdmin):
             'expertise',
             'capacity',
             'review',
+
+            'registration_flow',
+
         )
         initiative_settings = InitiativePlatformSettings.load()
         if initiative_settings.team_activities:

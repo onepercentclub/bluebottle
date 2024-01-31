@@ -66,7 +66,7 @@ class TimeBasedActivity(Activity):
 
     registration_flow = models.CharField(
         _('Registration flow'),
-        help_text=_('Do you want to ask any questions to your partipants when they join your activity?'),
+        help_text=_('Do you want to ask any questions to your participants when they join your activity?'),
         choices=REGISTRATION_FLOW_CHOICES,
         default='none',
         max_length=100

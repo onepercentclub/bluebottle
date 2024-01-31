@@ -125,7 +125,7 @@ class ActivitySlotSerializer(ModelSerializer):
     )
 
     def get_timezone(self, instance):
-        return instance.location.timezone if not instance.is_online else None
+        return instance.location.timezone if not instance.is_online and instance.location else None
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user

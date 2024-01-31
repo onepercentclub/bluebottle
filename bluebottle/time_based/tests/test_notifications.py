@@ -236,6 +236,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
                 slot.title
             )
 
+
 class PeriodParticipantNotificationTestCase(NotificationTestCase):
 
     def setUp(self):

@@ -1546,6 +1546,13 @@ class DateParticipantTriggers(ParticipantTriggers):
                 UnlockUnfilledSlotsEffect,
             ]
         ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
     ]
 
 

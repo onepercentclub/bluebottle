@@ -341,9 +341,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'image',
         'video_url',
         'highlight',
-        'next_step_link',
-        'next_step_title',
-        'next_step_description',
     )
 
     status_fields = (

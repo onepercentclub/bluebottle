@@ -68,6 +68,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
+            'review_link',
             'review_title',
             'review_description',
             'review_document_enabled',

@@ -302,3 +302,13 @@ ul#id_method-method li {
     line-height: 1.2em;
     cursor: pointer;
 }
+
+fieldset {
+    .checkbox {
+        min-height: 24px;
+        display: block;
+    }
+    .field-box {
+        float: none
+    }
+}

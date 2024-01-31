@@ -106,7 +106,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     )
 
     next_step_link = models.URLField(
-        _('Next step link'),
+        _('Redirect step link'),
         max_length=100,
         blank=True,
         null=True,
@@ -115,7 +115,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     )
 
     next_step_title = models.CharField(
-        _('Next step title'),
+        _('Redirect step title'),
         max_length=100,
         blank=True,
         null=True,
@@ -124,7 +124,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     )
 
     next_step_button_label = models.CharField(
-        _('Next step button label'),
+        _('Redirect step button label'),
         max_length=100,
         blank=True,
         null=True,
@@ -133,7 +133,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     )
 
     next_step_description = models.TextField(
-        _('Next step description'),
+        _('Redirect step description'),
         blank=True,
         null=True,
         default='',

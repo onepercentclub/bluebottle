@@ -433,6 +433,9 @@ class TimeBasedDetailAPIViewTestCase():
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
+        self.activity.review_title = 'Motivation'
+        self.activity.save()
+
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
@@ -447,13 +450,13 @@ class TimeBasedDetailAPIViewTestCase():
         if isinstance(self.activity, PeriodActivity):
             self.assertEqual(
                 tuple(sheet.values)[0],
-                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status',)
+                ('Email', 'Name', 'Registration Date', 'Status', 'Motivation',)
             )
         else:
             slot = self.activity.slots.first()
             self.assertEqual(
                 tuple(sheet.values)[0],
-                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status')
+                ('Email', 'Name', 'Registration Date', 'Status', 'Motivation')
             )
             self.assertEqual(
                 sheet.title,
@@ -515,6 +518,8 @@ class TimeBasedDetailAPIViewTestCase():
                 participant=participant,
                 status='registered'
             )
+        self.activity.review_title = 'Favourite colour'
+        self.activity.save()
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -524,7 +529,7 @@ class TimeBasedDetailAPIViewTestCase():
         sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
         self.assertEqual(sheet['A1'].value, 'Email')
         self.assertEqual(sheet['B1'].value, 'Name')
-        self.assertEqual(sheet['C1'].value, 'Motivation')
+        self.assertEqual(sheet['E1'].value, 'Favourite colour')
 
         self.assertEqual(sheet['F1'].value, 'Department')
         self.assertEqual(sheet['G1'].value, 'Music')

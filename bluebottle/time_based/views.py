@@ -609,13 +609,24 @@ class TeamSlotIcalView(BaseSlotIcalView):
 class DateParticipantExportView(ExportView):
     filename = "participants"
 
-    fields = (
-        ('participant__user__email', 'Email'),
-        ('participant__user__full_name', 'Name'),
-        ('participant__motivation', 'Motivation'),
-        ('participant__created', 'Registration Date'),
-        ('calculated_status', 'Status'),
-    )
+    def get_fields(self):
+        question = self.get_object().review_title
+        fields = (
+            ('participant__user__email', 'Email'),
+            ('participant__user__full_name', 'Name'),
+            ('created', 'Registration Date'),
+            ('calculated_status', 'Status'),
+        )
+        if question:
+            fields += (
+                ('participant__motivation', question),
+            )
+
+        segments = tuple(
+            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
+        )
+
+        return fields + segments
 
     model = DateActivity
 
@@ -655,15 +666,6 @@ class DateParticipantExportView(ExportView):
                 r += 1
                 worksheet.write_row(r, 0, row)
 
-    def get_fields(self):
-        fields = super().get_fields()
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-
-        return fields + segments
-
     def get_instances(self):
         return self.get_object().contributors.instance_of(
             DateParticipant
@@ -672,18 +674,25 @@ class DateParticipantExportView(ExportView):
 
 class SlotParticipantExportView(ExportView):
     filename = "participants"
-    fields = (
-        ('participant__user__email', 'Email'),
-        ('participant__user__full_name', 'Name'),
-        ('participant__motivation', 'Motivation'),
-        ('created', 'Registration Date'),
-        ('calculated_status', 'Status'),
-    )
 
     model = DateActivitySlot
 
     def get_instances(self):
         return self.get_object().slot_participants.all()
+
+    def get_fields(self):
+        question = self.get_object().activity.review_title
+        fields = (
+            ('participant__user__email', 'Email'),
+            ('participant__user__full_name', 'Name'),
+            ('created', 'Registration Date'),
+            ('calculated_status', 'Status'),
+        )
+        if question:
+            fields += (
+                ('participant__motivation', question),
+            )
+        return fields
 
 
 class PeriodParticipantExportView(ExportView):

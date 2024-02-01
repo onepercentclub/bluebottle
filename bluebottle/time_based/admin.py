@@ -29,7 +29,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot
+    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
@@ -425,6 +425,70 @@ class PeriodActivityAdmin(TimeBasedAdmin):
             return _('{duration} per {time_unit}').format(
                 duration=duration,
                 time_unit=obj.duration_period[0:-1])
+        return duration
+    duration_string.short_description = _('Duration')
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+    participant_count.short_description = _('Participants')
+
+
+@admin.register(DeadlineActivity)
+class DeadlineActivityAdmin(TimeBasedAdmin):
+    base_model = DeadlineActivity
+
+    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
+    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
+    form = TimeBasedActivityAdminForm
+    list_filter = TimeBasedAdmin.list_filter + [
+        ('expertise', SortedRelatedFieldListFilter)
+    ]
+
+    list_display = TimeBasedAdmin.list_display + [
+        'start', 'end_date', 'duration_string', 'participant_count'
+    ]
+
+    def get_detail_fields(self, request, obj):
+        fields = super().get_detail_fields(request, obj) + (
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
+
+            'expertise',
+            'capacity',
+            'review',
+
+            'registration_flow',
+
+            'duration',
+
+            'start',
+            'deadline',
+            'registration_deadline',
+            'preparation',
+
+        )
+        initiative_settings = InitiativePlatformSettings.load()
+        if initiative_settings.team_activities:
+            fields += ('team_activity',)
+        return fields
+
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
+        ('deadline', 'Deadline'),
+        ('duration', 'TimeContribution'),
+        ('duration_period', 'TimeContribution period'),
+    )
+    actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+    def end_date(self, obj):
+        if not obj.deadline:
+            return _('indefinitely')
+        return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
         return duration
     duration_string.short_description = _('Duration')
 

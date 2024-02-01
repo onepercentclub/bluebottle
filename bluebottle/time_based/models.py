@@ -706,6 +706,85 @@ class TeamSlot(ActivitySlot):
         }
 
 
+class DeadlineActivity(TimeBasedActivity):
+
+    ONLINE_CHOICES = (
+        (None, 'Not set yet'),
+        (True, 'Yes, participants can join from anywhere or online'),
+        (False, 'No, enter a location')
+    )
+
+    is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+
+    location = models.ForeignKey(
+        Geolocation, verbose_name=_('location'),
+        null=True, blank=True, on_delete=models.SET_NULL
+    )
+    location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
+    start = models.DateField(
+        _('Start date'),
+        help_text=_('The first moment participants can start.'),
+        null=True,
+        blank=True
+    )
+
+    deadline = models.DateField(
+        _('End date'),
+        help_text=_('Participants can contribute until this date.'),
+        null=True,
+        blank=True
+    )
+
+    duration = models.DurationField(
+        _('Activity duration'),
+        help_text=_('How much time will a participant contribute?'),
+        null=True,
+        blank=True
+    )
+
+    @property
+    def duration_human_readable(self):
+        if self.duration:
+            return get_human_readable_duration(str(self.duration)).lower()
+        return None
+
+    online_meeting_url = models.TextField(
+        _('Online Meeting URL'),
+        blank=True,
+        default=''
+    )
+
+    validators = [PeriodActivityRegistrationDeadlineValidator]
+
+    @property
+    def activity_date(self):
+        return self.deadline or self.start
+
+    class Meta:
+        verbose_name = _("Deadline activity")
+        verbose_name_plural = _("Deadline activities")
+
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/deadlines'
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/deadline/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+
+    @property
+    def required_fields(self):
+        fields = super().required_fields
+        if not self.is_online:
+            fields.append('location')
+        return fields + ['duration', 'is_online']
+
+
 class Participant(Contributor):
 
     @property

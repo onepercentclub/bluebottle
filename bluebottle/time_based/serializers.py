@@ -611,8 +611,8 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
         )
 
         if (
-                user not in (instance.owner, instance.initiative.owner) and
-                user not in instance.activity_managers.all()
+            user not in (instance.owner, instance.initiative.owner) and
+            user not in instance.activity_managers.all()
         ):
             unreviewed_participants = unreviewed_participants.filter(user=user)
 
@@ -631,6 +631,95 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
             'deadline',
             'duration',
             'duration_period',
+            'my_contributor',
+            'online_meeting_url',
+            'is_online',
+            'location',
+            'location_hint',
+            'participants_export_url'
+        )
+
+    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/periods'
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'location',
+            'my_contributor.team',
+            'my_contributor.team.slot',
+            'my_contributor.team.slot.location',
+        ]
+
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
+            'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
+            'my_contributor.team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+            'my_contributor.team.slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
+
+
+class DeadlineActivitySerializer(TimeBasedBaseSerializer):
+    permissions = ResourcePermissionField('deadline-detail', view_args=('pk',))
+
+    my_contributor = SerializerMethodResourceRelatedField(
+        model=PeriodParticipant,
+        read_only=True,
+        source='get_my_contributor'
+    )
+
+    contributors = SerializerMethodHyperlinkedRelatedField(
+        model=PeriodParticipant,
+        read_only=True,
+        many=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id'
+    )
+
+    unreviewed_contributors = UnreviewedContributorsField(
+        read_only=True,
+        related_link_view_name='period-participants',
+        related_link_url_kwarg='activity_id',
+        model=PeriodParticipant
+    )
+
+    participants_export_url = PrivateFileSerializer(
+        'period-participant-export',
+        url_args=('pk',),
+        filename='participant.csv',
+        permission=CanExportParticipantsPermission,
+        read_only=True
+    )
+
+    def get_unreviewed_contributors(self, instance):
+        user = self.context['request'].user
+        unreviewed_participants = instance.contributors.instance_of(
+            PeriodParticipant
+        ).filter(
+            status=ParticipantStateMachine.new.value
+        )
+
+        if (
+            user not in (instance.owner, instance.initiative.owner) and
+            user not in instance.activity_managers.all()
+        ):
+            unreviewed_participants = unreviewed_participants.filter(user=user)
+
+        return unreviewed_participants
+
+    def get_my_contributor(self, instance):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return instance.contributors.filter(user=user).instance_of(PeriodParticipant).first()
+
+    class Meta(TimeBasedBaseSerializer.Meta):
+        model = PeriodActivity
+        fields = TimeBasedBaseSerializer.Meta.fields + (
+            'slot_type',
+            'start',
+            'deadline',
+            'duration',
             'my_contributor',
             'online_meeting_url',
             'is_online',

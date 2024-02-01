@@ -25,7 +25,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill, TeamSlot
+    DateActivitySlot, SlotParticipant, Skill, TeamSlot, DeadlineActivity
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -103,6 +103,11 @@ class DateActivityDetailView(TimeBasedActivityDetailView):
 
 class PeriodActivityDetailView(TimeBasedActivityDetailView):
     queryset = PeriodActivity.objects.all()
+    serializer_class = PeriodActivitySerializer
+
+
+class DeadlineActivityDetailView(TimeBasedActivityDetailView):
+    queryset = DeadlineActivity.objects.all()
     serializer_class = PeriodActivitySerializer
 
 

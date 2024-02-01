@@ -9,7 +9,7 @@ from bluebottle.fsm.state import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
-    TeamSlot,
+    TeamSlot, DeadlineActivity,
 )
 
 
@@ -184,6 +184,71 @@ class PeriodStateMachine(TimeBasedStateMachine):
 
     publish = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Publish your activity and let people participate.'),
+        automatic=False,
+        name=_('Publish'),
+        passed_label=_('published'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_approved
+        ],
+    )
+
+    auto_publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=False,
+        name=_('Auto-publish'),
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+        ],
+    )
+
+
+@register(DeadlineActivity)
+class DeadlineActivityStateMachine(TimeBasedStateMachine):
+    def can_succeed(self):
+        return len(self.instance.active_participants) > 0
+
+    succeed_manually = Transition(
+        [ActivityStateMachine.open, TimeBasedStateMachine.full],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=False,
+        description=_("Close this activity and allocate the hours to the participants."),
+        conditions=[can_succeed],
+        permission=ActivityStateMachine.is_owner,
+    )
+
+    reschedule = Transition(
+        [
+            ActivityStateMachine.expired,
+            ActivityStateMachine.succeeded
+        ],
+        ActivityStateMachine.open,
+        name=_("Reschedule"),
+        description=_(
+            "The date of the activity has been changed to a date in the future. "
+            "The status of the activity will be recalculated."
+        ),
+    )
+
+    submit = None
+
+    publish = Transition(
+        [
+            ActivityStateMachine.submitted,
             ActivityStateMachine.draft,
             ActivityStateMachine.needs_work,
         ],

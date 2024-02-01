@@ -125,7 +125,7 @@ class FundingAdminForm(ActivityForm):
     def clean(self):
         clean = super(FundingAdminForm, self).clean()
         donation = self.instance.donations.filter(status='succeeded').order_by('created').first()
-        if donation and clean['deadline'] > donation.created + timedelta(days=61):
+        if donation and clean['deadline'] > donation.created + timedelta(days=76):
             message = str(_("Can't extend a deadline to more then 75 days from the first donation, which was {date}. "
                             "Maximum deadline is {deadline}"))
             message = message.format(

@@ -1401,7 +1401,7 @@ class ParticipantTriggers(ContributorTriggers):
                     conditions=[activity_is_finished]
                 ),
                 RelatedTransitionEffect(
-                    'contributions',
+                    'upcoming_contributions',
                     TimeContributionStateMachine.reset,
                     conditions=[team_is_active]
                 ),

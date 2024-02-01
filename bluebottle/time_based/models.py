@@ -730,6 +730,10 @@ class PeriodParticipant(Participant, Contributor):
         return self.contributions.filter(end__lt=timezone.now())
 
     @property
+    def upcoming_contributions(self):
+        return self.contributions.filter(start__gt=timezone.now())
+
+    @property
     def started_contributions(self):
         return self.contributions.filter(start__lt=timezone.now())
 

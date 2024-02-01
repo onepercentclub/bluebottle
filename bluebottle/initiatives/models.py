@@ -65,6 +65,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     activity_managers = models.ManyToManyField(
         'members.Member',
         blank=True,
+        null=True,
         verbose_name=_('co-initiators'),
         help_text=_('Co-initiators can create and edit activities for '
                     'this initiative, but cannot edit the initiative itself.'),
@@ -237,9 +238,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         self.story = clean_html(self.story)
 
         super(Initiative, self).save(**kwargs)
-
-        if not self.activity_managers.exists():
-            self.activity_managers.add(self.owner)
 
 
 ACTIVITY_SEARCH_FILTERS = (

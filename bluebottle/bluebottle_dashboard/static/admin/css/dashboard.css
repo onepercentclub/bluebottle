@@ -316,3 +316,19 @@ fieldset {
 .inline-description {
     margin-top: 24px
 }
+
+.select2-container--admin-autocomplete {
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+
+.related-widget-wrapper-icon {
+    opacity: 0;
+}
+
+
+
+html {
+    --darkened-bg: #E3ECF2
+}

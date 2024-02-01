@@ -729,7 +729,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
-        resource_name = 'activities/time-based/periods'
+        resource_name = 'activities/time-based/deadlines'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
             'my_contributor.team',

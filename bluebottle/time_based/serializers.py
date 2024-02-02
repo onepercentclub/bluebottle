@@ -725,7 +725,13 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
             'is_online',
             'location',
             'location_hint',
-            'participants_export_url'
+            'participants_export_url',
+            'registration_flow',
+            'review_link',
+            'review_title',
+            'review_description',
+            'review_document_enabled',
+
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

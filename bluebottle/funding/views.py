@@ -29,7 +29,7 @@ from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
-from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission
+from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission, IsActivityManager
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
@@ -46,7 +46,7 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -61,7 +61,7 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPI
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -76,7 +76,7 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -91,7 +91,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]

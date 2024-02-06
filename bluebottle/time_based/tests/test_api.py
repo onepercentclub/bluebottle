@@ -1108,7 +1108,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         sheet = workbook.worksheets[0]
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team', 'Team Captain')
         )
 
         teams_sheet = workbook.worksheets[1]

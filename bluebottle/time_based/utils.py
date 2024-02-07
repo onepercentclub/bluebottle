@@ -31,8 +31,8 @@ def duplicate_slot(slot, interval, end):
 
     fields = dict(
         (field.name, getattr(slot, field.name)) for field in slot._meta.fields
-        if field.name not in ['created', 'updated', 'start', 'id', 'status'] 
-    ) 
+        if field.name not in ['created', 'updated', 'start', 'id', 'status']
+    )
 
     for date in dates:
         start = tz.localize(

@@ -4,7 +4,6 @@ from datetime import timedelta
 from django.contrib.admin import AdminSite
 from django.urls import reverse
 from django.utils.timezone import now
-from pytz import UTC
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings

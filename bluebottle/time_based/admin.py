@@ -445,7 +445,6 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
-    model = Registration
     verbose_name = _("Registration")
     verbose_name_plural = _("Registrations")
     readonly_fields = ('status', 'edit')
@@ -467,7 +466,7 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
-    pass
+    model = DeadlineRegistration
 
 
 @admin.register(DeadlineActivity)
@@ -1093,7 +1092,7 @@ class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
 
 @admin.register(DeadlineRegistration)
-class BaseRegistrationAdmin(BaseRegistrationAdmin):
+class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
     pass
 
 

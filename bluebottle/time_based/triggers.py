@@ -1321,8 +1321,12 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
 
                 RelatedTransitionEffect(
-                    'contributions',
+                    'upcoming_contributions',
                     TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'finished_contributions',
+                    TimeContributionStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
                     'started_contributions',
@@ -1399,6 +1403,11 @@ class ParticipantTriggers(ContributorTriggers):
                     'activity',
                     TimeBasedStateMachine.succeed,
                     conditions=[activity_is_finished]
+                ),
+                RelatedTransitionEffect(
+                    'finished_contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[team_is_active]
                 ),
                 RelatedTransitionEffect(
                     'upcoming_contributions',

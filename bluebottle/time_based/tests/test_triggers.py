@@ -1501,8 +1501,12 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         self.assertEqual(self.activity.status, 'full')
 
         self.assertEqual(
-            self.participants[0].contributions.
-            exclude(timecontribution__contribution_type='preparation').get().status,
+            self.participants[0].contributions.first().status,
+            'succeeded'
+        )
+
+        self.assertEqual(
+            self.participants[0].contributions.last().status,
             'new'
         )
         self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())

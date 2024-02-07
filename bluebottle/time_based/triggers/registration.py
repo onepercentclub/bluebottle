@@ -3,6 +3,7 @@ from bluebottle.fsm.triggers import (
     register, TransitionTrigger, TriggerManager
 )
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects.registration import CreateDeadlineParticipantEffect
 from bluebottle.time_based.models import DeadlineRegistration
 from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedReviewNotification, \
     ManagerRegistrationCreatedNotification
@@ -29,6 +30,7 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                CreateDeadlineParticipantEffect,
                 TransitionEffect(
                     RegistrationStateMachine.auto_accept,
                     conditions=[

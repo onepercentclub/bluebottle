@@ -16,6 +16,7 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
+from polymorphic.admin import PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin
 from pytz import timezone
 
 from bluebottle.activities.admin import (
@@ -29,7 +30,8 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity, DeadlineParticipant
+    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity, DeadlineParticipant, DeadlineRegistration,
+    Registration
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
@@ -442,11 +444,36 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     fields = ('edit', 'user', 'status',)
 
 
+class BaseRegistrationAdminInline(TabularInlinePaginated):
+    verbose_name = _("Registration")
+    verbose_name_plural = _("Registrations")
+    readonly_fields = ('status', 'edit')
+    fields = ('edit', 'user', 'status',)
+    raw_id_fields = ('user', )
+
+    def edit(self, obj):
+        if not obj.user and obj.activity.has_deleted_data:
+            return format_html(f'<i>{_("Anonymous")}</i>')
+        if not obj.id:
+            return '-'
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse(
+                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
+                args=(obj.id,)),
+            _('Edit registration')
+        )
+
+
+class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
+    model = DeadlineRegistration
+
+
 @admin.register(DeadlineActivity)
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (DeadlineRegistrationAdminInline, DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm
@@ -1054,6 +1081,19 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
     ]
     fields = ContributorChildAdmin.fields
     list_display = ['__str__', 'activity_link', 'status']
+
+
+@admin.register(Registration)
+class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+    readonly_fields = ['created', ]
+    raw_id_fields = ['user', 'activity']
+    fields = ['user', 'activity', 'status', 'states']
+    list_display = ['__str__', 'activity', 'user', 'status']
+
+
+@admin.register(DeadlineRegistration)
+class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
+    pass
 
 
 @admin.register(SlotParticipant)

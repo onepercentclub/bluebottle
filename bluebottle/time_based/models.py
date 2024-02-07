@@ -788,6 +788,13 @@ class DeadlineActivity(TimeBasedActivity):
 
 class Participant(Contributor):
 
+    registration = models.ForeignKey(
+        'time_based.Registration',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
+
     @property
     def finished_contributions(self):
         return self.contributions.filter(

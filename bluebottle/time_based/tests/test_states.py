@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
@@ -346,17 +347,27 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user, status='approved')
         self.activity = DeadlineActivityFactory.create(
             initiative=self.initiative,
+            title='Some good stuff',
             status='open'
         )
 
     def test_register(self):
+        mail.outbox = []
         registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
         self.assertEqual(
             registration.status,
             'accepted'
         )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new participant for your activity "Some good stuff"'
+        )
+        self.assertEqual(registration.deadlineparticipant_set.count(), 1)
+        self.assertEqual(registration.deadlineparticipant_set.first().status, 'accepted')
 
     def test_register_review(self):
+        mail.outbox = []
         self.activity.review = True
         self.activity.save()
         registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
@@ -364,3 +375,10 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
             registration.status,
             'new'
         )
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have a new application for your activity "Some good stuff"'
+        )
+        self.assertEqual(registration.deadlineparticipant_set.count(), 1)
+        self.assertEqual(registration.deadlineparticipant_set.first().status, 'new')

@@ -364,6 +364,7 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
             'You have a new participant for your activity "Some good stuff"'
         )
         self.assertEqual(registration.deadlineparticipant_set.count(), 1)
+        self.assertEqual(registration.deadlineparticipant_set.first().status, 'accepted')
 
     def test_register_review(self):
         mail.outbox = []
@@ -380,3 +381,4 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
             'You have a new application for your activity "Some good stuff"'
         )
         self.assertEqual(registration.deadlineparticipant_set.count(), 1)
+        self.assertEqual(registration.deadlineparticipant_set.first().status, 'new')

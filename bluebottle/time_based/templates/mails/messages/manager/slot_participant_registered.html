@@ -4,6 +4,7 @@
 {% block message %}{% blocktrans context 'email' %}
 <p>{{ participant_name }} has registered for a time slot for your activity "{{ title }}"!</p>
 {% endblocktrans %}
+  {% include 'mails/messages/partial/registration_question.html' %}
 
 {% include 'mails/messages/partial/slot.html' %}
 

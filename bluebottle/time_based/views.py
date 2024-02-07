@@ -725,7 +725,17 @@ class PeriodParticipantExportView(ExportView):
         return row
 
     def get_fields(self):
-        fields = super().get_fields()
+        question = self.get_object().review_title
+        fields = (
+            ('participant__user__email', 'Email'),
+            ('participant__user__full_name', 'Name'),
+            ('created', 'Registration Date'),
+            ('status', 'Status'),
+        )
+        if question:
+            fields += (
+                ('participant__motivation', question),
+            )
 
         segments = tuple(
             (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()

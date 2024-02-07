@@ -13,7 +13,8 @@ from bluebottle.time_based.states import (
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory,
+    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory, DeadlineActivityFactory,
+    DeadlineRegistrationFactory,
 )
 
 
@@ -334,4 +335,32 @@ class PeriodParticipantStatesTestCase(BluebottleTestCase):
         self.assertTrue(
             PeriodParticipantStateMachine.stop not in
             self.participant.states.possible_transitions()
+        )
+
+
+class DeadlineParticipantStatesTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.user, status='approved')
+        self.activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            status='open'
+        )
+
+    def test_register(self):
+        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        self.assertEqual(
+            registration.status,
+            'accepted'
+        )
+
+    def test_register_review(self):
+        self.activity.review = True
+        self.activity.save()
+        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        self.assertEqual(
+            registration.status,
+            'new'
         )

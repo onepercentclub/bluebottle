@@ -24,10 +24,13 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, TeamParticipantAppliedNotification, TeamMemberJoinedNotification,
     ParticipantCreatedNotification
 )
+from bluebottle.time_based.notifications.registration import UserRegistrationAcceptedNotification, \
+    UserRegistrationRejectedNotification, ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, PeriodActivityFactory,
     DateParticipantFactory, PeriodParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, TeamSlotFactory
+    DateActivitySlotFactory, SlotParticipantFactory, TeamSlotFactory, DeadlineActivityFactory,
+    DeadlineRegistrationFactory
 )
 
 
@@ -2688,3 +2691,44 @@ class TeamReviewTriggerTestCase(TriggerTestCase):
             self.assertNoNotificationEffect(ParticipantRejectedNotification)
             self.assertNoNotificationEffect(TeamCancelledMessage)
             self.assertNotificationEffect(TeamCancelledTeamCaptainMessage)
+
+
+class DeadlineRegistrationTriggerTestCase(TriggerTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.initiator = BlueBottleUserFactory()
+        self.user = BlueBottleUserFactory()
+        self.initiative = InitiativeFactory(owner=self.initiator)
+
+        self.activity = DeadlineActivityFactory.create(
+            initiative=self.initiative,
+            review=True
+        )
+        self.model = DeadlineRegistrationFactory.build(
+            user=self.user,
+            activity=self.activity,
+        )
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_create(self):
+        with self.execute(user=self.user):
+            self.assertStatus(self.model, 'new')
+            self.assertNotificationEffect(ManagerRegistrationCreatedReviewNotification)
+
+    def test_create_accept(self):
+        self.model.save()
+        self.model.states.accept()
+        with self.execute(user=self.initiator):
+            self.assertStatus(self.model, 'accepted')
+            self.assertNotificationEffect(UserRegistrationAcceptedNotification)
+
+    def test_create_reject(self):
+        self.model.save()
+        self.model.states.reject()
+        with self.execute(user=self.initiator):
+            self.assertStatus(self.model, 'rejected')
+            self.assertNotificationEffect(UserRegistrationRejectedNotification)

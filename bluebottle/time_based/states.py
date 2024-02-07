@@ -773,6 +773,15 @@ class RegistrationStateMachine(ModelStateMachine):
         ),
     )
 
+    auto_accept = Transition(
+        new,
+        accepted,
+        name=_('Accept'),
+        description=_("Autoamtically accept this person as a participant to the activity."),
+        passed_label=_('accepted'),
+        automatic=True,
+    )
+
     accept = Transition(
         [new, rejected],
         accepted,

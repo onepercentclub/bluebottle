@@ -14,7 +14,8 @@ from bluebottle.time_based.messages import (
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
     TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
 )
-from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedNotification
+from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedNotification, \
+    ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory,
@@ -362,7 +363,7 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
             review=False
         )
 
-        self.registration = DeadlineRegistrationFactory.create(
+        self.obj = DeadlineRegistrationFactory.create(
             activity=self.activity,
             user=self.supporter
         )
@@ -376,10 +377,11 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_manager_registration_created_review(self):
-
-        self.message_class = ManagerRegistrationCreatedNotification
+        self.activity.review = True
+        self.activity.save()
+        self.message_class = ManagerRegistrationCreatedReviewNotification
         self.create()
         self.assertRecipients([self.activity.owner])
-        self.assertSubject('You have a new participant for your activity "Save the world!"')
+        self.assertSubject('You have a new application for your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

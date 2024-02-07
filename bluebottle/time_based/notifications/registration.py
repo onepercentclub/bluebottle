@@ -24,12 +24,12 @@ class ManagerRegistrationNotification(TransitionMessage):
 
 class ManagerRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
     subject = pgettext('email', 'You have a new application for your activity "{title}"')
-    template = 'messages/registration/manager_registration_created_review.html'
+    template = 'messages/registration/manager_registration_created_review'
 
 
 class ManagerRegistrationCreatedNotification(ManagerRegistrationNotification):
     subject = pgettext('email', 'You have a new participant for your activity "{title}"')
-    template = 'messages/registration/manager_registration_created.html'
+    template = 'messages/registration/manager_registration_created'
 
 
 class UserRegistrationNotification(TransitionMessage):
@@ -47,3 +47,13 @@ class UserRegistrationNotification(TransitionMessage):
     def get_recipients(self):
         """applicant"""
         return [self.obj.user]
+
+
+class UserRegistrationAcceptedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have been accepted for the activity "{title}"')
+    template = 'messages/registration/user_registration_accepted'
+
+
+class UserRegistrationRejectedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have not been selected for the activity "{title}"')
+    template = 'messages/registration/user_registration_rejected'

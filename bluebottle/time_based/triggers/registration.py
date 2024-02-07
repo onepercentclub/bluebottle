@@ -1,7 +1,9 @@
+from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, TriggerManager
 )
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.models import DeadlineRegistration
 from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedReviewNotification, \
     ManagerRegistrationCreatedNotification
 from bluebottle.time_based.states import (
@@ -21,12 +23,18 @@ class RegistrationTriggers(TriggerManager):
         """
         No review needed
         """
-        return effect.instance.activity.review
+        return not effect.instance.activity.review
 
     triggers = [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.auto_accept,
+                    conditions=[
+                        no_review_needed
+                    ]
+                ),
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[
@@ -44,6 +52,6 @@ class RegistrationTriggers(TriggerManager):
     ]
 
 
-@register(RegistrationTriggers)
-class DeadlineRegistrationTriggers(TriggerManager):
+@register(DeadlineRegistration)
+class DeadlineRegistrationTriggers(RegistrationTriggers):
     pass

@@ -29,7 +29,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity
+    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity, DeadlineParticipant
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import nth_weekday, duplicate_slot
@@ -433,11 +433,20 @@ class PeriodActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
 
+class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
+    model = DeadlineParticipant
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
+    raw_id_fields = BaseParticipantAdminInline.raw_id_fields
+    readonly_fields = ('status', 'edit')
+    fields = ('edit', 'user', 'status',)
+
+
 @admin.register(DeadlineActivity)
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm
@@ -1028,6 +1037,22 @@ class DateParticipantAdmin(ContributorChildAdmin):
         TimeContributionInlineAdmin
     ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
+    list_display = ['__str__', 'activity_link', 'status']
+
+
+@admin.register(DeadlineParticipant)
+class DeadlineParticipantAdmin(ContributorChildAdmin):
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        for inline in inlines:
+            inline.parent_object = obj
+        return inlines
+
+    inlines = ContributorChildAdmin.inlines + [
+        TimeContributionInlineAdmin
+    ]
+    fields = ContributorChildAdmin.fields
     list_display = ['__str__', 'activity_link', 'status']
 
 

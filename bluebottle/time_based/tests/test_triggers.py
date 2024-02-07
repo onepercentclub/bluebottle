@@ -2715,7 +2715,7 @@ class DeadlineRegistrationTriggerTestCase(TriggerTestCase):
         self.assertEqual(obj.status, status)
 
     def test_create(self):
-        with self.execute(user=self.user):
+        with self.execute(user=self.user, send_messages=True):
             self.assertStatus(self.model, 'new')
             self.assertNotificationEffect(ManagerRegistrationCreatedReviewNotification)
 

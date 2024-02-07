@@ -9,7 +9,7 @@ from bluebottle.fsm.state import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
-    TeamSlot, DeadlineActivity, DeadlineRegistration,
+    TeamSlot, DeadlineActivity, DeadlineRegistration, DeadlineParticipant,
 )
 
 
@@ -777,7 +777,7 @@ class RegistrationStateMachine(ModelStateMachine):
         new,
         accepted,
         name=_('Accept'),
-        description=_("Autoamtically accept this person as a participant to the activity."),
+        description=_("Automatically accept this person as a participant to the activity."),
         passed_label=_('accepted'),
         automatic=True,
     )
@@ -804,4 +804,9 @@ class RegistrationStateMachine(ModelStateMachine):
 
 @register(DeadlineRegistration)
 class DeadlineRegistrationStateMachine(RegistrationStateMachine):
+    pass
+
+
+@register(DeadlineParticipant)
+class DeadlineParticipantStateMachine(ParticipantStateMachine):
     pass

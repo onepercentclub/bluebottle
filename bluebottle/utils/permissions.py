@@ -17,13 +17,7 @@ class IsOwner(permissions.BasePermission):
         """
         Return `True` if user is owner of the object granted, `False` otherwise.
         """
-        return (
-            obj.owner == request.user or
-            obj.initiative.owner == request.user or
-            request.user in obj.initiative.activity_managers.all() or
-            request.user.is_superuser or
-            request.user.is_staff
-        )
+        return obj.owner == request.user
 
 
 class IsActivityManager(permissions.BasePermission):

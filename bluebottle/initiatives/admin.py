@@ -108,9 +108,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = (
-        'owner', 'reviewer',
+        'owner',
+        'reviewer',
         'promoter',
-        'organization', 'organization_contact',
+        'organization',
+        'organization_contact',
         'place',
         'theme',
     )

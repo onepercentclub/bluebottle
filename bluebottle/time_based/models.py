@@ -801,6 +801,18 @@ class Participant(Contributor):
             timecontribution__contribution_type=ContributionTypeChoices.preparation
         )
 
+    @property
+    def current_contribution(self):
+        return self.contributions.get(status='new')
+
+    @property
+    def upcoming_contributions(self):
+        return self.contributions.filter(start__gt=timezone.now())
+
+    @property
+    def started_contributions(self):
+        return self.contributions.filter(start__lt=timezone.now())
+
     class Meta:
         abstract = True
 
@@ -848,18 +860,6 @@ class PeriodParticipant(Participant, Contributor):
             ('api_change_own_periodparticipant', 'Can change own period participant through the API'),
             ('api_delete_own_periodparticipant', 'Can delete own period participant through the API'),
         )
-
-    @property
-    def current_contribution(self):
-        return self.contributions.get(status='new')
-
-    @property
-    def finished_contributions(self):
-        return self.contributions.filter(end__lt=timezone.now())
-
-    @property
-    def started_contributions(self):
-        return self.contributions.filter(start__lt=timezone.now())
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'

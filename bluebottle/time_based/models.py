@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
+from polymorphic.models import PolymorphicModel
 from timezonefinder import TimezoneFinder
 
 from bluebottle.activities.models import Activity, Contributor, Contribution, Team
@@ -982,6 +983,35 @@ class Skill(TranslatableModel):
 
     class JSONAPIMeta(object):
         resource_name = 'skills'
+
+
+class Registration(TriggerMixin, PolymorphicModel):
+
+    answer = models.TextField(blank=True, null=True)
+    document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
+
+    activity = models.ForeignKey(
+        TimeBasedActivity,
+        related_name='registrations',
+        on_delete=models.CASCADE
+    )
+
+    user = models.ForeignKey(
+        'members.Member',
+        related_name='registrations',
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(max_length=40)
+    created = models.DateTimeField(default=timezone.now)
+
+
+class DeadlineRegistration(Registration):
+    pass
+
+
+class DeadlineParticipant(Participant, Contributor):
+    pass
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

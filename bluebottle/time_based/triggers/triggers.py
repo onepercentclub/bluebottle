@@ -428,8 +428,7 @@ def slot_is_full(effect):
     Slot is full. Capacity is filled by participants.
     """
     participant_count = effect.instance.slot_participants.filter(participant__status='accepted').count()
-    if effect.instance.capacity \
-            and participant_count >= effect.instance.capacity:
+    if effect.instance.capacity and participant_count >= effect.instance.capacity:
         return True
     return False
 
@@ -446,9 +445,11 @@ def participant_slot_will_be_full(effect):
     the slot will be filled
     """
     participant_count = effect.instance.slot.slot_participants.filter(participant__status='accepted').count()
-    if effect.instance.slot.capacity \
-            and effect.instance.participant.status == 'accepted' \
-            and participant_count + 1 >= effect.instance.slot.capacity:
+    if (
+        effect.instance.slot.capacity and
+        effect.instance.participant.status == 'accepted' and
+        participant_count + 1 >= effect.instance.slot.capacity
+    ):
         return True
     return False
 
@@ -461,8 +462,10 @@ def participant_slot_will_be_not_full(effect):
         status='registered',
         participant__status='accepted'
     ).count()
-    if effect.instance.slot.capacity \
-            and participant_count - 1 < effect.instance.slot.capacity:
+    if (
+        effect.instance.slot.capacity and
+        participant_count - 1 < effect.instance.slot.capacity
+    ):
         return True
     return False
 
@@ -1024,7 +1027,7 @@ class PeriodActivityTriggers(TimeBasedTriggers):
     ]
 
 
-@ register(PeriodActivitySlot)
+@register(PeriodActivitySlot)
 class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
 
@@ -1592,7 +1595,6 @@ def is_participant(effect):
 
 @register(SlotParticipant)
 class SlotParticipantTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             SlotParticipantStateMachine.initiate,

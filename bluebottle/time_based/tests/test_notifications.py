@@ -14,10 +14,11 @@ from bluebottle.time_based.messages import (
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
     TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
 )
+from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory,
-    SlotParticipantFactory
+    SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
 )
 
 
@@ -346,3 +347,39 @@ class TeamSlotNotificationTestCase(NotificationTestCase):
         self.assertSubject('The details of the team activity "Save the world!" have changed')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
+
+
+class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+
+        self.activity = DeadlineActivityFactory.create(
+            title="Save the world!",
+            review=False
+        )
+
+        self.registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.supporter
+        )
+
+    def test_manager_registration_created(self):
+        self.message_class = ManagerRegistrationCreatedNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject('You have a new participant for your activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_manager_registration_created_review(self):
+
+        self.message_class = ManagerRegistrationCreatedNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject('You have a new participant for your activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('Open your activity')

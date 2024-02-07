@@ -478,6 +478,11 @@ class ParticipantStateMachine(ContributorStateMachine):
         _("The activity has been cancelled. This person's contribution "
           "is removed and the spent hours are reset to zero.")
     )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _('This person hast successfully contributed.')
+    )
 
     def is_user(self, user):
         """is participant"""
@@ -809,4 +814,17 @@ class DeadlineRegistrationStateMachine(RegistrationStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(ParticipantStateMachine):
-    pass
+
+    succeed = Transition(
+        [
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.failed,
+            ParticipantStateMachine.withdrawn,
+            ParticipantStateMachine.cancelled,
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=False,
+        description=_("This participant hass completed their contribution."),
+    )

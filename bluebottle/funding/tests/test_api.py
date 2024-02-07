@@ -278,6 +278,17 @@ class RewardListTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_coinitiator(self):
+        coinitiator = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(coinitiator)
+        response = self.client.post(
+            self.create_url,
+            data=json.dumps(self.data),
+            user=coinitiator
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_no_user(self):
         response = self.client.post(
             self.create_url,

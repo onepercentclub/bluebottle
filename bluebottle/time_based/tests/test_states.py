@@ -119,7 +119,6 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
     participant_factory = DateParticipantFactory
 
     def test_approved(self):
-        self.initiative.states.approve(save=True)
         self.activity.states.publish(save=True)
 
         self.activity.refresh_from_db()

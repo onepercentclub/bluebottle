@@ -207,7 +207,7 @@ class PeriodStateMachine(TimeBasedStateMachine):
         ],
         ActivityStateMachine.open,
         description=_('Automatically publish activity when initiative is approved'),
-        automatic=False,
+        automatic=True,
         name=_('Auto-publish'),
         conditions=[
             ActivityStateMachine.is_complete,

@@ -482,29 +482,6 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
-    SLOT_TYPE_CHOICES = (
-        (None, 'Not set yet'),
-        (
-            'free',
-            'Anytime. Participants will execute the task on their own time'
-        ),
-        (
-            'tailored',
-            'Tailored. After signing up, participants will be assigned a date and time by the activity manager.'
-        ),
-        (
-            'recurring',
-            'Recurring. Participants are expected to contribute every week or month.'
-        ),
-    )
-
-    slot_type = models.CharField(
-        _('Time slot type'),
-        help_text=_('How and when will participants contribute to this activity?'),
-        max_length=100,
-        choices=SLOT_TYPE_CHOICES,
-        null=True, default=None
-    )
 
     ONLINE_CHOICES = (
         (None, 'Not set yet'),

@@ -389,7 +389,6 @@ class PeriodActivityAdmin(TimeBasedAdmin):
         return fields
 
     date_fields = [
-        'slot_type',
         'duration_period',
         'max_iterations',
         'duration',

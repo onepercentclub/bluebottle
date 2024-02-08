@@ -101,7 +101,7 @@ class TimeBasedActivityStatesTestCase():
     def test_succeeded(self):
         self.initiative.states.approve(save=True)
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
         else:
             self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
@@ -117,7 +117,7 @@ class TimeBasedActivityStatesTestCase():
     def test_cancelled(self):
         self.initiative.states.approve(save=True)
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
         else:
             self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
@@ -177,7 +177,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
 
     def test_approved(self):
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
 
         self.initiative.states.approve(save=True)
 
@@ -213,7 +213,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
         )
 
     def test_submitted(self):
-        self.activity.states.submit()
+        self.activity.states.publish()
         self.assertTrue(
             TimeBasedStateMachine.auto_approve in
             self.activity.states.possible_transitions()
@@ -226,7 +226,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
 
     def test_succeed_manually_no_participants(self):
         self.activity.duration_period = 'weeks'
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.initiative.states.approve(save=True)
         self.activity.refresh_from_db()
         self.assertFalse(
@@ -237,7 +237,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
     def test_succeed_manually_overall(self):
         self.activity.duration_period = 'overall'
 
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.initiative.states.approve(save=True)
         self.participant_factory.create(activity=self.activity)
 
@@ -251,7 +251,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
     def test_succeed_manually_(self):
         self.activity.duration_period = 'weeks'
 
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.initiative.states.approve(save=True)
         self.participant_factory.create(activity=self.activity)
 

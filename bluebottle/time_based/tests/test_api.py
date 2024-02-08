@@ -548,7 +548,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
         else:
             self.activity.states.publish(save=True)
 
@@ -976,7 +976,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.initiative = self.initiative
         self.activity.start = None
         self.activity.deadline = None
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         PeriodParticipantFactory.create(activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
         self.data = response.json()['data']
@@ -1319,7 +1319,7 @@ class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Bluebo
         self.activity.deadline = None
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         PeriodParticipantFactory.create(activity=self.activity)
 
         self.data['data']['attributes']['transition'] = 'succeed_manually'

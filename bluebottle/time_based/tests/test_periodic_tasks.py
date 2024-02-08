@@ -40,7 +40,7 @@ class TimeBasedActivityPeriodicTasksTestCase():
         self.activity = self.factory.create(initiative=self.initiative, review=False)
 
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
         else:
             self.activity.states.publish(save=True)
 
@@ -501,7 +501,7 @@ class OverallPeriodParticipantPeriodicTest(BluebottleTestCase):
             duration=timedelta(hours=2),
             duration_period='overall'
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.participant = self.participant_factory.create(activity=self.activity)
 
     def refresh(self):
@@ -561,7 +561,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
             duration=timedelta(hours=2),
             duration_period='weeks'
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.participant = self.participant_factory.create(activity=self.activity)
 
     def refresh(self):
@@ -619,7 +619,7 @@ class PeriodParticipantPeriodicTest(BluebottleTestCase):
             duration_period='months',
             deadline=None
         )
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
         participant = self.participant_factory.create(activity=activity)
 
         self.run_tasks(activity.start + timedelta(minutes=1))
@@ -861,7 +861,7 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
             duration=timedelta(hours=2),
             duration_period='weeks'
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.participant = self.participant_factory.build(activity=self.activity)
         self.participant.user.save()
         self.participant.execute_triggers(user=self.participant.user, send_messages=True)

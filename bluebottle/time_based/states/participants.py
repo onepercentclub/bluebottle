@@ -11,7 +11,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
-from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 
 class ParticipantStateMachine(ContributorStateMachine):

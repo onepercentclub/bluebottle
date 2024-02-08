@@ -146,9 +146,9 @@ def start_is_not_passed(effect):
     )
 
 
-def activity_automatically_accept(effect):
+def no_review_needed(effect):
     """
-    automatically accept participants
+    no review needed
     """
     return not effect.instance.review
 
@@ -159,10 +159,14 @@ class TimeBasedTriggers(ActivityTriggers):
             'registration_deadline',
             effects=[
                 TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed
+                    registration_deadline_is_passed,
+                    start_is_not_passed,
+                    deadline_is_not_passed
                 ]),
                 TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed
+                    registration_deadline_is_not_passed,
+                    start_is_not_passed,
+                    deadline_is_not_passed
                 ]),
             ]
         ),
@@ -231,7 +235,7 @@ class TimeBasedTriggers(ActivityTriggers):
                 RelatedTransitionEffect(
                     'pending_participants',
                     ParticipantStateMachine.accept,
-                    conditions=[activity_automatically_accept]
+                    conditions=[no_review_needed]
                 ),
             ]
         ),
@@ -310,17 +314,6 @@ class DateActivityTriggers(TimeBasedTriggers):
             ]
         ),
     ]
-
-
-def all_slots_finished(effect):
-    """
-    all slots have finished
-    """
-    return effect.instance.activity.slots.exclude(
-        status__in=['finished', 'cancelled', 'deleted']
-    ).exclude(
-        id=effect.instance.id
-    ).count() == 0
 
 
 @register(PeriodActivity)

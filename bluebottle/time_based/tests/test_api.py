@@ -132,14 +132,14 @@ class TimeBasedListAPIViewTestCase():
 
     def test_create_not_initiator_open(self):
         self.initiative.is_open = True
-        self.initiative.states.approve(save=True)
-
+        self.initiative.save()
         another_user = BlueBottleUserFactory.create()
         response = self.client.post(self.url, json.dumps(self.data), user=another_user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_not_initiator_not_approved(self):
         self.initiative.is_open = True
+        self.initiative.status = 'draft'
         self.initiative.save()
 
         another_user = BlueBottleUserFactory.create()
@@ -194,8 +194,6 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
     def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.initiative.states.approve(save=True)
-
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
@@ -278,9 +276,9 @@ class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase
 class TimeBasedDetailAPIViewTestCase():
     def setUp(self):
         super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
-        )
+        self.settings = InitiativePlatformSettings.load()
+        self.settings.activity_types = [self.factory._meta.model.__name__.lower()]
+        self.settings.save()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()

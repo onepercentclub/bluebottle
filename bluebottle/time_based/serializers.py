@@ -57,7 +57,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    review = serializers.BooleanField(required=False)
+    review = serializers.BooleanField(required=False, allow_null=True)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
     teams = TeamsField()
@@ -626,7 +626,6 @@ class PeriodActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'slot_type',
             'start',
             'deadline',
             'duration',
@@ -716,7 +715,6 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'slot_type',
             'start',
             'deadline',
             'duration',

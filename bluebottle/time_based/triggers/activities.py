@@ -26,7 +26,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateActivitySlot
+    DateActivitySlot, DeadlineActivity
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ParticipantStateMachine, TimeContributionStateMachine
@@ -156,6 +156,17 @@ def activity_automatically_accept(effect):
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
+            'registration_deadline',
+            effects=[
+                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
+                    registration_deadline_is_passed
+                ]),
+                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
+                    registration_deadline_is_not_passed
+                ]),
+            ]
+        ),
+        ModelChangedTrigger(
             'capacity',
             effects=[
                 TransitionEffect(
@@ -230,17 +241,6 @@ class TimeBasedTriggers(ActivityTriggers):
 @register(DateActivity)
 class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
-        ModelChangedTrigger(
-            'registration_deadline',
-            effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed
-                ]),
-            ]
-        ),
 
         ModelChangedTrigger(
             'slot_selection',
@@ -326,17 +326,6 @@ def all_slots_finished(effect):
 @register(PeriodActivity)
 class PeriodActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
-        ModelChangedTrigger(
-            'registration_deadline',
-            effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed
-                ]),
-            ]
-        ),
 
         ModelChangedTrigger(
             ['start', 'deadline'],
@@ -417,6 +406,97 @@ class PeriodActivityTriggers(TimeBasedTriggers):
         ModelChangedTrigger(
             'deadline',
             effects=[
+                NotificationEffect(
+                    DeadlineChangedNotification,
+                    conditions=[
+                        deadline_is_not_passed
+                    ]
+                ),
+                TransitionEffect(
+                    DateStateMachine.succeed,
+                    conditions=[
+                        deadline_is_passed, has_participants
+                    ]
+                ),
+                TransitionEffect(
+                    DateStateMachine.expire,
+                    conditions=[
+                        deadline_is_passed, has_no_participants
+                    ]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.reschedule,
+                    conditions=[
+                        deadline_is_not_passed
+                    ]
+                ),
+            ]
+        )
+    ]
+
+
+@register(DeadlineActivity)
+class DeadlineActivityTriggers(TimeBasedTriggers):
+    triggers = TimeBasedTriggers.triggers + [
+
+        TransitionTrigger(
+            PeriodStateMachine.reschedule,
+            effects=[
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        is_full,
+                    ]
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        registration_deadline_is_passed,
+                    ]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            PeriodStateMachine.succeed,
+            effects=[
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
+                SetEndDateEffect,
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                RescheduleOverallPeriodActivityDurationsEffect,
+                NotificationEffect(
+                    DeadlineChangedNotification,
+                    conditions=[start_is_not_passed]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.reopen,
+                    conditions=[
+                        is_not_full, registration_deadline_is_not_passed
+                    ]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.lock,
+                    conditions=[
+                        is_full,
+                    ]
+                ),
+                TransitionEffect(
+                    PeriodStateMachine.lock,
+                    conditions=[
+                        registration_deadline_is_passed,
+                    ]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'deadline',
+            effects=[
+                RescheduleOverallPeriodActivityDurationsEffect,
                 NotificationEffect(
                     DeadlineChangedNotification,
                     conditions=[

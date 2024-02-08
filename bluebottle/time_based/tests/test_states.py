@@ -339,7 +339,7 @@ class PeriodParticipantStatesTestCase(BluebottleTestCase):
         )
 
 
-class DeadlineParticipantStatesTestCase(BluebottleTestCase):
+class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
 
     def setUp(self):
         super().setUp()
@@ -347,6 +347,8 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user, status='approved')
         self.activity = DeadlineActivityFactory.create(
             initiative=self.initiative,
+            preparation=None,
+            duration=timedelta(hours=4),
             title='Some good stuff',
             status='open'
         )
@@ -363,8 +365,12 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
             mail.outbox[0].subject,
             'You have a new participant for your activity "Some good stuff"'
         )
-        self.assertEqual(registration.deadlineparticipant_set.count(), 1)
-        self.assertEqual(registration.deadlineparticipant_set.first().status, 'accepted')
+        participants = registration.deadlineparticipant_set
+        participant = participants.first()
+        self.assertEqual(participants.count(), 1)
+        self.assertEqual(participant.status, 'succeeded')
+        self.assertEqual(participant.contributions.count(), 1)
+        self.assertEqual(participant.contributions.first().status, 'succeeded')
 
     def test_register_review(self):
         mail.outbox = []
@@ -380,5 +386,9 @@ class DeadlineParticipantStatesTestCase(BluebottleTestCase):
             mail.outbox[0].subject,
             'You have a new application for your activity "Some good stuff"'
         )
-        self.assertEqual(registration.deadlineparticipant_set.count(), 1)
-        self.assertEqual(registration.deadlineparticipant_set.first().status, 'new')
+        participants = registration.deadlineparticipant_set
+        participant = participants.first()
+        self.assertEqual(participants.count(), 1)
+        self.assertEqual(participant.status, 'new')
+        self.assertEqual(participant.contributions.count(), 1)
+        self.assertEqual(participant.contributions.first().status, 'new')

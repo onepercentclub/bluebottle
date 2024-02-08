@@ -44,8 +44,7 @@ class TimeBasedListAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.url = reverse('{}-list'.format(self.type))
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.states.submit(save=True)
+        self.initiative = InitiativeFactory(owner=self.user, status='approved')
 
         self.data = {
             'data': {
@@ -246,12 +245,13 @@ class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase
 
     def test_create_complete(self):
         super().test_create_complete()
+
         self.assertEqual(
             {
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'submit', 'delete'}
+            {'publish', 'delete'}
         )
 
     def test_create_no_location(self):

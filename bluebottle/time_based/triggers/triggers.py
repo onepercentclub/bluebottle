@@ -1760,7 +1760,7 @@ def should_succeed_instantly(effect):
         return True
     return (
         (effect.instance.end is None or effect.instance.end < now()) and
-        effect.instance.contributor.status in ('accepted', 'new') and
+        effect.instance.contributor.status in ('accepted', 'succeeded') and
         effect.instance.contributor.activity.status in ('open', 'succeeded')
     )
 

@@ -905,7 +905,10 @@ class PeriodReviewParticipantPeriodicTest(BluebottleTestCase):
 
     def test_contribution_value_is_succeeded(self):
         today = date.today()
-        while today <= self.activity.deadline - timedelta(days=2):
+        self.activity.deadline = today + timedelta(weeks=4)
+        self.activity.duration_period = 'weeks'
+        self.activity.save()
+        while today <= self.activity.deadline:
             self.run_tasks(today)
             self.refresh()
             today += timedelta(days=1)

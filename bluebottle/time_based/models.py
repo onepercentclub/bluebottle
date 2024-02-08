@@ -762,6 +762,10 @@ class DeadlineActivity(TimeBasedActivity):
             fields.append('location')
         return fields + ['duration', 'is_online']
 
+    @property
+    def active_participants(self):
+        return self.participants.filter(status__in=['new', 'accepted', 'succeeded'])
+
 
 class Participant(Contributor):
 

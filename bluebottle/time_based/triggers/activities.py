@@ -20,6 +20,7 @@ from bluebottle.time_based.effects import (
     SetEndDateEffect,
     ClearDeadlineEffect,
     ActiveTimeContributionsTransitionEffect, UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, )
+from bluebottle.time_based.effects.contributions import RescheduleDeadlineActivityDurationsEffect
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
     ActivitySucceededManuallyNotification
@@ -153,21 +154,39 @@ def no_review_needed(effect):
     return not effect.instance.review
 
 
+def is_open(effect):
+    """
+    is open
+    """
+    return effect.instance.status == 'open'
+
+
+def is_locked(effect):
+    """
+    is locked
+    """
+    return effect.instance.status == 'full'
+
+
 class TimeBasedTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
             'registration_deadline',
             effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed,
-                    start_is_not_passed,
-                    deadline_is_not_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed,
-                    start_is_not_passed,
-                    deadline_is_not_passed
-                ]),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        registration_deadline_is_passed,
+                        is_open
+                    ]
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.reopen,
+                    conditions=[
+                        registration_deadline_is_not_passed,
+                        is_locked
+                    ]
+                ),
             ]
         ),
         ModelChangedTrigger(
@@ -461,7 +480,7 @@ class DeadlineActivityTriggers(TimeBasedTriggers):
         ModelChangedTrigger(
             'start',
             effects=[
-                RescheduleOverallPeriodActivityDurationsEffect,
+                RescheduleDeadlineActivityDurationsEffect,
                 NotificationEffect(
                     DeadlineChangedNotification,
                     conditions=[start_is_not_passed]
@@ -489,7 +508,7 @@ class DeadlineActivityTriggers(TimeBasedTriggers):
         ModelChangedTrigger(
             'deadline',
             effects=[
-                RescheduleOverallPeriodActivityDurationsEffect,
+                RescheduleDeadlineActivityDurationsEffect,
                 NotificationEffect(
                     DeadlineChangedNotification,
                     conditions=[

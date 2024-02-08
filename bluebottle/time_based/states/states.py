@@ -42,7 +42,11 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen = Transition(
-        full,
+        [
+            full,
+            ActivityStateMachine.succeeded,
+            ActivityStateMachine.expired,
+        ],
         ActivityStateMachine.open,
         name=_("Unlock"),
         passed_label=_('unlocked'),
@@ -101,20 +105,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
     )
 
-
-@register(DateActivity)
-class DateStateMachine(TimeBasedStateMachine):
-    reschedule = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
-        ActivityStateMachine.open,
-        name=_("Reschedule"),
-        permission=ActivityStateMachine.is_owner,
-        automatic=True,
-        description=_(
-            "The activity is reopened because the start date changed."
-        )
-    )
-
     submit = None
 
     publish = Transition(
@@ -142,13 +132,29 @@ class DateStateMachine(TimeBasedStateMachine):
         ],
         ActivityStateMachine.open,
         description=_('Automatically publish activity when initiative is approved'),
-        automatic=False,
+        automatic=True,
         name=_('Auto-publish'),
         conditions=[
             ActivityStateMachine.is_complete,
             ActivityStateMachine.is_valid,
         ],
     )
+
+
+@register(DateActivity)
+class DateStateMachine(TimeBasedStateMachine):
+    reschedule = Transition(
+        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        ActivityStateMachine.open,
+        name=_("Reschedule"),
+        permission=ActivityStateMachine.is_owner,
+        automatic=True,
+        description=_(
+            "The activity is reopened because the start date changed."
+        )
+    )
+
+    submit = None
 
 
 @register(PeriodActivity)
@@ -177,41 +183,6 @@ class PeriodStateMachine(TimeBasedStateMachine):
             "The date of the activity has been changed to a date in the future. "
             "The status of the activity will be recalculated."
         ),
-    )
-
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Publish your activity and let people participate.'),
-        automatic=False,
-        name=_('Publish'),
-        passed_label=_('published'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
     )
 
 

@@ -125,7 +125,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(PeriodParticipant, DateParticipant)
+        return self.contributors.instance_of(PeriodParticipant, DateParticipant, DeadlineParticipant)
 
     @property
     def pending_participants(self):

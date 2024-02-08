@@ -27,8 +27,7 @@ class TimeBasedActivityStatesTestCase():
         )
 
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.states.submit(save=True)
+        self.initiative = InitiativeFactory(owner=self.user, status='approved')
         self.activity = self.factory.create(initiative=self.initiative)
 
     def test_initial(self):
@@ -77,21 +76,13 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_needs_work(self):
-        self.initiative.states.approve(save=True)
-
         self.activity.states.reject()
         self.activity.states.restore()
 
-        if self.activity.states.submit:
-            self.assertTrue(
-                TimeBasedStateMachine.submit in
-                self.activity.states.possible_transitions()
-            )
-        else:
-            self.assertTrue(
-                DateStateMachine.publish in
-                self.activity.states.possible_transitions()
-            )
+        self.assertTrue(
+            DateStateMachine.publish in
+            self.activity.states.possible_transitions()
+        )
 
         self.assertTrue(
             TimeBasedStateMachine.delete in
@@ -99,11 +90,7 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_succeeded(self):
-        self.initiative.states.approve(save=True)
-        if self.activity.states.submit:
-            self.activity.states.publish(save=True)
-        else:
-            self.activity.states.publish(save=True)
+        self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
         self.activity.states.succeed()
         self.assertEqual(
@@ -115,11 +102,7 @@ class TimeBasedActivityStatesTestCase():
         )
 
     def test_cancelled(self):
-        self.initiative.states.approve(save=True)
-        if self.activity.states.submit:
-            self.activity.states.publish(save=True)
-        else:
-            self.activity.states.publish(save=True)
+        self.activity.states.publish(save=True)
         self.activity.refresh_from_db()
         self.activity.states.cancel()
         self.assertEqual(
@@ -176,10 +159,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
     participant_factory = PeriodParticipantFactory
 
     def test_approved(self):
-        if self.activity.states.submit:
-            self.activity.states.publish(save=True)
-
-        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
 
         self.activity.refresh_from_db()
         self.assertEqual(
@@ -212,10 +192,9 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
             delta=timedelta(minutes=2)
         )
 
-    def test_submitted(self):
-        self.activity.states.publish()
+    def test_draft(self):
         self.assertTrue(
-            TimeBasedStateMachine.auto_approve in
+            TimeBasedStateMachine.publish in
             self.activity.states.possible_transitions()
         )
 
@@ -227,7 +206,6 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
     def test_succeed_manually_no_participants(self):
         self.activity.duration_period = 'weeks'
         self.activity.states.publish(save=True)
-        self.initiative.states.approve(save=True)
         self.activity.refresh_from_db()
         self.assertFalse(
             PeriodStateMachine.succeed_manually in
@@ -238,7 +216,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
         self.activity.duration_period = 'overall'
 
         self.activity.states.publish(save=True)
-        self.initiative.states.approve(save=True)
+
         self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()
@@ -252,7 +230,7 @@ class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTe
         self.activity.duration_period = 'weeks'
 
         self.activity.states.publish(save=True)
-        self.initiative.states.approve(save=True)
+
         self.participant_factory.create(activity=self.activity)
 
         self.activity.refresh_from_db()

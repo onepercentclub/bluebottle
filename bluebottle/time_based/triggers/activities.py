@@ -30,7 +30,8 @@ from bluebottle.time_based.models import (
     DateActivitySlot, DeadlineActivity
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ParticipantStateMachine, TimeContributionStateMachine
+    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ParticipantStateMachine, TimeContributionStateMachine,
+    DeadlineActivityStateMachine
 )
 
 
@@ -206,6 +207,13 @@ class TimeBasedTriggers(ActivityTriggers):
                         registration_deadline_is_not_passed
                     ]
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.publish,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
 
@@ -473,7 +481,6 @@ class DeadlineActivityTriggers(TimeBasedTriggers):
             PeriodStateMachine.succeed,
             effects=[
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
-                SetEndDateEffect,
             ]
         ),
 
@@ -516,19 +523,21 @@ class DeadlineActivityTriggers(TimeBasedTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    DateStateMachine.succeed,
+                    DeadlineActivityStateMachine.succeed,
                     conditions=[
-                        deadline_is_passed, has_participants
+                        deadline_is_passed,
+                        has_participants
                     ]
                 ),
                 TransitionEffect(
-                    DateStateMachine.expire,
+                    DeadlineActivityStateMachine.expire,
                     conditions=[
-                        deadline_is_passed, has_no_participants
+                        deadline_is_passed,
+                        has_no_participants
                     ]
                 ),
                 TransitionEffect(
-                    PeriodStateMachine.reschedule,
+                    DeadlineActivityStateMachine.reopen,
                     conditions=[
                         deadline_is_not_passed
                     ]

@@ -589,6 +589,19 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=is_user,
     )
 
+    cancel = Transition(
+        [
+            ContributorStateMachine.new,
+            accepted,
+            succeeded
+        ],
+        cancelled,
+        name=_('Cancel'),
+        passed_label=_('cancelled'),
+        description=_("Cancel the participant, because the activity was cancelled."),
+        automatic=True,
+    )
+
 
 @register(DateParticipant)
 class DateParticipantStateMachine(ParticipantStateMachine):

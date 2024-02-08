@@ -100,6 +100,10 @@ In your `local.py` file, set the `DATABASES` variable to the following::
 
     $ docker-compose -u -d
 
+* Get a local database dump::
+    $ scp backup-prod@prod.backup.goodup.com:/home/backup-prod/backups/saas/reef-prod-current.sql.bz2 ./ 
+(Make sure you are on VPN)
+
 * To import a database dump file (please note that the last two commands run without the `-t` flag)::
 
     $ docker exec -it -u postgres postgres dropdb reef
@@ -147,11 +151,14 @@ To run commands in the Python container::
 
     - For example::
   
-        $ docker exec -it bluebottle python manage.py migrate_schemas -s onepercent --settings=bluebottle.settings.local
+        $ docker exec -it bluebottle python manage.py migrate_schemas -s goodup_demo --settings=bluebottle.settings.local
+        $ docker exec -it bluebottle python ./manage.py reindex -s goodup_demo
 
 If you need to rebuild the container, for example when you want to apply changes after pulling the latest version of a branch, run::
 
     $ docker compose up --build
+
+In your hosts file you need this entry 127.0.0.1 goodup-demo.localhost 
 
 Testing
 -------

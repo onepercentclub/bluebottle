@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from bluebottle.time_based.views import (
-    DateActivityListView, PeriodActivityListView,
+    DateActivityListView, DeadlineTransitionList, PeriodActivityListView,
     DateActivityDetailView, PeriodActivityDetailView,
     DateActivityRelatedParticipantList, PeriodActivityRelatedParticipantList,
     DateTransitionList, PeriodTransitionList,
@@ -16,7 +16,8 @@ from bluebottle.time_based.views import (
     DateParticipantExportView, PeriodParticipantExportView,
     SlotRelatedParticipantList, SkillList, SkillDetail,
     RelatedSlotParticipantListView, TeamSlotListView, TeamSlotDetailView, DateSlotTransitionList,
-    SlotParticipantExportView, DeadlineActivityDetailView
+    SlotParticipantExportView, DeadlineActivityListView, DeadlineActivityDetailView, 
+    DeadlineParticipantExportView, DeadlineActivityRelatedParticipantList
 )
 
 urlpatterns = [
@@ -72,6 +73,18 @@ urlpatterns = [
         PeriodActivityRelatedParticipantList.as_view(),
         name='period-participants'),
 
+    url(r'^/deadline/(?P<activity_id>\d+)/participants$',
+        DeadlineActivityRelatedParticipantList.as_view(),
+        name='deadline-participants'),
+
+    url(r'^/deadline/(?P<activity_id>\d+)/participants$',
+        DeadlineActivityRelatedParticipantList.as_view(),
+        name='period-participants'),
+
+    url(r'^/deadline$',
+        DeadlineActivityListView.as_view(),
+        name='deadline-list'),
+
     url(r'^/deadline/(?P<pk>\d+)$',
         DeadlineActivityDetailView.as_view(),
         name='deadline-detail'),
@@ -96,6 +109,10 @@ urlpatterns = [
     url(r'^/period/transitions$',
         PeriodTransitionList.as_view(),
         name='period-transition-list'),
+
+    url(r'^/deadline/transitions$',
+        DeadlineTransitionList.as_view(),
+        name='deadline-transition-list'),
 
     url(r'^/participants/date$',
         DateParticipantList.as_view(),
@@ -150,6 +167,10 @@ urlpatterns = [
     url(r'^/period/export/(?P<pk>[\d]+)$',
         PeriodParticipantExportView.as_view(),
         name='period-participant-export'),
+
+    url(r'^/deadline/export/(?P<pk>[\d]+)$',
+        DeadlineParticipantExportView.as_view(),
+        name='deadline-participant-export'),
 
     url(r'^/slot/export/(?P<pk>[\d]+)$',
         SlotParticipantExportView.as_view(),

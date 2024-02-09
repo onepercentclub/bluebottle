@@ -5,8 +5,11 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registration import CreateDeadlineParticipantEffect
 from bluebottle.time_based.models import DeadlineRegistration
-from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedReviewNotification, \
-    ManagerRegistrationCreatedNotification, UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification
+from bluebottle.time_based.notifications.registration import (
+    ManagerRegistrationCreatedReviewNotification, ManagerRegistrationCreatedNotification,
+    UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification,
+    UserAppliedNotification
+)
 from bluebottle.time_based.states import (
     RegistrationStateMachine, ParticipantStateMachine, DeadlineParticipantStateMachine
 )
@@ -35,6 +38,12 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
+                    conditions=[
+                        review_needed
+                    ]
+                ),
+                NotificationEffect(
+                    UserAppliedNotification,
                     conditions=[
                         review_needed
                     ]

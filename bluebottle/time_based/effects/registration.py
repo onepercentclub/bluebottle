@@ -9,8 +9,11 @@ class CreateDeadlineParticipantEffect(Effect):
     template = 'admin/create_deadline_participant.html'
 
     def post_save(self, **kwargs):
-        DeadlineParticipant.objects.get_or_create(
-            registration=self.instance,
+        DeadlineParticipant.objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
+            registration=self.instance
         )
+
+    def is_valid(self):
+        return not self.instance.deadlineparticipant_set.exists()

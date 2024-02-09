@@ -9,7 +9,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.time_based.models import (
     PeriodActivity,
-    TimeContribution
+    TimeContribution, DeadlineActivity
 )
 from bluebottle.time_based.states import (
     TimeContributionStateMachine
@@ -22,14 +22,20 @@ def should_succeed_instantly(effect):
     """
     activity = effect.instance.contributor.activity
     if effect.instance.contribution_type == 'preparation':
-        if effect.instance.contributor.status in ('accepted',):
+        if effect.instance.contributor.status in ('accepted', 'succeeded'):
             return True
         else:
             return False
-    elif isinstance(activity, PeriodActivity):
+    elif (
+        isinstance(activity, PeriodActivity) or isinstance(activity, DeadlineActivity) and
+        effect.instance.contributor.status in ('accepted', 'succeeded')
+    ):
         return True
     return (
-        (effect.instance.end is None or effect.instance.end < now()) and
+        (
+            effect.instance.end is None or
+            effect.instance.end < now()
+        ) and
         effect.instance.contributor.status in ('accepted', 'succeeded') and
         effect.instance.contributor.activity.status in ('open', 'succeeded')
     )

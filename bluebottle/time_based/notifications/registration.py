@@ -57,3 +57,8 @@ class UserRegistrationAcceptedNotification(UserRegistrationNotification):
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have not been selected for the activity "{title}"')
     template = 'messages/registration/user_rejected'
+
+
+class UserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registration/user_applied'

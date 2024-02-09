@@ -439,8 +439,12 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
     raw_id_fields = BaseParticipantAdminInline.raw_id_fields
-    readonly_fields = ('status', 'edit')
-    fields = ('edit', 'user', 'status',)
+    readonly_fields = ('status_label', 'edit')
+    fields = ('edit', 'user', 'status_label',)
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+    status_label.short_description = _('Status')
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
@@ -472,7 +476,7 @@ class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (DeadlineRegistrationAdminInline, DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm

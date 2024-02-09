@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from captcha import client
 from django.core import mail
@@ -1154,8 +1155,10 @@ class UserAPITestCase(BluebottleTestCase):
 
     def test_get_current_user_hours_spent(self):
         activity = DateActivityFactory.create(
-            slot_selection='free'
+            slot_selection='free',
+            initiative=InitiativeFactory.create(status="approved")
         )
+        activity.states.publish(save=True)
         slot1 = DateActivitySlotFactory.create(
             activity=activity,
             start=now() - timedelta(days=1),
@@ -1182,7 +1185,6 @@ class UserAPITestCase(BluebottleTestCase):
             slot=slot2
         )
 
-        slot1.states.finish(save=True)
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.json()['hours_spent'], 3)
         self.assertEqual(response.json()['hours_planned'], 2)

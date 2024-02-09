@@ -24,7 +24,7 @@ from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocum
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import (
-    TimeBasedActivity, DateActivity, PeriodActivity,
+    DeadlineActivity, DeadlineParticipant, TimeBasedActivity, DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
     SlotParticipant, Skill, TeamSlot
 )
@@ -673,19 +673,19 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         model=PeriodParticipant,
         read_only=True,
         many=True,
-        related_link_view_name='period-participants',
+        related_link_view_name='deadline-participants',
         related_link_url_kwarg='activity_id'
     )
 
     unreviewed_contributors = UnreviewedContributorsField(
         read_only=True,
-        related_link_view_name='period-participants',
+        related_link_view_name='deadline-participants',
         related_link_url_kwarg='activity_id',
         model=PeriodParticipant
     )
 
     participants_export_url = PrivateFileSerializer(
-        'period-participant-export',
+        'deadline-participant-export',
         url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
@@ -695,7 +695,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     def get_unreviewed_contributors(self, instance):
         user = self.context['request'].user
         unreviewed_participants = instance.contributors.instance_of(
-            PeriodParticipant
+            DeadlineParticipant
         ).filter(
             status=ParticipantStateMachine.new.value
         )
@@ -711,12 +711,11 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
-            return instance.contributors.filter(user=user).instance_of(PeriodParticipant).first()
+            return instance.contributors.filter(user=user).instance_of(DeadlineParticipant).first()
 
     class Meta(TimeBasedBaseSerializer.Meta):
-        model = PeriodActivity
+        model = DeadlineActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'slot_type',
             'start',
             'deadline',
             'duration',
@@ -738,19 +737,12 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         resource_name = 'activities/time-based/deadlines'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
-            'my_contributor.team',
-            'my_contributor.team.slot',
-            'my_contributor.team.slot.location',
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'my_contributor': 'bluebottle.time_based.serializers.PeriodParticipantSerializer',
-            'my_contributor.team': 'bluebottle.activities.utils.TeamSerializer',
-            'my_contributor.team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
-            'my_contributor.team.slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 
@@ -814,6 +806,16 @@ class PeriodTransitionSerializer(TransitionSerializer):
     class JSONAPIMeta(object):
         included_resources = ['resource', ]
         resource_name = 'activities/time-based/period-transitions'
+
+class DeadlineTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=DeadlineActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/time-based/deadline-transitions'
 
 
 class TimeBasedActivityListSerializer(BaseActivityListSerializer):
@@ -1094,6 +1096,52 @@ class PeriodParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/period-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            'contributions',
+            'team',
+            'team.slot'
+        ]
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers,
+        **{
+            'document': 'bluebottle.time_based.serializers.PeriodParticipantDocumentSerializer',
+            'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+            'team.slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
+            'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
+        }
+    )
+
+class DeadlineParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
+
+    contributions = SerializerMethodResourceRelatedField(
+        model=TimeContribution,
+        many=True,
+        read_only=True,
+    )
+
+    def get_contributions(self, obj):
+        if obj.activity.duration_period == 'overall':
+            return obj.contributions.all()
+
+    class Meta(ParticipantSerializer.Meta):
+        model = DeadlineParticipant
+
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions',)
+        fields = ParticipantSerializer.Meta.fields + (
+            'contributions',
+        )
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=DeadlineParticipant.objects.all(),
+                fields=('activity', 'user')
+            )
+        ]
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/deadline-participants'
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             'contributions',
             'team',

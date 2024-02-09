@@ -39,15 +39,18 @@ class CreateRegistrationEffect(Effect):
     title = _('Create registration for this participant')
     template = 'admin/create_deadline_participant.html'
 
+    def without_registration(self):
+        return not self.instance.registration
+
     def post_save(self, **kwargs):
-        registration, _created = DeadlineRegistration.objects.get_or_create(
+        registration = DeadlineRegistration.objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
             status='accepted'
         )
-        if not self.instance.registration:
-            self.instance.registration = registration
-            self.instance.save()
+        self.instance.registration = registration
+        self.instance.save()
 
-    def is_valid(self):
-        return not self.instance.registration
+    conditions = [
+        without_registration
+    ]

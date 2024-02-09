@@ -130,6 +130,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     remove = Transition(
         [
             accepted,
+            succeeded
         ],
         rejected,
         name=_('Remove'),
@@ -142,6 +143,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     withdraw = Transition(
         [
             ContributorStateMachine.new,
+            succeeded,
             accepted
         ],
         withdrawn,
@@ -218,6 +220,4 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(ParticipantStateMachine):
-
-    accept = None
     reject = None

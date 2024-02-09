@@ -14,7 +14,7 @@ from bluebottle.time_based.messages import (
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
     TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
 )
-from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedNotification, \
+from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,

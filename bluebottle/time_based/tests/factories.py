@@ -90,6 +90,7 @@ class DeadlineActivityFactory(TimeBasedFactory):
         model = DeadlineActivity
 
     deadline = date.today() + timedelta(weeks=4)
+    registration_deadline = date.today() - timedelta(weeks=4)
     duration = timedelta(hours=4)
     is_online = False
     location = factory.SubFactory(GeolocationFactory)

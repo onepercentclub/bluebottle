@@ -87,17 +87,18 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated', 'type'
+        'created', 'updated',
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
-        if InitiativePlatformSettings.team_activities and 'team' not in self.fields:
-            self.fields += ('team',)
+        fields = self.get_fields(request, obj)
+        if InitiativePlatformSettings.team_activities and 'team' not in fields:
+            fields += ('team',)
         fieldsets = (
-            (_('Details'), {'fields': self.fields}),
+            (_('Details'), {'fields': fields}),
         )
         if request.user.is_superuser:
             fieldsets += (

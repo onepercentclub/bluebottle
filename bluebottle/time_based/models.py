@@ -993,6 +993,10 @@ class Registration(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
 
+    @property
+    def participants(self):
+        return self.deadlineparticipant_set.all()
+
 
 class DeadlineRegistration(Registration):
     pass

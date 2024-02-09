@@ -50,10 +50,10 @@ class UserRegistrationNotification(TransitionMessage):
 
 
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
-    subject = pgettext('email', 'You have been accepted for the activity "{title}"')
-    template = 'messages/registration/user_registration_accepted'
+    subject = pgettext('email', 'You have been selected for the activity "{title}"')
+    template = 'messages/registration/user_accepted'
 
 
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have not been selected for the activity "{title}"')
-    template = 'messages/registration/user_registration_rejected'
+    template = 'messages/registration/user_rejected'

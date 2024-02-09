@@ -125,7 +125,7 @@ class TimeBasedActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(PeriodParticipant, DateParticipant)
+        return self.contributors.instance_of(PeriodParticipant, DateParticipant, DeadlineParticipant)
 
     @property
     def pending_participants(self):
@@ -482,29 +482,6 @@ class DurationPeriodChoices(DjangoChoices):
 
 
 class PeriodActivity(TimeBasedActivity):
-    SLOT_TYPE_CHOICES = (
-        (None, 'Not set yet'),
-        (
-            'free',
-            'Anytime. Participants will execute the task on their own time'
-        ),
-        (
-            'tailored',
-            'Tailored. After signing up, participants will be assigned a date and time by the activity manager.'
-        ),
-        (
-            'recurring',
-            'Recurring. Participants are expected to contribute every week or month.'
-        ),
-    )
-
-    slot_type = models.CharField(
-        _('Time slot type'),
-        help_text=_('How and when will participants contribute to this activity?'),
-        max_length=100,
-        choices=SLOT_TYPE_CHOICES,
-        null=True, default=None
-    )
 
     ONLINE_CHOICES = (
         (None, 'Not set yet'),
@@ -796,6 +773,10 @@ class DeadlineActivity(TimeBasedActivity):
         if not self.is_online:
             fields.append('location')
         return fields + ['duration', 'is_online']
+
+    @property
+    def active_participants(self):
+        return self.participants.filter(status__in=['new', 'accepted', 'succeeded'])
 
 
 class Participant(Contributor):

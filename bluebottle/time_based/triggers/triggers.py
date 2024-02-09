@@ -4,16 +4,13 @@ from django.utils.timezone import now
 
 from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
-    ActivitySucceededNotification,
-    ActivityExpiredNotification, ActivityRejectedNotification,
-    ActivityCancelledNotification, ActivityRestoredNotification,
     ParticipantWithdrewConfirmationNotification,
     TeamMemberWithdrewMessage, TeamMemberRemovedMessage, TeamCaptainAcceptedMessage, TeamCancelledTeamCaptainMessage,
     TeamMemberAddedMessage
 )
-from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
+from bluebottle.activities.states import TeamStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers, has_organizer
+    ContributorTriggers
 )
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
@@ -24,21 +21,18 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    CreatePeriodTimeContributionEffect, CreateOverallTimeContributionEffect, SetEndDateEffect,
-    ClearDeadlineEffect,
-    RescheduleSlotDurationsEffect,
+    CreatePeriodTimeContributionEffect, CreateOverallTimeContributionEffect, RescheduleSlotDurationsEffect,
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, UnlockUnfilledSlotsEffect,
     LockFilledSlotsEffect, CreatePreparationTimeContributionEffect,
-    UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+    UpdateSlotTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
-    DeadlineChangedNotification,
     ParticipantAddedNotification, ParticipantCreatedNotification,
     ParticipantAcceptedNotification, ParticipantRejectedNotification,
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
     ChangedSingleDateNotification, ChangedMultipleDateNotification,
-    ActivitySucceededManuallyNotification, ParticipantChangedNotification,
+    ParticipantChangedNotification,
     ParticipantWithdrewNotification, ManagerParticipantAddedOwnerNotification,
     TeamParticipantAddedNotification,
     ParticipantRemovedOwnerNotification, ParticipantAppliedNotification, TeamParticipantAppliedNotification,
@@ -50,11 +44,11 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot,
+    DateParticipant, PeriodParticipant, DateActivitySlot,
     PeriodActivitySlot, SlotParticipant, TeamSlot
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, DateStateMachine, PeriodStateMachine, ActivitySlotStateMachine,
+    TimeBasedStateMachine, DateStateMachine, ActivitySlotStateMachine,
     ParticipantStateMachine, TimeContributionStateMachine, SlotParticipantStateMachine,
     PeriodParticipantStateMachine, TeamSlotStateMachine
 )
@@ -89,23 +83,6 @@ def activity_has_status_full(effect):
     the activity has status full
     """
     return effect.instance.activity.status == 'full'
-
-
-def is_not_full(effect):
-    """
-    the activity is not full
-    """
-    if getattr(effect.instance, 'team_activity', None) == 'teams':
-        accepted_teams = effect.instance.teams.filter(status__in=['open', 'running', 'finished']).count()
-        return (
-            not effect.instance.capacity or
-            effect.instance.capacity > accepted_teams
-        )
-
-    return (
-        not effect.instance.capacity or
-        effect.instance.capacity > len(effect.instance.accepted_participants)
-    )
 
 
 def has_participants(effect):
@@ -167,13 +144,6 @@ def registration_deadline_is_passed(effect):
     )
 
 
-def registration_deadline_is_not_passed(effect):
-    """
-    registration deadline hasn't passed
-    """
-    return not registration_deadline_is_passed(effect)
-
-
 def deadline_is_passed(effect):
     """
     deadline has passed
@@ -182,30 +152,6 @@ def deadline_is_passed(effect):
         effect.instance.deadline and
         effect.instance.deadline < date.today()
     )
-
-
-def deadline_is_not_passed(effect):
-    """
-    deadline hasn't passed
-    """
-    return not deadline_is_passed(effect)
-
-
-def start_is_not_passed(effect):
-    """
-    start date hasn't passed
-    """
-    return (
-        effect.instance.start is None or
-        effect.instance.start > date.today()
-    )
-
-
-def activity_automatically_accept(effect):
-    """
-    automatically accept participants
-    """
-    return not effect.instance.review
 
 
 def automatically_accept(effect):
@@ -220,165 +166,6 @@ def needs_review(effect):
     needs review
     """
     return effect.instance.activity.review
-
-
-class TimeBasedTriggers(ActivityTriggers):
-    triggers = ActivityTriggers.triggers + [
-        ModelChangedTrigger(
-            'capacity',
-            effects=[
-                TransitionEffect(
-                    TimeBasedStateMachine.reopen,
-                    conditions=[
-                        is_not_full,
-                        registration_deadline_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    TimeBasedStateMachine.lock,
-                    conditions=[
-                        is_full,
-                        registration_deadline_is_not_passed
-                    ]
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.succeed,
-            effects=[
-                NotificationEffect(ActivitySucceededNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.reject,
-            effects=[
-                NotificationEffect(ActivityRejectedNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.cancel,
-            effects=[
-                NotificationEffect(ActivityCancelledNotification),
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.restore,
-            effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
-                NotificationEffect(ActivityRestoredNotification)
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeBasedStateMachine.expire,
-            effects=[
-                NotificationEffect(ActivityExpiredNotification),
-            ]
-        ),
-        ModelChangedTrigger(
-            'review',
-            effects=[
-                RelatedTransitionEffect(
-                    'pending_participants',
-                    ParticipantStateMachine.accept,
-                    conditions=[activity_automatically_accept]
-                ),
-            ]
-        ),
-    ]
-
-
-@register(DateActivity)
-class DateActivityTriggers(TimeBasedTriggers):
-    triggers = TimeBasedTriggers.triggers + [
-        ModelChangedTrigger(
-            'registration_deadline',
-            effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed
-                ]),
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'slot_selection',
-            effects=[
-                UnsetCapacityEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            DateStateMachine.reopen_manually,
-            effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
-            ]
-        ),
-
-        TransitionTrigger(
-            DateStateMachine.auto_approve,
-            effects=[
-                TransitionEffect(
-                    DateStateMachine.succeed,
-                    conditions=[
-                        is_finished, has_participants
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.expire,
-                    conditions=[
-                        is_finished, has_no_participants
-                    ]
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            DateStateMachine.auto_publish,
-            effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.succeed,
-                    conditions=[has_organizer]
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            DateStateMachine.publish,
-            effects=[
-                RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.succeed,
-                    conditions=[has_organizer]
-                ),
-
-                TransitionEffect(
-                    DateStateMachine.succeed,
-                    conditions=[
-                        is_finished, has_participants
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.expire,
-                    conditions=[
-                        is_finished, has_no_participants
-                    ]
-                ),
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
-            ]
-        ),
-    ]
 
 
 def slot_is_complete(effect):
@@ -462,10 +249,7 @@ def participant_slot_will_be_not_full(effect):
         status='registered',
         participant__status='accepted'
     ).count()
-    if (
-        effect.instance.slot.capacity and
-        participant_count - 1 < effect.instance.slot.capacity
-    ):
+    if effect.instance.slot.capacity and participant_count - 1 < effect.instance.slot.capacity:
         return True
     return False
 
@@ -647,22 +431,6 @@ def activity_has_accepted_participants(effect):
     activity does not have any accepted participants
     """
     return effect.instance.activity.accepted_participants.count() > 0
-
-
-def slot_selection_is_all(effect):
-    """
-    all slots ar selected when participant applies
-    """
-    activity = effect.instance.activity
-    return activity.slot_selection == 'all'
-
-
-def slot_selection_is_free(effect):
-    """
-    all slots ar selected when participant applies
-    """
-    activity = effect.instance.activity
-    return activity.slot_selection == 'free'
 
 
 @register(DateActivitySlot)
@@ -904,129 +672,6 @@ class TeamSlotTriggers(TriggerManager):
     ]
 
 
-@register(PeriodActivity)
-class PeriodActivityTriggers(TimeBasedTriggers):
-    triggers = TimeBasedTriggers.triggers + [
-        ModelChangedTrigger(
-            'registration_deadline',
-            effects=[
-                TransitionEffect(TimeBasedStateMachine.lock, conditions=[
-                    registration_deadline_is_passed
-                ]),
-                TransitionEffect(TimeBasedStateMachine.reopen, conditions=[
-                    registration_deadline_is_not_passed
-                ]),
-            ]
-        ),
-
-        ModelChangedTrigger(
-            ['start', 'deadline'],
-            effects=[
-                RescheduleOverallPeriodActivityDurationsEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PeriodStateMachine.reschedule,
-            effects=[
-                TransitionEffect(
-                    TimeBasedStateMachine.lock,
-                    conditions=[
-                        is_full,
-                    ]
-                ),
-                TransitionEffect(
-                    TimeBasedStateMachine.lock,
-                    conditions=[
-                        registration_deadline_is_passed,
-                    ]
-                )
-            ]
-        ),
-
-        TransitionTrigger(
-            DateStateMachine.reopen_manually,
-            effects=[
-                ClearDeadlineEffect,
-            ]
-        ),
-
-        TransitionTrigger(
-            PeriodStateMachine.succeed_manually,
-            effects=[
-                SetEndDateEffect,
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
-                NotificationEffect(ActivitySucceededManuallyNotification),
-            ]
-        ),
-
-        TransitionTrigger(
-            PeriodStateMachine.succeed,
-            effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
-                SetEndDateEffect,
-            ]
-        ),
-
-        ModelChangedTrigger(
-            'start',
-            effects=[
-                NotificationEffect(
-                    DeadlineChangedNotification,
-                    conditions=[start_is_not_passed]
-                ),
-                TransitionEffect(
-                    PeriodStateMachine.reopen,
-                    conditions=[
-                        is_not_full, registration_deadline_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    PeriodStateMachine.lock,
-                    conditions=[
-                        is_full,
-                    ]
-                ),
-                TransitionEffect(
-                    PeriodStateMachine.lock,
-                    conditions=[
-                        registration_deadline_is_passed,
-                    ]
-                ),
-            ]
-        ),
-        ModelChangedTrigger(
-            'deadline',
-            effects=[
-                NotificationEffect(
-                    DeadlineChangedNotification,
-                    conditions=[
-                        deadline_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.succeed,
-                    conditions=[
-                        deadline_is_passed, has_participants
-                    ]
-                ),
-                TransitionEffect(
-                    DateStateMachine.expire,
-                    conditions=[
-                        deadline_is_passed, has_no_participants
-                    ]
-                ),
-                TransitionEffect(
-                    PeriodStateMachine.reschedule,
-                    conditions=[
-                        deadline_is_not_passed
-                    ]
-                ),
-            ]
-        )
-    ]
-
-
 @register(PeriodActivitySlot)
 class PeriodActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + []
@@ -1070,15 +715,6 @@ def is_user(effect):
     """
     if 'user' in effect.options:
         return effect.instance.user == effect.options['user']
-    return False
-
-
-def is_owner(effect):
-    """
-    User is the owner
-    """
-    if 'user' in effect.options:
-        return effect.instance.activity.owner == effect.options['user']
     return False
 
 
@@ -1576,13 +1212,6 @@ def participant_slot_is_finished(effect):
         return effect.instance.slot.is_complete and effect.instance.slot.end < now()
 
 
-def participant_will_not_be_attending(effect):
-    """
-    no more slot participations remaining for this activity (participant unregistered from all slots)
-    """
-    return len(effect.instance.participant.slot_participants.filter(status='registered')) <= 1
-
-
 def applicant_is_accepted(effect):
     return effect.instance.participant.status == 'accepted'
 
@@ -1740,53 +1369,6 @@ class PeriodParticipantTriggers(ParticipantTriggers):
             PeriodParticipantStateMachine.stop,
             effects=[
                 NotificationEffect(ParticipantFinishedNotification),
-            ]
-        ),
-
-    ]
-
-
-def should_succeed_instantly(effect):
-    """
-    contribution (slot) has finished
-    """
-    activity = effect.instance.contributor.activity
-    if effect.instance.contribution_type == 'preparation':
-        if effect.instance.contributor.status in ('accepted',):
-            return True
-        else:
-            return False
-    elif isinstance(activity, PeriodActivity):
-        return True
-    return (
-        (effect.instance.end is None or effect.instance.end < now()) and
-        effect.instance.contributor.status in ('accepted', 'new') and
-        effect.instance.contributor.activity.status in ('open', 'succeeded')
-    )
-
-
-@register(TimeContribution)
-class TimeContributionTriggers(ContributionTriggers):
-    triggers = ContributionTriggers.triggers + [
-        TransitionTrigger(
-            TimeContributionStateMachine.reset,
-            effects=[
-                TransitionEffect(
-                    TimeContributionStateMachine.succeed,
-                    conditions=[
-                        should_succeed_instantly
-                    ]),
-            ]
-        ),
-
-        TransitionTrigger(
-            TimeContributionStateMachine.initiate,
-            effects=[
-                TransitionEffect(
-                    TimeContributionStateMachine.succeed,
-                    conditions=[
-                        should_succeed_instantly
-                    ]),
             ]
         ),
 

@@ -27,6 +27,7 @@ class CreateTimeContributionEffect(Effect):
             value=activity.duration,
             start=contribution_date
         )
+
         contribution.execute_triggers(**self.options)
         contribution.save()
 

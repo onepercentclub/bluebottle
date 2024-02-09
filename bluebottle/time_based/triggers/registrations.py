@@ -15,15 +15,11 @@ from bluebottle.time_based.states import (
 class RegistrationTriggers(TriggerManager):
 
     def review_needed(effect):
-        """
-        Review needed
-        """
+        """ Review needed """
         return effect.instance.activity.review
 
     def no_review_needed(effect):
-        """
-        No review needed
-        """
+        """ No review needed """
         return not effect.instance.activity.review
 
     triggers = [

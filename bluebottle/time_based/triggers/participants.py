@@ -18,18 +18,20 @@ from bluebottle.time_based.states import (
 @register(DeadlineParticipant)
 class DeadlineParticipantTriggers(ContributorTriggers):
     def review_needed(effect):
+        """ Review needed """
         return effect.instance.activity.review
 
     def no_review_needed(effect):
+        """ No review needed """
         return not effect.instance.activity.review
 
     triggers = [
-        FollowActivityEffect,
-        CreatePreparationTimeContributionEffect,
-        CreateTimeContributionEffect,
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
+                FollowActivityEffect,
+                CreatePreparationTimeContributionEffect,
+                CreateTimeContributionEffect,
                 TransitionEffect(
                     ParticipantStateMachine.accept,
                     conditions=[
@@ -52,6 +54,33 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     ContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.cancelled,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.fail,
                 ),
             ]
         ),

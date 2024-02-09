@@ -30,7 +30,7 @@ from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution
+    TimeContribution, DeadlineParticipant
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -44,7 +44,8 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DateParticipant,
         PeriodParticipant,
         DeedParticipant,
-        CollectContributor
+        CollectContributor,
+        DeadlineParticipant
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)

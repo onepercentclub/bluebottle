@@ -16,7 +16,7 @@ from bluebottle.time_based.views import (
     DateParticipantExportView, PeriodParticipantExportView,
     SlotRelatedParticipantList, SkillList, SkillDetail,
     RelatedSlotParticipantListView, TeamSlotListView, TeamSlotDetailView, DateSlotTransitionList,
-    SlotParticipantExportView, DeadlineActivityListView, DeadlineActivityDetailView, 
+    SlotParticipantExportView, DeadlineActivityListView, DeadlineActivityDetailView,
     DeadlineParticipantExportView, DeadlineActivityRelatedParticipantList
 )
 

@@ -806,6 +806,7 @@ class PeriodTransitionSerializer(TransitionSerializer):
         included_resources = ['resource', ]
         resource_name = 'activities/time-based/period-transitions'
 
+
 class DeadlineTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=DeadlineActivity.objects.all())
     included_serializers = {
@@ -1110,6 +1111,7 @@ class PeriodParticipantSerializer(ParticipantSerializer):
             'activity': 'bluebottle.time_based.serializers.PeriodActivitySerializer',
         }
     )
+
 
 class DeadlineParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))

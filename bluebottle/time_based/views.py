@@ -324,6 +324,7 @@ class PeriodActivityRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
 
+
 class DeadlineActivityRelatedParticipantList(RelatedContributorListView):
     queryset = DeadlineParticipant.objects.prefetch_related('user')
     serializer_class = DeadlineParticipantSerializer

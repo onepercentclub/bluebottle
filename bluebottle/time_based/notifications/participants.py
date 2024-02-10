@@ -1,4 +1,4 @@
-from gettext import pgettext
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 

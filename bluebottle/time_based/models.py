@@ -743,6 +743,18 @@ class DeadlineActivity(TimeBasedActivity):
         verbose_name = _("Deadline activity")
         verbose_name_plural = _("Deadline activities")
 
+        permissions = (
+            ('api_read_deadlineactivity', 'Can view on a date activities through the API'),
+            ('api_add_deadlineactivity', 'Can add on a date activities through the API'),
+            ('api_change_deadlineactivity', 'Can change on a date activities through the API'),
+            ('api_delete_deadlineactivity', 'Can delete on a date activities through the API'),
+
+            ('api_read_own_deadlineactivity', 'Can view own on a date activities through the API'),
+            ('api_add_own_deadlineactivity', 'Can add own on a date activities through the API'),
+            ('api_change_own_deadlineactivity', 'Can change own on a date activities through the API'),
+            ('api_delete_own_deadlineactivity', 'Can delete own on a date activities through the API'),
+        )
+
     class JSONAPIMeta:
         resource_name = 'activities/time-based/deadlines'
 
@@ -1006,11 +1018,39 @@ class Registration(TriggerMixin, PolymorphicModel):
 
 
 class DeadlineRegistration(Registration):
-    pass
+    class Meta():
+        verbose_name = _(u'Deadline registration')
+        verbose_name_plural = _(u'Deadline registrations')
+
+        permissions = (
+            ('api_read_deadlineregistration', 'Can view registation through the API'),
+            ('api_add_deadlineregistration', 'Can add registation through the API'),
+            ('api_change_deadlineregistration', 'Can change registation through the API'),
+            ('api_delete_deadlineregistration', 'Can delete registation through the API'),
+
+            ('api_read_own_deadlineregistration', 'Can view own registation through the API'),
+            ('api_add_own_deadlineregistration', 'Can add own registation through the API'),
+            ('api_change_own_deadlineregistration', 'Can change own registation through the API'),
+            ('api_delete_own_deadlineregistration', 'Can delete own registation through the API'),
+        )
 
 
 class DeadlineParticipant(Participant, Contributor):
-    pass
+    class Meta():
+        verbose_name = _(u'Deadline participant')
+        verbose_name_plural = _(u'Deadline participants')
+
+        permissions = (
+            ('api_read_deadlineparticipant', 'Can view participant through the API'),
+            ('api_add_deadlineparticipant', 'Can add participant through the API'),
+            ('api_change_deadlineparticipant', 'Can change participant through the API'),
+            ('api_delete_deadlineparticipant', 'Can delete participant through the API'),
+
+            ('api_read_own_deadlineparticipant', 'Can view own participant through the API'),
+            ('api_add_own_deadlineparticipant', 'Can add own participant through the API'),
+            ('api_change_own_deadlineparticipant', 'Can change own participant through the API'),
+            ('api_delete_own_deadlineparticipant', 'Can delete own participant through the API'),
+        )
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

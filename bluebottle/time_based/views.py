@@ -25,7 +25,7 @@ from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill, TeamSlot, DeadlineActivity
+    DateActivitySlot, SlotParticipant, Skill, TeamSlot, DeadlineActivity, DeadlineParticipant
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
@@ -35,6 +35,7 @@ from bluebottle.time_based.serializers import (
     PeriodActivitySerializer,
     DateTransitionSerializer,
     PeriodTransitionSerializer,
+    DeadlineTransitionSerializer,
     PeriodParticipantSerializer,
     DateParticipantSerializer,
     DateParticipantListSerializer,
@@ -44,7 +45,7 @@ from bluebottle.time_based.serializers import (
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
     SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer, DateSlotTransitionSerializer,
-    DeadlineActivitySerializer
+    DeadlineActivitySerializer, DeadlineParticipantSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -90,6 +91,11 @@ class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMix
 class DateActivityListView(TimeBasedActivityListView):
     queryset = DateActivity.objects.all()
     serializer_class = DateActivitySerializer
+
+
+class DeadlineActivityListView(TimeBasedActivityListView):
+    queryset = DeadlineActivity.objects.all()
+    serializer_class = DeadlineActivitySerializer
 
 
 class PeriodActivityListView(TimeBasedActivityListView):
@@ -318,6 +324,10 @@ class PeriodActivityRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodParticipant.objects.prefetch_related('user')
     serializer_class = PeriodParticipantSerializer
 
+class DeadlineActivityRelatedParticipantList(RelatedContributorListView):
+    queryset = DeadlineParticipant.objects.prefetch_related('user')
+    serializer_class = DeadlineParticipantSerializer
+
 
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
@@ -332,6 +342,11 @@ class DateSlotTransitionList(TransitionList):
 class PeriodTransitionList(TransitionList):
     serializer_class = PeriodTransitionSerializer
     queryset = PeriodActivity.objects.all()
+
+
+class DeadlineTransitionList(TransitionList):
+    serializer_class = DeadlineTransitionSerializer
+    queryset = DeadlineActivity.objects.all()
 
 
 class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
@@ -754,6 +769,75 @@ class PeriodParticipantExportView(ExportView):
     def get_instances(self):
         return self.get_object().contributors.instance_of(
             PeriodParticipant
+        ).prefetch_related('user__segments')
+
+    def write_data(self, workbook):
+        """ Create extra tab with team info"""
+        super().write_data(workbook)
+        if self.get_object().team_activity == 'teams':
+            worksheet = workbook.add_worksheet('Teams')
+
+            fields = [
+                ('name', 'Name'),
+                ('owner__full_name', 'Owner'),
+                ('id', 'ID'),
+                ('status', 'Status'),
+                ('accepted_participants_count', '# Accepted Participants'),
+                ('slot__start', 'Start'),
+                ('slot__duration', 'duration'),
+            ]
+
+            worksheet.write_row(0, 0, [field[1] for field in fields])
+
+            for index, team in enumerate(self.get_object().teams.all()):
+                row = [prep_field(self.request, team, field[0]) for field in fields]
+
+                worksheet.write_row(index + 1, 0, row)
+
+
+class DeadlineParticipantExportView(ExportView):
+    filename = "participants"
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('motivation', 'Motivation'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+    )
+
+    model = DeadlineActivity
+
+    def get_row(self, instance):
+        row = []
+
+        for (field, name) in self.get_fields():
+            if field.startswith('segment.'):
+                row.append(
+                    ", ".join(
+                        instance.user.segments.filter(
+                            segment_type_id=field.split('.')[-1]
+                        ).values_list('name', flat=True)
+                    )
+                )
+            else:
+                row.append(prep_field(self.request, instance, field))
+
+        return row
+
+    def get_fields(self):
+        fields = super().get_fields()
+
+        segments = tuple(
+            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
+        )
+        if InitiativePlatformSettings.objects.get().team_activities:
+            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
+
+        return fields + segments
+
+    def get_instances(self):
+        return self.get_object().contributors.instance_of(
+            DeadlineParticipant
         ).prefetch_related('user__segments')
 
     def write_data(self, workbook):

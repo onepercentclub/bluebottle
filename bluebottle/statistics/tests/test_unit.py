@@ -74,6 +74,7 @@ class DateActivityStatisticsTest(StatisticsTest):
         super(DateActivityStatisticsTest, self).setUp()
         self.activity = DateActivityFactory.create(
             initiative=self.initiative,
+            preparation=None,
             owner=self.some_user,
             capacity=10,
             slots=[]
@@ -215,7 +216,7 @@ class PeriodActivityStatisticsTest(StatisticsTest):
             deadline=datetime.date.today() + datetime.timedelta(days=48),
             duration=datetime.timedelta(minutes=6)
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
 
     def test_open(self):
         self.assertEqual(

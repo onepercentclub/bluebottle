@@ -372,7 +372,7 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.message_class = ManagerRegistrationCreatedNotification
         self.create()
         self.assertRecipients([self.activity.owner])
-        self.assertSubject('You have a new participant for your activity "Save the world!"')
+        self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -382,6 +382,6 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.message_class = ManagerRegistrationCreatedReviewNotification
         self.create()
         self.assertRecipients([self.activity.owner])
-        self.assertSubject('You have a new application for your activity "Save the world!"')
+        self.assertSubject('You have a new application for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')

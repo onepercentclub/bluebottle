@@ -439,8 +439,12 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
     raw_id_fields = BaseParticipantAdminInline.raw_id_fields
-    readonly_fields = ('status', 'edit')
-    fields = ('edit', 'user', 'status',)
+    readonly_fields = ('status_label', 'edit')
+    fields = ('edit', 'user', 'status_label',)
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+    status_label.short_description = _('Status')
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
@@ -472,7 +476,7 @@ class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
 class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
-    inlines = (DeadlineRegistrationAdminInline, DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm
@@ -1078,7 +1082,39 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [
         TimeContributionInlineAdmin
     ]
-    fields = ContributorChildAdmin.fields
+    fields = ContributorChildAdmin.fields + ['registration_info']
+    pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
+
+    def get_fields(self, request, obj=None):
+        if obj and obj.registration and obj.registration.status == 'new':
+            return self.pending_fields
+        return self.fields
+
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
+        'registration_info'
+    ]
+
+    def registration_info(self, obj):
+        url = reverse("admin:{}_{}_change".format(
+            obj.registration._meta.app_label,
+            obj.registration._meta.model_name),
+            args=(obj.registration.id,)
+        )
+        status = obj.registration.states.current_state.name
+        if obj.registration.status == 'new':
+            template = loader.get_template(
+                'admin/time_based/registration_info.html'
+            )
+            return template.render({'status': status, 'url': url})
+        else:
+            title = _('Change review')
+            return format_html(
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
+                url=url, status=status, title=title
+            )
+
+    registration_info.short_description = _('Registration')
+
     list_display = ['__str__', 'activity_link', 'status']
 
 
@@ -1086,13 +1122,13 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = ['created', ]
     raw_id_fields = ['user', 'activity']
-    fields = ['user', 'activity', 'status', 'states']
+    fields = ['user', 'activity', 'answer', 'document', 'status', 'states']
     list_display = ['__str__', 'activity', 'user', 'status']
 
 
 @admin.register(DeadlineRegistration)
 class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
-    pass
+    inlines = [DeadlineParticipantAdminInline]
 
 
 @admin.register(SlotParticipant)

@@ -31,7 +31,7 @@ class RegistrationStateMachine(ModelStateMachine):
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or
-            (self.instance.team and self.instance.team.owner == user) or
+            user.is_superuser or
             user.is_staff or
             user in self.instance.activity.initiative.activity_managers.all()
         )

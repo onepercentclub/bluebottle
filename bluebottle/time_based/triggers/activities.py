@@ -238,7 +238,6 @@ class TimeBasedTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
 
@@ -481,6 +480,17 @@ class DeadlineActivityTriggers(TimeBasedTriggers):
             PeriodStateMachine.succeed,
             effects=[
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
+            ]
+        ),
+
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                NotificationEffect(ActivityCancelledNotification),
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    ParticipantStateMachine.cancel
+                ),
             ]
         ),
 

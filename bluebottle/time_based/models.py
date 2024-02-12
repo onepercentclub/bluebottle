@@ -778,6 +778,10 @@ class DeadlineActivity(TimeBasedActivity):
     def active_participants(self):
         return self.participants.filter(status__in=['new', 'accepted', 'succeeded'])
 
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(status__in=['succeeded'])
+
 
 class Participant(Contributor):
 
@@ -1004,6 +1008,13 @@ class Registration(TriggerMixin, PolymorphicModel):
 
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
+
+    @property
+    def participants(self):
+        return self.deadlineparticipant_set.all()
+
+    def __str__(self):
+        return _('Registration {name} for {activity}').format(name=self.user, activity=self.activity)
 
 
 class DeadlineRegistration(Registration):

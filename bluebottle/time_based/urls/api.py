@@ -1,29 +1,29 @@
 from django.conf.urls import include, url
 
 from bluebottle.time_based.views import (
-    ActivitySlotIcalView,
     DateActivityDetailView,
-    DateActivityIcalView,
     DateActivityListView,
     DateActivityRelatedParticipantList,
     DateParticipantDetail,
     DateParticipantDocumentDetail,
-    DateParticipantExportView,
     DateParticipantList,
     DateParticipantTransitionList,
+    DateTransitionList,
+    TimeContributionDetail,
     DateSlotDetailView,
     DateSlotListView,
-    DateSlotTransitionList,
-    DateTransitionList,
-    RelatedSlotParticipantListView,
-    SkillDetail,
-    SkillList,
-    SlotParticipantDetailView,
-    SlotParticipantExportView,
     SlotParticipantListView,
+    SlotParticipantDetailView,
     SlotParticipantTransitionList,
+    DateActivityIcalView,
+    ActivitySlotIcalView,
+    DateParticipantExportView,
     SlotRelatedParticipantList,
-    TimeContributionDetail,
+    SkillList,
+    SkillDetail,
+    RelatedSlotParticipantListView,
+    DateSlotTransitionList,
+    SlotParticipantExportView
 )
 
 urlpatterns = [

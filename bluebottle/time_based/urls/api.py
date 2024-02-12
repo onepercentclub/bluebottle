@@ -1,33 +1,35 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
 
 from bluebottle.time_based.views import (
-    DateActivityListView, DeadlineTransitionList, PeriodActivityListView,
-    DateActivityDetailView, PeriodActivityDetailView,
-    DateActivityRelatedParticipantList, PeriodActivityRelatedParticipantList,
-    DateTransitionList, PeriodTransitionList,
-    DateParticipantList, DateParticipantDetail,
-    DateParticipantTransitionList, DateParticipantDocumentDetail,
-    PeriodParticipantList, PeriodParticipantDetail,
-    PeriodParticipantTransitionList, PeriodParticipantDocumentDetail,
+    ActivitySlotIcalView,
+    DateActivityDetailView,
+    DateActivityIcalView,
+    DateActivityListView,
+    DateActivityRelatedParticipantList,
+    DateParticipantDetail,
+    DateParticipantDocumentDetail,
+    DateParticipantExportView,
+    DateParticipantList,
+    DateParticipantTransitionList,
+    DateSlotDetailView,
+    DateSlotListView,
+    DateSlotTransitionList,
+    DateTransitionList,
+    RelatedSlotParticipantListView,
+    SkillDetail,
+    SkillList,
+    SlotParticipantDetailView,
+    SlotParticipantExportView,
+    SlotParticipantListView,
+    SlotParticipantTransitionList,
+    SlotRelatedParticipantList,
     TimeContributionDetail,
-    DateSlotDetailView, DateSlotListView,
-    SlotParticipantListView, SlotParticipantDetailView, SlotParticipantTransitionList,
-    DateActivityIcalView, ActivitySlotIcalView, TeamSlotIcalView,
-    DateParticipantExportView, PeriodParticipantExportView,
-    SlotRelatedParticipantList, SkillList, SkillDetail,
-    RelatedSlotParticipantListView, TeamSlotListView, TeamSlotDetailView, DateSlotTransitionList,
-    SlotParticipantExportView, DeadlineActivityListView, DeadlineActivityDetailView, 
-    DeadlineParticipantExportView, DeadlineActivityRelatedParticipantList
 )
 
 urlpatterns = [
     url(r'^/date$',
         DateActivityListView.as_view(),
         name='date-list'),
-
-    url(r'^/period$',
-        PeriodActivityListView.as_view(),
-        name='period-list'),
 
     url(r'^/date/(?P<pk>\d+)$',
         DateActivityDetailView.as_view(),
@@ -61,58 +63,13 @@ urlpatterns = [
         ActivitySlotIcalView.as_view(),
         name='slot-ical'),
 
-    url(r'^/team/ical/(?P<pk>\d+)$',
-        TeamSlotIcalView.as_view(),
-        name='team-ical'),
-
-    url(r'^/period/(?P<pk>\d+)$',
-        PeriodActivityDetailView.as_view(),
-        name='period-detail'),
-
-    url(r'^/period/(?P<activity_id>\d+)/participants$',
-        PeriodActivityRelatedParticipantList.as_view(),
-        name='period-participants'),
-
-    url(r'^/deadline/(?P<activity_id>\d+)/participants$',
-        DeadlineActivityRelatedParticipantList.as_view(),
-        name='deadline-participants'),
-
-    url(r'^/deadline/(?P<activity_id>\d+)/participants$',
-        DeadlineActivityRelatedParticipantList.as_view(),
-        name='period-participants'),
-
-    url(r'^/deadline$',
-        DeadlineActivityListView.as_view(),
-        name='deadline-list'),
-
-    url(r'^/deadline/(?P<pk>\d+)$',
-        DeadlineActivityDetailView.as_view(),
-        name='deadline-detail'),
-
-    url(r'^/team/slots$',
-        TeamSlotListView.as_view(),
-        name='team-slot-list'),
-
-    url(r'^/team/slots/(?P<pk>\d+)$',
-        TeamSlotDetailView.as_view(),
-        name='team-slot-detail'),
-
     url(r'^/date/transitions$',
         DateTransitionList.as_view(),
         name='date-transition-list'),
 
-
     url(r'^/slot/transitions$',
         DateSlotTransitionList.as_view(),
         name='slot-transition-list'),
-
-    url(r'^/period/transitions$',
-        PeriodTransitionList.as_view(),
-        name='period-transition-list'),
-
-    url(r'^/deadline/transitions$',
-        DeadlineTransitionList.as_view(),
-        name='deadline-transition-list'),
 
     url(r'^/participants/date$',
         DateParticipantList.as_view(),
@@ -143,19 +100,6 @@ urlpatterns = [
         SlotParticipantTransitionList.as_view(),
         name='slot-participant-transition-list'),
 
-    url(r'^/participants/period$',
-        PeriodParticipantList.as_view(),
-        name='period-participant-list'),
-    url(r'^/participants/period/(?P<pk>\d+)$',
-        PeriodParticipantDetail.as_view(),
-        name='period-participant-detail'),
-    url(r'^/participants/period/transitions$',
-        PeriodParticipantTransitionList.as_view(),
-        name='period-participant-transition-list'),
-    url(r'^/participants/period/(?P<pk>\d+)/document$',
-        PeriodParticipantDocumentDetail.as_view(),
-        name='period-participant-document'),
-
     url(r'^/contributions/time/(?P<pk>\d+)$',
         TimeContributionDetail.as_view(),
         name='time-contribution-detail'),
@@ -163,14 +107,6 @@ urlpatterns = [
     url(r'^/date/export/(?P<pk>[\d]+)$',
         DateParticipantExportView.as_view(),
         name='date-participant-export'),
-
-    url(r'^/period/export/(?P<pk>[\d]+)$',
-        PeriodParticipantExportView.as_view(),
-        name='period-participant-export'),
-
-    url(r'^/deadline/export/(?P<pk>[\d]+)$',
-        DeadlineParticipantExportView.as_view(),
-        name='deadline-participant-export'),
 
     url(r'^/slot/export/(?P<pk>[\d]+)$',
         SlotParticipantExportView.as_view(),
@@ -187,4 +123,5 @@ urlpatterns = [
         name='skill'
     ),
 
+    url(r'^/deadline', include('bluebottle.time_based.urls.deadline_api')),
 ]

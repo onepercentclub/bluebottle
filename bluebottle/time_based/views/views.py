@@ -12,17 +12,20 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityStatusPermission,
+    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
+    ActivitySegmentPermission
 )
 from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
+from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill
+    DateActivitySlot, SlotParticipant, Skill, DeadlineActivity, DeadlineParticipant
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission

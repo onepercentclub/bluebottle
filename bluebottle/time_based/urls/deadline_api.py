@@ -2,10 +2,10 @@ from django.conf.urls import url
 
 from bluebottle.time_based.views import (
     DeadlineTransitionList,
-    DeadlineActivityListView, DeadlineActivityDetailView, 
+    DeadlineActivityListView, DeadlineActivityDetailView,
     DeadlineRelatedRegistrationList, DeadlineRegistrationList, DeadlineRegistrationTransitionList,
-    DeadlineRegistrationDocumentDetail,DeadlineParticipantTransitionList,  DeadlineParticipantExportView, 
-    DeadlineRelatedParticipantList
+    DeadlineRegistrationDocumentDetail, DeadlineParticipantTransitionList, DeadlineParticipantExportView,
+    DeadlineRelatedParticipantList, DeadlineParticipantDetail
 )
 
 urlpatterns = [
@@ -38,6 +38,9 @@ urlpatterns = [
     url(r'^/participants/transitions$',
         DeadlineParticipantTransitionList.as_view(),
         name='deadline-participant-transitions'),
+    url(r'^/(?P<activity_id>\d+)/participants$',
+        DeadlineParticipantDetail.as_view(),
+        name='deadline-participant-detail'),
 
     url(r'^/export/(?P<pk>[\d]+)$',
         DeadlineParticipantExportView.as_view(),

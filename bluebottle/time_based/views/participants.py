@@ -3,11 +3,12 @@ from rest_framework import filters
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineParticipant
 from bluebottle.time_based.serializers import (
-    DeadlineParticipantSerializer, DeadlineParticipantTransitionSerializer, DateParticipantSerializer
+    DeadlineParticipantSerializer, DeadlineParticipantTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
 )
+from bluebottle.time_based.views.views import ParticipantDetail
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
@@ -52,7 +53,12 @@ class DeadlineRelatedParticipantList(RelatedContributorListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
         'user', 'activity'
     )
-    serializer_class = DateParticipantSerializer
+    serializer_class = DeadlineParticipantSerializer
+
+
+class DeadlineParticipantDetail(ParticipantDetail):
+    queryset = DeadlineParticipant.objects.all()
+    serializer_class = DeadlineParticipantSerializer
 
 
 class DeadlineParticipantTransitionList(TransitionList):

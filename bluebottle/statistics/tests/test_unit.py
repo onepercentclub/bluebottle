@@ -182,9 +182,9 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_noshow(self):
-        contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        participant = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
         self.activity.states.succeed(save=True)
-        contribution.states.remove(save=True)
+        participant.states.remove(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0

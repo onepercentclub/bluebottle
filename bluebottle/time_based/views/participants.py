@@ -55,7 +55,7 @@ class DeadlineRelatedParticipantList(RelatedParticipantListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
         'user', 'activity'   
     )
-    serializer = DeadlineParticipantSerializer
+    serializer_class = DeadlineParticipantSerializer
 
 
 class DeadlineParticipantTransitionList(TransitionList):

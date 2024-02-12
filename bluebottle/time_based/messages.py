@@ -400,6 +400,8 @@ class ParticipantCreatedNotification(TransitionMessage):
     template = 'messages/participant_created'
     context = {
         'title': 'activity.title',
+        'question': 'activity.review_title',
+        'answer': 'motivation'
     }
 
     @property
@@ -421,7 +423,9 @@ class NewParticipantNotification(TransitionMessage):
     template = 'messages/new_participant'
     context = {
         'title': 'activity.title',
-        'applicant_name': 'user.full_name'
+        'applicant_name': 'user.full_name',
+        'question': 'activity.review_title',
+        'answer': 'motivation'
     }
 
     @property
@@ -791,6 +795,8 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',
+        'answer': 'participant.motivation',
+        'question': 'activity.review_title'
     }
 
     def get_context(self, recipient):

@@ -12,7 +12,8 @@ from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
-    TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
+    TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification,
+    ManagerSlotParticipantRegisteredNotification, ParticipantCreatedNotification
 )
 from bluebottle.time_based.notifications.registration import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
@@ -108,7 +109,24 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionLink(self.obj.slot.get_absolute_url())
         self.assertActionTitle('View activity')
 
+    def test_participant_registered_manager(self):
+        self.activity.review_title = 'What is your favorite color?'
+        self.activity.save()
+        self.obj.motivation = 'Par-bleu yellow'
+        self.obj.save()
+        self.obj = self.obj.slot_participants.first()
+        self.message_class = ManagerSlotParticipantRegisteredNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject('A participant has registered for a time slot for your activity "Save the world!"')
+        self.assertBodyContains('has registered for a time slot for your activity')
+        self.assertBodyContains('What is your favorite color?')
+        self.assertBodyContains('Par-bleu yellow')
+
     def test_new_participant_notification(self):
+        self.activity.review_title = 'What is your favorite color?'
+        self.activity.save()
+        self.obj.motivation = 'Par-bleu yellow'
         self.message_class = NewParticipantNotification
         self.create()
         self.assertRecipients([self.owner])
@@ -116,6 +134,8 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
+        self.assertBodyContains('What is your favorite color?')
+        self.assertBodyContains('Par-bleu yellow')
 
     def test_participant_removed_notification(self):
         self.message_class = ParticipantRemovedNotification
@@ -272,6 +292,17 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have applied to the activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
+
+    def test_someone_applied_to_manager(self):
+        self.activity.review_title = 'What is your favorite color?'
+        self.obj.motivation = 'Vermilion'
+        self.message_class = ParticipantCreatedNotification
+        self.create()
+        self.assertRecipients([self.activity.owner])
+        self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
+        self.assertBodyContains('Review the application and decide if this person is the right fit.')
+        self.assertBodyContains('What is your favorite color?')
+        self.assertBodyContains('Vermilion')
 
 
 class DateSlotNotificationTestCase(NotificationTestCase):

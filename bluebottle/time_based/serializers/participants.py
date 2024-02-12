@@ -7,8 +7,6 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class ParticipantSerializer(BaseContributorSerializer):
-    permissions = ResourcePermissionField('participant-detail', view_args=('pk',))
-
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)

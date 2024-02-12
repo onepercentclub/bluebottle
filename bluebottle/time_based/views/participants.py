@@ -1,23 +1,21 @@
-
-from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 
-from bluebottle.activities.models import Activity
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer, DeadlineParticipantTransitionSerializer
 )
+from bluebottle.time_based.views.mixins import (
+    CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
+)
+from bluebottle.time_based.views.views import ParticipantDetail
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
     ResourcePermission,
 )
 from bluebottle.utils.views import JsonApiViewMixin, ListAPIView, CreateAPIView
-from bluebottle.time_based.views.mixins import (
-    CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
-)
-from bluebottle.transitions.views import TransitionList
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
@@ -28,7 +26,7 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
 class DeadlineParticipantList(ParticipantList):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'    
+        'user', 'activity'
     )
     serializer = DeadlineParticipantSerializer
 
@@ -51,11 +49,16 @@ class RelatedParticipantListView(
         )
 
 
-class DeadlineRelatedParticipantList(RelatedParticipantListView):
+class DeadlineRelatedParticipantList(RelatedContributorListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'   
+        'user', 'activity'
     )
-    serializer = DeadlineParticipantSerializer
+    serializer_class = DeadlineParticipantSerializer
+
+
+class DeadlineParticipantDetail(ParticipantDetail):
+    queryset = DeadlineParticipant.objects.all()
+    serializer_class = DeadlineParticipantSerializer
 
 
 class DeadlineParticipantTransitionList(TransitionList):

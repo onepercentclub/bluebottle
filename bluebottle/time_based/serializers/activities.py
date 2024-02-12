@@ -5,7 +5,7 @@ from rest_framework_json_api.relations import (
 
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.time_based.models import DeadlineActivity, DeadlineParticipant
+from bluebottle.time_based.models import DeadlineActivity, DeadlineParticipant, DeadlineRegistration
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -22,6 +22,13 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             read_only=True,
             many=True,
             related_link_view_name=self.related_participant_view_name,
+            related_link_url_kwarg='activity_id'
+        )
+        self.fields['registrations'] = SerializerMethodHyperlinkedRelatedField(
+            model=self.registration_model,
+            read_only=True,
+            many=True,
+            related_link_view_name=self.related_registration_view_name,
             related_link_url_kwarg='activity_id'
         )
 
@@ -67,10 +74,12 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
 
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):
+    participant_model = DeadlineParticipant
+    registration_model = DeadlineRegistration
     detail_view_name = 'deadline-detail'
     related_participant_view_name = 'deadline-participants'
+    related_registration_view_name = 'related-deadline-registrations'
     export_view_name = 'deadline-participant-export'
-    participant_model = DeadlineParticipant
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity

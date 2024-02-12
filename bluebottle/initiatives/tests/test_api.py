@@ -423,7 +423,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        period_activity.states.submit(save=True)
+        period_activity.states.publish(save=True)
         PeriodParticipantFactory.create_batch(3, activity=period_activity)
         PeriodParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
 
@@ -494,7 +494,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        unrelated_activity.states.submit(save=True)
+        unrelated_activity.states.publish(save=True)
         PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
 
         response = self.client.get(

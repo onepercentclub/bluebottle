@@ -332,3 +332,17 @@ fieldset {
 html {
     --darkened-bg: #E3ECF2
 }
+
+.info_field {
+    background-color: var(--darkened-bg);
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    display: inline-block;
+    gap: 8px;
+}
+
+.info_field h3 {
+    padding-left: 0
+}

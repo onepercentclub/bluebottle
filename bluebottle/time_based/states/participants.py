@@ -113,9 +113,24 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=can_accept_participant,
     )
 
+    succeed = Transition(
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed,
+            rejected,
+            accepted
+        ],
+        succeeded,
+        name=_('Succeed'),
+        description=_("This participant has completed their contribution."),
+        automatic=False,
+        permission=can_accept_participant,
+    )
+
     remove = Transition(
         [
             accepted,
+            succeeded
         ],
         rejected,
         name=_('Remove'),
@@ -128,6 +143,7 @@ class ParticipantStateMachine(ContributorStateMachine):
     withdraw = Transition(
         [
             ContributorStateMachine.new,
+            succeeded,
             accepted
         ],
         withdrawn,
@@ -204,17 +220,4 @@ class PeriodParticipantStateMachine(ParticipantStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(ParticipantStateMachine):
-
-    succeed = Transition(
-        [
-            ParticipantStateMachine.accepted,
-            ParticipantStateMachine.new,
-            ParticipantStateMachine.failed,
-            ParticipantStateMachine.withdrawn,
-            ParticipantStateMachine.cancelled,
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        automatic=False,
-        description=_("This participant has completed their contribution."),
-    )
+    reject = None

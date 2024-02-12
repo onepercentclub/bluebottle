@@ -778,6 +778,10 @@ class DeadlineActivity(TimeBasedActivity):
     def active_participants(self):
         return self.participants.filter(status__in=['new', 'accepted', 'succeeded'])
 
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(status__in=['succeeded'])
+
 
 class Participant(Contributor):
 
@@ -1005,6 +1009,13 @@ class Registration(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
 
+    @property
+    def participants(self):
+        return self.deadlineparticipant_set.all()
+
+    def __str__(self):
+        return _('Registration {name} for {activity}').format(name=self.user, activity=self.activity)
+
 
 class DeadlineRegistration(Registration):
     class Meta():
@@ -1040,6 +1051,9 @@ class DeadlineParticipant(Participant, Contributor):
             ('api_change_own_deadlineparticipant', 'Can change own participant through the API'),
             ('api_delete_own_deadlineparticipant', 'Can delete own participant through the API'),
         )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/deadline-participants'
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

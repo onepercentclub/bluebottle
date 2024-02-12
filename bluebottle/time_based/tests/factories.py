@@ -10,7 +10,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot,
-    DeadlineActivity, DeadlineRegistration
+    DeadlineActivity, DeadlineRegistration, DeadlineParticipant
 )
 from bluebottle.utils.models import Language
 
@@ -90,6 +90,7 @@ class DeadlineActivityFactory(TimeBasedFactory):
         model = DeadlineActivity
 
     deadline = date.today() + timedelta(weeks=4)
+    registration_deadline = date.today() - timedelta(weeks=4)
     duration = timedelta(hours=4)
     is_online = False
     location = factory.SubFactory(GeolocationFactory)
@@ -147,6 +148,14 @@ class TeamSlotFactory(factory.DjangoModelFactory):
 class DeadlineRegistrationFactory(FSMModelFactory):
     class Meta(object):
         model = DeadlineRegistration
+
+    activity = factory.SubFactory(DeadlineActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class DeadlineParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = DeadlineParticipant
 
     activity = factory.SubFactory(DeadlineActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

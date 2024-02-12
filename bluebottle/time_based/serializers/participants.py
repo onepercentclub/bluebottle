@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
@@ -12,6 +13,7 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields
+        meta_fields = ('created', 'updated', 'current_status')
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -25,7 +27,7 @@ class ParticipantSerializer(BaseContributorSerializer):
     )
 
 
-class DeadlineParticipantSerializer(ParticipantSerializer):
+class ZZDeadlineParticipantSerializer(ParticipantSerializer):
     detail_view_name = 'deadline-participant-detail'
 
     class Meta(ParticipantSerializer.Meta):
@@ -40,6 +42,39 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
         }
     )
+
+
+class DeadlineParticipantSerializer(ParticipantSerializer):
+
+    permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
+
+    class Meta(ParticipantSerializer.Meta):
+        model = DeadlineParticipant
+
+        meta_fields = ParticipantSerializer.Meta.meta_fields + ('permissions',)
+        fields = ParticipantSerializer.Meta.fields
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/deadline-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            'activity',
+        ]
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers,
+        **{
+            'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+            # 'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',
+            'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+        }
+    )
+
+
+def activity_matches_participant_and_slot(value):
+    if value['slot'].activity != value['participant'].activity:
+        raise serializers.ValidationError(
+            'The activity of the slot does not match the activity of the participant.'
+        )
 
 
 class ParticipantTransitionSerializer(TransitionSerializer):

@@ -1052,5 +1052,8 @@ class DeadlineParticipant(Participant, Contributor):
             ('api_delete_own_deadlineparticipant', 'Can delete own participant through the API'),
         )
 
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/deadline-participants'
+
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

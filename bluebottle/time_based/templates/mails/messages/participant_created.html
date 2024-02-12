@@ -5,4 +5,6 @@
 <p>{{ applicant_name }} applied to your activity "{{ title}}".<p>
 
 <p>Review the application and decide if this person is the right fit.</p>
-{% endblocktrans %}{% endblock %}
+{% endblocktrans %}
+{% include 'mails/messages/partial/registration_question.html' %}
+{% endblock %}

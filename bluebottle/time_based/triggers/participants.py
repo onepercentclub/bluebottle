@@ -162,6 +162,13 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                     'contributions',
                     ContributionStateMachine.succeed,
                 ),
+
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        no_review_needed,
+                    ]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.lock,

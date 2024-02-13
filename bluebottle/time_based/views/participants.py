@@ -1,6 +1,8 @@
 from rest_framework import filters
 
 from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.activities.permissions import ContributorPermission 
+
 from bluebottle.time_based.models import DeadlineParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer, DeadlineParticipantTransitionSerializer
@@ -8,19 +10,25 @@ from bluebottle.time_based.serializers import (
 from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
 )
-from bluebottle.time_based.views.views import ParticipantDetail
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
     ResourcePermission,
 )
-from bluebottle.utils.views import JsonApiViewMixin, ListAPIView, CreateAPIView
+from bluebottle.utils.views import (
+    JsonApiViewMixin, ListAPIView, CreateAPIView, RetrieveUpdateAPIView
+)
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
 
 

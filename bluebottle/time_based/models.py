@@ -990,7 +990,6 @@ class Skill(TranslatableModel):
 
 
 class Registration(TriggerMixin, PolymorphicModel):
-
     answer = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
 
@@ -1013,11 +1012,17 @@ class Registration(TriggerMixin, PolymorphicModel):
     def participants(self):
         return self.deadlineparticipant_set.all()
 
+    @property
+    def anonymized(self):
+        return self.activity.anonymized
+
     def __str__(self):
         return _('Registration {name} for {activity}').format(name=self.user, activity=self.activity)
 
 
 class DeadlineRegistration(Registration):
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/deadline-registrations'
     class Meta():
         verbose_name = _(u'Deadline registration')
         verbose_name_plural = _(u'Deadline registrations')

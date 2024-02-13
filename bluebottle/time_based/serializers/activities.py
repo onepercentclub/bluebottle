@@ -16,6 +16,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
         self.fields['contributors'] = SerializerMethodHyperlinkedRelatedField(
             model=self.participant_model,
@@ -58,6 +59,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review_description',
             'review_document_enabled',
             'permissions',
+            'registrations'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

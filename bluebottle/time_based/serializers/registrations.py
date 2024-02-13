@@ -10,17 +10,21 @@ from bluebottle.time_based.permissions import ParticipantDocumentPermission
 class RegistrationSerializer(BaseContributorSerializer):
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
-    def __init__(self, *args, **kwargs):
-        self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
-
     class Meta(BaseContributorSerializer.Meta):
-        fields = BaseContributorSerializer.Meta.fields 
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + (
-            'permissions', 'document', 'motivation'
+        fields = [
+            'transitions',
+            'user',
+            'activity',
+            'permissions', 
+            'document', 
+            'answer'
+        ]
+        meta_fields = (
+            'permissions', 'status', 'transitions'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = ['user', 'document']
+        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         BaseContributorSerializer.included_serializers,
@@ -31,7 +35,7 @@ class RegistrationSerializer(BaseContributorSerializer):
 
 
 class DeadlineRegistrationSerializer(RegistrationSerializer):
-    detail_view_name = 'deadline-registration-detail'
+    permissions = ResourcePermissionField('deadline-registration-detail', view_args=('pk',))
 
     class Meta(RegistrationSerializer.Meta):
         model = DeadlineRegistration

@@ -65,7 +65,8 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
             values_list('place__country__id', flat=True)
         countries = Country.objects.filter(id__in=country_ids).language(language). \
             order_by('translations__name')
-        return [(c.id, c.name) for c in countries]
+        country_list = sorted(set([(c.id, c.name) for c in countries]), key=lambda pair: pair[1])
+        return country_list
 
     def queryset(self, request, queryset):
         if self.value():
@@ -107,9 +108,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = (
-        'owner', 'reviewer',
+        'owner',
+        'reviewer',
         'promoter',
-        'organization', 'organization_contact',
+        'organization',
+        'organization_contact',
         'place',
         'theme',
     )

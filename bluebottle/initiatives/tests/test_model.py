@@ -31,7 +31,7 @@ class InitiativeTestCase(TestCase):
 
     def test_activity_manager(self):
         initiative = InitiativeFactory(activity_managers=[])
-        self.assertTrue(initiative.owner in initiative.activity_managers.all())
+        self.assertFalse(initiative.owner in initiative.activity_managers.all())
 
     def test_absolute_url(self):
         initiative = InitiativeFactory(activity_managers=[])

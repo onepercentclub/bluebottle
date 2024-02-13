@@ -9,12 +9,10 @@ from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
-from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, ResourceRelatedField
-)
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
-from bluebottle.activities.models import Contributor, Activity, Team
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
@@ -33,8 +31,8 @@ from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
     DateActivitySerializer,
-    DateParticipantSerializer, 
-    DateParticipantListSerializer, 
+    DateParticipantSerializer,
+    DateParticipantListSerializer,
     DeadlineParticipantSerializer
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField

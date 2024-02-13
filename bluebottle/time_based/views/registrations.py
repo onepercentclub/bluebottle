@@ -1,8 +1,7 @@
-from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.permissions import ContributorPermission 
+from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineRegistration
 from bluebottle.time_based.serializers import (
@@ -14,7 +13,7 @@ from bluebottle.utils.permissions import (
     ResourcePermission,
 )
 from bluebottle.utils.views import (
-JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
+    JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
     RetrieveUpdateAPIView
 )
 from bluebottle.time_based.views.mixins import (
@@ -31,7 +30,7 @@ class RegistrationList(JsonApiViewMixin, CreatePermissionMixin, CreateAPIView):
 
 class DeadlineRegistrationList(RegistrationList):
     queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'    
+        'user', 'activity'
     )
     serializer_class = DeadlineRegistrationSerializer
 
@@ -62,7 +61,7 @@ class RelatedRegistrationListView(
 
 class DeadlineRelatedRegistrationList(RelatedContributorListView):
     queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'   
+        'user', 'activity'
     )
     serializer_class = DeadlineRegistrationSerializer
 

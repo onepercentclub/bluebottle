@@ -1,4 +1,8 @@
+from django.db.models import Q
+
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.activities.models import Activity
+
 
 class AnonimizeMembersMixin:
     @property

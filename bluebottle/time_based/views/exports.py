@@ -17,7 +17,6 @@ class TimebasedExportView(ExportView):
         ('status', 'Status'),
     )
 
-
     def get_row(self, instance):
         row = []
 

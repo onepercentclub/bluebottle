@@ -15,8 +15,8 @@ class RegistrationSerializer(BaseContributorSerializer):
             'transitions',
             'user',
             'activity',
-            'permissions', 
-            'document', 
+            'permissions',
+            'document',
             'answer'
         ]
         meta_fields = (

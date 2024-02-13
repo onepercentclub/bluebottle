@@ -1023,6 +1023,7 @@ class Registration(TriggerMixin, PolymorphicModel):
 class DeadlineRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-registrations'
+
     class Meta():
         verbose_name = _(u'Deadline registration')
         verbose_name_plural = _(u'Deadline registrations')

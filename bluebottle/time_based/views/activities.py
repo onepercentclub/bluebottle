@@ -5,7 +5,7 @@ from bluebottle.activities.permissions import (
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import DateActivity, DeadlineActivity
 from bluebottle.time_based.serializers import (
-DateActivitySerializer, DeadlineActivitySerializer,
+    DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer
 )
 from bluebottle.utils.permissions import (

@@ -4,6 +4,7 @@ from bluebottle.time_based.views import (
     DeadlineTransitionList,
     DeadlineActivityListView, DeadlineActivityDetailView,
     DeadlineRelatedRegistrationList, DeadlineRegistrationList, DeadlineRegistrationTransitionList,
+    DeadlineRegistrationDetail,
     DeadlineRegistrationDocumentDetail, DeadlineParticipantTransitionList, DeadlineParticipantExportView,
     DeadlineRelatedParticipantList, DeadlineParticipantDetail
 )
@@ -28,6 +29,9 @@ urlpatterns = [
     url(r'^/registrations/transitions$',
         DeadlineRegistrationTransitionList.as_view(),
         name='deadline-registration-transitions'),
+    url(r'^/registrations/(?P<activity_id>\d+)$',
+        DeadlineRegistrationDetail.as_view(),
+        name='deadline-registration-detail'),
     url(r'^/registrations/(?P<pk>\d+)/document$',
         DeadlineRegistrationDocumentDetail.as_view(),
         name='deadline-registration-document'),
@@ -38,7 +42,8 @@ urlpatterns = [
     url(r'^/participants/transitions$',
         DeadlineParticipantTransitionList.as_view(),
         name='deadline-participant-transitions'),
-    url(r'^/(?P<activity_id>\d+)/participants$',
+
+    url(r'^/participants/(?P<activity_id>\d+)$',
         DeadlineParticipantDetail.as_view(),
         name='deadline-participant-detail'),
 

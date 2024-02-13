@@ -2,13 +2,13 @@ from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
-from bluebottle.time_based.models import DeadlineParticipant
+from bluebottle.time_based.models import DeadlineParticipant, DeadlineRegistration
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class ParticipantSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
-        fields = BaseContributorSerializer.Meta.fields
+        fields = BaseContributorSerializer.Meta.fields + ('registration', )
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -24,6 +24,7 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 class DeadlineParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
+    registration = ResourceRelatedField(queryset=DeadlineRegistration.objects.all())
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant

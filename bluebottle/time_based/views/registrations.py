@@ -1,7 +1,7 @@
-from django.utils.translation import gettext_lazy as _
 from rest_framework import filters
 
 from bluebottle.activities.models import Activity
+from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineRegistration
 from bluebottle.time_based.serializers import (
@@ -12,14 +12,17 @@ from bluebottle.utils.permissions import (
     ResourceOwnerPermission,
     ResourcePermission,
 )
-from bluebottle.utils.views import JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView
+from bluebottle.utils.views import (
+    JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
+    RetrieveUpdateAPIView
+)
 from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
 )
 from bluebottle.transitions.views import TransitionList
 
 
-class RegistrationList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
+class RegistrationList(JsonApiViewMixin, CreatePermissionMixin, CreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -27,8 +30,9 @@ class RegistrationList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
 class DeadlineRegistrationList(RegistrationList):
     queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'    
+        'user', 'activity'
     )
+    serializer_class = DeadlineRegistrationSerializer
 
 
 class RelatedRegistrationListView(
@@ -57,8 +61,19 @@ class RelatedRegistrationListView(
 
 class DeadlineRelatedRegistrationList(RelatedContributorListView):
     queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'   
+        'user', 'activity'
     )
+    serializer_class = DeadlineRegistrationSerializer
+
+
+class RegistrationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
+    )
+
+
+class DeadlineRegistrationDetail(RegistrationDetail):
+    queryset = DeadlineRegistration.objects.all()
     serializer_class = DeadlineRegistrationSerializer
 
 

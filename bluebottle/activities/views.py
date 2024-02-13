@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import Sum, Q, F, BooleanField 
+from django.db.models import Sum, Q, F
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin

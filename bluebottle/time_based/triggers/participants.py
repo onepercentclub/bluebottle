@@ -32,7 +32,7 @@ class DeadlineParticipantTriggers(ContributorTriggers):
     def is_admin(effect):
         """ Is admin """
         user = effect.options.get('user', None)
-        return user and (user.is_staff or user.is_superuser)
+        return user and (user.is_staff or user.is_superuser) and effect.instance.user != user
 
     def is_user(effect):
         """ Is user """
@@ -162,7 +162,6 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                     'contributions',
                     ContributionStateMachine.succeed,
                 ),
-
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[

@@ -31,7 +31,7 @@ class RegistrationSerializer(ModelSerializer):
             'answer'
         ]
         meta_fields = (
-            'permissions', 'status', 'transitions', 'current_status'
+            'permissions', 'current_status', 'transitions'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -60,7 +60,7 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.DeadlineRegistrationDocumentSerializer',
         }
     )
 
@@ -87,4 +87,4 @@ class DeadlineRegistrationTransitionSerializer(RegistrationTransitionSerializer)
 
 class DeadlineRegistrationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'deadline-registration-document'
-    relationship = 'deadlineparticipant_set'
+    relationship = 'registration_set'

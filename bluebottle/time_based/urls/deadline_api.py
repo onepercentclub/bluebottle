@@ -29,7 +29,7 @@ urlpatterns = [
     url(r'^/registrations/transitions$',
         DeadlineRegistrationTransitionList.as_view(),
         name='deadline-registration-transitions'),
-    url(r'^/registrations/(?P<activity_id>\d+)$',
+    url(r'^/registrations/(?P<pk>\d+)$',
         DeadlineRegistrationDetail.as_view(),
         name='deadline-registration-detail'),
     url(r'^/registrations/(?P<pk>\d+)/document$',

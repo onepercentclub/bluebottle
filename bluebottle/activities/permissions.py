@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -22,6 +22,16 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
             return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
         else:
             return is_owner
+
+
+class IsAdminUser(permissions.BasePermission):
+
+    def has_permission(self, request, view, obj):
+        return (
+
+            request.user.is_superuser or
+            request.user.is_staff
+        )
 
 
 class ActivityTypePermission(ResourcePermission):

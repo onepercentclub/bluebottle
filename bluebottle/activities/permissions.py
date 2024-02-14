@@ -24,16 +24,6 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
             return is_owner
 
 
-class IsAdminUser(permissions.BasePermission):
-
-    def has_permission(self, request, view, obj):
-        return (
-
-            request.user.is_superuser or
-            request.user.is_staff
-        )
-
-
 class ActivityTypePermission(ResourcePermission):
     def has_permission(self, request, view):
         (settings, _) = InitiativePlatformSettings.objects.get_or_create()

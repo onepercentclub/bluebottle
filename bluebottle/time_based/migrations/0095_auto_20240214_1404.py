@@ -6,7 +6,8 @@ from django.db import migrations
 def enable_deadline_activity(apps, schema_editor):
     InitiativePlatformSettings = apps.get_model('initiatives', 'InitiativePlatformSettings')
     settings, _create = InitiativePlatformSettings.objects.get_or_create()
-    settings.activity_types.append('deadlineactivity')
+    if 'periodactivity' in settings.activity_types:
+        settings.activity_types.append('deadlineactivity')
     settings.save()
 
 

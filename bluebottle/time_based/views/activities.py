@@ -1,7 +1,7 @@
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
-    DeleteActivityPermission, ActivitySegmentPermission, IsAdminUser
+    DeleteActivityPermission, ActivitySegmentPermission
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import DateActivity, DeadlineActivity
@@ -22,7 +22,7 @@ from bluebottle.utils.views import (
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermissionMixin):
     permission_classes = (
         ActivityTypePermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminUser),
+        OneOf(ResourcePermission, ActivityOwnerPermission),
     )
 
 

@@ -992,7 +992,22 @@ class DateParticipantAdmin(ContributorChildAdmin):
         TimeContributionInlineAdmin
     ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
-    list_display = ['__str__', 'activity_link', 'status']
+    list_display = ['__str__', 'email', 'activity_link', 'status']
+
+    def email(self, obj):
+        return obj.user.email
+
+    export_to_csv_fields = (
+        ('id', 'ID'),
+        ('user__full_name', 'Name'),
+        ('user__email', 'Email'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+    )
+
+    def get_actions(self, request):
+        self.actions = (export_as_csv_action(fields=self.export_to_csv_fields),)
+        return super(DateParticipantAdmin, self).get_actions(request)
 
 
 @admin.register(SlotParticipant)

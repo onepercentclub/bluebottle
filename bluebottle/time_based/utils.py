@@ -50,11 +50,12 @@ def bulk_add_participants(slot, emails):
             participant, _created = DateParticipant.objects.get_or_create(
                 user=user, activity=activity
             )
-            SlotParticipant.objects.get_or_create(
+            slot_participant, created = SlotParticipant.objects.get_or_create(
                 participant=participant,
                 slot=slot
             )
-            count += 1
+            if created:
+                count += 1
         except Member.DoesNotExist:
             pass
     return count

@@ -766,15 +766,19 @@ class DateSlotAdmin(SlotAdmin):
 
     def bulk_add_participants(self, request, pk, *args, **kwargs):
         slot = DateActivitySlot.objects.get(pk=pk)
+        slot_overview = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+
+        if not request.user.is_superuser:
+            return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
+
         if request.method == "POST":
             form = SlotBulkAddForm(data=request.POST, slot=slot)
             if form.is_valid():
                 data = form.cleaned_data
                 emails = data['emails'].split('\n')
                 result = bulk_add_participants(slot, emails)
-                slot_overview = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
-                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
                 messages.add_message(request, messages.INFO, '{} participants were added'.format(result))
+                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
         context = {
             'opts': self.model._meta,

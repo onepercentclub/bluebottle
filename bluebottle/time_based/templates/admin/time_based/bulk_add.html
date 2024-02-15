@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static jet_tags admin_urls %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {{ slot }}
+  </div>
+{% endblock %}
+
+{% block content %}
+
+    <h2>{% trans "Bulk add participants" %}</h2>
+    <form action="" method="post">
+        {% csrf_token %}
+        <fieldset class="module aligned module_0 initialized selected">
+            <div class="description warning">
+                <h3 class="warning">{% trans "Warning" %}</h3>
+                <p>
+                  {% blocktrans %}
+                      This is an experimental feature. Please use with cause.
+                  {% endblocktrans %}
+                </p>
+                  <p>
+                    {% blocktrans %}
+                        Make sure every line contains just one email address.
+                    {% endblocktrans %}
+                </p>
+            </div>
+            {% for field in form %}
+                <div class="form-row{% if field.errors %} errors{% endif %}">
+                    <div{% if field.is_checkbox %} class="checkbox-row"{% endif %}>
+                        {{ field.errors }}
+                        {{ field.label_tag }}
+                        {% if field.is_readonly %}
+                            <p>{{ field.contents|linebreaksbr }}</p>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </fieldset>
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}"/>
+        <div class="submit-row">
+            <input type="hidden" name="action" value="{{ action }}"/>
+            <input type="submit" class="button default" name="confirm" value="{% trans "Add participants" %}"/>
+            <input type="button" onclick="window.history.back(); return false;"
+                   class="button" name="cancel" value="{% trans "Cancel" %}"/>
+        </div>
+    </form>
+
+{% endblock %}

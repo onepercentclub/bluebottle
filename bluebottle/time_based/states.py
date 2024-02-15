@@ -567,7 +567,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
 
     def slot_is_open(self):
         """task is open"""
-        return self.instance.slot.status in (
+        return self.instance.slot_id and self.instance.slot.status in (
             DateActivitySlotStateMachine.open.value,
             DateActivitySlotStateMachine.running.value,
         )

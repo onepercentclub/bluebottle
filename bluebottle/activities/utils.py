@@ -442,7 +442,6 @@ class BaseContributorSerializer(ModelSerializer):
         'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
-
     class Meta(object):
         model = Contributor
         fields = (

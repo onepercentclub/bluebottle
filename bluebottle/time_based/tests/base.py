@@ -16,13 +16,13 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 
 
 class TimeBasedActivityListAPITestCase:
-    url_name ='deadline-list' 
+    url_name = 'deadline-list'
 
     fields = ['initiative', 'start', 'title', 'description', 'review']
 
     attributes = ['start', 'title', 'description', 'review']
-    relationships =['initiative', 'owner'] 
-    included =['initiative', 'owner'] 
+    relationships = ['initiative', 'owner']
+    included = ['initiative', 'owner']
 
     def setUp(self):
         self.url = reverse(self.url_name)
@@ -38,7 +38,7 @@ class TimeBasedActivityListAPITestCase:
 
         for relationship in self.relationships:
             self.assertRelationship(relationship)
-            
+
         for included in self.included:
             self.assertIncluded(included)
 
@@ -98,8 +98,8 @@ class TimeBasedActivityDetailAPITestCase:
     fields = ['initiative', 'start', 'title', 'description', 'review']
 
     attributes = ['start', 'title', 'description', 'review']
-    relationships =['initiative', 'owner'] 
-    included =['initiative', 'owner'] 
+    relationships = ['initiative', 'owner']
+    included = ['initiative', 'owner']
 
     defaults = {
         'title': 'Test title',
@@ -114,7 +114,7 @@ class TimeBasedActivityDetailAPITestCase:
             **self.defaults
         )
 
-        self.url = reverse(self.url_name,  args=(self.model.pk,))
+        self.url = reverse(self.url_name, args=(self.model.pk,))
 
         super().setUp()
 
@@ -125,7 +125,7 @@ class TimeBasedActivityDetailAPITestCase:
 
         for relationship in self.relationships:
             self.assertRelationship(relationship)
-            
+
         for included in self.included:
             self.assertIncluded(included)
 
@@ -171,6 +171,7 @@ class TimeBasedActivityDetailAPITestCase:
             self.response.json()['data']['attributes']['participants-export-url']
 
         )
+
     def test_get_with_segments(self):
         segment = SegmentFactory.create(
             name="SDG1"
@@ -365,7 +366,6 @@ class TimeBasedActivityTransitionListAPITestCase:
         self.assertEqual(self.defaults['resource'].status, 'draft')
 
 
-
 class TimeBasedRegistrationListAPITestCase:
     included = ['activity', 'user']
     fields = ['answer', 'document', 'activity']
@@ -383,7 +383,7 @@ class TimeBasedRegistrationListAPITestCase:
         )
 
         self.defaults = {
-            'activity': self.activity, 
+            'activity': self.activity,
         }
 
     def test_create(self):
@@ -535,7 +535,6 @@ class TimeBasedRegistrationRelatedAPIListTestCase:
                 self.assertIsNone(member['attributes']['last-name'])
                 self.assertEqual(member['attributes']['full-name'], member['attributes']['first-name'])
 
-
     def test_get_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
@@ -666,7 +665,7 @@ class TimeBasedRegistrationDetailAPITestCase:
         )
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
-    def test_update_other_user(self):
+    def test_update_anonymous(self):
         self.perform_update(
             {'answer': 'updated answer'},
         )
@@ -816,7 +815,6 @@ class TimeBasedParticipantRelatedListAPITestCase:
                 self.assertIsNone(member['attributes']['last-name'])
                 self.assertEqual(member['attributes']['full-name'], member['attributes']['first-name'])
 
-
     def test_get_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
@@ -964,7 +962,7 @@ class TimeBasedActivityAPIExportTestCase:
         self.participant_factory.create_batch(4, activity=self.activity)
 
         response = self.client.get(
-            reverse(self.url_name, args=(self.activity.pk, )), 
+            reverse(self.url_name, args=(self.activity.pk, )),
             HTTP_AUTHORIZATION="JWT {0}".format(self.activity.owner.get_jwt_token())
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -985,7 +983,7 @@ class TimeBasedActivityAPIExportTestCase:
 
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name','Registration Date', 'Status',  'Registration answer', )
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )
         )
 
     def test_get_incorrect_signature(self):

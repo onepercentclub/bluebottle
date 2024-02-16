@@ -82,4 +82,3 @@ class RequiredQuestionsMixin:
             raise ValidationError('Required fields', code="required")
 
         serializer.save(user=self.request.user)
-

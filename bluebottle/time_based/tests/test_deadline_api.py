@@ -32,7 +32,7 @@ from bluebottle.test.utils import APITestCase
 
 
 class DeadlineActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase):
-    url_name ='deadline-list' 
+    url_name = 'deadline-list'
     serializer = DeadlineActivitySerializer
     factory = DeadlineActivityFactory
     fields = TimeBasedActivityListAPITestCase.fields + ['capacity', 'deadline', 'duration', 'is_online']
@@ -87,7 +87,7 @@ class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListA
 
 
 class DeadlineRegistrationListAPITestCase(TimeBasedRegistrationListAPITestCase, APITestCase):
-    url_name ='deadline-registration-list' 
+    url_name = 'deadline-registration-list'
     serializer = DeadlineRegistrationSerializer
     factory = DeadlineRegistrationFactory
     activity_factory = DeadlineActivityFactory
@@ -99,7 +99,7 @@ class DeadlineRegistrationListAPITestCase(TimeBasedRegistrationListAPITestCase, 
 
 
 class DeadlineRegistrationRelatedListAPITestCase(TimeBasedRegistrationRelatedAPIListTestCase, APITestCase):
-    url_name ='related-deadline-registrations' 
+    url_name = 'related-deadline-registrations'
     serializer = DeadlineRegistrationSerializer
     factory = DeadlineRegistrationFactory
     activity_factory = DeadlineActivityFactory
@@ -111,7 +111,7 @@ class DeadlineRegistrationRelatedListAPITestCase(TimeBasedRegistrationRelatedAPI
 
 
 class DeadlineRegistrationDetailAPITestCase(TimeBasedRegistrationDetailAPITestCase, APITestCase):
-    url_name ='deadline-registration-detail' 
+    url_name = 'deadline-registration-detail'
     serializer = DeadlineRegistrationSerializer
     factory = DeadlineRegistrationFactory
     activity_factory = DeadlineActivityFactory
@@ -131,7 +131,7 @@ class DeadlineRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
 
 
 class DeadlineParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListAPITestCase, APITestCase):
-    url_name ='deadline-participants' 
+    url_name = 'deadline-participants'
     serializer = DeadlineParticipantSerializer
     factory = DeadlineParticipantFactory
 
@@ -144,7 +144,7 @@ class DeadlineParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListA
 
 
 class DeadlineParticipantDetailAPITestCase(TimeBasedParticipantDetailAPITestCase, APITestCase):
-    url_name ='deadline-participant-detail' 
+    url_name = 'deadline-participant-detail'
     serializer = DeadlineParticipantSerializer
     factory = DeadlineParticipantFactory
     activity_factory = DeadlineActivityFactory

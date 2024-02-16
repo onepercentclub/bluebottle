@@ -19,9 +19,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     description = serializers.CharField()
     review = serializers.BooleanField()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 

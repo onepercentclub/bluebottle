@@ -44,7 +44,7 @@ class TimebasedExportView(ExportView):
     def get_instances(self):
         return self.get_object().contributors.instance_of(
             self.participant_model
-        ).prefetch_related('user__segments').select_related('user') 
+        ).prefetch_related('user__segments').select_related('user')
 
 
 class DeadlineParticipantExportView(TimebasedExportView):

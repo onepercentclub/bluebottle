@@ -22,6 +22,7 @@ from bluebottle.time_based.views.mixins import (
 )
 from bluebottle.transitions.views import TransitionList
 
+
 class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
 
     permission_classes = (

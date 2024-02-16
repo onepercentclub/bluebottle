@@ -65,6 +65,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     activity_managers = models.ManyToManyField(
         'members.Member',
         blank=True,
+        null=True,
         verbose_name=_('co-initiators'),
         help_text=_('Co-initiators can create and edit activities for '
                     'this initiative, but cannot edit the initiative itself.'),
@@ -238,9 +239,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
         super(Initiative, self).save(**kwargs)
 
-        if not self.activity_managers.exists():
-            self.activity_managers.add(self.owner)
-
 
 ACTIVITY_SEARCH_FILTERS = (
     ('office', _('Office')),
@@ -275,6 +273,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('funding', _('Funding')),
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),
+        ('deadlineactivity', _('Activity within a deadline')),
         ('deed', _('Deed')),
         ('collect', _('Collect activity')),
     )
@@ -299,9 +298,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
-    show_all_activities = models.BooleanField(
-        default=False,
-        help_text=_("In initial search show all activities, not only upcoming.")
+    include_full_activities = models.BooleanField(
+        default=True,
+        help_text=_("Include full activities in upcoming activities list")
     )
 
     enable_impact = models.BooleanField(

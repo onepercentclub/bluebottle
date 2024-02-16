@@ -30,7 +30,7 @@ from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution
+    TimeContribution, DeadlineParticipant
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -44,7 +44,8 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DateParticipant,
         PeriodParticipant,
         DeedParticipant,
-        CollectContributor
+        CollectContributor,
+        DeadlineParticipant
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -87,17 +88,18 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated', 'type'
+        'created', 'updated',
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
-        if InitiativePlatformSettings.team_activities and 'team' not in self.fields:
-            self.fields += ('team',)
+        fields = self.get_fields(request, obj)
+        if InitiativePlatformSettings.team_activities and 'team' not in fields:
+            fields += ('team',)
         fieldsets = (
-            (_('Details'), {'fields': self.fields}),
+            (_('Details'), {'fields': fields}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -348,7 +350,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         'updated',
         'has_deleted_data',
         'status',
-        'states'
+        'states',
     )
 
     def get_inline_instances(self, request, obj=None):
@@ -357,7 +359,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             impact_goal_inline = ImpactGoalInline(self.model, self.admin_site)
             inlines.append(impact_goal_inline)
 
-        if obj and (
+        if not obj or (
             obj.team_activity != Activity.TeamActivityChoices.teams or
             obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):

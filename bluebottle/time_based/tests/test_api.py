@@ -44,8 +44,7 @@ class TimeBasedListAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.url = reverse('{}-list'.format(self.type))
         self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory(owner=self.user)
-        self.initiative.states.submit(save=True)
+        self.initiative = InitiativeFactory(owner=self.user, status='approved')
 
         self.data = {
             'data': {
@@ -133,14 +132,14 @@ class TimeBasedListAPIViewTestCase():
 
     def test_create_not_initiator_open(self):
         self.initiative.is_open = True
-        self.initiative.states.approve(save=True)
-
+        self.initiative.save()
         another_user = BlueBottleUserFactory.create()
         response = self.client.post(self.url, json.dumps(self.data), user=another_user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_not_initiator_not_approved(self):
         self.initiative.is_open = True
+        self.initiative.status = 'draft'
         self.initiative.save()
 
         another_user = BlueBottleUserFactory.create()
@@ -195,8 +194,6 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
 
     def test_add_slots_by_owner(self):
         response = self.client.post(self.url, json.dumps(self.data), user=self.user)
-        self.initiative.states.approve(save=True)
-
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         activity_id = response.json()['data']['id']
@@ -211,13 +208,13 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
         activity_url = reverse('date-detail', args=(activity_id,))
         response = self.client.get(activity_url, user=self.user)
         self.response_data = response.json()['data']
-        # Now we can submit the activity
+        # Now we can publish the activity
         self.assertEqual(
             {
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'publish', 'delete', 'auto_publish'}
+            {'publish', 'delete'}
         )
 
     def test_add_slots_by_other(self):
@@ -246,12 +243,13 @@ class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase
 
     def test_create_complete(self):
         super().test_create_complete()
+
         self.assertEqual(
             {
                 transition['name'] for transition in
                 self.response_data['meta']['transitions']
             },
-            {'submit', 'delete'}
+            {'publish', 'delete'}
         )
 
     def test_create_no_location(self):
@@ -278,9 +276,9 @@ class PeriodListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase
 class TimeBasedDetailAPIViewTestCase():
     def setUp(self):
         super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
-        )
+        self.settings = InitiativePlatformSettings.load()
+        self.settings.activity_types = [self.factory._meta.model.__name__.lower()]
+        self.settings.save()
 
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -433,6 +431,9 @@ class TimeBasedDetailAPIViewTestCase():
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
         initiative_settings.save()
+        self.activity.review_title = 'Motivation'
+        self.activity.save()
+
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
@@ -447,13 +448,13 @@ class TimeBasedDetailAPIViewTestCase():
         if isinstance(self.activity, PeriodActivity):
             self.assertEqual(
                 tuple(sheet.values)[0],
-                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status',)
+                ('Email', 'Name', 'Registration Date', 'Status', 'Motivation',)
             )
         else:
             slot = self.activity.slots.first()
             self.assertEqual(
                 tuple(sheet.values)[0],
-                ('Email', 'Name', 'Motivation', 'Registration Date', 'Status')
+                ('Email', 'Name', 'Registration Date', 'Status', 'Motivation')
             )
             self.assertEqual(
                 sheet.title,
@@ -513,8 +514,10 @@ class TimeBasedDetailAPIViewTestCase():
             SlotParticipantFactory.create(
                 slot=slot,
                 participant=participant,
-                status='accepted'
+                status='registered'
             )
+        self.activity.review_title = 'Favourite colour'
+        self.activity.save()
 
         response = self.client.get(self.url, user=self.activity.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -524,7 +527,7 @@ class TimeBasedDetailAPIViewTestCase():
         sheet = load_workbook(filename=BytesIO(export_response.content)).get_active_sheet()
         self.assertEqual(sheet['A1'].value, 'Email')
         self.assertEqual(sheet['B1'].value, 'Name')
-        self.assertEqual(sheet['C1'].value, 'Motivation')
+        self.assertEqual(sheet['E1'].value, 'Favourite colour')
 
         self.assertEqual(sheet['F1'].value, 'Department')
         self.assertEqual(sheet['G1'].value, 'Music')
@@ -543,7 +546,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
         if self.activity.states.submit:
-            self.activity.states.submit(save=True)
+            self.activity.states.publish(save=True)
         else:
             self.activity.states.publish(save=True)
 
@@ -971,7 +974,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         self.activity.initiative = self.initiative
         self.activity.start = None
         self.activity.deadline = None
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         PeriodParticipantFactory.create(activity=self.activity)
         response = self.client.get(self.url, user=self.activity.owner)
         self.data = response.json()['data']
@@ -1103,7 +1106,7 @@ class PeriodDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTest
         sheet = workbook.worksheets[0]
         self.assertEqual(
             tuple(sheet.values)[0],
-            ('Email', 'Name', 'Motivation', 'Registration Date', 'Status', 'Team', 'Team Captain')
+            ('Email', 'Name', 'Registration Date', 'Status', 'Team', 'Team Captain')
         )
 
         teams_sheet = workbook.worksheets[1]
@@ -1314,7 +1317,7 @@ class PeriodTransitionAPIViewTestCase(TimeBasedTransitionAPIViewTestCase, Bluebo
         self.activity.deadline = None
         self.activity.initiative.states.submit()
         self.activity.initiative.states.approve(save=True)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         PeriodParticipantFactory.create(activity=self.activity)
 
         self.data['data']['attributes']['transition'] = 'succeed_manually'

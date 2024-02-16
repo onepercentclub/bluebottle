@@ -509,7 +509,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
             PeriodActivityFactory(
-                status='open', start=None, deadline=now() + timedelta(days=1)
+                status='full', start=None, deadline=now() + timedelta(days=1)
             ),
             PeriodActivityFactory(
                 status='open', start=None, deadline=None
@@ -545,6 +545,58 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='open', start=now() - timedelta(days=7), activity=second_date_activity
         )
+
+        self.search({'upcoming': 1})
+
+        self.assertEqual(
+            [str(activity.pk) for activity in activities],
+            [activity['id'] for activity in self.data['data']]
+        )
+
+    def test_sort_upcoming_exclude_full(self):
+        InitiativePlatformSettings.objects.create(include_full_activities=False)
+
+        today = now().date()
+        first_date_activity = DateActivityFactory.create(status='open', slots=[])
+        second_date_activity = DateActivityFactory.create(status='open', slots=[])
+        activities = [
+            PeriodActivityFactory(
+                status='open', start=None, deadline=None
+            ),
+
+            PeriodActivityFactory(
+                status='open', start=now() - timedelta(days=1), deadline=None
+            ),
+
+            first_date_activity,
+            second_date_activity,
+
+            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+        ]
+
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=2), activity=first_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=5), activity=first_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() - timedelta(days=5), activity=first_date_activity
+        )
+
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=4), activity=second_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() + timedelta(days=7), activity=second_date_activity
+        )
+        DateActivitySlotFactory.create(
+            status='open', start=now() - timedelta(days=7), activity=second_date_activity
+        )
+        PeriodActivityFactory(
+            status='full', start=None, deadline=now() + timedelta(days=1)
+        ),
 
         self.search({'upcoming': 1})
 
@@ -927,14 +979,24 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             PeriodActivityFactory.create_batch(2, status='open') +
             PeriodActivityFactory.create_batch(2, status='full')
         )
-        other = PeriodActivityFactory.create_batch(2, status='succeeded')
-
+        PeriodActivityFactory.create_batch(2, status='succeeded')
         PeriodActivityFactory.create_batch(2, status='draft')
         PeriodActivityFactory.create_batch(2, status='needs_work')
 
         self.search({'upcoming': 1})
+        self.assertFound(matching)
 
-        self.assertFacets('upcoming', {0: ('No', len(other)), 1: ('Yes', len(matching))})
+    def test_filter_upcoming_hide_full(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.include_full_activities = False
+        initiative_settings.save()
+        matching = PeriodActivityFactory.create_batch(2, status='open')
+        PeriodActivityFactory.create_batch(2, status='full')
+        PeriodActivityFactory.create_batch(2, status='succeeded')
+        PeriodActivityFactory.create_batch(2, status='draft')
+        PeriodActivityFactory.create_batch(2, status='needs_work')
+
+        self.search({'upcoming': 1})
         self.assertFound(matching)
 
     def test_no_filter(self):

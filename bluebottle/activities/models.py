@@ -104,6 +104,42 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
             "You can paste the link to YouTube or Vimeo video here"
         )
     )
+
+    next_step_link = models.URLField(
+        _('Redirect step link'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("This link is shown after a user joined as the next step for the activity")
+    )
+
+    next_step_title = models.CharField(
+        _('Redirect step title'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("The title in the popup after a user joined the activity")
+    )
+
+    next_step_button_label = models.CharField(
+        _('Redirect step button label'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("The title on the next link button")
+    )
+
+    next_step_description = models.TextField(
+        _('Redirect step description'),
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("A description to explain what the next step is")
+    )
+
     segments = models.ManyToManyField(
         'segments.segment',
         verbose_name=_('Segment'),

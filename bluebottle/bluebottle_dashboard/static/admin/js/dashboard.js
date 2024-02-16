@@ -59,10 +59,34 @@ function hideInfoBoxLabel() {
   });
 }
 
+
+function hideRecurringField() {
+  if (jQuery("#id_slot_type").val() === "recurring") {
+    jQuery(".field-duration_period").show()
+    jQuery(".field-max_iterations").show()
+  } else {
+    jQuery(".field-duration_period").hide()
+    jQuery(".field-max_iterations").hide()
+  }
+
+  jQuery("#id_slot_type").change(function(value) {
+    if (value.target.value === "recurring") {
+      jQuery(".field-duration_period").fadeIn()
+      jQuery(".field-max_iterations").fadeIn()
+    } else {
+      jQuery(".field-duration_period").fadeOut()
+      jQuery(".field-max_iterations").fadeOut()
+    }
+
+  })
+}
+
+
 window.onload = function() {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
   }
+  hideRecurringField()
   replaceInlineActivityAddButton();
   removeRedundantTabs();
   addHashToInlinePaginator();

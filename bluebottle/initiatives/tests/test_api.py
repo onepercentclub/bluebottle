@@ -369,6 +369,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 'name': 'request_changes',
                 'target': 'needs_work',
                 'label': 'Needs work',
+                'passed_label': None,
                 'description': "The status of the initiative is set to 'Needs work'. The " +
                                "initiator can edit and resubmit the initiative. Don't forget " +
                                "to inform the initiator of the necessary adjustments."
@@ -422,7 +423,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        period_activity.states.submit(save=True)
+        period_activity.states.publish(save=True)
         PeriodParticipantFactory.create_batch(3, activity=period_activity)
         PeriodParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
 
@@ -493,7 +494,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        unrelated_activity.states.submit(save=True)
+        unrelated_activity.states.publish(save=True)
         PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
 
         response = self.client.get(
@@ -1304,17 +1305,19 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.url = reverse('settings')
 
     def test_get_search_filter_settings(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertFalse(data['platform']['initiatives']['show_all_activities'])
-
-        self.settings.show_all_activities = True
+        self.settings.include_full_activities = False
         self.settings.save()
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertTrue(data['platform']['initiatives']['show_all_activities'])
+        self.assertFalse(data['platform']['initiatives']['include_full_activities'])
+
+        self.settings.include_full_activities = True
+        self.settings.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['platform']['initiatives']['include_full_activities'])
 
     def test_get_office_restriction_settings(self):
         response = self.client.get(self.url)

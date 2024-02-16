@@ -15,7 +15,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import (
     TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine, TeamSlotStateMachine
 )
-from bluebottle.time_based.triggers import has_participants, has_no_participants
+from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
 
 
 class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):

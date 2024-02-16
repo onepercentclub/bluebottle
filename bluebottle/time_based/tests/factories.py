@@ -9,7 +9,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot
+    DateParticipant, PeriodParticipant, TimeContribution, DateActivitySlot, SlotParticipant, Skill, TeamSlot,
+    DeadlineActivity, DeadlineRegistration, DeadlineParticipant
 )
 from bluebottle.utils.models import Language
 
@@ -83,6 +84,21 @@ class PeriodActivityFactory(TimeBasedFactory):
     start = (now() + timedelta(weeks=2)).date()
 
 
+class DeadlineActivityFactory(TimeBasedFactory):
+
+    class Meta:
+        model = DeadlineActivity
+
+    deadline = date.today() + timedelta(weeks=4)
+    registration_deadline = date.today() - timedelta(weeks=4)
+    duration = timedelta(hours=4)
+    is_online = False
+    location = factory.SubFactory(GeolocationFactory)
+    expertise = factory.SubFactory(SkillFactory)
+
+    start = (now() - timedelta(weeks=2)).date()
+
+
 class DateParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DateParticipant
@@ -127,3 +143,19 @@ class TeamSlotFactory(factory.DjangoModelFactory):
     location = factory.SubFactory(GeolocationFactory)
     start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)
+
+
+class DeadlineRegistrationFactory(FSMModelFactory):
+    class Meta(object):
+        model = DeadlineRegistration
+
+    activity = factory.SubFactory(DeadlineActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class DeadlineParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = DeadlineParticipant
+
+    activity = factory.SubFactory(DeadlineActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)

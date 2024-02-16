@@ -36,7 +36,7 @@ from bluebottle.time_based.messages import (
     NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
-from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
+from bluebottle.time_based.triggers.triggers import is_not_owner, is_not_user, is_user
 
 
 def is_started(effect):

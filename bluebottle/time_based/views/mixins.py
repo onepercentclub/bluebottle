@@ -1,5 +1,7 @@
 from django.db.models import Q
 
+from rest_framework.exceptions import ValidationError
+
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.activities.models import Activity
 
@@ -62,3 +64,22 @@ class FilterRelatedUserMixin:
             ).order_by('-id')
 
         return queryset
+
+
+class RequiredQuestionsMixin:
+    def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        if self.request.user.required:
+            raise ValidationError('Required fields', code="required")
+
+        serializer.save(user=self.request.user)
+

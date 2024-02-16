@@ -1,4 +1,7 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -42,6 +45,34 @@ class RegistrationSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+
+        user = self.context['request'].user
+
+        priveliged_users = [instance.user, instance.activity.owner] + list(
+            instance.activity.initiative.activity_managers.all()
+        )
+        if (
+            user not in priveliged_users and
+            not user.is_staff and
+            not user.is_superuser
+        ):
+            del result['answer']
+            del result['document']
+
+        return result
+
+    def validate(self, data):
+        if 'activity' in data and data['activity'].registration_flow == 'question':
+            if not data.get('answer'):
+                raise ValidationError({'answer': [_('This field is required')]})
+
+            if data['activity'].review_document_enabled and not data['document']:
+                raise ValidationError({'document': [_('This field is required')]})
+
+        return data
+
 
 class DeadlineRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('deadline-registration-detail', view_args=('pk',))
@@ -51,10 +82,6 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-registrations'
-        included_resources = [
-            'user',
-            'activity',
-        ]
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers,

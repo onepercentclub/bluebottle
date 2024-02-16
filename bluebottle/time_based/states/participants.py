@@ -28,6 +28,11 @@ class ParticipantStateMachine(ContributorStateMachine):
     rejected = State(
         _('rejected'),
         'rejected',
+        _("This person's contribution is rejected and the spent hours are reset to zero.")
+    )
+    removed = State(
+        _('removed'),
+        'removed',
         _("This person's contribution is removed and the spent hours are reset to zero.")
     )
     withdrawn = State(
@@ -109,7 +114,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
-        automatic=False,
+        automatic=True,
         permission=can_accept_participant,
     )
 
@@ -132,7 +137,7 @@ class ParticipantStateMachine(ContributorStateMachine):
             accepted,
             succeeded
         ],
-        rejected,
+        removed,
         name=_('Remove'),
         passed_label=_('removed'),
         description=_("Remove this person as a participant from the activity."),

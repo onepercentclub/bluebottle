@@ -93,7 +93,7 @@ class ContributorPermission(ResourcePermission):
             return user.has_perms(perms) and user in [
                 obj.activity.owner,
                 obj.activity.initiative.owner,
-            ] or user in obj.activity.initiative.activity_managers.all() or (obj.team and obj.team.owner == user)
+            ] or user in obj.activity.initiative.activity_managers.all() 
 
 
 class ContributionPermission(ResourcePermission):

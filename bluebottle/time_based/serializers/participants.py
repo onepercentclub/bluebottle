@@ -31,6 +31,7 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,

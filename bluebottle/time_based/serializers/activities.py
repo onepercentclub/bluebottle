@@ -1,3 +1,6 @@
+import dateutil
+
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     SerializerMethodHyperlinkedRelatedField, ResourceRelatedField
@@ -12,10 +15,22 @@ from bluebottle.fsm.serializers import TransitionSerializer
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    review = serializers.BooleanField(required=False, allow_null=True)
+    title = serializers.CharField()
+    description = serializers.CharField()
+    review = serializers.BooleanField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ('draft', 'needs_work'):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
 
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
         self.fields['contributors'] = SerializerMethodHyperlinkedRelatedField(
@@ -75,6 +90,23 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     )
 
 
+class StartDateValidator():
+    requires_context = True
+
+    def __call__(self, value, serializer):
+        parent = serializer.parent
+        try:
+            end = dateutil.parser.parse(parent.initial_data['deadline']).date()
+        except (KeyError, TypeError):
+            try:
+                end = parent.instance.deadline
+            except AttributeError:
+                return
+
+        if value and end and value > end:
+            raise ValidationError('The activity should start before the deadline')
+
+
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     participant_model = DeadlineParticipant
     registration_model = DeadlineRegistration
@@ -82,6 +114,10 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     related_participant_view_name = 'deadline-participants'
     related_registration_view_name = 'related-deadline-registrations'
     export_view_name = 'deadline-participant-export'
+
+    start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
+    deadline = serializers.DateField(allow_null=True)
+    is_online = serializers.BooleanField()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity

@@ -1009,6 +1009,10 @@ class Registration(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
 
     @property
+    def owner(self):
+        return self.user
+
+    @property
     def participants(self):
         return self.deadlineparticipant_set.all()
 

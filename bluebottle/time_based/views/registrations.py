@@ -17,12 +17,13 @@ from bluebottle.utils.views import (
     RetrieveUpdateAPIView
 )
 from bluebottle.time_based.views.mixins import (
-    CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
+    AnonimizeMembersMixin, FilterRelatedUserMixin,
+    RequiredQuestionsMixin
 )
 from bluebottle.transitions.views import TransitionList
 
+class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
 
-class RegistrationList(JsonApiViewMixin, CreatePermissionMixin, CreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )

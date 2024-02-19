@@ -70,6 +70,10 @@ JET_SIDE_MENU_ITEMS = [
                 'permissions': ['time_based.change_periodactivity']
             },
             {
+                'name': 'time_based.deadlineactivity',
+                'permissions': ['time_based.change_deadlineactivity']
+            },
+            {
                 'name': 'time_based.skill',
                 'permissions': ['time_based.change_skill']
             },

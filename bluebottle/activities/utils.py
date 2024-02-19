@@ -1,5 +1,4 @@
 from builtins import object
-from collections.abc import Iterable
 from itertools import groupby
 
 from django.conf import settings

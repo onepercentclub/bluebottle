@@ -4,7 +4,6 @@ from datetime import timedelta
 from django.contrib.admin import AdminSite
 from django.urls import reverse
 from django.utils.timezone import now
-from pytz import UTC
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -319,10 +318,14 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.activity = DateActivityFactory.create(
             slots=[]
         )
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
-            start=datetime.datetime(2022, 5, 15, tzinfo=UTC)
+            start=now() - datetime.timedelta(days=1)
         )
+        self.activity.states.publish(save=True)
         self.url = reverse('admin:time_based_dateactivityslot_change', args=(self.slot.id,))
         self.app.set_user(self.staff_member)
 
@@ -334,7 +337,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(h3.text.strip(), 'Warning')
         form = page.forms[0]
         form["interval"] = "day"
-        form["end"] = '2022-05-20'
+        form["end"] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
         self.assertEqual(
             page.location,
@@ -344,12 +347,27 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertContains(page, '6 Results')
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(
-            [str(s.start.date()) for s in self.activity.slots.all()],
-            [
-                '2022-05-15', '2022-05-16', '2022-05-17',
-                '2022-05-18', '2022-05-19', '2022-05-20',
-            ]
+            [s.start.date() for s in self.activity.slots.all()],
+            [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
         )
+
+    def test_duplicate_reopen(self):
+        self.assertEqual(self.activity.status, 'expired')
+        page = self.app.get(self.url)
+        page = page.click('Repeat this slot')
+        form = page.forms[0]
+        form["interval"] = "day"
+        form["end"] = str((now() + datetime.timedelta(days=4)).date())
+        page = form.submit()
+        self.assertEqual(
+            page.location,
+            f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
+        )
+        page = page.follow()
+        self.assertContains(page, '6 Results')
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.slots.count(), 6)
+        self.assertEqual(self.activity.status, 'open')
 
 
 class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):

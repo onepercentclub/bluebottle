@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
-from bluebottle.initiatives.models import Initiative
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from captcha import client
 from django.core import mail

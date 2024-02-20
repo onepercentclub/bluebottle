@@ -182,7 +182,6 @@ class MemberTestCase(BluebottleTestCase):
             slot=slot5
         )
 
-
         platform_settings = MemberPlatformSettings.load()
         platform_settings.fiscal_month_offset = 0
         platform_settings.save()

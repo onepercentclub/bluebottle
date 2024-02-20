@@ -109,6 +109,7 @@ class ActivitySlotSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     location = ResourceRelatedField(queryset=Geolocation.objects, required=False, allow_null=True)
     current_status = CurrentStatusField(source='states.current_state')
+    timezone = serializers.SerializerMethodField()
 
     my_contributor = SerializerMethodResourceRelatedField(
         model=SlotParticipant,
@@ -123,6 +124,9 @@ class ActivitySlotSerializer(ModelSerializer):
         read_only=True
     )
 
+    def get_timezone(self, instance):
+        return instance.location.timezone if not instance.is_online and instance.location else None
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -136,6 +140,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'end',
             'transitions',
             'is_online',
+            'timezone',
             'location_hint',
             'online_meeting_url',
             'my_contributor',

@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):

@@ -29,8 +29,10 @@ from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
-from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution, DeadlineParticipant
+from bluebottle.time_based.models import (
+    DateActivity, DeadlineActivity, PeriodActivity, DateParticipant, 
+    PeriodParticipant, TimeContribution, DeadlineParticipant
+)
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 

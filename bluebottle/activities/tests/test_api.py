@@ -1,5 +1,4 @@
 import datetime
-import io
 import json
 import re
 from builtins import str
@@ -12,7 +11,6 @@ from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
-from openpyxl import load_workbook
 from pytz import UTC
 from rest_framework import status
 
@@ -32,7 +30,7 @@ from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory, DateParticipantFactory, PeriodParticipantFactory,
+    DateActivityFactory, DeadlineActivityFactory, DeadlineActivityFactory, DateParticipantFactory, DeadlineParticipantFactory, DeadlineParticipantFactory,
     DateActivitySlotFactory, SkillFactory
 )
 
@@ -106,7 +104,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivityFactory.create(
             owner=self.owner, status='open', image=ImageFactory.create()
         )
-        PeriodActivityFactory.create(status='open', image=ImageFactory.create())
+        DeadlineActivityFactory.create(status='open', image=ImageFactory.create())
         FundingFactory.create(review_status='open', image=ImageFactory.create())
 
         response = self.client.get(self.url, user=self.owner)
@@ -315,8 +313,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['matching-properties']['skill'], True)
         self.assertEqual(attributes['matching-properties']['location'], True)
 
-    def test_period_preview(self):
-        activity = PeriodActivityFactory.create(status='open', is_online=False)
+    def test_deadline_preview(self):
+        activity = DeadlineActivityFactory.create(status='open', is_online=False)
         response = self.client.get(self.url, user=self.owner)
         attributes = response.json()['data'][0]['attributes']
 
@@ -331,7 +329,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
-        self.assertEqual(attributes['contribution-duration'], {'period': 'overall', 'value': 20.0})
+        self.assertEqual(attributes['contribution-duration'], {'period': 0, 'value': 4.0})
 
         location = activity.location
         self.assertEqual(
@@ -342,8 +340,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['matching-properties']['skill'], False)
         self.assertEqual(attributes['matching-properties']['location'], False)
 
-    def test_period_preview_matching(self):
-        activity = PeriodActivityFactory.create(
+    def test_deadline_preview_matching(self):
+        activity = DeadlineActivityFactory.create(
             status='open',
             location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
@@ -423,21 +421,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search(self):
         text = 'consectetur adipiscing elit,'
-        title = PeriodActivityFactory.create(
+        title = DeadlineActivityFactory.create(
             status="open", title=f'title with {text}',
         )
-        description = PeriodActivityFactory.create(
+        description = DeadlineActivityFactory.create(
             status="open", description=f'description with {text}',
         )
 
-        initiative_title = PeriodActivityFactory.create(
+        initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
-        initiative_story = PeriodActivityFactory.create(
+        initiative_story = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
         )
 
-        initiative_pitch = PeriodActivityFactory.create(
+        initiative_pitch = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
         )
 
@@ -462,21 +460,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_prefix(self):
         text = 'consectetur adipiscing elit,'
-        title = PeriodActivityFactory.create(
+        title = DeadlineActivityFactory.create(
             status="open", title=f'title with {text}',
         )
-        description = PeriodActivityFactory.create(
+        description = DeadlineActivityFactory.create(
             status="open", description=f'description with {text}',
         )
 
-        initiative_title = PeriodActivityFactory.create(
+        initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
-        initiative_story = PeriodActivityFactory.create(
+        initiative_story = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
         )
 
-        initiative_pitch = PeriodActivityFactory.create(
+        initiative_pitch = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(pitch=f'pitch with {text}'),
         )
 
@@ -504,21 +502,21 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='full', start=None, deadline=now() + timedelta(days=1)
             ),
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=None, deadline=None
             ),
 
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
 
             first_date_activity,
             second_date_activity,
 
-            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
         ]
 
@@ -556,18 +554,18 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=None, deadline=None
             ),
 
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
 
             first_date_activity,
             second_date_activity,
 
-            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
         ]
 
@@ -590,7 +588,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         DateActivitySlotFactory.create(
             status='open', start=now() - timedelta(days=7), activity=second_date_activity
         )
-        PeriodActivityFactory(
+        DeadlineActivityFactory(
             status='full', start=None, deadline=now() + timedelta(days=1)
         ),
 
@@ -603,14 +601,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_unknown(self):
         activities = [
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=None, deadline=now() + timedelta(days=1)
             ),
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=None, deadline=None
             ),
 
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
 
@@ -638,11 +636,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             second_date_activity,
             first_date_activity,
 
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='succeeded', start=None, deadline=now() - timedelta(days=6)
             ),
 
-            PeriodActivityFactory(
+            DeadlineActivityFactory(
                 status='succeeded', start=None, deadline=now() - timedelta(days=10)
             ),
 
@@ -672,12 +670,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         texel = GeolocationFactory.create(position=Point(4.853281, 53.154617))
         lyutidol = GeolocationFactory.create(position=Point(23.676222, 43.068555))
 
-        activity_amsterdam = PeriodActivityFactory(status="open", location=amsterdam)
-        activity_online1 = PeriodActivityFactory(status="open", is_online=True)
-        activity_leiden = PeriodActivityFactory(status="open", location=leiden)
-        activity_texel = PeriodActivityFactory(status="open", location=texel)
-        activity_online2 = PeriodActivityFactory(status="open", is_online=True)
-        activity_lyutidol = PeriodActivityFactory(status="open", location=lyutidol)
+        activity_amsterdam = DeadlineActivityFactory(status="open", location=amsterdam)
+        activity_online1 = DeadlineActivityFactory(status="open", is_online=True)
+        activity_leiden = DeadlineActivityFactory(status="open", location=leiden)
+        activity_texel = DeadlineActivityFactory(status="open", location=texel)
+        activity_online2 = DeadlineActivityFactory(status="open", is_online=True)
+        activity_lyutidol = DeadlineActivityFactory(status="open", location=lyutidol)
 
         leiden_place = PlaceFactory.create(position=leiden.position)
         texel_place = PlaceFactory.create(position=texel.position)
@@ -736,10 +734,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_date(self):
         today = now().date()
         activities = [
-            PeriodActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
+            DeadlineActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
-            PeriodActivityFactory(status='open', start=today + timedelta(days=8)),
+            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
             CollectActivityFactory(status='open', start=today + timedelta(days=9)),
         ]
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
@@ -791,7 +789,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_type(self):
         matching = (
             DateActivityFactory.create_batch(3, status='open') +
-            PeriodActivityFactory.create_batch(2, status='open')
+            DeadlineActivityFactory.create_batch(2, status='open')
         )
         funding = FundingFactory.create_batch(1, status='open')
         deed = DeedFactory.create_batch(3, status='open')
@@ -815,7 +813,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_type_missing(self):
         matching = (
             DateActivityFactory.create_batch(3, status='open') +
-            PeriodActivityFactory.create_batch(2, status='open')
+            DeadlineActivityFactory.create_batch(2, status='open')
         )
         funding = FundingFactory.create_batch(1, status='open')
         CollectActivityFactory.create_batch(4, status='cancelled')
@@ -972,12 +970,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_upcoming(self):
         matching = (
-            PeriodActivityFactory.create_batch(2, status='open') +
-            PeriodActivityFactory.create_batch(2, status='full')
+            DeadlineActivityFactory.create_batch(2, status='open') +
+            DeadlineActivityFactory.create_batch(2, status='full')
         )
-        PeriodActivityFactory.create_batch(2, status='succeeded')
-        PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='needs_work')
+        DeadlineActivityFactory.create_batch(2, status='succeeded')
+        DeadlineActivityFactory.create_batch(2, status='draft')
+        DeadlineActivityFactory.create_batch(2, status='needs_work')
 
         self.search({'upcoming': 1})
         self.assertFound(matching)
@@ -986,25 +984,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.include_full_activities = False
         initiative_settings.save()
-        matching = PeriodActivityFactory.create_batch(2, status='open')
-        PeriodActivityFactory.create_batch(2, status='full')
-        PeriodActivityFactory.create_batch(2, status='succeeded')
-        PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='needs_work')
+        matching = DeadlineActivityFactory.create_batch(2, status='open')
+        DeadlineActivityFactory.create_batch(2, status='full')
+        DeadlineActivityFactory.create_batch(2, status='succeeded')
+        DeadlineActivityFactory.create_batch(2, status='draft')
+        DeadlineActivityFactory.create_batch(2, status='needs_work')
 
         self.search({'upcoming': 1})
         self.assertFound(matching)
 
     def test_no_filter(self):
         matching = (
-            PeriodActivityFactory.create_batch(2, status='open') +
-            PeriodActivityFactory.create_batch(2, status='full') +
-            PeriodActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='open') +
+            DeadlineActivityFactory.create_batch(2, status='full') +
+            DeadlineActivityFactory.create_batch(2, status='full') +
             FundingFactory.create_batch(2, status='partially_funded')
         )
-        PeriodActivityFactory.create_batch(2, status='draft')
-        PeriodActivityFactory.create_batch(2, status='needs_work')
-        PeriodActivityFactory.create_batch(2, status='needs_work')
+        DeadlineActivityFactory.create_batch(2, status='draft')
+        DeadlineActivityFactory.create_batch(2, status='needs_work')
+        DeadlineActivityFactory.create_batch(2, status='needs_work')
 
         self.search({})
 
@@ -1013,8 +1011,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_filter_team(self):
         InitiativePlatformSettings.objects.create(activity_search_filters=['team_activity'])
 
-        matching = PeriodActivityFactory.create_batch(2, status="open", team_activity='teams')
-        other = PeriodActivityFactory.create_batch(3, status="open", team_activity='individuals')
+        matching = DeadlineActivityFactory.create_batch(2, status="open", team_activity='teams')
+        other = DeadlineActivityFactory.create_batch(3, status="open", team_activity='individuals')
 
         self.search({'team_activity': 'teams'})
 
@@ -1029,8 +1027,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ActivitySearchFilter.objects.create(settings=settings, type="theme_activity")
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        PeriodActivityFactory.create_batch(2, status="open", team_activity='teams')
-        PeriodActivityFactory.create_batch(3, status="open", team_activity='individuals')
+        DeadlineActivityFactory.create_batch(2, status="open", team_activity='teams')
+        DeadlineActivityFactory.create_batch(3, status="open", team_activity='individuals')
 
         self.search({
             'team_activity': 'teams',
@@ -1044,8 +1042,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound([])
 
     def test_filter_online(self):
-        matching = PeriodActivityFactory.create_batch(2, status="open", is_online=True)
-        other = PeriodActivityFactory.create_batch(3, status="open", is_online=False)
+        matching = DeadlineActivityFactory.create_batch(2, status="open", is_online=True)
+        other = DeadlineActivityFactory.create_batch(3, status="open", is_online=False)
 
         self.search({'is_online': '1'})
 
@@ -1062,11 +1060,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_category = CategoryFactory.create()
         other_category = CategoryFactory.create()
 
-        matching = PeriodActivityFactory.create_batch(2, status='open')
+        matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
             activity.initiative.categories.add(matching_category)
 
-        other = PeriodActivityFactory.create_batch(3, status='open')
+        other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
             activity.initiative.categories.add(other_category)
 
@@ -1088,13 +1086,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_skill = SkillFactory.create()
         other_skill = SkillFactory.create()
 
-        matching = PeriodActivityFactory.create_batch(
+        matching = DeadlineActivityFactory.create_batch(
             2,
             expertise=matching_skill,
             status='open',
         )
 
-        other = PeriodActivityFactory.create_batch(
+        other = DeadlineActivityFactory.create_batch(
             3,
             expertise=other_skill,
             status='open',
@@ -1118,13 +1116,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching_country = CountryFactory.create()
         other_country = CountryFactory.create()
 
-        matching = PeriodActivityFactory.create_batch(
+        matching = DeadlineActivityFactory.create_batch(
             2,
             office_location=LocationFactory.create(country=matching_country),
             status='open',
         )
 
-        other = PeriodActivityFactory.create_batch(
+        other = DeadlineActivityFactory.create_batch(
             3,
             office_location=LocationFactory.create(country=other_country),
             status='open',
@@ -1146,7 +1144,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = []
         for country in countries:
             location = GeolocationFactory.create(country=country)
-            matching.append(PeriodActivityFactory.create(location=location, status='open'))
+            matching.append(DeadlineActivityFactory.create(location=location, status='open'))
 
         self.search({})
         self.assertEqual(len(self.data['meta']['facets']['country']), 12)
@@ -1193,13 +1191,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_filter_highlight(self):
-        matching = PeriodActivityFactory.create_batch(
+        matching = DeadlineActivityFactory.create_batch(
             2,
             highlight=True,
             status='open',
         )
 
-        other = PeriodActivityFactory.create_batch(
+        other = DeadlineActivityFactory.create_batch(
             3,
             highlight=False,
             status='open',
@@ -1214,14 +1212,14 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_filter_date(self):
         matching = [
-            PeriodActivityFactory.create(status="open", start='2025-04-01', deadline='2025-04-02'),
-            PeriodActivityFactory.create(status="open", start='2025-04-01', deadline='2025-04-03'),
+            DeadlineActivityFactory.create(status="open", start='2025-04-01', deadline='2025-04-02'),
+            DeadlineActivityFactory.create(status="open", start='2025-04-01', deadline='2025-04-03'),
             DeedFactory.create(status="open", start='2025-04-05', end='2025-04-07'),
             CollectActivityFactory.create(status="open", start='2025-04-05', end='2025-04-07'),
         ]
 
-        PeriodActivityFactory.create(status="open", start='2025-05-01', deadline='2025-05-02')
-        PeriodActivityFactory.create(status="open", start='2025-05-01', deadline='2025-05-03')
+        DeadlineActivityFactory.create(status="open", start='2025-05-01', deadline='2025-05-02')
+        DeadlineActivityFactory.create(status="open", start='2025-05-01', deadline='2025-05-03')
         DeedFactory.create(status="open", start='2025-05-05', end='2025-05-07')
         CollectActivityFactory.create(status="open", start='2025-05-05', end='2025-05-07')
 
@@ -1237,8 +1235,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         activity1 = DateActivityFactory.create(status="succeeded")
         activity2 = DateActivityFactory.create(status="succeeded")
         activity3 = DateActivityFactory.create(status="succeeded")
-        activity4 = PeriodActivityFactory.create(status="succeeded", start='2022-04-15', deadline='2022-05-15')
-        PeriodActivityFactory.create(status="succeeded", start='2022-03-01', deadline='2022-06-01')
+        activity4 = DeadlineActivityFactory.create(status="succeeded", start='2022-04-15', deadline='2022-05-15')
+        DeadlineActivityFactory.create(status="succeeded", start='2022-03-01', deadline='2022-06-01')
 
         DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 3, tzinfo=UTC))
         DateActivitySlotFactory.create(activity=activity1, start=datetime.datetime(2022, 5, 25, tzinfo=UTC))
@@ -1280,10 +1278,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = [
             DateActivityFactory.create(status="open", slots=[]),
             DateActivityFactory.create(status="open", slots=[]),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=Point(lon + 0.1, lat + 0.1))
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=Point(lon - 0.1, lat - 0.1))
             ),
             CollectActivityFactory.create(
@@ -1302,11 +1300,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon - 0.05, lat - 0.05))
         )
 
-        further = PeriodActivityFactory.create(
+        further = DeadlineActivityFactory.create(
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 1, lat - 1))
         )
-        furthest = PeriodActivityFactory.create(
+        furthest = DeadlineActivityFactory.create(
             status="open",
             location=GeolocationFactory.create(position=Point(lon - 2, lat - 2))
         )
@@ -1317,7 +1315,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(lon + 2, lat + 2))
         )
 
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open",
             is_online=True
         )
@@ -1343,13 +1341,13 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         matching = [
             DateActivityFactory.create(status="open", slots=[]),
             DateActivityFactory.create(status="open", slots=[]),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=leiden),
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", location=GeolocationFactory.create(position=amsterdam),
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", is_online=True,
             ),
             DeedFactory.create(status="open"),
@@ -1367,10 +1365,10 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=amsterdam)
         )
 
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open", location=GeolocationFactory.create(position=lyutidol)
         )
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open", location=GeolocationFactory.create(position=lyutidol)
         )
 
@@ -1396,27 +1394,27 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
 
         matching = [
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", office_location=office, office_restriction='office'
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", office_location=within_region, office_restriction='office_region'
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", office_location=within_sub_region, office_restriction='office_subregion'
             ),
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open", office_location=LocationFactory.create(), office_restriction='all'
             ),
         ]
 
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open", office_location=LocationFactory.create(), office_restriction='office'
         )
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open", office_location=within_region, office_restriction='office'
         )
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status="open", office_location=within_region, office_restriction='office_subregion'
         )
 
@@ -1528,14 +1526,14 @@ class ContributorListAPITestCase(BluebottleTestCase):
             slot = DateActivitySlotFactory.create(activity=participant.activity)
             slot.slot_participants.all()[0].states.remove(save=True)
 
-        PeriodParticipantFactory.create_batch(2, user=self.user)
+        DeadlineParticipantFactory.create_batch(2, user=self.user)
         DonorFactory.create_batch(2, user=self.user, status='succeeded')
         DonorFactory.create_batch(2, user=self.user, status='new')
         DeedParticipantFactory.create_batch(2, user=self.user)
         CollectContributorFactory.create_batch(2, user=self.user)
 
         DateParticipantFactory.create()
-        PeriodParticipantFactory.create()
+        DeadlineParticipantFactory.create()
         DonorFactory.create()
         DeedParticipantFactory.create()
         CollectContributorFactory.create()
@@ -1795,7 +1793,7 @@ class ActivityLocationAPITestCase(APITestCase):
 
     def setUp(self):
         CollectActivityFactory.create(status='succeeded')
-        PeriodActivityFactory.create(status='succeeded')
+        DeadlineActivityFactory.create(status='succeeded')
 
         date_activity = DateActivityFactory.create(status="succeeded")
         date_activity.slots.add(DateActivitySlotFactory.create(activity=date_activity))

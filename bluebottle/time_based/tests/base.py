@@ -480,6 +480,17 @@ class TimeBasedRegistrationRelatedAPIListTestCase:
         for member in self.get_included('user'):
             self.assertIsNotNone(member['attributes']['last-name'])
 
+    def test_get_filter_my_registration(self):
+        registration = self.factory.create(activity=self.activity, status='accepted')
+        self.perform_get(user=registration.user, query={'filter[my]': 1})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(1)
+
+        self.assertObjectList(
+            [registration]
+        )
+
     def test_get_staff(self):
         self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
         self.assertStatus(status.HTTP_200_OK)

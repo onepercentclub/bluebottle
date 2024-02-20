@@ -18,6 +18,10 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     title = serializers.CharField()
     description = serializers.CharField()
     review = serializers.BooleanField()
+    registration_count = serializers.SerializerMethodField()
+
+    def get_registration_count(self, instance):
+        return instance.registrations.count()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -72,6 +76,9 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review_document_enabled',
             'permissions',
             'registrations'
+        )
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + (
+            'registration_count',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

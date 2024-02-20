@@ -70,7 +70,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    DeadlineParticipantStateMachine.succeed,
+                    DeadlineParticipantStateMachine.accept,
                 ),
             ]
         ),
@@ -87,7 +87,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.fail,
+                    ParticipantStateMachine.reject,
                 ),
             ]
         )

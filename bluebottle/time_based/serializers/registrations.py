@@ -17,7 +17,6 @@ from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedReso
 class RegistrationSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-    team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
 
@@ -31,17 +30,18 @@ class RegistrationSerializer(ModelSerializer):
             'activity',
             'permissions',
             'document',
-            'answer'
+            'answer',
+            'participants',
+
         ]
         meta_fields = (
             'permissions', 'current_status', 'transitions'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
-        included_resources = ['user', 'document', 'activity']
+        included_resources = ['user', 'document', 'activity', 'participants']
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -76,6 +76,7 @@ class RegistrationSerializer(ModelSerializer):
 
 class DeadlineRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('deadline-registration-detail', view_args=('pk',))
+    participants = ResourceRelatedField(many=True, read_only=True, source='deadlineparticipant_set')
 
     class Meta(RegistrationSerializer.Meta):
         model = DeadlineRegistration
@@ -88,6 +89,7 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
             'document': 'bluebottle.time_based.serializers.DeadlineRegistrationDocumentSerializer',
+            'participants': 'bluebottle.time_based.serializers.DeadlineParticipantSerializer'
         }
     )
 

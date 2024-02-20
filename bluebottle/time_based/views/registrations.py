@@ -65,6 +65,15 @@ class DeadlineRelatedRegistrationList(RelatedContributorListView):
     queryset = DeadlineRegistration.objects.prefetch_related(
         'user', 'activity'
     )
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        my = self.request.query_params.get('filter[my]')
+
+        if my:
+            queryset = queryset.filter(user=self.request.user)
+
+        return queryset
+
     serializer_class = DeadlineRegistrationSerializer
 
 

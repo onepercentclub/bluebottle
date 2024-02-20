@@ -1067,3 +1067,5 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa
+
+from bluebottle.time_based.signals import *  # noqa

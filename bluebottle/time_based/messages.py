@@ -821,7 +821,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     Slot participant registered for a time slot for an activity
     """
     subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
-    template = 'messages/participant/slot_participant_registered'
+    template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',

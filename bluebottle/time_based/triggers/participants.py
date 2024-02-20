@@ -214,6 +214,24 @@ class DeadlineParticipantTriggers(ContributorTriggers):
             ]
         ),
         TransitionTrigger(
+
+            DeadlineParticipantStateMachine.reject,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[
+                        activity_spots_left
+                    ]
+                )
+            ]
+        ),
+        TransitionTrigger(
             DeadlineParticipantStateMachine.cancelled,
             effects=[
                 UnFollowActivityEffect,

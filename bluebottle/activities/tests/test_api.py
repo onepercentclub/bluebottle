@@ -27,11 +27,13 @@ from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.geo import LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+from bluebottle.test.factory_models.geo import (
+    LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+)
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DeadlineActivityFactory, DeadlineActivityFactory, DateParticipantFactory, DeadlineParticipantFactory, DeadlineParticipantFactory,
-    DateActivitySlotFactory, SkillFactory
+    DateActivityFactory, DeadlineActivityFactory, DateParticipantFactory,
+    DeadlineParticipantFactory, DateActivitySlotFactory, SkillFactory
 )
 
 
@@ -225,6 +227,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(dateutil.parser.parse(attributes['end']), open_slot.end)
 
     def test_date_preview_multiple_slots_filtered(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="date")
+
         activity = DateActivityFactory.create(status='open', slots=[])
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=14))
         DateActivitySlotFactory.create(activity=activity, start=now() + timedelta(days=21))
@@ -734,7 +739,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
     def test_sort_date(self):
         today = now().date()
         activities = [
-            DeadlineActivityFactory(status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)),
+            DeadlineActivityFactory(
+                status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)
+            ),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
             DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
@@ -1140,6 +1147,9 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertFound(matching)
 
     def test_more_country_facets(self):
+        settings = InitiativePlatformSettings.objects.create()
+        ActivitySearchFilter.objects.create(settings=settings, type="country")
+
         countries = CountryFactory.create_batch(12)
         matching = []
         for country in countries:

@@ -115,7 +115,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
-        automatic=True,
+        automatic=False,
         permission=can_accept_participant,
     )
 
@@ -138,22 +138,10 @@ class ParticipantStateMachine(ContributorStateMachine):
             accepted,
             succeeded
         ],
-        removed,
+        rejected,
         name=_('Remove'),
         passed_label=_('removed'),
         description=_("Remove this person as a participant from the activity."),
-        automatic=False,
-        permission=can_accept_participant,
-    )
-
-    readd = Transition(
-        [
-            removed,
-        ],
-        succeeded,
-        name=_('Re-add'),
-        passed_label=_('re-added'),
-        description=_("Re-add this person as a participant to the activity"),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -259,5 +247,40 @@ class DeadlineParticipantStateMachine(ParticipantStateMachine):
         description=_("Accept this person as a participant to the Activity."),
         passed_label=_('accepted'),
         automatic=True,
+        permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    add = Transition(
+        [
+            ContributorStateMachine.new
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Add'),
+        description=_("Add this person as a participant to the activity."),
+        automatic=True
+    )
+
+    remove = Transition(
+        [
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded
+        ],
+        ParticipantStateMachine.removed,
+        name=_('Remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person as a participant from the activity."),
+        automatic=False,
+        permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    readd = Transition(
+        [
+            ParticipantStateMachine.removed,
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Re-add'),
+        passed_label=_('re-added'),
+        description=_("Re-add this person as a participant to the activity"),
+        automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )

@@ -26,9 +26,8 @@ from bluebottle.time_based.tests.factories import (
     SlotParticipantFactory
 )
 
+
 class TimeBasedActivityPeriodicTasksTestCase():
-
-
     def setUp(self):
         super(TimeBasedActivityPeriodicTasksTestCase, self).setUp()
         self.initiative = InitiativeFactory.create(status='approved')

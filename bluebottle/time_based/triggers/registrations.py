@@ -70,13 +70,17 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    DeadlineParticipantStateMachine.accept,
+                    DeadlineParticipantStateMachine.succeed,
                 ),
             ]
         ),
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DeadlineParticipantStateMachine.succeed,
+                ),
             ]
         ),
         TransitionTrigger(

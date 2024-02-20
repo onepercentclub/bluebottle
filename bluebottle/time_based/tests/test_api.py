@@ -6,7 +6,6 @@ from io import BytesIO
 import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
-from django.core import mail
 from django.urls import reverse
 from django.utils.timezone import now, utc
 from openpyxl import load_workbook

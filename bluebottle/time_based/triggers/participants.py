@@ -94,14 +94,11 @@ class DeadlineParticipantTriggers(ContributorTriggers):
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.add,
+            DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
                 NotificationEffect(ManagerParticipantAddedOwnerNotification),
                 NotificationEffect(ParticipantAddedNotification),
-                TransitionEffect(
-                    DeadlineParticipantStateMachine.succeed,
-                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.lock,
@@ -109,6 +106,31 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                         activity_no_spots_left
                     ]
                 )
+            ]
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.readd,
+            effects=[
+                FollowActivityEffect,
+                RelatedTransitionEffect(
+                    'activity',
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[
+                        activity_no_spots_left
+                    ]
+                ),
+
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DeadlineActivityStateMachine.succeed,
+                    conditions=[
+                        activity_is_expired
+                    ]
+                ),
             ]
         ),
         TransitionTrigger(

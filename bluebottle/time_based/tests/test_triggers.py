@@ -13,14 +13,16 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
 from bluebottle.time_based.messages import (
     ParticipantJoinedNotification, ParticipantChangedNotification,
-    ParticipantAppliedNotification, 
+    ParticipantAppliedNotification,
     ParticipantAddedNotification,
-     ManagerParticipantAddedOwnerNotification,
+    ManagerParticipantAddedOwnerNotification,
 )
-from bluebottle.time_based.notifications.participants import UserParticipantRemovedNotification, \
+from bluebottle.time_based.notifications.participants import (
+    UserParticipantRemovedNotification,
     ManagerParticipantRemovedNotification
+)
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, 
+    DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory, SlotParticipantFactory, DeadlineActivityFactory,
     DeadlineRegistrationFactory, DeadlineParticipantFactory
@@ -1644,7 +1646,7 @@ class DeadlineParticipantTriggerTestCase(TriggerTestCase):
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
 
-        self.assertEqual(participant.status, 'rejected')
+        self.assertEqual(participant.status, 'removed')
 
         self.assertEqual(len(mail.outbox), 2)
 
@@ -2085,7 +2087,7 @@ class DeadlineParticipantTriggerTestCase(TriggerTestCase):
     def test_reaccept(self):
         self.test_remove()
 
-        self.participant.states.accept(save=True)
+        self.participant.states.readd(save=True)
 
         self.assertStatus(self.activity, 'full')
 

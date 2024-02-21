@@ -6,7 +6,7 @@ from django.utils.timezone import get_current_timezone
 from bluebottle.fsm.effects import Effect
 
 
-class RescheduleDeadlineActivityDurationsEffect(Effect):
+class RescheduleActivityDurationsEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):

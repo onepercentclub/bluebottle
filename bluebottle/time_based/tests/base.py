@@ -16,19 +16,21 @@ from bluebottle.files.tests.factories import PrivateDocumentFactory
 
 
 class TimeBasedActivityListAPITestCase:
-    url_name = 'deadline-list'
-
     fields = ['initiative', 'start', 'title', 'description', 'review']
 
     attributes = ['start', 'title', 'description', 'review']
     relationships = ['initiative', 'owner']
     included = ['initiative', 'owner']
 
+    @property
+    def model_name(self):
+        return self.factory._meta.model._meta.model_name
+
     def setUp(self):
         self.url = reverse(self.url_name)
 
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.append('deadlineactivity')
+        settings.activity_types.append(self.model_name)
         settings.save()
         super().setUp()
 
@@ -84,7 +86,7 @@ class TimeBasedActivityListAPITestCase:
 
     def test_create_disabled_activity_type(self):
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.remove('deadlineactivity')
+        settings.activity_types.remove(self.model_name)
         settings.save()
 
         self.perform_create(user=self.user)
@@ -749,7 +751,7 @@ class TimeBasedParticipantRelatedListAPITestCase:
             status='open',
         )
         self.factory.create_batch(5, activity=self.activity, status='succeeded')
-        self.factory.create_batch(5, activity=self.activity, status='rejected')
+        self.factory.create_batch(5, activity=self.activity, status='withdrawn')
 
         self.url = reverse(self.url_name, args=(self.activity.pk,))
 
@@ -763,7 +765,7 @@ class TimeBasedParticipantRelatedListAPITestCase:
 
         self.assertTrue(
             all(
-                participant['meta']['current-status']['value'] in ('succeeded', 'rejected')
+                participant['meta']['current-status']['value'] in ('succeeded', 'withdrawn')
                 for participant in self.response.json()['data']
             )
         )
@@ -779,7 +781,7 @@ class TimeBasedParticipantRelatedListAPITestCase:
 
         self.assertTrue(
             all(
-                participant['meta']['current-status']['value'] in ('succeeded', 'rejected')
+                participant['meta']['current-status']['value'] in ('succeeded', 'withdrawn')
                 for participant in self.response.json()['data']
             )
         )
@@ -923,14 +925,15 @@ class TimeBasedParticipantTransitionListAPITestCase:
         )
         self.participant = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name)
+        __import__('ipdb').set_trace()
 
         self.defaults = {
             'resource': self.participant,
-            'transition': 'remove',
+            'transition': 'withdraw',
         }
         super().setUp()
 
-    def test_remove(self):
+    def test_transition(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('resource', self.participant)
@@ -938,24 +941,24 @@ class TimeBasedParticipantTransitionListAPITestCase:
         self.participant.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'removed')
 
-    def test_remove_yourself(self):
+    def test_transition_yourself(self):
         self.perform_create(user=self.participant.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-    def test_remove_other_user(self):
+    def test_transition_other_user(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
 
-        self.assertEqual(self.defaults['resource'].status, 'succeeded')
+        self.assertEqual(self.defaults['resource'].status, self.expected_status)
 
-    def test_remove_no_user(self):
+    def test_transition_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.defaults['resource'].status, 'succeeded')
+        self.assertEqual(self.defaults['resource'].status, self.expected_status)
 
 
 class TimeBasedActivityAPIExportTestCase:

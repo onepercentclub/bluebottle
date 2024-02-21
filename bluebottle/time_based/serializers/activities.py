@@ -1,17 +1,24 @@
 import dateutil
-
-from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
-    SerializerMethodHyperlinkedRelatedField, ResourceRelatedField
+    ResourceRelatedField,
+    SerializerMethodHyperlinkedRelatedField,
 )
 
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.time_based.models import DeadlineActivity, DeadlineParticipant, DeadlineRegistration
+from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.time_based.models import (
+    DeadlineActivity,
+    DeadlineParticipant,
+    DeadlineRegistration,
+    PeriodicActivity,
+    PeriodicParticipant,
+    PeriodicRegistration
+)
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
-from bluebottle.fsm.serializers import TransitionSerializer
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
@@ -147,6 +154,43 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         }
     )
 
+class PeriodicActivitySerializer(TimeBasedBaseSerializer):
+    participant_model = PeriodicParticipant
+    registration_model = PeriodicRegistration
+    detail_view_name = 'periodic-detail'
+    related_participant_view_name = 'periodic-participants'
+    related_registration_view_name = 'related-periodic-registrations'
+    export_view_name = 'periodic-participant-export'
+
+    start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
+    deadline = serializers.DateField(allow_null=True)
+    is_online = serializers.BooleanField()
+
+    class Meta(TimeBasedBaseSerializer.Meta):
+        model = PeriodicActivity
+        fields = TimeBasedBaseSerializer.Meta.fields + (
+            'start',
+            'deadline',
+            'duration',
+            'period',
+            'is_online',
+            'location',
+            'location_hint',
+        )
+
+    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/periodic'
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'location',
+        ]
+
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
+
 
 class DeadlineTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=DeadlineActivity.objects.all())
@@ -156,4 +200,15 @@ class DeadlineTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/deadline-transitions'
+        included_resources = ['resource', ]
+
+
+class PeriodicTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=PeriodicActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/time-based/periodic-transitions'
         included_resources = ['resource', ]

@@ -7,9 +7,9 @@ from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, ModelStateMachine
 )
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity,
-    TimeContribution, DateActivitySlot, PeriodActivitySlot, SlotParticipant,
-    TeamSlot, DeadlineActivity, )
+    DateActivity, 
+    TimeContribution, DateActivitySlot, SlotParticipant,
+    DeadlineActivity, PeriodicActivity)
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
@@ -156,38 +156,9 @@ class DateStateMachine(TimeBasedStateMachine):
 
     submit = None
 
-
-@register(PeriodActivity)
-class PeriodStateMachine(TimeBasedStateMachine):
-    def can_succeed(self):
-        return len(self.instance.active_participants) > 0
-
-    succeed_manually = Transition(
-        [ActivityStateMachine.open, TimeBasedStateMachine.full],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
-        automatic=False,
-        description=_("Close this activity and allocate the hours to the participants."),
-        conditions=[can_succeed],
-        permission=ActivityStateMachine.is_owner,
-    )
-
-    reschedule = Transition(
-        [
-            ActivityStateMachine.expired,
-            ActivityStateMachine.succeeded
-        ],
-        ActivityStateMachine.open,
-        name=_("Reschedule"),
-        description=_(
-            "The date of the activity has been changed to a date in the future. "
-            "The status of the activity will be recalculated."
-        ),
-    )
+class BaseTimeBasedStateMachine(TimeBasedStateMachine):
 
 
-@register(DeadlineActivity)
-class DeadlineActivityStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
 
@@ -249,6 +220,16 @@ class DeadlineActivityStateMachine(TimeBasedStateMachine):
             ActivityStateMachine.is_valid,
         ],
     )
+
+    
+@register(DeadlineActivity)
+class DeadlineActivityStateMachine(BaseTimeBasedStateMachine):
+    pass
+
+
+@register(PeriodicActivity)
+class PeriodicActivityStateMachine(BaseTimeBasedStateMachine):
+    pass
 
 
 class ActivitySlotStateMachine(ModelStateMachine):
@@ -402,23 +383,6 @@ class ActivitySlotStateMachine(ModelStateMachine):
 @register(DateActivitySlot)
 class DateActivitySlotStateMachine(ActivitySlotStateMachine):
     pass
-
-
-@register(PeriodActivitySlot)
-class PeriodActivitySlotStateMachine(ActivitySlotStateMachine):
-    pass
-
-
-@register(TeamSlot)
-class TeamSlotStateMachine(ActivitySlotStateMachine):
-    initiate = Transition(
-        EmptyState(),
-        ActivitySlotStateMachine.open,
-        name=_('Initiate'),
-        description=_(
-            'The slot was created.'
-        ),
-    )
 
 
 @register(SlotParticipant)

@@ -1,17 +1,15 @@
 from datetime import date
 
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine
 )
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, TeamTriggers, has_organizer
+    ActivityTriggers, ContributorTriggers, has_organizer
 )
 from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -32,7 +30,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
+    ParticipantRemovedNotification, ParticipantWithdrewNotification,
     NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
@@ -275,25 +273,6 @@ def contributor_is_active(effect):
     return effect.instance.status == DeedParticipantStateMachine.new.value
 
 
-def team_is_active(effect):
-    """Team status is open, or there is no team"""
-    return (
-        effect.instance.team.status == TeamStateMachine.open.value
-        if effect.instance.team
-        else True
-    )
-
-
-def is_team_activity(effect):
-    """Team status is open, or there is no team"""
-    return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
-
-
-def is_not_team_activity(effect):
-    """Team status is open, or there is no team"""
-    return not effect.instance.team
-
-
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -310,10 +289,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 NotificationEffect(
-                    TeamMemberAddedMessage,
-                    conditions=[is_team_activity]
-                ),
-                NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_user]
                 ),
@@ -325,8 +300,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     ParticipantJoinedNotification,
                     conditions=[is_user]
                 ),
-                CreateTeamEffect,
-                CreateInviteEffect,
                 FollowActivityEffect,
             ]
         ),
@@ -339,13 +312,10 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
-                NotificationEffect(ParticipantRemovedNotification, conditions=[is_not_team_activity]),
-                NotificationEffect(TeamParticipantRemovedNotification, conditions=[is_team_activity]),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
                     conditions=[is_not_owner]
                 ),
-                NotificationEffect(TeamMemberRemovedMessage),
                 UnFollowActivityEffect
             ]
         ),
@@ -361,7 +331,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     EffortContributionStateMachine.succeed,
-                    conditions=[contributor_is_active, team_is_active]
+                    conditions=[contributor_is_active]
                 ),
             ]
         ),
@@ -393,7 +363,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                NotificationEffect(TeamMemberWithdrewMessage),
                 UnFollowActivityEffect
             ]
         ),
@@ -404,7 +373,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
                 TransitionEffect(
                     DeedParticipantStateMachine.succeed,
-                    conditions=[activity_did_start, team_is_active]
+                    conditions=[activity_did_start, ]
                 ),
                 FollowActivityEffect,
             ]
@@ -417,16 +386,3 @@ class DeedParticipantTriggers(ContributorTriggers):
             ]
         ),
     ]
-
-
-TeamTriggers.triggers += [
-    TransitionTrigger(
-        TeamStateMachine.reopen,
-        effects=[
-            RelatedTransitionEffect(
-                'members', DeedParticipantStateMachine.succeed,
-                conditions=[activity_did_start]
-            )
-        ]
-    )
-]

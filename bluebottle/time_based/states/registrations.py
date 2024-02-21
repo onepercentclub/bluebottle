@@ -4,7 +4,8 @@ from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, ModelStateMachine
 )
 from bluebottle.time_based.models import (
-    DeadlineRegistration, )
+    DeadlineRegistration,
+    PeriodicRegistration, )
 
 
 class RegistrationStateMachine(ModelStateMachine):
@@ -77,3 +78,58 @@ class RegistrationStateMachine(ModelStateMachine):
 @register(DeadlineRegistration)
 class DeadlineRegistrationStateMachine(RegistrationStateMachine):
     pass
+
+
+@register(PeriodicRegistration)
+class PeriodicRegistrationStateMachine(RegistrationStateMachine):
+    def is_user(self, user):
+        """can accept participant"""
+        return user == self.instance.user
+
+    withdrawn = State(
+        _('withdrawn'),
+        'rejected',
+        _("This person has withdrawn from the activity. Contributions are not counted.")
+    )
+
+    stopped = State(
+        _('stopped'),
+        'rejected',
+        _("This person stopped contributing to this activity.")
+    )
+
+    withdraw = Transition(
+        [RegistrationStateMachine.new, RegistrationStateMachine.accepted],
+        withdrawn,
+        name=_('Withdraw'),
+        description=_("Withdraw from this activity."),
+        automatic=False,
+        permission=is_user,
+    )
+
+    reapply = Transition(
+        [withdrawn],
+        RegistrationStateMachine.new,
+        name=_('Reapply'),
+        description=_("Reapply for this activity."),
+        automatic=False,
+        permission=is_user,
+    )
+
+    stop = Transition(
+        [RegistrationStateMachine.accepted],
+        stopped,
+        name=_('Stop'),
+        description=_("Stop contributing to this activity."),
+        automatic=False,
+        permission=RegistrationStateMachine.can_accept_registration,
+    )
+
+    start = Transition(
+        [stopped],
+        RegistrationStateMachine.accepted,
+        name=_('Start again'),
+        description=_("Start contributing to this activity again."),
+        automatic=False,
+        permission=is_user,
+    )

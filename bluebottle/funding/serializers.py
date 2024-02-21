@@ -237,6 +237,12 @@ class FundingSerializer(BaseActivitySerializer):
 
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
+    psp = serializers.SerializerMethodField()
+
+    def get_psp(self, obj):
+        if obj.bank_account and obj.bank_account.connect_account:
+            return obj.bank_account.provider
+
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
@@ -272,6 +278,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines',
             'bank_account',
             'supporters_export_url',
+            'psp'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

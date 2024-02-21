@@ -55,6 +55,7 @@ class PaymentCurrency(models.Model):
 class PaymentProvider(PolymorphicModel):
 
     title = 'Payment Service Provider'
+    provider = 'default'
 
     public_settings = {}
     private_settings = {}
@@ -641,6 +642,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+    provider = 'default'
 
     connect_account = models.ForeignKey(
         'funding.PayoutAccount',

@@ -313,6 +313,7 @@ class StripePayoutAccount(PayoutAccount):
     country = models.CharField(max_length=2)
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = models.JSONField(null=True, default=list)
+    provider = 'stripe'
 
     @property
     def country_spec(self):

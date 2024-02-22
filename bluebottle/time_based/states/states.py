@@ -7,9 +7,10 @@ from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, ModelStateMachine
 )
 from bluebottle.time_based.models import (
-    DateActivity, 
+    DateActivity, PeriodActivity,
     TimeContribution, DateActivitySlot, SlotParticipant,
-    DeadlineActivity, PeriodicActivity)
+    DeadlineActivity, PeriodicActivity
+)
 
 
 class TimeBasedStateMachine(ActivityStateMachine):
@@ -156,9 +157,8 @@ class DateStateMachine(TimeBasedStateMachine):
 
     submit = None
 
+
 class BaseTimeBasedStateMachine(TimeBasedStateMachine):
-
-
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
 
@@ -221,7 +221,7 @@ class BaseTimeBasedStateMachine(TimeBasedStateMachine):
         ],
     )
 
-    
+
 @register(DeadlineActivity)
 class DeadlineActivityStateMachine(BaseTimeBasedStateMachine):
     pass
@@ -229,6 +229,11 @@ class DeadlineActivityStateMachine(BaseTimeBasedStateMachine):
 
 @register(PeriodicActivity)
 class PeriodicActivityStateMachine(BaseTimeBasedStateMachine):
+    pass
+
+
+@register(PeriodActivity)
+class PeriodActivityStateMachine(ModelStateMachine):
     pass
 
 

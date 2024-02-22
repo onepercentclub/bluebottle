@@ -274,6 +274,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('periodactivity', _('Activity during a period')),
         ('dateactivity', _('Activity on a specific date')),
         ('deadlineactivity', _('Activity within a deadline')),
+        ('periodicactivity', _('Periodic Activity')),
         ('deed', _('Deed')),
         ('collect', _('Collect activity')),
     )

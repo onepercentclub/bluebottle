@@ -88,18 +88,18 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
 
     withdrawn = State(
         _('withdrawn'),
-        'rejected',
+        'withdrawn',
         _("This person has withdrawn from the activity. Contributions are not counted.")
     )
 
     stopped = State(
         _('stopped'),
-        'rejected',
+        'stopped',
         _("This person stopped contributing to this activity.")
     )
 
     withdraw = Transition(
-        [RegistrationStateMachine.new, RegistrationStateMachine.accepted],
+        [RegistrationStateMachine.accepted],
         withdrawn,
         name=_('Withdraw'),
         description=_("Withdraw from this activity."),
@@ -109,7 +109,7 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
 
     reapply = Transition(
         [withdrawn],
-        RegistrationStateMachine.new,
+        RegistrationStateMachine.accepted,
         name=_('Reapply'),
         description=_("Reapply for this activity."),
         automatic=False,

@@ -3,12 +3,11 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, widgets
 from django.db import models
-from django.db.models import Sum
-from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
+from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
-from django.template import loader, defaultfilters
+from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -16,25 +15,38 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from polymorphic.admin import PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin
 from pytz import timezone
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+    ActivityChildAdmin,
+    ActivityForm,
+    ContributionChildAdmin,
+    ContributorChildAdmin,
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, DateParticipant, Participant, PeriodicActivity, PeriodicParticipant, PeriodicRegistration, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, DeadlineActivity, DeadlineParticipant, DeadlineRegistration,
-    Registration
+    DateActivity,
+    DateActivitySlot,
+    DateParticipant,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DeadlineRegistration,
+    Participant,
+    PeriodicActivity,
+    PeriodicParticipant,
+    PeriodicRegistration,
+    Skill,
+    SlotParticipant,
+    TimeContribution,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
-from bluebottle.time_based.utils import nth_weekday, duplicate_slot
-from bluebottle.utils.admin import export_as_csv_action, TranslatableAdminOrderingMixin
+from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -155,7 +167,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
 class TimeBasedActivityAdminForm(ActivityForm):
     class Meta(object):
         fields = '__all__'
-        model=PeriodicActivity
+        model = PeriodicActivity
         widgets = {
             'description': SummernoteWidget(attrs={'height': 400})
         }
@@ -290,8 +302,10 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
     model = DeadlineRegistration
 
+
 class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
     model = PeriodicRegistration
+
 
 @admin.register(DeadlineActivity)
 class DeadlineActivityAdmin(TimeBasedAdmin):
@@ -939,7 +953,6 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
-@admin.register(Registration)
 class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = ['created', ]
     raw_id_fields = ['user', 'activity']
@@ -950,6 +963,11 @@ class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 @admin.register(DeadlineRegistration)
 class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
     inlines = [DeadlineParticipantAdminInline]
+
+
+@admin.register(PeriodicRegistration)
+class PeriodicRegistrationAdmin(BaseRegistrationAdmin):
+    inlines = [PeriodicParticipantAdminInline]
 
 
 @admin.register(SlotParticipant)

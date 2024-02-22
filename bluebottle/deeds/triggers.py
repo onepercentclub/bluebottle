@@ -30,7 +30,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, ParticipantWithdrewNotification,
+    ParticipantWithdrewNotification,
     NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )

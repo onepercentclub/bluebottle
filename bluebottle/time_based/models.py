@@ -1,6 +1,5 @@
 from html import unescape
 from urllib.parse import urlencode
-from dateutil.relativedelta import relativedelta
 
 import pytz
 from django.db import connection
@@ -692,11 +691,7 @@ ONLINE_CHOICES = (
 )
 
 
-
-
 class BaseActivity(TimeBasedActivity):
-
-
     is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
 
     location = models.ForeignKey(
@@ -803,6 +798,10 @@ class PeriodChoices(DjangoChoices):
 class PeriodicActivity(BaseActivity):
     period = models.CharField(_('name'), max_length=100, choices=PeriodChoices)
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
+
+    @property
+    def required_fields(self):
+        return super().required_fields + ['period']
 
     class Meta:
         verbose_name = _("Periodic activity")

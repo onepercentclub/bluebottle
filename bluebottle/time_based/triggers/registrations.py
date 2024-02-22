@@ -15,7 +15,6 @@ from bluebottle.time_based.states import (
 )
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
-from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
 
 class RegistrationTriggers(TriggerManager):
@@ -104,7 +103,7 @@ class RegistrationTriggers(TriggerManager):
 
 @register(DeadlineRegistration)
 class DeadlineRegistrationTriggers(RegistrationTriggers):
-    triggers = [
+    triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
@@ -116,7 +115,7 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
 
 @register(PeriodicRegistration)
 class PeriodicRegistrationTriggers(RegistrationTriggers):
-    triggers = [
+    triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
             PeriodicRegistrationStateMachine.withdraw,
             effects=[

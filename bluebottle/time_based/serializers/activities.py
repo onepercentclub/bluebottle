@@ -154,6 +154,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         }
     )
 
+
 class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     participant_model = PeriodicParticipant
     registration_model = PeriodicRegistration

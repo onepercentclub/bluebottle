@@ -1,31 +1,48 @@
 import time
-from datetime import timedelta, date
+from datetime import date, datetime, timedelta
 
 import mock
+from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.template import defaultfilters
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.models import Organizer, Activity
-from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.activities.models import Activity, Organizer
+from bluebottle.initiatives.tests.factories import (
+    InitiativeFactory,
+    InitiativePlatformSettingsFactory,
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
+from bluebottle.time_based.effects.effects import (
+    CreateFirstSlotEffect,
+    CreateNextSlotEffect,
+    CreatePeriodicParticipantsEffect,
+)
 from bluebottle.time_based.messages import (
-    ParticipantJoinedNotification, ParticipantChangedNotification,
-    ParticipantAppliedNotification,
-    ParticipantAddedNotification,
     ManagerParticipantAddedOwnerNotification,
+    ParticipantAddedNotification,
+    ParticipantAppliedNotification,
+    ParticipantChangedNotification,
+    ParticipantJoinedNotification,
 )
 from bluebottle.time_based.notifications.participants import (
+    ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
-    ManagerParticipantRemovedNotification
 )
+from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
+    DateActivitySlotFactory,
     DateParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, DeadlineActivityFactory,
-    DeadlineRegistrationFactory, DeadlineParticipantFactory
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+    DeadlineRegistrationFactory,
+    PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
+    PeriodicSlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -2119,3 +2136,110 @@ class DeadlineParticipantTriggerTestCase(TriggerTestCase):
             'succeeded'
         )
         self.assertTrue(self.activity.followers.filter(user=self.participant.user).exists())
+
+
+class PeriodicActivityTriggerTestCase(TriggerTestCase):
+    factory = PeriodicActivityFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+
+        self.user = BlueBottleUserFactory()
+        self.admin_user = BlueBottleUserFactory.create(is_staff=True)
+        self.initiative = InitiativeFactory.create(
+            owner=self.user,
+            status='approved'
+        )
+
+        self.defaults = {
+            'start': date.today() + timedelta(days=10),
+            'deadline': date.today() + timedelta(days=20),
+            'preparation': timedelta(hours=1),
+            'initiative': self.initiative,
+            'review': False
+        }
+
+    def test_publish(self):
+        self.create()
+        self.model.states.publish()
+
+        with self.execute():
+            self.assertEffect(CreateFirstSlotEffect)
+            self.model.save()
+
+        self.assertEqual(self.model.slots.count(), 1)
+
+
+class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
+    factory = PeriodicSlotFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+
+        self.initiative = InitiativeFactory.create(
+            status='approved'
+        )
+        self.activity = PeriodicActivityFactory.create(
+            start=date.today() + timedelta(days=10),
+            deadline=date.today() + timedelta(days=20),
+            initiative=self.initiative,
+            status="open",
+            review=False
+        )
+        start = get_current_timezone().localize(
+            datetime.combine(self.activity.start, datetime.min.time())
+        )
+
+        self.defaults = {
+            'activity': self.activity,
+            'start': start,
+            'end': start + relativedelta(**{self.activity.period: 1}),
+        }
+
+        PeriodicRegistrationFactory.create_batch(
+            3, activity=self.activity, status='accepted'
+        )
+        PeriodicRegistrationFactory.create_batch(3, activity=self.activity, status='rejected')
+
+    def test_initiate(self):
+        self.model = self.factory.build(**self.defaults)
+
+        with self.execute():
+            self.assertEffect(CreatePeriodicParticipantsEffect)
+
+            self.model.save()
+
+        self.assertEqual(self.model.participants.count(), 3)
+
+        for participant in self.model.participants.all():
+            self.assertEqual(participant.status, 'new')
+
+    def test_finish(self):
+        self.create()
+        self.model.states.finish()
+
+        with self.execute():
+            self.assertEffect(CreateNextSlotEffect)
+            self.assertTransitionEffect(
+                PeriodicParticipantStateMachine.succeed, self.model.participants.first()
+            )
+
+            self.model.save()
+
+        for participant in self.model.participants.all():
+            self.assertEqual(participant.status, 'succeeded')
+
+        self.assertEqual(self.activity.slots.count(), 2)
+        next_slot = self.activity.slots.get(status='new')
+
+        self.assertEqual(next_slot.start, self.model.end)
+        self.assertEqual(
+            next_slot.end,
+            self.model.end + relativedelta(**{self.activity.period: 1}),
+        )

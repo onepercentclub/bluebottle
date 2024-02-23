@@ -1127,10 +1127,10 @@ class DeadlineParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/deadline-participants'
 
 
-class PeriodicSlot(models.Model):
+class PeriodicSlot(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
 
-    activity = models.ForeignKey(PeriodicActivity, on_delete=models.CASCADE)
+    activity = models.ForeignKey(PeriodicActivity, on_delete=models.CASCADE, related_name='slots')
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
@@ -1138,7 +1138,7 @@ class PeriodicSlot(models.Model):
 
 
 class PeriodicParticipant(Participant, Contributor):
-    slot = models.ForeignKey(PeriodicSlot, on_delete=models.CASCADE)
+    slot = models.ForeignKey(PeriodicSlot, on_delete=models.CASCADE, related_name='participants')
 
     class Meta():
         verbose_name = _(u'Periodic participant')

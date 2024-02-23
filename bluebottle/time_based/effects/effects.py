@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import F
@@ -7,7 +7,13 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import TimeContribution, SlotParticipant, ContributionTypeChoices
+from bluebottle.time_based.models import (
+    ContributionTypeChoices,
+    PeriodicSlot,
+    SlotParticipant,
+    TimeContribution,
+    PeriodicParticipant
+)
 
 
 class CreateSlotTimeContributionEffect(Effect):
@@ -351,3 +357,45 @@ class UnsetCapacityEffect(Effect):
 
     def __str__(self):
         return _('Reset slot selection to "all" for {activity}').format(activity=self.instance)
+
+
+class CreateFirstSlotEffect(Effect):
+    def is_valid(self):
+        self.instance.slots.count() == 0
+
+    def post_save(self):
+        tz = get_current_timezone()
+        start = tz.localize(
+            datetime.combine(self.instance.start, datetime.min.time())
+        ) if self.instance.start else now()
+
+        PeriodicSlot.objects.create(
+            activity=self.instance,
+            start=start,
+            end=start + relativedelta(**{self.instance.period: 1}),
+            duration=self.instance.duration
+        )
+
+
+class CreateNextSlotEffect(Effect):
+    def post_save(self):
+        activity = self.instance.activity
+
+        slot = PeriodicSlot.objects.create(
+            activity=activity,
+            start=self.instance.end,
+            end=self.instance.end + relativedelta(**{activity.period: 1}),
+            duration=activity.duration
+        )
+
+        slot.states.start(save=True)
+
+
+class CreatePeriodicParticipantsEffect(Effect):
+    def post_save(self):
+        for registration in self.instance.activity.registrations.filter(status='accepted'):
+            PeriodicParticipant.objects.create(
+                user=registration.user,
+                slot=self.instance,
+                activity=self.instance.activity
+            )

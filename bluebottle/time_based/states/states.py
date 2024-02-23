@@ -9,7 +9,7 @@ from bluebottle.fsm.state import (
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity,
     TimeContribution, DateActivitySlot, SlotParticipant,
-    DeadlineActivity, PeriodicActivity
+    DeadlineActivity, PeriodicActivity, PeriodicSlot
 )
 
 
@@ -235,6 +235,57 @@ class PeriodicActivityStateMachine(BaseTimeBasedStateMachine):
 @register(PeriodActivity)
 class PeriodActivityStateMachine(ModelStateMachine):
     pass
+
+
+@register(PeriodicSlot)
+class PeriodicSlotStateMachine(ModelStateMachine):
+    new = State(
+        _('new'),
+        'new',
+        _('The slot is in the future.')
+    )
+
+    running = State(
+        _('running'),
+        'running',
+        _('The slot running.')
+    )
+
+    finished = State(
+        _('finished'),
+        'finished',
+        _('The slot is finished')
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('Initiate'),
+        description=_(
+            'The slot was created.'
+        ),
+        automatic=True
+    )
+
+    start = Transition(
+        new,
+        running,
+        name=_('Start'),
+        description=_(
+            'The slot has started.'
+        ),
+        automatic=True
+    )
+
+    finish = Transition(
+        running,
+        finished,
+        name=_('Finish'),
+        description=_(
+            'The slot has finished.'
+        ),
+        automatic=True
+    )
 
 
 class ActivitySlotStateMachine(ModelStateMachine):

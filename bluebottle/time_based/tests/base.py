@@ -925,7 +925,6 @@ class TimeBasedParticipantTransitionListAPITestCase:
         )
         self.participant = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name)
-        __import__('ipdb').set_trace()
 
         self.defaults = {
             'resource': self.participant,

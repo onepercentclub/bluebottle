@@ -17,6 +17,7 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
     UnsetCapacityEffect,
+    CreateFirstSlotEffect
 )
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect,
@@ -33,7 +34,7 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
-from bluebottle.time_based.states.states import BaseTimeBasedStateMachine
+from bluebottle.time_based.states.states import BaseTimeBasedStateMachine, PeriodicActivityStateMachine
 
 
 def is_full(effect):
@@ -453,4 +454,11 @@ class DeadlineActivityTriggers(BaseTimeBasedTriggers):
 
 @register(PeriodicActivity)
 class PeriodicActivityTriggers(BaseTimeBasedTriggers):
-    pass
+    triggers = BaseTimeBasedTriggers.triggers + [
+        TransitionTrigger(
+            PeriodicActivityStateMachine.publish,
+            effects=[
+                CreateFirstSlotEffect,
+            ]
+        ),
+    ]

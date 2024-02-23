@@ -791,6 +791,8 @@ class DeadlineActivity(BaseActivity):
 
 
 class PeriodChoices(DjangoChoices):
+    hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing
+    days = ChoiceItem('days', label=_("per day"))  # TODO remove this after testing
     weeks = ChoiceItem('weeks', label=_("per week"))
     months = ChoiceItem('months', label=_("per month"))
 

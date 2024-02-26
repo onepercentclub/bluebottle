@@ -1009,6 +1009,10 @@ class Registration(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(default=timezone.now)
 
     @property
+    def owner(self):
+        return self.user
+
+    @property
     def participants(self):
         return self.deadlineparticipant_set.all()
 
@@ -1063,3 +1067,5 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa
+
+from bluebottle.time_based.signals import *  # noqa

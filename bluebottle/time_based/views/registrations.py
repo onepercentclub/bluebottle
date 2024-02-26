@@ -17,12 +17,14 @@ from bluebottle.utils.views import (
     RetrieveUpdateAPIView
 )
 from bluebottle.time_based.views.mixins import (
-    CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
+    AnonimizeMembersMixin, FilterRelatedUserMixin,
+    RequiredQuestionsMixin
 )
 from bluebottle.transitions.views import TransitionList
 
 
-class RegistrationList(JsonApiViewMixin, CreatePermissionMixin, CreateAPIView):
+class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
+
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -63,6 +65,16 @@ class DeadlineRelatedRegistrationList(RelatedContributorListView):
     queryset = DeadlineRegistration.objects.prefetch_related(
         'user', 'activity'
     )
+
+    def get_queryset(self, *args, **kwargs):
+        queryset = super().get_queryset(*args, **kwargs)
+        my = self.request.query_params.get('filter[my]')
+
+        if my:
+            queryset = queryset.filter(user=self.request.user)
+
+        return queryset
+
     serializer_class = DeadlineRegistrationSerializer
 
 

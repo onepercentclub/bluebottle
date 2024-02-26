@@ -42,8 +42,7 @@ urlpatterns = [
     url(r'^/participants/transitions$',
         DeadlineParticipantTransitionList.as_view(),
         name='deadline-participant-transitions'),
-
-    url(r'^/participants/(?P<activity_id>\d+)$',
+    url(r'^/participants/(?P<pk>\d+)$',
         DeadlineParticipantDetail.as_view(),
         name='deadline-participant-detail'),
 

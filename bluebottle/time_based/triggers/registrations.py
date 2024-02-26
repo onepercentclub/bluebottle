@@ -77,6 +77,10 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DeadlineParticipantStateMachine.succeed,
+                ),
             ]
         ),
         TransitionTrigger(
@@ -87,7 +91,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.fail,
+                    ParticipantStateMachine.reject,
                 ),
             ]
         )

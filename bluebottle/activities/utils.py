@@ -1,5 +1,4 @@
 from builtins import object
-from collections.abc import Iterable
 from itertools import groupby
 
 from django.conf import settings
@@ -441,7 +440,6 @@ class BaseContributorSerializer(ModelSerializer):
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
-
 
     class Meta(object):
         model = Contributor

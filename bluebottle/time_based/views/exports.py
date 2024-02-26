@@ -11,10 +11,9 @@ class TimebasedExportView(ExportView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
-        ('registration__status', 'Reviewed'),
-        ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
+        ('registration__answer', 'Registration answer'),
     )
 
     def get_row(self, instance):
@@ -45,11 +44,9 @@ class TimebasedExportView(ExportView):
     def get_instances(self):
         return self.get_object().contributors.instance_of(
             self.participant_model
-        ).prefetch_related('user__segments').select_related(
-            'user', 'registration'
-        )
+        ).prefetch_related('user__segments').select_related('user')
 
 
-class DeadlineParticipantExportView(ExportView):
+class DeadlineParticipantExportView(TimebasedExportView):
     model = DeadlineActivity
     participant_model = DeadlineParticipant

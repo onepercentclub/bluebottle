@@ -38,7 +38,7 @@ def add_group_permissions(apps, schema_editor):
             },
             'Authenticated': {
                 'perms': (
-                    'api_add_deadlineactivity',
+                    'api_add_own_deadlineactivity',
                     'api_add_deadlineregistration',
                     'api_add_deadlineparticipant',
 

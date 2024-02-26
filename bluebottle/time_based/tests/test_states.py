@@ -337,11 +337,17 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
             registration.status,
             'accepted'
         )
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have a new participant for your activity "Some good stuff"'
+        self.assertEqual(len(mail.outbox), 2)
+        subjects = [message.subject for message in mail.outbox]
+
+        self.assertTrue(
+            'You have a new participant for your activity "Some good stuff" 🎉' in subjects
         )
+
+        self.assertTrue(
+            'You have joined the activity "Some good stuff"' in subjects
+        )
+
         participants = registration.deadlineparticipant_set
         participant = participants.first()
         self.assertEqual(participants.count(), 1)
@@ -358,11 +364,8 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
             registration.status,
             'new'
         )
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have a new application for your activity "Some good stuff"'
-        )
+        self.assertEqual(len(mail.outbox), 2)
+
         participants = registration.deadlineparticipant_set
         participant = participants.first()
         self.assertEqual(participants.count(), 1)

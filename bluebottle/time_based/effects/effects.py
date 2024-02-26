@@ -380,15 +380,16 @@ class CreateFirstSlotEffect(Effect):
 class CreateNextSlotEffect(Effect):
     def post_save(self):
         activity = self.instance.activity
+        if activity.status == 'open':
 
-        slot = PeriodicSlot.objects.create(
-            activity=activity,
-            start=self.instance.end,
-            end=self.instance.end + relativedelta(**{activity.period: 1}),
-            duration=activity.duration
-        )
+            slot = PeriodicSlot.objects.create(
+                activity=activity,
+                start=self.instance.end,
+                end=self.instance.end + relativedelta(**{activity.period: 1}),
+                duration=activity.duration
+            )
 
-        slot.states.start(save=True)
+            slot.states.start(save=True)
 
 
 class CreatePeriodicParticipantsEffect(Effect):

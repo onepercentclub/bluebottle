@@ -86,7 +86,11 @@ class TimeBasedActivityListAPITestCase:
 
     def test_create_disabled_activity_type(self):
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.remove(self.model_name)
+
+        settings.activity_types = [
+            activity_type for activity_type in settings.activity_types
+            if activity_type != 'deadlineactivity'
+        ]
         settings.save()
 
         self.perform_create(user=self.user)

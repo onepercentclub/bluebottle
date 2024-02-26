@@ -1565,10 +1565,10 @@ class ContributorListAPITestCase(BluebottleTestCase):
             self.assertTrue(
                 contributor['type'] in (
                     'contributors/time-based/date-participants',
-                    'contributors/time-based/period-participants',
                     'contributors/collect/contributors',
                     'contributors/deeds/participant',
                     'contributors/donations',
+                    'contributors/time-based/deadline-participants',
                 )
             )
             self.assertTrue(contributor['type'])
@@ -1577,21 +1577,13 @@ class ContributorListAPITestCase(BluebottleTestCase):
                     'activities/fundings',
                     'activities/deeds',
                     'activities/time-based/dates',
-                    'activities/time-based/periods',
+                    'activities/time-based/deadlines',
                     'activities/collects'
                 )
             )
 
             if contributor['type'] == 'contributors/time-based/date-participants':
                 self.assertEqual(contributor['attributes']['total-duration'], '02:00:00')
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'activities/time-based/periods'
-            ]),
-            2
-        )
 
         self.assertEqual(
             len([
@@ -1613,6 +1605,14 @@ class ContributorListAPITestCase(BluebottleTestCase):
             len([
                 resource for resource in data['included']
                 if resource['type'] == 'activities/fundings'
+            ]),
+            2
+        )
+
+        self.assertEqual(
+            len([
+                resource for resource in data['included']
+                if resource['type'] == 'activities/time-based/deadlines'
             ]),
             2
         )
@@ -1813,7 +1813,7 @@ class ActivityLocationAPITestCase(APITestCase):
     def test_get(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(4)
+        self.assertTotal(3)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 

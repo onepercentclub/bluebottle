@@ -829,7 +829,7 @@ class ParticipantTriggers(ContributorTriggers):
 
                 RelatedTransitionEffect(
                     'activity',
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(
@@ -854,7 +854,7 @@ class ParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect(
                     'activity',
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(
@@ -870,7 +870,7 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'activity',
-                    TimeBasedStateMachine.reopen,
+                    TimeBasedStateMachine.unlock,
                     conditions=[activity_will_not_be_full]
                 ),
                 RelatedTransitionEffect(

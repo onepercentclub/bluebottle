@@ -1,6 +1,6 @@
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, widgets
 from django.db import models
 from django.db.models import Sum
@@ -32,7 +32,7 @@ from bluebottle.time_based.models import (
     SlotParticipant, Skill, PeriodActivitySlot, TeamSlot
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
-from bluebottle.time_based.utils import nth_weekday, duplicate_slot
+from bluebottle.time_based.utils import nth_weekday, duplicate_slot, bulk_add_participants
 from bluebottle.utils.admin import export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -672,6 +672,26 @@ class SlotDuplicateForm(forms.Form):
         ).format(start=start.strftime('%A %-d %B %Y %H:%M %Z'))
 
 
+class SlotBulkAddForm(forms.Form):
+
+    emails = forms.CharField(
+        label=_('Emails'),
+        help_text=_('Enter one email address per line'),
+        widget=forms.Textarea
+    )
+
+    title = _('Bulk add participants')
+
+    def __init__(self, slot, data=None, *args, **kwargs):
+        if data:
+            super(SlotBulkAddForm, self).__init__(data)
+        else:
+            super(SlotBulkAddForm, self).__init__()
+        self.fields['emails'].help_text = _(
+            'Enter the email addresses of the participants you want to add to this slot.'
+        )
+
+
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
@@ -720,6 +740,10 @@ class DateSlotAdmin(SlotAdmin):
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
                 ),
+            url(r'^(?P<pk>\d+)/bulk_add/$',
+                self.admin_site.admin_view(self.bulk_add_participants),
+                name='time_based_dateactivityslot_bulk_add'
+                ),
         ]
         return extra_urls + urls
 
@@ -746,6 +770,31 @@ class DateSlotAdmin(SlotAdmin):
         }
         return TemplateResponse(
             request, 'admin/time_based/duplicate_slot.html', context
+        )
+
+    def bulk_add_participants(self, request, pk, *args, **kwargs):
+        slot = DateActivitySlot.objects.get(pk=pk)
+        slot_overview = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+
+        if not request.user.is_superuser:
+            return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
+
+        if request.method == "POST":
+            form = SlotBulkAddForm(data=request.POST, slot=slot)
+            if form.is_valid():
+                data = form.cleaned_data
+                emails = data['emails'].split('\n')
+                result = bulk_add_participants(slot, emails)
+                messages.add_message(request, messages.INFO, '{} participants were added'.format(result))
+                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
+
+        context = {
+            'opts': self.model._meta,
+            'slot': slot,
+            'form': SlotBulkAddForm(slot=slot)
+        }
+        return TemplateResponse(
+            request, 'admin/time_based/bulk_add.html', context
         )
 
 
@@ -951,7 +1000,22 @@ class DateParticipantAdmin(ContributorChildAdmin):
         TimeContributionInlineAdmin
     ]
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
-    list_display = ['__str__', 'activity_link', 'status']
+    list_display = ['__str__', 'email', 'activity_link', 'status']
+
+    def email(self, obj):
+        return obj.user.email
+
+    export_to_csv_fields = (
+        ('id', 'ID'),
+        ('user__full_name', 'Name'),
+        ('user__email', 'Email'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+    )
+
+    def get_actions(self, request):
+        self.actions = (export_as_csv_action(fields=self.export_to_csv_fields),)
+        return super(DateParticipantAdmin, self).get_actions(request)
 
 
 @admin.register(SlotParticipant)

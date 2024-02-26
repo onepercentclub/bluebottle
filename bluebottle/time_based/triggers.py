@@ -484,6 +484,10 @@ class ActivitySlotTriggers(TriggerManager):
                     ActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
                 ),
+                TransitionEffect(
+                    ActivitySlotStateMachine.finish,
+                    conditions=[slot_is_finished]
+                ),
             ]
         ),
         TransitionTrigger(

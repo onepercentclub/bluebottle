@@ -598,7 +598,6 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
 
         self.run_task(self.started)
         self.run_task(self.next_period)
-        self.run_task(self.next_period)
 
         self.assertEqual(self.activity.slots.count(), 2)
 

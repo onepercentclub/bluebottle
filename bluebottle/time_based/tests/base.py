@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from io import BytesIO
+from django.contrib.auth.base_user import is_password_usable
 
 from rest_framework import status
 from django.urls import reverse
@@ -84,7 +85,11 @@ class TimeBasedActivityListAPITestCase:
 
     def test_create_disabled_activity_type(self):
         settings = InitiativePlatformSettings.objects.get()
-        settings.activity_types.remove('deadlineactivity')
+
+        settings.activity_types = [
+            activity_type for activity_type in settings.activity_types 
+            if activity_type != 'deadlineactivity'
+        ]
         settings.save()
 
         self.perform_create(user=self.user)

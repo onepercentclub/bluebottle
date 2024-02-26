@@ -1813,7 +1813,7 @@ class ActivityLocationAPITestCase(APITestCase):
     def test_get(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(4)
+        self.assertTotal(3)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 

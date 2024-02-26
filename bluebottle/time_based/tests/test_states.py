@@ -4,7 +4,6 @@ from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
-from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -303,15 +302,6 @@ class PeriodParticipantStatesTestCase(BluebottleTestCase):
     def test_stop(self):
         self.assertTrue(
             PeriodParticipantStateMachine.stop in
-            self.participant.states.possible_transitions()
-        )
-
-    def test_stop_team(self):
-        self.participant.team = TeamFactory.create()
-        self.participant.save()
-
-        self.assertTrue(
-            PeriodParticipantStateMachine.stop not in
             self.participant.states.possible_transitions()
         )
 

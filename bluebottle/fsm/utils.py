@@ -1,20 +1,36 @@
 import re
 from datetime import timedelta
 
-from bluebottle.activities.models import Team
-from bluebottle.collect.models import CollectActivity, CollectContributor
-from bluebottle.deeds.models import DeedParticipant, Deed
 from django.core.exceptions import FieldDoesNotExist
 from django.utils.timezone import now
 from polymorphic.models import PolymorphicModel
 
+from bluebottle.activities.models import Team
+from bluebottle.collect.models import CollectActivity, CollectContributor
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.triggers import TransitionTrigger
-from bluebottle.funding.models import Donor, Funding, PayoutAccount, Payment, MoneyContribution
+from bluebottle.funding.models import (
+    Donor,
+    Funding,
+    MoneyContribution,
+    Payment,
+    PayoutAccount,
+)
 from bluebottle.funding_pledge.models import PledgePayment
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution, DateActivitySlot, SlotParticipant, TeamSlot
+from bluebottle.time_based.models import (
+    DateActivity,
+    DateActivitySlot,
+    DateParticipant,
+    DeadlineActivity,
+    DeadlineParticipant,
+    PeriodicActivity,
+    PeriodicParticipant,
+    SlotParticipant,
+    TeamSlot,
+    TimeContribution,
+)
 
 
 def get_doc(element):
@@ -71,12 +87,21 @@ def setup_instance(model):
     if isinstance(instance, Payment):
         instance.donation = Donor()
 
-    if isinstance(instance, PeriodActivity):
+    if isinstance(instance, DeadlineActivity):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
-    if isinstance(instance, PeriodParticipant):
-        instance.activity = PeriodActivity(title="[activity title]")
+    if isinstance(instance, DeadlineParticipant):
+        instance.activity = PeriodicActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, PeriodicActivity):
+        instance.title = "[activity title]"
+        instance.owner = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, PeriodicParticipant):
+        instance.activity = PeriodicActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
@@ -121,8 +146,8 @@ def setup_instance(model):
         instance.team.activity.owner = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, TimeContribution):
-        contributor = PeriodParticipant()
-        contributor.activity = PeriodActivity(title="[activity title]")
+        contributor = DeadlineParticipant()
+        contributor.activity = DeadlineActivity(title="[activity title]")
         contributor.activity.pre_save_polymorphic()
         contributor.user = Member(first_name='[first name]', last_name='[last name]')
         instance.contributor = contributor

@@ -11,7 +11,7 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
 from bluebottle.time_based.effects.participant import CreateTimeContributionEffect, CreateRegistrationEffect
 from bluebottle.time_based.messages import ManagerParticipantAddedOwnerNotification, ParticipantAddedNotification
-from bluebottle.time_based.models import DeadlineParticipant
+from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant
 from bluebottle.time_based.notifications.participants import ManagerParticipantRemovedNotification, \
     UserParticipantRemovedNotification, UserParticipantWithdrewNotification, ManagerParticipantWithdrewNotification
 from bluebottle.time_based.states import (
@@ -271,3 +271,8 @@ class DeadlineParticipantTriggers(ContributorTriggers):
             ]
         ),
     ]
+
+
+@register(PeriodicParticipant)
+class PeriodicParticipantTriggers(ContributorTriggers):
+    triggers = []

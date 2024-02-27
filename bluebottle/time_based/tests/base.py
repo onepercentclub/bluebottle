@@ -932,8 +932,10 @@ class TimeBasedParticipantTransitionListAPITestCase:
 
         self.defaults = {
             'resource': self.participant,
-            'transition': 'withdraw',
+            'transition': self.transition,
         }
+
+        self.initial_status = self.participant.status
         super().setUp()
 
     def test_transition(self):
@@ -942,26 +944,30 @@ class TimeBasedParticipantTransitionListAPITestCase:
         self.assertIncluded('resource', self.participant)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.defaults['resource'].status, 'removed')
+        self.assertEqual(self.defaults['resource'].status, self.target_status)
 
     def test_transition_yourself(self):
         self.perform_create(user=self.participant.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
+        self.assertEqual(self.defaults['resource'].status, self.initial_status)
+
     def test_transition_other_user(self):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
+        self.assertEqual(self.defaults['resource'].status, self.initial_status)
+
         self.participant.refresh_from_db()
 
-        self.assertEqual(self.defaults['resource'].status, self.expected_status)
+        self.assertEqual(self.defaults['resource'].status, self.initial_status)
 
     def test_transition_no_user(self):
         self.perform_create()
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
         self.participant.refresh_from_db()
-        self.assertEqual(self.defaults['resource'].status, self.expected_status)
+        self.assertEqual(self.defaults['resource'].status, self.initial_status)
 
 
 class TimeBasedActivityAPIExportTestCase:

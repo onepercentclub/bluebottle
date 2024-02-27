@@ -57,7 +57,7 @@ class UnreviewedContributorsField(SerializerMethodHyperlinkedRelatedField):
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    review = serializers.BooleanField(required=False)
+    review = serializers.BooleanField(required=False, allow_null=True)
     is_online = serializers.BooleanField(required=False, allow_null=True)
 
     teams = TeamsField()
@@ -68,6 +68,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'registration_deadline',
             'expertise',
             'review',
+            'registration_flow',
+            'review_link',
             'review_title',
             'review_description',
             'review_document_enabled',

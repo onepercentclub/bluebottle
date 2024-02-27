@@ -56,6 +56,7 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     SlotParticipantStateMachine,
     TimeBasedStateMachine,
+
     TimeContributionStateMachine,
 )
 

@@ -30,6 +30,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
+    ParticipantRemovedNotification,
     ParticipantWithdrewNotification,
     NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
@@ -314,6 +315,10 @@ class DeedParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail),
                 NotificationEffect(
                     ParticipantRemovedOwnerNotification,
+                    conditions=[is_not_owner]
+                ),
+                NotificationEffect(
+                    ParticipantRemovedNotification,
                     conditions=[is_not_owner]
                 ),
                 UnFollowActivityEffect

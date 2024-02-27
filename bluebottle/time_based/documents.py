@@ -211,7 +211,7 @@ class DeadlinectivityDocument(TimeBasedActivityDocument, ActivityDocument):
             return result
 
         if isinstance(related_instance, DeadlineParticipant):
-            return PeriodActivity.objects.filter(contributors=related_instance)
+            return DeadlineActivity.objects.filter(contributors=related_instance)
 
     class Django:
         related_models = ActivityDocument.Django.related_models + (DeadlineParticipant, )

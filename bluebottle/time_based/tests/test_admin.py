@@ -293,5 +293,3 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
                 '2022-05-18', '2022-05-19', '2022-05-20',
             ]
         )
-
-

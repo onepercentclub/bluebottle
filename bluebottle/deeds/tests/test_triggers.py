@@ -1,4 +1,3 @@
-import uuid
 from datetime import timedelta, date
 
 from bluebottle.activities.effects import SetContributionDateEffect

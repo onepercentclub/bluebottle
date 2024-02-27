@@ -4,7 +4,7 @@ from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
-    ParticipantWithdrewConfirmationNotification, 
+    ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor

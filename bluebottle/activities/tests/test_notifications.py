@@ -5,16 +5,17 @@ from django.utils.timezone import now
 from bluebottle.activities.messages import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivitySucceededNotification, ActivityRestoredNotification,
-    ActivityExpiredNotification, 
+    ActivityExpiredNotification,
     DoGoodHoursReminderQ1Notification,
-    DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification, DoGoodHoursReminderQ4Notification
+    DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification,
+    DoGoodHoursReminderQ4Notification
 )
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory,
+    DateActivityFactory, DateActivitySlotFactory,
     DateParticipantFactory, SlotParticipantFactory
 )
 

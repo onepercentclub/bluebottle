@@ -1,6 +1,3 @@
-from datetime import timedelta
-
-from django.utils.timezone import now
 
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
@@ -10,7 +7,7 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
-    SlotCancelledNotification, ParticipantAddedNotification, 
+    SlotCancelledNotification, ParticipantAddedNotification,
     ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification, ParticipantCreatedNotification
 )

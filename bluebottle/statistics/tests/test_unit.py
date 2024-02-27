@@ -19,7 +19,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
-    PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory
+    DateActivitySlotFactory
 )
 
 

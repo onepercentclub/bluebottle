@@ -1994,6 +1994,7 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
 
     def test_finish(self):
         self.create()
+        self.model.states.start(save=True)
         self.model.states.finish()
 
         with self.execute():
@@ -2008,7 +2009,7 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
             self.assertEqual(participant.status, 'succeeded')
 
         self.assertEqual(self.activity.slots.count(), 2)
-        next_slot = self.activity.slots.get(status='new')
+        next_slot = self.activity.slots.get(status='running')
 
         self.assertEqual(next_slot.start, self.model.end)
         self.assertEqual(

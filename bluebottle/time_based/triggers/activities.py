@@ -388,10 +388,6 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
             'start',
             effects=[
                 RescheduleActivityDurationsEffect,
-                NotificationEffect(
-                    BaseTimeBasedStateMachine,
-                    conditions=[start_is_not_passed]
-                ),
                 TransitionEffect(
                     BaseTimeBasedStateMachine.reopen,
                     conditions=[
@@ -416,12 +412,6 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
             'deadline',
             effects=[
                 RescheduleActivityDurationsEffect,
-                NotificationEffect(
-                    BaseTimeBasedStateMachine,
-                    conditions=[
-                        deadline_is_not_passed
-                    ]
-                ),
                 TransitionEffect(
                     BaseTimeBasedStateMachine.succeed,
                     conditions=[

@@ -8,12 +8,11 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory, Initiative
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.states import (
-    DateStateMachine, TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
-    PeriodParticipantStateMachine
+    DateStateMachine, TimeBasedStateMachine, DateActivitySlotStateMachine
 )
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory, DeadlineActivityFactory,
+    DateActivityFactory,
+    DateParticipantFactory, DateActivitySlotFactory, DeadlineActivityFactory,
     DeadlineRegistrationFactory,
 )
 
@@ -152,97 +151,6 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
         )
 
 
-class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def test_approved(self):
-        self.activity.states.publish(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(
-            self.activity.status, 'open'
-        )
-        self.assertTrue(
-            TimeBasedStateMachine.cancel in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.succeed in
-            self.activity.states.possible_transitions()
-        )
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(
-            organizer.status,
-            'succeeded'
-        )
-        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
-        organizer_contribution = organizer.contributions.get()
-        self.assertEqual(
-            organizer_contribution.status,
-            'succeeded'
-        )
-        self.assertAlmostEqual(
-            organizer_contribution.start,
-            now(),
-            delta=timedelta(minutes=2)
-        )
-
-    def test_draft(self):
-        self.assertTrue(
-            TimeBasedStateMachine.publish in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.reject in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_no_participants(self):
-        self.activity.duration_period = 'weeks'
-        self.activity.states.publish(save=True)
-        self.activity.refresh_from_db()
-        self.assertFalse(
-            PeriodStateMachine.succeed_manually in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_overall(self):
-        self.activity.duration_period = 'overall'
-
-        self.activity.states.publish(save=True)
-
-        self.participant_factory.create(activity=self.activity)
-
-        self.activity.refresh_from_db()
-
-        self.assertTrue(
-            PeriodStateMachine.succeed_manually in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_(self):
-        self.activity.duration_period = 'weeks'
-
-        self.activity.states.publish(save=True)
-
-        self.participant_factory.create(activity=self.activity)
-
-        self.activity.refresh_from_db()
-
-        self.activity.states.succeed_manually()
-        self.assertEqual(
-            self.activity.status, 'succeeded'
-        )
-        self.assertTrue(
-            PeriodStateMachine.cancel in
-            self.activity.states.possible_transitions()
-        )
-
-
 class DateActivitySlotStatesTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
@@ -285,24 +193,6 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
         self.assertTrue(
             DateActivitySlotStateMachine.cancel in
             self.slot.states.possible_transitions()
-        )
-
-
-class PeriodParticipantStatesTestCase(BluebottleTestCase):
-    def setUp(self):
-        super().setUp()
-        self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory(owner=self.user, status='approved')
-        self.activity = PeriodActivityFactory.create(
-            initiative=self.initiative,
-            status='open'
-        )
-        self.participant = PeriodParticipantFactory.create(activity=self.activity)
-
-    def test_stop(self):
-        self.assertTrue(
-            PeriodParticipantStateMachine.stop in
-            self.participant.states.possible_transitions()
         )
 
 

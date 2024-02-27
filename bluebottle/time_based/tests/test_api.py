@@ -611,9 +611,6 @@ class TimeBasedDetailAPIViewTestCase():
         )
         self.assertEqual(str(participant.pk), included_participant['id'])
 
-        invite = get_first_included_by_type(response, 'activities/invites')
-        self.assertEqual(str(participant.invite.pk), invite['id'])
-
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
 

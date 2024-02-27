@@ -828,10 +828,7 @@ class PeriodicActivity(RegistrationActivity):
 class Participant(Contributor):
 
     registration = models.ForeignKey(
-        'time_based.Registration',
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True
+        "time_based.Registration", on_delete=models.CASCADE, blank=True, null=True
     )
 
     @property

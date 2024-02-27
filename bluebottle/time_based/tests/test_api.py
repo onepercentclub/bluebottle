@@ -1198,7 +1198,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         for attr in ['start', 'duration', 'capacity']:
             self.assertTrue(attr in data['data']['attributes'])
 
-        self.assertEqual(data['data']['meta']['status'], 'open')
+        self.assertEqual(data['data']['meta']['status'], 'finished')
 
         self.assertTrue(
             {'id': str(self.activity.pk), 'type': 'activities/time-based/dates'} in included

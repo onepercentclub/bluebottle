@@ -766,12 +766,14 @@ class SlotParticipantSerializer(ModelSerializer):
         resource_name = 'contributors/time-based/slot-participants'
         included_resources = [
             'participant',
+            'participant.user',
             'slot',
             'slot.activity',
         ]
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'slot.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }

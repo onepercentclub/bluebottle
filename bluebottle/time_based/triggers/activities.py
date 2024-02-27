@@ -451,4 +451,10 @@ class PeriodicActivityTriggers(BaseTimeBasedTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+        TransitionTrigger(
+            PeriodicActivityStateMachine.auto_publish,
+            effects=[
+                CreateFirstSlotEffect,
+            ]
+        ),
     ]

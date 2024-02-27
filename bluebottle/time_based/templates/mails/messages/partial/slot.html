@@ -1,0 +1,26 @@
+{% load i18n %}
+<p class="{% if slot.changed %}italic{% endif %}">
+    <b>{{ slot.title }}</b>
+    {% if slot.changed %}
+        {% trans "Changed" %}
+    {% endif %}
+    <br/>
+    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }} <b>({{slot.timezone}})</b>
+    <br/>
+    {% if slot.is_online %}
+        {% if slot.online_meeting_url %}
+            <a href="{{ slot.online_meeting_url }}">
+                {% trans "Meeting link" %}<br/>
+            </a>
+        {% else %}
+            {% trans "Anywhere/Online" %}
+        {% endif %}
+    {% else %}
+        {{ slot.location }}
+        {% if slot.location_hint %}
+            <br/>
+            {{ slot.location_hint }}
+        {% endif %}
+    {% endif %}
+    <br/>
+</p>

@@ -1,10 +1,9 @@
-from django.db import models
-
 from django.contrib import admin
+from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Slide
 
 
@@ -28,8 +27,8 @@ class SlideAdmin(admin.ModelAdmin):
         }),
         (_('Contents'), {
             'fields': (
-                'title', 'body', 'image', 'background_image', 'video',
-                'video_url', 'link_text', 'link_url', 'style'),
+                'title', 'body', 'background_image', 'video',
+                'video_url', 'link_text', 'link_url'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date'),

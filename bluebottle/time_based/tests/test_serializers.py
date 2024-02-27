@@ -1,16 +1,15 @@
 from datetime import timedelta
 
-from django.utils.timezone import now
 from django.contrib.auth.models import AnonymousUser
+from django.test.client import RequestFactory
+from django.utils.timezone import now
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.serializers import DateActivityListSerializer
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
     DateParticipantFactory, SlotParticipantFactory
-from bluebottle.time_based.serializers import DateActivityListSerializer
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.geo import GeolocationFactory
-
-from django.test.client import RequestFactory
 
 
 class DateActivityListSerializerTestCase(BluebottleTestCase):
@@ -31,8 +30,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
 
     def test_date_info_no_slots(self):
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 0,
             'first': None,
+            'end': None,
             'is_full': True,
             'duration': None,
             'has_multiple': False,
@@ -42,8 +43,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
     def test_date_info_single_slot(self):
         slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 1,
             'first': slot.start,
+            'end': slot.end,
             'duration': timedelta(hours=2),
             'is_full': False,
             'has_multiple': False,
@@ -58,8 +61,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
+            'end': max(slot.end.date() for slot in slots),
             'duration': None,
             'is_full': False,
             'has_multiple': True,
@@ -80,8 +85,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
+            'capacity': None,
             'count': 3,
             'first': min(slot.start.date() for slot in slots),
+            'end': max(slot.end.date() for slot in slots),
             'duration': None,
             'is_full': True,
             'has_multiple': True,
@@ -96,8 +103,10 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         ]
 
         self.assertAttribute('date_info', {
-            'count': 2,
+            'capacity': None,
+            'count': 3,
             'first': min(slot.start.date() for slot in slots),
+            'end': max(slot.end.date() for slot in slots),
             'duration': None,
             'is_full': False,
             'has_multiple': True,
@@ -114,10 +123,12 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         self.assertAttribute(
             'date_info',
             {
+                'capacity': None,
                 'count': 2,
                 'duration': None,
                 'is_full': False,
                 'first': min(slot.start.date() for slot in slots),
+                'end': max(slot.end.date() for slot in slots),
                 'has_multiple': True,
                 'total': 2
             },

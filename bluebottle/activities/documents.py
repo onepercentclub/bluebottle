@@ -5,8 +5,8 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
+from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.members.models import Member
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.search import Search
 
@@ -29,12 +29,18 @@ class ActivityDocument(Document):
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
     description = fields.TextField()
-    status = fields.KeywordField()
-    status_score = fields.FloatField()
-    created = fields.DateField()
     highlight = fields.BooleanField()
+    is_upcoming = fields.BooleanField()
+    status = fields.KeywordField()
 
     type = fields.KeywordField()
+    manager = fields.KeywordField()
+
+    current_status = fields.NestedField(properties={
+        'name': fields.KeywordField(),
+        'label': fields.KeywordField(),
+        'description': fields.KeywordField(),
+    })
 
     image = fields.NestedField(properties={
         'id': fields.KeywordField(),
@@ -65,6 +71,7 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -72,12 +79,19 @@ class ActivityDocument(Document):
         attr='initiative.categories',
         properties={
             'id': fields.KeywordField(),
-            'slug': fields.KeywordField(),
+            'title': fields.KeywordField(),
+            'language': fields.KeywordField()
         }
     )
     position = fields.GeoPointField()
 
-    country = fields.KeywordField()
+    country = fields.NestedField(
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+            'language': fields.KeywordField(),
+        }
+    )
 
     expertise = fields.NestedField(
         properties={
@@ -91,8 +105,9 @@ class ActivityDocument(Document):
         properties={
             'id': fields.KeywordField(),
             'type': fields.KeywordField(attr='segment_type.slug'),
-            'name': fields.TextField(),
+            'name': fields.KeywordField(),
             'closed': fields.BooleanField(),
+            'language': fields.KeywordField(),
         }
     )
 
@@ -110,6 +125,14 @@ class ActivityDocument(Document):
         }
     )
 
+    office = fields.NestedField(
+        attr='office_location',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     office_restriction = fields.NestedField(
         attr='office_restriction',
         properties={
@@ -120,12 +143,20 @@ class ActivityDocument(Document):
         }
     )
 
-    contributors = fields.DateField()
+    contributors = fields.KeywordField()
     contributor_count = fields.IntegerField()
     donation_count = fields.IntegerField()
+    activity_type = fields.KeywordField()
 
     start = fields.DateField()
     end = fields.DateField()
+
+    dates = fields.NestedField(
+        properties={
+            'start': fields.DateField(),
+            'end': fields.DateField(),
+        }
+    )
 
     duration = DateRangeField()
     activity_date = fields.DateField()
@@ -139,11 +170,9 @@ class ActivityDocument(Document):
             return model.objects.filter(initiative__theme=related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
-        if isinstance(related_instance, Member):
-            return model.objects.filter(owner=related_instance)
 
     class Django:
-        related_models = (Initiative, Theme, Theme.translations.field.model, Member)
+        related_models = (Initiative, Theme, Theme.translations.field.model)
         model = Activity
 
     date_field = None
@@ -165,6 +194,14 @@ class ActivityDocument(Document):
             model=cls._doc_type.model
         )
 
+    def prepare_current_status(self, instance):
+        if instance.states.current_state:
+            return {
+                'value': instance.states.current_state.value,
+                'name': str(instance.states.current_state.name),
+                'description': str(instance.states.current_state.description),
+            }
+
     def prepare_image(self, instance):
         if instance.image:
             return {
@@ -179,10 +216,22 @@ class ActivityDocument(Document):
                 'type': 'initiative'
             }
 
+    def prepare_manager(self, instance):
+        managers = [
+            instance.owner.pk,
+            instance.initiative.owner.pk
+        ]
+        for manager in instance.initiative.activity_managers.all():
+            managers.append(manager.pk)
+        if instance.initiative.promoter:
+            managers.append(instance.initiative.promoter.pk)
+        return managers
+
     def prepare_contributors(self, instance):
         return [
-            contributor.created for contributor
+            contributor.user.pk for contributor
             in instance.contributors.filter(status__in=('succeeded', 'accepted'))
+            if contributor.user
         ]
 
     def prepare_contributor_count(self, instance):
@@ -194,13 +243,25 @@ class ActivityDocument(Document):
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
 
+    def prepare_activity_type(self, instance):
+        mapping = {
+            'dateactivity': 'time',
+            'periodactivity': 'time',
+            'funding': 'funding',
+            'collectactivity': 'collect',
+            'deed': 'deed'
+        }
+        return mapping[str(instance.__class__.__name__.lower())]
+
     def prepare_country(self, instance):
-        country_ids = []
-        if hasattr(instance, 'office_location') and instance.office_location:
-            country_ids.append(instance.office_location.country_id)
-        if instance.initiative.place:
-            country_ids.append(instance.initiative.place.country_id)
-        return country_ids
+        countries = []
+        if instance.office_location and instance.office_location.country:
+            countries += get_translated_list(instance.office_location.country)
+        if hasattr(instance, 'place') and instance.place and instance.place.country:
+            countries += get_translated_list(instance.place.country)
+        if instance.initiative.place and instance.initiative.place.country:
+            countries += get_translated_list(instance.initiative.place.country)
+        return deduplicate(countries)
 
     def prepare_location(self, instance):
         locations = []
@@ -254,29 +315,36 @@ class ActivityDocument(Document):
 
     def prepare_expertise(self, instance):
         if hasattr(instance, 'expertise') and instance.expertise:
-            return [
-                {
-                    'id': instance.expertise_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.expertise.translations.all()
-            ]
+            return get_translated_list(instance.expertise)
 
     def prepare_theme(self, instance):
         if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
-            return [
-                {
-                    'id': instance.initiative.theme_id,
-                    'name': translation.name,
-                    'language': translation.language_code,
-                }
-                for translation in instance.initiative.theme.translations.all()
-            ]
+            return get_translated_list(instance.initiative.theme)
+
+    def prepare_categories(self, instance):
+        categories = []
+        if instance.initiative:
+            for category in instance.initiative.categories.all():
+                categories += get_translated_list(category, 'title')
+        return categories
+
+    def prepare_segments(self, instance):
+        return [
+            {
+                'id': segment.pk,
+                'type': segment.segment_type.slug,
+                'name': segment.name,
+                'closed': segment.closed,
+            }
+            for segment in instance.segments.all()
+        ]
 
     def prepare_is_online(self, instance):
         if hasattr(instance, 'is_online'):
             return instance.is_online
+
+    def prepare_is_upcoming(self, instance):
+        return instance.status in ['open', 'full']
 
     def prepare_position(self, instance):
         return []

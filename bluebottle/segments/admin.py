@@ -76,7 +76,9 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
 
         (_('Content'), {
             'fields': [
-                'tag_line', 'story', 'background_color', 'text_color', 'logo', 'cover_image',
+                'tag_line', 'story', 'logo', 'cover_image',
+                'background_color', 'text_color',
+                'button_color', 'button_text_color'
             ],
         }),
 

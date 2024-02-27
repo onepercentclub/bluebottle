@@ -193,6 +193,8 @@ class Place(models.Model):
 
     position = PointField(null=True)
 
+    mapbox_id = models.CharField(max_length=50, null=True)
+
     def save(self, *args, **kwargs):
         if self.locality and self.country and not self.position:
             result = geocoder.google(
@@ -217,7 +219,9 @@ class Place(models.Model):
         )
 
     def __str__(self):
-        return "{0}, {1}".format(self.locality, self.country)
+        if self.locality and self.country:
+            return "{0}, {1}".format(self.locality, self.country)
+        return self.locality or self.formatted_address or '-unknown-'
 
 
 @python_2_unicode_compatible
@@ -228,6 +232,7 @@ class Geolocation(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
+    mapbox_id = models.CharField(max_length=50, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 

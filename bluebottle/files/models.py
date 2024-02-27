@@ -39,6 +39,13 @@ class File(AnonymizationMixin, models.Model):
         on_delete=models.CASCADE
     )
     used = models.BooleanField(_('used'), default=False)
+    name = models.CharField(null=True, blank=True, max_length=50)
+
+    def save(self, *args, **kwargs):
+        if not self.name and self.file.name:
+            self.name = self.file.name[:50]
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.id)
@@ -70,7 +77,6 @@ def get_private_path(self, filename):
 
 
 class PrivateDocument(File):
-
     file = models.FileField(_('file'), upload_to=get_private_path)
 
     class JSONAPIMeta(object):

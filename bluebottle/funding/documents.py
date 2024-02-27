@@ -1,11 +1,13 @@
-from django_elasticsearch_dsl.registries import registry
+from datetime import datetime
 from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.funding.models import Funding, Donor
 
 SCORE_MAP = {
     'open': 1,
+    'on_hold': 0.6,
     'succeeded': 0.5,
     'partially_funded': 0.5,
     'refundend': 0.3,
@@ -43,6 +45,12 @@ class FundingDocument(ActivityDocument):
     def prepare_end(self, instance):
         return [instance.deadline]
 
+    def prepare_dates(self, instance):
+        return [{
+            'start': datetime.min,
+            'end': instance.deadline or datetime.max
+        }]
+
     def prepare_duration(self, instance):
         if instance.started and instance.deadline and instance.started > instance.deadline:
             return {}
@@ -57,3 +65,6 @@ class FundingDocument(ActivityDocument):
 
     def prepare_amount_raised(self, instance):
         return self.prepare_amount(instance.amount_raised)
+
+    def prepare_is_online(self, instance):
+        return True

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from builtins import object
+
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
@@ -116,6 +117,26 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         null=True
     )
 
+    participant_target = models.IntegerField(
+        _('Number of participants'),
+        help_text=_('How many people you expect to join?'),
+        blank=True,
+        null=True
+    )
+
+    @property
+    def participant_impact(self):
+        if not self.participant_target:
+            return 0
+        return (self.target or 0) / self.participant_target
+
+    @property
+    def impact_realized(self):
+        if self.realized and self.activity.status == 'succeeded':
+            return self.realized
+        if self.participant_impact:
+            return self.activity.succeeded_contributor_count * self.participant_impact
+        return self.realized_from_contributions
     realized_from_contributions = models.FloatField(
         _('realized from contributions'),
         blank=True,

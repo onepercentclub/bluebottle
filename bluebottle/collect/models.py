@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 
 from django.db import models, connection
 from django.db.models import SET_NULL
-
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatedFields
 
@@ -11,6 +10,7 @@ from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class CollectType(SortableTranslatableModel):
@@ -74,6 +74,8 @@ class CollectActivity(Activity):
 
     auto_approve = True
 
+    activity_type = _('Collect activity')
+
     @property
     def activity_date(self):
         return self.start
@@ -97,6 +99,15 @@ class CollectActivity(Activity):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/initiatives/activities/details/collect/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     @property
     def uid(self):
@@ -180,3 +191,6 @@ class CollectContribution(Contribution):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/collect/contributions'
+
+
+from bluebottle.collect.periodic_tasks import *  # noqa

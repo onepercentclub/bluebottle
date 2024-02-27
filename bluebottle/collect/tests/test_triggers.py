@@ -25,7 +25,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    TeamParticipantRemovedNotification, ParticipantAddedNotification, ParticipantAddedOwnerNotification,
+    TeamParticipantRemovedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification,
     NewParticipantNotification
 )
 
@@ -161,7 +161,7 @@ class CollectTriggersTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ActivityExpiredNotification),
 
-    def test_succeed(self):
+    def test_set_end_date(self):
         self.create()
 
         self.model.states.submit(save=True)
@@ -343,7 +343,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
                 CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantAddedNotification)
-            self.assertNotificationEffect(ParticipantAddedOwnerNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
             self.assertNoNotificationEffect(ParticipantJoinedNotification)
             self.assertNoNotificationEffect(NewParticipantNotification)
@@ -359,7 +359,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
                 CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
             self.assertNotificationEffect(ParticipantAddedNotification)
-            self.assertNoNotificationEffect(ParticipantAddedOwnerNotification)
+            self.assertNoNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
     def test_initiate_team(self):
         self.defaults['activity'].team_activity = Activity.TeamActivityChoices.teams

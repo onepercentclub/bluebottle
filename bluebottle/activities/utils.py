@@ -1,6 +1,6 @@
 from builtins import object
-from itertools import groupby
 from collections.abc import Iterable
+from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Count, Sum, Q
@@ -22,7 +22,7 @@ from bluebottle.activities.permissions import CanExportTeamParticipantsPermissio
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectContribution
-from bluebottle.fsm.serializers import AvailableTransitionsField
+from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -171,9 +171,17 @@ class BaseActivitySerializer(ModelSerializer):
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
-    goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
+    goals = ResourceRelatedField(required=False, many=True, read_only=True)
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
+    current_status = CurrentStatusField(source='states.current_state')
+
+    updates = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name='activity-update-list',
+        related_link_url_kwarg='activity_pk',
+    )
 
     segments = SerializerMethodResourceRelatedField(
         source='segments',
@@ -243,7 +251,12 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location',
             'office_restriction',
             'segments',
-            'team_activity'
+            'team_activity',
+            'updates',
+            'next_step_link',
+            'next_step_title',
+            'next_step_description',
+            'next_step_button_label',
         )
 
         meta_fields = (
@@ -256,7 +269,8 @@ class BaseActivitySerializer(ModelSerializer):
             'matching_properties',
             'deleted_successful_contributors',
             'contributor_count',
-            'team_count'
+            'team_count',
+            'current_status'
         )
 
     class JSONAPIMeta(object):
@@ -420,6 +434,7 @@ class BaseContributorSerializer(ModelSerializer):
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
+    current_status = CurrentStatusField(source='states.current_state')
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
@@ -454,7 +469,7 @@ class BaseContributorSerializer(ModelSerializer):
             'accepted_invite',
             'invite',
         )
-        meta_fields = ('transitions', 'created', 'updated',)
+        meta_fields = ('transitions', 'created', 'updated', 'current_status')
 
     class JSONAPIMeta(object):
         included_resources = [

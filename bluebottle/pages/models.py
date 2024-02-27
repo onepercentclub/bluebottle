@@ -145,6 +145,9 @@ class ImageTextItem(ContentItem):
         verbose_name = _('Picture + Text')
         verbose_name_plural = _('Picture + Text')
 
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
+
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 
@@ -205,6 +208,11 @@ class Page(PublishableModel):
         _('Page without sub-navigation'),
         default=False,
         help_text=_('Show this page in full width and hide the sub-navigation')
+    )
+
+    show_title = models.BooleanField(
+        default=True,
+        help_text=_('Show the title of this page in the header')
     )
 
     # Contents

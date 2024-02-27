@@ -1,3 +1,4 @@
+from datetime import datetime
 from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
@@ -36,7 +37,16 @@ class DeedDocument(ActivityDocument):
     def prepare_end(self, instance):
         return [instance.end]
 
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start or datetime.min,
+            'end': instance.end or datetime.max
+        }]
+
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
         return {'gte': instance.start, 'lte': instance.end}
+
+    def prepare_is_online(self, instance):
+        return True

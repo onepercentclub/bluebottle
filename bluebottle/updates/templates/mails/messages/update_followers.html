@@ -1,0 +1,32 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with text=obj.message|truncatechars:250 context 'email' %}
+        Hi {{ recipient_name }},
+        <br><br>
+        {{ author }} posted an update to {{ title }}:
+        <br>
+        '{{ text }}'
+
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ action_link_ }}"
+       class="action-email">{% blocktrans context 'email' %}View message{% endblocktrans %}</a>
+{% endblock %}`
+
+{% block end_message %}
+    {% blocktrans with title=obj.content_object.title context 'email' %}
+        <p>
+            You received this email because you support {{ title }}.
+            Don't want to receive activity updates anymore?
+        </p>
+        <p>
+            <a href="{{ site }}/member/profile">
+                Unsubscribe
+            </a> via your account page
+        </p>
+    {% endblocktrans %}
+{% endblock %}

@@ -36,7 +36,7 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity has been removed. The activity does not appear on '
             'the platform and does not count in the report. '
             'The activity cannot be edited by an activity manager.'
-        )
+        ),
     )
     cancelled = State(
         _('cancelled'),
@@ -44,7 +44,7 @@ class ActivityStateMachine(ModelStateMachine):
         _(
             'The activity is not executed. The activity does not appear on the platform, '
             'but counts in the report. The activity cannot be edited by an activity manager.'
-        )
+        ),
     )
 
     expired = State(
@@ -129,10 +129,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_(
             'Reject the activity if it does not fit the programme or '
             'if it does not comply with the rules. '
-            'An activity manager can no longer edit the activity '
-            'and it will no longer be visible on the platform. '
-            'The activity will still be visible in the back '
-            'office and will continue to count in the reporting.'
+            'The activity manager can no longer edit the activity.'
         ),
         automatic=False,
         permission=is_staff,
@@ -180,6 +177,9 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity will still be visible in the back office '
             'and will continue to count in the reporting.'
         ),
+        description_front_end=_(
+            'The activity ends and people no longer register. All current participants will fail too.'
+        ),
         permission=is_owner,
         automatic=False,
     )
@@ -194,8 +194,11 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Restore'),
         description=_(
             "The activity status is changed to 'Needs work'. "
-            "An manager of the activity has to enter a new date and can make changes. "
-            "The activity will then be reopened to participants."
+            "Then you can make changes to the activity and submit it again."
+        ),
+        description_front_end=_(
+            "The activity will be set to the status ‘Needs work’. "
+            "Then you can make changes to the activity and submit it again."
         ),
         automatic=False,
         permission=is_owner
@@ -223,6 +226,7 @@ class ActivityStateMachine(ModelStateMachine):
             'The activity will no longer be visible on the platform, '
             'but will still be available in the back office.'
         ),
+        description_front_end=_('Delete the activity. You will not be able to retrieve it afterwards.')
     )
 
     succeed = Transition(
@@ -260,7 +264,7 @@ class ContributorStateMachine(ModelStateMachine):
         description=_('The contribution was created.')
     )
     fail = Transition(
-        (new, succeeded, failed, ),
+        (new, succeeded, failed,),
         failed,
         name=_('fail'),
         description=_("The contribution failed. It will not be visible in reports."),
@@ -406,6 +410,7 @@ class TeamStateMachine(ModelStateMachine):
     accept = Transition(
         new,
         open,
+        automatic=False,
         name=_('Accept'),
         description=_('The team will be accepted.'),
     )

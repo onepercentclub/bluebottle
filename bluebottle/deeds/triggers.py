@@ -1,5 +1,6 @@
 from datetime import date
 
+from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
@@ -10,12 +11,9 @@ from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine, TeamStateMachine
 )
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, TeamTriggers
+    ActivityTriggers, ContributorTriggers, TeamTriggers, has_organizer
 )
-
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
-
-from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
     ParticipantJoinedNotification
@@ -23,6 +21,9 @@ from bluebottle.deeds.messages import (
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
+)
+from bluebottle.follow.effects import (
+    FollowActivityEffect, UnFollowActivityEffect
 )
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
@@ -32,7 +33,7 @@ from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantWithdrewNotification,
-    NewParticipantNotification, ParticipantAddedOwnerNotification,
+    NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
 from bluebottle.time_based.triggers import is_not_owner, is_not_user, is_user
@@ -157,6 +158,19 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
             ]
         ),
+        TransitionTrigger(
+            DeedStateMachine.publish,
+            effects=[
+                TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
+                TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+            ]
+        ),
 
         TransitionTrigger(
             DeedStateMachine.reopen,
@@ -178,6 +192,7 @@ class DeedTriggers(ActivityTriggers):
                     conditions=[is_not_started]
                 ),
                 NotificationEffect(ActivitySucceededNotification),
+                SetEndDateEffect,
             ]
         ),
 
@@ -185,7 +200,7 @@ class DeedTriggers(ActivityTriggers):
             DeedStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
-                NotificationEffect(ActivityExpiredNotification)
+                NotificationEffect(ActivityExpiredNotification),
             ]
         ),
 
@@ -229,6 +244,11 @@ def activity_expired(effect):
     return (
         effect.instance.activity.status == 'expired'
     )
+
+
+def activity_not_expired(effect):
+    """activity did not expire"""
+    return not activity_expired(effect)
 
 
 def activity_did_start(effect):
@@ -298,7 +318,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_user]
                 ),
                 NotificationEffect(
-                    ParticipantAddedOwnerNotification,
+                    ManagerParticipantAddedOwnerNotification,
                     conditions=[is_not_user, is_not_owner]
                 ),
                 NotificationEffect(
@@ -306,7 +326,8 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 CreateTeamEffect,
-                CreateInviteEffect
+                CreateInviteEffect,
+                FollowActivityEffect,
             ]
         ),
         TransitionTrigger(
@@ -325,6 +346,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_not_owner]
                 ),
                 NotificationEffect(TeamMemberRemovedMessage),
+                UnFollowActivityEffect
             ]
         ),
 
@@ -362,6 +384,7 @@ class DeedParticipantTriggers(ContributorTriggers):
             DeedParticipantStateMachine.re_accept,
             effects=[
                 RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset),
+                FollowActivityEffect
             ]
         ),
         TransitionTrigger(
@@ -371,6 +394,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
                 NotificationEffect(TeamMemberWithdrewMessage),
+                UnFollowActivityEffect
             ]
         ),
 
@@ -382,6 +406,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     DeedParticipantStateMachine.succeed,
                     conditions=[activity_did_start, team_is_active]
                 ),
+                FollowActivityEffect,
             ]
         ),
 

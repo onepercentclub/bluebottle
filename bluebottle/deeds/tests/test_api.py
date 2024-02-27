@@ -1,23 +1,21 @@
-from datetime import timedelta, date
 import io
+from datetime import timedelta, date
 
-from rest_framework import status
+from django.urls import reverse
 from openpyxl import load_workbook
+from rest_framework import status
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory
-
-from bluebottle.test.utils import APITestCase
 from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-from django.urls import reverse
+from bluebottle.test.utils import APITestCase
 
 
 class DeedsListViewAPITestCase(APITestCase):
@@ -54,7 +52,7 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
@@ -113,6 +111,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
+            'description': 'Some descrpition',
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
         }
@@ -125,7 +124,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             4, activity=self.model, status='withdrawn'
         )
 
-        self.url = reverse('deed-detail', args=(self.model.pk, ))
+        self.url = reverse('deed-detail', args=(self.model.pk,))
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description']
 
@@ -144,7 +143,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         self.assertMeta(
             'contributor-count',
@@ -153,7 +152,12 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + self.withdrawn_participants
+            (self.accepted_participants + self.withdrawn_participants).reverse()
+        )
+        self.assertTrue(
+            self.response.json()['data']['relationships']['updates']['links']['related'].endswith(
+                reverse('activity-update-list', args=(self.model.pk,))
+            ),
         )
 
     def test_get_with_segments(self):
@@ -217,9 +221,12 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertTrue(
             links['ical'].startswith(
-                reverse('deed-ical', args=(self.model.pk, ))
+                reverse('deed-ical', args=(self.model.pk,))
             )
         )
+
+        response = self.client.get(links['ical'])
+        self.assertTrue(response.status_code, 200)
 
     def test_get_with_participant(self):
         participant = DeedParticipantFactory.create(
@@ -245,7 +252,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants + [participant]
+            (self.accepted_participants + [participant]).reverse()
         )
 
     def test_get_with_participant_team(self):
@@ -281,7 +288,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
             contributors,
-            self.accepted_participants
+            self.accepted_participants.reverse()
         )
 
     def test_get_closed_site(self):
@@ -297,6 +304,53 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertAttribute('description', new_description)
+
+    def test_put_start_after_end(self):
+        self.model.status = 'open'
+        self.model.save()
+
+        self.perform_update(
+            {'start': date.today() + timedelta(days=10), 'end': date.today() + timedelta(days=5)},
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+
+    def test_put_missing_description(self):
+        self.perform_update(
+            {
+                'title': '',
+                'description': '',
+                'start': None,
+                'end': None,
+            },
+            user=self.model.owner
+        )
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.model.refresh_from_db()
+        self.assertAttribute('description', '')
+        self.assertAttribute('title', '')
+        self.assertAttribute('start', None)
+        self.assertAttribute('end', None)
+
+    def test_put_open_missing_description(self):
+        self.model.status = 'open'
+        self.model.save()
+
+        self.perform_update(
+            {
+                'title': '',
+                'description': '',
+                'start': None,
+                'end': None,
+            },
+            user=self.model.owner
+        )
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertError('title')
+        self.assertError('description')
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'
@@ -330,7 +384,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedTranistionListViewAPITestCase(APITestCase):
+class DeedTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
@@ -345,12 +399,12 @@ class DeedTranistionListViewAPITestCase(APITestCase):
 
         self.defaults = {
             'resource': self.activity,
-            'transition': 'submit',
+            'transition': 'publish',
         }
 
         self.fields = ['resource', 'transition', ]
 
-    def test_submit(self):
+    def test_publish(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertIncluded('resource', self.activity)
@@ -390,10 +444,26 @@ class RelatedDeedParticipantViewAPITestCase(APITestCase):
         DeedParticipantFactory.create_batch(5, activity=self.activity, status='accepted')
         DeedParticipantFactory.create_batch(5, activity=self.activity, status='withdrawn')
 
-        self.url = reverse('related-deed-participants', args=(self.activity.pk, ))
+        self.url = reverse('related-deed-participants', args=(self.activity.pk,))
 
     def test_get(self):
         self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(10)
+
+        self.assertTrue(
+            all(
+                participant['attributes']['status'] in ('accepted', 'withdrawn')
+                for participant in self.response.json()['data']
+            )
+        )
+
+        for member in self.get_included('user'):
+            self.assertIsNotNone(member['attributes']['last-name'])
+
+    def test_get_staff(self):
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertTotal(10)
@@ -528,6 +598,15 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertTransition('withdraw')
         self.assertIncluded('invite')
 
+    def test_create_required_question(self):
+        MemberPlatformSettings.objects.update_or_create(
+            required_questions_location='contribution', require_birthdate=True
+        )
+        self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.response.json()['errors'][0]['code'], 'required')
+
     def test_create_with_team_invite(self):
         self.activity.team_activity = 'teams'
         self.activity.save()
@@ -547,7 +626,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
-class DeedParticipantTranistionListViewAPITestCase(APITestCase):
+class DeedParticipantTransitionListViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
@@ -608,7 +687,7 @@ class ParticipantExportViewAPITestCase(APITestCase):
         self.participants = DeedParticipantFactory.create_batch(
             5, activity=self.activity
         )
-        self.url = reverse('deed-detail', args=(self.activity.pk, ))
+        self.url = reverse('deed-detail', args=(self.activity.pk,))
 
     @property
     def export_url(self):
@@ -658,7 +737,7 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
             end=date.today() + timedelta(days=20),
         )
         self.participant = DeedParticipantFactory.create(activity=self.activity)
-        self.url = reverse('deed-participant-detail', args=(self.participant.pk, ))
+        self.url = reverse('deed-participant-detail', args=(self.participant.pk,))
 
     def test_get_user(self):
         self.perform_get(user=self.participant.user)

@@ -10,7 +10,9 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.follow.admin import FollowAdminInline
+from bluebottle.updates.admin import UpdateInline
+from bluebottle.utils.admin import export_as_csv_action, admin_info_box
 
 
 class DeedAdminForm(ActivityForm):
@@ -66,10 +68,10 @@ class DeedParticipantInline(TabularInlinePaginated):
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
     form = DeedAdminForm
-    inlines = (TeamInline, DeedParticipantInline,) + ActivityChildAdmin.inlines
+    inlines = (TeamInline, DeedParticipantInline, UpdateInline, FollowAdminInline)
     list_filter = ['status']
     search_fields = ['title', 'description']
-    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity']
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['team_activity', 'next_step_info']
     list_display = ActivityChildAdmin.list_display + [
         'start',
         'end',
@@ -77,6 +79,7 @@ class DeedAdmin(ActivityChildAdmin):
         'target',
         'participant_count',
     ]
+    save_as = True
 
     def participant_count(self, obj):
         return obj.participants.count() + obj.deleted_successful_contributors or 0
@@ -87,6 +90,21 @@ class DeedAdmin(ActivityChildAdmin):
         'end',
         'enable_impact',
         'target',
+    )
+
+    def next_step_info(self, obj):
+        return admin_info_box(
+            _('Redirect participants to an external website so '
+              'they can complete an action such as registering a vote.')
+        )
+
+    description_fields = ActivityChildAdmin.description_fields + (
+        'next_step_info',
+        'next_step_title',
+        'next_step_description',
+        'next_step_button_label',
+        'next_step_link',
+
     )
 
     export_as_csv_fields = (

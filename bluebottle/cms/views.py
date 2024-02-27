@@ -3,18 +3,20 @@ from datetime import datetime, time
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http.response import Http404
+from fluent_contents.models import ContentItem
 from pytz import timezone
 
 from bluebottle.clients import properties
 from bluebottle.cms.models import ResultPage, HomePage
 from bluebottle.cms.serializers import (
     ResultPageSerializer, HomePageSerializer, NewsItemSerializer,
-    PageSerializer
+    OldPageSerializer, HomeSerializer, PageSerializer, BlockSerializer
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
+from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermission
 from bluebottle.utils.utils import get_language_from_request
-from bluebottle.utils.views import RetrieveAPIView
+from bluebottle.utils.views import RetrieveAPIView, JsonApiViewMixin
 
 
 class ResultPageDetail(RetrieveAPIView):
@@ -46,9 +48,23 @@ class HomePageDetail(RetrieveAPIView):
     serializer_class = HomePageSerializer
 
 
-class PageDetail(RetrieveAPIView):
+class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
+    queryset = HomePage.objects.all()
+    serializer_class = HomeSerializer
+
+    permission_classes = [TenantConditionalOpenClose, ResourcePermission]
+
+
+class BlockDetail(JsonApiViewMixin, RetrieveAPIView):
+    queryset = ContentItem.objects.all()
+    serializer_class = BlockSerializer
+
+    permission_classes = [TenantConditionalOpenClose, ResourcePermission]
+
+
+class OldPageDetail(RetrieveAPIView):
     queryset = Page.objects
-    serializer_class = PageSerializer
+    serializer_class = OldPageSerializer
     lookup_field = 'slug'
 
     def get_object(self, queryset=None):
@@ -67,6 +83,10 @@ class PageDetail(RetrieveAPIView):
                 )
             except ObjectDoesNotExist:
                 raise Http404
+
+
+class PageDetail(JsonApiViewMixin, OldPageDetail):
+    serializer_class = PageSerializer
 
 
 class NewsItemDetail(RetrieveAPIView):

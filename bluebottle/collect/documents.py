@@ -1,6 +1,6 @@
-from django_elasticsearch_dsl.registries import registry
-
+from datetime import datetime
 from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType
@@ -52,6 +52,12 @@ class CollectDocument(ActivityDocument):
     def prepare_end(self, instance):
         return [instance.end]
 
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start or datetime.min,
+            'end': instance.end or datetime.max
+        }]
+
     def prepare_duration(self, instance):
         if instance.start and instance.end and instance.start > instance.end:
             return {}
@@ -64,3 +70,11 @@ class CollectDocument(ActivityDocument):
             {'name': translation.name, 'language': translation.language_code}
             for translation in instance.collect_type.translations.all()
         ]
+
+    def prepare_position(self, instance):
+        if instance.location:
+            position = instance.location.position
+            return [{'lat': position.y, 'lon': position.x}]
+
+    def prepare_is_online(self, instance):
+        return not instance.location

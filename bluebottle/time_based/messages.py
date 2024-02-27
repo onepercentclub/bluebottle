@@ -12,7 +12,7 @@ from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
     DateParticipant, SlotParticipant,
-    PeriodParticipant, DateActivitySlot
+    PeriodParticipant, DateActivitySlot, PeriodActivity
 )
 
 
@@ -241,6 +241,9 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
+    def get_event_data(self, recipient=None):
+        return self.obj.event_data
+
     def get_recipients(self):
         """participants that signed up"""
         return [
@@ -261,6 +264,14 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
+
+    def get_event_data(self, recipient=None):
+        slots = self.obj.activity.slots.filter(
+            slot_participants__participant__user=recipient,
+            slot_participants__participant__status='accepted',
+            slot_participants__status='registered',
+        ).all()
+        return [slot.event_data for slot in slots]
 
     action_title = pgettext('email', 'View activity')
 
@@ -292,6 +303,9 @@ class TeamSlotChangedNotification(TransitionMessage):
         'location': 'location.formatted_address',
         'timezone': 'timezone',
     }
+
+    def get_event_data(self, recipient=None):
+        return self.obj.event_data
 
     @property
     def action_link(self):
@@ -455,6 +469,17 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     delay = 60
 
+    def get_event_data(self, recipient=None):
+        if isinstance(self.obj.activity, PeriodActivity):
+            # TODO: Come up with calendar events once we've added slots to period activities too
+            return []
+        slots = self.obj.activity.slots.filter(
+            slot_participants__participant__user=recipient,
+            slot_participants__participant__status='accepted',
+            slot_participants__status='registered',
+        ).all()
+        return [slot.event_data for slot in slots]
+
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
@@ -583,7 +608,7 @@ class TeamMemberJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
         'team_name': 'team.name'
     }
-    # delay = 60
+    delay = 60
 
     @property
     def action_link(self):
@@ -611,6 +636,12 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
+
+    def get_event_data(self, recipient=None):
+        if isinstance(self.obj.activity, PeriodActivity):
+            # TODO: Come up with calendar events once we've added slots to period activities too
+            return []
+        return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
 
     def get_recipients(self):
         """participant"""
@@ -724,7 +755,93 @@ class ParticipantWithdrewNotification(TransitionMessage):
         return [self.obj.activity.owner]
 
 
-class ParticipantAddedOwnerNotification(TransitionMessage):
+class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
+    """
+    A slot participant withdrew from a time slot for your activity
+    """
+    subject = pgettext('email', 'A participant has withdrawn from a time slot for your activity "{title}"')
+    template = 'messages/manager/slot_participant_withdrew'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.slot.activity.owner]
+
+
+class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
+    """
+    A slot participant registered from a time slot for your activity
+    """
+    subject = pgettext('email', 'A participant has registered for a time slot for your activity "{title}"')
+    template = 'messages/manager/slot_participant_registered'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+
+        return [self.obj.slot.activity.owner]
+
+
+class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
+    """
+    Slot participant registered for a time slot for an activity
+    """
+    subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
+    template = 'messages/participant/slot_participant_registered'
+    context = {
+        'title': 'activity.title',
+        'participant_name': 'participant.user.full_name',
+    }
+
+    def get_event_data(self, recipient):
+        return self.obj.slot.event_data
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context
+
+    @property
+    def action_link(self):
+        return self.obj.slot.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+
+        return [self.obj.participant.user]
+
+
+class ManagerParticipantAddedOwnerNotification(TransitionMessage):
     """
     A participant added notify owner
     """

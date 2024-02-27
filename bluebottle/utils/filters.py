@@ -1,5 +1,19 @@
-from elasticsearch_dsl.query import MatchPhrasePrefix, Term, Nested, Bool, Exists
+import re
+
+import dateutil
+from elasticsearch_dsl import (
+    FacetedSearch, Facet
+)
+from elasticsearch_dsl.aggs import A
+from elasticsearch_dsl.query import (
+    Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
+)
 from rest_framework import filters
+
+from bluebottle.segments.models import Segment
+from bluebottle.utils.utils import get_current_language
+
+FACET_LIMIT = 10000
 
 
 class TrigramFilter(filters.SearchFilter):
@@ -17,87 +31,166 @@ class TrigramFilter(filters.SearchFilter):
         return None
 
 
-class ElasticSearchFilter(filters.SearchFilter):
-    search_field = 'filter[search]'
+class ModelFacet(Facet):
+    def __init__(self, path, model, attr='name'):
+        self.path = path
+        self.model = model
+        self.attr = attr
+        super().__init__()
 
-    def filter_queryset(self, request, queryset, view):
-        search = self.document.search()
+    @property
+    def filter(self):
+        return Term(**{f'{self.path}.language': get_current_language()})
 
-        filters = self.get_filters(request)
+    def get_aggregation(self):
+        return A(
+            'nested',
+            path=self.path,
+            aggs={
+                'filter': A(
+                    'filter',
+                    filter=self.filter,
+                    aggs={
+                        'inner': A('terms', size=FACET_LIMIT, field=f"{self.path}.id")
+                    }
+                )
+            }
+        )
 
-        if filters:
-            search = search.filter(Bool(must=filters))
+    def get_values(self, data, filter_values):
+        result = super().get_values(data.filter.inner, filter_values)
+        ids = [facet[0] for facet in result]
 
-        search_query = self.get_search_query(request)
-        if search_query:
-            search = search.query(search_query)
+        if filter_values and filter_values[0] not in ids and filter_values[0].isnumeric():
+            result.append((filter_values[0], 0, True))
+            ids.append(filter_values[0])
 
-        sort = self.get_sort(request)
-        if sort:
-            try:
-                scoring = getattr(self, 'get_sort_{}'.format(sort))(request)
-                search = search.query(scoring)
-            except AttributeError:
-                search = search.sort(*sort)
-
-        return (queryset, search)
-
-    def get_filter_fields(self, request):
-        return [
-            field for field in self.filters if request.GET.get('filter[{}]'.format(field))
+        models = dict(
+            (str(model.pk), model)
+            for model in self.model.objects.filter(pk__in=ids)
+        )
+        result = [
+            ((getattr(models[id], self.attr), id), count, active)
+            for (id, count, active) in result
         ]
+        return result
 
-    def get_filters(self, request):
-        filter_fields = self.get_filter_fields(request)
-        return [
-            self.get_filter(request, field)
-            for field in filter_fields if self.get_filter(request, field)
-        ] + self.get_default_filters(request)
+    def add_filter(self, filter_values):
+        if filter_values:
+            return Nested(
+                path=self.path,
+                query=Terms(**{f'{self.path}.id': filter_values})
+            )
 
-    def get_search_query(self, request):
-        terms = request.GET.get(self.search_field)
 
-        if terms:
+class SegmentFacet(ModelFacet):
+    def __init__(self, segment_type):
+        self.segment_type = segment_type
+        super().__init__('segments', Segment)
+
+    @property
+    def filter(self):
+        return Term(**{'segments.type': self.segment_type.slug})
+
+
+class DateRangeFacet(Facet):
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def get_value_filter(self, filter_value):
+        start, end = filter_value.split(',')
+        return Range(
+            _expand__to_dot=False,
+            **{
+                self._params["field"]: {
+                    "gte": dateutil.parser.parse(start),
+                    "lt": dateutil.parser.parse(end)
+                }
+            }
+        )
+
+
+class Search(FacetedSearch):
+    def __new__(cls, enabled_filters):
+        result = super().__new__(cls)
+
+        # Make sure that we copy the original facets, so that things do not add up
+        facets = dict(**result.facets)
+
+        for filter in enabled_filters:
+            try:
+                facets[filter.type] = cls.possible_facets[filter.type]
+            except KeyError:
+                pass
+
+        result.facets = facets
+
+        return result
+
+    def __init__(self, query=None, filters={}, sort=(), user=None):
+        self.user = user
+        self.index = self.doc_types[0]._name
+
+        super().__init__(query, filters, sort)
+
+    @property
+    def default_sort(self):
+        return list(self.sorting.keys())[0]
+
+    def sort(self, search):
+        """
+        Add sorting information to the request.
+        """
+        sort = self._sort or self.default_sort
+
+        return search.sort(*self.sorting.get(sort, self.sorting[self.default_sort]))
+
+    def highlight(self, search):
+        return search
+
+    def query(self, search, query):
+        if query:
             queries = []
-            for field in self.search_fields:
-                boost = self.boost.get(field, 1) * 0.05
-                if '.' in field:
-                    path = field.split('.')[0]
-                    query = Nested(
-                        path=path,
-                        query=MatchPhrasePrefix(
-                            **{field: {'query': terms, 'boost': boost}}
+            for path, fields in self.fields:
+                if path:
+                    queries.append(
+                        Nested(
+                            path=path,
+                            query=MultiMatch(
+                                fields=[f'{path}.{field}' for field in fields],
+                                type="phrase_prefix",
+                                query=query
+                            )
                         )
                     )
                 else:
-                    query = MatchPhrasePrefix(**{field: {'query': terms, 'boost': boost}})
+                    queries.append(
+                        MultiMatch(
+                            fields=fields,
+                            query=query,
+                            type="phrase_prefix"
+                        )
 
-                queries.append(query)
+                    )
 
-            return Bool(should=queries)
-
-    def get_filter(self, request, field):
-        value = request.GET.get('filter[{}]'.format(field))
-
-        if '.' in field:
-            path = field.split('.')[0]
-
-            if value == '__empty__':
-                return ~Nested(path=path, query=Exists(field=field))
-            else:
-                return Nested(path=path, query=Term(**{field: value}))
+            return search.query(Bool(should=queries))
         else:
-            try:
-                return getattr(self, 'get_{}_filter'.format(field))(value, request)
-            except AttributeError:
-                if value == '__empty__':
-                    return ~Exists(field=field)
-                else:
-                    return Term(**{field: value})
+            return search
 
-    def get_sort(self, request):
-        sort = request.GET.get('sort', self.default_sort_field)
-        return self.sort_fields.get(sort)
 
-    def get_default_filters(self, request):
-        return []
+class ElasticSearchFilter(filters.SearchFilter):
+    def filter_queryset(self, request, queryset, view):
+        filter = {}
+        regex = re.compile(r'^filter\[([\w,\-\.]+)\]$')
+
+        for key, value in request.GET.items():
+            match = regex.match(key)
+            if value and match and match.groups()[0] != 'search':
+                filter[match.groups()[0]] = value
+
+        search = request.GET.get('filter[search]')
+
+        return self.search_class(search, filter, request.GET.get('sort'), user=request.user)

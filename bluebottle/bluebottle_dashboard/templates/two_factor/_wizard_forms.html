@@ -1,0 +1,18 @@
+{% if form.non_field_errors %}
+  {% for error in form.non_field_errors %}
+    <p class="errornote">
+      {{ error }}
+    </p>
+  {% endfor %}
+{% endif %}
+
+{{ wizard.management_form }}
+
+{% for field in form %}
+
+  <div class="form-row">
+    {{ field.errors }}
+    {{ field.label_tag }}
+    {{field}}
+  </div>
+{% endfor %}

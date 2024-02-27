@@ -116,6 +116,16 @@ To run the containers::
 
     $ docker-compose -u -d
 
+
+To run one specific container::
+
+    $ docker-compose -u -d [CONTAINER_NAME]
+
+Or on other systems (some OSX)::
+
+    $ docker compose up -d elasticsearch
+
+
 To shut them down::
 
     $ docker-compose down
@@ -159,8 +169,3 @@ The BlueBottle test suite can be run completely using:
 #. Run the tests
 
     $ python manage.py test -k
-
-
-Pull request - Testing, Reviewing and Merging Flow
-------------
-https://www.lucidchart.com/invitations/accept/89cab398-8c15-4701-8897-d2fef42c0aa7

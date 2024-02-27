@@ -16,7 +16,7 @@ from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Slide, Step, Logo, ResultPage, HomePage, ContentLink,
+    Stat, Quote, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
@@ -100,11 +100,6 @@ class QuoteInline(NestedStackedInline):
     extra = 1
 
 
-class SlideInline(NestedStackedInline, SortableStackedInline):
-    model = Slide
-    extra = 0
-
-
 class StepInline(NestedStackedInline, SortableStackedInline):
     model = Step
     extra = 0
@@ -170,7 +165,7 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Powered by'),
             {
                 'fields': (
-                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo'
+                    'copyright', 'powered_by_text', 'powered_by_link', 'powered_by_logo', 'footer_banner'
                 )
             }
         ),

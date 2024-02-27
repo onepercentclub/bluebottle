@@ -8,6 +8,7 @@ from urllib.parse import (
 )
 
 from bs4 import BeautifulSoup
+from celery.contrib.testing.worker import start_worker
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
@@ -18,14 +19,12 @@ from django.test.utils import override_settings
 from django_webtest import WebTestMixin
 from munch import munchify
 from rest_framework import status
-from rest_framework.relations import RelatedField
+from rest_framework.relations import ManyRelatedField, RelatedField
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 from webtest import Text
-
-from celery.contrib.testing.worker import start_worker
 
 from bluebottle.celery import app
 from bluebottle.clients import properties
@@ -213,7 +212,7 @@ class APITestCase(BluebottleTestCase):
         """
         Perform a get request and save the result in `self.response`
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         if query:
             parsed_url = urlparse(self.url)
@@ -228,11 +227,13 @@ class APITestCase(BluebottleTestCase):
             url = self.url
 
         self.user = user
-
-        self.response = self.client.get(
-            url,
-            user=user,
-        )
+        if user:
+            self.response = self.client.get(
+                url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.get(url)
 
     def perform_update(self, to_change=None, user=None):
         """
@@ -240,7 +241,7 @@ class APITestCase(BluebottleTestCase):
 
         `to_change` should be a dictionary of fields to update
 
-        If `user` is None, perform an anoymous request
+        If `user` is None, perform an anonymous request
         """
         data = {
             'type': self.serializer.JSONAPIMeta.resource_name,
@@ -253,18 +254,31 @@ class APITestCase(BluebottleTestCase):
             if isinstance(self.serializer().get_fields()[field], RelatedField):
                 data['relationships'][field] = {
                     'data': {
-                        'id': value.pk,
+                        'id': str(value.pk),
                         'type': value.JSONAPIMeta.resource_name
                     }
                 }
+            elif isinstance(self.serializer().get_fields()[field], ManyRelatedField):
+                data['relationships'][field] = {'data': [
+                    {
+                        'id': str(item.pk),
+                        'type': item.JSONAPIMeta.resource_name
+                    } for item in value
+                ]}
             else:
                 data['attributes'][field] = value
 
-        self.response = self.client.patch(
-            self.url,
-            json.dumps({'data': data}, cls=DjangoJSONEncoder),
-            user=user
-        )
+        if user:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.patch(
+                self.url,
+                json.dumps({'data': data}, cls=DjangoJSONEncoder)
+            )
 
         if self.response.status_code == status.HTTP_200_OK:
             self.model.refresh_from_db()
@@ -281,11 +295,17 @@ class APITestCase(BluebottleTestCase):
         if data is None:
             data = self.data
 
-        self.response = self.client.post(
-            self.url,
-            json.dumps(data, cls=DjangoJSONEncoder),
-            user=user
-        )
+        if user:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.post(
+                self.url,
+                json.dumps(data, cls=DjangoJSONEncoder),
+            )
 
         if (
             self.response.status_code == status.HTTP_201_CREATED and
@@ -299,10 +319,13 @@ class APITestCase(BluebottleTestCase):
 
         If `user` is None, perform an anoymous request
         """
-        self.response = self.client.delete(
-            self.url,
-            user=user
-        )
+        if user:
+            self.response = self.client.delete(
+                self.url,
+                HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+            )
+        else:
+            self.response = self.client.delete(self.url)
 
     def loadLinkedRelated(self, relationship, user=None):
         """
@@ -322,15 +345,21 @@ class APITestCase(BluebottleTestCase):
         Context manager that will make the platform closed, so that scenarios on closed platforms can
         be tested
         """
-        group = Group.objects.get(name='Anonymous')
-        model_name = self.serializer.Meta.model._meta.model_name
+        if hasattr(self, 'serializer'):
+            model_name = self.serializer.Meta.model._meta.model_name
+        elif hasattr(self, 'model'):
+            model_name = self.model._meta.model_name
+        else:
+            raise TypeError('Testcase is missing model or serializer attribute')
+
         try:
             MemberPlatformSettings.objects.update(closed=True)
             group = Group.objects.get(name='Anonymous')
             try:
-                group.permissions.remove(
-                    Permission.objects.get(codename='api_read_{}'.format(model_name))
-                )
+                for permission in Permission.objects.filter(codename='api_read_{}'.format(model_name)):
+                    group.permissions.remove(
+                        permission
+                    )
             except Permission.DoesNotExist:
                 pass
 
@@ -338,9 +367,23 @@ class APITestCase(BluebottleTestCase):
         finally:
             MemberPlatformSettings.objects.update(closed=False)
 
+    def assertError(self, field, message=None):
+        if isinstance(self.serializer().get_fields()[field], RelatedField):
+            pointer = f'/data/relationships/{field}'
+        else:
+            pointer = f'/data/attributes/{field}'
+
+        for error in self.response.json()['errors']:
+            if error['source']['pointer'] == pointer:
+                if message:
+                    self.assertEqual(error['detail'], message)
+                return
+
+        self.fail(f'Error for field {field} not found')
+
     def assertStatus(self, status):
         """
-        Assert that the status code of the reponse is as expected
+        Assert that the status code of the response is as expected
         """
         self.assertEqual(self.response.status_code, status)
 
@@ -393,10 +436,17 @@ class APITestCase(BluebottleTestCase):
             except IndexError:
                 return self.fail('Included relation not found')
 
-            self.assertTrue(
-                {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
-                in included_resources
-            )
+            if isinstance(relationship, (list, tuple)):
+                for rel in relationship:
+                    self.assertTrue(
+                        {'type': rel['type'], 'id': str(model.pk) if model else rel['id']}
+                        in included_resources
+                    )
+            else:
+                self.assertTrue(
+                    {'type': relationship['type'], 'id': str(model.pk) if model else relationship['id']}
+                    in included_resources
+                )
 
     def assertNotIncluded(self, included):
         """
@@ -459,10 +509,8 @@ class APITestCase(BluebottleTestCase):
         data = data or self.response.json()['data']
         if models:
             ids = [resource['id'] for resource in data]
-            for model in models:
-                self.assertTrue(
-                    str(model.pk) in ids
-                )
+            model_ids = [str(model.pk) for model in models]
+            self.assertEqual(ids, model_ids)
 
     def assertAttribute(self, attr, value=None):
         """
@@ -557,7 +605,7 @@ class APITestCase(BluebottleTestCase):
         ]
         self.assertIn(field, error_fields)
 
-    @property
+    @ property
     def data(self):
         """
         randomly generated data that can be used to perform creates
@@ -581,14 +629,13 @@ class APITestCase(BluebottleTestCase):
                 except AttributeError:
                     value = None
 
-            if isinstance(self.serializer().get_fields()[field], RelatedField):
+            if isinstance(self.serializer().get_fields()[field], RelatedField) and value:
                 try:
                     serializer_name = self.serializer.included_serializers[field]
                     (module, cls_name) = serializer_name.rsplit('.', 1)
                     resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
-                except KeyError:
-                    model = getattr(self.serializer.Meta.model, 'accepted_invite').get_queryset().model
-                    resource_name = model.JSONAPIMeta.resource_name
+                except (KeyError, AttributeError):
+                    resource_name = value.JSONAPIMeta.resource_name
 
                 data['relationships'][field] = {
                     'data': {
@@ -736,7 +783,7 @@ class NotificationTestCase(BluebottleTestCase):
     def create(self, **kwargs):
         self.message = self.message_class(self.obj, **kwargs)
 
-    @property
+    @ property
     def _html(self):
         return BeautifulSoup(self.message.get_content_html(
             self.message.get_recipients()[0]), 'html.parser'
@@ -778,11 +825,11 @@ class NotificationTestCase(BluebottleTestCase):
         if text in self.html_content:
             self.fail("HTML body does contain '{}'".format(text))
 
-    @property
+    @ property
     def text_content(self):
         return self.message.get_content_text(self.message.get_recipients()[0])
 
-    @property
+    @ property
     def html_content(self):
         return self.message.get_content_html(self.message.get_recipients()[0])
 
@@ -835,7 +882,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 form.field_order.append((name, new))
 
 
-@override_settings(
+@ override_settings(
     CELERY_ALWAYS_EAGER=True,
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
 )
@@ -848,7 +895,7 @@ class CeleryTestCase(SimpleTestCase):
         for factory in self.factories:
             factory._meta.model.objects.all().delete()
 
-    @classmethod
+    @ classmethod
     def setUpClass(cls):
         from celery.contrib.testing.tasks import ping  # noqa
 
@@ -858,7 +905,7 @@ class CeleryTestCase(SimpleTestCase):
 
         super().setUpClass()
 
-    @classmethod
+    @ classmethod
     def tearDownClass(cls):
         cls.celery_worker.__exit__(None, None, None)
         app.conf.task_always_eager = True

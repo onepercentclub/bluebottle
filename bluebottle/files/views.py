@@ -1,11 +1,13 @@
 import mimetypes
-from os.path import exists
-from random import random
+from random import randrange
 
 import magic
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+from django.http import (
+    HttpResponse, HttpResponseRedirect, HttpResponseNotFound
+)
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -14,8 +16,15 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import Document, Image, PrivateDocument
-from bluebottle.files.serializers import FileSerializer, ImageSerializer, PrivateFileSerializer
-from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
+from bluebottle.files.serializers import (
+    FileSerializer,
+    PrivateDocumentSerializer,
+    PrivateFileSerializer,
+    UploadImageSerializer,
+    ImageSerializer
+)
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
 
 mime = magic.Magic(mime=True)
 
@@ -24,9 +33,9 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     queryset = Document.objects.all()
     serializer_class = FileSerializer
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
     parser_classes = (FileUploadParser,)
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,
@@ -36,7 +45,17 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         'owner': ['owner'],
     }
 
+    allowed_mime_types = settings.PRIVATE_FILE_ALLOWED_MIME_TYPES
+
     def perform_create(self, serializer):
+        uploaded_file = self.request.FILES['file']
+        mime_type = mime.from_buffer(uploaded_file.read())
+        if not mime_type == uploaded_file.content_type:
+            raise ValidationError(f'Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}')
+
+        if mime_type not in self.allowed_mime_types:
+            raise ValidationError('Mime-type is not allowed for this endpoint')
+
         serializer.save(owner=self.request.user)
 
 
@@ -44,19 +63,8 @@ class PrivateFileList(FileList):
     queryset = PrivateDocument.objects.all()
     serializer_class = PrivateFileSerializer
 
-    def perform_create(self, serializer):
-        uploaded_file = self.request.FILES['file']
-        mime_type = mime.from_buffer(uploaded_file.read())
-        if not mime_type == uploaded_file.content_type:
-            raise ValidationError('Mime-type does not match Content-Type')
-
-        if mime_type not in settings.PRIVATE_FILE_ALLOWED_MIME_TYPES:
-            raise ValidationError('Mime-type is not allowed for this endpoint')
-        serializer.save(owner=self.request.user)
-
 
 class FileContentView(RetrieveAPIView):
-
     permission_classes = []
 
     def retrieve(self, *args, **kwargs):
@@ -82,13 +90,33 @@ class ImageContentView(FileContentView):
             width, height = self.kwargs['size'].split('x')
         else:
             width = self.kwargs['size']
-            height = int(width) / 1.5
-        return settings.RANDOM_IMAGE_PROVIDER.format(seed=random(), width=width, height=height)
+            height = int(int(width) / 1.5)
+        return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
+
+    def get_file(self):
+        instance = self.get_object()
+        return getattr(instance, self.field).file
 
     def retrieve(self, *args, **kwargs):
-        instance = self.get_object()
-        file = getattr(instance, self.field).file
-        thumbnail = get_thumbnail(file, self.kwargs['size'])
+        file = self.get_file()
+
+        if 'x' in self.kwargs['size']:
+            if self.kwargs['size'] not in self.allowed_sizes.values():
+                return HttpResponseNotFound()
+        else:
+            if not self.kwargs['size'] in [val.split('x')[0] for val in self.allowed_sizes.values()]:
+                return HttpResponseNotFound()
+
+        size = self.kwargs['size']
+        try:
+            width, height = size.split('x')
+            if width == height and int(width) < 300:
+                thumbnail = get_thumbnail(file, size, crop='center')
+            else:
+                thumbnail = get_thumbnail(file, size)
+        except ValueError:
+            thumbnail = get_thumbnail(file, size)
+
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:
@@ -102,7 +130,7 @@ class ImageContentView(FileContentView):
                     response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            if exists(file.path):
+            if thumbnail.url:
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:
@@ -116,13 +144,29 @@ class ImageList(FileList):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
-    def perform_create(self, serializer):
-        uploaded_file = self.request.FILES['file']
-        mime_type = mime.from_buffer(uploaded_file.read())
-        if not mime_type == uploaded_file.content_type:
-            raise ValidationError('Mime-type does not match Content-Type')
+    allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
-        if mime_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
-            raise ValidationError('Mime-type is not allowed for this endpoint')
 
-        serializer.save(owner=self.request.user)
+class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = Image.objects.all()
+    serializer_class = UploadImageSerializer
+
+
+class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+    permission_classes = (IsOwner,)
+    queryset = PrivateDocument.objects.all()
+    serializer_class = PrivateDocumentSerializer
+
+
+class ImagePreview(ImageContentView):
+    allowed_sizes = {'preview': '292x164', 'large': '1568x882'}
+
+    queryset = Image.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def get_file(self):
+        instance = self.get_object()
+        return instance.file.file

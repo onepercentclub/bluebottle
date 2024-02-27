@@ -1,11 +1,12 @@
-from builtins import str
-from builtins import object
 import uuid
+from builtins import object
+from builtins import str
+
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.fields import ReadOnlyField
 
 from bluebottle.fsm.state import TransitionNotPossible
-from rest_framework.exceptions import ValidationError
-from rest_framework import serializers
-from rest_framework.fields import ReadOnlyField
 
 
 class Transition(object):
@@ -25,6 +26,9 @@ class AvailableTransitionsField(ReadOnlyField):
             {
                 'name': transition.field,
                 'target': transition.target.value,
+                'label': transition.name,
+                'passed_label': transition.passed_label,
+                'description': transition.description_front_end,
                 'available': True,
             }
             for transition in states.possible_transitions(user=user)
@@ -33,6 +37,15 @@ class AvailableTransitionsField(ReadOnlyField):
 
     def get_attribute(self, instance):
         return instance
+
+
+class CurrentStatusField(ReadOnlyField):
+    def to_representation(self, value):
+        return {
+            'value': value.value,
+            'name': value.name.title(),
+            'description': value.description,
+        }
 
 
 class TransitionSerializer(serializers.Serializer):

@@ -144,10 +144,15 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     favourite_themes = models.ManyToManyField(Theme, blank=True)
     skills = models.ManyToManyField('time_based.Skill', blank=True)
+
+    search_distance = models.CharField(_('Distance'), max_length=10, default='50km', blank=True, null=True)
+    any_search_distance = models.BooleanField(_('Any distance'), default=True)
+    exclude_online = models.BooleanField(_('Don’t show online/remote activities'), default=False)
+
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
     gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)
-    about_me = models.TextField(_('about me'), blank=True, max_length=265)
+    about_me = models.TextField(_('about me'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(
         _('picture'), blank=True, upload_to='profiles',
@@ -231,6 +236,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             ('api_change_own_member', 'Can change own members through the API'),
             ('api_delete_own_member', 'Can delete own members through the API'),
         )
+
+    class JSONAPIMeta():
+        resource_name = 'members'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
@@ -333,7 +341,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_initiator(self):
-        return bool(self.own_initiatives.count())
+        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists()
 
     @cached_property
     def is_supporter(self):

@@ -35,6 +35,109 @@ class StatisticListListAPITestCase(BluebottleTestCase):
     def setUp(self):
         super(StatisticListListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
+        self.url = reverse('statistics')
+        self.user = BlueBottleUserFactory()
+
+        initiative = InitiativeFactory.create()
+        activity = DateActivityFactory.create(
+            initiative=initiative,
+            owner=initiative.owner,
+        )
+        initiative.states.submit(save=True)
+        initiative.states.approve(save=True)
+        activity.states.publish(save=True)
+
+        slot = activity.slots.get()
+        slot.start = timezone.now() - datetime.timedelta(hours=1)
+        slot.duration = datetime.timedelta(minutes=6)
+        slot.save()
+
+        DateParticipantFactory.create_batch(5, activity=activity)
+
+        self.impact_type = ImpactTypeFactory.create()
+
+        self.impact_goal = ImpactGoalFactory.create(
+            type=self.impact_type,
+            target=100,
+            realized=50
+        )
+
+        self.manual = ManualStatisticFactory.create()
+        self.impact = ImpactStatisticFactory(impact_type=self.impact_type)
+        self.database = DatabaseStatisticFactory(query='people_involved')
+
+    def test_get(self):
+        response = self.client.get(self.url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(response.json()['data']), 3)
+
+        for resource in response.json()['data']:
+            if resource['id'] == str(self.manual.pk):
+                self.assertEqual(resource['type'], 'statistics')
+                self.assertEqual(resource['attributes']['value'], self.manual.value)
+                self.assertEqual(resource['attributes']['name'], self.manual.name)
+
+            if resource['id'] == str(self.impact.pk):
+                self.assertEqual(resource['type'], 'statistics')
+                self.assertEqual(resource['attributes']['value'], self.impact_goal.realized)
+                self.assertEqual(resource['attributes']['name'], self.impact_type.text_passed)
+                self.assertEqual(resource['attributes']['icon'], self.impact_type.icon)
+
+            if resource['id'] == str(self.database.pk):
+                self.assertEqual(resource['type'], 'statistics')
+                self.assertEqual(resource['attributes']['value'], 7)
+                self.assertEqual(resource['attributes']['name'], self.database.name)
+
+    def test_get_anonymous(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 3)
+
+    def test_get_only_active(self):
+        self.manual.active = False
+        self.manual.save()
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 2)
+
+    def test_get_closed(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_closed_anonymous(self):
+        MemberPlatformSettings.objects.update(closed=True)
+
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_post(self):
+        response = self.client.post(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_filter_by_year(self):
+        response = self.client.get(self.url + '?year=' + str(now().year))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()['data']), 3)
+
+
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
+class OldStatisticListListAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(OldStatisticListListAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
         self.url = reverse('statistic-list')
         self.user = BlueBottleUserFactory()
 
@@ -45,7 +148,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.submit(save=True)
+        activity.states.publish(save=True)
 
         slot = activity.slots.get()
         slot.start = timezone.now() - datetime.timedelta(hours=1)
@@ -91,41 +194,6 @@ class StatisticListListAPITestCase(BluebottleTestCase):
 
         self.assertEqual(response.json()['included'][0]['id'], str(self.impact_type.pk))
         self.assertEqual(response.json()['included'][0]['type'], 'activities/impact-types')
-
-    def test_get_anonymous(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['data']), 3)
-
-    def test_get_only_active(self):
-        self.manual.active = False
-        self.manual.save()
-
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['data']), 2)
-
-    def test_get_closed(self):
-        MemberPlatformSettings.objects.update(closed=True)
-
-        response = self.client.get(self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_get_closed_anonymous(self):
-        MemberPlatformSettings.objects.update(closed=True)
-
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_post(self):
-        response = self.client.post(self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_filter_by_year(self):
-        response = self.client.get(self.url + '?year=' + str(now().year))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()['data']), 3)
 
 
 @override_settings(

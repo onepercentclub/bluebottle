@@ -10,11 +10,14 @@ from django_elasticsearch_dsl.test import ESTestCase
 
 from bluebottle.activities.models import Contributor
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
-from bluebottle.activities.tasks import recommend, data_retention_contribution_task
+from bluebottle.activities.tasks import (
+    recommend, get_matching_activities, data_retention_contribution_task
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, PeriodParticipantFactory, SkillFactory, DateActivityFactory, DateParticipantFactory
@@ -39,7 +42,10 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
         self.rotterdam = Point(x=4.4207882, y=51.9280712)
 
         self.user = BlueBottleUserFactory.create(
-            subscribed=True
+            subscribed=True,
+            search_distance='50km',
+            any_search_distance=False,
+            exclude_online=False
         )
         self.user.place = PlaceFactory.create(
             position=self.amsterdam
@@ -50,279 +56,276 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         for skill in SkillFactory.create_batch(3):
             self.user.skills.add(skill)
+
         self.user.save()
 
-        self.matches = []
-
-        self.matches.append(
+        self.matching = [
+            # Online
             PeriodActivityFactory.create(
+                status="open",
+                is_online=True,
+                location=None,
+            ),
+
+            # Matching skill, matching place
+            PeriodActivityFactory.create(
+                status="open",
                 expertise=self.user.skills.first(),
                 is_online=False,
-                location=GeolocationFactory.create(position=self.close_to_amsterdam),
+                location=GeolocationFactory.create(position=self.close_to_amsterdam)
+            ),
+
+            # Matching theme, online
+            PeriodActivityFactory.create(
+                status="open",
+                location=None,
+                is_online=True,
                 initiative=InitiativeFactory.create(
                     theme=self.user.favourite_themes.first()
                 )
-            )
-        )
+            ),
 
-        self.matches.append(
+            # Matching place, theme and no skill
             PeriodActivityFactory.create(
+                status="open",
                 expertise=None,
                 is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
                 initiative=InitiativeFactory.create(
                     theme=self.user.favourite_themes.first()
                 )
-            )
-        )
+            ),
 
-        self.non_matches = []
-        self.partial_matches = []
-
-        # Wrong location, wrong theme, matching skill
-        self.non_matches.append(
+            # Matching theme, skill, online
             PeriodActivityFactory.create(
-                is_online=False,
-                expertise=self.user.skills.first()
-            )
-        )
-        # wrong skill, wrong theme, match location
-        self.non_matches.append(
-            PeriodActivityFactory.create(
-                is_online=False,
-                location=GeolocationFactory.create(position=self.close_to_amsterdam)
-            )
-        )
-        # wrong theme, matching location, matching skill
-        self.partial_matches.append(
-            PeriodActivityFactory.create(
+                status="open",
                 expertise=self.user.skills.first(),
-                is_online=False,
-                location=GeolocationFactory.create(position=self.close_to_amsterdam)
-            )
-        )
-        # wrong skill , matching location
-        self.non_matches.append(
-            PeriodActivityFactory.create(
+                location=None,
+                is_online=True,
                 initiative=InitiativeFactory.create(
                     theme=self.user.favourite_themes.first()
-                ),
-                is_online=False,
-                location=GeolocationFactory.create(position=self.close_to_amsterdam)
-            )
-        )
-        # Wrong location
-        self.non_matches.append(
+                )
+            ),
+
+            # Matching place, theme and skill
             PeriodActivityFactory.create(
+                status="open",
                 is_online=False,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                ),
-                expertise=self.user.skills.first()
-            )
-        )
-
-        # matching but applied
-        activity = PeriodActivityFactory.create(
-            expertise=self.user.skills.first(),
-            is_online=False,
-            location=GeolocationFactory.create(position=self.close_to_amsterdam),
-            initiative=InitiativeFactory.create(
-                theme=self.user.favourite_themes.first()
-            )
-        )
-        PeriodParticipantFactory.create(activity=activity, user=self.user)
-        self.non_matches.append(activity)
-
-        for activity in self.matches + self.non_matches + self.partial_matches:
-            activity.initiative.states.submit(save=True)
-            activity.initiative.states.approve(save=True)
-
-        # matching but incorrect status
-        self.non_matches.append(
-            PeriodActivityFactory.create(
                 expertise=self.user.skills.first(),
-                is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
                 initiative=InitiativeFactory.create(
                     theme=self.user.favourite_themes.first()
                 )
-            )
-        )
+            ),
 
-        mail.outbox = []
+        ]
 
-    def test_including_partial(self):
+    def test_recommend(self):
         recommend()
-        body = mail.outbox[-1].body
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_recommend_no_matching(self):
+        for activity in self.matching:
+            activity.delete()
+
+        recommend()
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_include_matching(self):
+        activities = get_matching_activities(self.user)
+
         self.assertEqual(
-            mail.outbox[-1].subject,
-            '{}, there are 3 activities on Test matching your profile'.format(
-                self.user.first_name
-            )
+            set(activity.pk for activity in activities),
+            set(match.pk for match in self.matching)
         )
 
-        self.assertTrue('/en/initiatives/activities/list' in body)
-        self.assertTrue(
-            'There are tons of cool activities on Test that are making a positive impact.'
-            in body
+    def test_order_matching(self):
+        activities = get_matching_activities(self.user)
+        self.assertEqual(
+            [activity.pk for activity in activities],
+            list(reversed([match.pk for match in self.matching]))
         )
-
-        self.assertTrue(
-            'We have selected 3 activities that match with your profile. Join us!'
-            in body
-        )
-        self.assertFalse(
-            "Complete your profile, so that we can select even more relevant activities for you"
-            in body
-        )
-
-        for activity in self.matches + self.partial_matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
-
-        for activity in self.non_matches:
-            self.assertFalse(activity.title in body)
-            self.assertFalse(activity.get_absolute_url() in body)
-
-    def test_no_user_skill(self):
-        self.user.skills.clear()
-
-        recommend()
-        body = mail.outbox[-1].body
-
-        self.assertTrue('/en/initiatives/activities/list' in body)
-        self.assertTrue(
-            (
-                "[ Complete your profile ](https://testserver/member/profile) , "
-                "so that we can select even more relevant activities for you"
-            ) in body
-        )
-
-        for activity in self.matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
-
-        for activity in self.non_matches:
-            activity.refresh_from_db()
-            if (
-                activity.location.position == self.close_to_amsterdam and
-                activity.initiative.theme in self.user.favourite_themes.all() and
-                activity.status == 'open' and
-                not len(activity.participants.all())
-            ):
-                self.assertTrue(activity.title in body)
-                self.assertTrue(activity.get_absolute_url() in body)
-
-            else:
-                self.assertFalse(activity.title in body)
-                self.assertFalse(activity.get_absolute_url() in body)
-
-    def test_including_partial_location(self):
-        self.user.place = None
-        self.user.location = LocationFactory.create(position=self.amsterdam)
-        self.user.save()
-
-        recommend()
-        body = mail.outbox[-1].body
-
-        self.assertTrue('/en/initiatives/activities/list' in body)
-        self.assertFalse(
-            "Complete your profile, so that we can select even more relevant activities for you"
-            in body
-        )
-
-        for activity in self.matches + self.partial_matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
-
-        for activity in self.non_matches:
-            self.assertFalse(activity.title in body)
-            self.assertFalse(activity.get_absolute_url() in body)
-
-    def test_not_including_partial(self):
-        activity = PeriodActivityFactory.create(
-            expertise=self.user.skills.first(),
-            is_online=False,
-            location=GeolocationFactory.create(position=self.close_to_amsterdam),
-            initiative=InitiativeFactory.create(
-                theme=self.user.favourite_themes.first()
-            )
-        )
-        activity.initiative.states.submit(save=True)
-        activity.initiative.states.approve(save=True)
-        self.matches.append(activity)
-
-        recommend()
-        body = mail.outbox[-1].body
-
-        self.assertTrue('/en/initiatives/activities/list' in body)
-
-        for activity in self.matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
-
-        for activity in self.non_matches + self.partial_matches:
-            self.assertFalse(activity.title in body)
-            self.assertFalse(activity.get_absolute_url() in body)
 
     def test_not_including_closed_segment(self):
         closed_segment = SegmentFactory.create(closed=True)
-        activity = self.matches.pop()
+        activity = self.matching[-1]
         activity.segments.set([closed_segment])
 
-        for act in self.partial_matches:
-            act.delete()
-
-        recommend()
-
-        body = mail.outbox[-1].body
-
-        self.assertEqual(
-            mail.outbox[-1].subject,
-            '{}, there are 1 activities on Test matching your profile'.format(
-                self.user.first_name
-            )
-        )
-
-        self.assertTrue('/en/initiatives/activities/list' in body)
-
-        self.assertFalse(activity.title in body)
-        self.assertFalse(activity.get_absolute_url() in body)
-
-        for activity in self.matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
 
     def test_including_closed_segment(self):
         closed_segment = SegmentFactory.create(closed=True)
-        activity = self.matches.pop()
+        activity = self.matching[-1]
         activity.segments.set([closed_segment])
 
         self.user.segments.set([closed_segment])
 
-        for act in self.partial_matches:
-            act.delete()
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
 
-        recommend()
+    def test_exclude_office(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
 
-        body = mail.outbox[-1].body
+        activity = self.matching[-1]
+        activity.office_location = LocationFactory.create()
+        activity.office_restriction = 'office'
+        activity.save()
 
-        self.assertEqual(
-            mail.outbox[-1].subject,
-            '{}, there are 2 activities on Test matching your profile'.format(
-                self.user.first_name
-            )
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_exclude_office_settings_disabled(self):
+
+        activity = self.matching[-1]
+        activity.office_location = LocationFactory.create()
+        activity.office_restriction = 'office'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
+
+    def test_exclude_office_no_office(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
+        activity = self.matching[-1]
+
+        activity.office_restriction = 'office'
+        activity.office_location = LocationFactory.create()
+        activity.save()
+
+        self.user.location = LocationFactory.create()
+        self.user.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_include_office(self):
+        activity = self.matching[-1]
+
+        activity.office_location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create()
+        )
+        activity.office_restriction = 'office'
+        activity.save()
+
+        self.user.location = activity.office_location
+        self.user.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
+
+    def test_exclude_office_sub_region(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
+        activity = self.matching[-1]
+
+        activity.office_location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create()
+        )
+        activity.office_restriction = 'office_subregion'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+
+        self.assertFalse(activity in activities)
+
+    def test_include_office_sub_region(self):
+        activity = self.matching[-1]
+
+        activity.office_location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create()
         )
 
-        self.assertTrue('/en/initiatives/activities/list' in body)
+        activity.office_restriction = 'office_subregion'
+        activity.save()
 
-        self.assertTrue(activity.title in body)
-        self.assertTrue(activity.get_absolute_url() in body)
+        self.user.location = LocationFactory.create(
+            subregion=activity.office_location.subregion
+        )
+        self.user.save()
 
-        for activity in self.matches:
-            self.assertTrue(activity.title in body)
-            self.assertTrue(activity.get_absolute_url() in body)
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
+
+    def test_exclude_office_region(self):
+        self.settings.enable_office_restrictions = True
+        self.settings.save()
+
+        activity = self.matching[-1]
+        activity.office_location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create(
+                region=OfficeRegionFactory.create()
+            )
+        )
+        activity.office_restriction = 'office_region'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_include_office_region(self):
+        activity = self.matching[-1]
+
+        activity.office_location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create(
+                region=OfficeRegionFactory.create()
+            )
+        )
+        activity.office_restriction = 'office_region'
+        activity.save()
+
+        self.user.location = LocationFactory.create(
+            subregion=OfficeSubRegionFactory.create(
+                region=activity.office_location.subregion.region
+            )
+        )
+        self.user.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertTrue(activity in activities)
+
+    def test_exclude_contributed_to(self):
+        activity = self.matching[-1]
+        PeriodParticipantFactory.create(activity=activity, user=self.user)
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_exclude_distance(self):
+        activity = self.matching[-1]
+        activity.location = GeolocationFactory.create(position=self.rotterdam)
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_exclude_draft(self):
+        activity = self.matching[-1]
+        activity.status = 'draft'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_exclude_succeeded(self):
+        activity = self.matching[-1]
+        activity.status = 'succeeded'
+        activity.save()
+
+        activities = get_matching_activities(self.user)
+        self.assertFalse(activity in activities)
+
+    def test_exclude_online(self):
+        self.user.exclude_online = True
+        self.user.save()
+
+        activities = get_matching_activities(self.user)
+        for activity in activities:
+            self.assertTrue(activity.is_online)
 
     def test_not_subscribed(self):
         self.user.subscribed = False

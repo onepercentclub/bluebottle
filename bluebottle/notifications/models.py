@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
@@ -63,8 +64,6 @@ class NotificationPlatformSettings(BasePlatformSettings):
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
-
-    match_options = models.BooleanField(default=False)
 
     class Meta(object):
         verbose_name_plural = _('notification settings')

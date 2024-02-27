@@ -1,7 +1,9 @@
-from django_elasticsearch_dsl.registries import registry
-from django_elasticsearch_dsl import fields
+from datetime import datetime
 
-from bluebottle.activities.documents import ActivityDocument, activity
+from django_elasticsearch_dsl import fields
+from django_elasticsearch_dsl.registries import registry
+
+from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
     DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
 )
@@ -20,6 +22,10 @@ class TimeBasedActivityDocument:
         return SCORE_MAP.get(instance.status, 0)
 
 
+def deduplicate(items):
+    return [dict(s) for s in set(frozenset(d.items()) for d in items)]
+
+
 @registry.register_document
 @activity.document
 class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
@@ -30,6 +36,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     slots = fields.NestedField(properties={
         'id': fields.KeywordField(),
         'status': fields.KeywordField(),
+        'title': fields.TextField(),
         'start': fields.DateField(),
         'end': fields.DateField(),
         'locality': fields.KeywordField(attr='location.locality'),
@@ -83,6 +90,17 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
             if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
         ]
 
+    def prepare_dates(self, instance):
+        return [
+            {
+                'start': slot.start,
+                'end': slot.start + slot.duration,
+                'status': slot.status
+            }
+            for slot in instance.slots.all()
+            if slot.start and slot.duration and slot.status in ('open', 'full', 'finished', )
+        ]
+
     def prepare_duration(self, instance):
         return [
             {'gte': slot.start, 'lte': slot.end}
@@ -102,11 +120,11 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         ]
 
     def prepare_country(self, instance):
-        countries = [super().prepare_country(instance)]
-        return countries + [
-            slot.location.country_id for slot in instance.slots.all()
-            if not slot.is_online and slot.location
-        ]
+        countries = super().prepare_country(instance)
+        for slot in instance.slots.all():
+            if not slot.is_online and slot.location and slot.location.country:
+                countries += get_translated_list(slot.location.country)
+        return deduplicate(countries)
 
     def prepare_position(self, instance):
         return [
@@ -140,12 +158,6 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
         model = PeriodActivity
 
-    def prepare_country(self, instance):
-        if not instance.is_online and instance.location:
-            return instance.location.country_id
-        else:
-            return super().prepare_country(instance)
-
     def prepare_contribution_duration(self, instance):
         if instance.duration:
             return [{
@@ -169,6 +181,12 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_end(self, instance):
         return [instance.deadline]
+
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start or datetime.min,
+            'end': instance.deadline or datetime.max,
+        }]
 
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:

@@ -38,10 +38,10 @@ from bluebottle.funding_vitepay.tests.factories import (
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.segments.tests.factories import SegmentTypeFactory
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -278,6 +278,17 @@ class RewardListTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_coinitiator(self):
+        coinitiator = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(coinitiator)
+        response = self.client.post(
+            self.create_url,
+            data=json.dumps(self.data),
+            user=coinitiator
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_no_user(self):
         response = self.client.post(
             self.create_url,
@@ -510,6 +521,23 @@ class FundingDetailTestCase(BluebottleTestCase):
         wrong_signature_response = self.client.get(export_url + '111')
         self.assertEqual(
             wrong_signature_response.status_code, 404
+        )
+
+    def test_get_owner_export_weird_title(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_participant_exports = True
+        initiative_settings.save()
+        self.funding.title = 'This \ is å süper / weird ++ TITŁE $%$%'
+        self.funding.save()
+        DonorFactory.create(activity=self.funding, amount=Money(20, 'EUR'), status='new')
+        DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
+        response = self.client.get(self.funding_url, user=self.funding.owner)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        export_url = data['attributes']['supporters-export-url']['url']
+        export_response = self.client.get(export_url)
+        self.assertEqual(
+            export_response.status_code, 200
         )
 
     def test_get_bank_account(self):
@@ -1822,7 +1850,7 @@ class FundingAPITestCase(APITestCase):
         self.donors = DonorFactory.create_batch(
             5, activity=self.activity
         )
-        self.url = reverse('funding-detail', args=(self.activity.pk, ))
+        self.url = reverse('funding-detail', args=(self.activity.pk,))
 
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)

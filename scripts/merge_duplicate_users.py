@@ -17,10 +17,8 @@ for client in Client.objects.all():
             lower=Lower('email')
         ).values('lower').annotate(count=Count('lower')).filter(count__gt=1)
         for result in duplicate:
-            first = Member.objects.filter(email__iexact=result['lower']).order_by('date_joined').first()
-            for duplicate in Member.objects.filter(
-                email__iexact=result['lower']
-            ).exclude(pk=first.pk).order_by('date_joined'):
+            first, *duplicates = Member.objects.filter(email__iexact=result['lower']).order_by('date_joined')
+            for duplicate in duplicates:
                 for activity in Activity.objects.filter(owner=duplicate):
                     activity.owner = first
                     activity.execute_triggers(send_messages=False)

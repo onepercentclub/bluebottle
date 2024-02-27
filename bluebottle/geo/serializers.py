@@ -17,6 +17,24 @@ staticmap_url_signer = StaticMapURLSigner(
 tf = TimezoneFinder()
 
 
+class PointSerializer(serializers.CharField):
+
+    def to_representation(self, instance):
+        return {
+            'longitude': instance.coords[0],
+            'latitude': instance.coords[1]
+        }
+
+    def to_internal_value(self, data):
+        if not data:
+            return None
+        try:
+            point = Point(float(data['longitude']), float(data['latitude']))
+        except ValueError as e:
+            raise serializers.ValidationError("Invalid point. {}".format(e))
+        return point
+
+
 class StaticMapsField(serializers.ReadOnlyField):
     url = (
         "https://maps.googleapis.com/maps/api/staticmap"
@@ -94,6 +112,28 @@ class OfficeSerializer(ModelSerializer):
     }
 
 
+class PlaceSerializer(ModelSerializer):
+    position = PointSerializer(allow_null=True)
+
+    class Meta(object):
+        model = Place
+        fields = (
+            'id', 'street', 'street_number', 'postal_code',
+            'locality', 'province', 'country', 'position', 'formatted_address',
+            'mapbox_id'
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'places'
+        included_resources = [
+            'country',
+        ]
+
+    included_serializers = {
+        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
+    }
+
+
 class SimplePointSerializer(serializers.CharField):
 
     def to_representation(self, instance):
@@ -112,7 +152,7 @@ class SimplePointSerializer(serializers.CharField):
         return point
 
 
-class PlaceSerializer(serializers.ModelSerializer):
+class OldPlaceSerializer(serializers.ModelSerializer):
     position = SimplePointSerializer(required=False, allow_null=True)
 
     class Meta(object):
@@ -133,24 +173,6 @@ class InitiativeCountrySerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'countries'
-
-
-class PointSerializer(serializers.CharField):
-
-    def to_representation(self, instance):
-        return {
-            'latitude': instance.coords[1],
-            'longitude': instance.coords[0]
-        }
-
-    def to_internal_value(self, data):
-        if not data:
-            return None
-        try:
-            point = Point(float(data['longitude']), float(data['latitude']))
-        except ValueError as e:
-            raise serializers.ValidationError("Invalid point. {}".format(e))
-        return point
 
 
 class TinyPointSerializer(serializers.CharField):
@@ -174,13 +196,17 @@ class GeolocationSerializer(ModelSerializer):
     class Meta(object):
         model = Geolocation
         fields = (
-            'id', 'street', 'street_number',
-            'locality', 'province',
+            'id',
+            'street',
+            'street_number',
+            'locality',
+            'province',
             'country',
             'position',
             'static_map_url',
             'formatted_address',
             'timezone',
+            'mapbox_id'
         )
 
     class JSONAPIMeta(object):

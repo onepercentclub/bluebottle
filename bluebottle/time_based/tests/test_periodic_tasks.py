@@ -39,7 +39,11 @@ class TimeBasedActivityPeriodicTasksTestCase():
 
         self.activity = self.factory.create(initiative=self.initiative, review=False)
 
-        self.activity.states.submit(save=True)
+        if self.activity.states.submit:
+            self.activity.states.submit(save=True)
+        else:
+            self.activity.states.publish(save=True)
+
         self.tenant = connection.tenant
 
     def test_nothing(self):
@@ -318,6 +322,106 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 0, "Should send reminders only once")
+
+    def test_finished_multiple_dates(self):
+        self.slot.title = "First slot"
+        self.slot.save()
+        self.slot2 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            title='Slot 2',
+            start=now() - timedelta(days=11),
+            duration=timedelta(hours=3),
+            status='open'
+        )
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            created=now() - timedelta(days=10)
+        )
+        SlotParticipantFactory.create(
+            slot=self.slot,
+            participant=participant
+        )
+        SlotParticipantFactory.create(
+            slot=self.slot2,
+            participant=participant
+        )
+        self.run_task(now())
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
+        # Close first slot too
+        self.slot.start = now() - timedelta(days=11)
+        self.slot.status = 'finished'
+        self.slot.save()
+
+        self.run_task(now())
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'succeeded')
+
+    def test_finished_expired_slot(self):
+
+        activity = DateActivityFactory.create(
+            slot_selection='all',
+            owner=BlueBottleUserFactory.create(),
+            status='open',
+            slots=[]
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            capacity=5,
+            duration=timedelta(hours=3)
+        )
+
+        self.run_task(now() + timedelta(days=1))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'running')
+        self.assertEqual(activity.status, 'open')
+        self.run_task(now() + timedelta(days=2))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'finished')
+        self.assertEqual(activity.status, 'expired')
+
+    def test_finished_multiple_past_dates(self):
+        self.slot.title = "First slot"
+        self.slot.save()
+        self.slot2 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            title='Slot 2',
+            start=datetime.combine((now() - timedelta(days=11)).date(), time(14, 0, tzinfo=UTC)),
+            duration=timedelta(hours=3)
+        )
+        eng = BlueBottleUserFactory.create(primary_language='eng')
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+            created=now() - timedelta(days=10)
+        )
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'The activity "{}" will take place in a few days!'.format(
+                self.activity.title
+            )
+        )
+        with TenantLanguage('en'):
+            expected = '{} {} - {} ({})'.format(
+                defaultfilters.date(self.slot.start),
+                defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
+                defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
+                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+            )
+        self.assertTrue(expected in mail.outbox[0].body)
+        mail.outbox = []
+        self.run_task(self.nigh)
+        self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):
@@ -639,7 +743,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.initiative = InitiativeFactory.create(status='approved')
         self.initiative.save()
         self.activity = DateActivityFactory.create(initiative=self.initiative, review=False)
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.tenant = connection.tenant
 
@@ -693,7 +797,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.activity = DateActivityFactory.create(
             slot_selection='free', initiative=self.initiative, review=False
         )
-        self.activity.states.submit(save=True)
+        self.activity.states.publish(save=True)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.assertEqual(self.slot.status, 'open')
         self.participant = DateParticipantFactory.create(activity=self.activity)

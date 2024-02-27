@@ -1,21 +1,18 @@
-from builtins import object
-
-from datetime import datetime, time
-import dateutil
 import hashlib
-from django.urls import reverse
+from builtins import object
+from collections import namedtuple
+from datetime import datetime
 
-from django.utils.timezone import get_current_timezone, now
+import dateutil
 from django.conf import settings
-
-
+from django.urls import reverse
+from django.utils.timezone import get_current_timezone, now
+from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
-from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
-
-from geopy.distance import distance, lonlat
+from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
 from bluebottle.activities.models import Contributor, Activity, Team
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
@@ -24,12 +21,14 @@ from bluebottle.deeds.serializers import (
     DeedListSerializer, DeedSerializer, DeedParticipantListSerializer
 )
 from bluebottle.files.models import RelatedImage
+from bluebottle.files.serializers import IMAGE_SIZES
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonorListSerializer, TinyFundingSerializer
 )
+from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     PeriodActivityListSerializer,
@@ -38,17 +37,33 @@ from bluebottle.time_based.serializers import (
     PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
     DateParticipantListSerializer, PeriodParticipantListSerializer,
 )
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
     MoneySerializer
 )
 from bluebottle.utils.utils import get_current_language
 
-IMAGE_SIZES = {
-    'preview': '300x168',
-    'small': '320x180',
-    'large': '600x337',
-    'cover': '960x540'
-}
+ActivityLocation = namedtuple('Position', ['pk', 'created', 'position', 'activity'])
+
+
+class ActivityLocationRelationSerializer(Serializer):
+    class JSONAPIMeta:
+        resource_name = 'activity-location-relations'
+
+
+class ActivityLocationSerializer(Serializer):
+    position = PointSerializer()
+    activity = PolymorphicSerializerMethodResourceRelatedField(
+        ActivityLocationRelationSerializer,
+        read_only=True,
+        model=ActivityLocation,
+    )
+
+    def get_activity(self, obj):
+        return obj.activity
+
+    class JSONAPIMeta:
+        resource_name = 'activity-locations'
 
 
 class ActivityImageSerializer(ImageSerializer):
@@ -80,12 +95,14 @@ class ActivityPreviewSerializer(ModelSerializer):
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
+    current_status = CurrentStatusField()
 
     collect_type = serializers.SerializerMethodField()
 
     def get_start(self, obj):
-        if obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
+        if hasattr(obj, 'slots') and obj.slots:
+            upcoming = obj.status in ('open', 'full')
+            slots = self.get_filtered_slots(obj, only_upcoming=upcoming)
             if slots:
                 return slots[0].start
 
@@ -93,11 +110,39 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.start[0]
 
     def get_end(self, obj):
-        if obj.slots:
-            slots = self.get_filtered_slots(obj, only_upcoming=True)
-            if slots:
-                return slots[0].end
+        if hasattr(obj, 'slots') and obj.slots:
+            upcoming = obj.status in ('open', 'full')
 
+            tz = get_current_timezone()
+            try:
+                start, end = (
+                    dateutil.parser.parse(date).astimezone(tz)
+                    for date in self.context['request'].GET.get('filter[date]').split(',')
+                )
+            except (ValueError, AttributeError):
+                start = None
+                end = None
+
+            if upcoming or (start and start >= now()):
+                ends = [
+                    slot.end for slot in obj.slots
+                    if (
+                        slot.status not in ['draft', 'cancelled'] and
+                        (not start or dateutil.parser.parse(slot.start).date() >= start.date()) and
+                        (not end or dateutil.parser.parse(slot.end).date() <= end.date())
+                    )
+                ]
+            else:
+                ends = [
+                    slot.end for slot in obj.slots
+                    if (
+                        slot.status not in ['draft', 'cancelled'] and
+                        (not start or dateutil.parser.parse(slot.end).date() > start.date()) and
+                        (not end or dateutil.parser.parse(slot.end).date() <= end.date())
+                    )
+                ]
+            if ends:
+                return max(ends)
         elif obj.end and len(obj.end) == 1:
             return obj.end[0]
 
@@ -112,13 +157,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_contribution_duration(self, obj):
-        if len(obj.contribution_duration) == 0:
-            return {}
-        elif len(obj.contribution_duration) == 1:
-            return {
-                'period': obj.contribution_duration[0].period,
-                'value': obj.contribution_duration[0].value,
-            }
+        if hasattr(obj, 'contribution_duration'):
+            if len(obj.contribution_duration) == 0:
+                return {}
+            elif len(obj.contribution_duration) == 1:
+                return {
+                    'period': obj.contribution_duration[0].period,
+                    'value': obj.contribution_duration[0].value,
+                }
 
     def get_collect_type(self, obj):
         try:
@@ -145,7 +191,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_location(self, obj):
         location = False
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             slots = self.get_filtered_slots(obj)
 
             if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
@@ -156,7 +202,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                 location = places[0]
         elif len(obj.location):
             order = ['location', 'office', 'place', 'initiative_office', 'impact_location']
-            location = sorted(obj.location, key=lambda l: order.index(l.type))[0]
+            location = sorted(obj.location, key=lambda loc: order.index(loc.type))[0]
 
         if location:
             if location.locality:
@@ -178,7 +224,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         user = self.context['request'].user
         matching = {'skill': False, 'theme': False, 'location': False}
 
-        if not user.is_authenticated or obj.status != 'open':
+        if not user.is_authenticated or not obj.is_upcoming:
             return matching
 
         if 'skills' not in self.context:
@@ -220,38 +266,33 @@ class ActivityPreviewSerializer(ModelSerializer):
         tz = get_current_timezone()
 
         try:
-            start = dateutil.parser.parse(
-                self.context['request'].GET.get('filter[start]')
-            ).astimezone(tz)
-        except (ValueError, TypeError):
+            start, end = (
+                dateutil.parser.parse(date).astimezone(tz)
+                for date in self.context['request'].GET.get('filter[date]').split(',')
+            )
+        except (ValueError, AttributeError):
             start = None
-
-        try:
-            end = datetime.combine(
-                dateutil.parser.parse(
-                    self.context['request'].GET.get('filter[end]'),
-                ),
-                time.max
-            ).astimezone(tz)
-        except (ValueError, TypeError):
             end = None
 
-        return [
-            slot for slot in obj.slots
-            if (
-                slot.status not in ['draft', 'cancelled'] and
-                (not only_upcoming or slot.start >= now()) and
-                (not start or slot.start >= start) and
-                (not end or slot.end <= end)
-            )
-        ]
+        if hasattr(obj, 'slots') and obj.slots:
+            return [
+                slot for slot in obj.slots
+                if (
+                    slot.status not in ['draft', 'cancelled'] and
+                    (not only_upcoming or datetime.fromisoformat(slot.start).date() >= now().date()) and
+                    (not start or dateutil.parser.parse(slot.start).date() >= start.date()) and
+                    (not end or dateutil.parser.parse(slot.end).date() <= end.date())
+                )
+            ]
+        else:
+            return []
 
     def get_slot_count(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             return len(self.get_filtered_slots(obj, only_upcoming=True))
 
     def get_is_online(self, obj):
-        if obj.slots:
+        if hasattr(obj, 'slots') and obj.slots:
             return all(slot.is_online for slot in self.get_filtered_slots(obj))
         else:
             return obj.is_online
@@ -277,6 +318,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type', 'highlight', 'contribution_duration',
         )
+        meta_fields = ('current_status',)
 
     class JSONAPIMeta:
         resource_name = 'activities/preview'
@@ -360,6 +402,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'updated',
             'errors',
             'required',
+            'current_status',
+            'contributor_count',
+            'deleted_successful_contributors'
         )
 
     class JSONAPIMeta(object):

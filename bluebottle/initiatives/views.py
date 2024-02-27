@@ -5,12 +5,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.db import connection
-from rest_framework import generics
+from rest_framework import generics, response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Funding
@@ -22,20 +23,23 @@ from bluebottle.initiatives.permissions import (
 )
 from bluebottle.initiatives.serializers import (
     InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
-    InitiativeMapSerializer, InitiativeRedirectSerializer,
-    RelatedInitiativeImageSerializer, ThemeSerializer
+    InitiativeMapSerializer, InitiativePreviewSerializer, InitiativeRedirectSerializer,
+    RelatedInitiativeImageSerializer, ThemeSerializer,
+    RelatedInitiativeImageContentSerializer,
+    InitiativeImageSerializer
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination
+    RetrieveUpdateAPIView, JsonApiViewMixin,
+    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    JsonApiElasticSearchPagination,
 )
 
 
-class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     queryset = Initiative.objects.prefetch_related(
         'place', 'location', 'owner', 'activity_managers', 'image', 'categories', 'theme'
     )
@@ -48,10 +52,6 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    filter_backends = (
-        InitiativeSearchFilter,
     )
 
     filterset_fields = {
@@ -79,6 +79,31 @@ class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
         )
 
         serializer.save(owner=self.request.user)
+
+
+class InitiativePreviewList(JsonApiViewMixin, ListAPIView):
+    serializer_class = InitiativePreviewSerializer
+    model = Initiative
+    pagination_class = JsonApiElasticSearchPagination
+    renderer_classes = (ElasticSearchJSONAPIRenderer, )
+    filter_backends = (
+        InitiativeSearchFilter,
+    )
+
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    def list(self, request, *args, **kwargs):
+        result = self.filter_queryset(None)
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result, many=True)
+        return response.Response(serializer.data)
 
 
 class TinyProjectPagination(PageNumberPagination):
@@ -142,6 +167,7 @@ class InitiativeDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIVie
 class InitiativeImage(ImageContentView):
     queryset = Initiative.objects
     field = 'image'
+    allowed_sizes = InitiativeImageSerializer.sizes
 
 
 class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -162,6 +188,7 @@ class RelatedInitiativeImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIV
 class RelatedInitiativeImageContent(ImageContentView):
     queryset = RelatedImage.objects
     field = 'image'
+    allowed_sizes = RelatedInitiativeImageContentSerializer.sizes
 
 
 class InitiativeReviewTransitionList(TransitionList):
@@ -186,6 +213,7 @@ class ThemeDetail(TranslatedApiViewMixin, JsonApiViewMixin, RetrieveAPIView):
 
 
 from collections import namedtuple
+
 Instance = namedtuple('Instance', 'pk, route, params, target_params, target_route')
 
 

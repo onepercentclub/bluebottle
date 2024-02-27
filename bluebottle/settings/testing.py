@@ -2,6 +2,10 @@
 
 SECRET_KEY = '1, 2, this is just a test!'
 
+
+RECAPTCHA_PRIVATE_KEY = 'test-private-key'
+RECAPTCHA_PUBLIC_KEY = 'test-public-key'
+
 from .base import *
 
 import warnings
@@ -167,6 +171,7 @@ except ImportError:
     pass
 
 ELASTICSEARCH_DSL_AUTOSYNC = False
+ELASTICSEARCH_DSL_SIGNAL_PROCESSOR = 'django_elasticsearch_dsl.signals.RealTimeSignalProcessor'
 
 STRIPE = {
     'secret_key': 'test-key',

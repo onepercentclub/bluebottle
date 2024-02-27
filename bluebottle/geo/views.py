@@ -1,13 +1,18 @@
 from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework.generics import (
+    ListAPIView, RetrieveAPIView, CreateAPIView,
+    RetrieveUpdateAPIView
+)
 from rest_framework_json_api.views import AutoPrefetchMixin
 
-from bluebottle.geo.models import Location, Country, Geolocation
-from bluebottle.geo.serializers import GeolocationSerializer, OfficeSerializer, OfficeListSerializer
+from bluebottle.geo.models import Location, Country, Geolocation, Place
+from bluebottle.geo.serializers import (
+    GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
+    InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
+)
 from bluebottle.utils.views import TranslatedApiViewMixin, JsonApiViewMixin
-from .serializers import CountrySerializer
 
 
 class CountryList(TranslatedApiViewMixin, ListAPIView):
@@ -72,3 +77,33 @@ class GeolocationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     prefetch_for_includes = {
         'country': ['country'],
     }
+
+
+class PlaceList(JsonApiViewMixin, CreateAPIView):
+    queryset = Place.objects.all()
+
+    serializer_class = PlaceSerializer
+
+    def perform_create(self, serializer):
+        try:
+            if 'mapbox_id' in serializer.validated_data:
+                serializer.instance = Place.objects.get(
+                    mapbox_id=serializer.validated_data['mapbox_id'],
+                )
+        except Place.DoesNotExist:
+            pass
+
+        return super().perform_create(serializer)
+
+
+class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    queryset = Place.objects.all()
+
+    permission_classes = []
+    serializer_class = PlaceSerializer
+
+
+class NewCountryList(JsonApiViewMixin, ListAPIView):
+    queryset = Country.objects.all()
+    serializer_class = InitiativeCountrySerializer
+    pagination_class = None

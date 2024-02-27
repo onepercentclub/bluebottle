@@ -315,7 +315,7 @@ class TestPageAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(
             response,
-            "Mime type &#39;application/pdf&#39; doesn&#39;t match the filename extension &#39;.html&#39;."
+            "Mime type &#x27;application/pdf&#x27; doesn&#x27;t match the filename extension &#x27;.html&#x27;"
         )
         self.assertEqual(page.content.contentitems.count(), 0)
         self.assertEqual(DocumentItem.objects.count(), 0)

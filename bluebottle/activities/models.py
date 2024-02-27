@@ -104,6 +104,42 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
             "You can paste the link to YouTube or Vimeo video here"
         )
     )
+
+    next_step_link = models.URLField(
+        _('Redirect step link'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("This link is shown after a user joined as the next step for the activity")
+    )
+
+    next_step_title = models.CharField(
+        _('Redirect step title'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("The title in the popup after a user joined the activity")
+    )
+
+    next_step_button_label = models.CharField(
+        _('Redirect step button label'),
+        max_length=100,
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("The title on the next link button")
+    )
+
+    next_step_description = models.TextField(
+        _('Redirect step description'),
+        blank=True,
+        null=True,
+        default='',
+        help_text=_("A description to explain what the next step is")
+    )
+
     segments = models.ManyToManyField(
         'segments.segment',
         verbose_name=_('Segment'),
@@ -118,6 +154,12 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     auto_approve = True
+
+    activity_type = _('Activity')
+
+    @property
+    def succeeded_contributor_count(self):
+        raise NotImplementedError
 
     @property
     def activity_date(self):
@@ -168,13 +210,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        link = u"{}/{}/initiatives/activities/details/{}/{}/{}".format(
-            domain, language,
-            self.get_real_instance().__class__.__name__.lower(),
-            self.pk,
-            self.slug
-        )
-        return link
+        type = self.get_real_instance().__class__.__name__.lower()
+        if type == 'deed':
+            return f'{domain}/{language}/activities/details/deed/{self.id}/{self.slug}'
+        else:
+            return f"{domain}/{language}/initiatives/activities/details/{type}/{self.id}/{self.slug}"
 
     @property
     def organizer(self):
@@ -217,6 +257,11 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     @property
+    def status_label(self):
+        if self.states.current_state:
+            return self.states.current_state.name
+
+    @property
     def owner(self):
         return self.user
 
@@ -232,6 +277,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         ordering = ('-created',)
         verbose_name = _('Contribution')
         verbose_name_plural = _('Contributions')
+
+    @property
+    def type(self):
+        return self.polymorphic_ctype.model_class()._meta.verbose_name
 
     def __str__(self):
         if self.user:

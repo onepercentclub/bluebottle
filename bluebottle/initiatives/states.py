@@ -10,22 +10,22 @@ class ReviewStateMachine(ModelStateMachine):
     model = Initiative
 
     draft = State(
-        _('draft'),
+        _('Draft'),
         'draft',
         _('The initiative has been created and is being worked on.')
     )
     submitted = State(
-        _('submitted'),
+        _('Submitted'),
         'submitted',
         _('The initiative has been submitted and is ready to be reviewed.')
     )
     needs_work = State(
-        _('needs work'),
+        _('Needs work'),
         'needs_work',
         _('The initiative has been submitted but needs adjustments in order to be approved.')
     )
     rejected = State(
-        _('rejected'),
+        _('Rejected'),
         'rejected',
         _("The initiative doesn't fit the program or the rules of the game. "
           "The initiative won't show up on the search page in the front end, "
@@ -33,7 +33,7 @@ class ReviewStateMachine(ModelStateMachine):
           "The initiative cannot be edited by the initiator.")
     )
     cancelled = State(
-        _('cancelled'),
+        _('Cancelled'),
         'cancelled',
         _("The initiative is not executed. "
           "The initiative won't show up on the search page in the front end, "
@@ -41,19 +41,15 @@ class ReviewStateMachine(ModelStateMachine):
           "The initiative cannot be edited by the initiator.")
     )
     deleted = State(
-        _('deleted'),
+        _('Deleted'),
         'deleted',
         _('The initiative is not visible in the frontend and does not count in the reporting. '
           'The initiative cannot be edited by the initiator.')
     )
     approved = State(
-        _('approved'),
+        _('Approved'),
         'approved',
-        _('The initiative is visible in the frontend and completed activities are open for contributions. '
-          'All activities, except the crowdfunding campaigns, '
-          'that will be completed at a later stage, '
-          'will also be automatically opened up for contributions. '
-          'The crowdfunding campaigns must be approved separately.')
+        _('The initiative is visible in the frontend and completed activities are open for contributions.')
     )
 
     def is_complete(self):

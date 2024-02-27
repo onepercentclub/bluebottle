@@ -9,10 +9,10 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
-    ParticipantWithdrewNotification, NewParticipantNotification, ParticipantAddedOwnerNotification,
+    ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
     SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
-    TeamSlotChangedNotification, TeamParticipantJoinedNotification
+    TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
@@ -96,6 +96,16 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             user=self.supporter
         )
 
+    def test_participant_registered_notification(self):
+        self.obj = self.obj.slot_participants.first()
+        self.message_class = ParticipantSlotParticipantRegisteredNotification
+        self.create()
+        self.assertRecipients([self.supporter])
+        self.assertSubject('You\'ve registered for a time slot for the activity "Save the world!"')
+        self.assertBodyContains('You are registered for a time slot for the activity')
+        self.assertActionLink(self.obj.slot.get_absolute_url())
+        self.assertActionTitle('View activity')
+
     def test_new_participant_notification(self):
         self.message_class = NewParticipantNotification
         self.create()
@@ -149,7 +159,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_participant_added_owner_notification(self):
-        self.message_class = ParticipantAddedOwnerNotification
+        self.message_class = ManagerParticipantAddedOwnerNotification
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A participant has been added to your activity "Save the world!" 🎉')

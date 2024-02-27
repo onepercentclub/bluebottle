@@ -10,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext as _
+from django.utils.encoding import force_str
+
 from djmoney.forms import MoneyField as MoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
@@ -242,10 +244,17 @@ class PolymorphicManySerializerMethodResourceRelatedField(
         assert child_relation is not None, "`child_relation` is a required argument."
         self.child_relation = child_relation
         super().__init__(polymorphic_serializer, **kwargs)
-        self.child_relation.bind(field_name="", parent=self)
+        # self.child_relation.bind(field_name="", parent=self)
 
     def to_representation(self, value):
-        return [self.child_relation.to_representation(item) for item in value]
+        serializers = [
+            self.polymorphic_serializer(item).to_representation(item) for item in value
+        ]
+
+        return [
+            {'type': serializer['type'], 'id': force_str(serializer['id'])}
+            for serializer in serializers
+        ]
 
 
 class PolymorphicSerializerMethodResourceRelatedField(

@@ -1,3 +1,5 @@
+import re
+
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -27,7 +29,7 @@ from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
-from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission
+from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission, IsActivityManager
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
@@ -44,7 +46,7 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -59,7 +61,7 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPI
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -74,7 +76,7 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -89,7 +91,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -149,7 +151,7 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
 
-    authentication_classes = (TokenAuthentication, )
+    authentication_classes = (TokenAuthentication,)
 
     permission_classes = (IsFinancialMember,)
 
@@ -216,7 +218,7 @@ class PlainPayoutAccountDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpda
         'external_accounts': ['external_accounts'],
     }
 
-    permission_classes = (IsAuthenticated, IsOwner, )
+    permission_classes = (IsAuthenticated, IsOwner,)
 
     def post(self, request, *args, **kwargs):
         return self.create(request, *args, **kwargs)
@@ -279,7 +281,7 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
 
 
 class PaymentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
-    permission_classes = (PaymentPermission, )
+    permission_classes = (PaymentPermission,)
 
     prefetch_for_includes = {
         'donation': ['donation'],
@@ -303,7 +305,8 @@ class SupportersExportView(PrivateFileView):
 
     def get(self, request, *args, **kwargs):
         activity = self.get_object()
-        filename = 'participants for {}.xlsx'.format(activity.title)
+        filename = re.sub("[^\w\s\d]+", '-', activity.title)
+        filename = 'participants for {}.xlsx'.format(filename)
 
         sheet = []
         title_row = [field[1] for field in self.fields]
@@ -312,7 +315,7 @@ class SupportersExportView(PrivateFileView):
         sheet.append(title_row)
 
         for t, donor in enumerate(
-            activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
+                activity.contributors.filter(status='succeeded').instance_of(Donor).prefetch_related('user__segments')
         ):
             row = [prep_field(request, donor, field[0]) for field in self.fields]
             for segment_type in self.get_segment_types():

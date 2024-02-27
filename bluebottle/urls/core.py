@@ -23,10 +23,6 @@ urlpatterns = [
         include('bluebottle.geo.urls.api')),
     url(r'^api/news/',
         include('bluebottle.news.urls.api')),
-    url(r'^api/pages/',
-        include('bluebottle.pages.urls.api')),
-    url(r'^api/quotes/',
-        include('bluebottle.quotes.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
     url(r'^api/wallposts/',
@@ -39,6 +35,8 @@ urlpatterns = [
     url(r'^api/statistics/',
         include('bluebottle.statistics.urls.api')),
     url(r'^api/cms/',
+        include('bluebottle.cms.urls.api')),
+    url(r'^api/pages/',
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives',
         include('bluebottle.initiatives.urls.api')),
@@ -72,6 +70,9 @@ urlpatterns = [
     url(r'^api/segments/',
         include('bluebottle.segments.urls.api')),
 
+    url(r'^api/updates/',
+        include('bluebottle.updates.urls.api')),
+
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),
 
@@ -80,6 +81,9 @@ urlpatterns = [
 
     # JSON Web Token based authentication for Django REST framework
     url(r'^api/token-auth/', AxesObtainJSONWebToken.as_view(), name='token-auth'),
+
+    url(r'^api/auth/facebook$',
+        AuthFacebookView.as_view()),
 
     url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
@@ -96,6 +100,7 @@ urlpatterns = [
 
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
+
 ]
 
 
@@ -123,9 +128,6 @@ urlpatterns += [
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),
-    url(r'^api/auth/facebook$',
-        AuthFacebookView.as_view()),
-
 
     # Needed for the self-documenting API in Django Rest Framework.
     url(r'^api-auth/', include('rest_framework.urls',

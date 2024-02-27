@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import pytz
 from django.db import connection
 from django.utils import timezone
-from django.utils.html import strip_tags
+from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from timezonefinder import TimezoneFinder
@@ -18,7 +18,7 @@ from bluebottle.time_based.validators import (
     HasSlotValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, to_text
 from bluebottle.utils.widgets import get_human_readable_duration
 
 tf = TimezoneFinder()
@@ -38,21 +38,6 @@ class TimeBasedActivity(Activity):
         help_text=_('Number of participants or teams that can join'),
         null=True, blank=True)
 
-    old_is_online = models.NullBooleanField(
-        _('is online'),
-        db_column='is_online',
-        choices=ONLINE_CHOICES,
-        null=True, default=None)
-    old_location = models.ForeignKey(
-        Geolocation,
-        db_column='location_id',
-        verbose_name=_('location'),
-        null=True, blank=True, on_delete=models.SET_NULL)
-    old_location_hint = models.TextField(
-        _('location hint'),
-        db_column='location_hint',
-        null=True, blank=True)
-
     registration_deadline = models.DateField(
         _('registration deadline'),
         null=True,
@@ -67,15 +52,42 @@ class TimeBasedActivity(Activity):
         on_delete=models.SET_NULL
     )
 
-    review = models.NullBooleanField(
-        _('review participants'),
+    review_document_enabled = models.BooleanField(
+        _('Review document enabled'),
+        help_text=_('Can participants upload a document in the review step'),
+        null=True, default=False
+    )
+
+    review = models.BooleanField(
+        _('Review participants'),
         help_text=_('Activity manager accepts or rejects participants or teams'),
         null=True, default=None)
+
+    review_title = models.CharField(
+        _('Registration step title'),
+        help_text=_('Title of the registration step'),
+        max_length=255,
+        null=True, blank=True
+    )
+
+    review_description = models.TextField(
+        _('Registration description'),
+        help_text=_('Description of the registration step'),
+        null=True, blank=True
+    )
+
+    review_document_enabled = models.BooleanField(
+        _('Registration document enabled'),
+        help_text=_('Can participants upload a document in the registration step'),
+        null=True, default=False
+    )
 
     preparation = models.DurationField(
         _('Preparation time'),
         null=True, blank=True,
     )
+
+    activity_type = _('Time-based activity')
 
     @property
     def local_timezone(self):
@@ -99,6 +111,10 @@ class TimeBasedActivity(Activity):
     @property
     def participants(self):
         return self.contributors.instance_of(PeriodParticipant, DateParticipant)
+
+    @property
+    def pending_participants(self):
+        return self.participants.filter(status='new')
 
     @property
     def cancelled_participants(self):
@@ -139,7 +155,7 @@ class TimeBasedActivity(Activity):
     def details(self):
         details = unescape(
             u'{}\n{}'.format(
-                strip_tags(self.description), self.get_absolute_url()
+                to_text.handle(self.description), self.get_absolute_url()
             )
         )
         return details
@@ -160,7 +176,7 @@ class DateActivity(TimeBasedActivity):
         max_length=20,
         blank=True,
         null=True,
-        default=SlotSelectionChoices.all,
+        default=SlotSelectionChoices.free,
         choices=SlotSelectionChoices.choices,
     )
 
@@ -206,7 +222,7 @@ class DateActivity(TimeBasedActivity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/activities/details/time-based/date/{}/{}".format(
+        return u"{}/{}/activities/details/date/{}/{}".format(
             domain, language,
             self.pk,
             self.slug
@@ -238,7 +254,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     capacity = models.PositiveIntegerField(_('attendee limit'), null=True, blank=True)
 
-    is_online = models.NullBooleanField(
+    is_online = models.BooleanField(
         _('is online'),
         choices=DateActivity.ONLINE_CHOICES,
         null=True, default=None
@@ -261,6 +277,14 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivityslot', self.pk)
+
+    @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
+    def initiative(self):
+        return self.activity.initiative
 
     @property
     def local_timezone(self):
@@ -357,6 +381,12 @@ class DateActivitySlot(ActivitySlot):
         return '-'
 
     @property
+    def contributor_count(self):
+        return self.slot_participants.filter(
+            status__in=['registered', 'succeeded']
+        ).filter(participant__status__in=['accepted']).count()
+
+    @property
     def local_timezone(self):
         if self.location and self.location.position:
             tz_name = tf.timezone_at(
@@ -373,6 +403,41 @@ class DateActivitySlot(ActivitySlot):
 
     def __str__(self):
         return "{} {}".format(_("Slot"), self.sequence)
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/date/{}/{}?slotId={}".format(
+            domain, language,
+            self.activity.pk,
+            self.activity.slug,
+            self.pk
+
+        )
+
+    @property
+    def event_data(self):
+        if self.end < now() or self.status not in ['open', 'full']:
+            return None
+        title = f'{self.activity.title} - {self.title or self.id}'
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality or self.location.formatted_address or ''
+            if self.location_hint:
+                location += f" {self.location_hint}"
+
+        return {
+            'uid': f"{connection.tenant.client_name}-{self.id}",
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.activity.owner.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
 
     class Meta:
         verbose_name = _('slot')
@@ -408,7 +473,7 @@ class PeriodActivity(TimeBasedActivity):
         (False, 'No, enter a location')
     )
 
-    is_online = models.NullBooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
+    is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
         null=True, blank=True, on_delete=models.SET_NULL
@@ -566,6 +631,31 @@ class TeamSlot(ActivitySlot):
     def accepted_participants(self):
         return self.team.members.filter(status='accepted')
 
+    @property
+    def event_data(self):
+        if self.end < now() or self.status not in ['open', 'full']:
+            return None
+        title = self.activity.title
+        if self.team.name:
+            title += f" - {self.team.name}"
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality
+            if self.location_hint:
+                location += f" {self.location_hint}"
+        return {
+            'uid': self.uid,
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.activity.owner.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
+
 
 class Participant(Contributor):
 
@@ -582,6 +672,18 @@ class Participant(Contributor):
         return self.contributions.filter(
             timecontribution__contribution_type=ContributionTypeChoices.preparation
         )
+
+    @property
+    def current_contribution(self):
+        return self.contributions.get(status='new')
+
+    @property
+    def upcoming_contributions(self):
+        return self.contributions.filter(start__gt=timezone.now())
+
+    @property
+    def started_contributions(self):
+        return self.contributions.filter(start__lt=timezone.now())
 
     class Meta:
         abstract = True
@@ -631,30 +733,22 @@ class PeriodParticipant(Participant, Contributor):
             ('api_delete_own_periodparticipant', 'Can delete own period participant through the API'),
         )
 
-    @property
-    def current_contribution(self):
-        return self.contributions.get(status='new')
-
-    @property
-    def finished_contributions(self):
-        return self.contributions.filter(end__lt=timezone.now())
-
-    @property
-    def started_contributions(self):
-        return self.contributions.filter(start__lt=timezone.now())
-
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
+class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
 
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
     )
     participant = models.ForeignKey(
-        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE,
+        blank=True, null=True
     )
+
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
 
     status = models.CharField(max_length=40)
     auto_approve = True
@@ -669,6 +763,12 @@ class SlotParticipant(TriggerMixin, models.Model):
     @property
     def activity(self):
         return self.slot.activity
+
+    @property
+    def calculated_status(self):
+        if self.participant.status != 'accepted':
+            return str(self.participant.states.current_state.name)
+        return str(self.states.current_state.name)
 
     class Meta():
         verbose_name = _("Slot participant")
@@ -685,6 +785,7 @@ class SlotParticipant(TriggerMixin, models.Model):
             ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
         )
         unique_together = ['slot', 'participant']
+        ordering = ['slot__start']
 
     class JSONAPIMeta:
         resource_name = 'contributors/time-based/slot-participants'
@@ -750,6 +851,9 @@ class Skill(TranslatableModel):
         )
         verbose_name = _(u'Skill')
         verbose_name_plural = _(u'Skills')
+
+    class JSONAPIMeta(object):
+        resource_name = 'skills'
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa

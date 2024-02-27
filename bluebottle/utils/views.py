@@ -16,6 +16,7 @@ from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
 from rest_framework import views, response
 from rest_framework.pagination import PageNumberPagination
@@ -294,17 +295,19 @@ class ESPaginator(Paginator):
         """
         Returns the total number of objects, across all pages.
         """
-        return self.object_list[1].count()
+        return self.result.hits.total.value
 
     def page(self, number):
-        number = self.validate_number(number)
+        number = int(number)
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
 
-        if top + self.orphans >= self.count:
-            top = self.count
+        self.result = self.object_list[1][bottom:top].execute()
 
-        return self._get_page(self.object_list[1][bottom:top].execute(), number, self)
+        page = self._get_page(self.result, number, self)
+        page.facets = self.result.facets
+
+        return page
 
 
 class JsonApiPagination(JsonApiPageNumberPagination):
@@ -317,6 +320,37 @@ class JsonApiElasticSearchPagination(JsonApiPageNumberPagination):
     page_size = 8
     max_page_size = None
     django_paginator_class = ESPaginator
+
+    def paginate_queryset(self, queryset, request, view=None):
+        result = super().paginate_queryset(queryset, request, view)
+
+        return result
+
+    def get_paginated_response(self, data):
+        result = super().get_paginated_response(data)
+
+        facets = {}
+        for filter, facet in self.page.facets.to_dict().items():
+            facets[filter] = []
+
+            for key, count, active in facet:
+                if isinstance(key, (AttrList, list, tuple)):
+                    facets[filter].append({
+                        'name': key[0],
+                        'id': key[1],
+                        'count': count,
+                        'active': active
+                    })
+                else:
+                    facets[filter].append({
+                        'id': key,
+                        'count': count,
+                        'active': active
+                    })
+
+        result.data['meta']['facets'] = facets
+
+        return result
 
 
 class JsonApiViewMixin(AutoPrefetchMixin):
@@ -349,6 +383,7 @@ class IcalView(PrivateFileView):
         event = icalendar.Event()
         event.add('summary', instance.title)
         event.add('description', self.details)
+        event.add('uid', instance.uid)
         event.add('url', instance.get_absolute_url())
         event.add('dtstart', instance.start)
         event.add('dtend', instance.end)
@@ -358,7 +393,7 @@ class IcalView(PrivateFileView):
         organizer.params['cn'] = icalendar.vText(instance.owner.full_name)
 
         event['organizer'] = organizer
-        if instance.location:
+        if hasattr(instance, 'location') and instance.location:
             event['location'] = icalendar.vText(instance.location.formatted_address)
 
         calendar.add_component(event)
@@ -392,7 +427,7 @@ class ExportView(PrivateFileView):
     def write_data(self, workbook):
         title = re.sub("[\[\]\\:*?/]", '', str(self.get_object())[:30])
         worksheet = workbook.add_worksheet(title)
-
+        worksheet.set_column(0, 10, 30)
         worksheet.write_row(0, 0, [field[1] for field in self.get_fields()])
 
         for (index, row) in enumerate(self.get_data()):

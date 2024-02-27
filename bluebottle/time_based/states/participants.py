@@ -7,7 +7,7 @@ from bluebottle.fsm.state import (
     register, State, Transition, EmptyState
 )
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, )
+    DateParticipant, PeriodParticipant, PeriodicParticipant, )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
@@ -282,5 +282,20 @@ class DeadlineParticipantStateMachine(ParticipantStateMachine):
         passed_label=_('re-added'),
         description=_("Re-add this person as a participant to the activity"),
         automatic=False,
+        permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+
+@register(PeriodicParticipant)
+class PeriodicParticipantStateMachine(ParticipantStateMachine):
+    succeed = Transition(
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed,
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_("This participant has completed their contribution."),
+        automatic=True,
         permission=ParticipantStateMachine.can_accept_participant,
     )

@@ -4,10 +4,11 @@ from bluebottle.activities.permissions import (
     DeleteActivityPermission, ActivitySegmentPermission
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.models import DateActivity, DeadlineActivity
+from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodicActivity
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
-    DateTransitionSerializer, DeadlineTransitionSerializer
+    DateTransitionSerializer, DeadlineTransitionSerializer,
+    PeriodicActivitySerializer, PeriodicTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin
 from bluebottle.transitions.views import TransitionList
@@ -45,6 +46,11 @@ class DeadlineActivityListView(TimeBasedActivityListView):
     serializer_class = DeadlineActivitySerializer
 
 
+class PeriodicActivityListView(TimeBasedActivityListView):
+    queryset = PeriodicActivity.objects.all()
+    serializer_class = PeriodicActivitySerializer
+
+
 class DateActivityDetailView(TimeBasedActivityDetailView):
     queryset = DateActivity.objects.all()
     serializer_class = DateActivitySerializer
@@ -55,6 +61,11 @@ class DeadlineActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = DeadlineActivitySerializer
 
 
+class PeriodicActivityDetailView(TimeBasedActivityDetailView):
+    queryset = PeriodicActivity.objects.all()
+    serializer_class = PeriodicActivitySerializer
+
+
 class DateTransitionList(TransitionList):
     serializer_class = DateTransitionSerializer
     queryset = DateActivity.objects.all()
@@ -63,3 +74,8 @@ class DateTransitionList(TransitionList):
 class DeadlineTransitionList(TransitionList):
     serializer_class = DeadlineTransitionSerializer
     queryset = DeadlineActivity.objects.all()
+
+
+class PeriodicTransitionList(TransitionList):
+    serializer_class = PeriodicTransitionSerializer
+    queryset = PeriodicActivity.objects.all()

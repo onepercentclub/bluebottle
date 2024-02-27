@@ -20,7 +20,8 @@ from bluebottle.activities.tasks import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, PeriodParticipantFactory, SkillFactory, DateActivityFactory, DateParticipantFactory
+    DeadlineActivityFactory, DeadlineParticipantFactory, SkillFactory,
+    DateActivityFactory, DateParticipantFactory
 )
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 
@@ -61,14 +62,14 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
         self.matching = [
             # Online
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 is_online=True,
                 location=None,
             ),
 
             # Matching skill, matching place
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 expertise=self.user.skills.first(),
                 is_online=False,
@@ -76,7 +77,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             ),
 
             # Matching theme, online
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 location=None,
                 is_online=True,
@@ -86,7 +87,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             ),
 
             # Matching place, theme and no skill
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 expertise=None,
                 is_online=False,
@@ -97,7 +98,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             ),
 
             # Matching theme, skill, online
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 expertise=self.user.skills.first(),
                 location=None,
@@ -108,7 +109,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
             ),
 
             # Matching place, theme and skill
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status="open",
                 is_online=False,
                 expertise=self.user.skills.first(),
@@ -290,7 +291,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
 
     def test_exclude_contributed_to(self):
         activity = self.matching[-1]
-        PeriodParticipantFactory.create(activity=activity, user=self.user)
+        DeadlineParticipantFactory.create(activity=activity, user=self.user, status="succeeded")
 
         activities = get_matching_activities(self.user)
         self.assertFalse(activity in activities)
@@ -360,11 +361,11 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         months_ago_2 = now() - relativedelta(months=2)
 
         self.activity1 = DateActivityFactory.create()
-        self.activity2 = PeriodActivityFactory.create()
+        self.activity2 = DeadlineActivityFactory.create()
         self.activity3 = DeedFactory.create()
 
         self.create_contributors(DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8])
-        self.create_contributors(PeriodParticipantFactory, self.activity2, [months_ago_12, months_ago_2])
+        self.create_contributors(DeadlineParticipantFactory, self.activity2, [months_ago_12, months_ago_2])
         self.create_contributors(DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2])
 
         self.task = data_retention_contribution_task

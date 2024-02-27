@@ -1,14 +1,20 @@
 from rest_framework import filters
 
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import ContributorPermission
-
-from bluebottle.time_based.models import DeadlineParticipant
+from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant
 from bluebottle.time_based.serializers import (
-    DeadlineParticipantSerializer, DeadlineParticipantTransitionSerializer
+    DeadlineParticipantSerializer,
+    DeadlineParticipantTransitionSerializer,
+)
+from bluebottle.time_based.serializers.participants import (
+    PeriodicParticipantSerializer,
+    PeriodicParticipantTransitionSerializer,
 )
 from bluebottle.time_based.views.mixins import (
-    CreatePermissionMixin, AnonimizeMembersMixin, FilterRelatedUserMixin
+    AnonimizeMembersMixin,
+    CreatePermissionMixin,
+    FilterRelatedUserMixin,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
@@ -17,7 +23,10 @@ from bluebottle.utils.permissions import (
     ResourcePermission,
 )
 from bluebottle.utils.views import (
-    JsonApiViewMixin, ListAPIView, CreateAPIView, RetrieveUpdateAPIView
+    CreateAPIView,
+    JsonApiViewMixin,
+    ListAPIView,
+    RetrieveUpdateAPIView,
 )
 
 
@@ -27,17 +36,34 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
     )
 
 
+class DeadlineParticipantList(ParticipantList):
+    queryset = DeadlineParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer = DeadlineParticipantSerializer
+
+
+class PeriodicParticipantList(ParticipantList):
+    queryset = PeriodicParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer = PeriodicParticipantSerializer
+
+
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
 
 
-class DeadlineParticipantList(ParticipantList):
-    queryset = DeadlineParticipant.objects.prefetch_related(
-        'user', 'activity'
-    )
-    serializer = DeadlineParticipantSerializer
+class DeadlineParticipantDetail(ParticipantDetail):
+    queryset = DeadlineParticipant.objects.all()
+    serializer_class = DeadlineParticipantSerializer
+
+
+class PeriodicParticipantDetail(ParticipantDetail):
+    queryset = PeriodicParticipant.objects.all()
+    serializer_class = PeriodicParticipantSerializer
 
 
 class RelatedParticipantListView(
@@ -65,11 +91,18 @@ class DeadlineRelatedParticipantList(RelatedContributorListView):
     serializer_class = DeadlineParticipantSerializer
 
 
-class DeadlineParticipantDetail(ParticipantDetail):
-    queryset = DeadlineParticipant.objects.all()
-    serializer_class = DeadlineParticipantSerializer
+class PeriodicRelatedParticipantList(RelatedContributorListView):
+    queryset = PeriodicParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = PeriodicParticipantSerializer
 
 
 class DeadlineParticipantTransitionList(TransitionList):
     serializer_class = DeadlineParticipantTransitionSerializer
     queryset = DeadlineParticipant.objects.all()
+
+
+class PeriodicParticipantTransitionList(TransitionList):
+    serializer_class = PeriodicParticipantTransitionSerializer
+    queryset = PeriodicParticipant.objects.all()

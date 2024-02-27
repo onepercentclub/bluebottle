@@ -4,7 +4,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registration import CreateDeadlineParticipantEffect
-from bluebottle.time_based.models import DeadlineRegistration
+from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedReviewNotification, ManagerRegistrationCreatedNotification,
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification,
@@ -13,6 +13,8 @@ from bluebottle.time_based.notifications.registrations import (
 from bluebottle.time_based.states import (
     RegistrationStateMachine, ParticipantStateMachine, DeadlineParticipantStateMachine
 )
+from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
+from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
 
 
 class RegistrationTriggers(TriggerManager):
@@ -101,4 +103,35 @@ class RegistrationTriggers(TriggerManager):
 
 @register(DeadlineRegistration)
 class DeadlineRegistrationTriggers(RegistrationTriggers):
-    pass
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
+            effects=[
+                CreateDeadlineParticipantEffect,
+            ]
+        ),
+    ]
+
+
+@register(PeriodicRegistration)
+class PeriodicRegistrationTriggers(RegistrationTriggers):
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    PeriodicParticipantStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    PeriodicParticipantStateMachine.succeed,
+                ),
+            ]
+        ),
+    ]

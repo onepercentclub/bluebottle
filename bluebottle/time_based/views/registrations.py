@@ -3,9 +3,10 @@ from rest_framework import filters
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.time_based.models import DeadlineRegistration
+from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration
 from bluebottle.time_based.serializers import (
-    DeadlineRegistrationSerializer, DeadlineRegistrationTransitionSerializer
+    DeadlineRegistrationSerializer, DeadlineRegistrationTransitionSerializer,
+    PeriodicRegistrationSerializer, PeriodicRegistrationTransitionSerializer
 )
 from bluebottle.utils.permissions import (
     OneOf,
@@ -37,8 +38,15 @@ class DeadlineRegistrationList(RegistrationList):
     serializer_class = DeadlineRegistrationSerializer
 
 
+class PeriodicRegistrationList(RegistrationList):
+    queryset = PeriodicRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = PeriodicRegistrationSerializer
+
+
 class RelatedRegistrationListView(
-    JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
+    RelatedContributorListView, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
 ):
     @property
     def owners(self):
@@ -56,26 +64,28 @@ class RelatedRegistrationListView(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
-
-
-class DeadlineRelatedRegistrationList(RelatedContributorListView):
-    queryset = DeadlineRegistration.objects.prefetch_related(
-        'user', 'activity'
-    )
-
-    def get_queryset(self, *args, **kwargs):
-        queryset = super().get_queryset(*args, **kwargs)
         my = self.request.query_params.get('filter[my]')
 
         if my:
             queryset = queryset.filter(user=self.request.user)
 
-        return queryset
+        return queryset.filter(
+            activity_id=self.kwargs['activity_id']
+        )
 
+
+class DeadlineRelatedRegistrationList(RelatedRegistrationListView):
+    queryset = DeadlineRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
     serializer_class = DeadlineRegistrationSerializer
+
+
+class PeriodicRelatedRegistrationList(RelatedRegistrationListView):
+    queryset = PeriodicRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = PeriodicRegistrationSerializer
 
 
 class RegistrationDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
@@ -89,9 +99,19 @@ class DeadlineRegistrationDetail(RegistrationDetail):
     serializer_class = DeadlineRegistrationSerializer
 
 
+class PeriodicRegistrationDetail(RegistrationDetail):
+    queryset = PeriodicRegistration.objects.all()
+    serializer_class = PeriodicRegistrationSerializer
+
+
 class DeadlineRegistrationTransitionList(TransitionList):
     serializer_class = DeadlineRegistrationTransitionSerializer
     queryset = DeadlineRegistration.objects.all()
+
+
+class PeriodicRegistrationTransitionList(TransitionList):
+    serializer_class = PeriodicRegistrationTransitionSerializer
+    queryset = PeriodicRegistration.objects.all()
 
 
 class RegistrationDocumentDetail(PrivateFileView):
@@ -102,3 +122,7 @@ class RegistrationDocumentDetail(PrivateFileView):
 
 class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
     queryset = DeadlineRegistration.objects
+
+
+class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = PeriodicRegistration.objects

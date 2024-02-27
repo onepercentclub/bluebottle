@@ -1,9 +1,12 @@
 from bluebottle.segments.models import SegmentType
-
+from bluebottle.time_based.models import (
+    DeadlineActivity,
+    DeadlineParticipant,
+    PeriodicActivity,
+    PeriodicParticipant,
+)
 from bluebottle.utils.admin import prep_field
-
 from bluebottle.utils.views import ExportView
-from bluebottle.time_based.models import DeadlineParticipant, DeadlineActivity
 
 
 class TimebasedExportView(ExportView):
@@ -50,3 +53,8 @@ class TimebasedExportView(ExportView):
 class DeadlineParticipantExportView(TimebasedExportView):
     model = DeadlineActivity
     participant_model = DeadlineParticipant
+
+
+class PeriodicParticipantExportView(TimebasedExportView):
+    model = PeriodicActivity
+    participant_model = PeriodicParticipant

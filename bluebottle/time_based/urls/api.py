@@ -124,4 +124,5 @@ urlpatterns = [
     ),
 
     url(r'^/deadline', include('bluebottle.time_based.urls.deadline_api')),
+    url(r'^/periodic', include('bluebottle.time_based.urls.periodic_api')),
 ]

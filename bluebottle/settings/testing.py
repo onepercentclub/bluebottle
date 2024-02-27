@@ -336,13 +336,23 @@ CONFLUENCE = {
             'page_id': ''
         },
         {
-            'title': '[DEV] States - Time based - Activity over a period',
-            'model': 'bluebottle.time_based.models.PeriodActivity',
+            'title': '[DEV] States - Time based - Deadline Activity',
+            'model': 'bluebottle.time_based.models.DeadlineActivity',
             'page_id': ''
         },
         {
-            'title': '[DEV] States - Time based - Participant over a period',
-            'model': 'bluebottle.time_based.models.PeriodParticipant',
+            'title': '[DEV] States - Time based - Periodic Activity',
+            'model': 'bluebottle.time_based.models.PeriodicActivity',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Deadline Participant',
+            'model': 'bluebottle.time_based.models.DeadlineParticipant',
+            'page_id': ''
+        },
+        {
+            'title': '[DEV] States - Time based - Periodic Participant',
+            'model': 'bluebottle.time_based.models.PeriodicParticipant',
             'page_id': ''
         },
         {

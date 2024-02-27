@@ -3,12 +3,11 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, widgets
 from django.db import models
-from django.db.models import Sum
-from django.forms import Textarea, BaseInlineFormSet, ModelForm, BooleanField, TextInput
+from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
-from django.template import loader, defaultfilters
+from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import reverse, resolve
+from django.urls import resolve, reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -16,26 +15,39 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from polymorphic.admin import PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin
 from pytz import timezone
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm, TeamInline
+    ActivityChildAdmin,
+    ActivityForm,
+    ContributionChildAdmin,
+    ContributorChildAdmin,
 )
-from bluebottle.activities.models import Team
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.fsm.admin import StateMachineFilter, StateMachineAdmin
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, Participant, TimeContribution, DateActivitySlot,
-    SlotParticipant, Skill, PeriodActivitySlot, TeamSlot, DeadlineActivity, DeadlineParticipant, DeadlineRegistration,
-    Registration
+    DateActivity,
+    DateActivitySlot,
+    DateParticipant,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DeadlineRegistration,
+    Participant,
+    PeriodicActivity,
+    PeriodicParticipant,
+    PeriodicRegistration,
+    Skill,
+    SlotParticipant,
+    TimeContribution,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
-from bluebottle.time_based.utils import nth_weekday, duplicate_slot, bulk_add_participants
-from bluebottle.utils.admin import export_as_csv_action, TranslatableAdminOrderingMixin
+from bluebottle.time_based.utils import bulk_add_participants
+from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -103,59 +115,6 @@ class DateParticipantAdminInline(BaseParticipantAdminInline):
     fields = ('edit', 'user', 'status')
 
 
-class PeriodParticipantForm(ModelForm):
-
-    activity = None
-
-    class Meta:
-        model = PeriodParticipant
-        exclude = []
-
-    def __init__(self, *args, **kwargs):
-        super(PeriodParticipantForm, self).__init__(*args, **kwargs)
-        if self.activity and 'team' in self.fields:
-            self.fields['team'].queryset = Team.objects.filter(activity=self.activity)
-
-    def full_clean(self):
-        data = super(PeriodParticipantForm, self).full_clean()
-        if not self.instance.activity_id and self.instance.team_id:
-            self.instance.activity = self.instance.team.activity
-        return data
-
-
-class PeriodParticipantAdminInline(BaseParticipantAdminInline):
-    model = PeriodParticipant
-    verbose_name = _("Participant")
-    verbose_name_plural = _("Participants")
-    raw_id_fields = BaseParticipantAdminInline.raw_id_fields
-    fields = ('edit', 'user', 'status')
-    form = PeriodParticipantForm
-
-    def get_parent_object_from_request(self, request):
-        """
-        Returns the parent object from the request or None.
-        """
-        resolved = resolve(request.path_info)
-        if resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
-        return None
-
-    def get_formset(self, request, obj=None, **kwargs):
-        # Set activity on form so we can filter teams for new participants too
-        formset = super(PeriodParticipantAdminInline, self).get_formset(request, obj, **kwargs)
-        parent = self.get_parent_object_from_request(request)
-        if isinstance(parent, PeriodActivity):
-            formset.form.activity = parent
-        return formset
-
-    def get_fields(self, request, obj=None):
-        fields = super(PeriodParticipantAdminInline, self).get_fields(request, obj)
-        if isinstance(obj, PeriodActivity):
-            if obj and obj.team_activity == 'teams':
-                fields += ('team',)
-        return fields
-
-
 class TimeBasedAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
 
@@ -208,8 +167,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
 class TimeBasedActivityAdminForm(ActivityForm):
     class Meta(object):
-        model = PeriodActivity
         fields = '__all__'
+        model = PeriodicActivity
         widgets = {
             'description': SummernoteWidget(attrs={'height': 400})
         }
@@ -254,61 +213,11 @@ class DateActivitySlotInline(TabularInlinePaginated):
     timezone.short_description = _('Timezone')
 
 
-class TeamSlotForm(ModelForm):
-
-    class Meta:
-        model = TeamSlot
-        exclude = []
-
-    def full_clean(self):
-        data = super(TeamSlotForm, self).full_clean()
-        if not self.instance.activity_id and self.instance.team_id:
-            self.instance.activity = self.instance.team.activity
-        return data
-
-
-class TeamSlotInline(admin.StackedInline):
-    model = TeamSlot
-
-    form = TeamSlotForm
-    verbose_name = _('Time slot')
-    verbose_name_plural = _('Time slot')
-    raw_id_fields = ('location', )
-
-    formfield_overrides = {
-        models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
-        },
-    }
-
-    ordering = ['-start']
-    readonly_fields = ['link', 'timezone', 'status']
-    fields = [
-        'start',
-        'duration',
-        'timezone',
-        'location',
-        'is_online',
-        'status',
-    ]
-
-    def timezone(self, obj):
-        if not obj.is_online and obj.location:
-            return obj.location.timezone
-        else:
-            return str(obj.start.astimezone(get_current_timezone()).tzinfo)
-    timezone.short_description = _('Timezone')
-
-
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
     form = TimeBasedActivityAdminForm
-    inlines = (TeamInline, DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
+    inlines = (DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
 
@@ -353,87 +262,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-@admin.register(PeriodActivity)
-class PeriodActivityAdmin(TimeBasedAdmin):
-    base_model = PeriodActivity
-
-    inlines = (TeamInline, PeriodParticipantAdminInline,) + TimeBasedAdmin.inlines
-    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
-    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
-    form = TimeBasedActivityAdminForm
-    list_filter = TimeBasedAdmin.list_filter + [
-        ('expertise', SortedRelatedFieldListFilter)
-    ]
-
-    list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
-    ]
-
-    def get_detail_fields(self, request, obj):
-        fields = super().get_detail_fields(request, obj) + (
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-
-            'expertise',
-            'capacity',
-            'review',
-
-            'registration_flow',
-
-        )
-        initiative_settings = InitiativePlatformSettings.load()
-        if initiative_settings.team_activities:
-            fields += ('team_activity',)
-        return fields
-
-    date_fields = [
-        'duration_period',
-        'max_iterations',
-        'duration',
-
-        'start',
-        'deadline',
-        'registration_deadline',
-        'preparation',
-
-    ]
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (_('Date & Time'), {
-            'fields': self.date_fields,
-            'description': _('The type of time slot determines how the activity is scheduled.')
-        }))
-        return fieldsets
-
-    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
-        ('deadline', 'Deadline'),
-        ('duration', 'TimeContribution'),
-        ('duration_period', 'TimeContribution period'),
-    )
-    actions = [export_as_csv_action(fields=export_as_csv_fields)]
-
-    def end_date(self, obj):
-        if not obj.deadline:
-            return _('indefinitely')
-        return obj.deadline
-
-    def duration_string(self, obj):
-        duration = get_human_readable_duration(str(obj.duration)).lower()
-        if obj.duration_period and obj.duration_period != 'overall':
-            return _('{duration} per {time_unit}').format(
-                duration=duration,
-                time_unit=obj.duration_period[0:-1])
-        return duration
-    duration_string.short_description = _('Duration')
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
-    participant_count.short_description = _('Participants')
-
-
 class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     model = DeadlineParticipant
     verbose_name = _("Participant")
@@ -445,6 +273,10 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     def status_label(self, obj):
         return obj.states.current_state.name
     status_label.short_description = _('Status')
+
+
+class PeriodicParticipantAdminInline(DeadlineParticipantAdminInline):
+    model = PeriodicParticipant
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
@@ -470,6 +302,10 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
     model = DeadlineRegistration
+
+
+class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
+    model = PeriodicRegistration
 
 
 @admin.register(DeadlineActivity)
@@ -517,7 +353,68 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
         ('duration', 'TimeContribution'),
-        ('duration_period', 'TimeContribution period'),
+    )
+    actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+    def end_date(self, obj):
+        if not obj.deadline:
+            return _('indefinitely')
+        return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        return duration
+    duration_string.short_description = _('Duration')
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+    participant_count.short_description = _('Participants')
+
+
+@admin.register(PeriodicActivity)
+class PeriodicActivityAdmin(TimeBasedAdmin):
+    base_model = PeriodicActivity
+
+    inlines = (PeriodicParticipantAdminInline,) + TimeBasedAdmin.inlines
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
+    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
+    form = TimeBasedActivityAdminForm
+    list_filter = TimeBasedAdmin.list_filter + [
+        ('expertise', SortedRelatedFieldListFilter)
+    ]
+
+    list_display = TimeBasedAdmin.list_display + [
+        'start', 'end_date', 'duration_string', 'participant_count'
+    ]
+
+    def get_detail_fields(self, request, obj):
+        fields = super().get_detail_fields(request, obj) + (
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
+
+            'expertise',
+            'capacity',
+            'review',
+
+            'registration_flow',
+
+            'period',
+            'duration',
+
+            'start',
+            'deadline',
+            'registration_deadline',
+            'preparation',
+
+        )
+        return fields
+
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
+        ('deadline', 'Deadline'),
+        ('duration', 'duration'),
+        ('period', 'period'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
@@ -914,52 +811,6 @@ class DateSlotAdmin(SlotAdmin):
         )
 
 
-@admin.register(PeriodActivitySlot)
-class PeriodSlotAdmin(SlotAdmin):
-    model = PeriodActivitySlot
-
-    date_hierarchy = 'start'
-    list_display = [
-        '__str__', 'start', 'activity_link',
-    ]
-    list_filter = [
-        'status',
-        SlotTimeFilter,
-        RequiredSlotFilter,
-    ]
-
-    def participants(self, obj):
-        return obj.accepted_participants.count()
-    participants.short_description = _('Accepted participants')
-
-
-@admin.register(TeamSlot)
-class TeamSlotAdmin(SlotAdmin):
-    model = TeamSlot
-    raw_id_fields = SlotAdmin.raw_id_fields + ['team']
-    date_hierarchy = 'start'
-    list_display = [
-        '__str__', 'start', 'activity_link',
-    ]
-    list_filter = [
-        'status',
-        SlotTimeFilter,
-        RequiredSlotFilter,
-    ]
-    detail_fields = SlotAdmin.detail_fields + [
-        'start',
-        'duration',
-        'location',
-        'is_online',
-        'status',
-        'team',
-    ]
-
-    def participants(self, obj):
-        return obj.accepted_participants.count()
-    participants.short_description = _('Accepted participants')
-
-
 class TimeContributionInlineAdmin(admin.TabularInline):
     model = TimeContribution
     extra = 0
@@ -986,21 +837,6 @@ class TimeContributionInlineAdmin(admin.TabularInline):
                 args=(obj.id,)),
             _('Edit duration')
         )
-
-
-@admin.register(PeriodParticipant)
-class PeriodParticipantAdmin(ContributorChildAdmin):
-    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['total']
-    fields = ContributorChildAdmin.fields + ['total', 'motivation', 'current_period', 'document']
-    list_display = ['__str__', 'activity_link', 'status']
-
-    def total(self, obj):
-        if not obj:
-            return '-'
-        return obj.contributions.aggregate(total=Sum('timecontribution__value'))['total']
-
-    total.short_description = _('Total contributed')
 
 
 @admin.register(TimeContribution)
@@ -1182,7 +1018,6 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
-@admin.register(Registration)
 class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     readonly_fields = ['created', ]
     raw_id_fields = ['user', 'activity']
@@ -1193,6 +1028,11 @@ class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 @admin.register(DeadlineRegistration)
 class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
     inlines = [DeadlineParticipantAdminInline]
+
+
+@admin.register(PeriodicRegistration)
+class PeriodicRegistrationAdmin(BaseRegistrationAdmin):
+    inlines = [PeriodicParticipantAdminInline]
 
 
 @admin.register(SlotParticipant)

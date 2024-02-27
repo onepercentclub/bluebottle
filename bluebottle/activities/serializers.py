@@ -30,10 +30,12 @@ from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
+    PeriodicActivitySerializer,
     DateActivitySerializer,
     DateParticipantSerializer,
     DateParticipantListSerializer,
-    DeadlineParticipantSerializer
+    DeadlineParticipantSerializer,
+    PeriodicParticipantSerializer
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
@@ -329,7 +331,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeedListSerializer,
         CollectActivityListSerializer,
         DateActivityListSerializer,
-        DeadlineActivitySerializer
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     included_serializers = {
@@ -374,6 +377,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         CollectActivitySerializer,
         DateActivitySerializer,
         DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     included_serializers = {
@@ -428,6 +432,7 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         TinyFundingSerializer,
         DateActivityListSerializer,
         DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     class Meta(object):
@@ -442,7 +447,8 @@ class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantSerializer,
-        DeadlineParticipantSerializer
+        DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
     ]
 
     included_serializers = {
@@ -468,6 +474,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
         DonorListSerializer,
         DateParticipantListSerializer,
         DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
         DeedParticipantListSerializer,
         CollectContributorListSerializer
     ]

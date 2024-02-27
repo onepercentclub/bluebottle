@@ -1,25 +1,21 @@
-from datetime import timedelta
-
-from django.utils.timezone import now
 
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
-from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
-    ParticipantRemovedNotification, TeamParticipantRemovedNotification, ParticipantFinishedNotification,
+    ParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
-    SlotCancelledNotification, ParticipantAddedNotification, TeamParticipantAddedNotification,
-    TeamSlotChangedNotification, TeamParticipantJoinedNotification, ParticipantSlotParticipantRegisteredNotification,
+    SlotCancelledNotification, ParticipantAddedNotification,
+    ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification, ParticipantCreatedNotification
 )
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory, TeamSlotFactory,
+    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory,
     SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
 )
 
@@ -146,22 +142,6 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionLink('https://testserver/initiatives/activities/list')
         self.assertActionTitle('View all activities')
 
-    def test_team_participant_removed_notification(self):
-        self.message_class = TeamParticipantRemovedNotification
-        self.activity.team_activity = 'teams'
-
-        self.obj = DateParticipantFactory.create(activity=self.activity, user=self.supporter)
-
-        self.create()
-
-        self.assertRecipients([self.supporter])
-        self.assertSubject('Your team participation in ‘Save the world!’ has been cancelled')
-        self.assertTextBodyContains(
-            f"Your participation has been cancelled for {self.obj.team.name} in the activity 'Save the world!'."
-        )
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-
     def test_participant_finished_notification(self):
         self.message_class = ParticipantFinishedNotification
         self.create()
@@ -194,24 +174,10 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.obj = DateParticipantFactory.create(
             activity=self.activity,
             user=self.supporter,
-            team=TeamFactory.create()
         )
         self.create()
         self.assertRecipients([self.supporter])
         self.assertSubject('You have been added to the activity "Save the world!" 🎉')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-
-    def test_team_participant_added_notification(self):
-        self.message_class = TeamParticipantAddedNotification
-        self.obj = DateParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter,
-            team=TeamFactory.create()
-        )
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have been added to a team for "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
 
@@ -265,24 +231,6 @@ class PeriodParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View activity')
         self.assertBodyNotContains(
             'Go to the activity page to see the times in your own timezone and add them to your calendar.'
-        )
-
-    def test_team_joined_notification(self):
-        self.activity.team_activity = 'teams'
-        self.activity.save()
-        self.obj.team = TeamFactory.create()
-        self.obj.save()
-        self.message_class = TeamParticipantJoinedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have registered your team for "Save the world!"')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-        self.assertBodyNotContains(
-            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
-        )
-        self.assertBodyContains(
-            'The activity manager will be in touch to confirm details'
         )
 
     def test_new_participant_notification(self):
@@ -346,39 +294,6 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertSubject('A slot for your activity "Save the world!" has been cancelled')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
-
-
-class TeamSlotNotificationTestCase(NotificationTestCase):
-
-    def setUp(self):
-        self.supporter = BlueBottleUserFactory.create(
-            first_name='Frans',
-            last_name='Beckenbauer'
-        )
-        self.activity = PeriodActivityFactory.create(
-            title="Save the world!",
-            team_activity='teams'
-        )
-
-        self.participant = PeriodParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter
-        )
-
-        self.obj = TeamSlotFactory.create(
-            activity=self.activity,
-            team=self.participant.team,
-            start=(now() + timedelta(days=3)).replace(hour=20, minute=0, second=0, microsecond=0),
-            duration=timedelta(hours=1)
-        )
-
-    def test_slot_created(self):
-        self.message_class = TeamSlotChangedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('The details of the team activity "Save the world!" have changed')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
 
 
 class DeadlineRegistrationNotificationTestCase(NotificationTestCase):

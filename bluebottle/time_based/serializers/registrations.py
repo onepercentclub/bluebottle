@@ -8,7 +8,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
-from bluebottle.time_based.models import DeadlineRegistration, Registration
+from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, Registration
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
@@ -94,6 +94,26 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
     )
 
 
+class PeriodicRegistrationSerializer(RegistrationSerializer):
+    permissions = ResourcePermissionField('periodic-registration-detail', view_args=('pk',))
+    participants = ResourceRelatedField(many=True, read_only=True, source='periodicparticipant_set')
+
+    class Meta(RegistrationSerializer.Meta):
+        model = PeriodicRegistration
+
+    class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/periodic-registrations'
+
+    included_serializers = dict(
+        RegistrationSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.PeriodicRegistrationDocumentSerializer',
+            'participants': 'bluebottle.time_based.serializers.PeriodicParticipantSerializer'
+        }
+    )
+
+
 class RegistrationTransitionSerializer(TransitionSerializer):
     field = 'states'
 
@@ -114,6 +134,22 @@ class DeadlineRegistrationTransitionSerializer(RegistrationTransitionSerializer)
         resource_name = 'contributors/time-based/deadline-registration-transitions'
 
 
+class PeriodicRegistrationTransitionSerializer(RegistrationTransitionSerializer):
+    resource = ResourceRelatedField(queryset=PeriodicRegistration.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.PeriodicRegistrationSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
+    }
+
+    class JSONAPIMeta(RegistrationTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/periodic-registration-transitions'
+
+
 class DeadlineRegistrationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'deadline-registration-document'
+    relationship = 'registration_set'
+
+
+class PeriodicRegistrationDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'periodic-registration-document'
     relationship = 'registration_set'

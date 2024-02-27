@@ -167,6 +167,9 @@ class DeadlineParticipantTransitionListAPITestCase(TimeBasedParticipantTransitio
         'deadline': date.today() + timedelta(days=20),
     }
 
+    transition = 'remove'
+    target_status = 'removed'
+
 
 class DeadlineActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):
     factory = DeadlineActivityFactory

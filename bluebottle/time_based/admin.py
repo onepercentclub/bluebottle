@@ -15,7 +15,8 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin, PolymorphicParentModelAdmin, \
+    PolymorphicChildModelFilter
 from pytz import timezone
 
 from bluebottle.activities.admin import (
@@ -42,7 +43,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     Skill,
     SlotParticipant,
-    TimeContribution,
+    TimeContribution, Registration,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -375,7 +376,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 class PeriodicActivityAdmin(TimeBasedAdmin):
     base_model = PeriodicActivity
 
-    inlines = (PeriodicParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (PeriodicRegistrationAdminInline, ) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
     form = TimeBasedActivityAdminForm
@@ -1018,7 +1019,25 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
-class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+@admin.register(Registration)
+class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+    base_model = Registration
+    child_models = (
+        PeriodicRegistration,
+        DeadlineRegistration
+    )
+    list_display = ['created', 'user', 'type', 'activity', 'state_name']
+    list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
+    date_hierarchy = 'created'
+
+    ordering = ('-created',)
+
+    def type(self, obj):
+        return obj.get_real_instance_class()._meta.verbose_name
+
+
+class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+    base_model = Registration
     readonly_fields = ['created', ]
     raw_id_fields = ['user', 'activity']
     fields = ['user', 'activity', 'answer', 'document', 'status', 'states']
@@ -1026,12 +1045,12 @@ class BaseRegistrationAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
 
 @admin.register(DeadlineRegistration)
-class DeadlineRegistrationAdmin(BaseRegistrationAdmin):
+class DeadlineRegistrationAdmin(RegistrationChildAdmin):
     inlines = [DeadlineParticipantAdminInline]
 
 
 @admin.register(PeriodicRegistration)
-class PeriodicRegistrationAdmin(BaseRegistrationAdmin):
+class PeriodicRegistrationAdmin(RegistrationChildAdmin):
     inlines = [PeriodicParticipantAdminInline]
 
 

@@ -297,5 +297,29 @@ class PeriodicParticipantStateMachine(ParticipantStateMachine):
         name=_('Succeed'),
         description=_("This participant has completed their contribution."),
         automatic=True,
+    )
+
+    remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.succeeded
+        ],
+        ParticipantStateMachine.removed,
+        name=_('Remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person as a participant from the activity."),
+        automatic=False,
+        permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    readd = Transition(
+        [
+            ParticipantStateMachine.removed,
+        ],
+        ParticipantStateMachine.new,
+        name=_('Re-add'),
+        passed_label=_('re-added'),
+        description=_("Re-add this person as a participant to the activity"),
+        automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )

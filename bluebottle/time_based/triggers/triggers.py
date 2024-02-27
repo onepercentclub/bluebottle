@@ -18,8 +18,6 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
-    CreateOverallTimeContributionEffect,
-    CreatePeriodTimeContributionEffect,
     CreatePreparationTimeContributionEffect,
     CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect,
@@ -34,14 +32,11 @@ from bluebottle.time_based.messages import (
     ManagerParticipantAddedOwnerNotification,
     ManagerSlotParticipantRegisteredNotification,
     ManagerSlotParticipantWithdrewNotification,
-    NewParticipantNotification,
     ParticipantAcceptedNotification,
     ParticipantAddedNotification,
     ParticipantAppliedNotification,
     ParticipantChangedNotification,
     ParticipantCreatedNotification,
-    ParticipantFinishedNotification,
-    ParticipantJoinedNotification,
     ParticipantRejectedNotification,
     ParticipantRemovedNotification,
     ParticipantRemovedOwnerNotification,
@@ -53,16 +48,12 @@ from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
     DateParticipant,
-    PeriodActivity,
-    PeriodActivitySlot,
-    PeriodParticipant,
     SlotParticipant,
 )
 from bluebottle.time_based.states import (
     ActivitySlotStateMachine,
     DateStateMachine,
     ParticipantStateMachine,
-    PeriodParticipantStateMachine,
     SlotParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
@@ -602,11 +593,6 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
     ]
 
 
-@register(PeriodActivitySlot)
-class PeriodActivitySlotTriggers(ActivitySlotTriggers):
-    triggers = ActivitySlotTriggers.triggers + []
-
-
 def is_not_user(effect):
     """
     User is not the participant
@@ -669,21 +655,13 @@ def activity_is_finished(effect):
     """
     activity = effect.instance.activity
 
-    if isinstance(activity, DateActivity):
-        last_slot = activity.slots.order_by('start').last()
-        return (
-            last_slot and
-            last_slot.start and
-            last_slot.duration and
-            last_slot.start + last_slot.duration < now()
-        )
-    elif isinstance(activity, PeriodActivity):
-        return (
-            activity.deadline and
-            activity.deadline < date.today()
-        )
-    else:
-        return False
+    last_slot = activity.slots.order_by('start').last()
+    return (
+        last_slot and
+        last_slot.start and
+        last_slot.duration and
+        last_slot.start + last_slot.duration < now()
+    )
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -902,6 +880,10 @@ class DateParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.accept,
             effects=[
                 LockFilledSlotsEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
             ]
         ),
         TransitionTrigger(
@@ -1048,42 +1030,4 @@ class SlotParticipantTriggers(TriggerManager):
 
             ]
         ),
-    ]
-
-
-@register(PeriodParticipant)
-class PeriodParticipantTriggers(ParticipantTriggers):
-    triggers = ParticipantTriggers.triggers + [
-        TransitionTrigger(
-            ParticipantStateMachine.initiate,
-            effects=[
-                CreatePeriodTimeContributionEffect,
-                CreateOverallTimeContributionEffect
-            ]
-        ),
-        TransitionTrigger(
-            ParticipantStateMachine.accept,
-            effects=[
-                NotificationEffect(
-                    NewParticipantNotification,
-                    conditions=[
-                        automatically_accept
-                    ]
-                ),
-                NotificationEffect(
-                    ParticipantJoinedNotification,
-                    conditions=[
-                        automatically_accept,
-                    ]
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            PeriodParticipantStateMachine.stop,
-            effects=[
-                NotificationEffect(ParticipantFinishedNotification),
-            ]
-        ),
-
     ]

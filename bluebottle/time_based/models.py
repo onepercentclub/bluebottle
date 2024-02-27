@@ -691,7 +691,7 @@ ONLINE_CHOICES = (
 )
 
 
-class BaseActivity(TimeBasedActivity):
+class RegistrationActivity(TimeBasedActivity):
     is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
 
     location = models.ForeignKey(
@@ -767,7 +767,7 @@ class BaseActivity(TimeBasedActivity):
         abstract = True
 
 
-class DeadlineActivity(BaseActivity):
+class DeadlineActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
     class Meta:
@@ -797,7 +797,7 @@ class PeriodChoices(DjangoChoices):
     months = ChoiceItem('months', label=_("per month"))
 
 
-class PeriodicActivity(BaseActivity):
+class PeriodicActivity(RegistrationActivity):
     period = models.CharField(_('name'), max_length=100, choices=PeriodChoices)
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 
@@ -822,7 +822,7 @@ class PeriodicActivity(BaseActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/periodic'
+        resource_name = 'activities/time-based/periodics'
 
 
 class Participant(Contributor):

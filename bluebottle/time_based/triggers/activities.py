@@ -34,7 +34,7 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
-from bluebottle.time_based.states.states import BaseTimeBasedStateMachine, PeriodicActivityStateMachine
+from bluebottle.time_based.states.states import RegistrationActivityStateMachine, PeriodicActivityStateMachine
 
 
 def is_full(effect):
@@ -345,11 +345,11 @@ class DateActivityTriggers(TimeBasedTriggers):
     ]
 
 
-class BaseTimeBasedTriggers(TimeBasedTriggers):
+class RegistrationActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
 
         TransitionTrigger(
-            BaseTimeBasedStateMachine.reschedule,
+            RegistrationActivityStateMachine.reschedule,
             effects=[
                 TransitionEffect(
                     TimeBasedStateMachine.lock,
@@ -367,7 +367,7 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
-            BaseTimeBasedStateMachine.succeed,
+            RegistrationActivityStateMachine.succeed,
             effects=[
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
             ]
@@ -389,19 +389,19 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
             effects=[
                 RescheduleActivityDurationsEffect,
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.reopen,
+                    RegistrationActivityStateMachine.reopen,
                     conditions=[
                         is_not_full, registration_deadline_is_not_passed
                     ]
                 ),
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.lock,
+                    RegistrationActivityStateMachine.lock,
                     conditions=[
                         is_full,
                     ]
                 ),
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.lock,
+                    RegistrationActivityStateMachine.lock,
                     conditions=[
                         registration_deadline_is_passed,
                     ]
@@ -413,21 +413,21 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
             effects=[
                 RescheduleActivityDurationsEffect,
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.succeed,
+                    RegistrationActivityStateMachine.succeed,
                     conditions=[
                         deadline_is_passed,
                         has_participants
                     ]
                 ),
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.expire,
+                    RegistrationActivityStateMachine.expire,
                     conditions=[
                         deadline_is_passed,
                         has_no_participants
                     ]
                 ),
                 TransitionEffect(
-                    BaseTimeBasedStateMachine.reopen,
+                    RegistrationActivityStateMachine.reopen,
                     conditions=[
                         deadline_is_not_passed
                     ]
@@ -438,13 +438,13 @@ class BaseTimeBasedTriggers(TimeBasedTriggers):
 
 
 @register(DeadlineActivity)
-class DeadlineActivityTriggers(BaseTimeBasedTriggers):
+class DeadlineActivityTriggers(RegistrationActivityTriggers):
     pass
 
 
 @register(PeriodicActivity)
-class PeriodicActivityTriggers(BaseTimeBasedTriggers):
-    triggers = BaseTimeBasedTriggers.triggers + [
+class PeriodicActivityTriggers(RegistrationActivityTriggers):
+    triggers = RegistrationActivityTriggers.triggers + [
         TransitionTrigger(
             PeriodicActivityStateMachine.publish,
             effects=[

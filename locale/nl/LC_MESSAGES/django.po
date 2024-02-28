@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-05 11:17+0100\n"
-"PO-Revision-Date: 2024-02-28 14:13\n"
+"PO-Revision-Date: 2024-02-28 16:00\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -162,7 +162,7 @@ msgstr "Deelbare link"
 
 #: bluebottle/activities/dashboard.py:11
 msgid "Unpublished activities"
-msgstr ""
+msgstr "Ongepubliceerde activiteiten"
 
 #: bluebottle/activities/dashboard.py:23
 msgid "Recently submitted activities"
@@ -519,35 +519,35 @@ msgstr "Heb je een video die je initiatief uitlegt? Vul dan hier de YouTube of V
 
 #: bluebottle/activities/models.py:109
 msgid "Next step link"
-msgstr ""
+msgstr "Doorstuur link"
 
 #: bluebottle/activities/models.py:114
 msgid "This link is shown after a user joined as the next step for the activity"
-msgstr ""
+msgstr "Na het aanmelden wordt de deelnemer doorgestuurd naar deze link"
 
 #: bluebottle/activities/models.py:118
 msgid "Next step title"
-msgstr ""
+msgstr "Doorstuur link titel"
 
 #: bluebottle/activities/models.py:123
 msgid "The title in the popup after a user joined the activity"
-msgstr ""
+msgstr "Deze titel wordt getoond in de pop-up nadat je je hebt aangemeld, vanwaar je doorgestuurd wordt naar de externe website"
 
 #: bluebottle/activities/models.py:127
 msgid "Next step button label"
-msgstr ""
+msgstr "Doorstuur link label"
 
 #: bluebottle/activities/models.py:132
 msgid "The title on the next link button"
-msgstr ""
+msgstr "Het label dat wordt getoond op de knop"
 
 #: bluebottle/activities/models.py:136
 msgid "Next step description"
-msgstr ""
+msgstr "Doorstuur link omschrijving"
 
 #: bluebottle/activities/models.py:140
 msgid "A description to explain what the next step is"
-msgstr ""
+msgstr "Leg hier uit wat er van de deelnemer wordt verwacht op de website waar die naartoe wordt gestuurd"
 
 #: bluebottle/activities/models.py:145 bluebottle/members/models.py:266
 msgid "Segment"
@@ -747,7 +747,7 @@ msgstr "Afwijzen"
 
 #: bluebottle/activities/states.py:130
 msgid "Reject the activity if it does not fit the programme or if it does not comply with the rules. The activity manager can no longer edit the activity."
-msgstr ""
+msgstr "Wijs de activiteit af als deze niet in overeenstemming is met het programma of niet voldoet aan de regels. De manager van de activiteit kan de activiteit niet meer bewerken."
 
 #: bluebottle/activities/states.py:144
 msgid "Submit the activity for approval."
@@ -2058,11 +2058,11 @@ msgstr "Opslaan en blijf aanpassen"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:11
 msgid "Save and view"
-msgstr ""
+msgstr "Opslaan en bekijken"
 
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:12
 msgid "Close"
-msgstr ""
+msgstr "Sluiten"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/_wizard_actions.html:6
 msgid "Back"
@@ -3122,11 +3122,11 @@ msgstr "Deelnemer"
 
 #: bluebottle/deeds/states.py:27 bluebottle/time_based/states.py:130
 msgid "published"
-msgstr ""
+msgstr "gepubliceerd"
 
 #: bluebottle/deeds/states.py:28 bluebottle/time_based/states.py:127
 msgid "Publish your activity and let people participate."
-msgstr ""
+msgstr "Publiceer je activiteit en laat mensen deelnemen."
 
 #: bluebottle/deeds/states.py:30
 #: bluebottle/news/templates/admin/blogs/change_form.html:119
@@ -3141,7 +3141,7 @@ msgstr "De activiteit eindigt en mensen kunnen zich niet meer registreren. "
 
 #: bluebottle/deeds/states.py:91 bluebottle/time_based/states.py:60
 msgid "reopened"
-msgstr ""
+msgstr "heropend"
 
 #: bluebottle/deeds/states.py:117
 msgid "The activity ends and people can no longer register."
@@ -5624,7 +5624,7 @@ msgstr "Activiteit zoeken: meer filters"
 
 #: bluebottle/initiatives/models.py:304
 msgid "Include full activities in upcoming activities list"
-msgstr ""
+msgstr "Toon activiteiten die vol zijn in de lijst van aankomende activiteiten"
 
 #: bluebottle/initiatives/models.py:309
 msgid "Allow activity managers to indicate the impact they make."
@@ -5703,7 +5703,7 @@ msgstr "Het initiatief is aangemaakt en wordt aangepast."
 
 #: bluebottle/initiatives/states.py:18
 msgid "Submitted"
-msgstr ""
+msgstr "Ingediend"
 
 #: bluebottle/initiatives/states.py:20
 msgid "The initiative has been submitted and is ready to be reviewed."
@@ -5715,7 +5715,7 @@ msgstr "Het initiatief is ingediend, maar heeft aanpassing nodig voor het goedge
 
 #: bluebottle/initiatives/states.py:28
 msgid "Rejected"
-msgstr ""
+msgstr "Afgewezen"
 
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
@@ -5735,7 +5735,7 @@ msgstr "Het initiatief is niet zichtbaar aan de voorkant en telt niet in de rapp
 
 #: bluebottle/initiatives/states.py:50
 msgid "Approved"
-msgstr ""
+msgstr "Goedgekeurd"
 
 #: bluebottle/initiatives/states.py:52
 msgid "The initiative is visible in the frontend and completed activities are open for contributions."
@@ -7331,7 +7331,7 @@ msgstr "Overeenkomsten"
 
 #: bluebottle/time_based/admin.py:190
 msgid "Registration"
-msgstr ""
+msgstr "Registratie"
 
 #: bluebottle/time_based/admin.py:216 bluebottle/time_based/admin.py:415
 #, python-brace-format
@@ -7695,7 +7695,7 @@ msgstr "Bekijk je activiteit"
 #, python-brace-format
 msgctxt "email"
 msgid "You've registered for a time slot for the activity \"{title}\""
-msgstr ""
+msgstr "Je hebt je geregistreerd voor een tijdsblok voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages.py:848
 #, python-brace-format
@@ -7733,15 +7733,15 @@ msgstr "vaardigheid"
 
 #: bluebottle/time_based/models.py:56
 msgid "Review document enabled"
-msgstr ""
+msgstr "Review document ingeschakeld"
 
 #: bluebottle/time_based/models.py:57
 msgid "Can participants upload a document in the review step"
-msgstr ""
+msgstr "Kunnen deelnemers een document in de review stap uploaden"
 
 #: bluebottle/time_based/models.py:62
 msgid "Review participants"
-msgstr ""
+msgstr "Deelnemers beoordelen"
 
 #: bluebottle/time_based/models.py:63
 msgid "Activity manager accepts or rejects participants or teams"
@@ -7749,15 +7749,15 @@ msgstr "Activiteitenmanager accepteert of verwerpt deelnemers of teams"
 
 #: bluebottle/time_based/models.py:67
 msgid "Registration step title"
-msgstr ""
+msgstr "Titel registratie stap"
 
 #: bluebottle/time_based/models.py:68
 msgid "Title of the registration step"
-msgstr ""
+msgstr "Titel van de registratie stap"
 
 #: bluebottle/time_based/models.py:74
 msgid "Registration description"
-msgstr ""
+msgstr "Registratie beschrijving"
 
 #: bluebottle/time_based/models.py:75
 msgid "Description of the registration step"
@@ -8973,11 +8973,11 @@ msgstr "supporters informeren"
 
 #: bluebottle/updates/models.py:54
 msgid "Update"
-msgstr ""
+msgstr "Update"
 
 #: bluebottle/updates/serializers.py:50
 msgid "At least one of 'message', 'images', or 'video_url' must be set."
-msgstr ""
+msgstr "Ten minste één van 'bericht', 'images' of 'video_url' moet zijn ingesteld."
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:5
 #| msgid ""
@@ -8997,13 +8997,19 @@ msgid "\n"
 "        <br>\n"
 "        '%(text)s'\n\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Hi %(recipient_name)s,\n"
+"        <br><br>\n"
+"        %(author)s heeft een update geplaatst op %(title)s:\n"
+"        <br>\n"
+"        '%(text)s'\n\n"
+"    "
 
 #: bluebottle/updates/templates/mails/messages/update_followers.html:17
 #: bluebottle/updates/templates/mails/messages/update_owner.html:15
 msgctxt "email"
 msgid "View message"
-msgstr ""
+msgstr "Bekijk bericht"
 
 #: bluebottle/updates/templates/mails/messages/update_owner.html:5
 #| msgid ""
@@ -9022,7 +9028,12 @@ msgid "\n"
 "        <br/>\n"
 "        %(author)s posted a comment to '%(title)s'.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Hi %(recipient_name)s,\n"
+"        <br/>\n"
+"        <br/>\n"
+"        %(author)s plaatste een reactie op '%(title)s'.\n"
+"    "
 
 #: bluebottle/updates/templates/mails/messages/update_parent.html:5
 #| msgid ""
@@ -9040,12 +9051,16 @@ msgid "\n"
 "        <br><br>\n"
 "        %(author)s replied to your message on '%(title)s'.\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Hi %(recipient_name)s,\n"
+"        <br><br>\n"
+"        %(author)s reageerde op je bericht op '%(title)s'.\n"
+"    "
 
 #: bluebottle/updates/templates/mails/messages/update_parent.html:14
 msgctxt "email"
 msgid "View reply"
-msgstr ""
+msgstr "Reactie bekijken"
 
 #: bluebottle/utils/fields.py:213
 msgid "This field is required"

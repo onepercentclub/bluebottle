@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-05 11:17+0100\n"
-"PO-Revision-Date: 2024-01-10 08:39\n"
+"PO-Revision-Date: 2024-02-28 14:13\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -8035,7 +8035,7 @@ msgstr ""
 
 #: bluebottle/time_based/states.py:165
 msgid "Close this activity and allocate the hours to the participants."
-msgstr ""
+msgstr "Sluit deze activiteit en wijs de uren toe aan de deelnemers."
 
 #: bluebottle/time_based/states.py:178
 msgid "The date of the activity has been changed to a date in the future. The status of the activity will be recalculated."
@@ -8450,13 +8450,14 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/update_slot_time_contribution.html:2
 msgid "Update time contributions"
-msgstr ""
+msgstr "Update tijd bijdragen"
 
 #: bluebottle/time_based/templates/admin/update_slot_time_contribution.html:5
 #, python-format
 msgid "\n"
 "    Update related contributions to \"%(slot)s\" for \"%(activity)s\"?\n"
-msgstr ""
+msgstr "\n"
+"    Update gerelateerde bijdragen aan \"%(slot)s\" voor \"%(activity)s\"?\n"
 
 #: bluebottle/time_based/templates/mails/messages/changed_multiple_dates.html:5
 #, python-format
@@ -8930,25 +8931,25 @@ msgstr "heeft afbeeldingen"
 
 #: bluebottle/updates/admin.py:44
 msgid "has video"
-msgstr ""
+msgstr "heeft video"
 
 #: bluebottle/updates/messages.py:18
 #, python-brace-format
 msgctxt "email"
 msgid "New update from '{title}'"
-msgstr ""
+msgstr "Nieuwe update van '{title}'"
 
 #: bluebottle/updates/messages.py:34
 #, python-brace-format
 msgctxt "email"
 msgid "A new message is posted on '{title}'"
-msgstr ""
+msgstr "Een nieuw bericht is geplaatst op '{title}'"
 
 #: bluebottle/updates/messages.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "You have a reply on '{title}'"
-msgstr ""
+msgstr "Je hebt een reactie op '{title}'"
 
 #: bluebottle/updates/models.py:15 bluebottle/wallposts/admin.py:263
 msgid "Author"
@@ -8956,19 +8957,19 @@ msgstr "Auteur"
 
 #: bluebottle/updates/models.py:30
 msgid "Reply to"
-msgstr ""
+msgstr "Reageer op"
 
 #: bluebottle/updates/models.py:37
 msgid "message"
-msgstr ""
+msgstr "bericht"
 
 #: bluebottle/updates/models.py:41
 msgid "Pinned"
-msgstr ""
+msgstr "Vastgepind"
 
 #: bluebottle/updates/models.py:45
 msgid "notify supporters"
-msgstr ""
+msgstr "supporters informeren"
 
 #: bluebottle/updates/models.py:54
 msgid "Update"

@@ -165,6 +165,27 @@ class TimeBasedAdmin(ActivityChildAdmin):
         return duration
     duration_string.short_description = _('Duration')
 
+    registration_fields = (
+        'review',
+        'registration_flow',
+        'review_title',
+        'review_description',
+        'review_document_enabled',
+        'review_link',
+        'preparation',
+        'registration_deadline',
+    )
+
+    def get_registration_fields(self, request, obj):
+        return self.registration_fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (_('Registration'), {
+            'fields': self.get_registration_fields(request, obj)
+        }))
+        return fieldsets
+
 
 class TimeBasedActivityAdminForm(ActivityForm):
     class Meta(object):
@@ -246,17 +267,8 @@ class DateActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
     detail_fields = ActivityChildAdmin.detail_fields + (
-        'preparation',
-        'registration_deadline',
         'expertise',
         'capacity',
-        'review',
-        'registration_flow',
-        'review_title',
-        'review_description',
-        'review_document_enabled',
-        'review_link',
-
     )
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields
@@ -331,20 +343,10 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
             'location',
             'location_hint',
             'online_meeting_url',
-
             'expertise',
-            'capacity',
-            'review',
-
-            'registration_flow',
-
             'duration',
-
             'start',
             'deadline',
-            'registration_deadline',
-            'preparation',
-
         )
         initiative_settings = InitiativePlatformSettings.load()
         if initiative_settings.team_activities:
@@ -426,24 +428,16 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = super().get_detail_fields(request, obj) + (
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-
             'expertise',
-            'capacity',
-            'review',
-
-            'registration_flow',
-
             'period',
             'duration',
 
             'start',
             'deadline',
-            'registration_deadline',
-            'preparation',
+            'is_online',
+            'location',
+            'location_hint',
+            'online_meeting_url',
 
         )
         return fields

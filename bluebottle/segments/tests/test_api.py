@@ -18,7 +18,6 @@ from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPubl
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.time_based.models import DeadlineActivity
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,

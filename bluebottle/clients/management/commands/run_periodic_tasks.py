@@ -6,7 +6,8 @@ from bluebottle.collect.models import CollectActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.funding.models import Funding, Donor
 from bluebottle.time_based.models import DateActivity, DateActivitySlot, PeriodActivity, TeamSlot, DateParticipant, \
-    PeriodParticipant, TimeContribution
+    PeriodParticipant, TimeContribution, DeadlineActivity, DeadlineParticipant, PeriodicParticipant, PeriodicActivity, \
+    PeriodicSlot
 
 
 class Command(InteractiveTenantOption, BaseCommand):
@@ -27,7 +28,10 @@ class Command(InteractiveTenantOption, BaseCommand):
             PeriodActivity, TeamSlot, PeriodParticipant,
             TimeContribution,
             Funding, Donor,
-            Deed, CollectActivity
+            Deed, CollectActivity,
+            DeadlineActivity, DeadlineParticipant,
+            PeriodicActivity, PeriodicParticipant,
+            PeriodicSlot
         ]
 
         for model in models:

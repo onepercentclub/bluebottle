@@ -92,7 +92,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Accept'),
         description=_("Accept this person as a participant to the Activity."),
         passed_label=_('accepted'),
-        automatic=False,
+        automatic=True,
         permission=can_accept_participant,
     )
 
@@ -115,7 +115,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant in the activity."),
-        automatic=False,
+        automatic=True,
         permission=can_accept_participant,
     )
 

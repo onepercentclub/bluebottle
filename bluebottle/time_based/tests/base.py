@@ -89,7 +89,7 @@ class TimeBasedActivityListAPITestCase:
 
         settings.activity_types = [
             activity_type for activity_type in settings.activity_types
-            if activity_type != 'deadlineactivity'
+            if activity_type != self.factory._meta.model._meta.model_name
         ]
         settings.save()
 

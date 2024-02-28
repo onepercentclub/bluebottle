@@ -372,16 +372,40 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     participant_count.short_description = _('Participants')
 
 
+@admin.register(PeriodicSlot)
+class PeriodicSlotAdmin(StateMachineAdmin):
+    list_display = ('start', 'end', 'activity', 'participant_count')
+    inlines = (PeriodicParticipantAdminInline,)
+
+    readonly_fields = ('activity', 'start', 'end', 'status')
+    fields = readonly_fields
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+
 class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ('start', 'end', 'participant_count')
-    fields = ('start', 'end', 'participant_count')
+    readonly_fields = ('edit', 'start', 'end', 'participant_count')
+    fields = ('edit', 'start', 'end', 'participant_count')
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
-    participant_count.short_description = _('Participants')
+    participant_count.short_description = _('Accepted participants')
+
+    def has_add_permission(self, request, obj):
+        return False
+
+    def edit(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse(
+                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
+                args=(obj.id,)),
+            _('Edit slot')
+        )
 
 
 @admin.register(PeriodicActivity)
@@ -1102,6 +1126,16 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
     raw_id_fields = ['user', 'activity']
     fields = ['user', 'activity', 'answer', 'document', 'status', 'states']
     list_display = ['__str__', 'activity', 'user', 'status']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += [
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            ]
+        return fieldsets
 
 
 @admin.register(DeadlineRegistration)

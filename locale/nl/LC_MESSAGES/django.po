@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-28 16:37+0100\n"
-"PO-Revision-Date: 2024-02-28 15:59\n"
+"PO-Revision-Date: 2024-02-28 17:48\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -519,7 +519,7 @@ msgstr "Heb je een video die je initiatief uitlegt? Vul dan hier de YouTube of V
 
 #: bluebottle/activities/models.py:109
 msgid "Redirect step link"
-msgstr ""
+msgstr "Doorstuur link"
 
 #: bluebottle/activities/models.py:114
 msgid "This link is shown after a user joined as the next step for the activity"
@@ -527,7 +527,7 @@ msgstr "Na het aanmelden wordt de deelnemer doorgestuurd naar deze link"
 
 #: bluebottle/activities/models.py:118
 msgid "Redirect step title"
-msgstr ""
+msgstr "Doorstuur titel"
 
 #: bluebottle/activities/models.py:123
 msgid "The title in the popup after a user joined the activity"
@@ -535,7 +535,7 @@ msgstr "Deze titel die wordt getoond in de pop-up nadat je je hebt aangemeld, va
 
 #: bluebottle/activities/models.py:127
 msgid "Redirect step button label"
-msgstr ""
+msgstr "Doorstuur knop label"
 
 #: bluebottle/activities/models.py:132
 msgid "The title on the next link button"
@@ -543,7 +543,7 @@ msgstr "Het label dat wordt getoond op de knop"
 
 #: bluebottle/activities/models.py:136
 msgid "Redirect step description"
-msgstr ""
+msgstr "Doorstuur omschrijving"
 
 #: bluebottle/activities/models.py:140
 msgid "A description to explain what the next step is"
@@ -3110,7 +3110,7 @@ msgstr "Deelnemer bewerken"
 
 #: bluebottle/deeds/admin.py:97
 msgid "Redirect participants to an external website so they can complete an action such as registering a vote."
-msgstr ""
+msgstr "Stuur deelnemers door naar een externe website waar ze de activiteit kunnen uitvoeren, zoals het uitbrengen van een stem."
 
 #: bluebottle/deeds/models.py:22
 msgid "The number of users you want to participate."
@@ -3494,7 +3494,7 @@ msgstr "Valuta"
 #: bluebottle/funding/admin.py:129
 #, python-brace-format
 msgid "Can't extend a deadline to more then 75 days from the first donation, which was {date}. Maximum deadline is {deadline}"
-msgstr ""
+msgstr "De deadline kan niet verlengd worden tot meer dan 75 dagen vanaf de eerste donatie, dat was op {date}. De maximale deadline is {deadline}"
 
 #: bluebottle/funding/admin.py:185
 #, no-python-format
@@ -7453,21 +7453,21 @@ msgstr "We tonen deze opties omdat het slot plaatsvindt op {start}"
 
 #: bluebottle/time_based/admin.py:678
 msgid "Emails"
-msgstr ""
+msgstr "E-mails"
 
 #: bluebottle/time_based/admin.py:679
 msgid "Enter one email address per line"
-msgstr ""
+msgstr "Voer één e-mailadres per regel in"
 
 #: bluebottle/time_based/admin.py:683
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:15
 #: bluebottle/time_based/templates/admin/time_based/dateactivityslot/change_form.html:10
 msgid "Bulk add participants"
-msgstr ""
+msgstr "Bulk toevoegen deelnemers"
 
 #: bluebottle/time_based/admin.py:691
 msgid "Enter the email addresses of the participants you want to add to this slot."
-msgstr ""
+msgstr "Voer de e-mailadressen in van de deelnemers die je aan dit tijdsblok wilt toevoegen."
 
 #: bluebottle/time_based/admin.py:720 bluebottle/time_based/admin.py:817
 #: bluebottle/time_based/admin.py:844
@@ -7761,23 +7761,23 @@ msgstr "Kunnen deelnemers een document in de review stap uploaden"
 
 #: bluebottle/time_based/models.py:62
 msgid "No question"
-msgstr ""
+msgstr "Geen vraag"
 
 #: bluebottle/time_based/models.py:63
 msgid "Ask the participant a question on the platform."
-msgstr ""
+msgstr "Stel de deelnemer een vraag op het platform."
 
 #: bluebottle/time_based/models.py:64
 msgid "Direct the participant to an external website e.g. a Google form."
-msgstr ""
+msgstr "Stuur de gebruiker door naar een externe website, bijvoorbeeld een Google Form."
 
 #: bluebottle/time_based/models.py:68
 msgid "Registration flow"
-msgstr ""
+msgstr "Registratie flow"
 
 #: bluebottle/time_based/models.py:69
 msgid "Do you want to ask any questions to your participants when they join your activity?"
-msgstr ""
+msgstr "Wil je vragen stellen aan je deelnemers wanneer ze zich aanmelden voor je activiteit?"
 
 #: bluebottle/time_based/models.py:76
 msgid "Review participants"
@@ -7801,15 +7801,15 @@ msgstr "Registratie beschrijving"
 
 #: bluebottle/time_based/models.py:89
 msgid "Description of the registration step"
-msgstr ""
+msgstr "Beschrijving van de registratie stap"
 
 #: bluebottle/time_based/models.py:93
 msgid "Registration link"
-msgstr ""
+msgstr "Registratie link"
 
 #: bluebottle/time_based/models.py:94
 msgid "External link where the participant should complete their registration"
-msgstr ""
+msgstr "Externe link waar de gebruiker zijn registratie moet voltooien"
 
 #: bluebottle/time_based/models.py:100
 msgid "Preparation time"
@@ -8038,7 +8038,7 @@ msgstr "Mensen kunnen zich weer aanmelden voor het evenement. Getriggerd wanneer
 
 #: bluebottle/time_based/states.py:49
 msgid "unlocked"
-msgstr ""
+msgstr "ontgrendeld"
 
 #: bluebottle/time_based/states.py:51 bluebottle/time_based/states.py:64
 msgid "The number of participants has fallen below the required number. People can sign up again for the task."
@@ -8050,11 +8050,11 @@ msgstr "De activiteit eindigt en mensen kunnen zich niet meer registreren. Deeln
 
 #: bluebottle/time_based/states.py:93
 msgid "Cancel if the activity will not be executed. It will no longer be visible on the platform. Contributions will not be counted in reporting."
-msgstr ""
+msgstr "Annuleer de activiteit als niet wordt uitgevoerd. Het zal niet langer zichtbaar zijn op het platform. Bijdragen zullen niet worden meegeteld in de rapportage."
 
 #: bluebottle/time_based/states.py:98
 msgid "The activity will not be executed. Any contributions will be cancelled too."
-msgstr ""
+msgstr "De activiteit wordt niet uitgevoerd. Alle bijdragen worden ook geannuleerd."
 
 #: bluebottle/time_based/states.py:111 bluebottle/time_based/states.py:176
 #: bluebottle/time_based/states.py:324
@@ -8067,11 +8067,11 @@ msgstr "De activiteit is heropend omdat de starttijd veranderd is."
 
 #: bluebottle/time_based/states.py:145
 msgid "Automatically publish activity when initiative is approved"
-msgstr ""
+msgstr "Publiceer de activiteit automatisch wanneer het initiatief is goedgekeurd"
 
 #: bluebottle/time_based/states.py:147
 msgid "Auto-publish"
-msgstr ""
+msgstr "Automatisch publiceren"
 
 #: bluebottle/time_based/states.py:165
 msgid "Close this activity and allocate the hours to the participants."
@@ -8119,7 +8119,7 @@ msgstr "Tijdsblok is niet volledig."
 
 #: bluebottle/time_based/states.py:266
 msgid "This time slot will not take place. People can no longer join and contributions will not be counted."
-msgstr ""
+msgstr "Dit tijdsblok zal niet plaatsvinden. Mensen kunnen niet meer meedoen en bijdragen worden niet meegeteld."
 
 #: bluebottle/time_based/states.py:276
 msgid "Reopen a cancelled slot. People can apply again. Contributions are counted again"
@@ -8127,7 +8127,7 @@ msgstr "Heropen een geannuleerd tijdsblok. Mensen kunnen zich weer aanmelden en 
 
 #: bluebottle/time_based/states.py:279
 msgid "Reopening a time slot will allow people to join again and their contributions will be counted."
-msgstr ""
+msgstr "Het heropenen van een tijdsblok zal mensen in staat stellen opnieuw deel te nemen en hun bijdragen zullen worden meegeteld."
 
 #: bluebottle/time_based/states.py:288
 msgid "People can no longer join the slot. Triggered when the attendee limit is reached."
@@ -8175,7 +8175,7 @@ msgstr "Accepteer deze persoon als deelnemer aan de activiteit."
 
 #: bluebottle/time_based/states.py:421 bluebottle/time_based/states.py:586
 msgid "accepted"
-msgstr ""
+msgstr "geaccepteerd"
 
 #: bluebottle/time_based/states.py:431
 msgid "Add"
@@ -8204,7 +8204,7 @@ msgstr "Stop je deelname aan de activiteit. Eventueel gemaakte uren blijven beho
 
 #: bluebottle/time_based/states.py:479 bluebottle/time_based/states.py:622
 msgid "reapplied"
-msgstr ""
+msgstr "opnieuw aangemeld"
 
 #: bluebottle/time_based/states.py:480
 msgid "User re-applies for the activity after previously withdrawing."
@@ -8272,7 +8272,7 @@ msgstr "Annuleer de deelname."
 
 #: bluebottle/time_based/states.py:610
 msgid "You will no longer participate in this time slot. You can rejoin as long as the activity is open."
-msgstr ""
+msgstr "Je neemt niet langer deel aan dit tijdsblok. Je kunt je opnieuw aanmelden zolang de activiteit geopend is."
 
 #: bluebottle/time_based/states.py:623
 msgid "User re-applies after previously withdrawing."
@@ -8444,17 +8444,21 @@ msgstr "Let op"
 msgid "\n"
 "                      This is an experimental feature. Please use with cause.\n"
 "                  "
-msgstr ""
+msgstr "\n"
+"                      Dit is een experimentele functie. Let goed op in het gebruik.\n"
+"                  "
 
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:27
 msgid "\n"
 "                        Make sure every line contains just one email address.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"                        Zorg ervoor dat elke regel slechts één e-mailadres bevat.\n"
+"                    "
 
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:52
 msgid "Add participants"
-msgstr ""
+msgstr "Voeg deelnemers toe"
 
 #: bluebottle/time_based/templates/admin/time_based/dateactivityslot/change_form.html:6
 msgid "Repeat this slot"
@@ -8605,7 +8609,9 @@ msgctxt "email"
 msgid "\n"
 "<p>%(applicant_name)s has joined your activity \"%(title)s\"!</p>\n"
 "<p>Give the new participant a warm welcome.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>%(applicant_name)s heeft zich aangemeld voor je activiteit \"%(title)s\"!</p>\n"
+"<p>Geef de nieuwe deelnemer een warm welkom.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/partial/period.html:4
 #, python-format
@@ -8671,7 +8677,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "<p>You are registered for a time slot for the activity \"%(title)s\"!</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je bent aangemeld voor een tijdsblok voor de activiteit \"%(title)s\"!</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_accepted.html:5
 #, python-format
@@ -8974,11 +8981,11 @@ msgstr "Moet minstens 1 tijdsblok bevatten."
 
 #: bluebottle/time_based/views.py:468
 msgid "Participant does not belong to this activity"
-msgstr ""
+msgstr "Deelnemer hoort niet bij deze activiteit"
 
 #: bluebottle/time_based/views.py:475
 msgid "Participant already registered for this slot"
-msgstr ""
+msgstr "Deelnemer is al aangemeld voor dit tijdsblok"
 
 #: bluebottle/updates/admin.py:40
 msgid "has images"

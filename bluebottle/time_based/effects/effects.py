@@ -360,8 +360,11 @@ class UnsetCapacityEffect(Effect):
 
 
 class CreateFirstSlotEffect(Effect):
+
+    template = 'admin/time_based/periodic/create_first_slot.html'
+
     def is_valid(self):
-        self.instance.slots.count() == 0
+        return self.instance.slots.count() == 0
 
     def post_save(self):
         tz = get_current_timezone()
@@ -378,6 +381,7 @@ class CreateFirstSlotEffect(Effect):
 
 
 class CreateNextSlotEffect(Effect):
+
     def post_save(self):
         activity = self.instance.activity
         if activity.status == 'open':
@@ -393,6 +397,7 @@ class CreateNextSlotEffect(Effect):
 
 
 class CreatePeriodicParticipantsEffect(Effect):
+
     def post_save(self):
         for registration in self.instance.activity.registrations.filter(status='accepted'):
             PeriodicParticipant.objects.create(

@@ -691,7 +691,7 @@ ONLINE_CHOICES = (
 )
 
 
-class BaseActivity(TimeBasedActivity):
+class RegistrationActivity(TimeBasedActivity):
     is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
 
     location = models.ForeignKey(
@@ -767,7 +767,7 @@ class BaseActivity(TimeBasedActivity):
         abstract = True
 
 
-class DeadlineActivity(BaseActivity):
+class DeadlineActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
     class Meta:
@@ -792,13 +792,18 @@ class DeadlineActivity(BaseActivity):
 
 class PeriodChoices(DjangoChoices):
     hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing
-    days = ChoiceItem('days', label=_("per day"))  # TODO remove this after testing
+    days = ChoiceItem('days', label=_("per day"))
     weeks = ChoiceItem('weeks', label=_("per week"))
     months = ChoiceItem('months', label=_("per month"))
 
 
-class PeriodicActivity(BaseActivity):
-    period = models.CharField(_('name'), max_length=100, choices=PeriodChoices)
+class PeriodicActivity(RegistrationActivity):
+    period = models.CharField(
+        _('Period'),
+        help_text=_('When should the activity be repeated?'),
+        max_length=100,
+        choices=PeriodChoices
+    )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 
     @property
@@ -822,7 +827,7 @@ class PeriodicActivity(BaseActivity):
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/periodic'
+        resource_name = 'activities/time-based/periodics'
 
 
 class Participant(Contributor):
@@ -1055,10 +1060,6 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.user
 
     @property
-    def participants(self):
-        return self.deadlineparticipant_set.all()
-
-    @property
     def anonymized(self):
         return self.activity.anonymized
 
@@ -1069,6 +1070,10 @@ class Registration(TriggerMixin, PolymorphicModel):
 class DeadlineRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-registrations'
+
+    @property
+    def participants(self):
+        return self.deadlineparticipant_set.all()
 
     class Meta():
         verbose_name = _(u'Deadline registration')
@@ -1090,6 +1095,10 @@ class DeadlineRegistration(Registration):
 class PeriodicRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/periodic-registrations'
+
+    @property
+    def participants(self):
+        return self.periodicparticipant_set.all()
 
     class Meta():
         verbose_name = _(u'Periodic registration')

@@ -1,8 +1,5 @@
-from datetime import date, timedelta
-
 from django.core import mail
 
-from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
@@ -21,7 +18,7 @@ class RegistrationTriggerTestCase:
     def setUp(self):
         super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
+            activity_types=[self.activity_factory._meta.model.__name__.lower()]
         )
 
         self.user = BlueBottleUserFactory()
@@ -133,7 +130,9 @@ class DeadlineRegistationTriggerTestCase(
     def test_initial(self):
         super().test_initial()
         self.assertEqual(len(self.registration.participants.all()), 1)
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+
+        participant = self.registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
 
     def test_initial_review(self):
         super().test_initial_review()

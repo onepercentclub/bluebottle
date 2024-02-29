@@ -90,7 +90,10 @@ class ParticipantTriggers(ContributorTriggers):
 class DeadlineParticipantTriggers(ParticipantTriggers):
     def registration_is_accepted(effect):
         """Review needed"""
-        return effect.instance.registration.status == "accepted"
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
 
     def is_admin(effect):
         """ Is admin """
@@ -132,20 +135,17 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            DeadlineParticipantStateMachine.restore,
-            effects=[
-                TransitionEffect(
-                    DeadlineParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted],
-                ),
-            ]
-        ),
-        TransitionTrigger(
             DeadlineParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                TransitionEffect(
-                    DeadlineParticipantStateMachine.succeed,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.succeed,
+                    conditions=[ParticipantTriggers.activity_is_expired],
                 ),
                 RelatedTransitionEffect(
                     'activity',

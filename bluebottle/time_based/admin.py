@@ -377,7 +377,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
-    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
+    readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
@@ -387,21 +387,22 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    def get_detail_fields(self, request, obj):
-        fields = super().get_detail_fields(request, obj) + (
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-            'expertise',
-            'duration',
-            'start',
-            'deadline',
-        )
-        initiative_settings = InitiativePlatformSettings.load()
-        if initiative_settings.team_activities:
-            fields += ('team_activity',)
-        return fields
+    date_fields = [
+        'duration',
+        'start',
+        'deadline',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Date & time'), {'fields': self.date_fields}
+        ))
+        return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
@@ -482,18 +483,26 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     def get_detail_fields(self, request, obj):
         fields = super().get_detail_fields(request, obj) + (
             'expertise',
-            'period',
-            'duration',
-
-            'start',
-            'deadline',
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-
         )
         return fields
+
+    date_fields = [
+        'period',
+        'duration',
+        'start',
+        'deadline',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Date & time'), {'fields': self.date_fields}
+        ))
+        return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),

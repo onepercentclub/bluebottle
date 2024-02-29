@@ -1,20 +1,27 @@
-from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import (
-    register, TransitionTrigger, TriggerManager
-)
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
+from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects.registration import CreateParticipantEffect
+from bluebottle.time_based.effects.registration import (
+    CreateInitialPeriodicParticipantEffect,
+    CreateParticipantEffect,
+)
 from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration
 from bluebottle.time_based.notifications.registrations import (
-    ManagerRegistrationCreatedReviewNotification, ManagerRegistrationCreatedNotification,
-    UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification,
-    UserAppliedNotification, UserJoinedNotification
+    ManagerRegistrationCreatedNotification,
+    ManagerRegistrationCreatedReviewNotification,
+    UserAppliedNotification,
+    UserJoinedNotification,
+    UserRegistrationAcceptedNotification,
+    UserRegistrationRejectedNotification,
 )
 from bluebottle.time_based.states import (
-    RegistrationStateMachine, ParticipantStateMachine, DeadlineParticipantStateMachine
+    DeadlineParticipantStateMachine,
+    ParticipantStateMachine,
+    RegistrationStateMachine,
 )
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
+from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
 
 class RegistrationTriggers(TriggerManager):
@@ -31,7 +38,6 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
-                CreateParticipantEffect,
                 TransitionEffect(
                     RegistrationStateMachine.auto_accept,
                     conditions=[
@@ -70,19 +76,6 @@ class RegistrationTriggers(TriggerManager):
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
-                RelatedTransitionEffect(
-                    'participants',
-                    DeadlineParticipantStateMachine.succeed,
-                ),
-            ]
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.auto_accept,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    DeadlineParticipantStateMachine.succeed,
-                ),
             ]
         ),
         TransitionTrigger(
@@ -110,12 +103,82 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 CreateParticipantEffect,
             ]
         ),
+        TransitionTrigger(
+            RegistrationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
     ]
 
 
 @register(PeriodicRegistration)
 class PeriodicRegistrationTriggers(RegistrationTriggers):
+    def activity_no_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return False
+        return (
+            effect.instance.activity.capacity
+            <= effect.instance.activity.registrations.filter(status="accepted").count()
+            + 1
+        )
+
+    def activity_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return True
+        return (
+            effect.instance.activity.capacity
+            > effect.instance.activity.registrations.filter(status="accepted").count()
+            - 1
+        )
+
     triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.auto_accept,
+            effects=[
+                CreateInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.accept,
+            effects=[
+                CreateInitialPeriodicParticipantEffect,
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                )
+            ],
+        ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.withdraw,
             effects=[
@@ -123,7 +186,12 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     'participants',
                     PeriodicParticipantStateMachine.fail,
                 ),
-            ]
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.reapply,
@@ -132,6 +200,11 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     'participants',
                     PeriodicParticipantStateMachine.succeed,
                 ),
-            ]
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
         ),
     ]

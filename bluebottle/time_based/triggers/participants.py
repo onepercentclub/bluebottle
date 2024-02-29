@@ -9,25 +9,91 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
-from bluebottle.time_based.effects.participant import CreateTimeContributionEffect, CreateRegistrationEffect
-from bluebottle.time_based.messages import ManagerParticipantAddedOwnerNotification, ParticipantAddedNotification
-from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant
-from bluebottle.time_based.notifications.participants import ManagerParticipantRemovedNotification, \
-    UserParticipantRemovedNotification, UserParticipantWithdrewNotification, ManagerParticipantWithdrewNotification
+from bluebottle.time_based.effects.participant import (
+    CreateTimeContributionEffect,
+    CreateRegistrationEffect,
+)
+from bluebottle.time_based.messages import (
+    ManagerParticipantAddedOwnerNotification,
+    ParticipantAddedNotification,
+)
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    Participant,
+    PeriodicParticipant,
+)
+from bluebottle.time_based.notifications.participants import (
+    ManagerParticipantRemovedNotification,
+    UserParticipantRemovedNotification,
+    UserParticipantWithdrewNotification,
+    ManagerParticipantWithdrewNotification,
+)
 from bluebottle.time_based.states import (
-    ParticipantStateMachine, DeadlineParticipantStateMachine, DeadlineActivityStateMachine
+    ParticipantStateMachine,
+    DeadlineParticipantStateMachine,
+    DeadlineActivityStateMachine,
 )
 
 
-@register(DeadlineParticipant)
-class DeadlineParticipantTriggers(ContributorTriggers):
-    def review_needed(effect):
-        """ Review needed """
-        return effect.instance.activity.review
+class ParticipantTriggers(ContributorTriggers):
+    def activity_is_expired(effect):
+        """Activity is expired"""
+        return effect.instance.activity.status == "expired"
 
-    def no_review_needed(effect):
-        """ No review needed """
-        return not effect.instance.activity.review
+    triggers = ContributorTriggers.triggers + [
+        TransitionTrigger(
+            ParticipantStateMachine.initiate,
+            effects=[
+                FollowActivityEffect,
+                CreatePreparationTimeContributionEffect,
+                CreateTimeContributionEffect,
+            ],
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.reject,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.cancelled,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+    ]
+
+
+@register(DeadlineParticipant)
+class DeadlineParticipantTriggers(ParticipantTriggers):
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
 
     def is_admin(effect):
         """ Is admin """
@@ -38,10 +104,6 @@ class DeadlineParticipantTriggers(ContributorTriggers):
         """ Is user """
         user = effect.options.get('user', None)
         return user == effect.instance.user
-
-    def activity_is_expired(effect):
-        """ Activity is expired """
-        return effect.instance.activity.status == 'expired'
 
     def activity_no_spots_left(effect):
         """ Activity has spots available after this effect """
@@ -55,13 +117,10 @@ class DeadlineParticipantTriggers(ContributorTriggers):
             return True
         return effect.instance.activity.capacity > effect.instance.activity.accepted_participants.count() - 1
 
-    triggers = [
+    triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
-                FollowActivityEffect,
-                CreatePreparationTimeContributionEffect,
-                CreateTimeContributionEffect,
                 CreateRegistrationEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
@@ -70,19 +129,23 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                     ]
                 ),
                 TransitionEffect(
-                    DeadlineParticipantStateMachine.succeed,
-                    conditions=[
-                        no_review_needed,
-                    ]
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
                 ),
-            ]
+            ],
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
-                TransitionEffect(
-                    DeadlineParticipantStateMachine.succeed,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.succeed,
+                    conditions=[ParticipantTriggers.activity_is_expired],
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -127,26 +190,13 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.succeed,
-                    conditions=[
-                        activity_is_expired
-                    ]
+                    conditions=[ParticipantTriggers.activity_is_expired],
                 ),
             ]
         ),
         TransitionTrigger(
             DeadlineParticipantStateMachine.succeed,
             effects=[
-                RelatedTransitionEffect(
-                    'contributions',
-                    ContributionStateMachine.succeed,
-                ),
-                RelatedTransitionEffect(
-                    'activity',
-                    DeadlineActivityStateMachine.succeed,
-                    conditions=[
-                        activity_is_expired
-                    ]
-                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.lock,
@@ -187,7 +237,7 @@ class DeadlineParticipantTriggers(ContributorTriggers):
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
-                        no_review_needed,
+                        registration_is_accepted,
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -236,14 +286,8 @@ class DeadlineParticipantTriggers(ContributorTriggers):
             ]
         ),
         TransitionTrigger(
-
             DeadlineParticipantStateMachine.reject,
             effects=[
-                UnFollowActivityEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    ContributionStateMachine.fail,
-                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -256,11 +300,6 @@ class DeadlineParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.cancelled,
             effects=[
-                UnFollowActivityEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    ContributionStateMachine.fail,
-                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -274,5 +313,5 @@ class DeadlineParticipantTriggers(ContributorTriggers):
 
 
 @register(PeriodicParticipant)
-class PeriodicParticipantTriggers(ContributorTriggers):
-    triggers = []
+class PeriodicParticipantTriggers(ParticipantTriggers):
+    triggers = ParticipantTriggers.triggers + []

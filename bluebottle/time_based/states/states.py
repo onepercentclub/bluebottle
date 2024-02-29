@@ -8,8 +8,13 @@ from bluebottle.fsm.state import (
 )
 from bluebottle.time_based.models import (
     DateActivity,
-    TimeContribution, DateActivitySlot, SlotParticipant,
-    DeadlineActivity, PeriodicActivity, PeriodicSlot, PeriodActivity
+    TimeContribution,
+    DateActivitySlot,
+    SlotParticipant,
+    DeadlineActivity,
+    PeriodicActivity,
+    PeriodicSlot,
+    PeriodActivity,
 )
 
 

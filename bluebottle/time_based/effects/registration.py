@@ -1,6 +1,7 @@
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.time_based.models import DeadlineActivity
 
 
 class CreateParticipantEffect(Effect):
@@ -8,17 +9,20 @@ class CreateParticipantEffect(Effect):
     template = 'admin/create_participant.html'
 
     def post_save(self, **kwargs):
-        if self.instance.activity.slots.exists():
+        if not isinstance(self.instance.activity, DeadlineActivity) and self.instance.activity.slots.exists():
             slot = self.instance.activity.slots.last()
+            self.instance.participants.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+                registration=self.instance,
+                slot=slot
+            )
         else:
-            slot = None
-
-        self.instance.participants.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-            registration=self.instance,
-            slot=slot
-        )
+            self.instance.participants.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+                registration=self.instance,
+            )
 
     def is_valid(self):
         return not self.instance.participants.exists()

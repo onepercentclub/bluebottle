@@ -376,10 +376,25 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
-                NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect(
                     'accepted_participants',
                     ParticipantStateMachine.cancel
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "accepted_participants", ParticipantStateMachine.reject
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants", ParticipantStateMachine.restore
                 ),
             ]
         ),
@@ -439,7 +454,21 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
 
 @register(DeadlineActivity)
 class DeadlineActivityTriggers(RegistrationActivityTriggers):
-    pass
+    triggers = RegistrationActivityTriggers.triggers + [
+        ModelChangedTrigger(
+            "capacity",
+            effects=[
+                TransitionEffect(
+                    TimeBasedStateMachine.reopen,
+                    conditions=[is_not_full, registration_deadline_is_not_passed],
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[is_full, registration_deadline_is_not_passed],
+                ),
+            ],
+        ),
+    ]
 
 
 @register(PeriodicActivity)

@@ -166,14 +166,14 @@ class TimeBasedAdmin(ActivityChildAdmin):
     duration_string.short_description = _('Duration')
 
     registration_fields = (
-        'review',
-        'registration_flow',
-        'review_title',
-        'review_description',
-        'review_document_enabled',
-        'review_link',
-        'preparation',
-        'registration_deadline',
+        "review",
+        "registration_flow",
+        "review_title",
+        "review_description",
+        "review_document_enabled",
+        "review_link",
+        "preparation",
+        "registration_deadline",
     )
 
     def get_registration_fields(self, request, obj):
@@ -181,9 +181,10 @@ class TimeBasedAdmin(ActivityChildAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (_('Registration'), {
-            'fields': self.get_registration_fields(request, obj)
-        }))
+        fieldsets.insert(
+            1,
+            (_("Registration"), {"fields": self.get_registration_fields(request, obj)}),
+        )
         return fieldsets
 
 
@@ -376,10 +377,10 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
 @admin.register(PeriodicSlot)
 class PeriodicSlotAdmin(StateMachineAdmin):
-    list_display = ('start', 'end', 'activity', 'participant_count')
+    list_display = ("start", "end", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
-    readonly_fields = ('activity', 'start', 'end', 'status')
+    readonly_fields = ("activity", "start", "end", "status")
     fields = readonly_fields
 
     def participant_count(self, obj):
@@ -390,12 +391,13 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ('edit', 'start', 'end', 'participant_count')
-    fields = ('edit', 'start', 'end', 'participant_count')
+    readonly_fields = ("edit", "start", "end", "participant_count")
+    fields = ("edit", "start", "end", "participant_count")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
-    participant_count.short_description = _('Accepted participants')
+
+    participant_count.short_description = _("Accepted participants")
 
     def has_add_permission(self, request, obj):
         return False
@@ -404,9 +406,10 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
         return format_html(
             '<a href="{}">{}</a>',
             reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit slot')
+                "admin:time_based_{}_change".format(obj.__class__.__name__.lower()),
+                args=(obj.id,),
+            ),
+            _("Edit slot"),
         )
 
 
@@ -428,17 +431,15 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = super().get_detail_fields(request, obj) + (
-            'expertise',
-            'period',
-            'duration',
-
-            'start',
-            'deadline',
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-
+            "expertise",
+            "period",
+            "duration",
+            "start",
+            "deadline",
+            "is_online",
+            "location",
+            "location_hint",
+            "online_meeting_url",
         )
         return fields
 
@@ -1125,9 +1126,7 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
             fieldsets += [
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
+                (_("Super admin"), {"fields": ("force_status",)}),
             ]
         return fieldsets
 

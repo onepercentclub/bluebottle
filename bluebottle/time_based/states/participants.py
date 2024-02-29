@@ -119,6 +119,14 @@ class ParticipantStateMachine(ContributorStateMachine):
         permission=can_accept_participant,
     )
 
+    restore = Transition(
+        [rejected, cancelled],
+        new,
+        name=_("Reject"),
+        description=_("Reject this person as a participant in the activity."),
+        automatic=True,
+    )
+
     succeed = Transition(
         [
             ContributorStateMachine.new,
@@ -234,12 +242,12 @@ class DeadlineParticipantStateMachine(ParticipantStateMachine):
         ParticipantStateMachine.succeeded,
         name=_('Succeed'),
         description=_("This participant has completed their contribution."),
-        automatic=False,
-        permission=ParticipantStateMachine.can_accept_participant,
+        automatic=True,
     )
 
     accept = Transition(
         [
+            ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
         ],
         ParticipantStateMachine.succeeded,
@@ -247,7 +255,6 @@ class DeadlineParticipantStateMachine(ParticipantStateMachine):
         description=_("Accept this person as a participant to the Activity."),
         passed_label=_('accepted'),
         automatic=True,
-        permission=ParticipantStateMachine.can_accept_participant,
     )
 
     add = Transition(

@@ -28,8 +28,10 @@ from bluebottle.activities.admin import (
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -64,7 +66,7 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
             fields += ('user',)
         return fields
 
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
     extra = 0
     ordering = ['-created']
     template = 'admin/participant_list.html'
@@ -163,28 +165,76 @@ class TimeBasedAdmin(ActivityChildAdmin):
                 duration=duration,
                 time_unit=obj.duration_period[0:-1])
         return duration
+
     duration_string.short_description = _('Duration')
 
+    detail_fields = (
+        'title',
+        'description',
+        'image',
+        'video_url'
+    )
+
+    status_fields = (
+        'initiative',
+        'owner',
+        'highlight',
+        'created',
+        'updated',
+        'has_deleted_data',
+        'status',
+        'states',
+    )
+
     registration_fields = (
-        "review",
-        "registration_flow",
-        "review_title",
-        "review_description",
-        "review_document_enabled",
-        "review_link",
-        "preparation",
-        "registration_deadline",
+        'expertise',
+        'review',
+        'registration_flow',
+        'review_title',
+        'review_description',
+        'review_document_enabled',
+        'review_link',
+        'preparation',
+        'registration_deadline',
     )
 
     def get_registration_fields(self, request, obj):
         return self.registration_fields
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(
-            1,
-            (_("Registration"), {"fields": self.get_registration_fields(request, obj)}),
-        )
+        settings = InitiativePlatformSettings.objects.get()
+        fieldsets = [
+            (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
+            (_('Registration'), {'fields': self.get_registration_fields(request, obj)}),
+            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
+        ]
+
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                if 'office_restriction' not in self.office_fields:
+                    self.office_fields += (
+                        'office_restriction',
+                    )
+            fieldsets.insert(2, (
+                _('Office'), {'fields': self.office_fields}
+            ))
+
+        if request.user.is_superuser:
+            fieldsets += [
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                )}),
+            ]
+
+        if SegmentType.objects.count():
+            fieldsets.insert(4, (
+                _('Segments'), {
+                    'fields': [
+                        segment_type.field_name
+                        for segment_type in SegmentType.objects.all()
+                    ]
+                }
+            ))
         return fieldsets
 
 
@@ -233,6 +283,7 @@ class DateActivitySlotInline(TabularInlinePaginated):
             return f'{obj.start.astimezone(timezone(obj.location.timezone))} ({obj.location.timezone})'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
+
     timezone.short_description = _('Timezone')
 
 
@@ -261,16 +312,13 @@ class DateActivityAdmin(TimeBasedAdmin):
 
     def duration(self, obj):
         return obj.slots.count()
+
     duration.short_description = _('Slots')
 
     def participant_count(self, obj):
         return obj.accepted_participants.count() + obj.deleted_successful_contributors or 0
-    participant_count.short_description = _('Participants')
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'expertise',
-        'capacity',
-    )
+    participant_count.short_description = _('Participants')
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
@@ -286,6 +334,7 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
 
     def status_label(self, obj):
         return obj.states.current_state.name
+
     status_label.short_description = _('Status')
 
 
@@ -298,7 +347,7 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Registrations")
     readonly_fields = ('status', 'edit')
     fields = ('edit', 'user', 'status',)
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:
@@ -328,7 +377,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
-    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
+    readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
@@ -338,21 +387,22 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    def get_detail_fields(self, request, obj):
-        fields = super().get_detail_fields(request, obj) + (
-            'is_online',
-            'location',
-            'location_hint',
-            'online_meeting_url',
-            'expertise',
-            'duration',
-            'start',
-            'deadline',
-        )
-        initiative_settings = InitiativePlatformSettings.load()
-        if initiative_settings.team_activities:
-            fields += ('team_activity',)
-        return fields
+    date_fields = [
+        'duration',
+        'start',
+        'deadline',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Date & time'), {'fields': self.date_fields}
+        ))
+        return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
@@ -368,10 +418,12 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
         return duration
+
     duration_string.short_description = _('Duration')
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
+
     participant_count.short_description = _('Participants')
 
 
@@ -397,7 +449,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
-    participant_count.short_description = _("Accepted participants")
+    participant_count.short_description = _('Accepted participants')
 
     def has_add_permission(self, request, obj):
         return False
@@ -431,17 +483,27 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     def get_detail_fields(self, request, obj):
         fields = super().get_detail_fields(request, obj) + (
-            "expertise",
-            "period",
-            "duration",
-            "start",
-            "deadline",
-            "is_online",
-            "location",
-            "location_hint",
-            "online_meeting_url",
+            'expertise',
         )
         return fields
+
+    date_fields = [
+        'period',
+        'duration',
+        'start',
+        'deadline',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Date & time'), {'fields': self.date_fields}
+        ))
+        return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
         ('deadline', 'Deadline'),
@@ -458,15 +520,16 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
         return duration
+
     duration_string.short_description = _('Duration')
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
+
     participant_count.short_description = _('Participants')
 
 
 class SlotParticipantInline(admin.TabularInline):
-
     model = SlotParticipant
     readonly_fields = ['participant_link', 'smart_status', 'participant_status']
     fields = readonly_fields
@@ -489,11 +552,11 @@ class SlotParticipantInline(admin.TabularInline):
 
     def smart_status(self, obj):
         return obj.status
+
     smart_status.short_description = _('Registered')
 
 
 class SlotAdmin(StateMachineAdmin):
-
     raw_id_fields = ['activity', 'location']
 
     formfield_overrides = {
@@ -520,6 +583,7 @@ class SlotAdmin(StateMachineAdmin):
             args=(obj.activity.id,)
         )
         return format_html('<a href="{}">{}</a>', url, obj.activity)
+
     activity_link.short_description = _('Activity')
 
     def get_form(self, request, obj=None, **kwargs):
@@ -663,7 +727,6 @@ class RequiredSlotFilter(SimpleListFilter):
 
 
 class SlotDuplicateForm(forms.Form):
-
     INTERVAL_CHOICES = (
         ('day', _('day')),
         ('week', _('week')),
@@ -718,7 +781,6 @@ class SlotDuplicateForm(forms.Form):
 
 
 class SlotBulkAddForm(forms.Form):
-
     emails = forms.CharField(
         label=_('Emails'),
         help_text=_('Enter one email address per line'),
@@ -762,12 +824,14 @@ class DateSlotAdmin(SlotAdmin):
 
     def participants(self, obj):
         return obj.accepted_participants.count()
+
     participants.short_description = _('Accepted participants')
 
     def required(self, obj):
         if obj.activity.slot_selection == 'free':
             return _('Optional')
         return _('Required')
+
     required.short_description = _('Required')
 
     detail_fields = SlotAdmin.detail_fields + [
@@ -878,7 +942,6 @@ class TimeContributionAdmin(ContributionChildAdmin):
 
 
 class SlotWidget(TextInput):
-
     template_name = 'admin/widgets/slot_widget.html'
 
 
@@ -968,7 +1031,6 @@ class ParticipantSlotInline(admin.TabularInline):
 
 @admin.register(DateParticipant)
 class DateParticipantAdmin(ContributorChildAdmin):
-
     formfield_overrides = {
         PrivateDocumentModelChoiceField: {'widget': DocumentWidget}
     }
@@ -1201,4 +1263,5 @@ class SkillAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
             "<a href='{}'>{} {}</a>",
             url, obj.member_set.count(), _('users')
         )
+
     member_link.short_description = _('Users with this skill')

@@ -1147,6 +1147,10 @@ class PeriodicSlot(TriggerMixin, models.Model):
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
     duration = models.DurationField(_('duration'), null=True, blank=True)
 
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(status="accepted")
+
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(PeriodicSlot, on_delete=models.CASCADE, related_name='participants')

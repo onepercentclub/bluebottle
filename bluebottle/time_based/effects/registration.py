@@ -1,6 +1,7 @@
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.time_based.models import DeadlineActivity
 
 
 class CreateParticipantEffect(Effect):
@@ -30,6 +31,5 @@ class CreateInitialPeriodicParticipantEffect(Effect):
             registration=self.instance,
             slot=slot
         )
-
     def is_valid(self):
         return not self.instance.participants.exists()

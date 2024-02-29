@@ -82,6 +82,7 @@ class DeadlineRegistrationStateMachine(RegistrationStateMachine):
 
 @register(PeriodicRegistration)
 class PeriodicRegistrationStateMachine(RegistrationStateMachine):
+
     def is_user(self, user):
         """can accept participant"""
         return user == self.instance.user
@@ -131,5 +132,5 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         name=_('Start again'),
         description=_("Start contributing to this activity again."),
         automatic=False,
-        permission=is_user,
+        permission=RegistrationStateMachine.can_accept_registration,
     )

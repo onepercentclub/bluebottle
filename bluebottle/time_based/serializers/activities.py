@@ -28,7 +28,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     registration_count = serializers.SerializerMethodField()
 
     def get_registration_count(self, instance):
-        return instance.registrations.count()
+        return instance.registrations.filter(status='accepted').count()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)

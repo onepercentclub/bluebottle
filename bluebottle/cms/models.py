@@ -736,12 +736,20 @@ class ImagePlainTextItem(TitledContent):
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
+        null=True,
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
             validate_file_infection
         ]
+    )
+    video_url = models.URLField(
+        _("Video URL"),
+        max_length=255,
+        null=True,
+        blank=True
     )
     action_text = models.CharField(
         max_length=80,

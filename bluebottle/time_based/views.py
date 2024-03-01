@@ -727,8 +727,8 @@ class PeriodParticipantExportView(ExportView):
     def get_fields(self):
         question = self.get_object().review_title
         fields = (
-            ('participant__user__email', 'Email'),
-            ('participant__user__full_name', 'Name'),
+            ('user__email', 'Email'),
+            ('user__full_name', 'Name'),
             ('created', 'Registration Date'),
             ('status', 'Status'),
         )

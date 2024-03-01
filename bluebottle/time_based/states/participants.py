@@ -1,13 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import (
-    ContributorStateMachine
-)
-from bluebottle.fsm.state import (
-    register, State, Transition, EmptyState
-)
+from bluebottle.activities.states import ContributorStateMachine
+from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, PeriodicParticipant, )
+    DateParticipant,
+    PeriodicParticipant,
+)
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
@@ -107,24 +105,12 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
     reject = Transition(
-        [
-            ContributorStateMachine.new,
-            accepted,
-            succeeded
-        ],
+        [ContributorStateMachine.new, accepted, succeeded],
         rejected,
-        name=_('Reject'),
-        description=_("Reject this person as a participant in the activity."),
-        automatic=True,
-        permission=can_accept_participant,
-    )
-
-    restore = Transition(
-        [rejected, cancelled],
-        new,
         name=_("Reject"),
         description=_("Reject this person as a participant in the activity."),
-        automatic=True,
+        automatic=False,
+        permission=can_accept_participant,
     )
 
     succeed = Transition(
@@ -201,100 +187,44 @@ class DateParticipantStateMachine(ParticipantStateMachine):
     pass
 
 
-@register(PeriodParticipant)
-class PeriodParticipantStateMachine(ParticipantStateMachine):
-    def is_not_team(self):
-        return not self.instance.team
-
-    stopped = State(
-        _('stopped'),
-        'stopped',
-        _('The participant (temporarily) stopped. Contributions will no longer be created.')
-    )
-
-    stop = Transition(
-        ParticipantStateMachine.accepted,
-        stopped,
-        name=_('Stop'),
-        permission=ParticipantStateMachine.can_accept_participant,
-        description=_("Participant stopped contributing."),
-        automatic=False,
-        conditions=[ParticipantStateMachine.activity_is_open, is_not_team]
-    )
-
-    start = Transition(
-        stopped,
-        ParticipantStateMachine.accepted,
-        name=_('Start'),
-        permission=ParticipantStateMachine.can_accept_participant,
-        description=_("Participant started contributing again."),
-        automatic=False,
-    )
-
-
-@register(DeadlineParticipant)
-class DeadlineParticipantStateMachine(ParticipantStateMachine):
-    succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
-        automatic=True,
-    )
-
+class RegistrationParticipantStateMachine(ParticipantStateMachine):
     accept = Transition(
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
         ],
         ParticipantStateMachine.succeeded,
-        name=_('Accept'),
+        name=_("Accept"),
         description=_("Accept this person as a participant to the Activity."),
-        passed_label=_('accepted'),
+        passed_label=_("accepted"),
         automatic=True,
     )
 
-    add = Transition(
+    reject = Transition(
         [
-            ContributorStateMachine.new
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Add'),
-        description=_("Add this person as a participant to the activity."),
-        automatic=True
-    )
-
-    remove = Transition(
-        [
+            ContributorStateMachine.new,
             ParticipantStateMachine.accepted,
-            ParticipantStateMachine.succeeded
+            ParticipantStateMachine.succeeded,
         ],
-        ParticipantStateMachine.removed,
-        name=_('Remove'),
-        passed_label=_('removed'),
-        description=_("Remove this person as a participant from the activity."),
-        automatic=False,
+        ParticipantStateMachine.rejected,
+        name=_("Reject"),
+        description=_("Reject this person as a participant in the activity."),
+        automatic=True,
         permission=ParticipantStateMachine.can_accept_participant,
     )
 
-    readd = Transition(
+    restore = Transition(
         [
-            ParticipantStateMachine.removed,
+            ParticipantStateMachine.withdrawn,
+            ParticipantStateMachine.rejected,
+            ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.succeeded,
-        name=_('Re-add'),
-        passed_label=_('re-added'),
-        description=_("Re-add this person as a participant to the activity"),
-        automatic=False,
-        permission=ParticipantStateMachine.can_accept_participant,
+        ParticipantStateMachine.new,
+        name=_("Restore"),
+        description=_("Restore previously failed participant"),
+        automatic=True,
     )
 
-
-@register(PeriodicParticipant)
-class PeriodicParticipantStateMachine(ParticipantStateMachine):
     succeed = Transition(
         [
             ContributorStateMachine.new,
@@ -324,9 +254,26 @@ class PeriodicParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.removed,
         ],
         ParticipantStateMachine.new,
-        name=_('Re-add'),
-        passed_label=_('re-added'),
+        name=_("Re-add"),
+        passed_label=_("re-added"),
         description=_("Re-add this person as a participant to the activity"),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )
+
+
+@register(DeadlineParticipant)
+class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
+
+    add = Transition(
+        [ContributorStateMachine.new],
+        ParticipantStateMachine.succeeded,
+        name=_("Add"),
+        description=_("Add this person as a participant to the activity."),
+        automatic=True,
+    )
+
+
+@register(PeriodicParticipant)
+class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
+    pass

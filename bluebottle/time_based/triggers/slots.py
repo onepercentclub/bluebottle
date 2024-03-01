@@ -22,7 +22,7 @@ class PeriodicSlotTriggers(TriggerManager):
         TransitionTrigger(
             PeriodicSlotStateMachine.finish,
             effects=[
-                CreateNextSlotEffect,
+                # CreateNextSlotEffect,
                 RelatedTransitionEffect(
                     'participants',
                     PeriodicParticipantStateMachine.succeed,

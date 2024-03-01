@@ -403,5 +403,6 @@ class CreatePeriodicParticipantsEffect(Effect):
             PeriodicParticipant.objects.create(
                 user=registration.user,
                 slot=self.instance,
-                activity=self.instance.activity
+                activity=self.instance.activity,
+                registration=registration,
             )

@@ -184,7 +184,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    PeriodicParticipantStateMachine.fail,
+                    PeriodicParticipantStateMachine.withdraw,
                 ),
                 RelatedTransitionEffect(
                     "activity",
@@ -198,7 +198,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    PeriodicParticipantStateMachine.succeed,
+                    PeriodicParticipantStateMachine.restore,
                 ),
                 RelatedTransitionEffect(
                     "activity",

@@ -12,6 +12,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
 )
 
 
@@ -38,25 +39,6 @@ class ParticipantTriggerTestCase:
         self.activity.states.publish(save=True)
 
         mail.outbox = []
-
-
-class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    activity_factory = DeadlineActivityFactory
-
-    def create(self, user=None, as_user=None):
-        if not user:
-            user = BlueBottleUserFactory.create()
-
-        if not as_user:
-            as_user = user
-
-        self.participant = DeadlineParticipantFactory.create(
-            activity=self.activity, user=user, as_user=as_user
-        )
-
-    def register(self):
-        registration = DeadlineRegistrationFactory.create(activity=self.activity)
-        self.participant = registration.participants.get()
 
     def test_initial(self):
         self.register()
@@ -175,6 +157,25 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.status, "succeeded")
 
+
+class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    activity_factory = DeadlineActivityFactory
+
+    def create(self, user=None, as_user=None):
+        if not user:
+            user = BlueBottleUserFactory.create()
+
+        if not as_user:
+            as_user = user
+
+        self.participant = DeadlineParticipantFactory.create(
+            activity=self.activity, user=user, as_user=as_user
+        )
+
+    def register(self):
+        registration = DeadlineRegistrationFactory.create(activity=self.activity)
+        self.participant = registration.participants.get()
+
     def test_initial_added_through_admin(self):
         mail.outbox = []
         self.create(as_user=self.admin_user)
@@ -220,3 +221,18 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
                 self.activity.title
             ),
         )
+
+
+class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    activity_factory = PeriodicActivityFactory
+
+    def register(self):
+        registration = PeriodicRegistrationFactory.create(activity=self.activity)
+
+        slot = self.activity.slots.get()
+        self.participant = registration.participants.get(slot=slot)
+
+        slot.states.start(save=True)
+        slot.states.finish(save=True)
+
+        self.participant.refresh_from_db()

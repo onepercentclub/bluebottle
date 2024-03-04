@@ -286,6 +286,22 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ]
         ),
         TransitionTrigger(
+            RegistrationParticipantStateMachine.readd,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
             DeadlineParticipantStateMachine.remove,
             effects=[
                 NotificationEffect(UserParticipantRemovedNotification),
@@ -351,6 +367,24 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             PeriodicParticipantStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
+                )
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicParticipantStateMachine.readd,
+            effects=[
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
+                )
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicParticipantStateMachine.reapply,
             effects=[
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,

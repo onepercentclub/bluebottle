@@ -96,5 +96,6 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(self.registration.participants.count(), 2)
 
-        for participant in self.registration.participants.all():
-            self.assertEqual(participant.status, "new")
+        participants = self.registration.participants.order_by("slot__start")
+        self.assertEqual(participants[0].status, "succeeded")
+        self.assertEqual(participants[1].status, "new")

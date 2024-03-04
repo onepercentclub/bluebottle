@@ -1,0 +1,100 @@
+from dateutil.relativedelta import relativedelta
+from django.core import mail
+
+from bluebottle.initiatives.tests.factories import (
+    InitiativeFactory,
+    InitiativePlatformSettingsFactory,
+)
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.tests.factories import (
+    PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
+)
+
+
+class PeriodicSlotTriggerTestCase(BluebottleTestCase):
+    activity_factory = PeriodicActivityFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.activity_factory._meta.model.__name__.lower()]
+        )
+        self.admin_user = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory()
+
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = self.activity_factory.create(
+            initiative=self.initiative,
+            period="weeks",
+            registration_deadline=None,
+        )
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+
+        mail.outbox = []
+
+    def register(self):
+        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
+
+    @property
+    def first_slot(self):
+        return self.activity.slots.first()
+
+    def test_initial(self):
+        self.register()
+        self.assertEqual(self.first_slot.status, "new")
+        self.assertEqual(self.first_slot.participants.get().status, "new")
+
+    def test_initial_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        self.register()
+        self.assertEqual(self.first_slot.status, "new")
+        self.assertEqual(self.first_slot.participants.get().status, "new")
+
+    def test_start(self):
+        self.register()
+        self.first_slot.states.start(save=True)
+        self.assertEqual(self.first_slot.status, "running")
+        self.assertEqual(self.first_slot.participants.get().status, "new")
+
+    def test_finish(self):
+        self.test_start()
+        self.first_slot.states.finish(save=True)
+
+        self.assertEqual(self.first_slot.status, "finished")
+        self.assertEqual(self.first_slot.participants.get().status, "succeeded")
+
+        self.assertTrue(self.activity.slots.count(), 2)
+
+        second_slot = self.activity.slots.all()[1]
+        self.assertEqual(second_slot.status, "running")
+
+        self.assertEqual(second_slot.participants.get().status, "new")
+        self.assertEqual(second_slot.participants.get().registration, self.registration)
+        self.assertEqual(second_slot.participants.get().registration, self.registration)
+
+        self.assertEqual(second_slot.start, self.first_slot.end)
+        self.assertEqual(
+            second_slot.end,
+            self.first_slot.end + relativedelta(**{self.activity.period: 1}),
+        )
+
+    def test_finish_review(self):
+        self.activity.review = True
+        self.activity.save()
+
+        self.test_start()
+        self.first_slot.states.finish(save=True)
+
+        self.assertEqual(self.first_slot.status, "finished")
+
+        self.assertEqual(self.registration.participants.count(), 2)
+
+        for participant in self.registration.participants.all():
+            self.assertEqual(participant.status, "new")

@@ -42,7 +42,7 @@ class ParticipantTriggerTestCase:
 
     def test_initial(self):
         self.register()
-        self.assertTrue(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, "succeeded")
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
         )
@@ -60,7 +60,7 @@ class ParticipantTriggerTestCase:
     def test_withdraw(self):
         self.test_initial()
         self.participant.states.withdraw(save=True)
-        self.assertTrue(self.participant.status, "withdrawn")
+        self.assertEqual(self.participant.status, "withdrawn")
 
         self.assertFalse(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -76,7 +76,7 @@ class ParticipantTriggerTestCase:
     def test_reapply(self):
         self.test_withdraw()
         self.participant.states.reapply(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, "succeeded")
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -93,7 +93,7 @@ class ParticipantTriggerTestCase:
     def test_remove(self):
         self.test_initial()
         self.participant.states.remove(save=True)
-        self.assertTrue(self.participant.status, "removed")
+        self.assertEqual(self.participant.status, "removed")
 
         self.assertFalse(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -109,7 +109,7 @@ class ParticipantTriggerTestCase:
     def test_readd(self):
         self.test_remove()
         self.participant.states.readd(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, "succeeded")
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -126,7 +126,7 @@ class ParticipantTriggerTestCase:
     def test_reject(self):
         self.test_initial()
         self.participant.states.reject(save=True)
-        self.assertTrue(self.participant.status, "rejected")
+        self.assertEqual(self.participant.status, "rejected")
 
         self.assertFalse(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -143,7 +143,7 @@ class ParticipantTriggerTestCase:
         self.test_reject()
 
         self.participant.states.accept(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, "succeeded")
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()

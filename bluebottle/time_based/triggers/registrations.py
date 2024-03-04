@@ -148,9 +148,14 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
-            PeriodicRegistrationStateMachine.auto_accept,
+            PeriodicRegistrationStateMachine.initiate,
             effects=[
                 CreateInitialPeriodicParticipantEffect,
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.auto_accept,
+            effects=[
                 RelatedTransitionEffect(
                     "activity",
                     PeriodicActivityStateMachine.lock,
@@ -161,7 +166,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             PeriodicRegistrationStateMachine.accept,
             effects=[
-                CreateInitialPeriodicParticipantEffect,
                 RelatedTransitionEffect(
                     "activity",
                     PeriodicActivityStateMachine.lock,

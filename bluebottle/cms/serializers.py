@@ -756,7 +756,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImagePlainTextItem
         fields = (
-            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',
+            'id', 'text', 'image', 'video_url', 'ratio', 'align', 'type', 'title', 'sub_title',
             'action_text', 'action_link'
         )
 
@@ -769,7 +769,7 @@ class ImageBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImageItem
-        fields = ('id', 'type', 'image', 'title', 'sub_title')
+        fields = ('id', 'type', 'video_url', 'image', 'title', 'sub_title')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

@@ -736,12 +736,20 @@ class ImagePlainTextItem(TitledContent):
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
+        null=True,
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
             validate_file_infection
         ]
+    )
+    video_url = models.URLField(
+        _("Video URL"),
+        max_length=255,
+        null=True,
+        blank=True
     )
     action_text = models.CharField(
         max_length=80,
@@ -788,6 +796,8 @@ class ImageItem(TitledContent):
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
+        null=True,
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
@@ -795,13 +805,19 @@ class ImageItem(TitledContent):
             validate_file_infection
         ]
     )
+    video_url = models.URLField(
+        _("Video URL"),
+        max_length=255,
+        null=True,
+        blank=True
+    )
     preview_template = 'admin/cms/preview/default.html'
 
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Image')
-        verbose_name_plural = _('Image')
+        verbose_name = _('Image or video')
+        verbose_name_plural = _('Image or video')
 
     def __str__(self):
         return self.image.name

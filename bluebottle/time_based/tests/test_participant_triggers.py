@@ -1,4 +1,5 @@
 from datetime import timedelta
+
 from django.core import mail
 
 from bluebottle.initiatives.tests.factories import (
@@ -11,7 +12,6 @@ from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
-    PeriodicActivityFactory,
 )
 
 

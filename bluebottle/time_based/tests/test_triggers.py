@@ -16,29 +16,19 @@ from bluebottle.initiatives.tests.factories import (
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
 from bluebottle.time_based.effects.effects import (
-    CreateFirstSlotEffect,
     CreateNextSlotEffect,
     CreatePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
-    ManagerParticipantAddedOwnerNotification,
-    ParticipantAddedNotification,
     ParticipantAppliedNotification,
     ParticipantChangedNotification,
     ParticipantJoinedNotification,
-)
-from bluebottle.time_based.notifications.participants import (
-    ManagerParticipantRemovedNotification,
-    UserParticipantRemovedNotification,
 )
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DateParticipantFactory,
-    DeadlineActivityFactory,
-    DeadlineParticipantFactory,
-    DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     PeriodicSlotFactory,

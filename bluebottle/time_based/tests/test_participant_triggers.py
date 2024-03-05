@@ -7,6 +7,7 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
@@ -227,12 +228,20 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     activity_factory = PeriodicActivityFactory
 
     def register(self):
-        registration = PeriodicRegistrationFactory.create(activity=self.activity)
+        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
 
         slot = self.activity.slots.get()
-        self.participant = registration.participants.get(slot=slot)
+        self.participant = self.registration.participants.get(slot=slot)
 
         slot.states.start(save=True)
         slot.states.finish(save=True)
 
         self.participant.refresh_from_db()
+
+    def test_single_preparation_contribution(self):
+        self.register()
+        preparation = TimeContribution.objects.get(
+            contributor__activity=self.activity, contribution_type="preparation"
+        )
+
+        self.assertEqual(preparation.contributor, self.participant)

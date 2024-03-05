@@ -12,6 +12,7 @@ from bluebottle.time_based.effects import CreatePreparationTimeContributionEffec
 from bluebottle.time_based.effects.participant import (
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
+    CreatePeriodicPreparationTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     ManagerParticipantAddedOwnerNotification,
@@ -33,7 +34,6 @@ from bluebottle.time_based.states import (
     DeadlineActivityStateMachine,
     RegistrationActivityStateMachine,
     PeriodicParticipantStateMachine,
-    PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
 )
 
@@ -48,7 +48,6 @@ class ParticipantTriggers(ContributorTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 FollowActivityEffect,
-                CreatePreparationTimeContributionEffect,
                 CreateTimeContributionEffect,
             ],
         ),
@@ -190,6 +189,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 CreateRegistrationEffect,
+                CreatePreparationTimeContributionEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
                     conditions=[
@@ -365,6 +365,16 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
         return effect.instance.slot.status == "finished"
 
     triggers = ParticipantTriggers.triggers + [
+        TransitionTrigger(
+            PeriodicParticipantStateMachine.initiate,
+            effects=[
+                CreatePeriodicPreparationTimeContributionEffect,
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
+                ),
+            ],
+        ),
         TransitionTrigger(
             PeriodicParticipantStateMachine.restore,
             effects=[

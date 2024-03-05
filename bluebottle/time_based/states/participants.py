@@ -163,8 +163,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         withdrawn,
         name=_('Withdraw'),
         passed_label=_('withdrawn'),
-        description=_("Stop your participation in the activity. "
-                      "Any hours spent will be kept, but no new hours will be allocated."),
+        description=_("Cancel your participation in the activity. Participation hours will not be counted."),
         automatic=False,
         permission=is_user,
         hide_from_admin=True,

@@ -268,6 +268,22 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ]
         ),
         TransitionTrigger(
+            DeadlineParticipantStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
             DeadlineParticipantStateMachine.reapply,
             effects=[
                 TransitionEffect(

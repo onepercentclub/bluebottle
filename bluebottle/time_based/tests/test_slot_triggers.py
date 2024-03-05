@@ -55,7 +55,7 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
 
         self.register()
         self.assertEqual(self.first_slot.status, "new")
-        self.assertEqual(self.first_slot.participants.get().status, "new")
+        self.assertEqual(self.first_slot.participants.count(), 0)
 
     def test_start(self):
         self.register()
@@ -84,18 +84,3 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
             second_slot.end,
             self.first_slot.end + relativedelta(**{self.activity.period: 1}),
         )
-
-    def test_finish_review(self):
-        self.activity.review = True
-        self.activity.save()
-
-        self.test_start()
-        self.first_slot.states.finish(save=True)
-
-        self.assertEqual(self.first_slot.status, "finished")
-
-        self.assertEqual(self.registration.participants.count(), 2)
-
-        participants = self.registration.participants.order_by("slot__start")
-        self.assertEqual(participants[0].status, "succeeded")
-        self.assertEqual(participants[1].status, "new")

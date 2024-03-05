@@ -19,7 +19,10 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     RegistrationStateMachine,
 )
-from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
+from bluebottle.time_based.states.participants import (
+    PeriodicParticipantStateMachine,
+    RegistrationParticipantStateMachine,
+)
 from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
@@ -86,7 +89,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.reject,
+                    RegistrationParticipantStateMachine.reject,
                 ),
             ]
         )
@@ -142,12 +145,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
-            PeriodicRegistrationStateMachine.initiate,
-            effects=[
-                CreateInitialPeriodicParticipantEffect,
-            ],
-        ),
-        TransitionTrigger(
             PeriodicRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
@@ -155,6 +152,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                CreateInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -165,6 +163,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                CreateInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(

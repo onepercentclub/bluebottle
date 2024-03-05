@@ -90,8 +90,8 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Accept'),
         description=_("Accept this person as a participant to the Activity."),
         passed_label=_('accepted'),
-        automatic=True,
         permission=can_accept_participant,
+        automatic=False,
     )
 
     add = Transition(

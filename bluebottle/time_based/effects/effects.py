@@ -399,8 +399,8 @@ class CreateNextSlotEffect(Effect):
 class CreatePeriodicParticipantsEffect(Effect):
 
     def post_save(self):
-        for registration in self.instance.activity.registrations.exclude(
-            status="stopped"
+        for registration in self.instance.activity.registrations.filter(
+            status="accepted"
         ):
             PeriodicParticipant.objects.create(
                 user=registration.user,

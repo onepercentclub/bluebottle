@@ -145,6 +145,10 @@ class DeadlineRegistationTriggerTestCase(
 
     def test_reject(self):
         super().test_reject()
+        self.assertEqual(self.registration.participants.get().status, "new")
+
+    def test_reject(self):
+        super().test_reject()
         self.assertEqual(self.registration.participants.get().status, "rejected")
 
     def test_reject_then_accept(self):
@@ -168,9 +172,10 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_initial_review(self):
         super().test_initial_review()
+
         self.assertEqual(self.registration.participants.count(), 0)
 
-    def test_initial_accept(self):
+    def test_accept(self):
         super().test_accept()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
@@ -192,13 +197,17 @@ class PeriodicRegistrationTriggerTestCase(
     def test_reapply_finished_slot(self):
         self.test_withdraw()
 
+        participant = self.registration.participants.get()
         slot = self.activity.slots.get()
         slot.states.start()
         slot.states.finish(save=True)
 
+        participant.refresh_from_db()
+
         self.registration.states.reapply(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "succeeded")
 
     def test_stop(self):
         self.test_initial()

@@ -401,13 +401,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fields
 
     def get_detail_fields(self, request, obj):
-        settings = InitiativePlatformSettings.objects.get()
-        fields = self.detail_fields
-        if obj and Location.objects.count() and not settings.enable_office_restrictions:
-            fields = list(fields)
-            fields.insert(3, 'office_location')
-            fields = tuple(fields)
-        return fields
+        return self.detail_fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields

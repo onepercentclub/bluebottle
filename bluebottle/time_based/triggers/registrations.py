@@ -130,21 +130,15 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return False
-
-        count = (
-            effect.instance.activity.registrations.filter(status="accepted").count() + 1
-        )
-        return effect.instance.activity.capacity <= count
+        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+        return effect.instance.activity.capacity <= accepted + 1
 
     def activity_spots_left(effect):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
-
-        count = (
-            effect.instance.activity.registrations.filter(status="accepted").count() - 1
-        )
-        return effect.instance.activity.capacity > count
+        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+        return effect.instance.activity.capacity > accepted - 1
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(

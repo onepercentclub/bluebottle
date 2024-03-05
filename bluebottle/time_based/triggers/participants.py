@@ -158,8 +158,8 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
     def registration_is_accepted(effect):
         """Review needed"""
         return (
-            effect.instance.registration
-            and effect.instance.registration.status == "accepted"
+            effect.instance.registration and
+            effect.instance.registration.status == "accepted"
         )
 
     def is_admin(effect):

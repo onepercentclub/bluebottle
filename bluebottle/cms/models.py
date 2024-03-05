@@ -400,8 +400,9 @@ class Step(SortableMixin, models.Model):
             ),
             validate_file_infection
         ],
-        help_text=_("The image will be displayed in a square. Upload a square or round "
-                    "image with equal height, to prevent your image from being cropped.")
+        help_text=_(
+            "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
+        ),
     )
     header = models.CharField(_("Header"), max_length=100)
     text = models.CharField(_("Text"), max_length=400, null=True, blank=True)

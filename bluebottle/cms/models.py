@@ -773,7 +773,7 @@ class ImagePlainTextItem(TitledContent):
     RATIO_CHOICES = (
         ('0.5', _("1:2 (Text twice as wide)")),
         ('1', _("1:1 (Equal width)")),
-        ('2', _("2:1 (Image twice as wide)")),
+        ('2', _("2:1 (Media twice as wide)")),
     )
 
     align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")
@@ -781,8 +781,8 @@ class ImagePlainTextItem(TitledContent):
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Plain Text + Image')
-        verbose_name_plural = _('Plain Text + Image')
+        verbose_name = _('Plain Text + Media')
+        verbose_name_plural = _('Plain Text + Media')
 
     def __str__(self):
         return Truncator(self.text).words(20)

@@ -1,18 +1,16 @@
 from datetime import date, timedelta
 from io import BytesIO
 
-from rest_framework import status
 from django.urls import reverse
 from openpyxl import load_workbook
-
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.segments.tests.factories import SegmentFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from rest_framework import status
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class TimeBasedActivityListAPITestCase:
@@ -588,8 +586,9 @@ class TimeBasedRegistrationDetailAPITestCase:
             **self.activity_defaults,
             review_title='document',
             initiative=InitiativeFactory.create(status='approved'),
-            status='open',
+            status='draft',
         )
+        self.activity.states.publish(save=True)
         self.defaults = {
             'answer': 'Some answer',
             'document': PrivateDocumentFactory.create(),

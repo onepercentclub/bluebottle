@@ -145,10 +145,6 @@ class DeadlineRegistationTriggerTestCase(
 
     def test_reject(self):
         super().test_reject()
-        self.assertEqual(self.registration.participants.get().status, "new")
-
-    def test_reject(self):
-        super().test_reject()
         self.assertEqual(self.registration.participants.get().status, "rejected")
 
     def test_reject_then_accept(self):

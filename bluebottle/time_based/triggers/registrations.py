@@ -16,7 +16,6 @@ from bluebottle.time_based.notifications.registrations import (
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
-    ParticipantStateMachine,
     RegistrationStateMachine,
 )
 from bluebottle.time_based.states.participants import (

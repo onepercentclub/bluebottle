@@ -401,7 +401,7 @@ class Step(SortableMixin, models.Model):
             validate_file_infection
         ],
         help_text=_(
-            "Please upload an image with a 16:9 aspect ratio for best results."
+            "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
         ),
     )
     header = models.CharField(_("Header"), max_length=100)

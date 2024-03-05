@@ -383,8 +383,9 @@ class TimeBasedRegistrationListAPITestCase:
             **self.activity_defaults,
             review_title='document',
             initiative=InitiativeFactory.create(status='approved'),
-            status='open',
+            status='draft',
         )
+        self.activity.states.publish(save=True)
 
         self.defaults = {
             'activity': self.activity,
@@ -694,11 +695,12 @@ class TimeBasedRegistrationTransitionListAPITestCase:
     def setUp(self):
         self.activity = self.activity_factory.create(
             initiative=InitiativeFactory.create(status='approved'),
-            status='open',
+            status='draft',
             start=date.today() + timedelta(days=10),
             deadline=date.today() + timedelta(days=20),
             review=True
         )
+        self.activity.states.publish(save=True)
         self.registration = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name)
 

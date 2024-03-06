@@ -78,7 +78,7 @@ def migrate_periodic_participants(apps, schema_editor):
                 start = end
 
             for participant in activity.contributors.filter(
-                polymorphic_ctype=period_participant_ctype
+                polymorphic_ctype=period_participant_ctype, user__isnull=False
             ):
                 status = participant.status
                 if status == "no_show":

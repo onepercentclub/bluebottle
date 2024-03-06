@@ -46,7 +46,7 @@ def migrate_deadline_participants(apps, schema_editor):
 
     for activity in activities:
         for participant in activity.contributors.filter(
-            polymorphic_ctype=period_participant_ctype
+            polymorphic_ctype=period_participant_ctype, user__isnull=False
         ):
             registration = DeadlineRegistration.objects.create(
                 user=participant.user,

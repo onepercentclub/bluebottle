@@ -108,7 +108,7 @@ class BaseTransitionEffect(Effect):
             return _('{transition} {object} if {conditions}').format(
                 transition=self.transition.name,
                 object=str(self.instance),
-                conditions=" and ".join([c.__name__ for c in self.conditions])
+                conditions=" and ".join([c.__doc__ for c in self.conditions])
             )
         return _('{transition} {object}').format(
             transition=self.transition.name,

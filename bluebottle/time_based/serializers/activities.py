@@ -5,7 +5,9 @@ from rest_framework_json_api.relations import (
     ResourceRelatedField,
     SerializerMethodHyperlinkedRelatedField,
 )
+from rest_framework_json_api.serializers import ModelSerializer
 
+from bluebottle.activities.models import Activity
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -28,7 +30,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     registration_count = serializers.SerializerMethodField()
 
     def get_registration_count(self, instance):
-        return instance.registrations.count()
+        return instance.registrations.filter(status='accepted').count()
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -116,6 +118,21 @@ class StartDateValidator():
 
         if value and end and value > end:
             raise ValidationError('The activity should start before the deadline')
+
+
+class PeriodActivitySerializer(ModelSerializer):
+    activity_type = serializers.SerializerMethodField()
+
+    def get_activity_type(self, instance):
+        return instance.JSONAPIMeta.resource_name
+
+    class Meta:
+        model = Activity
+        fields = (
+            'activity_type',
+            'slug'
+        )
+        resource_name = 'activities/time-based/periods'
 
 
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):

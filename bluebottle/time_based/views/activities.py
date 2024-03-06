@@ -1,4 +1,4 @@
-
+from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ActivitySegmentPermission
@@ -8,7 +8,7 @@ from bluebottle.time_based.models import DateActivity, DeadlineActivity, Periodi
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer,
-    PeriodicActivitySerializer, PeriodicTransitionSerializer
+    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin
 from bluebottle.transitions.views import TransitionList
@@ -54,6 +54,11 @@ class PeriodicActivityListView(TimeBasedActivityListView):
 class DateActivityDetailView(TimeBasedActivityDetailView):
     queryset = DateActivity.objects.all()
     serializer_class = DateActivitySerializer
+
+
+class PeriodActivityDetailView(TimeBasedActivityDetailView):
+    queryset = Activity.objects.all()
+    serializer_class = PeriodActivitySerializer
 
 
 class DeadlineActivityDetailView(TimeBasedActivityDetailView):

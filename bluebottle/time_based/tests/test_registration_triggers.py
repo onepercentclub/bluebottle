@@ -168,9 +168,10 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_initial_review(self):
         super().test_initial_review()
+
         self.assertEqual(self.registration.participants.count(), 0)
 
-    def test_initial_accept(self):
+    def test_accept(self):
         super().test_accept()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
@@ -180,7 +181,7 @@ class PeriodicRegistrationTriggerTestCase(
 
         self.registration.states.withdraw(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "failed")
+        self.assertEqual(self.registration.participants.get().status, "withdrawn")
 
     def test_reapply(self):
         self.test_withdraw()
@@ -192,10 +193,20 @@ class PeriodicRegistrationTriggerTestCase(
     def test_reapply_finished_slot(self):
         self.test_withdraw()
 
-        self.registration.states.reapply(save=True)
-
+        participant = self.registration.participants.get()
         slot = self.activity.slots.get()
         slot.states.start()
         slot.states.finish(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        participant.refresh_from_db()
+
+        self.registration.states.reapply(save=True)
+
+        participant.refresh_from_db()
+        self.assertEqual(participant.status, "succeeded")
+
+    def test_stop(self):
+        self.test_initial()
+        self.registration.states.stop()
+
+        self.assertEqual(self.registration.participants.get().status, "new")

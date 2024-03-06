@@ -91,9 +91,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-1-duration_1'] = 0
         form['slots-1-is_online'] = True
 
-        page = form.submit()
-        self.assertContains(page, 'That will have these effects')
-        page.forms[0].submit().follow()
+        page = form.submit().follow()
         self.assertEqual(page.status, '200 OK', 'Slots added to the activity')
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)

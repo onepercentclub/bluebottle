@@ -34,7 +34,13 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
-from bluebottle.time_based.states.states import RegistrationActivityStateMachine, PeriodicActivityStateMachine
+from bluebottle.time_based.states.participants import (
+    RegistrationParticipantStateMachine,
+)
+from bluebottle.time_based.states.states import (
+    RegistrationActivityStateMachine,
+    PeriodicActivityStateMachine,
+)
 
 
 def is_full(effect):
@@ -386,7 +392,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
             TimeBasedStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "accepted_participants", ParticipantStateMachine.reject
+                    "accepted_participants", RegistrationParticipantStateMachine.reject
                 ),
             ],
         ),
@@ -394,7 +400,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
             TimeBasedStateMachine.restore,
             effects=[
                 RelatedTransitionEffect(
-                    "participants", ParticipantStateMachine.restore
+                    "participants", RegistrationParticipantStateMachine.restore
                 ),
             ]
         ),

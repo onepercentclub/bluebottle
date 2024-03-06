@@ -62,6 +62,7 @@ class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipants
     template = "admin/create_preparation_time_contribution.html"
 
     def is_first_participant(self):
+        """First participant"""
         return (
             self.instance.registration
             and self.instance.registration.participants.count() == 0

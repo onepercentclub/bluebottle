@@ -1,10 +1,10 @@
+from builtins import object
+from builtins import str
 from collections import Iterable
 from functools import partial
 
-from builtins import str
-from builtins import object
-from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible
@@ -108,7 +108,7 @@ class BaseTransitionEffect(Effect):
             return _('{transition} {object} if {conditions}').format(
                 transition=self.transition.name,
                 object=str(self.instance),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
+                conditions=" and ".join([c.__name__ for c in self.conditions])
             )
         return _('{transition} {object}').format(
             transition=self.transition.name,

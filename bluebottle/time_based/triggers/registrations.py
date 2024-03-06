@@ -16,10 +16,12 @@ from bluebottle.time_based.notifications.registrations import (
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
-    ParticipantStateMachine,
     RegistrationStateMachine,
 )
-from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
+from bluebottle.time_based.states.participants import (
+    PeriodicParticipantStateMachine,
+    RegistrationParticipantStateMachine,
+)
 from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
@@ -86,7 +88,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.reject,
+                    RegistrationParticipantStateMachine.reject,
                 ),
             ]
         )
@@ -144,23 +146,23 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             PeriodicRegistrationStateMachine.auto_accept,
             effects=[
-                CreateInitialPeriodicParticipantEffect,
                 RelatedTransitionEffect(
                     "activity",
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                CreateInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.accept,
             effects=[
-                CreateInitialPeriodicParticipantEffect,
                 RelatedTransitionEffect(
                     "activity",
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                CreateInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -178,7 +180,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    PeriodicParticipantStateMachine.fail,
+                    PeriodicParticipantStateMachine.withdraw,
                 ),
                 RelatedTransitionEffect(
                     "activity",
@@ -192,7 +194,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    PeriodicParticipantStateMachine.succeed,
+                    PeriodicParticipantStateMachine.restore,
                 ),
                 RelatedTransitionEffect(
                     "activity",

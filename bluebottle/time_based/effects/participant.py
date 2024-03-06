@@ -4,6 +4,7 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
 from bluebottle.time_based.models import TimeContribution, ContributionTypeChoices, DeadlineRegistration
 
 
@@ -54,3 +55,29 @@ class CreateRegistrationEffect(Effect):
     conditions = [
         without_registration
     ]
+
+
+class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipantsEffect):
+    title = _("Create preparation time contribution")
+    template = "admin/create_preparation_time_contribution.html"
+
+    def is_first_participant(self):
+        """First participant"""
+        return (
+            self.instance.registration
+            and self.instance.registration.participants.count() == 0
+        )
+
+    conditions = [is_first_participant]
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        if activity.preparation:
+            start = now()
+            contribution = TimeContribution(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.preparation,
+                value=activity.preparation,
+                start=start,
+            )
+            contribution.save()

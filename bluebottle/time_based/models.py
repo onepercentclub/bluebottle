@@ -802,7 +802,9 @@ class PeriodicActivity(RegistrationActivity):
         _('Period'),
         help_text=_('When should the activity be repeated?'),
         max_length=100,
-        choices=PeriodChoices
+        blank=True,
+        null=True,
+        choices=PeriodChoices,
     )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 

@@ -198,6 +198,7 @@ class TriggerMixin(object):
     def execute_triggers(self, effects=None, **options):
         if 'user' not in options and get_current_user():
             options['user'] = get_current_user()
+
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)

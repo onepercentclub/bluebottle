@@ -25,7 +25,9 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+    DateParticipantFactory,
+    DeadlineParticipantFactory,
+    ParticipationFactory,
 )
 from bluebottle.utils.models import Language
 
@@ -403,8 +405,8 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         ParticipationFactory.create(
             value=timedelta(hours=12),
-            contributor=PeriodParticipantFactory(user=member, status='accepted'),
-            status='succeeded'
+            contributor=DeadlineParticipantFactory(user=member, status="accepted"),
+            status="succeeded",
         )
         ParticipationFactory.create_batch(
             3,

@@ -1,10 +1,10 @@
+from builtins import object
+from builtins import str
 from collections import Iterable
 from functools import partial
 
-from builtins import str
-from builtins import object
-from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible

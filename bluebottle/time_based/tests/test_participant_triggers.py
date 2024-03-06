@@ -8,10 +8,13 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
+    PeriodicActivityFactory,
+    PeriodicRegistrationFactory,
 )
 
 
@@ -39,6 +42,123 @@ class ParticipantTriggerTestCase:
 
         mail.outbox = []
 
+    def test_initial(self):
+        self.register()
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertTrue(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+        self.assertEqual(contribution.value, self.activity.duration)
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.value, self.activity.preparation)
+        self.assertEqual(preparation_contribution.status, "succeeded")
+
+    def test_withdraw(self):
+        self.test_initial()
+        self.participant.states.withdraw(save=True)
+        self.assertEqual(self.participant.status, "withdrawn")
+
+        self.assertFalse(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "failed")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "failed")
+
+    def test_reapply(self):
+        self.test_withdraw()
+        self.participant.states.reapply(save=True)
+        self.assertEqual(self.participant.status, "succeeded")
+
+        self.assertTrue(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "succeeded")
+
+    def test_remove(self):
+        self.test_initial()
+        self.participant.states.remove(save=True)
+        self.assertEqual(self.participant.status, "removed")
+
+        self.assertFalse(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "failed")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "failed")
+
+    def test_readd(self):
+        self.test_remove()
+        self.participant.states.readd(save=True)
+        self.assertEqual(self.participant.status, "succeeded")
+
+        self.assertTrue(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "succeeded")
+
+    def test_reject(self):
+        self.test_initial()
+        self.participant.states.reject(save=True)
+        self.assertEqual(self.participant.status, "rejected")
+
+        self.assertFalse(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "failed")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "failed")
+
+    def test_accept(self):
+        self.test_reject()
+
+        self.participant.states.accept(save=True)
+        self.assertEqual(self.participant.status, "succeeded")
+
+        self.assertTrue(
+            self.activity.followers.filter(user=self.participant.user).exists()
+        )
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+
+        preparation_contribution = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation_contribution.status, "succeeded")
+
 
 class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = DeadlineActivityFactory
@@ -57,123 +177,6 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     def register(self):
         registration = DeadlineRegistrationFactory.create(activity=self.activity)
         self.participant = registration.participants.get()
-
-    def test_initial(self):
-        self.register()
-        self.assertTrue(self.participant.status, "succeeded")
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "succeeded")
-        self.assertEqual(contribution.value, self.activity.duration)
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.value, self.activity.preparation)
-        self.assertEqual(preparation_contribution.status, "succeeded")
-
-    def test_withdraw(self):
-        self.test_initial()
-        self.participant.states.withdraw(save=True)
-        self.assertTrue(self.participant.status, "withdrawn")
-
-        self.assertFalse(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "failed")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "failed")
-
-    def test_reapply(self):
-        self.test_withdraw()
-        self.participant.states.reapply(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
-
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "succeeded")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
-
-    def test_remove(self):
-        self.test_initial()
-        self.participant.states.remove(save=True)
-        self.assertTrue(self.participant.status, "removed")
-
-        self.assertFalse(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "failed")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "failed")
-
-    def test_readd(self):
-        self.test_remove()
-        self.participant.states.readd(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
-
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "succeeded")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
-
-    def test_reject(self):
-        self.test_initial()
-        self.participant.states.reject(save=True)
-        self.assertTrue(self.participant.status, "rejected")
-
-        self.assertFalse(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "failed")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "failed")
-
-    def test_accept(self):
-        self.test_reject()
-
-        self.participant.states.accept(save=True)
-        self.assertTrue(self.participant.status, "succeeded")
-
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participant.user).exists()
-        )
-
-        contribution = self.participant.contributions.get(
-            timecontribution__contribution_type="period"
-        )
-        self.assertEqual(contribution.status, "succeeded")
-
-        preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
 
     def test_initial_added_through_admin(self):
         mail.outbox = []
@@ -220,3 +223,26 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
                 self.activity.title
             ),
         )
+
+
+class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    activity_factory = PeriodicActivityFactory
+
+    def register(self):
+        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
+
+        slot = self.activity.slots.get()
+        self.participant = self.registration.participants.get(slot=slot)
+
+        slot.states.start(save=True)
+        slot.states.finish(save=True)
+
+        self.participant.refresh_from_db()
+
+    def test_single_preparation_contribution(self):
+        self.register()
+        preparation = TimeContribution.objects.get(
+            contributor__activity=self.activity, contribution_type="preparation"
+        )
+
+        self.assertEqual(preparation.contributor, self.participant)

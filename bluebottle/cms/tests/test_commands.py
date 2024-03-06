@@ -14,53 +14,68 @@ PAGE_DUMP = [{
     'model': 'HomePage',
     'app': 'cms',
     'properties': {},
-    'data': [{
-        'model': 'SlidesContent',
-        'app': 'cms',
-        'fields': {
-            'language_code': 'en',
-            'sort_order': 1,
-            'title': None,
-            'sub_title': None,
-        },
-        'items': [],
-    }, {
-        'model': 'StepsContent',
-        'app': 'cms',
-        'fields': {
-            'language_code': 'en',
-            'sort_order': 2,
-            'title': None,
-            'sub_title': None,
-            'action_text': 'Start your own project',
-            'action_link': '/start-project',
-        },
-        'items': [{'model': 'Step', 'app': 'cms', 'data': {
-            'image': '',
-            'header': 'First',
-            'text': 'Go!',
-            'link': None,
-            'link_text': None,
-            'external': False,
-            'sequence': 1,
-        }}, {'model': 'Step', 'app': 'cms', 'data': {
-            'image': '',
-            'header': 'Second',
-            'text': 'Go!',
-            'link': None,
-            'link_text': None,
-            'external': False,
-            'sequence': 2,
-        }}, {'model': 'Step', 'app': 'cms', 'data': {
-            'image': '',
-            'header': 'Third',
-            'text': 'Go!',
-            'link': None,
-            'link_text': None,
-            'external': False,
-            'sequence': 3,
-        }}],
-    }],
+    'data': [
+        {
+            'model': 'SlidesContent',
+            'app': 'cms',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 1,
+                'title': None,
+                'sub_title': None,
+            },
+            'items': [],
+        }, {
+            'model': 'StepsContent',
+            'app': 'cms',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 2,
+                'title': None,
+                'sub_title': None,
+                'action_text': 'Start your own project',
+                'action_link': '/start-project',
+            },
+            'items': [
+                {
+                    'model': 'Step',
+                    'app': 'cms',
+                    'data': {
+                        'image': '',
+                        'header': 'First',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 1,
+                    }
+                }, {
+                    'model': 'Step',
+                    'app': 'cms',
+                    'data': {
+                        'image': '',
+                        'header': 'Second',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 2,
+                    }
+                }, {
+                    'model': 'Step',
+                    'app': 'cms', 'data': {
+                        'image': '',
+                        'header': 'Third',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 3,
+                    }
+                }
+            ],
+        }
+    ],
 }, {
     'model': 'Page',
     'app': 'pages',
@@ -72,19 +87,20 @@ PAGE_DUMP = [{
         'full_page': False,
         'publication_date': '2020-01-01 00:00',
     },
-    'data': [{
-        'model': 'TextItem',
-        'app': 'text',
-        'fields': {
-            'language_code': 'en',
-            'sort_order': 1,
-            'text': 'A really engaging text!',
-            'text_final': None,
-        },
-        'items': [],
-    }],
+    'data': [
+        {
+            'model': 'TextItem',
+            'app': 'text',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 1,
+                'text': 'A really engaging text!',
+                'text_final': None,
+            },
+            'items': [],
+        }
+    ],
 }]
-
 
 LINK_DUMP = [
     {

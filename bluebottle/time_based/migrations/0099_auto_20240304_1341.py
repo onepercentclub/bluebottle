@@ -10,7 +10,9 @@ def migrate_deadline_activities(apps, schema_editor):
     DeadlineActivity = apps.get_model("time_based", "DeadlineActivity")
     deadline_activity_ctype = ContentType.objects.get_for_model(DeadlineActivity)
 
-    activities = PeriodActivity.objects.filter(duration_period="overall")
+    activities = PeriodActivity.objects.filter(
+        duration_period="overall", team_activity="individuals"
+    )
 
     for activity in activities:
         print(

@@ -72,14 +72,8 @@ def migrate_periodic_participants(apps, schema_editor):
                     activity=activity,
                     start=start,
                     end=end,
+                    duration=activity.duration,
                     status="finished" if end < now() else "running",
-                )
-                print(
-                    activity,
-                    activity.period,
-                    start,
-                    end,
-                    "finished" if end < now() else "running",
                 )
                 start = end
 
@@ -96,12 +90,20 @@ def migrate_periodic_participants(apps, schema_editor):
                 for contribution in participant.contributions.filter(
                     timecontribution__contribution_type="period"
                 ):
-                    print(contribution.start, contribution.end)
                     slot = PeriodicSlot.objects.filter(
-                        start__lte=contribution.start, end__gt=contribution.start
+                        start__lte=contribution.start,
+                        end__gt=contribution.start,
+                        activity=activity,
                     ).first()
 
-                    print(slot.start, slot.end)
+                    if not slot:
+                        slot = PeriodicSlot.objects.create(
+                            start=contribution.start,
+                            end=contribution.end,
+                            activity=activity,
+                            duration=activity.duration,
+                            status="finished",
+                        )
 
                     periodic_participant = PeriodicParticipant.objects.create(
                         slot=slot,

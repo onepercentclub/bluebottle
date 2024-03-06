@@ -51,6 +51,7 @@ class CurrentStatusField(ReadOnlyField):
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    send_email = serializers.BooleanField(default=True)
 
     field = 'states'
 
@@ -58,6 +59,7 @@ class TransitionSerializer(serializers.Serializer):
         resource = self.validated_data['resource']
         transition_name = self.validated_data['transition']
         message = self.validated_data.get('message', '')
+        send_email = self.validated_data.get('send_email', '')
         states = getattr(resource, self.field)
         user = self.context['request'].user
 
@@ -70,7 +72,7 @@ class TransitionSerializer(serializers.Serializer):
         self.instance = Transition(resource, transition_name, message)
 
         transition.execute(states)
-        resource.execute_triggers(user=user, send_messages=True, message=message)
+        resource.execute_triggers(user=user, send_messages=send_email, message=message)
         resource.save()
 
     class Meta(object):

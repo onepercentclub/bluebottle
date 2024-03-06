@@ -205,7 +205,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
-            (_('Registration'), {'fields': self.get_registration_fields(request, obj)}),
+            (_('Participation'), {'fields': self.get_registration_fields(request, obj)}),
             (_('Management'), {'fields': self.get_status_fields(request, obj)}),
         ]
 

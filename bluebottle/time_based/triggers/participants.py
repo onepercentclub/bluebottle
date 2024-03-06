@@ -378,6 +378,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
 @register(PeriodicParticipant)
 class PeriodicParticipantTriggers(ParticipantTriggers):
     def slot_is_finished(effect):
+        """Slot has status finished"""
         return effect.instance.slot.status == "finished"
 
     triggers = ParticipantTriggers.triggers + [

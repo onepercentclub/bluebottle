@@ -1,5 +1,3 @@
-from importlib import import_module
-
 from django.db import models, connection
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import CelerySignalProcessor

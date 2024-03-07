@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    SerializerMethodHyperlinkedRelatedField,
+    HyperlinkedRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -13,11 +13,7 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
-    DeadlineParticipant,
-    DeadlineRegistration,
     PeriodicActivity,
-    PeriodicParticipant,
-    PeriodicRegistration
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -43,20 +39,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
                 self.fields[key].required = False
 
         self.fields['permissions'] = ResourcePermissionField(self.detail_view_name, view_args=('pk',))
-        self.fields['contributors'] = SerializerMethodHyperlinkedRelatedField(
-            model=self.participant_model,
-            read_only=True,
-            many=True,
-            related_link_view_name=self.related_participant_view_name,
-            related_link_url_kwarg='activity_id'
-        )
-        self.fields['registrations'] = SerializerMethodHyperlinkedRelatedField(
-            model=self.registration_model,
-            read_only=True,
-            many=True,
-            related_link_view_name=self.related_registration_view_name,
-            related_link_url_kwarg='activity_id'
-        )
 
         self.fields['participants_export_url'] = PrivateFileSerializer(
             self.export_view_name,
@@ -136,16 +118,25 @@ class PeriodActivitySerializer(ModelSerializer):
 
 
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):
-    participant_model = DeadlineParticipant
-    registration_model = DeadlineRegistration
     detail_view_name = 'deadline-detail'
-    related_participant_view_name = 'deadline-participants'
-    related_registration_view_name = 'related-deadline-registrations'
     export_view_name = 'deadline-participant-export'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
+
+    contributors = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="deadline-participants",
+        related_link_url_kwarg="activity_id",
+    )
+    registrations = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="related-deadline-registrations",
+        related_link_url_kwarg="activity_id",
+    )
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DeadlineActivity
@@ -173,16 +164,25 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
 
 class PeriodicActivitySerializer(TimeBasedBaseSerializer):
-    participant_model = PeriodicParticipant
-    registration_model = PeriodicRegistration
     detail_view_name = 'periodic-detail'
-    related_participant_view_name = 'periodic-participants'
-    related_registration_view_name = 'related-periodic-registrations'
     export_view_name = 'periodic-participant-export'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
+
+    contributors = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="periodic-participants",
+        related_link_url_kwarg="activity_id",
+    )
+    registrations = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="related-periodic-registrations",
+        related_link_url_kwarg="activity_id",
+    )
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity

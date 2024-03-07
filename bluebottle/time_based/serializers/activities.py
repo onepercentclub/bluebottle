@@ -13,11 +13,7 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
-    DeadlineParticipant,
-    DeadlineRegistration,
     PeriodicActivity,
-    PeriodicParticipant,
-    PeriodicRegistration
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField

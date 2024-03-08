@@ -159,8 +159,8 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
 
     def get_queryset(self):
         slots = DateActivitySlot.objects.filter(
-            start__lte=timezone.now() + timedelta(hours=26),
-            start__gt=timezone.now(),
+            start__lte=timezone.now() + timedelta(hours=25),
+            start__gt=timezone.now() + timedelta(hours=20),
             status__in=['open', 'full'],
             activity__status__in=['open', 'full']
         )
@@ -173,7 +173,7 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return str(_("Send a reminder five days before the activity slot."))
+        return str(_("Send a reminder 24 hours before the activity slot."))
 
 
 class TeamSlotReminderTask(ModelPeriodicTask):

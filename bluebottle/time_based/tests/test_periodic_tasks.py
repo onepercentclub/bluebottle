@@ -97,13 +97,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     @property
     def nigh(self):
-        return timezone.get_current_timezone().localize(
-            datetime(
-                self.slot.start.year,
-                self.slot.start.month,
-                self.slot.start.day,
-            )
-        )
+        yesterday = self.slot.start - timedelta(hours=22)
+        return yesterday
 
     @property
     def before(self):
@@ -925,7 +920,7 @@ class TeamSlotPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The team activity "{}" will take place tomorrow!'.format(self.activity.title)
+            'The team activity "{}" will take place in a few days!'.format(self.activity.title)
         )
         self.assertTrue('The team activity is just a few days away!' in mail.outbox[0].body)
 

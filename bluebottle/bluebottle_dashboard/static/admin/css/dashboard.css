@@ -327,6 +327,9 @@ fieldset {
     opacity: 0;
 }
 
+.field-image .related-widget-wrapper-icon {
+    opacity: 1;
+}
 
 
 html {

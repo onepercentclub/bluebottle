@@ -10,97 +10,98 @@ from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.models import Language
 
-PAGE_DUMP = [
-    {
-        'model': 'HomePage',
-        'data': [
-            {
-                'fields': {
-                    'language_code': 'en',
-                    'sort_order': 1,
-                    'sub_title': None,
-                    'title': None
-                },
-                'model': 'SlidesContent',
-                'app': 'cms',
-                'items': []
-            }, {
-                'fields': {
-                    'action_text': 'Start your own project',
-                    'title': None,
-                    'action_link': '/start-project',
-                    'sub_title': None,
-                    'sort_order': 2,
-                    'language_code': 'en'
-                },
-                'model': 'StepsContent',
-                'app': 'cms',
-                'items': [
-                    {
-                        'model': 'Step',
-                        'data': {
-                            'text': 'Go!',
-                            'image': '',
-                            'header': 'First',
-                            'link': None,
-                            'external': False,
-                            'sequence': 1
-                        },
-                        'app': 'cms'
-                    }, {
-                        'model': 'Step',
-                        'data': {
-                            'text': 'Go!',
-                            'image': '',
-                            'header': 'Second',
-                            'link': None,
-                            'external': False,
-                            'sequence': 2
-                        },
-                        'app': 'cms'
-                    }, {
-                        'model': 'Step',
-                        'data': {
-                            'text': 'Go!',
-                            'image': '',
-                            'header': 'Third',
-                            'link': None,
-                            'external': False,
-                            'sequence': 3
-                        },
-                        'app': 'cms'
+PAGE_DUMP = [{
+    'model': 'HomePage',
+    'app': 'cms',
+    'properties': {},
+    'data': [
+        {
+            'model': 'SlidesContent',
+            'app': 'cms',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 1,
+                'title': None,
+                'sub_title': None,
+            },
+            'items': [],
+        }, {
+            'model': 'StepsContent',
+            'app': 'cms',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 2,
+                'title': None,
+                'sub_title': None,
+                'action_text': 'Start your own project',
+                'action_link': '/start-project',
+            },
+            'items': [
+                {
+                    'model': 'Step',
+                    'app': 'cms',
+                    'data': {
+                        'image': '',
+                        'header': 'First',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 1,
                     }
-                ]
-            }
-        ],
-        'app': 'cms',
-        'properties': {}
-    }, {
-        'model': 'Page',
-        'data': [
-            {
-                'fields': {
-                    'text': 'A really engaging text!',
-                    'text_final': None,
-                    'sort_order': 1,
-                    'language_code': 'en'
-                },
-                'model': 'TextItem',
-                'app': 'text',
-                'items': []
-            }
-        ],
-        'app': 'pages',
-        'properties': {
-            'status': 'published',
-            'language': 'en',
-            'title': 'About this platform',
-            'publication_date': '2020-01-01 00:00',
-            'slug': 'about',
-            'full_page': False
+                }, {
+                    'model': 'Step',
+                    'app': 'cms',
+                    'data': {
+                        'image': '',
+                        'header': 'Second',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 2,
+                    }
+                }, {
+                    'model': 'Step',
+                    'app': 'cms', 'data': {
+                        'image': '',
+                        'header': 'Third',
+                        'text': 'Go!',
+                        'link': None,
+                        'link_text': None,
+                        'external': False,
+                        'sequence': 3,
+                    }
+                }
+            ],
         }
-    }
-]
+    ],
+}, {
+    'model': 'Page',
+    'app': 'pages',
+    'properties': {
+        'title': 'About this platform',
+        'slug': 'about',
+        'status': 'published',
+        'language': 'en',
+        'full_page': False,
+        'publication_date': '2020-01-01 00:00',
+    },
+    'data': [
+        {
+            'model': 'TextItem',
+            'app': 'text',
+            'fields': {
+                'language_code': 'en',
+                'sort_order': 1,
+                'text': 'A really engaging text!',
+                'text_final': None,
+            },
+            'items': [],
+        }
+    ],
+}]
+
 LINK_DUMP = [
     {
         'language': 'en',
@@ -214,7 +215,6 @@ class PageDumpCommandsTestCase(BluebottleTestCase):
         call_command('dumppages', '-f', 'test_pages.json')
         with open("test_pages.json", "r") as json_file:
             test_output = json.load(json_file)
-
         self.assertEqual(test_output, PAGE_DUMP)
 
     def test_loadpages(self):

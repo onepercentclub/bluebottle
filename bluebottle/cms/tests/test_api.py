@@ -401,7 +401,8 @@ class OldHomePageTestCase(BluebottleTestCase):
                     block=block,
                     header='test header',
                     text='<a href="http://example.com">link</a>',
-                    image=image
+                    link_text="Click here",
+                    image=image,
                 )
 
         response = self.client.get(self.url)
@@ -412,6 +413,9 @@ class OldHomePageTestCase(BluebottleTestCase):
         for step in response.data['blocks'][0]['steps']:
             self.assertEqual(
                 step['text'], u'<a href="http://example.com">link</a>'
+            )
+            self.assertEqual(
+                step['link_text'], 'Click here'
             )
 
     def test_steps_unsafe(self):

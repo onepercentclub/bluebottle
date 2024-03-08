@@ -310,7 +310,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
         if segments:
             obj.segments.set(segments)
-            obj.save()
 
     show_in_index = True
     date_hierarchy = 'created'

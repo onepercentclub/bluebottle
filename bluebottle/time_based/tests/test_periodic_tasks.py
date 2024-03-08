@@ -96,9 +96,12 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
                 date_activity_tasks()
 
     @property
+    def almost(self):
+        return self.slot.start - timedelta(hours=3)
+
+    @property
     def nigh(self):
-        yesterday = self.slot.start - timedelta(hours=22)
-        return yesterday
+        return self.slot.start - timedelta(hours=22)
 
     @property
     def before(self):
@@ -151,6 +154,16 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         message.id = None
         message.save()
         self.run_task(self.nigh)
+
+    def test_no_reminder_almost_started(self):
+        eng = BlueBottleUserFactory.create(primary_language='en')
+        DateParticipantFactory.create(
+            activity=self.activity,
+            user=eng,
+        )
+        mail.outbox = []
+        self.run_task(self.almost)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_reminder_different_timezone(self):
         self.slot.location = GeolocationFactory.create(

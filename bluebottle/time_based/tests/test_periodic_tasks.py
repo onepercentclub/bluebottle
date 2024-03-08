@@ -101,8 +101,8 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             datetime(
                 self.slot.start.year,
                 self.slot.start.month,
-                self.slot.start.day
-            ) - timedelta(days=4)
+                self.slot.start.day,
+            )
         )
 
     @property
@@ -137,7 +137,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+            'The activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         with TenantLanguage('en'):
             expected = '{} {} - {} ({})'.format(
@@ -157,17 +157,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         message.save()
         self.run_task(self.nigh)
 
-    def test_no_reminder_just_joined(self):
-        eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(
-            activity=self.activity,
-            user=eng,
-            created=now() - timedelta(days=2)
-        )
-        mail.outbox = []
-        self.run_task(self.nigh)
-        self.assertEqual(len(mail.outbox), 0)
-
     def test_reminder_different_timezone(self):
         self.slot.location = GeolocationFactory.create(
             position=Point(-74.2, 40.7)
@@ -184,7 +173,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.run_task(self.nigh)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+            'The activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         with TenantLanguage('en'):
             tz = pytz.timezone(self.slot.location.timezone)
@@ -212,7 +201,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.run_task(self.nigh)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(self.activity.title)
+            'The activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         with TenantLanguage('nl'):
             expected = '{} {} - {} ({})'.format(
@@ -248,7 +237,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(
+            'The activity "{}" will take place tomorrow!'.format(
                 self.activity.title
             )
         )
@@ -263,65 +252,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
-
-    def test_reminder_multiple_nigh_dates(self):
-        self.slot.title = "First slot"
-        self.slot.save()
-        self.slot2 = DateActivitySlotFactory.create(
-            activity=self.activity,
-            title='Slot 2',
-            start=datetime.combine((now() + timedelta(days=8)).date(), time(14, 0, tzinfo=UTC)),
-            duration=timedelta(hours=3)
-        )
-        self.slot3 = DateActivitySlotFactory.create(
-            activity=self.activity,
-            title='Slot 3',
-            start=datetime.combine((now() + timedelta(days=8)).date(), time(10, 0, tzinfo=UTC)),
-            duration=timedelta(hours=3)
-        )
-        self.slot4 = DateActivitySlotFactory.create(
-            activity=self.activity,
-            title='Slot 4',
-            start=datetime.combine((now() + timedelta(days=6)).date(), time(10, 0, tzinfo=UTC)),
-            duration=timedelta(hours=3)
-        )
-        eng = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(
-            activity=self.activity,
-            user=eng,
-            created=now() - timedelta(days=10)
-        )
-
-        other = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(
-            activity=self.activity,
-            user=other,
-            created=now() - timedelta(days=10)
-        )
-
-        self.slot4.slot_participants.first().states.withdraw(save=True)
-        mail.outbox = []
-        self.run_task(self.nigh)
-        self.assertEqual(len(mail.outbox), 5)
-
-        self.assertTrue('Slot 4' in mail.outbox[0].body)
-
-        # Slot 2 & 3 should be in the same emails
-        self.assertTrue(
-            'Slot 3' in mail.outbox[1].body and
-            'Slot 2' in mail.outbox[1].body
-        )
-        self.assertTrue(
-            'Slot 3' in mail.outbox[2].body and
-            'Slot 2' in mail.outbox[2].body
-        )
-
-        self.assertTrue('First slot' in mail.outbox[3].body)
-        self.assertTrue('First slot' in mail.outbox[4].body)
-
-        mail.outbox = []
-        self.run_task(self.nigh)
-        self.assertEqual(len(mail.outbox), 0, "Should send reminders only once")
 
     def test_finished_multiple_dates(self):
         self.slot.title = "First slot"
@@ -407,7 +337,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place in a few days!'.format(
+            'The activity "{}" will take place tomorrow!'.format(
                 self.activity.title
             )
         )
@@ -995,7 +925,7 @@ class TeamSlotPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The team activity "{}" will take place in a few days!'.format(self.activity.title)
+            'The team activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         self.assertTrue('The team activity is just a few days away!' in mail.outbox[0].body)
 

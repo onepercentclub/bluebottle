@@ -145,35 +145,23 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
 
-    def get_slots(self, recipient):
-        slots = self.obj.activity.slots.filter(
-            start__date=self.obj.start.date(),
-            slot_participants__participant__user=recipient,
-            slot_participants__status__in=['registered'],
-            status__in=['open', 'full']
-        ).all()
-        return slots
-
     def already_send(self, recipient):
-        slot_ids = self.get_slots(recipient).values_list('id', flat=True)
-        if slot_ids.count() == 0:
-            return True
         return Message.objects.filter(
             template=self.get_template(),
             recipient=recipient,
             content_type=get_content_type_for_model(self.obj),
-            object_id__in=slot_ids
-        ).count() > 0
+            object_id=self.obj.id
+        ).exists()
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        slots = self.get_slots(recipient).all()
+        slots = [self.obj]
         context['slots'] = [get_slot_info(slot) for slot in slots]
         return context
 
     @property
     def action_link(self):
-        return self.obj.activity.get_absolute_url()
+        return self.obj.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
 

@@ -684,9 +684,15 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = DeadlineActivity
 
+    class PeriodicInline(ActivityInlineChild):
+        readonly_fields = ["activity_link", "start", "deadline", "state_name"]
+        fields = readonly_fields
+        model = PeriodicActivity
+
     child_inlines = (
         FundingInline,
         DeadlineInline,
+        PeriodicInline,
         DateInline,
         DeedInline,
         CollectActivityInline

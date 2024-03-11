@@ -30,8 +30,13 @@ from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
-    DateActivity, DeadlineActivity, DateParticipant,
-    TimeContribution, DeadlineParticipant, PeriodicActivity
+    DateActivity,
+    DeadlineActivity,
+    DateParticipant,
+    ScheduleActivity,
+    TimeContribution,
+    DeadlineParticipant,
+    PeriodicActivity,
 )
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
@@ -689,10 +694,16 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = PeriodicActivity
 
+    class ScheduleInline(ActivityInlineChild):
+        readonly_fields = ["activity_link", "start", "deadline", "state_name"]
+        fields = readonly_fields
+        model = ScheduleActivity
+
     child_inlines = (
         FundingInline,
         DeadlineInline,
         PeriodicInline,
+        ScheduleInline,
         DateInline,
         DeedInline,
         CollectActivityInline

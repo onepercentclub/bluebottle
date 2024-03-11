@@ -8,6 +8,10 @@ from bluebottle.time_based.models import (
     DateActivity,
     DeadlineActivity,
     DeadlineParticipant,
+    PeriodicActivity,
+    PeriodicParticipant,
+    ScheduleActivity,
+    ScheduleParticipant,
     DateParticipant,
     DateActivitySlot,
 )
@@ -141,9 +145,8 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return any(slot.is_online for slot in instance.slots.all())
 
 
-@registry.register_document
-@activity.doc_type
-class DeadlinectivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class RegistrationActivityDocument(ActivityDocument):
+
     contribution_duration = fields.NestedField(properties={
         'period': fields.KeywordField(),
         'value': fields.FloatField()
@@ -155,12 +158,8 @@ class DeadlinectivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if result is not None:
             return result
 
-        if isinstance(related_instance, DeadlineParticipant):
+        if isinstance(related_instance, self.participant_class):
             return DeadlineActivity.objects.filter(contributors=related_instance)
-
-    class Django:
-        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant, )
-        model = DeadlineActivity
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
@@ -195,5 +194,37 @@ class DeadlinectivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:
             return {}
+        return {"gte": instance.start, "lte": instance.deadline}
 
-        return {'gte': instance.start, 'lte': instance.deadline}
+
+@registry.register_document
+@activity.doc_type
+class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = DeadlineParticipant
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
+        model = DeadlineActivity
+
+
+@registry.register_document
+@activity.doc_type
+class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = PeriodicParticipant
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (PeriodicParticipant,)
+        model = PeriodicActivity
+
+
+@registry.register_document
+@activity.doc_type
+class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = ScheduleParticipant
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
+        model = ScheduleActivity

@@ -45,7 +45,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     Skill,
     SlotParticipant,
-    TimeContribution, Registration, PeriodicSlot, ScheduleActivity,
+    TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -339,7 +339,7 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
 
 
 class ScheduleParticipantAdminInline(DeadlineParticipantAdminInline):
-    model = PeriodicParticipant
+    model = ScheduleParticipant
 
 
 class PeriodicParticipantAdminInline(DeadlineParticipantAdminInline):
@@ -369,6 +369,10 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
     model = DeadlineRegistration
+
+
+class ScheduleRegistrationAdminInline(BaseRegistrationAdminInline):
+    model = ScheduleRegistration
 
 
 class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
@@ -435,7 +439,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 class ScheduleActivityAdmin(TimeBasedAdmin):
     base_model = ScheduleActivity
 
-    inlines = (ScheduleParticipantAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (ScheduleRegistrationAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
@@ -1256,6 +1260,11 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
 @admin.register(DeadlineRegistration)
 class DeadlineRegistrationAdmin(RegistrationChildAdmin):
     inlines = [DeadlineParticipantAdminInline]
+
+
+@admin.register(ScheduleRegistration)
+class ScheduleRegistrationAdmin(RegistrationChildAdmin):
+    inlines = [ScheduleParticipantAdminInline]
 
 
 @admin.register(PeriodicRegistration)

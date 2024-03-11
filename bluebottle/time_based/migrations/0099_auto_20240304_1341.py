@@ -43,12 +43,13 @@ def migrate_deadline_participants(apps, schema_editor):
     activities = DeadlineActivity.objects.all()
 
     period_participant_ctype = ContentType.objects.get_for_model(PeriodParticipant)
+    deadline_participant_ctype = ContentType.objects.get_for_model(DeadlineParticipant)
 
     for activity in activities:
         for participant in activity.contributors.filter(
             polymorphic_ctype=period_participant_ctype, user__isnull=False
         ):
-            registration = DeadlineRegistration.objects.create(
+            registration, _created = DeadlineRegistration.objects.get_or_create(
                 user=participant.user,
                 activity=activity,
                 status="new" if participant.status == "new" else "accepted",
@@ -58,6 +59,7 @@ def migrate_deadline_participants(apps, schema_editor):
                 user=participant.user,
                 activity=activity,
                 status=participant.status,
+                polymorphic_ctype=deadline_participant_ctype,
             )
             participant.contributions.update(contributor=deadline_participant)
             participant.delete()

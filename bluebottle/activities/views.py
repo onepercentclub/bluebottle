@@ -1,8 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import Sum, Q, F, ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.db.models import ExpressionWrapper, BooleanField, Case, When, Value, Count
+from django.db.models import Sum, Q, F
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -42,6 +45,7 @@ from bluebottle.utils.views import (
 )
 
 
+@method_decorator(cache_page(60 * 60), name='dispatch')
 class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityLocationSerializer
     pagination_class = None
@@ -55,7 +59,8 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Activity.objects.filter(status__in=("succeeded", "open"))
+        queryset = Activity.objects.filter(status__in=("succeeded", "open", "full", "running"))
+
         collects = [
             activity for activity
             in queryset.annotate(

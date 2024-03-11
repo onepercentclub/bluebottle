@@ -253,7 +253,8 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = SorlImageField("x198", upscale=False)
+    image = SorlImageField("500x500", upscale=False)
+
     text = SafeField(required=False, allow_blank=True)
 
     class Meta(object):

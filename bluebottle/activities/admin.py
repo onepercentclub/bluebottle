@@ -29,8 +29,10 @@ from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
-from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
-    TimeContribution
+from bluebottle.time_based.models import (
+    DateActivity, DeadlineActivity, DateParticipant,
+    TimeContribution, DeadlineParticipant, PeriodicActivity
+)
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -42,9 +44,9 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Donor,
         Organizer,
         DateParticipant,
-        PeriodParticipant,
         DeedParticipant,
-        CollectContributor
+        CollectContributor,
+        DeadlineParticipant
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -87,17 +89,18 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated', 'type'
+        'created', 'updated',
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
-        if InitiativePlatformSettings.team_activities and 'team' not in self.fields:
-            self.fields += ('team',)
+        fields = self.get_fields(request, obj)
+        if InitiativePlatformSettings.team_activities and 'team' not in fields:
+            fields += ('team',)
         fieldsets = (
-            (_('Details'), {'fields': self.fields}),
+            (_('Details'), {'fields': fields}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -397,13 +400,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return fields
 
     def get_detail_fields(self, request, obj):
-        settings = InitiativePlatformSettings.objects.get()
-        fields = self.detail_fields
-        if obj and Location.objects.count() and not settings.enable_office_restrictions:
-            fields = list(fields)
-            fields.insert(3, 'office_location')
-            fields = tuple(fields)
-        return fields
+        return self.detail_fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields
@@ -561,10 +558,11 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Activity
     child_models = (
         Funding,
-        PeriodActivity,
         DateActivity,
         Deed,
-        CollectActivity
+        CollectActivity,
+        DeadlineActivity,
+        PeriodicActivity
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
@@ -681,14 +679,20 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = DateActivity
 
-    class PeriodInline(ActivityInlineChild):
+    class DeadlineInline(ActivityInlineChild):
         readonly_fields = ['activity_link', 'start', 'deadline', 'state_name']
         fields = readonly_fields
-        model = PeriodActivity
+        model = DeadlineActivity
+
+    class PeriodicInline(ActivityInlineChild):
+        readonly_fields = ["activity_link", "start", "deadline", "state_name"]
+        fields = readonly_fields
+        model = PeriodicActivity
 
     child_inlines = (
         FundingInline,
-        PeriodInline,
+        DeadlineInline,
+        PeriodicInline,
         DateInline,
         DeedInline,
         CollectActivityInline
@@ -708,56 +712,3 @@ class ActivityAdminInline(StackedPolymorphicInline):
         PaginationFormSet.request = request
         PaginationFormSet.per_page = self.per_page
         return PaginationFormSet
-
-
-@admin.register(Team)
-class TeamAdmin(StateMachineAdmin):
-    raw_id_fields = ['owner', 'activity']
-    readonly_fields = ['created', 'activity_link', 'invite_link', 'member_count']
-    fields = ['activity', 'invite_link', 'created', 'owner', 'status', 'states']
-    superadmin_fields = ['force_status']
-    list_display = ['__str__', 'activity_link', 'status', 'member_count']
-
-    def member_count(self, obj):
-        link = reverse('admin:time_based_periodparticipant_changelist') + f'?team_id={obj.id}'
-        count = obj.members.count()
-        return format_html('<a href="{}">{}</a>', link, count)
-
-    def get_inline_instances(self, request, obj=None):
-        self.inlines = []
-        if isinstance(obj.activity, PeriodActivity):
-            from bluebottle.time_based.admin import PeriodParticipantAdminInline, TeamSlotInline
-            self.inlines = [
-                PeriodParticipantAdminInline,
-                TeamSlotInline
-            ]
-        return super(TeamAdmin, self).get_inline_instances(request, obj)
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Details'), {'fields': self.fields}),
-        )
-        if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': self.superadmin_fields}),
-            )
-        return fieldsets
-
-    def activity_link(self, obj):
-        url = reverse("admin:{}_{}_change".format(
-            obj.activity._meta.app_label,
-            obj.activity._meta.model_name),
-            args=(obj.activity.id,)
-        )
-        return format_html(u"<a href='{}'>{}</a>", url, obj.activity.title or '-empty-')
-
-    activity_link.short_description = _('Activity')
-
-    def invite_link(self, obj):
-        url = obj.activity.get_absolute_url()
-        contributor = obj.members.filter(user=obj.owner).first()
-
-        if contributor.invite:
-            return f'{url}?inviteId={contributor.invite.pk}'
-
-    invite_link.short_description = _('Shareable link')

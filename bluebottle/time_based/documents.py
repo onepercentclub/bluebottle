@@ -5,7 +5,11 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
+    DateActivity,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DateParticipant,
+    DateActivitySlot,
 )
 
 SCORE_MAP = {
@@ -139,7 +143,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
 @registry.register_document
 @activity.doc_type
-class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class DeadlinectivityDocument(TimeBasedActivityDocument, ActivityDocument):
     contribution_duration = fields.NestedField(properties={
         'period': fields.KeywordField(),
         'value': fields.FloatField()
@@ -151,24 +155,24 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if result is not None:
             return result
 
-        if isinstance(related_instance, PeriodParticipant):
-            return PeriodActivity.objects.filter(contributors=related_instance)
+        if isinstance(related_instance, DeadlineParticipant):
+            return DeadlineActivity.objects.filter(contributors=related_instance)
 
     class Django:
-        related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
-        model = PeriodActivity
+        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant, )
+        model = DeadlineActivity
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
             return [{
-                'period': instance.duration_period,
+                'period': 0,
                 'start': instance.start,
                 'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
             }]
         return [{
-            'period': instance.duration_period,
             'start': instance.start,
-            'value': 0
+            'value': 0,
+            'period': 0,
         }]
 
     def prepare_position(self, instance):

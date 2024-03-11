@@ -9,12 +9,10 @@ from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
-from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, ResourceRelatedField
-)
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
-from bluebottle.activities.models import Contributor, Activity, Team
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
@@ -31,11 +29,13 @@ from bluebottle.funding.serializers import (
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
-    PeriodActivityListSerializer,
-
+    DeadlineActivitySerializer,
+    PeriodicActivitySerializer,
     DateActivitySerializer,
-    PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
-    DateParticipantListSerializer, PeriodParticipantListSerializer,
+    DateParticipantSerializer,
+    DateParticipantListSerializer,
+    DeadlineParticipantSerializer,
+    PeriodicParticipantSerializer
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
@@ -331,7 +331,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeedListSerializer,
         CollectActivityListSerializer,
         DateActivityListSerializer,
-        PeriodActivityListSerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     included_serializers = {
@@ -375,7 +376,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeedSerializer,
         CollectActivitySerializer,
         DateActivitySerializer,
-        PeriodActivitySerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     included_serializers = {
@@ -429,7 +431,8 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TinyFundingSerializer,
         DateActivityListSerializer,
-        PeriodActivityListSerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     class Meta(object):
@@ -444,7 +447,8 @@ class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantSerializer,
-        PeriodParticipantSerializer
+        DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
     ]
 
     included_serializers = {
@@ -469,7 +473,8 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantListSerializer,
-        PeriodParticipantListSerializer,
+        DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
         DeedParticipantListSerializer,
         CollectContributorListSerializer
     ]
@@ -540,16 +545,3 @@ class RelatedActivityImageContentSerializer(ImageSerializer):
     }
     content_view_name = 'related-activity-image-content'
     relationship = 'relatedimage_set'
-
-
-class TeamTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=Team.objects.all())
-    field = 'states'
-
-    included_serializers = {
-        'resource': 'bluebottle.activities.utils.TeamSerializer',
-    }
-
-    class JSONAPIMeta(object):
-        included_resources = ['resource']
-        resource_name = 'activities/team-transitions'

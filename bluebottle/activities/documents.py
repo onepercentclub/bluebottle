@@ -247,6 +247,7 @@ class ActivityDocument(Document):
         mapping = {
             'dateactivity': 'time',
             'periodactivity': 'time',
+            'deadlineactivity': 'time',
             'funding': 'funding',
             'collectactivity': 'collect',
             'deed': 'deed'

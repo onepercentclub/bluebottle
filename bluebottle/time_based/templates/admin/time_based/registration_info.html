@@ -1,0 +1,14 @@
+{% load i18n %}
+<div class="info_field">
+  <h3>{% trans "Registration pending" %}</h3>
+
+  <p>
+  {% blocktrans with instance=effects.0.instance %}
+    This participant has a pending registration. Please review the registration and approve or reject it.
+  {% endblocktrans %}
+  </p>
+  <a href="{{ url }}" class="button">
+    {% trans "Review registration" %}
+  </a>
+
+</div>

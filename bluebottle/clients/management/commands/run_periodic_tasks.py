@@ -5,8 +5,20 @@ from tenant_schemas.management.commands import InteractiveTenantOption
 from bluebottle.collect.models import CollectActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.funding.models import Funding, Donor
-from bluebottle.time_based.models import DateActivity, DateActivitySlot, PeriodActivity, TeamSlot, DateParticipant, \
-    PeriodParticipant, TimeContribution
+from bluebottle.time_based.models import (
+    DateActivity,
+    DateActivitySlot,
+    PeriodActivity,
+    TeamSlot,
+    DateParticipant,
+    PeriodParticipant,
+    TimeContribution,
+    DeadlineActivity,
+    DeadlineParticipant,
+    PeriodicParticipant,
+    PeriodicActivity,
+    PeriodicSlot,
+)
 
 
 class Command(InteractiveTenantOption, BaseCommand):
@@ -26,8 +38,15 @@ class Command(InteractiveTenantOption, BaseCommand):
             DateActivity, DateActivitySlot, DateParticipant,
             PeriodActivity, TeamSlot, PeriodParticipant,
             TimeContribution,
-            Funding, Donor,
-            Deed, CollectActivity
+            Funding,
+            Donor,
+            Deed,
+            CollectActivity,
+            DeadlineActivity,
+            DeadlineParticipant,
+            PeriodicActivity,
+            PeriodicParticipant,
+            PeriodicSlot,
         ]
 
         for model in models:

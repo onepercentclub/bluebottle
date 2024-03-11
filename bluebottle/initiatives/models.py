@@ -269,6 +269,7 @@ def get_search_filters(filters):
 
 
 class InitiativePlatformSettings(BasePlatformSettings):
+    ACTIVITY_TYPES = (
         ("funding", _("Funding")),
         ("periodactivity", _("Activity during a period")),
         ("dateactivity", _("Activity on a specific date")),

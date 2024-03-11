@@ -5,8 +5,11 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
-    DateActivity, DeadlineActivity, DeadlineParticipant, PeriodActivity, DateParticipant, PeriodParticipant,
-    DateActivitySlot
+    DateActivity,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DateParticipant,
+    DateActivitySlot,
 )
 
 SCORE_MAP = {
@@ -136,64 +139,6 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
 
     def prepare_is_online(self, instance):
         return any(slot.is_online for slot in instance.slots.all())
-
-
-@registry.register_document
-@activity.doc_type
-class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
-    contribution_duration = fields.NestedField(properties={
-        'period': fields.KeywordField(),
-        'value': fields.FloatField()
-    })
-
-    def get_instances_from_related(self, related_instance):
-        result = super().get_instances_from_related(related_instance)
-
-        if result is not None:
-            return result
-
-        if isinstance(related_instance, PeriodParticipant):
-            return PeriodActivity.objects.filter(contributors=related_instance)
-
-    class Django:
-        related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
-        model = PeriodActivity
-
-    def prepare_contribution_duration(self, instance):
-        if instance.duration:
-            return [{
-                'period': instance.duration_period,
-                'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-            }]
-        return [{
-            'period': instance.duration_period,
-            'start': instance.start,
-            'value': 0
-        }]
-
-    def prepare_position(self, instance):
-        if not instance.is_online and instance.location:
-            position = instance.location.position
-            return [{'lat': position.y, 'lon': position.x}]
-
-    def prepare_start(self, instance):
-        return [instance.start]
-
-    def prepare_end(self, instance):
-        return [instance.deadline]
-
-    def prepare_dates(self, instance):
-        return [{
-            'start': instance.start or datetime.min,
-            'end': instance.deadline or datetime.max,
-        }]
-
-    def prepare_duration(self, instance):
-        if instance.start and instance.deadline and instance.start > instance.deadline:
-            return {}
-
-        return {'gte': instance.start, 'lte': instance.deadline}
 
 
 @registry.register_document

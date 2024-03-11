@@ -823,7 +823,9 @@ class ImageItem(TitledContent):
         verbose_name_plural = _('Image or video')
 
     def __str__(self):
-        return self.image.name
+        if self.image:
+            return self.image.name
+        return f"Image/video {self.pk}"
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

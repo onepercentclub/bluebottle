@@ -790,6 +790,29 @@ class DeadlineActivity(RegistrationActivity):
         resource_name = 'activities/time-based/deadlines'
 
 
+class ScheduleActivity(RegistrationActivity):
+    url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+
+    class Meta:
+        verbose_name = _("Schedule activity")
+        verbose_name_plural = _("Schedule activities")
+
+        permissions = (
+            ('api_read_scheduleactivity', 'Can view on a schedule activities through the API'),
+            ('api_add_scheduleactivity', 'Can add on a schedule activities through the API'),
+            ('api_change_scheduleactivity', 'Can change on a schedule activities through the API'),
+            ('api_delete_scheduleactivity', 'Can delete on a schedule activities through the API'),
+
+            ('api_read_own_scheduleactivity', 'Can view own on a schedule activities through the API'),
+            ('api_add_own_scheduleactivity', 'Can add own on a schedule activities through the API'),
+            ('api_change_own_scheduleactivity', 'Can change own on a schedule activities through the API'),
+            ('api_delete_own_scheduleactivity', 'Can delete own on a schedule activities through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/schedules'
+
+
 class PeriodChoices(DjangoChoices):
     hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing
     days = ChoiceItem('days', label=_("per day"))

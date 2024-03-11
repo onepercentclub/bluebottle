@@ -471,7 +471,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
-    readonly_fields = TimeBasedAdmin.readonly_fields + ['registration_flow']
+    readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)

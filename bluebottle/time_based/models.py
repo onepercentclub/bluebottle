@@ -54,19 +54,19 @@ class TimeBasedActivity(Activity):
     )
 
     review_document_enabled = models.BooleanField(
-        _('Review document enabled'),
-        help_text=_('Can participants upload a document in the review step'),
+        _('Upload documents'),
+        help_text=_('Allow participants to upload documents that support their application.'),
         null=True, default=False
     )
 
     REGISTRATION_FLOW_CHOICES = (
-        ('none', _('No question')),
-        ('question', _('Ask the participant a question on the platform.')),
-        ('link', _('Direct the participant to an external website e.g. a Google form.')),
+        ('none', _('No')),
+        ('question', _('Ask a single question on the platform.')),
+        ('link', _('Direct the participants to a questionnaire on an external website like Microsoft forms.')),
     )
 
     registration_flow = models.CharField(
-        _('Registration flow'),
+        _('Ask a question'),
         help_text=_('Do you want to ask any questions to your participants when they join your activity?'),
         choices=REGISTRATION_FLOW_CHOICES,
         default='none',
@@ -75,24 +75,24 @@ class TimeBasedActivity(Activity):
 
     review = models.BooleanField(
         _('Review participants'),
-        help_text=_('Activity manager accepts or rejects participants or teams'),
+        help_text=_('Activity manager accepts or rejects participants or teams.'),
         null=True, default=None)
 
     review_title = models.CharField(
-        _('Registration step title'),
-        help_text=_('Title of the registration step'),
+        _('Question label'),
+        help_text=_('This is the question that participants will answer.'),
         max_length=255,
         null=True, blank=True
     )
 
     review_description = models.TextField(
-        _('Registration description'),
-        help_text=_('Description of the registration step'),
+        _('Question description'),
+        help_text=_('Give some more context to help the participant answer the question.'),
         null=True, blank=True
     )
     review_link = models.URLField(
-        _('Registration link'),
-        help_text=_('External link where the participant should complete their registration'),
+        _('External website link'),
+        help_text=_('Direct participants to a questionnaire created from an external website like Microsoft forms.'),
         max_length=255,
         null=True, blank=True
     )

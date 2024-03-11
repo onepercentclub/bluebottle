@@ -14,7 +14,7 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     PeriodicSlot,
-    PeriodActivity,
+    PeriodActivity, ScheduleActivity,
 )
 
 
@@ -235,6 +235,11 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
 
 @register(DeadlineActivity)
 class DeadlineActivityStateMachine(RegistrationActivityStateMachine):
+    pass
+
+
+@register(ScheduleActivity)
+class ScheduleActivityStateMachine(RegistrationActivityStateMachine):
     pass
 
 

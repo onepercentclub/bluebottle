@@ -4,7 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant,
+    PeriodicParticipant, ScheduleParticipant,
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
@@ -271,6 +271,11 @@ class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
         description=_("Add this person as a participant to the activity."),
         automatic=True,
     )
+
+
+@register(ScheduleParticipant)
+class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
+    pass
 
 
 @register(PeriodicParticipant)

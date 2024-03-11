@@ -6,7 +6,7 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     DeadlineRegistration,
     PeriodicParticipant,
-    PeriodicRegistration,
+    PeriodicRegistration, ScheduleParticipant, ScheduleRegistration,
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -42,6 +42,25 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         ParticipantSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+        }
+    )
+
+
+class ScheduleParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
+    registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
+
+    class Meta(ParticipantSerializer.Meta):
+        model = ScheduleParticipant
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/schedule-participants'
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
         }
     )
 
@@ -83,6 +102,17 @@ class DeadlineParticipantTransitionSerializer(ParticipantTransitionSerializer):
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-participant-transitions'
+
+
+class ScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=ScheduleParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.ScheduleParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/schedule-participant-transitions'
 
 
 class PeriodicParticipantTransitionSerializer(ParticipantTransitionSerializer):

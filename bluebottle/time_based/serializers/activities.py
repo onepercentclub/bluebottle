@@ -13,7 +13,7 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
-    PeriodicActivity,
+    PeriodicActivity, ScheduleActivity,
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -151,6 +151,52 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/deadlines'
+        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
+            'location',
+        ]
+
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )
+
+
+class ScheduleActivitySerializer(TimeBasedBaseSerializer):
+    detail_view_name = 'schedule-detail'
+    export_view_name = 'schedule-participant-export'
+
+    start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
+    deadline = serializers.DateField(allow_null=True)
+    is_online = serializers.BooleanField()
+
+    contributors = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="schedule-participants",
+        related_link_url_kwarg="activity_id",
+    )
+    registrations = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name="related-schedule-registrations",
+        related_link_url_kwarg="activity_id",
+    )
+
+    class Meta(TimeBasedBaseSerializer.Meta):
+        model = ScheduleActivity
+        fields = TimeBasedBaseSerializer.Meta.fields + (
+            'start',
+            'deadline',
+            'duration',
+            'is_online',
+            'location',
+            'location_hint',
+        )
+
+    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/schedules'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
             'location',
         ]

@@ -45,7 +45,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     Skill,
     SlotParticipant,
-    TimeContribution, Registration, PeriodicSlot,
+    TimeContribution, Registration, PeriodicSlot, ScheduleActivity,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -338,6 +338,10 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     status_label.short_description = _('Status')
 
 
+class ScheduleParticipantAdminInline(DeadlineParticipantAdminInline):
+    model = PeriodicParticipant
+
+
 class PeriodicParticipantAdminInline(DeadlineParticipantAdminInline):
     model = PeriodicParticipant
 
@@ -376,6 +380,62 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     base_model = DeadlineActivity
 
     inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
+    readonly_fields = TimeBasedAdmin.readonly_fields
+    form = TimeBasedActivityAdminForm
+    list_filter = TimeBasedAdmin.list_filter + [
+        ('expertise', SortedRelatedFieldListFilter)
+    ]
+
+    list_display = TimeBasedAdmin.list_display + [
+        'start', 'end_date', 'duration_string', 'participant_count'
+    ]
+
+    date_fields = [
+        'duration',
+        'start',
+        'deadline',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url',
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(1, (
+            _('Date & time'), {'fields': self.date_fields}
+        ))
+        return fieldsets
+
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
+        ('deadline', 'Deadline'),
+        ('duration', 'TimeContribution'),
+    )
+    actions = [export_as_csv_action(fields=export_as_csv_fields)]
+
+    def end_date(self, obj):
+        if not obj.deadline:
+            return _('indefinitely')
+        return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        return duration
+
+    duration_string.short_description = _('Duration')
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    participant_count.short_description = _('Participants')
+
+
+@admin.register(ScheduleActivity)
+class ScheduleActivityAdmin(TimeBasedAdmin):
+    base_model = ScheduleActivity
+
+    inlines = (ScheduleParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm

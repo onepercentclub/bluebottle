@@ -254,11 +254,12 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField("500x500", upscale=False)
+
     text = SafeField(required=False, allow_blank=True)
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', 'link', 'external')
+        fields = ('id', 'image', 'header', 'text', 'link', 'link_text', 'external')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/steps/steps'

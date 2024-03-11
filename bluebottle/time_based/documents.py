@@ -5,8 +5,11 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
-    DateActivity, DeadlineActivity, DeadlineParticipant, PeriodActivity, DateParticipant, PeriodParticipant,
-    DateActivitySlot
+    DateActivity,
+    DeadlineActivity,
+    DeadlineParticipant,
+    DateParticipant,
+    DateActivitySlot,
 )
 
 SCORE_MAP = {

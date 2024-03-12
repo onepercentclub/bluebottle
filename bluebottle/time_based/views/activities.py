@@ -8,7 +8,8 @@ from bluebottle.time_based.models import DateActivity, DeadlineActivity, Periodi
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer,
-    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer
+    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer,
+    ScheduleTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin
 from bluebottle.transitions.views import TransitionList
@@ -92,7 +93,7 @@ class DeadlineTransitionList(TransitionList):
 
 
 class ScheduleTransitionList(TransitionList):
-    serializer_class = ScheduleActivitySerializer
+    serializer_class = ScheduleTransitionSerializer
     queryset = ScheduleActivity.objects.all()
 
 

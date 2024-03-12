@@ -24,7 +24,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TeamSlot,
-    TimeContribution,
+    TimeContribution, ScheduleActivity, ScheduleRegistration, ScheduleParticipant,
 )
 from bluebottle.utils.models import Language
 
@@ -101,6 +101,20 @@ class PeriodActivityFactory(TimeBasedFactory):
 class DeadlineActivityFactory(TimeBasedFactory):
     class Meta:
         model = DeadlineActivity
+
+    deadline = date.today() + timedelta(weeks=4)
+    registration_deadline = date.today() - timedelta(weeks=4)
+    duration = timedelta(hours=4)
+    is_online = False
+    location = factory.SubFactory(GeolocationFactory)
+    expertise = factory.SubFactory(SkillFactory)
+
+    start = (now() - timedelta(weeks=2)).date()
+
+
+class ScheduleActivityFactory(TimeBasedFactory):
+    class Meta:
+        model = ScheduleActivity
 
     deadline = date.today() + timedelta(weeks=4)
     registration_deadline = date.today() - timedelta(weeks=4)
@@ -191,6 +205,22 @@ class DeadlineParticipantFactory(FSMModelFactory):
         model = DeadlineParticipant
 
     activity = factory.SubFactory(DeadlineActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class ScheduleRegistrationFactory(FSMModelFactory):
+    class Meta(object):
+        model = ScheduleRegistration
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class ScheduleParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = ScheduleParticipant
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 

@@ -267,6 +267,17 @@ class DeadlineTransitionSerializer(TransitionSerializer):
         included_resources = ['resource', ]
 
 
+class ScheduleTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=ScheduleActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/time-based/schedule-transitions'
+        included_resources = ['resource', ]
+
+
 class PeriodicTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=PeriodicActivity.objects.all())
     included_serializers = {

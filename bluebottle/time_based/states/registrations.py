@@ -5,7 +5,7 @@ from bluebottle.fsm.state import (
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
-    PeriodicRegistration, )
+    PeriodicRegistration, ScheduleRegistration, )
 
 
 class RegistrationStateMachine(ModelStateMachine):
@@ -77,6 +77,11 @@ class RegistrationStateMachine(ModelStateMachine):
 
 @register(DeadlineRegistration)
 class DeadlineRegistrationStateMachine(RegistrationStateMachine):
+    pass
+
+
+@register(ScheduleRegistration)
+class ScheduleRegistrationStateMachine(RegistrationStateMachine):
     pass
 
 

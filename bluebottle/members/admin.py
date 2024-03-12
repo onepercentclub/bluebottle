@@ -49,8 +49,17 @@ from bluebottle.members.models import (
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin, admin_info_box
+from bluebottle.time_based.models import (
+    DateParticipant,
+    PeriodicParticipant,
+    DeadlineParticipant,
+    ScheduleParticipant,
+)
+from bluebottle.utils.admin import (
+    export_as_csv_action,
+    BasePlatformSettingsAdmin,
+    admin_info_box,
+)
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
@@ -520,13 +529,26 @@ class MemberAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
-            'date_joined', 'last_login',
-            'updated', 'deleted', 'login_as_link',
-            'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "deadline_activities",
+            "periodic_activities",
+            "schedule_activities",
+            "date_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "kyc",
+            "hours_spent",
+            "hours_planned",
+            "all_contributions",
+            "data_retention_info",
         ]
 
         user_groups = request.user.groups.all()
@@ -677,21 +699,68 @@ class MemberAdmin(UserAdmin):
         return _('None')
     date_activities.short_description = _('Activity on a date')
 
-    def period_activities(self, obj):
+    def periodic_activities(self, obj):
         applicants = []
-        applicant_url = reverse('admin:time_based_periodparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
-            if PeriodParticipant.objects.filter(status=status, user=obj).count():
-                link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
-                applicants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    PeriodParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
+        applicant_url = reverse("admin:time_based_periodicparticipant_changelist")
+        for status in ["new", "accepted", "withdrawn", "rejected"]:
+            if PeriodicParticipant.objects.filter(status=status, user=obj).count():
+                link = applicant_url + "?user_id={}&status={}".format(obj.id, status)
+                applicants.append(
+                    format_html(
+                        '<a href="{}">{}</a> {}',
+                        link,
+                        PeriodicParticipant.objects.filter(
+                            status=status, user=obj
+                        ).count(),
+                        status,
+                    )
+                )
         if len(applicants):
-            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
-    period_activities.short_description = _('Activity over a period')
+            return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
+
+    periodic_activities.short_description = _("Recurring activity")
+
+    def deadline_activities(self, obj):
+        applicants = []
+        applicant_url = reverse("admin:time_based_deadlineparticipant_changelist")
+        for status in ["new", "accepted", "withdrawn", "rejected"]:
+            if DeadlineParticipant.objects.filter(status=status, user=obj).count():
+                link = applicant_url + "?user_id={}&status={}".format(obj.id, status)
+                applicants.append(
+                    format_html(
+                        '<a href="{}">{}</a> {}',
+                        link,
+                        DeadlineParticipant.objects.filter(
+                            status=status, user=obj
+                        ).count(),
+                        status,
+                    )
+                )
+        if len(applicants):
+            return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
+
+    periodic_activities.short_description = _("Flexible activity")
+
+    def schedule_activities(self, obj):
+        applicants = []
+        applicant_url = reverse("admin:time_based_scheduleparticipant_changelist")
+        for status in ["new", "accepted", "withdrawn", "rejected"]:
+            if ScheduleParticipant.objects.filter(status=status, user=obj).count():
+                link = applicant_url + "?user_id={}&status={}".format(obj.id, status)
+                applicants.append(
+                    format_html(
+                        '<a href="{}">{}</a> {}',
+                        link,
+                        ScheduleParticipant.objects.filter(
+                            status=status, user=obj
+                        ).count(),
+                        status,
+                    )
+                )
+        if len(applicants):
+            return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
+
+    periodic_activities.short_description = _("Schedule activity")
 
     def funding(self, obj):
         donations = []

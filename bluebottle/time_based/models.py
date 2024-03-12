@@ -790,6 +790,29 @@ class DeadlineActivity(RegistrationActivity):
         resource_name = 'activities/time-based/deadlines'
 
 
+class ScheduleActivity(RegistrationActivity):
+    url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+
+    class Meta:
+        verbose_name = _("Schedule activity")
+        verbose_name_plural = _("Schedule activities")
+
+        permissions = (
+            ('api_read_scheduleactivity', 'Can view on a schedule activities through the API'),
+            ('api_add_scheduleactivity', 'Can add on a schedule activities through the API'),
+            ('api_change_scheduleactivity', 'Can change on a schedule activities through the API'),
+            ('api_delete_scheduleactivity', 'Can delete on a schedule activities through the API'),
+
+            ('api_read_own_scheduleactivity', 'Can view own on a schedule activities through the API'),
+            ('api_add_own_scheduleactivity', 'Can add own on a schedule activities through the API'),
+            ('api_change_own_scheduleactivity', 'Can change own on a schedule activities through the API'),
+            ('api_delete_own_scheduleactivity', 'Can delete own on a schedule activities through the API'),
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'activities/time-based/schedules'
+
+
 class PeriodChoices(DjangoChoices):
     hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing
     days = ChoiceItem('days', label=_("per day"))
@@ -1094,6 +1117,31 @@ class DeadlineRegistration(Registration):
         )
 
 
+class ScheduleRegistration(Registration):
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/schedule-registrations'
+
+    @property
+    def participants(self):
+        return self.scheduleparticipant_set.all()
+
+    class Meta():
+        verbose_name = _(u'Deadline registration')
+        verbose_name_plural = _(u'Deadline registrations')
+
+        permissions = (
+            ('api_read_scheduleregistration', 'Can view registation through the API'),
+            ('api_add_scheduleregistration', 'Can add registation through the API'),
+            ('api_change_scheduleregistration', 'Can change registation through the API'),
+            ('api_delete_scheduleregistration', 'Can delete registation through the API'),
+
+            ('api_read_own_scheduleregistration', 'Can view own registation through the API'),
+            ('api_add_own_scheduleregistration', 'Can add own registation through the API'),
+            ('api_change_own_scheduleregistration', 'Can change own registation through the API'),
+            ('api_delete_own_scheduleregistration', 'Can delete own registation through the API'),
+        )
+
+
 class PeriodicRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/periodic-registrations'
@@ -1138,6 +1186,27 @@ class DeadlineParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-participants'
+
+
+class ScheduleParticipant(Participant, Contributor):
+    class Meta():
+        verbose_name = _(u'Schedule participant')
+        verbose_name_plural = _(u'Schedule participants')
+
+        permissions = (
+            ('api_read_scheduleparticipant', 'Can view participant through the API'),
+            ('api_add_scheduleparticipant', 'Can add participant through the API'),
+            ('api_change_scheduleparticipant', 'Can change participant through the API'),
+            ('api_delete_scheduleparticipant', 'Can delete participant through the API'),
+
+            ('api_read_own_scheduleparticipant', 'Can view own participant through the API'),
+            ('api_add_own_scheduleparticipant', 'Can add own participant through the API'),
+            ('api_change_own_scheduleparticipant', 'Can change own participant through the API'),
+            ('api_delete_own_scheduleparticipant', 'Can delete own participant through the API'),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/schedule-participants'
 
 
 class PeriodicSlot(TriggerMixin, models.Model):

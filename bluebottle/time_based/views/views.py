@@ -70,9 +70,9 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
         ).get(pk=self.kwargs['participant_id'])
 
         if not self.request.user.is_authenticated or (
-                self.request.user != participant.user and
-                self.request.user != participant.activity.owner and
-                self.request.user != participant.activity.initiative.owner
+            self.request.user != participant.user and
+            self.request.user != participant.activity.owner and
+            self.request.user != participant.activity.initiative.owner
         ):
             queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.filter(status='registered')
@@ -209,11 +209,11 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 status__in=('registered', 'succeeded'),
             )
         elif (
-                user != activity.owner and
-                user != activity.initiative.owner and
-                user not in activity.initiative.activity_managers.all() and
-                not user.is_staff and
-                not user.is_superuser
+            user != activity.owner and
+            user != activity.initiative.owner and
+            user not in activity.initiative.activity_managers.all() and
+            not user.is_staff and
+            not user.is_superuser
         ):
             queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
@@ -260,15 +260,15 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
             context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
 
             if self.request.user and self.request.user.is_authenticated and (
-                    self.request.user in context['owners'] or
-                    self.request.user.is_staff or
-                    self.request.user.is_superuser
+                self.request.user in context['owners'] or
+                self.request.user.is_staff or
+                self.request.user.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
         else:
             if self.request.user and self.request.user.is_authenticated and (
-                    self.request.user.is_staff or
-                    self.request.user.is_superuser
+                self.request.user.is_staff or
+                self.request.user.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
 

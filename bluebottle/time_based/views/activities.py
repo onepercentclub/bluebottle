@@ -4,11 +4,12 @@ from bluebottle.activities.permissions import (
     DeleteActivityPermission, ActivitySegmentPermission
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
-from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodicActivity
+from bluebottle.time_based.models import DateActivity, DeadlineActivity, PeriodicActivity, ScheduleActivity
 from bluebottle.time_based.serializers import (
     DateActivitySerializer, DeadlineActivitySerializer,
     DateTransitionSerializer, DeadlineTransitionSerializer,
-    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer
+    PeriodicActivitySerializer, PeriodicTransitionSerializer, PeriodActivitySerializer, ScheduleActivitySerializer,
+    ScheduleTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin
 from bluebottle.transitions.views import TransitionList
@@ -46,6 +47,11 @@ class DeadlineActivityListView(TimeBasedActivityListView):
     serializer_class = DeadlineActivitySerializer
 
 
+class ScheduleActivityListView(TimeBasedActivityListView):
+    queryset = ScheduleActivity.objects.all()
+    serializer_class = ScheduleActivitySerializer
+
+
 class PeriodicActivityListView(TimeBasedActivityListView):
     queryset = PeriodicActivity.objects.all()
     serializer_class = PeriodicActivitySerializer
@@ -66,6 +72,11 @@ class DeadlineActivityDetailView(TimeBasedActivityDetailView):
     serializer_class = DeadlineActivitySerializer
 
 
+class ScheduleActivityDetailView(TimeBasedActivityDetailView):
+    queryset = ScheduleActivity.objects.all()
+    serializer_class = ScheduleActivitySerializer
+
+
 class PeriodicActivityDetailView(TimeBasedActivityDetailView):
     queryset = PeriodicActivity.objects.all()
     serializer_class = PeriodicActivitySerializer
@@ -79,6 +90,11 @@ class DateTransitionList(TransitionList):
 class DeadlineTransitionList(TransitionList):
     serializer_class = DeadlineTransitionSerializer
     queryset = DeadlineActivity.objects.all()
+
+
+class ScheduleTransitionList(TransitionList):
+    serializer_class = ScheduleTransitionSerializer
+    queryset = ScheduleActivity.objects.all()
 
 
 class PeriodicTransitionList(TransitionList):

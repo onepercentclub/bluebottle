@@ -3,7 +3,7 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
-    PeriodicParticipant,
+    PeriodicParticipant, ScheduleActivity, ScheduleParticipant,
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
@@ -53,6 +53,11 @@ class TimebasedExportView(ExportView):
 class DeadlineParticipantExportView(TimebasedExportView):
     model = DeadlineActivity
     participant_model = DeadlineParticipant
+
+
+class ScheduleParticipantExportView(TimebasedExportView):
+    model = ScheduleActivity
+    participant_model = ScheduleParticipant
 
 
 class PeriodicParticipantExportView(TimebasedExportView):

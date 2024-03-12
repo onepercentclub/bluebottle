@@ -270,13 +270,14 @@ def get_search_filters(filters):
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
-        ('funding', _('Funding')),
-        ('periodactivity', _('Activity during a period')),
-        ('dateactivity', _('Activity on a specific date')),
-        ('deadlineactivity', _('Activity within a deadline')),
-        ('periodicactivity', _('Periodic Activity')),
-        ('deed', _('Deed')),
-        ('collect', _('Collect activity')),
+        ("funding", _("Funding")),
+        ("periodactivity", _("Activity during a period")),
+        ("dateactivity", _("Activity on a specific date")),
+        ("deadlineactivity", _("Activity within a deadline")),
+        ("scheduleactivity", _("Scheduled activity")),
+        ("periodicactivity", _("Periodic Activity")),
+        ("deed", _("Deed")),
+        ("collect", _("Collect activity")),
     )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),

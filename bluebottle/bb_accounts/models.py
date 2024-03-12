@@ -352,10 +352,24 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_volunteer(self):
-        from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+        from bluebottle.time_based.models import (
+            DateParticipant,
+            DeadlineParticipant,
+            PeriodicParticipant,
+            ScheduleParticipant,
+        )
         from bluebottle.time_based.states import ParticipantStateMachine
-        return bool(self.contributor_set.instance_of(DateParticipant, PeriodParticipant).
-                    filter(status=ParticipantStateMachine.accepted.value).count())
+
+        return bool(
+            self.contributor_set.instance_of(
+                DateParticipant,
+                PeriodicParticipant,
+                DeadlineParticipant,
+                ScheduleParticipant,
+            )
+            .filter(status=ParticipantStateMachine.accepted.value)
+            .count()
+        )
 
     @cached_property
     def amount_donated(self):

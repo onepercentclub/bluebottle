@@ -180,6 +180,11 @@ class DeadlineRegistrationDocumentSerializer(PrivateDocumentSerializer):
     relationship = 'registration_set'
 
 
+class ScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'schedule-registration-document'
+    relationship = 'registration_set'
+
+
 class PeriodicRegistrationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'periodic-registration-document'
     relationship = 'registration_set'

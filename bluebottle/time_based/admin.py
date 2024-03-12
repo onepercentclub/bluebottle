@@ -802,7 +802,7 @@ class SlotBulkAddForm(forms.Form):
 @admin.register(DateActivitySlot)
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
-    inlines = [SlotParticipantInline]
+    inlines = [SlotParticipantInline, MessageAdminInline]
 
     def lookup_allowed(self, lookup, value):
         if lookup == 'activity__slot_selection__exact':

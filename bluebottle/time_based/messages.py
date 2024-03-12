@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from datetime import timedelta
 
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
@@ -138,7 +137,7 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
     """
     Reminder notification for a date activity slot
     """
-    subject = pgettext('email', 'The activity "{title}" will take place in a few days!')
+    subject = pgettext('email', 'The activity "{title}" will take place tomorrow!')
     template = 'messages/reminder_slot'
     send_once = True
 
@@ -146,36 +145,23 @@ class ReminderSlotNotification(TimeBasedInfoMixin, TransitionMessage):
         'title': 'activity.title',
     }
 
-    def get_slots(self, recipient):
-        days_ago = now() - timedelta(days=5)
-        return self.obj.activity.slots.filter(
-            start__date=self.obj.start.date(),
-            slot_participants__participant__user=recipient,
-            slot_participants__status__in=['registered'],
-            slot_participants__participant__created__lt=days_ago,
-            status__in=['open', 'full']
-        ).all()
-
     def already_send(self, recipient):
-        slot_ids = self.get_slots(recipient).values_list('id', flat=True)
-        if slot_ids.count() == 0:
-            return True
         return Message.objects.filter(
             template=self.get_template(),
             recipient=recipient,
             content_type=get_content_type_for_model(self.obj),
-            object_id__in=slot_ids
-        ).count() > 0
+            object_id=self.obj.id
+        ).exists()
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        slots = self.get_slots(recipient).all()
+        slots = [self.obj]
         context['slots'] = [get_slot_info(slot) for slot in slots]
         return context
 
     @property
     def action_link(self):
-        return self.obj.activity.get_absolute_url()
+        return self.obj.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
 

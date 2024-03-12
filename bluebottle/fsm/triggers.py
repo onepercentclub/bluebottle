@@ -1,13 +1,12 @@
-from django.dispatch import receiver
-from django.db.models.signals import post_delete, pre_delete
-
+from builtins import object
 from builtins import str
 from builtins import zip
-from builtins import object
+
+from django.db.models.signals import post_delete, pre_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
-
 
 from bluebottle.fsm.state import pre_state_transition
 

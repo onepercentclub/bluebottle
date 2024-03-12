@@ -38,6 +38,10 @@ class UserRegistrationNotification(TransitionMessage):
         'applicant_name': 'user.full_name',
     }
 
+    def get_context(self, recipient):
+        context = super(UserRegistrationNotification, self).get_context(recipient)
+        return context
+
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
@@ -57,6 +61,16 @@ class UserRegistrationAcceptedNotification(UserRegistrationNotification):
 class UserRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have not been selected for the activity "{title}"')
     template = 'messages/registrations/user_rejected'
+
+
+class UserRegistrationStoppedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'Your contribution to the activity "{title}" has been stopped')
+    template = 'messages/registrations/user_stopped'
+
+
+class UserRegistrationRestartedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'Your contribution to the activity "{title}" has been restarted')
+    template = 'messages/registrations/user_restarted'
 
 
 class UserAppliedNotification(UserRegistrationNotification):

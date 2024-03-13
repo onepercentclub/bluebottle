@@ -772,7 +772,7 @@ class DeadlineActivity(RegistrationActivity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ["duration", "period"]
+        return super().required_fields + ["duration"]
 
     class Meta:
         verbose_name = _("Deadline activity")

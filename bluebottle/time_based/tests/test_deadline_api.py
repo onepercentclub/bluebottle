@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.time_based.models import DeadlineRegistration
 
 from bluebottle.time_based.serializers import (
     DeadlineActivitySerializer,
@@ -69,6 +70,19 @@ class DeadlineActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APIT
             'deadline': date.today() + timedelta(days=20),
         }
     )
+
+    def test_registration_count(self):
+        DeadlineRegistrationFactory.create_batch(1, status="new", activity=self.model)
+        DeadlineRegistrationFactory.create_batch(
+            2, status="rejected", activity=self.model
+        )
+        DeadlineRegistrationFactory.create_batch(
+            3, status="accepted", activity=self.model
+        )
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertMeta("registration-status", {"accepted": 3, "new": 1, "rejected": 2})
 
 
 class DeadlineActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):

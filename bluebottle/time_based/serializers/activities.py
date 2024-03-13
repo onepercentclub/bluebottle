@@ -7,6 +7,8 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
+from django.db.models import Count
+
 from bluebottle.activities.models import Activity
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
@@ -23,10 +25,15 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     title = serializers.CharField()
     description = serializers.CharField()
     review = serializers.BooleanField()
-    registration_count = serializers.SerializerMethodField()
+    registration_status = serializers.SerializerMethodField()
 
-    def get_registration_count(self, instance):
-        return instance.registrations.count()
+    def get_registration_status(self, instance):
+        return dict(
+            (item["status"], item["count"])
+            for item in instance.registrations.values("status").annotate(
+                count=Count("pk")
+            )
+        )
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -68,9 +75,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'permissions',
             'registrations'
         )
-        meta_fields = BaseActivitySerializer.Meta.meta_fields + (
-            'registration_count',
-        )
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [

@@ -183,8 +183,9 @@ STRIPE = {
 }
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    "default": {
+        "BACKEND": "bluebottle.clients.cache.TenantAwareLocMemCache",
+        "LOCATION": "127.0.0.1:11211",
     },
     'axes_cache': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',

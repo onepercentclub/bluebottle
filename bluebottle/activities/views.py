@@ -45,7 +45,7 @@ from bluebottle.utils.views import (
 )
 
 
-@method_decorator(cache_page(60 * 60), name='dispatch')
+@method_decorator(cache_page(60 * 60 * 24), name='dispatch')
 class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityLocationSerializer
     pagination_class = None
@@ -54,9 +54,6 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         TenantConditionalOpenClose,
     )
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Activity.objects.filter(status__in=("succeeded", "open", "full", "running"))

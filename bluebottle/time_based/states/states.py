@@ -14,7 +14,9 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     PeriodicSlot,
-    PeriodActivity, ScheduleActivity,
+    ScheduleSlot,
+    PeriodActivity,
+    ScheduleActivity,
 )
 
 
@@ -248,8 +250,7 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
     pass
 
 
-@register(PeriodicSlot)
-class PeriodicSlotStateMachine(ModelStateMachine):
+class SlotStateMachine(ModelStateMachine):
     new = State(
         _('new'),
         'new',
@@ -298,6 +299,16 @@ class PeriodicSlotStateMachine(ModelStateMachine):
         automatic=True
     )
 
+
+
+@register(PeriodicSlot)
+class PeriodicSlotStateMachine(SlotStateMachine):
+    pass
+
+
+@register(ScheduleSlot)
+class ScheduleSlotStateMachine(SlotStateMachine):
+    pass
 
 class ActivitySlotStateMachine(ModelStateMachine):
 

@@ -45,9 +45,10 @@ class DeadlineParticipantList(ParticipantList):
 
 class ScheduleParticipantList(ParticipantList):
     queryset = ScheduleParticipant.objects.prefetch_related(
-        'user', 'activity'
+        "user",
+        "activity",
     )
-    serializer = DeadlineParticipantSerializer
+    serializer = ScheduleParticipantSerializer
 
 
 class PeriodicParticipantList(ParticipantList):

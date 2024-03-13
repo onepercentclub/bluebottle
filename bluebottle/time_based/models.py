@@ -714,13 +714,6 @@ class RegistrationActivity(TimeBasedActivity):
         blank=True
     )
 
-    duration = models.DurationField(
-        _('Activity duration'),
-        help_text=_('How much time will a participant contribute?'),
-        null=True,
-        blank=True
-    )
-
     @property
     def duration_human_readable(self):
         if self.duration:
@@ -752,8 +745,8 @@ class RegistrationActivity(TimeBasedActivity):
     def required_fields(self):
         fields = super().required_fields
         if not self.is_online:
-            fields.append('location')
-        return fields + ['duration', 'is_online']
+            fields.append("location")
+        return fields + ["is_online"]
 
     @property
     def active_participants(self):
@@ -769,6 +762,17 @@ class RegistrationActivity(TimeBasedActivity):
 
 class DeadlineActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
+
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
+
+    @property
+    def required_fields(self):
+        return super().required_fields + ["duration", "period"]
 
     class Meta:
         verbose_name = _("Deadline activity")
@@ -829,11 +833,17 @@ class PeriodicActivity(RegistrationActivity):
         null=True,
         choices=PeriodChoices,
     )
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 
     @property
     def required_fields(self):
-        return super().required_fields + ['period']
+        return super().required_fields + ["duration", "period"]
 
     class Meta:
         verbose_name = _("Periodic activity")
@@ -1189,6 +1199,10 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class ScheduleParticipant(Participant, Contributor):
+    slot = models.ForeignKey(
+        "time_based.ScheduleSlot", related_name="participants", on_delete=models.CASCADE
+    )
+
     class Meta():
         verbose_name = _(u'Schedule participant')
         verbose_name_plural = _(u'Schedule participants')
@@ -1209,18 +1223,38 @@ class ScheduleParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/schedule-participants'
 
 
-class PeriodicSlot(TriggerMixin, models.Model):
+class Slot(models.Model):
     status = models.CharField(max_length=40)
-
-    activity = models.ForeignKey(PeriodicActivity, on_delete=models.CASCADE, related_name='slots')
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class PeriodicSlot(TriggerMixin, Slot):
+    activity = models.ForeignKey(
+        PeriodicActivity, on_delete=models.CASCADE, related_name="slots"
+    )
+
     duration = models.DurationField(_('duration'), null=True, blank=True)
 
     @property
     def accepted_participants(self):
         return self.participants.filter(status="accepted")
+
+
+class ScheduleSlot(TriggerMixin, Slot):
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
+    )
+
+    @property
+    def duration(self):
+        if self.end and self.start:
+            return self.end - self.start
+
 
 
 class PeriodicParticipant(Participant, Contributor):

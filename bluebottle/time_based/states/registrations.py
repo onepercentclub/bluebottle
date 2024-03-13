@@ -82,7 +82,45 @@ class DeadlineRegistrationStateMachine(RegistrationStateMachine):
 
 @register(ScheduleRegistration)
 class ScheduleRegistrationStateMachine(RegistrationStateMachine):
-    pass
+    def can_schedule_registration(self, user):
+        """can accept participant"""
+        return self.instance.participants.count() > 0 and (
+            user
+            in [self.instance.activity.owner, self.instance.activity.initiative.owner]
+            or user.is_superuser
+            or user.is_staff
+            or user in self.instance.activity.initiative.activity_managers.all()
+        )
+
+    scheduled = State(
+        _("scheduled"),
+        "scheduled",
+        _("This person is assigned a slot for this activity."),
+    )
+
+    auto_schedule = Transition(
+        [
+            RegistrationStateMachine.new,
+            RegistrationStateMachine.accepted,
+            RegistrationStateMachine.rejected,
+        ],
+        scheduled,
+        name=_("Reject"),
+        description=_("Assign a slot to this participant"),
+        automatic=True,
+    )
+    schedule = Transition(
+        [
+            RegistrationStateMachine.new,
+            RegistrationStateMachine.accepted,
+            RegistrationStateMachine.rejected,
+        ],
+        scheduled,
+        name=_("Reject"),
+        description=_("Assign a slot to this participant"),
+        automatic=False,
+        permission=can_schedule_registration,
+    )
 
 
 @register(PeriodicRegistration)

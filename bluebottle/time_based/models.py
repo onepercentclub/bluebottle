@@ -125,7 +125,13 @@ class TimeBasedActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(PeriodParticipant, DateParticipant, DeadlineParticipant)
+        return self.contributors.instance_of(
+            PeriodParticipant,
+            DateParticipant,
+            DeadlineParticipant,
+            PeriodicParticipant,
+            ScheduleParticipant,
+        )
 
     @property
     def pending_participants(self):
@@ -137,11 +143,11 @@ class TimeBasedActivity(Activity):
 
     @property
     def active_participants(self):
-        return self.participants.filter(status__in=('accepted', 'new'))
+        return self.participants.filter(status__in=['accepted', 'new', 'participating'])
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=('accepted', 'succeeded'))
+        return self.participants.filter(status__in=['accepted', 'succeeded', 'participating'])
 
     @property
     def succeeded_contributor_count(self):
@@ -757,7 +763,7 @@ class RegistrationActivity(TimeBasedActivity):
 
     @property
     def active_participants(self):
-        return self.participants.filter(status__in=['new', 'succeeded'])
+        return self.participants.filter(status__in=['new', 'succeeded', 'participating'])
 
     @property
     def accepted_participants(self):

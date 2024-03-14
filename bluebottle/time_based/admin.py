@@ -237,6 +237,11 @@ class TimeBasedAdmin(ActivityChildAdmin):
             ))
         return fieldsets
 
+    def participant_count(self, obj):
+        return obj.succeeded_contributor_count
+
+    participant_count.short_description = _('Participants')
+
 
 class TimeBasedActivityAdminForm(ActivityForm):
     class Meta(object):
@@ -314,11 +319,6 @@ class DateActivityAdmin(TimeBasedAdmin):
         return obj.slots.count()
 
     duration.short_description = _('Slots')
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count() + obj.deleted_successful_contributors or 0
-
-    participant_count.short_description = _('Participants')
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
@@ -429,11 +429,6 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     duration_string.short_description = _('Duration')
 
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
-
-    participant_count.short_description = _('Participants')
-
 
 @admin.register(ScheduleActivity)
 class ScheduleActivityAdmin(TimeBasedAdmin):
@@ -484,11 +479,6 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         return duration
 
     duration_string.short_description = _('Duration')
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
-
-    participant_count.short_description = _('Participants')
 
 
 @admin.register(PeriodicSlot)
@@ -586,11 +576,6 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         return duration
 
     duration_string.short_description = _('Duration')
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
-
-    participant_count.short_description = _('Participants')
 
 
 class SlotParticipantInline(admin.TabularInline):

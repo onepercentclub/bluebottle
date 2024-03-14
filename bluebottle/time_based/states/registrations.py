@@ -89,8 +89,11 @@ class ScheduleRegistrationStateMachine(RegistrationStateMachine):
 class PeriodicRegistrationStateMachine(RegistrationStateMachine):
 
     def is_user(self, user):
-        """can accept participant"""
+        """is the participant"""
         return user == self.instance.user
+
+    def is_user_or_manager(self, user):
+        return self.is_user(user) or self.can_accept_registration(user)
 
     withdrawn = State(
         _('withdrawn'),
@@ -128,7 +131,7 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         name=_('Stop'),
         description=_("Stop contributing to this activity."),
         automatic=False,
-        permission=RegistrationStateMachine.can_accept_registration,
+        permission=is_user_or_manager,
     )
 
     start = Transition(
@@ -137,5 +140,5 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         name=_('Start again'),
         description=_("Start contributing to this activity again."),
         automatic=False,
-        permission=RegistrationStateMachine.can_accept_registration,
+        permission=is_user_or_manager,
     )

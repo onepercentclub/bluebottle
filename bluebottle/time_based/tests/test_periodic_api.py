@@ -1,6 +1,10 @@
 from datetime import date, timedelta
-from bluebottle.initiatives.tests.factories import InitiativeFactory
 
+from django.core import mail
+from rest_framework import status
+
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     PeriodicActivitySerializer,
     PeriodicParticipantSerializer,
@@ -8,11 +12,6 @@ from bluebottle.time_based.serializers import (
     PeriodicRegistrationSerializer,
     PeriodicRegistrationTransitionSerializer,
     PeriodicTransitionSerializer,
-)
-from bluebottle.time_based.tests.factories import (
-    PeriodicActivityFactory,
-    PeriodicParticipantFactory,
-    PeriodicRegistrationFactory,
 )
 from bluebottle.time_based.tests.base import (
     TimeBasedActivityAPIExportTestCase,
@@ -27,8 +26,11 @@ from bluebottle.time_based.tests.base import (
     TimeBasedRegistrationRelatedAPIListTestCase,
     TimeBasedRegistrationTransitionListAPITestCase,
 )
-
-from bluebottle.test.utils import APITestCase
+from bluebottle.time_based.tests.factories import (
+    PeriodicActivityFactory,
+    PeriodicParticipantFactory,
+    PeriodicRegistrationFactory,
+)
 
 
 class PeriodicActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase):
@@ -129,6 +131,64 @@ class PeriodicRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
 
     factory = PeriodicRegistrationFactory
     activity_factory = PeriodicActivityFactory
+
+    def test_stop_by_manager(self):
+        self.perform_create(user=self.activity.owner)
+        self.assertResourceStatus(self.registration, 'accepted')
+        mail.outbox = []
+        self.defaults['transition'] = 'stop'
+        self.defaults['message'] = "We don't need you anymore."
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been stopped'
+        )
+        self.assertTrue("We don't need you anymore." in mail.outbox[0].body)
+
+    def test_restart_by_manager(self):
+        self.perform_create(user=self.activity.owner)
+        self.assertResourceStatus(self.registration, 'accepted')
+        self.defaults['transition'] = 'stop'
+        self.defaults['message'] = "We don't need you anymore."
+        self.perform_create(user=self.activity.owner)
+        mail.outbox = []
+        self.defaults['transition'] = 'start'
+        self.defaults['message'] = "Good to have you back!"
+        self.perform_create(user=self.activity.owner)
+        self.assertResourceStatus(self.registration, 'accepted')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been restarted'
+        )
+        self.assertTrue("Good to have you back!" in mail.outbox[0].body)
+
+    def test_stop_no_mail(self):
+        self.perform_create(user=self.activity.owner)
+        mail.outbox = []
+        self.defaults['transition'] = 'stop'
+        self.defaults['send_email'] = False
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_stop_self(self):
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+        mail.outbox = []
+        self.defaults['transition'] = 'stop'
+        self.perform_create(user=self.registration.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been stopped'
+        )
 
 
 class PeriodicParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListAPITestCase, APITestCase):

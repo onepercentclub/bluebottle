@@ -771,19 +771,19 @@ class DeadlineActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
     class Meta:
-        verbose_name = _("Deadline activity")
-        verbose_name_plural = _("Deadline activities")
+        verbose_name = _("Flexible activity")
+        verbose_name_plural = _("Flexible activities")
 
         permissions = (
-            ('api_read_deadlineactivity', 'Can view on a deadline activities through the API'),
-            ('api_add_deadlineactivity', 'Can add on a deadline activities through the API'),
-            ('api_change_deadlineactivity', 'Can change on a deadline activities through the API'),
-            ('api_delete_deadlineactivity', 'Can delete on a deadline activities through the API'),
+            ('api_read_deadlineactivity', 'Can view on a felxible activities through the API'),
+            ('api_add_deadlineactivity', 'Can add on a felxible activities through the API'),
+            ('api_change_deadlineactivity', 'Can change on a felxible activities through the API'),
+            ('api_delete_deadlineactivity', 'Can delete on a felxible activities through the API'),
 
-            ('api_read_own_deadlineactivity', 'Can view own on a deadline activities through the API'),
-            ('api_add_own_deadlineactivity', 'Can add own on a deadline activities through the API'),
-            ('api_change_own_deadlineactivity', 'Can change own on a deadline activities through the API'),
-            ('api_delete_own_deadlineactivity', 'Can delete own on a deadline activities through the API'),
+            ('api_read_own_deadlineactivity', 'Can view own on a felxible activities through the API'),
+            ('api_add_own_deadlineactivity', 'Can add own on a felxible activities through the API'),
+            ('api_change_own_deadlineactivity', 'Can change own on a felxible activities through the API'),
+            ('api_delete_own_deadlineactivity', 'Can delete own on a felxible activities through the API'),
         )
 
     class JSONAPIMeta:
@@ -836,8 +836,8 @@ class PeriodicActivity(RegistrationActivity):
         return super().required_fields + ['period']
 
     class Meta:
-        verbose_name = _("Periodic activity")
-        verbose_name_plural = _("Periodic activities")
+        verbose_name = _("Recurring activity")
+        verbose_name_plural = _("Recurring activities")
 
         permissions = (
             ('api_read_periodicactivity', 'Can view on a periodic activities through the API'),
@@ -899,8 +899,8 @@ class DateParticipant(Participant):
     document = PrivateDocumentField(blank=True, null=True, view_name='date-participant-document')
 
     class Meta():
-        verbose_name = _("Participant on a date")
-        verbose_name_plural = _("Participants on a date")
+        verbose_name = _("Participant to date activities")
+        verbose_name_plural = _("Participants to date activities")
         permissions = (
             ('api_read_dateparticipant', 'Can view participant through the API'),
             ('api_add_dateparticipant', 'Can add participant through the API'),
@@ -1101,19 +1101,19 @@ class DeadlineRegistration(Registration):
         return self.deadlineparticipant_set.all()
 
     class Meta():
-        verbose_name = _(u'Deadline registration')
-        verbose_name_plural = _(u'Deadline registrations')
+        verbose_name = _('Candidate for flexible activities')
+        verbose_name_plural = _('Candidates for flexible activities')
 
         permissions = (
-            ('api_read_deadlineregistration', 'Can view registation through the API'),
-            ('api_add_deadlineregistration', 'Can add registation through the API'),
-            ('api_change_deadlineregistration', 'Can change registation through the API'),
-            ('api_delete_deadlineregistration', 'Can delete registation through the API'),
+            ('api_read_deadlineregistration', 'Can view registration through the API'),
+            ('api_add_deadlineregistration', 'Can add registration through the API'),
+            ('api_change_deadlineregistration', 'Can change candidates through the API'),
+            ('api_delete_deadlineregistration', 'Can delete candidates through the API'),
 
-            ('api_read_own_deadlineregistration', 'Can view own registation through the API'),
-            ('api_add_own_deadlineregistration', 'Can add own registation through the API'),
-            ('api_change_own_deadlineregistration', 'Can change own registation through the API'),
-            ('api_delete_own_deadlineregistration', 'Can delete own registation through the API'),
+            ('api_read_own_deadlineregistration', 'Can view own candidates through the API'),
+            ('api_add_own_deadlineregistration', 'Can add own candidates through the API'),
+            ('api_change_own_deadlineregistration', 'Can change own candidates through the API'),
+            ('api_delete_own_deadlineregistration', 'Can delete own candidates through the API'),
         )
 
 
@@ -1126,19 +1126,19 @@ class ScheduleRegistration(Registration):
         return self.scheduleparticipant_set.all()
 
     class Meta():
-        verbose_name = _(u'Deadline registration')
-        verbose_name_plural = _(u'Deadline registrations')
+        verbose_name = _('Candidate for schedule activities')
+        verbose_name_plural = _('Candidates for schedule activities')
 
         permissions = (
-            ('api_read_scheduleregistration', 'Can view registation through the API'),
-            ('api_add_scheduleregistration', 'Can add registation through the API'),
-            ('api_change_scheduleregistration', 'Can change registation through the API'),
-            ('api_delete_scheduleregistration', 'Can delete registation through the API'),
+            ('api_read_scheduleregistration', 'Can view candidates through the API'),
+            ('api_add_scheduleregistration', 'Can add candidates through the API'),
+            ('api_change_scheduleregistration', 'Can change candidates through the API'),
+            ('api_delete_scheduleregistration', 'Can delete candidates through the API'),
 
-            ('api_read_own_scheduleregistration', 'Can view own registation through the API'),
-            ('api_add_own_scheduleregistration', 'Can add own registation through the API'),
-            ('api_change_own_scheduleregistration', 'Can change own registation through the API'),
-            ('api_delete_own_scheduleregistration', 'Can delete own registation through the API'),
+            ('api_read_own_scheduleregistration', 'Can view own candidates through the API'),
+            ('api_add_own_scheduleregistration', 'Can add own candidates through the API'),
+            ('api_change_own_scheduleregistration', 'Can change own candidates through the API'),
+            ('api_delete_own_scheduleregistration', 'Can delete own candidates through the API'),
         )
 
 
@@ -1151,26 +1151,26 @@ class PeriodicRegistration(Registration):
         return self.periodicparticipant_set.all()
 
     class Meta():
-        verbose_name = _(u'Periodic registration')
-        verbose_name_plural = _(u'Periodic registrations')
+        verbose_name = _('Candidate for recurring activities')
+        verbose_name_plural = _('Candidates for recurring activities')
 
         permissions = (
-            ('api_read_periodicregistration', 'Can view periodic registation through the API'),
-            ('api_add_periodicregistration', 'Can add periodic registation through the API'),
-            ('api_change_periodicregistration', 'Can change periodic registation through the API'),
-            ('api_delete_periodicregistration', 'Can delete periodic registation through the API'),
+            ('api_read_periodicregistration', 'Can view periodic candidates through the API'),
+            ('api_add_periodicregistration', 'Can add periodic candidates through the API'),
+            ('api_change_periodicregistration', 'Can change periodic candidates through the API'),
+            ('api_delete_periodicregistration', 'Can delete periodic candidates through the API'),
 
-            ('api_read_own_periodicregistration', 'Can view own periodic registation through the API'),
-            ('api_add_own_periodicregistration', 'Can add own periodic registation through the API'),
-            ('api_change_own_periodicregistration', 'Can change own periodic registation through the API'),
-            ('api_delete_own_periodicregistration', 'Can delete own periodic registation through the API'),
+            ('api_read_own_periodicregistration', 'Can view own periodic candidates through the API'),
+            ('api_add_own_periodicregistration', 'Can add own periodic candidates through the API'),
+            ('api_change_own_periodicregistration', 'Can change own periodic candidates through the API'),
+            ('api_delete_own_periodicregistration', 'Can delete own periodic candidates through the API'),
         )
 
 
 class DeadlineParticipant(Participant, Contributor):
     class Meta():
-        verbose_name = _(u'Deadline participant')
-        verbose_name_plural = _(u'Deadline participants')
+        verbose_name = _('Participant to flexible activities')
+        verbose_name_plural = _('Participants to flexible activities')
 
         permissions = (
             ('api_read_deadlineparticipant', 'Can view participant through the API'),
@@ -1190,8 +1190,8 @@ class DeadlineParticipant(Participant, Contributor):
 
 class ScheduleParticipant(Participant, Contributor):
     class Meta():
-        verbose_name = _(u'Schedule participant')
-        verbose_name_plural = _(u'Schedule participants')
+        verbose_name = _('Participant to schedule activities')
+        verbose_name_plural = _('Participants to schedule activities')
 
         permissions = (
             ('api_read_scheduleparticipant', 'Can view participant through the API'),
@@ -1227,19 +1227,19 @@ class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(PeriodicSlot, on_delete=models.CASCADE, related_name='participants')
 
     class Meta():
-        verbose_name = _(u'Periodic participant')
-        verbose_name_plural = _(u'Periodic participants')
+        verbose_name = _('Participant to ecurring activities')
+        verbose_name_plural = _('Participants to recurring activities')
 
         permissions = (
-            ('api_read_periodicparticipant', 'Can view periodic participant through the API'),
-            ('api_add_periodicparticipant', 'Can add periodic participant through the API'),
-            ('api_change_periodicparticipant', 'Can change periodic participant through the API'),
-            ('api_delete_periodicparticipant', 'Can delete periodic participant through the API'),
+            ('api_read_periodicparticipant', 'Can view recurring participant through the API'),
+            ('api_add_periodicparticipant', 'Can add recurring participant through the API'),
+            ('api_change_periodicparticipant', 'Can change recurring participant through the API'),
+            ('api_delete_periodicparticipant', 'Can delete recurring participant through the API'),
 
-            ('api_read_own_periodicparticipant', 'Can view own periodic participant through the API'),
-            ('api_add_own_periodicparticipant', 'Can add own periodic participant through the API'),
-            ('api_change_own_periodicparticipant', 'Can change own periodic participant through the API'),
-            ('api_delete_own_periodicparticipant', 'Can delete own periodic participant through the API'),
+            ('api_read_own_periodicparticipant', 'Can view own recurring participant through the API'),
+            ('api_add_own_periodicparticipant', 'Can add own recurring participant through the API'),
+            ('api_change_own_periodicparticipant', 'Can change own recurring participant through the API'),
+            ('api_delete_own_periodicparticipant', 'Can delete own recurring participant through the API'),
         )
 
     class JSONAPIMeta(object):

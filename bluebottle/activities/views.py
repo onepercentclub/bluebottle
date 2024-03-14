@@ -29,7 +29,7 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.time_based.models import DateParticipant, DeadlineParticipant, PeriodParticipant
+from bluebottle.time_based.models import DateParticipant, DeadlineParticipant, PeriodicParticipant
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -152,7 +152,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         ).instance_of(
             Donor,
             DateParticipant,
-            PeriodParticipant,
+            PeriodicParticipant,
             DeedParticipant,
             DeadlineParticipant,
             CollectContributor,

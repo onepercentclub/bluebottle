@@ -1,3 +1,4 @@
+from django.db.models import Sum, Q
 from rest_framework import filters
 
 from bluebottle.activities.permissions import ContributorPermission
@@ -31,6 +32,15 @@ from bluebottle.utils.views import (
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
+
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            total_duration=Sum(
+                'contributions__timecontribution__value',
+                filter=Q(contributions__status__in=['succeeded', 'new'])
+            )
+        )
+
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )

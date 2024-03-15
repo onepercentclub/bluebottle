@@ -1226,7 +1226,7 @@ class PeriodicSlot(TriggerMixin, models.Model):
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status="accepted")
+        return self.participants.filter(status__in=["accepted", "participating", "succeeded"])
 
 
 class PeriodicParticipant(Participant, Contributor):

@@ -7,7 +7,7 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
@@ -229,6 +229,11 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="related-periodic-registrations",
         related_link_url_kwarg="activity_id",
     )
+
+    def get_contributor_count(self, instance):
+        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
+            status__in=['accepted', 'participating']
+        ).count()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity

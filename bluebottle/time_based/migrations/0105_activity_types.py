@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("time_based", "0104_schedule_permissions"),
+        ("initiatives", "0052_auto_20240314_1448"),
     ]
 
     operations = [

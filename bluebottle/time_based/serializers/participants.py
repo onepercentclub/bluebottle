@@ -33,18 +33,21 @@ class ParticipantSerializer(BaseContributorSerializer):
 class DeadlineParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=DeadlineRegistration.objects.all())
+    contributions = ResourceRelatedField(many=True, read_only=True)
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant
+        fields = ParticipantSerializer.Meta.fields + ('contributions',)
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity', 'contributions']
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+            'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
         }
     )
 

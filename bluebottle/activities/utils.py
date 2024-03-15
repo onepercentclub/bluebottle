@@ -465,7 +465,7 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ('value', 'status',)
+        fields = ('value', 'status', 'start', 'end')
         meta_fields = ('created',)
 
     class JSONAPIMeta(object):

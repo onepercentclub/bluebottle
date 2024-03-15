@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 
 import pytz
 from django.db import connection
+from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import now
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -1171,6 +1172,25 @@ class PeriodicRegistration(Registration):
             ('api_change_own_periodicregistration', 'Can change own periodic candidates through the API'),
             ('api_delete_own_periodicregistration', 'Can delete own periodic candidates through the API'),
         )
+
+    @property
+    def first_slot(self):
+        return self.participants.order_by('slot__start').first().slot
+
+    @property
+    def last_slot(self):
+        return self.participants.order_by('slot__start').last().slot
+
+    @property
+    def total_hours(self):
+        total = TimeContribution.objects.filter(
+            contributor_id__in=self.participants.values_list('contributor_ptr_id', flat=True)
+        ).aggregate(Sum('value'))
+        return total['value__sum']
+
+    @property
+    def total_slots(self):
+        return self.participants.count()
 
 
 class DeadlineParticipant(Participant, Contributor):

@@ -3,7 +3,7 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
-    PeriodicParticipant, ScheduleActivity, ScheduleParticipant,
+    ScheduleActivity, ScheduleParticipant, PeriodicRegistration,
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
@@ -62,4 +62,21 @@ class ScheduleParticipantExportView(TimebasedExportView):
 
 class PeriodicParticipantExportView(TimebasedExportView):
     model = PeriodicActivity
-    participant_model = PeriodicParticipant
+    participant_model = PeriodicRegistration
+
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('answer', 'Registration answer'),
+        ('total_slots', 'Iterations'),
+        ('total_hours', 'Total hours'),
+        ('first_slot__start', 'First contribution'),
+        ('last_slot__end', 'Last contribution'),
+    )
+
+    def get_instances(self):
+        return self.participant_model.objects.filter(
+            activity=self.get_object()
+        ).prefetch_related('user__segments').select_related('user')

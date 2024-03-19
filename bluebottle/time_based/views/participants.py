@@ -32,14 +32,17 @@ from bluebottle.utils.views import (
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
-
     def get_queryset(self):
-        return super().get_queryset().annotate(
+        queryset = super().get_queryset().annotate(
             total_duration=Sum(
                 'contributions__timecontribution__value',
                 filter=Q(contributions__status__in=['succeeded', 'new'])
             )
         )
+        my = self.request.query_params.get('filter[my]')
+        if my:
+            queryset = queryset.filter(user=self.request.user)
+        return queryset
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

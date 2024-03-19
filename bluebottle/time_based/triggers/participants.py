@@ -397,6 +397,10 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
+                ),
             ],
         ),
         TransitionTrigger(

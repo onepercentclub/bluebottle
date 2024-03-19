@@ -492,18 +492,34 @@ class PeriodicSlotAdmin(StateMachineAdmin):
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': (
+                    'force_status',
+                    'states'
+                )}),
+            )
+        return fieldsets
+
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "participant_count")
-    fields = ("edit", "start", "end", "participant_count")
+    readonly_fields = ("edit", "start", "end", "current_status", "participant_count")
+    fields = ("edit", "start", "end", "current_status", "participant_count")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
     participant_count.short_description = _('Accepted participants')
+
+    def current_status(self, obj):
+        return obj.states.current_state.name
+
+    current_status.short_description = _('Status')
 
     def has_add_permission(self, request, obj):
         return False
@@ -551,6 +567,10 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'location_hint',
         'online_meeting_url',
     ]
+
+    registration_fields = (
+        'capacity',
+    ) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -1164,6 +1184,8 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 @admin.register(PeriodicParticipant)
 class PeriodicParticipantAdmin(ContributorChildAdmin):
 
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('slot',)
+
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         for inline in inlines:
@@ -1173,7 +1195,7 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [
         TimeContributionInlineAdmin
     ]
-    fields = ContributorChildAdmin.fields + ['registration_info']
+    fields = ContributorChildAdmin.fields + ['registration_info', 'slot']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
     def get_fields(self, request, obj=None):

@@ -204,9 +204,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
+            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
             (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Participation'), {'fields': self.get_registration_fields(request, obj)}),
-            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
         ]
 
         if Location.objects.count():
@@ -395,6 +395,8 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+
     date_fields = [
         'duration',
         'start',
@@ -407,7 +409,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets
@@ -456,6 +458,8 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         fieldsets.insert(1, (
@@ -488,6 +492,8 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
     readonly_fields = ("activity", "start", "end", "status")
     fields = readonly_fields
+
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

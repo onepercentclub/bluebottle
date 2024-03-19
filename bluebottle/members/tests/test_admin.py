@@ -249,7 +249,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
+            'resend_welcome_link', 'initiatives', 'periodic_activities', 'deadline_activities',
+            'schedule_activities', 'date_activities', 'funding',
             'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
             'data_retention_info'
         }
@@ -260,7 +261,9 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         fields = self.member_admin.get_readonly_fields(self.request)
         expected_fields = {
             'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
+            'resend_welcome_link', 'initiatives', 'date_activities',
+            'periodic_activities', 'deadline_activities',
+            'schedule_activities', 'funding',
             'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
             'data_retention_info'
         }

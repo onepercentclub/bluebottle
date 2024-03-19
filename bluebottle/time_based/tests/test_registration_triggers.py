@@ -162,7 +162,7 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_initial(self):
         super().test_initial()
-
+        self.assertEqual(self.registration.status, 'accepted')
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
 

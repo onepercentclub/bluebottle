@@ -797,7 +797,7 @@ class TimeContributionSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
-
+        fields = BaseContributionSerializer.Meta.fields + ('contribution_type',)
         meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions',)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):

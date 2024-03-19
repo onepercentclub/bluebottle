@@ -27,19 +27,22 @@ from bluebottle.utils.views import (
     CreateAPIView,
     JsonApiViewMixin,
     ListAPIView,
-    RetrieveUpdateAPIView,
-)
+    RetrieveUpdateAPIView, )
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     def get_queryset(self):
-        return super().get_queryset().annotate(
+        queryset = super().get_queryset().annotate(
             total_duration=Sum(
                 'contributions__timecontribution__value',
                 filter=Q(contributions__status__in=['succeeded', 'new'])
             )
         )
+        my = self.request.query_params.get('filter[my]')
+        if my:
+            queryset = queryset.filter(user=self.request.user)
+        return queryset
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -63,7 +66,7 @@ class ScheduleParticipantList(ParticipantList):
 class PeriodicParticipantList(ParticipantList):
     queryset = PeriodicParticipant.objects.prefetch_related(
         'user', 'activity'
-    )
+    ).order_by('-slot__start')
     serializer = PeriodicParticipantSerializer
 
 
@@ -125,6 +128,11 @@ class PeriodicRelatedParticipantList(RelatedContributorListView):
         'user', 'activity'
     )
     serializer_class = PeriodicParticipantSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.order_by('-slot__start')
+        return queryset
 
 
 class DeadlineParticipantTransitionList(TransitionList):

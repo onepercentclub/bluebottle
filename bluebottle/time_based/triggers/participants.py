@@ -394,10 +394,6 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreatePeriodicPreparationTimeContributionEffect,
                 TransitionEffect(
-                    PeriodicParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted],
-                ),
-                TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
                 ),

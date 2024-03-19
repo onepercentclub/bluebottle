@@ -14,9 +14,9 @@ from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
-        _('pending'),
+        _('new'),
         'new',
-        _("This person has applied and must be reviewed.")
+        _("This participant is new and ready to participate once the slot starts.")
     )
     accepted = State(
         _('participating'),

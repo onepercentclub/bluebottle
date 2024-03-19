@@ -204,9 +204,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
+            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
             (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
             (_('Participation'), {'fields': self.get_registration_fields(request, obj)}),
-            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
         ]
 
         if Location.objects.count():
@@ -407,7 +407,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets

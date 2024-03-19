@@ -116,9 +116,11 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 class PeriodicRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('periodic-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True, source='periodicparticipant_set')
+    total_hours = serializers.DurationField()
 
     class Meta(RegistrationSerializer.Meta):
         model = PeriodicRegistration
+        meta_fields = RegistrationSerializer.Meta.meta_fields + ('total_slots', 'total_hours')
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/periodic-registrations'

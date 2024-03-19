@@ -510,6 +510,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Slots")
     readonly_fields = ("edit", "start", "end", "current_status", "participant_count")
     fields = ("edit", "start", "end", "current_status", "participant_count")
+    ordering = ['-start']
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1195,7 +1196,8 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [
         TimeContributionInlineAdmin
     ]
-    fields = ContributorChildAdmin.fields + ['registration_info', 'slot']
+
+    fields = ContributorChildAdmin.fields + ['registration_info', 'slot_info', 'slot']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
     def get_fields(self, request, obj=None):
@@ -1204,7 +1206,8 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'registration_info'
+        'registration_info',
+        'slot_info'
     ]
 
     def registration_info(self, obj):
@@ -1225,6 +1228,14 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
                 'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
                 url=url, status=status, title=title
             )
+
+    def slot_info(self, obj):
+        if not obj.slot:
+            return '-'
+        return format_html(
+            '{} to {}',
+            obj.slot.start.date(), obj.slot.end.date()
+        )
 
     registration_info.short_description = _('Registration')
 

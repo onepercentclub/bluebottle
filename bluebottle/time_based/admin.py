@@ -395,6 +395,8 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+
     date_fields = [
         'duration',
         'start',
@@ -456,6 +458,8 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         fieldsets.insert(1, (
@@ -488,6 +492,8 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
     readonly_fields = ("activity", "start", "end", "status")
     fields = readonly_fields
+
+    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

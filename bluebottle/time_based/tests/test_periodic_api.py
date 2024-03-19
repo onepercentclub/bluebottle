@@ -1,7 +1,9 @@
 from datetime import date, timedelta
 
 from django.core import mail
+from openpyxl.reader.excel import load_workbook
 from rest_framework import status
+from six import BytesIO
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import APITestCase
@@ -240,3 +242,28 @@ class PeriodicActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),
     }
+
+    def test_get(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            (
+                'Email',
+                'Name',
+                'Registration Date',
+                'Status',
+                'Registration answer',
+                'Iterations',
+                'Total hours',
+                'First contribution',
+                'Last contribution'
+            )
+        )

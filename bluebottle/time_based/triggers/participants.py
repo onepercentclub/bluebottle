@@ -381,11 +381,22 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
         """Slot has status finished"""
         return effect.instance.slot.status == "finished"
 
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
+
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             PeriodicParticipantStateMachine.initiate,
             effects=[
                 CreatePeriodicPreparationTimeContributionEffect,
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
+                ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],

@@ -29,7 +29,11 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.time_based.models import DateParticipant, DeadlineParticipant, PeriodParticipant
+from bluebottle.time_based.models import (
+    DateParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -147,27 +151,25 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
     def get_queryset(self):
-        return Contributor.objects.prefetch_related(
-            'user', 'activity', 'contributions'
-        ).instance_of(
-            Donor,
-            DateParticipant,
-            PeriodParticipant,
-            DeedParticipant,
-            DeadlineParticipant,
-            CollectContributor,
-        ).filter(
-            user=self.request.user
-        ).exclude(
-            status__in=['rejected', 'failed']
-        ).exclude(
-            donor__status__in=['new']
-        ).order_by(
-            '-created'
-        ).annotate(
-            total_duration=Sum(
-                'contributions__timecontribution__value',
-                filter=Q(contributions__status__in=['succeeded', 'new'])
+        return (
+            Contributor.objects.prefetch_related("user", "activity", "contributions")
+            .instance_of(
+                Donor,
+                DateParticipant,
+                PeriodicParticipant,
+                DeedParticipant,
+                DeadlineParticipant,
+                CollectContributor,
+            )
+            .filter(user=self.request.user)
+            .exclude(status__in=["rejected", "failed"])
+            .exclude(donor__status__in=["new"])
+            .order_by("-created")
+            .annotate(
+                total_duration=Sum(
+                    "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
             )
         )
 

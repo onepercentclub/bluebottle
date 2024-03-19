@@ -123,8 +123,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         description=_('Publish your activity and let people participate.'),
         automatic=False,
-        name=_('Publish'),
-        passed_label=_('published'),
+        name=_("APublish"),
+        passed_label=_("published"),
         permission=ActivityStateMachine.is_owner,
         conditions=[
             ActivityStateMachine.is_complete,

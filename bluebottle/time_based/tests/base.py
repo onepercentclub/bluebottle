@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 from io import BytesIO
 
+from django.core import mail
 from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
@@ -690,7 +691,7 @@ class TimeBasedRegistrationDetailAPITestCase:
 
 
 class TimeBasedRegistrationTransitionListAPITestCase:
-    fields = ['resource', 'transition']
+    fields = ["resource", "transition", "send_email", "message"]
 
     def setUp(self):
         self.activity = self.activity_factory.create(
@@ -730,6 +731,19 @@ class TimeBasedRegistrationTransitionListAPITestCase:
 
         self.registration.refresh_from_db()
         self.assertEqual(self.defaults['resource'].status, 'rejected')
+
+    def test_reject_manager(self):
+        self.defaults["transition"] = "reject"
+        mail.outbox = []
+        self.perform_create(user=self.activity.owner)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have not been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
+        )
+        self.assertStatus(status.HTTP_201_CREATED)
 
     def test_accept_other_user(self):
         self.perform_create(user=self.user)

@@ -1,3 +1,4 @@
+from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
@@ -12,9 +13,14 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class ParticipantSerializer(BaseContributorSerializer):
+    total_duration = serializers.DurationField(read_only=True)
+
     class Meta(BaseContributorSerializer.Meta):
-        fields = BaseContributorSerializer.Meta.fields + ('registration', )
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
+        fields = BaseContributorSerializer.Meta.fields + (
+            "registration",
+            "total_duration",
+        )
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ("permissions",)
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = ['user']

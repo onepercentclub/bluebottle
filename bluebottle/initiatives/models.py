@@ -284,7 +284,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('phone', _('Phone')),
     )
 
-    activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
+    activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
         help_text=_("Enable team activities where teams sign-up instead of individuals.")

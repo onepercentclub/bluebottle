@@ -1,0 +1,9 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+      <p>You have restarted your contribution to "{{ title }}".</p>
+      <p>Good to have you on board again!</p>
+    {% endblocktrans %}
+{% endblock %}

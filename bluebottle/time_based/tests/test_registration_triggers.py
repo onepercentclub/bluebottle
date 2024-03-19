@@ -207,6 +207,22 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_stop(self):
         self.test_initial()
-        self.registration.states.stop()
-
+        mail.outbox = []
+        self.registration.states.stop(save=True)
         self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been stopped',
+        )
+
+    def test_start(self):
+        self.test_initial()
+        self.registration.states.stop(save=True)
+        mail.outbox = []
+        self.registration.states.start(save=True)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your contribution to the activity "{self.activity.title}" has been restarted',
+        )

@@ -15,7 +15,7 @@ class CreateTimeContributionEffect(Effect):
     def post_save(self, **kwargs):
         activity = self.instance.activity
         tz = get_current_timezone()
-        if self.instance.slot:
+        if hasattr(self.instance, 'slot') and self.instance.slot:
             contribution_date = self.instance.slot.start
         elif activity.start and activity.start > date.today():
             contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))

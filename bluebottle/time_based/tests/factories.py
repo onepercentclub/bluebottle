@@ -21,6 +21,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     PeriodicSlot,
     PeriodParticipant,
+    ScheduleSlot,
     Skill,
     SlotParticipant,
     TeamSlot,
@@ -118,7 +119,6 @@ class ScheduleActivityFactory(TimeBasedFactory):
 
     deadline = date.today() + timedelta(weeks=4)
     registration_deadline = date.today() - timedelta(weeks=4)
-    duration = timedelta(hours=4)
     is_online = False
     location = factory.SubFactory(GeolocationFactory)
     expertise = factory.SubFactory(SkillFactory)
@@ -252,3 +252,14 @@ class PeriodicParticipantFactory(FSMModelFactory):
 
     activity = factory.SubFactory(PeriodicActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class ScheduleSlotFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = ScheduleSlot
+
+    is_online = False
+
+    location = factory.SubFactory(GeolocationFactory)
+    start = now() + timedelta(weeks=4)
+    duration = timedelta(hours=2)

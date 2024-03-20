@@ -275,7 +275,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
 
         status = self.request.query_params.get('filter[status]')
         if status:
-            queryset = queryset.filter(status=status)
+            queryset = queryset.filter(status__in=status.split(","))
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

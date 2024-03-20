@@ -138,6 +138,7 @@ class TimeBasedActivity(Activity):
             ScheduleParticipant,
         )
 
+
     @property
     def pending_participants(self):
         return self.participants.filter(status="new")
@@ -1366,7 +1367,10 @@ class DeadlineParticipant(Participant, Contributor):
 
 class ScheduleParticipant(Participant, Contributor):
     slot = models.ForeignKey(
-        "time_based.ScheduleSlot", related_name="participants", on_delete=models.CASCADE
+        "time_based.ScheduleSlot",
+        related_name="participants",
+        on_delete=models.CASCADE,
+        null=True,
     )
 
     class Meta:
@@ -1410,7 +1414,6 @@ class Slot(models.Model):
     status = models.CharField(max_length=40)
 
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -1434,12 +1437,30 @@ class ScheduleSlot(TriggerMixin, Slot):
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
     )
+    duration = models.DurationField(_("duration"), null=True, blank=True)
+
+    is_online = models.BooleanField(
+        _("is online"), choices=DateActivity.ONLINE_CHOICES, null=True, default=None
+    )
+
+    online_meeting_url = models.TextField(
+        _("online meeting link"), blank=True, default=""
+    )
+
+    location = models.ForeignKey(
+        Geolocation,
+        verbose_name=_("location"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    location_hint = models.TextField(_("location hint"), null=True, blank=True)
 
     @property
-    def duration(self):
-        if self.end and self.start:
-            return self.end - self.start
-
+    def end(self):
+        if self.duration and self.start:
+            return self.start + self.duration
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(

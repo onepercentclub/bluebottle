@@ -51,7 +51,7 @@ urlpatterns = [
         ScheduleParticipantDetail.as_view(),
         name="schedule-participant-detail",
     ),
-    url(r"/slots/^$", ScheduleSlotListView.as_view(), name="schedule-list"),
+    url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-list"),
     url(
         r"^/slots/(?P<pk>\d+)$",
         ScheduleSlotDetailView.as_view(),

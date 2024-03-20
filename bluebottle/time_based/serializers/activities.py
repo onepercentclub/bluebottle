@@ -1,4 +1,6 @@
+from typing import OrderedDict
 import dateutil
+from numpy import who
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -15,7 +17,10 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
-    PeriodicActivity, ScheduleActivity,
+    DeadlineParticipant,
+    DeadlineRegistration,
+    PeriodicActivity,
+    ScheduleActivity,
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -122,6 +127,33 @@ class PeriodActivitySerializer(ModelSerializer):
         resource_name = 'activities/time-based/periods'
 
 
+class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
+    model = DeadlineParticipant
+
+    def __init__(self, *args, **kwargs):
+        self.statuses = kwargs.pop("statuses") or {}
+
+        super().__init__(*args, **kwargs)
+
+    def get_links(self, obj=None, lookup_field="pk"):
+        return_data = super().get_links(obj, lookup_field)
+        queryset = getattr(
+            obj, self.source or self.field_name or self.parent.field_name
+        )
+
+        url = self.reverse(
+            self.related_link_view_name, args=(getattr(obj, lookup_field),)
+        )
+
+        for name, statuses in self.statuses.items():
+            return_data[name] = {
+                "href": f'{url}?filter[status]={",".join(statuses)}',
+                "meta": {"count": queryset.filter(status__in=statuses).count()},
+            }
+
+        return return_data
+
+
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'deadline-detail'
     export_view_name = 'deadline-participant-export'
@@ -130,17 +162,22 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
+    registrations = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
         related_link_view_name="related-deadline-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
     class Meta(TimeBasedBaseSerializer.Meta):

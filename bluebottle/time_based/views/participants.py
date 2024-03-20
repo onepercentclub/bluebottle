@@ -96,9 +96,6 @@ class PeriodicParticipantDetail(ParticipantDetail):
 class RelatedParticipantListView(
     JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
 ):
-    search_fields = ['user__first_name', 'user__last_name']
-    filter_backends = [filters.SearchFilter]
-
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -106,9 +103,7 @@ class RelatedParticipantListView(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset.filter(activity_id__in=self.kwargs["activity_id"])
 
 
 class DeadlineRelatedParticipantList(RelatedContributorListView):

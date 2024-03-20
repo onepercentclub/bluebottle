@@ -443,11 +443,12 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     ]
 
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
+        "start",
+        "end_date",
+        "participant_count",
     ]
 
     date_fields = [
-        'duration',
         'start',
         'deadline',
         'is_online',
@@ -480,13 +481,18 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     duration_string.short_description = _('Duration')
 
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    participant_count.short_description = _("Participants")
+
 
 @admin.register(PeriodicSlot)
 class PeriodicSlotAdmin(StateMachineAdmin):
-    list_display = ("start", "end", "activity", "participant_count")
+    list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
-    readonly_fields = ("activity", "start", "end", "status")
+    readonly_fields = ("activity", "start", "duration", "status")
     fields = readonly_fields
 
     def participant_count(self, obj):
@@ -497,8 +503,8 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "participant_count")
-    fields = ("edit", "start", "end", "participant_count")
+    readonly_fields = ("edit", "start", "duration", "participant_count")
+    fields = ("edit", "start", "duration", "participant_count")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

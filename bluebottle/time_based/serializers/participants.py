@@ -41,13 +41,17 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         model = DeadlineParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/deadline-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
+        resource_name = "contributors/time-based/deadline-participants"
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            "activity",
+            "registration",
+        ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
-            'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
+            "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
+            "registration": "bluebottle.time_based.serializers.DeadlineRegistrationSerializer",
         }
     )
 
@@ -57,16 +61,23 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
     registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
 
     class Meta(ParticipantSerializer.Meta):
+        fields = ParticipantSerializer.Meta.fields + ("slot",)
         model = ScheduleParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/schedule-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
+        resource_name = "contributors/time-based/schedule-participants"
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            "activity",
+            "slot",
+            "registratoin",
+        ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
-            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+            "slot": "bluebottle.time_based.serializers.ScheduleSlotSerializer",
+            "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
         }
     )
 
@@ -79,13 +90,17 @@ class PeriodicParticipantSerializer(ParticipantSerializer):
         model = PeriodicParticipant
 
     class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
-        resource_name = 'contributors/time-based/periodic-participants'
-        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['activity']
+        resource_name = "contributors/time-based/periodic-participants"
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
+            "activity",
+            "registration",
+        ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
-            'activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
+            "activity": "bluebottle.time_based.serializers.PeriodicActivitySerializer",
+            "registration": "bluebottle.time_based.serializers.PeriodicRegistrationSerializer",
         }
     )
 

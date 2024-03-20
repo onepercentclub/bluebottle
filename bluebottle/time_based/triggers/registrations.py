@@ -5,7 +5,7 @@ from bluebottle.time_based.effects.registration import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
 )
-from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration
+from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
@@ -124,6 +124,11 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
             ],
         ),
     ]
+
+
+@register(ScheduleRegistration)
+class ScheduleRegistrationTriggers(RegistrationTriggers):
+    pass
 
 
 @register(PeriodicRegistration)

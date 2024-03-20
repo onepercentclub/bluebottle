@@ -15,7 +15,9 @@ class CreateTimeContributionEffect(Effect):
     def post_save(self, **kwargs):
         activity = self.instance.activity
         tz = get_current_timezone()
-        if activity.start and activity.start > date.today():
+        if hasattr(self.instance, "slot") and self.instance.slot:
+            contribution_date = self.instance.slot.start
+        elif activity.start and activity.start > date.today():
             contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
         elif activity.deadline and activity.deadline < date.today():
             contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
@@ -94,7 +96,7 @@ class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipants
     def post_save(self, **kwargs):
         activity = self.instance.activity
         if activity.preparation:
-            start = now()
+            start = self.instance.created
             contribution = TimeContribution(
                 contributor=self.instance,
                 contribution_type=ContributionTypeChoices.preparation,

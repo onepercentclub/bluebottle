@@ -95,50 +95,6 @@ class CreateOverallTimeContributionEffect(Effect):
         return super().is_valid and self.instance.activity.duration_period == 'overall'
 
 
-class CreatePeriodTimeContributionEffect(Effect):
-    title = _('Create contribution')
-    template = 'admin/create_period_time_contribution.html'
-
-    def post_save(self, **kwargs):
-        tz = get_current_timezone()
-        activity = self.instance.activity
-
-        if self.instance.current_period or not activity.start:
-            # Use today if we already have previous contributions
-            # or when we create a new contribution and now start
-            start = date.today()
-        else:
-            # The first contribution should start on the start
-            start = activity.start
-
-        # Calculate the next end
-        end = start + relativedelta(**{activity.duration_period: 1})
-        if activity.deadline and end > activity.deadline:
-            # the end is passed the deadline
-            end = activity.deadline
-
-        # Update the current_period
-        self.instance.current_period = end
-        self.instance.save()
-
-        if not activity.deadline or start < activity.deadline:
-            # Only when the deadline is not passed, create the new contribution
-            TimeContribution.objects.create(
-                contributor=self.instance,
-                contribution_type=ContributionTypeChoices.period,
-                value=activity.duration,
-                start=tz.localize(datetime.combine(start, datetime.min.time())),
-                end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
-            )
-
-    def __str__(self):
-        return _('Create contribution')
-
-    @property
-    def is_valid(self):
-        return super().is_valid and self.instance.activity.duration_period != 'overall'
-
-
 class SetEndDateEffect(Effect):
     title = _('End the activity')
     template = 'admin/set_end_date.html'

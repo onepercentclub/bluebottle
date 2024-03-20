@@ -1324,7 +1324,9 @@ class PeriodicRegistration(Registration):
 
     @property
     def total_slots(self):
-        return self.participants.count()
+        return self.participants.filter(
+            status__in=["running", "new", "succeeded"]
+        ).count()
 
 
 class DeadlineParticipant(Participant, Contributor):

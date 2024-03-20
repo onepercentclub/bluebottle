@@ -394,7 +394,6 @@ class TimeBasedRegistrationListAPITestCase:
 
     def test_create(self):
         self.perform_create(user=self.user)
-
         self.assertStatus(status.HTTP_201_CREATED)
 
         for included in self.included:

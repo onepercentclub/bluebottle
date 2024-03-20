@@ -26,7 +26,7 @@ from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
     DeadlineActivity,
-    PeriodicActivity,
+    PeriodicActivity, ScheduleActivity,
 )
 from bluebottle.time_based.states import (
     DateStateMachine,
@@ -460,6 +460,25 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
 
 @register(DeadlineActivity)
 class DeadlineActivityTriggers(RegistrationActivityTriggers):
+    triggers = RegistrationActivityTriggers.triggers + [
+        ModelChangedTrigger(
+            "capacity",
+            effects=[
+                TransitionEffect(
+                    TimeBasedStateMachine.reopen,
+                    conditions=[is_not_full, registration_deadline_is_not_passed],
+                ),
+                TransitionEffect(
+                    TimeBasedStateMachine.lock,
+                    conditions=[is_full, registration_deadline_is_not_passed],
+                ),
+            ],
+        ),
+    ]
+
+
+@register(ScheduleActivity)
+class ScheduleActivityTriggers(RegistrationActivityTriggers):
     triggers = RegistrationActivityTriggers.triggers + [
         ModelChangedTrigger(
             "capacity",

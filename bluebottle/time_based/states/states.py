@@ -300,7 +300,6 @@ class SlotStateMachine(ModelStateMachine):
     )
 
 
-
 @register(PeriodicSlot)
 class PeriodicSlotStateMachine(SlotStateMachine):
     pass
@@ -309,6 +308,7 @@ class PeriodicSlotStateMachine(SlotStateMachine):
 @register(ScheduleSlot)
 class ScheduleSlotStateMachine(SlotStateMachine):
     pass
+
 
 class ActivitySlotStateMachine(ModelStateMachine):
 

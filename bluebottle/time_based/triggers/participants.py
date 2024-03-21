@@ -370,11 +370,6 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
     ]
 
 
-@register(ScheduleParticipant)
-class ScheduleParticipantTriggers(ParticipantTriggers):
-    pass
-
-
 @register(PeriodicParticipant)
 class PeriodicParticipantTriggers(ParticipantTriggers):
     def slot_is_finished(effect):

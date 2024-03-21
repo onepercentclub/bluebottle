@@ -121,7 +121,10 @@ class PeriodicRegistrationSerializer(RegistrationSerializer):
 
     class Meta(RegistrationSerializer.Meta):
         model = PeriodicRegistration
-        meta_fields = RegistrationSerializer.Meta.meta_fields + ('total_slots', 'total_hours')
+        meta_fields = RegistrationSerializer.Meta.meta_fields + (
+            "total_slots",
+            "total_hours",
+        )
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/periodic-registrations'

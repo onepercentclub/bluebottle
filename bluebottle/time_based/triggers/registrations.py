@@ -5,14 +5,20 @@ from bluebottle.time_based.effects.registration import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
 )
-from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration
+from bluebottle.time_based.models import (
+    DeadlineRegistration,
+    PeriodicRegistration,
+    ScheduleRegistration,
+)
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
     UserAppliedNotification,
     UserJoinedNotification,
     UserRegistrationAcceptedNotification,
-    UserRegistrationRejectedNotification, UserRegistrationRestartedNotification, UserRegistrationStoppedNotification,
+    UserRegistrationRejectedNotification,
+    UserRegistrationRestartedNotification,
+    UserRegistrationStoppedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -21,6 +27,7 @@ from bluebottle.time_based.states import (
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
+    ScheduleParticipantStateMachine,
 )
 from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
@@ -126,11 +133,6 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
     ]
 
 
-@register(ScheduleRegistration)
-class ScheduleRegistrationTriggers(RegistrationTriggers):
-    pass
-
-
 @register(PeriodicRegistration)
 class PeriodicRegistrationTriggers(RegistrationTriggers):
     def activity_no_spots_left(effect):
@@ -210,14 +212,40 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.start,
-            effects=[
-                NotificationEffect(UserRegistrationRestartedNotification)
-            ],
+            effects=[NotificationEffect(UserRegistrationRestartedNotification)],
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.stop,
+            effects=[NotificationEffect(UserRegistrationStoppedNotification)],
+        ),
+    ]
+
+
+@register(ScheduleRegistration)
+class ScheduleRegistrationTriggers(RegistrationTriggers):
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
             effects=[
-                NotificationEffect(UserRegistrationStoppedNotification)
+                CreateParticipantEffect,
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
             ],
         ),
     ]

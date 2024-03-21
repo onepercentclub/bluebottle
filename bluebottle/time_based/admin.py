@@ -43,6 +43,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
+    ScheduleSlot,
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
@@ -204,9 +205,12 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
-            (_('Management'), {'fields': self.get_status_fields(request, obj)}),
-            (_('Information'), {'fields': self.get_detail_fields(request, obj)}),
-            (_('Participation'), {'fields': self.get_registration_fields(request, obj)}),
+            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (
+                _("Participation"),
+                {"fields": self.get_registration_fields(request, obj)},
+            ),
         ]
 
         if Location.objects.count():
@@ -240,7 +244,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     def participant_count(self, obj):
         return obj.succeeded_contributor_count
 
-    participant_count.short_description = _('Participants')
+    participant_count.short_description = _("Participants")
 
 
 class TimeBasedActivityAdminForm(ActivityForm):
@@ -395,7 +399,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     date_fields = [
         'duration',
@@ -409,9 +413,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(2, (
-            _('Date & time'), {'fields': self.date_fields}
-        ))
+        fieldsets.insert(2, (_("Date & time"), {"fields": self.date_fields}))
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
@@ -445,11 +447,12 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     ]
 
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
+        "start",
+        "end_date",
+        "participant_count",
     ]
 
     date_fields = [
-        'duration',
         'start',
         'deadline',
         'is_online',
@@ -458,7 +461,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -484,16 +487,21 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     duration_string.short_description = _('Duration')
 
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    participant_count.short_description = _("Participants")
+
 
 @admin.register(PeriodicSlot)
 class PeriodicSlotAdmin(StateMachineAdmin):
-    list_display = ("start", "end", "activity", "participant_count")
+    list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
-    readonly_fields = ("activity", "start", "end", "status")
+    readonly_fields = ("activity", "start", "duration", "status")
     fields = readonly_fields
 
-    registration_fields = ('capacity',) + TimeBasedAdmin.registration_fields
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -501,12 +509,26 @@ class PeriodicSlotAdmin(StateMachineAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                    'states'
-                )}),
-            )
+            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+        return fieldsets
+
+
+@admin.register(ScheduleSlot)
+class ScheduleSlotAdmin(StateMachineAdmin):
+    list_display = ("start", "duration", "activity", "participant_count")
+
+    readonly_fields = ("activity", "start", "duration", "status")
+    fields = readonly_fields
+
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
         return fieldsets
 
 
@@ -514,9 +536,8 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "current_status", "participant_count")
-    fields = ("edit", "start", "end", "current_status", "participant_count")
-    ordering = ['-start']
+    readonly_fields = ("edit", "start", "duration", "participant_count")
+    fields = ("edit", "start", "duration", "participant_count")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -526,7 +547,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     def current_status(self, obj):
         return obj.states.current_state.name
 
-    current_status.short_description = _('Status')
+    current_status.short_description = _("Status")
 
     def has_add_permission(self, request, obj):
         return False
@@ -575,9 +596,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = (
-        'capacity',
-    ) + TimeBasedAdmin.registration_fields
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -1191,7 +1210,7 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 @admin.register(PeriodicParticipant)
 class PeriodicParticipantAdmin(ContributorChildAdmin):
 
-    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('slot',)
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
@@ -1203,8 +1222,8 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
         TimeContributionInlineAdmin
     ]
 
-    fields = ContributorChildAdmin.fields + ['registration_info', 'slot_info', 'slot']
-    pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
+    pending_fields = ["activity", "user", "registration_info", "created", "updated"]
 
     def get_fields(self, request, obj=None):
         if obj and obj.registration and obj.registration.status == 'new':
@@ -1212,8 +1231,8 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        'registration_info',
-        'slot_info'
+        "registration_info",
+        "slot_info",
     ]
 
     def registration_info(self, obj):
@@ -1237,11 +1256,64 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
 
     def slot_info(self, obj):
         if not obj.slot:
-            return '-'
-        return format_html(
-            '{} to {}',
-            obj.slot.start.date(), obj.slot.end.date()
+            return "-"
+        return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
+
+    registration_info.short_description = _("Registration")
+
+    list_display = ["__str__", "activity_link", "status"]
+
+
+@admin.register(ScheduleParticipant)
+class ScheduleParticipantAdmin(ContributorChildAdmin):
+
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        for inline in inlines:
+            inline.parent_object = obj
+        return inlines
+
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
+    pending_fields = ["activity", "user", "registration_info", "created", "updated"]
+
+    def get_fields(self, request, obj=None):
+        if obj and obj.registration and obj.registration.status == "new":
+            return self.pending_fields
+        return self.fields
+
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
+        "registration_info",
+        "slot_info",
+    ]
+
+    def registration_info(self, obj):
+        url = reverse(
+            "admin:{}_{}_change".format(
+                obj.registration._meta.app_label, obj.registration._meta.model_name
+            ),
+            args=(obj.registration.id,),
         )
+        status = obj.registration.states.current_state.name
+        if obj.registration.status == "new":
+            template = loader.get_template("admin/time_based/registration_info.html")
+            return template.render({"status": status, "url": url})
+        else:
+            title = _("Change review")
+            return format_html(
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
+                url=url,
+                status=status,
+                title=title,
+            )
+
+    def slot_info(self, obj):
+        if not obj.slot:
+            return "-"
+        return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
 
     registration_info.short_description = _('Registration')
 

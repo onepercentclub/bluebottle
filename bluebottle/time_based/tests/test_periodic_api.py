@@ -136,60 +136,60 @@ class PeriodicRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
 
     def test_stop_by_manager(self):
         self.perform_create(user=self.activity.owner)
-        self.assertResourceStatus(self.registration, 'accepted')
+        self.assertResourceStatus(self.registration, "accepted")
         mail.outbox = []
-        self.defaults['transition'] = 'stop'
-        self.defaults['message'] = "We don't need you anymore."
+        self.defaults["transition"] = "stop"
+        self.defaults["message"] = "We don't need you anymore."
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
-        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertResourceStatus(self.registration, "stopped")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            f'Your contribution to the activity "{self.activity.title}" has been stopped'
+            f'Your contribution to the activity "{self.activity.title}" has been stopped',
         )
         self.assertTrue("We don't need you anymore." in mail.outbox[0].body)
 
     def test_restart_by_manager(self):
         self.perform_create(user=self.activity.owner)
-        self.assertResourceStatus(self.registration, 'accepted')
-        self.defaults['transition'] = 'stop'
-        self.defaults['message'] = "We don't need you anymore."
+        self.assertResourceStatus(self.registration, "accepted")
+        self.defaults["transition"] = "stop"
+        self.defaults["message"] = "We don't need you anymore."
         self.perform_create(user=self.activity.owner)
         mail.outbox = []
-        self.defaults['transition'] = 'start'
-        self.defaults['message'] = "Good to have you back!"
+        self.defaults["transition"] = "start"
+        self.defaults["message"] = "Good to have you back!"
         self.perform_create(user=self.activity.owner)
-        self.assertResourceStatus(self.registration, 'accepted')
+        self.assertResourceStatus(self.registration, "accepted")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            f'Your contribution to the activity "{self.activity.title}" has been restarted'
+            f'Your contribution to the activity "{self.activity.title}" has been restarted',
         )
         self.assertTrue("Good to have you back!" in mail.outbox[0].body)
 
     def test_stop_no_mail(self):
         self.perform_create(user=self.activity.owner)
         mail.outbox = []
-        self.defaults['transition'] = 'stop'
-        self.defaults['send_email'] = False
+        self.defaults["transition"] = "stop"
+        self.defaults["send_email"] = False
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
-        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertResourceStatus(self.registration, "stopped")
         self.assertEqual(len(mail.outbox), 0)
 
     def test_stop_self(self):
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         mail.outbox = []
-        self.defaults['transition'] = 'stop'
+        self.defaults["transition"] = "stop"
         self.perform_create(user=self.registration.user)
         self.assertStatus(status.HTTP_201_CREATED)
-        self.assertResourceStatus(self.registration, 'stopped')
+        self.assertResourceStatus(self.registration, "stopped")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            f'Your contribution to the activity "{self.activity.title}" has been stopped'
+            f'Your contribution to the activity "{self.activity.title}" has been stopped',
         )
 
 
@@ -256,14 +256,14 @@ class PeriodicActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         self.assertEqual(
             tuple(sheet.values)[0],
             (
-                'Email',
-                'Name',
-                'Registration Date',
-                'Status',
-                'Registration answer',
-                'Iterations',
-                'Total hours',
-                'First contribution',
-                'Last contribution'
-            )
+                "Email",
+                "Name",
+                "Registration Date",
+                "Status",
+                "Registration answer",
+                "Iterations",
+                "Total hours",
+                "First contribution",
+                "Last contribution",
+            ),
         )

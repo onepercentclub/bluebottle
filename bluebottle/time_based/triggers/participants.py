@@ -10,6 +10,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
 from bluebottle.time_based.effects.participant import (
+    CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
     CreatePeriodicPreparationTimeContributionEffect,
@@ -44,13 +45,6 @@ class ParticipantTriggers(ContributorTriggers):
         return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
-        TransitionTrigger(
-            ParticipantStateMachine.initiate,
-            effects=[
-                FollowActivityEffect,
-                CreateTimeContributionEffect,
-            ],
-        ),
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
@@ -189,6 +183,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 CreateRegistrationEffect,
+                CreateTimeContributionEffect,
                 CreatePreparationTimeContributionEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
@@ -375,11 +370,6 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
     ]
 
 
-@register(ScheduleParticipant)
-class ScheduleParticipantTriggers(ParticipantTriggers):
-    pass
-
-
 @register(PeriodicParticipant)
 class PeriodicParticipantTriggers(ParticipantTriggers):
     def slot_is_finished(effect):
@@ -389,14 +379,15 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
     def registration_is_accepted(effect):
         """Review needed"""
         return (
-            effect.instance.registration and
-            effect.instance.registration.status == "accepted"
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
         )
 
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             PeriodicParticipantStateMachine.initiate,
             effects=[
+                CreateTimeContributionEffect,
                 CreatePeriodicPreparationTimeContributionEffect,
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
@@ -428,6 +419,216 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
+                )
+            ],
+        ),
+    ]
+
+
+@register(ScheduleParticipant)
+class ScheduleParticipantTriggers(ParticipantTriggers):
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
+
+    def is_admin(effect):
+        """Is admin"""
+        user = effect.options.get("user", None)
+        return (
+            user
+            and (user.is_staff or user.is_superuser)
+            and effect.instance.user != user
+        )
+
+    def is_user(effect):
+        """Is user"""
+        user = effect.options.get("user", None)
+        return user == effect.instance.user
+
+    def activity_no_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return False
+        return (
+            effect.instance.activity.capacity
+            <= effect.instance.activity.accepted_participants.count() + 1
+        )
+
+    def activity_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return True
+        return (
+            effect.instance.activity.capacity
+            > effect.instance.activity.accepted_participants.count() - 1
+        )
+
+    triggers = ParticipantTriggers.triggers + [
+        TransitionTrigger(
+            ParticipantStateMachine.initiate,
+            effects=[
+                CreateScheduleContributionEffect,
+                CreateRegistrationEffect,
+                CreatePreparationTimeContributionEffect,
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.add, conditions=[is_admin]
+                ),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                )
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.add,
+            effects=[
+                CreateRegistrationEffect,
+                NotificationEffect(ManagerParticipantAddedOwnerNotification),
+                NotificationEffect(ParticipantAddedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.readd,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                )
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.withdraw,
+            effects=[
+                NotificationEffect(UserParticipantWithdrewNotification),
+                NotificationEffect(ManagerParticipantWithdrewNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.reapply,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationParticipantStateMachine.readd,
+            effects=[
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.remove,
+            effects=[
+                NotificationEffect(UserParticipantRemovedNotification),
+                NotificationEffect(ManagerParticipantRemovedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.fail,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                )
+            ],
+        ),
+        TransitionTrigger(
+            DeadlineParticipantStateMachine.cancelled,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
                 )
             ],
         ),

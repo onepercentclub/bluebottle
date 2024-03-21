@@ -1,5 +1,4 @@
 from django.db.models import Sum, Q
-from rest_framework import filters
 
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
@@ -27,19 +26,24 @@ from bluebottle.utils.views import (
     CreateAPIView,
     JsonApiViewMixin,
     ListAPIView,
-    RetrieveUpdateAPIView, )
+    RetrieveUpdateAPIView,
+)
 
 
 class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     def get_queryset(self):
-        queryset = super().get_queryset().annotate(
-            total_duration=Sum(
-                'contributions__timecontribution__value',
-                filter=Q(contributions__status__in=['succeeded', 'new'])
+        queryset = (
+            super()
+            .get_queryset()
+            .annotate(
+                total_duration=Sum(
+                    "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
             )
         )
-        my = self.request.query_params.get('filter[my]')
+        my = self.request.query_params.get("filter[my]")
         if my:
             queryset = queryset.filter(user=self.request.user)
         return queryset
@@ -58,15 +62,16 @@ class DeadlineParticipantList(ParticipantList):
 
 class ScheduleParticipantList(ParticipantList):
     queryset = ScheduleParticipant.objects.prefetch_related(
-        'user', 'activity'
+        "user",
+        "activity",
     )
-    serializer = DeadlineParticipantSerializer
+    serializer = ScheduleParticipantSerializer
 
 
 class PeriodicParticipantList(ParticipantList):
     queryset = PeriodicParticipant.objects.prefetch_related(
-        'user', 'activity'
-    ).order_by('-slot__start')
+        "user", "activity"
+    ).order_by("-slot__start")
     serializer = PeriodicParticipantSerializer
 
 
@@ -94,9 +99,6 @@ class PeriodicParticipantDetail(ParticipantDetail):
 class RelatedParticipantListView(
     JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
 ):
-    search_fields = ['user__first_name', 'user__last_name']
-    filter_backends = [filters.SearchFilter]
-
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -104,9 +106,7 @@ class RelatedParticipantListView(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        return queryset.filter(
-            activity_id=self.kwargs['activity_id']
-        )
+        return queryset.filter(activity_id__in=self.kwargs["activity_id"])
 
 
 class DeadlineRelatedParticipantList(RelatedContributorListView):
@@ -131,7 +131,7 @@ class PeriodicRelatedParticipantList(RelatedContributorListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.order_by('-slot__start')
+        queryset = queryset.order_by("-slot__start")
         return queryset
 
 

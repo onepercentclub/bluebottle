@@ -122,7 +122,11 @@ class TimeBasedActivity(Activity):
 
     @property
     def required_fields(self):
-        return super().required_fields + ['title', 'description', 'review', ]
+        return super().required_fields + [
+            "title",
+            "description",
+            "review",
+        ]
 
     @property
     def participants(self):
@@ -136,19 +140,21 @@ class TimeBasedActivity(Activity):
 
     @property
     def pending_participants(self):
-        return self.participants.filter(status='new')
+        return self.participants.filter(status="new")
 
     @property
     def cancelled_participants(self):
-        return self.participants.filter(status='cancelled')
+        return self.participants.filter(status="cancelled")
 
     @property
     def active_participants(self):
-        return self.participants.filter(status__in=['accepted', 'new', 'participating'])
+        return self.participants.filter(status__in=["accepted", "new", "participating"])
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=['accepted', 'succeeded', 'participating'])
+        return self.participants.filter(
+            status__in=["accepted", "succeeded", "participating"]
+        )
 
     @property
     def succeeded_contributor_count(self):
@@ -721,13 +727,6 @@ class RegistrationActivity(TimeBasedActivity):
         blank=True
     )
 
-    duration = models.DurationField(
-        _('Activity duration'),
-        help_text=_('How much time will a participant contribute?'),
-        null=True,
-        blank=True
-    )
-
     @property
     def duration_human_readable(self):
         if self.duration:
@@ -759,16 +758,18 @@ class RegistrationActivity(TimeBasedActivity):
     def required_fields(self):
         fields = super().required_fields
         if not self.is_online:
-            fields.append('location')
-        return fields + ['duration', 'is_online']
+            fields.append("location")
+        return fields + ["is_online"]
 
     @property
     def active_participants(self):
-        return self.participants.filter(status__in=['new', 'succeeded', 'participating'])
+        return self.participants.filter(
+            status__in=["new", "succeeded", "participating"]
+        )
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=['succeeded'])
+        return self.participants.filter(status__in=["succeeded"])
 
     class Meta:
         abstract = True
@@ -777,28 +778,68 @@ class RegistrationActivity(TimeBasedActivity):
 class DeadlineActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/deadline/{}/{}"
 
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
+
+    @property
+    def required_fields(self):
+        return super().required_fields + ["duration"]
+
     class Meta:
         verbose_name = _("Flexible activity")
         verbose_name_plural = _("Flexible activities")
 
         permissions = (
-            ('api_read_deadlineactivity', 'Can view on a felxible activities through the API'),
-            ('api_add_deadlineactivity', 'Can add on a felxible activities through the API'),
-            ('api_change_deadlineactivity', 'Can change on a felxible activities through the API'),
-            ('api_delete_deadlineactivity', 'Can delete on a felxible activities through the API'),
-
-            ('api_read_own_deadlineactivity', 'Can view own on a felxible activities through the API'),
-            ('api_add_own_deadlineactivity', 'Can add own on a felxible activities through the API'),
-            ('api_change_own_deadlineactivity', 'Can change own on a felxible activities through the API'),
-            ('api_delete_own_deadlineactivity', 'Can delete own on a felxible activities through the API'),
+            (
+                "api_read_deadlineactivity",
+                "Can view on a felxible activities through the API",
+            ),
+            (
+                "api_add_deadlineactivity",
+                "Can add on a felxible activities through the API",
+            ),
+            (
+                "api_change_deadlineactivity",
+                "Can change on a felxible activities through the API",
+            ),
+            (
+                "api_delete_deadlineactivity",
+                "Can delete on a felxible activities through the API",
+            ),
+            (
+                "api_read_own_deadlineactivity",
+                "Can view own on a felxible activities through the API",
+            ),
+            (
+                "api_add_own_deadlineactivity",
+                "Can add own on a felxible activities through the API",
+            ),
+            (
+                "api_change_own_deadlineactivity",
+                "Can change own on a felxible activities through the API",
+            ),
+            (
+                "api_delete_own_deadlineactivity",
+                "Can delete own on a felxible activities through the API",
+            ),
         )
 
     class JSONAPIMeta:
-        resource_name = 'activities/time-based/deadlines'
+        resource_name = "activities/time-based/deadlines"
 
 
 class ScheduleActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Schedule activity")
@@ -836,26 +877,55 @@ class PeriodicActivity(RegistrationActivity):
         null=True,
         choices=PeriodChoices,
     )
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 
     @property
     def required_fields(self):
-        return super().required_fields + ['period']
+        return super().required_fields + ["duration", "period"]
 
     class Meta:
         verbose_name = _("Recurring activity")
         verbose_name_plural = _("Recurring activities")
 
         permissions = (
-            ('api_read_periodicactivity', 'Can view on a periodic activities through the API'),
-            ('api_add_periodicactivity', 'Can add on a periodic activities through the API'),
-            ('api_change_periodicactivity', 'Can change on a periodic activities through the API'),
-            ('api_delete_periodicactivity', 'Can delete on a periodic activities through the API'),
-
-            ('api_read_own_periodicactivity', 'Can view own on a periodic activities through the API'),
-            ('api_add_own_periodicactivity', 'Can add own on a periodic activities through the API'),
-            ('api_change_own_periodicactivity', 'Can change own on a periodic activities through the API'),
-            ('api_delete_own_periodicactivity', 'Can delete own on a periodic activities through the API'),
+            (
+                "api_read_periodicactivity",
+                "Can view on a periodic activities through the API",
+            ),
+            (
+                "api_add_periodicactivity",
+                "Can add on a periodic activities through the API",
+            ),
+            (
+                "api_change_periodicactivity",
+                "Can change on a periodic activities through the API",
+            ),
+            (
+                "api_delete_periodicactivity",
+                "Can delete on a periodic activities through the API",
+            ),
+            (
+                "api_read_own_periodicactivity",
+                "Can view own on a periodic activities through the API",
+            ),
+            (
+                "api_add_own_periodicactivity",
+                "Can add own on a periodic activities through the API",
+            ),
+            (
+                "api_change_own_periodicactivity",
+                "Can change own on a periodic activities through the API",
+            ),
+            (
+                "api_delete_own_periodicactivity",
+                "Can delete own on a periodic activities through the API",
+            ),
         )
 
     class JSONAPIMeta:
@@ -903,21 +973,31 @@ class Participant(Contributor):
 
 class DateParticipant(Participant):
     motivation = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True, view_name='date-participant-document')
+    document = PrivateDocumentField(
+        blank=True, null=True, view_name="date-participant-document"
+    )
 
-    class Meta():
+    class Meta:
         verbose_name = _("Participant to date activities")
         verbose_name_plural = _("Participants to date activities")
         permissions = (
-            ('api_read_dateparticipant', 'Can view participant through the API'),
-            ('api_add_dateparticipant', 'Can add participant through the API'),
-            ('api_change_dateparticipant', 'Can change participant through the API'),
-            ('api_delete_dateparticipant', 'Can delete participant through the API'),
-
-            ('api_read_own_dateparticipant', 'Can view own participant through the API'),
-            ('api_add_own_dateparticipant', 'Can add own participant through the API'),
-            ('api_change_own_dateparticipant', 'Can change own participant through the API'),
-            ('api_delete_own_dateparticipant', 'Can delete own participant through the API'),
+            ("api_read_dateparticipant", "Can view participant through the API"),
+            ("api_add_dateparticipant", "Can add participant through the API"),
+            ("api_change_dateparticipant", "Can change participant through the API"),
+            ("api_delete_dateparticipant", "Can delete participant through the API"),
+            (
+                "api_read_own_dateparticipant",
+                "Can view own participant through the API",
+            ),
+            ("api_add_own_dateparticipant", "Can add own participant through the API"),
+            (
+                "api_change_own_dateparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_dateparticipant",
+                "Can delete own participant through the API",
+            ),
         )
 
     class JSONAPIMeta:
@@ -1096,7 +1176,11 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.activity.anonymized
 
     def __str__(self):
-        return _('Registration {name} for {activity}').format(name=self.user, activity=self.activity)
+        return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
+
+    class Meta:
+        verbose_name = _("Candidate")
+        verbose_name_plural = _("Candidates")
 
 
 class DeadlineRegistration(Registration):
@@ -1107,20 +1191,37 @@ class DeadlineRegistration(Registration):
     def participants(self):
         return self.deadlineparticipant_set.all()
 
-    class Meta():
-        verbose_name = _('Candidate for flexible activities')
-        verbose_name_plural = _('Candidates for flexible activities')
+    class Meta:
+        verbose_name = _("Candidate for flexible activities")
+        verbose_name_plural = _("Candidates for flexible activities")
 
         permissions = (
-            ('api_read_deadlineregistration', 'Can view registration through the API'),
-            ('api_add_deadlineregistration', 'Can add registration through the API'),
-            ('api_change_deadlineregistration', 'Can change candidates through the API'),
-            ('api_delete_deadlineregistration', 'Can delete candidates through the API'),
-
-            ('api_read_own_deadlineregistration', 'Can view own candidates through the API'),
-            ('api_add_own_deadlineregistration', 'Can add own candidates through the API'),
-            ('api_change_own_deadlineregistration', 'Can change own candidates through the API'),
-            ('api_delete_own_deadlineregistration', 'Can delete own candidates through the API'),
+            ("api_read_deadlineregistration", "Can view registration through the API"),
+            ("api_add_deadlineregistration", "Can add registration through the API"),
+            (
+                "api_change_deadlineregistration",
+                "Can change candidates through the API",
+            ),
+            (
+                "api_delete_deadlineregistration",
+                "Can delete candidates through the API",
+            ),
+            (
+                "api_read_own_deadlineregistration",
+                "Can view own candidates through the API",
+            ),
+            (
+                "api_add_own_deadlineregistration",
+                "Can add own candidates through the API",
+            ),
+            (
+                "api_change_own_deadlineregistration",
+                "Can change own candidates through the API",
+            ),
+            (
+                "api_delete_own_deadlineregistration",
+                "Can delete own candidates through the API",
+            ),
         )
 
 
@@ -1132,20 +1233,37 @@ class ScheduleRegistration(Registration):
     def participants(self):
         return self.scheduleparticipant_set.all()
 
-    class Meta():
-        verbose_name = _('Candidate for schedule activities')
-        verbose_name_plural = _('Candidates for schedule activities')
+    class Meta:
+        verbose_name = _("Candidate for schedule activities")
+        verbose_name_plural = _("Candidates for schedule activities")
 
         permissions = (
-            ('api_read_scheduleregistration', 'Can view candidates through the API'),
-            ('api_add_scheduleregistration', 'Can add candidates through the API'),
-            ('api_change_scheduleregistration', 'Can change candidates through the API'),
-            ('api_delete_scheduleregistration', 'Can delete candidates through the API'),
-
-            ('api_read_own_scheduleregistration', 'Can view own candidates through the API'),
-            ('api_add_own_scheduleregistration', 'Can add own candidates through the API'),
-            ('api_change_own_scheduleregistration', 'Can change own candidates through the API'),
-            ('api_delete_own_scheduleregistration', 'Can delete own candidates through the API'),
+            ("api_read_scheduleregistration", "Can view candidates through the API"),
+            ("api_add_scheduleregistration", "Can add candidates through the API"),
+            (
+                "api_change_scheduleregistration",
+                "Can change candidates through the API",
+            ),
+            (
+                "api_delete_scheduleregistration",
+                "Can delete candidates through the API",
+            ),
+            (
+                "api_read_own_scheduleregistration",
+                "Can view own candidates through the API",
+            ),
+            (
+                "api_add_own_scheduleregistration",
+                "Can add own candidates through the API",
+            ),
+            (
+                "api_change_own_scheduleregistration",
+                "Can change own candidates through the API",
+            ),
+            (
+                "api_delete_own_scheduleregistration",
+                "Can delete own candidates through the API",
+            ),
         )
 
 
@@ -1157,57 +1275,101 @@ class PeriodicRegistration(Registration):
     def participants(self):
         return self.periodicparticipant_set.all()
 
-    class Meta():
-        verbose_name = _('Candidate for recurring activities')
-        verbose_name_plural = _('Candidates for recurring activities')
+    class Meta:
+        verbose_name = _("Candidate for recurring activities")
+        verbose_name_plural = _("Candidates for recurring activities")
 
         permissions = (
-            ('api_read_periodicregistration', 'Can view periodic candidates through the API'),
-            ('api_add_periodicregistration', 'Can add periodic candidates through the API'),
-            ('api_change_periodicregistration', 'Can change periodic candidates through the API'),
-            ('api_delete_periodicregistration', 'Can delete periodic candidates through the API'),
-
-            ('api_read_own_periodicregistration', 'Can view own periodic candidates through the API'),
-            ('api_add_own_periodicregistration', 'Can add own periodic candidates through the API'),
-            ('api_change_own_periodicregistration', 'Can change own periodic candidates through the API'),
-            ('api_delete_own_periodicregistration', 'Can delete own periodic candidates through the API'),
+            (
+                "api_read_periodicregistration",
+                "Can view periodic candidates through the API",
+            ),
+            (
+                "api_add_periodicregistration",
+                "Can add periodic candidates through the API",
+            ),
+            (
+                "api_change_periodicregistration",
+                "Can change periodic candidates through the API",
+            ),
+            (
+                "api_delete_periodicregistration",
+                "Can delete periodic candidates through the API",
+            ),
+            (
+                "api_read_own_periodicregistration",
+                "Can view own periodic candidates through the API",
+            ),
+            (
+                "api_add_own_periodicregistration",
+                "Can add own periodic candidates through the API",
+            ),
+            (
+                "api_change_own_periodicregistration",
+                "Can change own periodic candidates through the API",
+            ),
+            (
+                "api_delete_own_periodicregistration",
+                "Can delete own periodic candidates through the API",
+            ),
         )
 
     @property
     def first_slot(self):
-        return self.participants.order_by('slot__start').first().slot
+        return self.participants.order_by("slot__start").first().slot
 
     @property
     def last_slot(self):
-        return self.participants.order_by('slot__start').last().slot
+        return self.participants.order_by("slot__start").last().slot
 
     @property
     def total_hours(self):
         total = TimeContribution.objects.filter(
-            contributor_id__in=self.participants.values_list('contributor_ptr_id', flat=True)
-        ).aggregate(Sum('value'))
-        return total['value__sum']
+            contributor_id__in=self.participants.values_list(
+                "contributor_ptr_id", flat=True
+            )
+        ).aggregate(Sum("value"))
+        return total["value__sum"]
 
     @property
     def total_slots(self):
-        return self.participants.filter(status__in=['running', 'new', 'succeeded']).count()
+        return self.participants.filter(
+            status__in=["running", "new", "succeeded"]
+        ).count()
 
 
 class DeadlineParticipant(Participant, Contributor):
-    class Meta():
-        verbose_name = _('Participant to flexible activities')
-        verbose_name_plural = _('Participants to flexible activities')
+    class Meta:
+        verbose_name = _("Participant to flexible activities")
+        verbose_name_plural = _("Participants to flexible activities")
 
         permissions = (
-            ('api_read_deadlineparticipant', 'Can view participant through the API'),
-            ('api_add_deadlineparticipant', 'Can add participant through the API'),
-            ('api_change_deadlineparticipant', 'Can change participant through the API'),
-            ('api_delete_deadlineparticipant', 'Can delete participant through the API'),
-
-            ('api_read_own_deadlineparticipant', 'Can view own participant through the API'),
-            ('api_add_own_deadlineparticipant', 'Can add own participant through the API'),
-            ('api_change_own_deadlineparticipant', 'Can change own participant through the API'),
-            ('api_delete_own_deadlineparticipant', 'Can delete own participant through the API'),
+            ("api_read_deadlineparticipant", "Can view participant through the API"),
+            ("api_add_deadlineparticipant", "Can add participant through the API"),
+            (
+                "api_change_deadlineparticipant",
+                "Can change participant through the API",
+            ),
+            (
+                "api_delete_deadlineparticipant",
+                "Can delete participant through the API",
+            ),
+            (
+                "api_read_own_deadlineparticipant",
+                "Can view own participant through the API",
+            ),
+            (
+                "api_add_own_deadlineparticipant",
+                "Can add own participant through the API",
+            ),
+            (
+                "api_change_own_deadlineparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_deadlineparticipant",
+                "Can delete own participant through the API",
+            ),
         )
 
     class JSONAPIMeta(object):
@@ -1215,61 +1377,150 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class ScheduleParticipant(Participant, Contributor):
-    class Meta():
-        verbose_name = _('Participant to schedule activities')
-        verbose_name_plural = _('Participants to schedule activities')
+    slot = models.ForeignKey(
+        "time_based.ScheduleSlot",
+        related_name="participants",
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    class Meta:
+        verbose_name = _("Participant to schedule activities")
+        verbose_name_plural = _("Participants to schedule activities")
 
         permissions = (
-            ('api_read_scheduleparticipant', 'Can view participant through the API'),
-            ('api_add_scheduleparticipant', 'Can add participant through the API'),
-            ('api_change_scheduleparticipant', 'Can change participant through the API'),
-            ('api_delete_scheduleparticipant', 'Can delete participant through the API'),
-
-            ('api_read_own_scheduleparticipant', 'Can view own participant through the API'),
-            ('api_add_own_scheduleparticipant', 'Can add own participant through the API'),
-            ('api_change_own_scheduleparticipant', 'Can change own participant through the API'),
-            ('api_delete_own_scheduleparticipant', 'Can delete own participant through the API'),
+            ("api_read_scheduleparticipant", "Can view participant through the API"),
+            ("api_add_scheduleparticipant", "Can add participant through the API"),
+            (
+                "api_change_scheduleparticipant",
+                "Can change participant through the API",
+            ),
+            (
+                "api_delete_scheduleparticipant",
+                "Can delete participant through the API",
+            ),
+            (
+                "api_read_own_scheduleparticipant",
+                "Can view own participant through the API",
+            ),
+            (
+                "api_add_own_scheduleparticipant",
+                "Can add own participant through the API",
+            ),
+            (
+                "api_change_own_scheduleparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_scheduleparticipant",
+                "Can delete own participant through the API",
+            ),
         )
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/schedule-participants'
 
 
-class PeriodicSlot(TriggerMixin, models.Model):
+class Slot(models.Model):
     status = models.CharField(max_length=40)
 
-    activity = models.ForeignKey(PeriodicActivity, on_delete=models.CASCADE, related_name='slots')
-
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
-    duration = models.DurationField(_('duration'), null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class PeriodicSlot(TriggerMixin, Slot):
+    activity = models.ForeignKey(
+        PeriodicActivity, on_delete=models.CASCADE, related_name="slots"
+    )
+
+    duration = models.DurationField(_("duration"), null=True, blank=True)
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=["accepted", "participating", "succeeded"])
+        return self.participants.filter(
+            status__in=["accepted", "participating", "succeeded"]
+        )
+
+
+class ScheduleSlot(TriggerMixin, Slot):
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
+    )
+    duration = models.DurationField(_("duration"), null=True, blank=True)
+
+    is_online = models.BooleanField(
+        _("is online"), choices=DateActivity.ONLINE_CHOICES, null=True, default=None
+    )
+
+    online_meeting_url = models.TextField(
+        _("online meeting link"), blank=True, default=""
+    )
+
+    location = models.ForeignKey(
+        Geolocation,
+        verbose_name=_("location"),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    location_hint = models.TextField(_("location hint"), null=True, blank=True)
+
+    @property
+    def end(self):
+        if self.duration and self.start:
+            return self.start + self.duration
 
 
 class PeriodicParticipant(Participant, Contributor):
-    slot = models.ForeignKey(PeriodicSlot, on_delete=models.CASCADE, related_name='participants')
+    slot = models.ForeignKey(
+        PeriodicSlot, on_delete=models.CASCADE, related_name="participants"
+    )
 
-    class Meta():
-        verbose_name = _('Participant to ecurring activities')
-        verbose_name_plural = _('Participants to recurring activities')
+    class Meta:
+        verbose_name = _("Participant to ecurring activities")
+        verbose_name_plural = _("Participants to recurring activities")
 
         permissions = (
-            ('api_read_periodicparticipant', 'Can view recurring participant through the API'),
-            ('api_add_periodicparticipant', 'Can add recurring participant through the API'),
-            ('api_change_periodicparticipant', 'Can change recurring participant through the API'),
-            ('api_delete_periodicparticipant', 'Can delete recurring participant through the API'),
-
-            ('api_read_own_periodicparticipant', 'Can view own recurring participant through the API'),
-            ('api_add_own_periodicparticipant', 'Can add own recurring participant through the API'),
-            ('api_change_own_periodicparticipant', 'Can change own recurring participant through the API'),
-            ('api_delete_own_periodicparticipant', 'Can delete own recurring participant through the API'),
+            (
+                "api_read_periodicparticipant",
+                "Can view recurring participant through the API",
+            ),
+            (
+                "api_add_periodicparticipant",
+                "Can add recurring participant through the API",
+            ),
+            (
+                "api_change_periodicparticipant",
+                "Can change recurring participant through the API",
+            ),
+            (
+                "api_delete_periodicparticipant",
+                "Can delete recurring participant through the API",
+            ),
+            (
+                "api_read_own_periodicparticipant",
+                "Can view own recurring participant through the API",
+            ),
+            (
+                "api_add_own_periodicparticipant",
+                "Can add own recurring participant through the API",
+            ),
+            (
+                "api_change_own_periodicparticipant",
+                "Can change own recurring participant through the API",
+            ),
+            (
+                "api_delete_own_periodicparticipant",
+                "Can delete own recurring participant through the API",
+            ),
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/time-based/periodic-participants'
+        resource_name = "contributors/time-based/periodic-participants"
+
 
 from bluebottle.time_based.periodic_tasks import *  # noqa
 

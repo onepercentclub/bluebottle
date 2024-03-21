@@ -7,13 +7,25 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('initiatives', '0051_auto_20240311_1632'),
+        ("initiatives", "0051_auto_20240311_1632"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='initiativeplatformsettings',
-            name='activity_types',
-            field=multiselectfield.db.fields.MultiSelectField(choices=[('funding', 'Funding'), ('periodactivity', 'Activity during a period'), ('dateactivity', 'Activity on a specific date'), ('deadlineactivity', 'Activity within a deadline'), ('scheduleactivity', 'Scheduled activity'), ('periodicactivity', 'Periodic Activity'), ('deed', 'Deed'), ('collect', 'Collect activity')], max_length=300),
+            model_name="initiativeplatformsettings",
+            name="activity_types",
+            field=multiselectfield.db.fields.MultiSelectField(
+                choices=[
+                    ("funding", "Funding"),
+                    ("periodactivity", "Activity during a period"),
+                    ("dateactivity", "Activity on a specific date"),
+                    ("deadlineactivity", "Activity within a deadline"),
+                    ("scheduleactivity", "Scheduled activity"),
+                    ("periodicactivity", "Periodic Activity"),
+                    ("deed", "Deed"),
+                    ("collect", "Collect activity"),
+                ],
+                max_length=300,
+            ),
         ),
     ]

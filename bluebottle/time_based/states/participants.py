@@ -14,9 +14,9 @@ from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
-        _('new'),
-        'new',
-        _("This participant is new and ready to participate once the slot starts.")
+        _("new"),
+        "new",
+        _("This participant is new and ready to participate once the slot starts."),
     )
     accepted = State(
         _('participating'),
@@ -275,7 +275,35 @@ class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
 
 @register(ScheduleParticipant)
 class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
-    pass
+    def participant_has_a_slot(self):
+        return self.instance.slot is not None
+
+    scheduled = State(_("scheduled"), "scheduled", _("This person is assigned a slot."))
+
+    accept = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.rejected,
+        ],
+        ParticipantStateMachine.accepted,
+        name=_("Accept"),
+        description=_("Accept this person as a participant to the Activity."),
+        passed_label=_("accepted"),
+        automatic=True,
+    )
+
+    schedule = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+        ],
+        scheduled,
+        name=_("Schedule"),
+        description=_("Schedule this participant the Activity."),
+        passed_label=_("scheduled"),
+        conditions=[participant_has_a_slot],
+        automatic=True,
+    )
 
 
 @register(PeriodicParticipant)

@@ -64,13 +64,17 @@ class UserRegistrationRejectedNotification(UserRegistrationNotification):
 
 
 class UserRegistrationStoppedNotification(UserRegistrationNotification):
-    subject = pgettext('email', 'Your contribution to the activity "{title}" has been stopped')
-    template = 'messages/registrations/user_stopped'
+    subject = pgettext(
+        "email", 'Your contribution to the activity "{title}" has been stopped'
+    )
+    template = "messages/registrations/user_stopped"
 
 
 class UserRegistrationRestartedNotification(UserRegistrationNotification):
-    subject = pgettext('email', 'Your contribution to the activity "{title}" has been restarted')
-    template = 'messages/registrations/user_restarted'
+    subject = pgettext(
+        "email", 'Your contribution to the activity "{title}" has been restarted'
+    )
+    template = "messages/registrations/user_restarted"
 
 
 class UserAppliedNotification(UserRegistrationNotification):

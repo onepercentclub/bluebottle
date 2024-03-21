@@ -8,17 +8,21 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.models import ScheduleRegistration, TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
+    ScheduleSlotFactory,
 )
 
 
 class ParticipantTriggerTestCase:
+    expected_status = "succeeded"
+    expected_contribution_status = "succeeded"
+
     def setUp(self):
         super().setUp()
         self.settings = InitiativePlatformSettingsFactory.create(
@@ -44,7 +48,7 @@ class ParticipantTriggerTestCase:
 
     def test_initial(self):
         self.register()
-        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, self.expected_status)
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
         )
@@ -52,7 +56,7 @@ class ParticipantTriggerTestCase:
         contribution = self.participant.contributions.get(
             timecontribution__contribution_type="period"
         )
-        self.assertEqual(contribution.status, "succeeded")
+        self.assertEqual(contribution.status, self.expected_contribution_status)
         self.assertEqual(contribution.value, self.activity.duration)
 
         preparation_contribution = self.participant.preparation_contributions.first()
@@ -78,7 +82,7 @@ class ParticipantTriggerTestCase:
     def test_reapply(self):
         self.test_withdraw()
         self.participant.states.reapply(save=True)
-        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, self.expected_status)
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -87,7 +91,7 @@ class ParticipantTriggerTestCase:
         contribution = self.participant.contributions.get(
             timecontribution__contribution_type="period"
         )
-        self.assertEqual(contribution.status, "succeeded")
+        self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.status, "succeeded")
@@ -111,7 +115,7 @@ class ParticipantTriggerTestCase:
     def test_readd(self):
         self.test_remove()
         self.participant.states.readd(save=True)
-        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, self.expected_status)
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -120,7 +124,7 @@ class ParticipantTriggerTestCase:
         contribution = self.participant.contributions.get(
             timecontribution__contribution_type="period"
         )
-        self.assertEqual(contribution.status, "succeeded")
+        self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.status, "succeeded")
@@ -145,7 +149,7 @@ class ParticipantTriggerTestCase:
         self.test_reject()
 
         self.participant.states.accept(save=True)
-        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, self.expected_status)
 
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -154,7 +158,7 @@ class ParticipantTriggerTestCase:
         contribution = self.participant.contributions.get(
             timecontribution__contribution_type="period"
         )
-        self.assertEqual(contribution.status, "succeeded")
+        self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.status, "succeeded")
@@ -181,7 +185,7 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     def test_initial_added_through_admin(self):
         mail.outbox = []
         self.create(as_user=self.admin_user)
-        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.status, self.expected_status)
 
         self.assertEqual(self.participant.registration.status, "accepted")
 
@@ -246,3 +250,28 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         )
 
         self.assertEqual(preparation.contributor, self.participant)
+
+
+class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
+    activity_factory = PeriodicActivityFactory
+    expected_status = "registered"
+
+    def register(self):
+        self.registration = ScheduleRegistration.create(activity=self.activity)
+
+        self.participant = self.registration.participants.first()
+
+    def test_initial(self):
+        super().test_initial()
+
+        self.registration.refresh_from_db()
+
+        self.assertEqual(self.registration.status, "accepted")
+
+    def test_schedule(self):
+        self.test_initial()
+
+        self.partcipant.slot = ScheduleSlotFactory.create()
+        self.participants.save()
+
+        self.assertEqual(self.participant.status, "scheduled")

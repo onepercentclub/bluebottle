@@ -690,7 +690,7 @@ class TimeBasedRegistrationDetailAPITestCase:
 
 
 class TimeBasedRegistrationTransitionListAPITestCase:
-    fields = ['resource', 'transition', 'send_email', 'message']
+    fields = ["resource", "transition", "send_email", "message"]
 
     def setUp(self):
         self.activity = self.activity_factory.create(
@@ -732,13 +732,15 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.assertEqual(self.defaults['resource'].status, 'rejected')
 
     def test_reject_manager(self):
-        self.defaults['transition'] = 'reject'
+        self.defaults["transition"] = "reject"
         mail.outbox = []
         self.perform_create(user=self.activity.owner)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            'You have not been selected for the activity "{}"'.format(self.activity.title)
+            'You have not been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
         )
         self.assertStatus(status.HTTP_201_CREATED)
 

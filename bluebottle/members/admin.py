@@ -568,17 +568,17 @@ class MemberAdmin(UserAdmin):
 
     def get_impact_fields(self, obj):
         fields = [
-            'all_contributions',
-            'hours_spent',
-            'hours_planned',
-            'initiatives',
-            'date_activities',
-            'periodic_activities',
-            'deadline_activities',
-            'schedule_activities',
-            'funding',
-            'deeds',
-            'collect',
+            "all_contributions",
+            "hours_spent",
+            "hours_planned",
+            "initiatives",
+            "date_activities",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "funding",
+            "deeds",
+            "collect",
         ]
         member_settings = MemberPlatformSettings.load()
         if member_settings.retention_delete or member_settings.retention_anonymize:

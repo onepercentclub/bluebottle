@@ -15,7 +15,7 @@ class CreateTimeContributionEffect(Effect):
     def post_save(self, **kwargs):
         activity = self.instance.activity
         tz = get_current_timezone()
-        if hasattr(self.instance, 'slot') and self.instance.slot:
+        if hasattr(self.instance, "slot") and self.instance.slot:
             contribution_date = self.instance.slot.start
         elif activity.start and activity.start > date.today():
             contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
@@ -33,6 +33,27 @@ class CreateTimeContributionEffect(Effect):
 
         contribution.execute_triggers(**self.options)
         contribution.save()
+
+    def __str__(self):
+        return _("Create contribution")
+
+
+class CreateScheduleContributionEffect(Effect):
+    title = _("Create contribution")
+    template = "admin/create_deadline_time_contribution.html"
+
+    def post_save(self, **kwargs):
+        if self.instance.slot:
+            contribution = TimeContribution(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.period,
+                value=self.instance.slot.duration,
+                start=self.instance.slot.start,
+                end=self.instance.slot.end,
+            )
+
+            contribution.execute_triggers(**self.options)
+            contribution.save()
 
     def __str__(self):
         return _('Create contribution')

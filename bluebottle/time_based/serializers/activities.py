@@ -1,4 +1,5 @@
 import dateutil
+from django.db.models import Count
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -13,7 +14,9 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
-    PeriodicActivity, ScheduleActivity,
+    DeadlineParticipant,
+    PeriodicActivity,
+    ScheduleActivity,
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -23,10 +26,15 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
     title = serializers.CharField()
     description = serializers.CharField()
     review = serializers.BooleanField()
-    registration_count = serializers.SerializerMethodField()
+    registration_status = serializers.SerializerMethodField()
 
-    def get_registration_count(self, instance):
-        return instance.registrations.count()
+    def get_registration_status(self, instance):
+        return dict(
+            (item["status"], item["count"])
+            for item in instance.registrations.values("status").annotate(
+                count=Count("pk")
+            )
+        )
 
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
@@ -68,9 +76,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'permissions',
             'registrations'
         )
-        meta_fields = BaseActivitySerializer.Meta.meta_fields + (
-            'registration_count',
-        )
+        meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
@@ -117,6 +123,33 @@ class PeriodActivitySerializer(ModelSerializer):
         resource_name = 'activities/time-based/periods'
 
 
+class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
+    model = DeadlineParticipant
+
+    def __init__(self, *args, **kwargs):
+        self.statuses = kwargs.pop("statuses") or {}
+
+        super().__init__(*args, **kwargs)
+
+    def get_links(self, obj=None, lookup_field="pk"):
+        return_data = super().get_links(obj, lookup_field)
+        queryset = getattr(
+            obj, self.source or self.field_name or self.parent.field_name
+        )
+
+        url = self.reverse(
+            self.related_link_view_name, args=(getattr(obj, lookup_field),)
+        )
+
+        for name, statuses in self.statuses.items():
+            return_data[name] = {
+                "href": f'{url}?filter[status]={",".join(statuses)}',
+                "meta": {"count": queryset.filter(status__in=statuses).count()},
+            }
+
+        return return_data
+
+
 class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'deadline-detail'
     export_view_name = 'deadline-participant-export'
@@ -125,17 +158,22 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
+    registrations = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
         related_link_view_name="related-deadline-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
     class Meta(TimeBasedBaseSerializer.Meta):
@@ -171,17 +209,23 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="schedule-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "unscheduled": ["accepted"],
+            "failed": ["rejected", "withdrawn", "removed"],
+            "active": ["scheduled", "succeeded"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
+    registrations = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
         related_link_view_name="related-schedule-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
     class Meta(TimeBasedBaseSerializer.Meta):
@@ -217,23 +261,34 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="periodic-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
-        many=True,
+    registrations = RelatedLinkFieldByStatus(
         read_only=True,
         related_link_view_name="related-periodic-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "new": ["new"],
+            "accepted": ["accepted"],
+            "rejected": ["rejected", "stopped"],
+        },
     )
 
     def get_contributor_count(self, instance):
-        return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
-            status__in=['accepted', 'participating']
-        ).count()
+        return (
+            instance.deleted_successful_contributors
+            + instance.contributors.not_instance_of(Organizer)
+            .filter(status__in=["accepted", "participating"])
+            .count()
+        )
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = PeriodicActivity

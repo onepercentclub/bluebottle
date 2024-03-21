@@ -139,14 +139,14 @@ class TransitionMessage(object):
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
-            'site': tenant_url(),
-            'site_name': tenant_name(),
-            'language': recipient.primary_language,
-            'contact_email': properties.CONTACT_EMAIL,
-            'recipient_name': recipient.first_name,
-            'first_name': recipient.first_name,
-            'action_link': getattr(self, 'action_link', None),
-            'action_title': getattr(self, 'action_title', None),
+            "site": tenant_url(),
+            "site_name": tenant_name(),
+            "language": recipient.primary_language,
+            "contact_email": properties.CONTACT_EMAIL,
+            "recipient_name": recipient.first_name,
+            "first_name": recipient.first_name,
+            "action_link": getattr(self, "action_link", None),
+            "action_title": getattr(self, "action_title", None),
         }
         for key, item in list(self.context.items()):
             try:

@@ -56,10 +56,10 @@ class TransitionSerializer(serializers.Serializer):
     field = 'states'
 
     def save(self):
-        resource = self.validated_data['resource']
-        transition_name = self.validated_data['transition']
-        message = self.validated_data.get('message', None)
-        send_email = self.validated_data.get('send_email', True)
+        resource = self.validated_data["resource"]
+        transition_name = self.validated_data["transition"]
+        message = self.validated_data.get("message", None)
+        send_email = self.validated_data.get("send_email", True)
         if send_email is None:
             send_email = True
         states = getattr(resource, self.field)

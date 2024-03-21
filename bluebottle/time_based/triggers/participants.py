@@ -21,8 +21,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant,
-    ScheduleParticipant,
+    PeriodicParticipant, ScheduleParticipant,
 )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
@@ -369,6 +368,11 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ]
         ),
     ]
+
+
+@register(ScheduleParticipant)
+class ScheduleParticipantTriggers(ParticipantTriggers):
+    pass
 
 
 @register(PeriodicParticipant)

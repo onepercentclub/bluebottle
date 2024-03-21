@@ -133,6 +133,11 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
     ]
 
 
+@register(ScheduleRegistration)
+class ScheduleRegistrationTriggers(RegistrationTriggers):
+    pass
+
+
 @register(PeriodicRegistration)
 class PeriodicRegistrationTriggers(RegistrationTriggers):
     def activity_no_spots_left(effect):

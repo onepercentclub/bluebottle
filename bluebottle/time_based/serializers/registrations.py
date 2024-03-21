@@ -19,7 +19,11 @@ class RegistrationSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
 
-    document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
+    document = PrivateDocumentField(
+        required=False,
+        allow_null=True,
+        permissions=[ParticipantDocumentPermission]
+    )
 
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
@@ -66,10 +70,6 @@ class RegistrationSerializer(ModelSerializer):
         if 'activity' in data and data['activity'].registration_flow == 'question':
             if not data.get('answer'):
                 raise ValidationError({'answer': [_('This field is required')]})
-
-            if data['activity'].review_document_enabled and not data['document']:
-                raise ValidationError({'document': [_('This field is required')]})
-
         return data
 
 
@@ -116,7 +116,8 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 class PeriodicRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('periodic-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True, source='periodicparticipant_set')
-    total_hours = serializers.DurationField()
+    total_hours = serializers.DurationField(read_only=True)
+    total_slots = serializers.IntegerField(read_only=True)
 
     class Meta(RegistrationSerializer.Meta):
         model = PeriodicRegistration

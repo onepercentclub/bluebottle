@@ -567,7 +567,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         Deed,
         CollectActivity,
         DeadlineActivity,
-        PeriodicActivity
+        PeriodicActivity,
+        ScheduleActivity
     )
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']

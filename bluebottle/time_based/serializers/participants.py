@@ -73,7 +73,7 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             "activity",
             "slot",
-            "registratoin",
+            "registration",
         ]
 
     included_serializers = dict(

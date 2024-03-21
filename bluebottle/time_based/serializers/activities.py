@@ -213,17 +213,23 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="schedule-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "unscheduled": ["accepted"],
+            "failed": ["rejected", "withdrawn", "removed"],
+            "active": ["scheduled", "succeeded"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
+    registrations = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
         related_link_view_name="related-schedule-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
 
     class Meta(TimeBasedBaseSerializer.Meta):
@@ -258,17 +264,25 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     deadline = serializers.DateField(allow_null=True)
     is_online = serializers.BooleanField()
 
-    contributors = HyperlinkedRelatedField(
-        many=True,
+    contributors = RelatedLinkFieldByStatus(
         read_only=True,
+        source="participants",
         related_link_view_name="periodic-participants",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
-    registrations = HyperlinkedRelatedField(
-        many=True,
+    registrations = RelatedLinkFieldByStatus(
         read_only=True,
         related_link_view_name="related-periodic-registrations",
         related_link_url_kwarg="activity_id",
+        statuses={
+            "new": ["new"],
+            "accepted": ["accepted"],
+            "rejected": ["rejected", "stopped"],
+        },
     )
 
     def get_contributor_count(self, instance):

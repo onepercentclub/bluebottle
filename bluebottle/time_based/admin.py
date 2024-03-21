@@ -43,6 +43,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
+    ScheduleSlot,
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
@@ -510,6 +511,26 @@ class PeriodicSlotAdmin(StateMachineAdmin):
         if request.user.is_superuser:
             fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
         return fieldsets
+
+
+@admin.register(ScheduleSlot)
+class ScheduleSlotAdmin(StateMachineAdmin):
+    list_display = ("start", "duration", "activity", "participant_count")
+
+    readonly_fields = ("activity", "start", "duration", "status")
+    fields = readonly_fields
+
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+        return fieldsets
+
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
@@ -1232,6 +1253,63 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
             return format_html(
                 'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
                 url=url, status=status, title=title
+            )
+
+
+    def slot_info(self, obj):
+        if not obj.slot:
+            return "-"
+        return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
+
+    registration_info.short_description = _("Registration")
+
+    list_display = ["__str__", "activity_link", "status"]
+
+
+@admin.register(ScheduleParticipant)
+class ScheduleParticipantAdmin(ContributorChildAdmin):
+
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        for inline in inlines:
+            inline.parent_object = obj
+        return inlines
+
+    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
+    pending_fields = ["activity", "user", "registration_info", "created", "updated"]
+
+    def get_fields(self, request, obj=None):
+        if obj and obj.registration and obj.registration.status == "new":
+            return self.pending_fields
+        return self.fields
+
+    readonly_fields = ContributorChildAdmin.readonly_fields + [
+        "registration_info",
+        "slot_info",
+    ]
+
+    def registration_info(self, obj):
+        url = reverse(
+            "admin:{}_{}_change".format(
+                obj.registration._meta.app_label, obj.registration._meta.model_name
+            ),
+            args=(obj.registration.id,),
+        )
+        status = obj.registration.states.current_state.name
+        if obj.registration.status == "new":
+            template = loader.get_template("admin/time_based/registration_info.html")
+            return template.render({"status": status, "url": url})
+        else:
+            title = _("Change review")
+            return format_html(
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
+                url=url,
+                status=status,
+                title=title,
             )
 
     def slot_info(self, obj):

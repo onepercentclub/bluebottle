@@ -834,6 +834,12 @@ class DeadlineActivity(RegistrationActivity):
 
 class ScheduleActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _("Schedule activity")

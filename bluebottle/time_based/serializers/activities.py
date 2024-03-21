@@ -233,6 +233,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start',
             'deadline',
+            'duration',
             'is_online',
             'location',
             'location_hint',

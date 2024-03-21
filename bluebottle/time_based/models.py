@@ -1170,7 +1170,11 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.activity.anonymized
 
     def __str__(self):
-        return _('Registration {name} for {activity}').format(name=self.user, activity=self.activity)
+        return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
+
+    class Meta:
+        verbose_name = _("Candidate")
+        verbose_name_plural = _("Candidates")
 
 
 class DeadlineRegistration(Registration):

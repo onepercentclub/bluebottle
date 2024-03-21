@@ -138,7 +138,6 @@ class TimeBasedActivity(Activity):
             ScheduleParticipant,
         )
 
-
     @property
     def pending_participants(self):
         return self.participants.filter(status="new")
@@ -1463,6 +1462,7 @@ class ScheduleSlot(TriggerMixin, Slot):
     def end(self):
         if self.duration and self.start:
             return self.start + self.duration
+
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(

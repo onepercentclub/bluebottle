@@ -305,6 +305,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         automatic=True,
     )
 
+
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     pass

@@ -1,6 +1,5 @@
-from typing import OrderedDict
 import dateutil
-from numpy import who
+from django.db.models import Count
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -9,8 +8,6 @@ from rest_framework_json_api.relations import (
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
-from django.db.models import Count
-
 from bluebottle.activities.models import Activity, Organizer
 from bluebottle.activities.utils import BaseActivitySerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
@@ -18,7 +15,6 @@ from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
-    DeadlineRegistration,
     PeriodicActivity,
     ScheduleActivity,
 )

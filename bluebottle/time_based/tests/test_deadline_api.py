@@ -1,7 +1,7 @@
 from datetime import date, timedelta
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.time_based.models import DeadlineRegistration
 
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     DeadlineActivitySerializer,
     DeadlineParticipantSerializer,
@@ -9,11 +9,6 @@ from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
     DeadlineRegistrationTransitionSerializer,
     DeadlineTransitionSerializer,
-)
-from bluebottle.time_based.tests.factories import (
-    DeadlineActivityFactory,
-    DeadlineParticipantFactory,
-    DeadlineRegistrationFactory,
 )
 from bluebottle.time_based.tests.base import (
     TimeBasedActivityAPIExportTestCase,
@@ -28,8 +23,11 @@ from bluebottle.time_based.tests.base import (
     TimeBasedRegistrationRelatedAPIListTestCase,
     TimeBasedRegistrationTransitionListAPITestCase,
 )
-
-from bluebottle.test.utils import APITestCase
+from bluebottle.time_based.tests.factories import (
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+    DeadlineRegistrationFactory,
+)
 
 
 class DeadlineActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase):

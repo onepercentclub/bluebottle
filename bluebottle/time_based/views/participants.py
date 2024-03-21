@@ -1,5 +1,4 @@
 from django.db.models import Sum, Q
-from rest_framework import filters
 
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView

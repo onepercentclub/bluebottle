@@ -532,7 +532,6 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         return fieldsets
 
 
-
 class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
@@ -1254,7 +1253,6 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
                 'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
                 url=url, status=status, title=title
             )
-
 
     def slot_info(self, obj):
         if not obj.slot:

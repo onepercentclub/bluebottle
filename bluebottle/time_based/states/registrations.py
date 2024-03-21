@@ -85,7 +85,6 @@ class ScheduleRegistrationStateMachine(RegistrationStateMachine):
     pass
 
 
-
 @register(PeriodicRegistration)
 class PeriodicRegistrationStateMachine(RegistrationStateMachine):
 

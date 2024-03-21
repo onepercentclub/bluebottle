@@ -438,7 +438,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 class ScheduleActivityAdmin(TimeBasedAdmin):
     base_model = ScheduleActivity
 
-    inlines = (ScheduleRegistrationAdminInline,) + TimeBasedAdmin.inlines
+    inlines = (ScheduleParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
@@ -516,11 +516,9 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
-
-    readonly_fields = ("activity", "start", "duration", "status")
-    fields = readonly_fields
-
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    raw_id_fields = ('activity',)
+    readonly_fields = ("status",)
+    fields = readonly_fields + ("activity", "start", "duration")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

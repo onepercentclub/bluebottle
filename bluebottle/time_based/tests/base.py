@@ -415,7 +415,7 @@ class TimeBasedRegistrationListAPITestCase:
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
-    def test_create_require_document(self):
+    def test_create_without_document(self):
         self.activity.registration_flow = 'question'
         self.activity.review_document_enabled = True
         self.activity.save()
@@ -425,7 +425,7 @@ class TimeBasedRegistrationListAPITestCase:
 
         self.perform_create(user=self.user)
 
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertStatus(status.HTTP_201_CREATED)
 
     def test_create_require_document_complete(self):
         self.activity.registration_flow = 'question'

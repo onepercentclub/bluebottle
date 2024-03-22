@@ -202,6 +202,15 @@ class RegistrationActivityDocument(ActivityDocument):
 class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
     participant_class = DeadlineParticipant
 
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': 'once',
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
+
     class Django:
 
         related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
@@ -213,6 +222,15 @@ class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
 class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
     participant_class = PeriodicParticipant
 
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': instance.period,
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
+
     class Django:
 
         related_models = ActivityDocument.Django.related_models + (PeriodicParticipant,)
@@ -223,6 +241,15 @@ class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
 @activity.doc_type
 class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
     participant_class = ScheduleParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': 'once',
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
 
     class Django:
 

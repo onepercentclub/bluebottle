@@ -48,6 +48,7 @@ def migrate_periodic_participants(apps, schema_editor):
 
     period_participant_ctype = ContentType.objects.get_for_model(PeriodParticipant)
     periodic_participant_ctype = ContentType.objects.get_for_model(PeriodicParticipant)
+    periodic_registration_ctype = ContentType.objects.get_for_model(PeriodicRegistration)
 
     for activity in activities:
         tz = get_current_timezone()
@@ -86,7 +87,10 @@ def migrate_periodic_participants(apps, schema_editor):
                     status = "rejected"
 
                 registration, _created = PeriodicRegistration.objects.get_or_create(
-                    user=participant.user, activity=activity, status=status
+                    user=participant.user,
+                    activity=activity,
+                    status=status,
+                    polymorphic_ctype=periodic_registration_ctype
                 )
                 for contribution in participant.contributions.filter(
                     timecontribution__contribution_type="period"

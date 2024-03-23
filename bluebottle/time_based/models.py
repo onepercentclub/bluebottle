@@ -1436,6 +1436,7 @@ class PeriodicSlot(TriggerMixin, Slot):
     )
 
     duration = models.DurationField(_("duration"), null=True, blank=True)
+    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
     @property
     def accepted_participants(self):

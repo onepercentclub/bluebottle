@@ -1209,7 +1209,6 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
 
 @admin.register(PeriodicParticipant)
 class PeriodicParticipantAdmin(ContributorChildAdmin):
-
     raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
 
     def get_inline_instances(self, request, obj=None):
@@ -1339,10 +1338,14 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ['created', ]
-    raw_id_fields = ['user', 'activity']
-    fields = ['user', 'activity', 'answer', 'document', 'status', 'states']
-    list_display = ['__str__', 'activity', 'user', 'status']
+    readonly_fields = [
+        "created",
+    ]
+    raw_id_fields = ["user", "activity", "document"]
+    fields = ["user", "activity", "answer", "document", "status", "states"]
+    list_display = ["__str__", "activity", "user", "status"]
+
+    formfield_overrides = {PrivateDocumentModelChoiceField: {"widget": DocumentWidget}}
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

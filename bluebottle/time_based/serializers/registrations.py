@@ -18,6 +18,7 @@ class RegistrationSerializer(ModelSerializer):
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
+    contact_email = serializers.EmailField(read_only=True, source='user.email')
 
     document = PrivateDocumentField(
         required=False,
@@ -35,6 +36,7 @@ class RegistrationSerializer(ModelSerializer):
             'document',
             'answer',
             'participants',
+            'contact_email',
 
         ]
         meta_fields = (

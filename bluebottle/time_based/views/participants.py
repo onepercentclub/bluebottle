@@ -103,6 +103,7 @@ class RelatedParticipantListView(
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
+
     def get_queryset(self):
         queryset = super().get_queryset()
 

@@ -29,7 +29,7 @@ class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
 class PeriodActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
-        return self.instance.start or self.instance.deadline
+        return self.instance.deadline
 
 
 class CompletedSlotsValidator(Validator):

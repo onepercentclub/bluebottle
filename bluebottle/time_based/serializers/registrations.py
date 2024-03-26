@@ -13,12 +13,26 @@ from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
 
 
+class ContactEmailField(serializers.CharField):
+    def __init__(self):
+        super().__init__(read_only=True, source="user.email")
+
+    def to_representation(self, value):
+        user = self.context["request"].user
+        activity = self.parent.instance
+
+        if user.is_authenticated and (
+            user.is_staff or user in [activity.owner] + activity.activity_managers.all()
+        ):
+            return super().to_representation(value)
+
+
 class RegistrationSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
-    contact_email = serializers.EmailField(read_only=True, source='user.email')
+    contact_email = ContactEmailField()
 
     document = PrivateDocumentField(
         required=False,
@@ -29,15 +43,14 @@ class RegistrationSerializer(ModelSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = Registration
         fields = [
-            'transitions',
-            'user',
-            'activity',
-            'permissions',
-            'document',
-            'answer',
-            'participants',
-            'contact_email',
-
+            "transitions",
+            "user",
+            "activity",
+            "contact_email",
+            "permissions",
+            "document",
+            "answer",
+            "participants",
         ]
         meta_fields = (
             'permissions', 'current_status', 'transitions'

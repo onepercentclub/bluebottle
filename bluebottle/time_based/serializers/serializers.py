@@ -221,13 +221,20 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
-        included_resources = ['activity', 'my_contributor', 'my_contributor.participant.user', 'location']
+        included_resources = [
+            'activity',
+            'my_contributor',
+            'my_contributor.participant.user',
+            'location',
+            'location.country'
+        ]
 
     included_serializers = dict(
         ActivitySlotSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'country': 'bluebottle.geo.serializers.CountrySerializer',
             'my_contributor': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
             'my_contributor.participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }

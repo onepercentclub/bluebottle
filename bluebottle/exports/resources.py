@@ -1,12 +1,11 @@
 from builtins import object
 from datetime import timedelta
 
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+
 from bluebottle.exports.exporter import ExportModelResource
 from bluebottle.impact.models import ImpactType
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.segments.models import SegmentType
-
-from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 
 class ImpactMixin(object):
@@ -63,26 +62,18 @@ class InitiativeResource(DateRangeResource):
     )
 
 
-class PeriodActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
+class DeadlineActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):
     select_related = (
         'initiative', 'owner',
     )
 
 
-class PeriodParticipantResource(SegmentMixin, DateRangeResource):
+class DeadlineParticipantResource(SegmentMixin, DateRangeResource):
     segment_field = 'user'
     user_field = 'user'
     select_related = (
         'activity', 'activity__initiative',
     )
-
-    def get_extra_fields(self):
-        fields = super().get_extra_fields()
-
-        if InitiativePlatformSettings.objects.get().team_activities:
-            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
-
-        return fields
 
 
 class DateActivityResource(ImpactMixin, SegmentMixin, DateRangeResource):

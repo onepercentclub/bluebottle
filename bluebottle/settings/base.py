@@ -709,7 +709,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.InitiativeResource',
             'title': _('Initiatives'),
         }),
-        ('time_based.PeriodActivity', {
+        ('time_based.DeadlineActivity', {
             'fields': (
                 ('id', 'Task ID'),
                 ('initiative__title', 'Initiative Title'),
@@ -735,10 +735,10 @@ EXPORTDB_EXPORT_CONF = {
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
-            'resource_class': 'bluebottle.exports.resources.PeriodActivityResource',
-            'title': _('Activities during a period'),
+            'resource_class': 'bluebottle.exports.resources.DeadlineActivityResource',
+            'title': _('Flexible activities'),
         }),
-        ('time_based.PeriodParticipant', {
+        ('time_based.DeadlineParticipant', {
             'fields': (
                 ('id', 'Participant ID'),
                 ('activity__title', 'Activity Title'),
@@ -750,8 +750,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('user__email', 'Email'),
                 ('status', 'Status'),
             ),
-            'resource_class': 'bluebottle.exports.resources.PeriodParticipantResource',
-            'title': _('Participants over a period'),
+            'resource_class': 'bluebottle.exports.resources.DeadlineParticipantResource',
+            'title': _('Participants to flexible activities')
         }),
         ('time_based.DateActivity', {
             'fields': (

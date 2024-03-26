@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -93,7 +93,7 @@ class ContributorPermission(ResourcePermission):
             return user.has_perms(perms) and user in [
                 obj.activity.owner,
                 obj.activity.initiative.owner,
-            ] or user in obj.activity.initiative.activity_managers.all() or (obj.team and obj.team.owner == user)
+            ] or user in obj.activity.initiative.activity_managers.all()
 
 
 class ContributionPermission(ResourcePermission):

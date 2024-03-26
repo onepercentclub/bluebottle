@@ -12,38 +12,30 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
+    ActivityOwnerPermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
-    ActivitySegmentPermission
 )
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
-from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity,
-    DateParticipant, PeriodParticipant,
+    DateActivity,
+    DateParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill, TeamSlot
+    DateActivitySlot, SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import (
     SlotParticipantPermission, DateSlotActivityStatusPermission
 )
 from bluebottle.time_based.serializers import (
-    DateActivitySerializer,
-    PeriodActivitySerializer,
     DateTransitionSerializer,
-    PeriodTransitionSerializer,
-    PeriodParticipantSerializer,
     DateParticipantSerializer,
     DateParticipantListSerializer,
     DateParticipantTransitionSerializer,
-    PeriodParticipantTransitionSerializer,
     TimeContributionSerializer,
     DateActivitySlotSerializer,
     SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, TeamSlotSerializer, DateSlotTransitionSerializer
+    SlotParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -56,54 +48,6 @@ from bluebottle.utils.views import (
     RelatedPermissionMixin,
     PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
-
-
-class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView):
-    permission_classes = (
-        ActivityTypePermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-    )
-
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        serializer.save(owner=self.request.user)
-
-
-class TimeBasedActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = (
-        ActivityStatusPermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission),
-        DeleteActivityPermission,
-        ActivitySegmentPermission,
-    )
-
-
-class DateActivityListView(TimeBasedActivityListView):
-    queryset = DateActivity.objects.all()
-    serializer_class = DateActivitySerializer
-
-
-class PeriodActivityListView(TimeBasedActivityListView):
-    queryset = PeriodActivity.objects.all()
-    serializer_class = PeriodActivitySerializer
-
-
-class DateActivityDetailView(TimeBasedActivityDetailView):
-    queryset = DateActivity.objects.all()
-    serializer_class = DateActivitySerializer
-
-
-class PeriodActivityDetailView(TimeBasedActivityDetailView):
-    queryset = PeriodActivity.objects.all()
-    serializer_class = PeriodActivitySerializer
 
 
 class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
@@ -126,9 +70,9 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
         ).get(pk=self.kwargs['participant_id'])
 
         if not self.request.user.is_authenticated or (
-                self.request.user != participant.user and
-                self.request.user != participant.activity.owner and
-                self.request.user != participant.activity.initiative.owner
+            self.request.user != participant.user and
+            self.request.user != participant.activity.owner and
+            self.request.user != participant.activity.initiative.owner
         ):
             queryset = queryset.filter(participant__status='accepted')
             queryset = queryset.filter(status='registered')
@@ -224,35 +168,6 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = DateActivitySlotSerializer
 
 
-class TeamSlotListView(DateSlotListView):
-    related_permission_classes = {
-        'team.activity': [
-            ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-            DeleteActivityPermission
-        ]
-    }
-
-    permission_classes = [TenantConditionalOpenClose]
-    queryset = TeamSlot.objects.all()
-    serializer_class = TeamSlotSerializer
-
-    def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-        if 'team' in serializer.validated_data:
-            serializer.save(activity=serializer.validated_data['team'].activity)
-        serializer.save()
-
-
-class TeamSlotDetailView(DateSlotDetailView):
-    permission_classes = [TenantConditionalOpenClose]
-    queryset = TeamSlot.objects.all()
-    serializer_class = TeamSlotSerializer
-
-
 class DateActivityRelatedParticipantList(RelatedContributorListView):
     queryset = DateParticipant.objects.prefetch_related(
         'user', 'slot_participants', 'slot_participants__slot'
@@ -294,11 +209,11 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 status__in=('registered', 'succeeded'),
             )
         elif (
-                user != activity.owner and
-                user != activity.initiative.owner and
-                user not in activity.initiative.activity_managers.all() and
-                not user.is_staff and
-                not user.is_superuser
+            user != activity.owner and
+            user != activity.initiative.owner and
+            user not in activity.initiative.activity_managers.all() and
+            not user.is_staff and
+            not user.is_superuser
         ):
             queryset = queryset.filter(status__in=('registered', 'succeeded'))
 
@@ -306,11 +221,6 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
     queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
     serializer_class = SlotParticipantSerializer
-
-
-class PeriodActivityRelatedParticipantList(RelatedContributorListView):
-    queryset = PeriodParticipant.objects.prefetch_related('user')
-    serializer_class = PeriodParticipantSerializer
 
 
 class DateTransitionList(TransitionList):
@@ -321,11 +231,6 @@ class DateTransitionList(TransitionList):
 class DateSlotTransitionList(TransitionList):
     serializer_class = DateSlotTransitionSerializer
     queryset = DateActivitySlot.objects.all()
-
-
-class PeriodTransitionList(TransitionList):
-    serializer_class = PeriodTransitionSerializer
-    queryset = PeriodActivity.objects.all()
 
 
 class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
@@ -355,15 +260,15 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
             context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
 
             if self.request.user and self.request.user.is_authenticated and (
-                    self.request.user in context['owners'] or
-                    self.request.user.is_staff or
-                    self.request.user.is_superuser
+                self.request.user in context['owners'] or
+                self.request.user.is_staff or
+                self.request.user.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
         else:
             if self.request.user and self.request.user.is_authenticated and (
-                    self.request.user.is_staff or
-                    self.request.user.is_superuser
+                self.request.user.is_staff or
+                self.request.user.is_superuser
             ):
                 context['display_member_names'] = 'full_name'
 
@@ -404,11 +309,6 @@ class DateParticipantList(ParticipantList):
             return DateParticipantListSerializer
 
 
-class PeriodParticipantList(ParticipantList):
-    queryset = PeriodParticipant.objects.all()
-    serializer_class = PeriodParticipantSerializer
-
-
 class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
     serializer_class = TimeContributionSerializer
@@ -426,11 +326,6 @@ class DateParticipantDetail(ParticipantDetail):
     serializer_class = DateParticipantSerializer
 
 
-class PeriodParticipantDetail(ParticipantDetail):
-    queryset = PeriodParticipant.objects.all()
-    serializer_class = PeriodParticipantSerializer
-
-
 class ParticipantTransitionList(TransitionList):
     pass
 
@@ -438,11 +333,6 @@ class ParticipantTransitionList(TransitionList):
 class DateParticipantTransitionList(ParticipantTransitionList):
     serializer_class = DateParticipantTransitionSerializer
     queryset = DateParticipant.objects.all()
-
-
-class PeriodParticipantTransitionList(ParticipantTransitionList):
-    serializer_class = PeriodParticipantTransitionSerializer
-    queryset = PeriodParticipant.objects.all()
 
 
 class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
@@ -497,10 +387,6 @@ class ParticipantDocumentDetail(PrivateFileView):
 
 class DateParticipantDocumentDetail(ParticipantDocumentDetail):
     queryset = DateParticipant.objects
-
-
-class PeriodParticipantDocumentDetail(ParticipantDocumentDetail):
-    queryset = PeriodParticipant.objects
 
 
 class DateActivityIcalView(PrivateFileView):
@@ -599,13 +485,6 @@ class ActivitySlotIcalView(BaseSlotIcalView):
     )
 
 
-class TeamSlotIcalView(BaseSlotIcalView):
-    queryset = TeamSlot.objects.exclude(
-        status__in=['cancelled', 'deleted', 'rejected'],
-        activity__status__in=['cancelled', 'deleted', 'rejected'],
-    )
-
-
 class DateParticipantExportView(ExportView):
     filename = "participants"
 
@@ -693,85 +572,6 @@ class SlotParticipantExportView(ExportView):
                 ('participant__motivation', question),
             )
         return fields
-
-
-class PeriodParticipantExportView(ExportView):
-    filename = "participants"
-    fields = (
-        ('user__email', 'Email'),
-        ('user__full_name', 'Name'),
-        ('motivation', 'Motivation'),
-        ('created', 'Registration Date'),
-        ('status', 'Status'),
-    )
-
-    model = PeriodActivity
-
-    def get_row(self, instance):
-        row = []
-
-        for (field, name) in self.get_fields():
-            if field.startswith('segment.'):
-                row.append(
-                    ", ".join(
-                        instance.user.segments.filter(
-                            segment_type_id=field.split('.')[-1]
-                        ).values_list('name', flat=True)
-                    )
-                )
-            else:
-                row.append(prep_field(self.request, instance, field))
-
-        return row
-
-    def get_fields(self):
-        question = self.get_object().review_title
-        fields = (
-            ('user__email', 'Email'),
-            ('user__full_name', 'Name'),
-            ('created', 'Registration Date'),
-            ('status', 'Status'),
-        )
-        if question:
-            fields += (
-                ('participant__motivation', question),
-            )
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-        if InitiativePlatformSettings.objects.get().team_activities:
-            fields += (('team__name', 'Team'), ('is_team_captain', 'Team Captain'))
-
-        return fields + segments
-
-    def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            PeriodParticipant
-        ).prefetch_related('user__segments')
-
-    def write_data(self, workbook):
-        """ Create extra tab with team info"""
-        super().write_data(workbook)
-        if self.get_object().team_activity == 'teams':
-            worksheet = workbook.add_worksheet('Teams')
-
-            fields = [
-                ('name', 'Name'),
-                ('owner__full_name', 'Owner'),
-                ('id', 'ID'),
-                ('status', 'Status'),
-                ('accepted_participants_count', '# Accepted Participants'),
-                ('slot__start', 'Start'),
-                ('slot__duration', 'duration'),
-            ]
-
-            worksheet.write_row(0, 0, [field[1] for field in fields])
-
-            for index, team in enumerate(self.get_object().teams.all()):
-                row = [prep_field(self.request, team, field[0]) for field in fields]
-
-                worksheet.write_row(index + 1, 0, row)
 
 
 class SkillPagination(JsonApiPagination):

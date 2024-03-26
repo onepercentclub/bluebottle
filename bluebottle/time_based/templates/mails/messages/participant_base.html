@@ -10,9 +10,9 @@
     {% else %}
         {% block message %}{% endblock %}
     {% endif %}
+    {% block additional %} {% endblock %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}"
-       class="action-email">{{ action_title }}</a>
+    <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
 {% endblock %}`

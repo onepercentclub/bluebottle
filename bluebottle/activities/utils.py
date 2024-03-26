@@ -1,5 +1,4 @@
 from builtins import object
-from collections.abc import Iterable
 from itertools import groupby
 
 from django.conf import settings
@@ -440,24 +439,7 @@ class BaseContributorSerializer(ModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'invite': 'bluebottle.activities.utils.InviteSerializer',
-        'team': 'bluebottle.activities.utils.TeamSerializer',
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if (
-            isinstance(self.instance, Iterable) or (
-                self.instance and (
-                    (not self.instance.team or self.instance.user != self.instance.team.owner) and
-                    (
-                        self.instance.accepted_invite or
-                        self.instance.user != self.context['request'].user
-                    )
-                )
-            )
-        ):
-            self.fields.pop('invite')
 
     class Meta(object):
         model = Contributor
@@ -465,9 +447,6 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'status',
-            'team',
-            'accepted_invite',
-            'invite',
         )
         meta_fields = ('transitions', 'created', 'updated', 'current_status')
 
@@ -476,7 +455,6 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'invite',
-            'team'
         ]
         resource_name = 'contributors'
 
@@ -487,8 +465,8 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ('value', 'status',)
-        meta_fields = ('created',)
+        fields = ("value", "status", "start", "end")
+        meta_fields = ("created",)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'

@@ -6,11 +6,11 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, PeriodActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
 from bluebottle.time_based.tests.steps import api_user_joins_activity, assert_participant_status, \
     api_participant_transition, assert_status, assert_slot_participant_status, assert_not_slot_participant, \
     api_user_joins_slot, api_slot_participant_transition, api_create_date_activity, api_create_date_slot, \
-    api_update_date_slot, api_activity_transition, api_user_joins_period_activity
+    api_update_date_slot, api_activity_transition
 
 
 class DateActivityScenarioTestCase(BluebottleAdminTestCase):
@@ -304,45 +304,3 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
             self, self.slot2, 'open',
             'Slot2 should now be '
         )
-
-
-class PeriodActivityScenarioTestCase(BluebottleAdminTestCase):
-
-    def setUp(self):
-        super().setUp()
-        self.owner = BlueBottleUserFactory.create()
-        self.supporter = BlueBottleUserFactory.create()
-        self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
-        self.client = JSONAPITestClient()
-
-    def test_create_team_activity(self):
-        activity_data = {
-            'title': 'Beach clean-up Katwijk',
-            'review': False,
-            'slot_selection': 'all',
-            'registration-deadline': str(date.today() + timedelta(days=1)),
-            'capacity': 10,
-            'team_activity': 'teams',
-            'description': 'We will clean up the beach south of Katwijk'
-        }
-        activity = api_create_date_activity(self, self.initiative, activity_data)
-        self.assertEqual(activity.team_activity, 'teams')
-
-
-class PeriodParticipantScenarioTestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super().setUp()
-        self.owner = BlueBottleUserFactory.create()
-        self.supporter = BlueBottleUserFactory.create()
-        self.activity = PeriodActivityFactory.create(
-            status='open',
-            team_activity='teams',
-            owner=self.owner
-        )
-        self.client = JSONAPITestClient()
-
-    def test_user_starts_a_team(self):
-        api_user_joins_period_activity(self, self.activity, self.supporter)
-        assert_participant_status(self, self.activity, self.supporter, status='accepted')
-        self.assertEqual(self.activity.teams.count(), 1)

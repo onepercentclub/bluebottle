@@ -11,14 +11,14 @@ from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
-from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     PeriodActivityFactory, PeriodParticipantFactory,
-    DateActivityFactory
+    DateActivityFactory, DeadlineActivityFactory, DeadlineParticipantFactory
 )
 
 TEST_EXPORT_SETTINGS = {
@@ -43,7 +43,7 @@ class TestExportAdmin(BluebottleTestCase):
         initiatives = InitiativeFactory.create_batch(4)
         for initiative in initiatives:
             DateActivityFactory.create_batch(3, initiative=initiative)
-            PeriodActivityFactory.create_batch(2, initiative=initiative)
+            DeadlineActivityFactory.create_batch(2, initiative=initiative)
             FundingFactory.create_batch(1, initiative=initiative)
             DeedFactory.create_batch(1, initiative=initiative)
 
@@ -82,20 +82,21 @@ class TestExportAdmin(BluebottleTestCase):
             'Skill'
         )
 
+        print(book._sheet_names)
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').nrows,
+            book.sheet_by_name('Flexible activities').nrows,
             9
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 16).value,
+            book.sheet_by_name('Flexible activities').cell(0, 16).value,
             'Preparation time'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 17).value,
+            book.sheet_by_name('Flexible activities').cell(0, 17).value,
             'Start'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 18).value,
+            book.sheet_by_name('Flexible activities').cell(0, 18).value,
             'Deadline'
         )
 
@@ -137,13 +138,13 @@ class TestExportAdmin(BluebottleTestCase):
         rubbish = SegmentFactory.create(segment_type=segment_type, name='Rubbish')
         users[0].segments.add(engineering)
         initiative = InitiativeFactory.create(owner=users[0])
-        activity = PeriodActivityFactory.create(
+        activity = DeadlineActivityFactory.create(
             owner=users[1],
             initiative=initiative
         )
         activity.segments.add(engineering)
         activity.segments.add(rubbish)
-        PeriodParticipantFactory.create(activity=activity, user=users[2])
+        DeadlineParticipantFactory.create(activity=activity, user=users[2])
 
         data = {
             'from_date': from_date,
@@ -173,7 +174,7 @@ class TestExportAdmin(BluebottleTestCase):
             t += 1
 
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 21).value,
+            book.sheet_by_name('Flexible activities').cell(0, 21).value,
             'Department'
         )
 
@@ -181,7 +182,7 @@ class TestExportAdmin(BluebottleTestCase):
         while t < book.sheet_by_name('Users').nrows:
             if book.sheet_by_name('Users').cell(t, 5).value == users[0].email:
                 self.assertTrue(
-                    book.sheet_by_name('Activities during a period').cell(t, 21).value in
+                    book.sheet_by_name('Flexible activities').cell(t, 21).value in
                     ['Engineering, Rubbish', 'Rubbish, Engineering']
                 )
             t += 1
@@ -200,7 +201,7 @@ class TestExportAdmin(BluebottleTestCase):
 
         initiative = InitiativeFactory.create(owner=users[0])
 
-        activity = PeriodActivityFactory.create(
+        activity = DeadlineActivityFactory.create(
             owner=users[1],
             initiative=initiative
         )
@@ -217,19 +218,19 @@ class TestExportAdmin(BluebottleTestCase):
         book = xlrd.open_workbook(result)
 
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 21).value,
+            book.sheet_by_name('Flexible activities').cell(0, 21).value,
             u'Reduce CO\u2082 emissions'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(1, 21).value,
+            book.sheet_by_name('Flexible activities').cell(1, 21).value,
             300
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(0, 22).value,
+            book.sheet_by_name('Flexible activities').cell(0, 22).value,
             u'Save water'
         )
         self.assertEqual(
-            book.sheet_by_name('Activities during a period').cell(1, 22).value,
+            book.sheet_by_name('Flexible activities').cell(1, 22).value,
             750
         )
 
@@ -258,7 +259,7 @@ class TestExportAdmin(BluebottleTestCase):
         result = plain_export(Exporter, tenant=tenant, **data)
         book = xlrd.open_workbook(result)
 
-        sheet = book.sheet_by_name('Participants over a period')
+        sheet = book.sheet_by_name('Participants to flexible activi')
         self.assertEqual(
             [field.value for field in tuple(sheet.get_rows())[0]],
             [
@@ -273,12 +274,11 @@ class TestExportAdmin(BluebottleTestCase):
         result = plain_export(Exporter, tenant=tenant, **data)
         book = xlrd.open_workbook(result)
 
-        sheet = book.sheet_by_name('Participants over a period')
+        sheet = book.sheet_by_name('Participants to flexible activi')
         self.assertEqual(
             [field.value for field in tuple(sheet.get_rows())[0]],
             [
                 'Participant ID', 'Activity Title', 'Initiative Title', 'Activity ID',
-                'Activity status', 'User ID', 'Remote ID', 'Email', 'Status', 'Team',
-                'Team Captain'
+                'Activity status', 'User ID', 'Remote ID', 'Email', 'Status'
             ]
         )

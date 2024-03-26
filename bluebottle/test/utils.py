@@ -387,6 +387,13 @@ class APITestCase(BluebottleTestCase):
         """
         self.assertEqual(self.response.status_code, status)
 
+    def assertResourceStatus(self, resource, status):
+        """
+        Assert that the status a resource as expected
+        """
+        resource.refresh_from_db()
+        self.assertEqual(resource.status, status)
+
     def assertTotal(self, count):
         """
         Assert that total the number of found objects is the same as expected

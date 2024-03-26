@@ -268,7 +268,6 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertIncluded('my-contributor', participant)
-        self.assertIncluded('my-contributor.invite', participant.invite)
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -581,7 +580,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
             'activity': self.activity
         }
 
-        self.fields = ['activity', 'accepted_invite']
+        self.fields = ['activity']
 
     def test_create(self):
         self.perform_create(user=self.user)
@@ -596,7 +595,6 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', True)
 
         self.assertTransition('withdraw')
-        self.assertIncluded('invite')
 
     def test_create_required_question(self):
         MemberPlatformSettings.objects.update_or_create(
@@ -606,19 +604,6 @@ class DeedParticipantListViewAPITestCase(APITestCase):
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.response.json()['errors'][0]['code'], 'required')
-
-    def test_create_with_team_invite(self):
-        self.activity.team_activity = 'teams'
-        self.activity.save()
-
-        team_captain = DeedParticipantFactory.create(activity=self.activity)
-
-        self.defaults['accepted_invite'] = team_captain.invite
-
-        self.perform_create(user=self.user)
-
-        self.assertStatus(status.HTTP_201_CREATED)
-        self.assertRelationship('team', [team_captain.team])
 
     def test_create_anonymous(self):
         self.perform_create()
@@ -746,8 +731,6 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('activity', self.activity)
         self.assertIncluded('user', self.participant.user)
-        self.assertRelationship('invite', [self.participant.invite])
-        self.assertRelationship('accepted-invite')
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
@@ -756,22 +739,6 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('activity', self.activity)
         self.assertIncluded('user', self.participant.user)
-        self.assertNoRelationship('invite')
-        self.assertRelationship('accepted-invite')
-
-    def test_get_accepted_invite(self):
-        invite = DeedParticipantFactory.create().invite
-        self.participant.accepted_invite = invite
-        self.participant.save()
-
-        self.perform_get(user=self.participant.user)
-
-        self.assertStatus(status.HTTP_200_OK)
-
-        self.assertIncluded('activity', self.activity)
-        self.assertIncluded('user', self.participant.user)
-        self.assertNoRelationship('invite')
-        self.assertRelationship('accepted-invite')
 
     def test_get_anonymous(self):
         self.perform_get()
@@ -780,8 +747,6 @@ class DeedParticipantDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('activity', self.activity)
         self.assertIncluded('user', self.participant.user)
-        self.assertNoRelationship('invite')
-        self.assertRelationship('accepted-invite')
 
     def test_get_anonymous_closed_site(self):
         with self.closed_site():

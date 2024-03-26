@@ -1,0 +1,10 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+        <p>You have stopped your contribution to "{{ title }}".</p>
+        <p>Thanks for your participation so far.</p>
+        <p>You won't be expected to participate in the future, but the contributions you already made are still counted.</p>
+    {% endblocktrans %}
+{% endblock %}

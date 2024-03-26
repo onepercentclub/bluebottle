@@ -25,7 +25,9 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+    DateParticipantFactory,
+    DeadlineParticipantFactory,
+    ParticipationFactory,
 )
 from bluebottle.utils.models import Language
 
@@ -246,10 +248,27 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields(self):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         expected_fields = {
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "date_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "is_superuser",
+            "kyc",
+            "hours_planned",
+            "hours_spent",
+            "all_contributions",
+            "data_retention_info",
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -257,10 +276,27 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields_create(self):
         fields = self.member_admin.get_readonly_fields(self.request)
         expected_fields = {
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "date_activities",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "is_superuser",
+            "kyc",
+            "hours_planned",
+            "hours_spent",
+            "all_contributions",
+            "data_retention_info",
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -403,8 +439,8 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         ParticipationFactory.create(
             value=timedelta(hours=12),
-            contributor=PeriodParticipantFactory(user=member, status='accepted'),
-            status='succeeded'
+            contributor=DeadlineParticipantFactory(user=member, status="accepted"),
+            status="succeeded",
         )
         ParticipationFactory.create_batch(
             3,

@@ -75,7 +75,10 @@ class RelatedRegistrationListView(
         my = self.request.query_params.get('filter[my]')
 
         if my:
-            queryset = queryset.filter(user=self.request.user)
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

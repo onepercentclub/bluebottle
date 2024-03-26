@@ -8,14 +8,10 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import ScheduleRegistration, TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
-    PeriodicActivityFactory,
-    PeriodicRegistrationFactory,
-    ScheduleSlotFactory,
 )
 
 
@@ -227,51 +223,3 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
                 self.activity.title
             ),
         )
-
-
-class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    activity_factory = PeriodicActivityFactory
-
-    def register(self):
-        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
-
-        slot = self.activity.slots.get()
-        self.participant = self.registration.participants.get(slot=slot)
-
-        slot.states.start(save=True)
-        slot.states.finish(save=True)
-
-        self.participant.refresh_from_db()
-
-    def test_single_preparation_contribution(self):
-        self.register()
-        preparation = TimeContribution.objects.get(
-            contributor__activity=self.activity, contribution_type="preparation"
-        )
-
-        self.assertEqual(preparation.contributor, self.participant)
-
-
-class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    activity_factory = PeriodicActivityFactory
-    expected_status = "registered"
-
-    def register(self):
-        self.registration = ScheduleRegistration.create(activity=self.activity)
-
-        self.participant = self.registration.participants.first()
-
-    def test_initial(self):
-        super().test_initial()
-
-        self.registration.refresh_from_db()
-
-        self.assertEqual(self.registration.status, "accepted")
-
-    def test_schedule(self):
-        self.test_initial()
-
-        self.partcipant.slot = ScheduleSlotFactory.create()
-        self.participants.save()
-
-        self.assertEqual(self.participant.status, "scheduled")

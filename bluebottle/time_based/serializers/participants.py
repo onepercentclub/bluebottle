@@ -17,8 +17,8 @@ class ParticipantSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
-            "registration",
             "total_duration",
+            "registration",
         )
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ("permissions",)
 
@@ -46,7 +46,6 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         resource_name = "contributors/time-based/deadline-participants"
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             "activity",
-            "registration",
             "contributions",
         ]
 
@@ -54,7 +53,6 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         ParticipantSerializer.included_serializers,
         **{
             "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
-            "registration": "bluebottle.time_based.serializers.DeadlineRegistrationSerializer",
             "contributions": "bluebottle.time_based.serializers.TimeContributionSerializer",
         }
     )
@@ -73,7 +71,6 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             "activity",
             "slot",
-            "registration",
         ]
 
     included_serializers = dict(
@@ -81,7 +78,6 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "slot": "bluebottle.time_based.serializers.ScheduleSlotSerializer",
-            "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
         }
     )
 
@@ -99,14 +95,12 @@ class PeriodicParticipantSerializer(ParticipantSerializer):
         resource_name = "contributors/time-based/periodic-participants"
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             "activity",
-            "registration",
             "contributions",
         ]
 
     included_serializers = dict(
         ParticipantSerializer.included_serializers,
         **{
-            "registration": "bluebottle.time_based.serializers.PeriodicRegistrationSerializer",
             "activity": "bluebottle.time_based.serializers.PeriodicActivitySerializer",
             "contributions": "bluebottle.time_based.serializers.TimeContributionSerializer",
         }

@@ -164,7 +164,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="deadline-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["new", "succeeded"],
+            "active": ["succeeded"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
     )

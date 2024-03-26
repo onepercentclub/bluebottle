@@ -50,11 +50,11 @@ urlpatterns = [
     url(r'^/participants/(?P<pk>\d+)$',
         ScheduleParticipantDetail.as_view(),
         name="schedule-participant-detail"),
-    url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-list"),
+    url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),
     url(
         r"^/slots/(?P<pk>\d+)$",
         ScheduleSlotDetailView.as_view(),
-        name="schedule-detail"),
+        name="schedule-slot-detail"),
     url(
         r"^/export/(?P<pk>[\d]+)$",
         ScheduleParticipantExportView.as_view(),

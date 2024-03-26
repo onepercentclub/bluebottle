@@ -8,14 +8,14 @@ from bluebottle.initiatives.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import ScheduleRegistration, TimeContribution
+from bluebottle.time_based.models import TimeContribution
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
-    ScheduleSlotFactory,
+    ScheduleSlotFactory, ScheduleRegistrationFactory,
 )
 
 
@@ -254,11 +254,10 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = PeriodicActivityFactory
-    expected_status = "registered"
+    expected_status = "accepted"
 
     def register(self):
-        self.registration = ScheduleRegistration.create(activity=self.activity)
-
+        self.registration = ScheduleRegistrationFactory.create(activity=self.activity)
         self.participant = self.registration.participants.first()
 
     def test_initial(self):

@@ -118,7 +118,6 @@ class TimeBasedActivityDetailAPITestCase:
             initiative=InitiativeFactory.create(status='approved'),
             **self.defaults
         )
-
         self.url = reverse(self.url_name, args=(self.model.pk,))
 
         super().setUp()
@@ -158,6 +157,7 @@ class TimeBasedActivityDetailAPITestCase:
         initiative_settings.save()
 
         self.perform_get(user=self.model.owner)
+
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertTrue(

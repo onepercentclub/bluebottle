@@ -82,15 +82,18 @@ def migrate_periodic_participants(apps, schema_editor):
             for participant in activity.contributors.filter(
                 polymorphic_ctype=period_participant_ctype, user__isnull=False
             ):
-                status = participant.status
-                if status == "no_show":
-                    status = "rejected"
+                registration_status_map = {
+                    "new": "new",
+                    "accepted": "accepted",
+                    "rejected": "rejected",
+                    "withdrawn": "stopped",
+                }
 
                 registration, _created = PeriodicRegistration.objects.get_or_create(
                     user=participant.user,
                     activity=activity,
-                    status=status,
-                    polymorphic_ctype=periodic_registration_ctype
+                    status=registration_status_map.get(participant.status, "accepted"),
+                    polymorphic_ctype=periodic_registration_ctype,
                 )
                 for contribution in participant.contributions.filter(
                     timecontribution__contribution_type="period"
@@ -115,7 +118,7 @@ def migrate_periodic_participants(apps, schema_editor):
                         registration=registration,
                         user=participant.user,
                         activity=activity,
-                        status=participant.status,
+                        status=contribution.status,
                         polymorphic_ctype=periodic_participant_ctype,
                     )
 

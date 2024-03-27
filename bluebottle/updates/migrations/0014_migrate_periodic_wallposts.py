@@ -14,9 +14,9 @@ def migrate_related_reactions(old_wallpost, new_update, update_model):
         )
 
 
-def migrate_deadline_wallposts(apps, schema_editor):
+def migrate_periodic_wallposts(apps, schema_editor):
     ContentType = apps.get_model("contenttypes", "ContentType")
-    DeadlineActivity = apps.get_model("time_based", "DeadlineActivity")
+    PeriodicActivity = apps.get_model("time_based", "PeriodicActivity")
 
     SystemWallpost = apps.get_model("wallposts", "SystemWallpost")
     TextWallpost = apps.get_model("wallposts", "TextWallpost")
@@ -27,9 +27,9 @@ def migrate_deadline_wallposts(apps, schema_editor):
     Update = apps.get_model("updates", "Update")
     UpdateImage = apps.get_model("updates", "UpdateImage")
     Image = apps.get_model("files", "Image")
-    deadline_activity_ctype = ContentType.objects.get_for_model(DeadlineActivity)
+    periodic_activity_ctype = ContentType.objects.get_for_model(PeriodicActivity)
 
-    for wallpost in MediaWallpost.objects.filter(content_type=deadline_activity_ctype):
+    for wallpost in MediaWallpost.objects.filter(content_type=periodic_activity_ctype):
         update = Update.objects.create(
             created=wallpost.created,
             activity_id=wallpost.object_id,
@@ -54,7 +54,7 @@ def migrate_deadline_wallposts(apps, schema_editor):
                 except FileNotFoundError:
                     pass
 
-    for wallpost in TextWallpost.objects.filter(content_type=deadline_activity_ctype):
+    for wallpost in TextWallpost.objects.filter(content_type=periodic_activity_ctype):
         update = Update.objects.create(
             created=wallpost.created,
             activity_id=wallpost.object_id,
@@ -64,7 +64,7 @@ def migrate_deadline_wallposts(apps, schema_editor):
         )
         migrate_related_reactions(wallpost, update, Update)
 
-    for wallpost in SystemWallpost.objects.filter(content_type=deadline_activity_ctype):
+    for wallpost in SystemWallpost.objects.filter(content_type=periodic_activity_ctype):
         update = Update.objects.create(
             created=wallpost.created,
             activity_id=wallpost.object_id,
@@ -78,10 +78,11 @@ def migrate_deadline_wallposts(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("updates", "0012_migrate_date_wallposts"),
-        ("time_based", "0099_auto_20240304_1341"),
-        ("wallposts", "0024_migrate_deadline_wallposts"),
+        ("updates", "0013_migrate_deadline_wallposts"),
+        ("time_based", "0101_auto_20240304_1439"),
+        ("wallposts", "0025_migrate_periodic_wallposts"),
     ]
+
     operations = [
-        migrations.RunPython(migrate_deadline_wallposts, migrations.RunPython.noop)
+        migrations.RunPython(migrate_periodic_wallposts, migrations.RunPython.noop)
     ]

@@ -1325,9 +1325,9 @@ class PeriodicRegistration(Registration):
     @property
     def total_hours(self):
         total = TimeContribution.objects.filter(
-            contributor_id__in=self.participants.values_list(
-                "contributor_ptr_id", flat=True
-            )
+            contributor_id__in=self.participants.filter(
+                status__in=["running", "new", "succeeded"]
+            ).values_list("contributor_ptr_id", flat=True)
         ).aggregate(Sum("value"))
         return total["value__sum"]
 

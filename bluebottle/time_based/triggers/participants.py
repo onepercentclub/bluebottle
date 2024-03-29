@@ -48,6 +48,7 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
+                FollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,

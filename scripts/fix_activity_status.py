@@ -4,6 +4,7 @@ from bluebottle.time_based.models import DateActivity
 
 
 def run(*args):
+    fix = 'fix' in args
     for client in Client.objects.all():
         with LocalTenant(client):
             full_activities = DateActivity.objects.filter(
@@ -27,7 +28,8 @@ def run(*args):
                         status=activity.status
                     )
                 )
-                # activity.states.reopen(save=True)
+                if fix:
+                    activity.states.reopen(save=True)
             for activity in open_activities:
                 print(
                     "Activity {title} is {status} but there aren't any open slots.".format(
@@ -35,4 +37,7 @@ def run(*args):
                         status=activity.status
                     )
                 )
-                # activity.states.lock(save=True)
+                if fix:
+                    activity.states.lock(save=True)
+    if not fix:
+        print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

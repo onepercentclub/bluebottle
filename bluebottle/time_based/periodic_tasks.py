@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
-from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.notifications.effects import NotificationEffect, LogErrorEffect
 from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
 from bluebottle.time_based.messages import ReminderSlotNotification, ReminderTeamSlotNotification
 from bluebottle.time_based.models import (
@@ -59,6 +59,34 @@ class DateActivityFinishedTask(ModelPeriodicTask):
 
     def __str__(self):
         return str(_("Finish an activity when all slots are completed."))
+
+
+class DateActivityCheckFull(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.filter(slots__status='open').filter(status__in=['full', 'succeeded']).all()
+
+    effects = [
+        LogErrorEffect('Activity {title} is {status} but there are still open slots.'),
+        TransitionEffect(TimeBasedStateMachine.reopen),
+    ]
+
+    def __str__(self):
+        return str(_("Reopen full activity when a slot is open."))
+
+
+class DateActivityCheckNotFull(ModelPeriodicTask):
+
+    def get_queryset(self):
+        return self.model.objects.exclude(slots__status='open').filter(status='open').all()
+
+    effects = [
+        LogErrorEffect("Activity {title} is not full but there aren't open slots."),
+        TransitionEffect(TimeBasedStateMachine.lock),
+    ]
+
+    def __str__(self):
+        return str(_("Close an open activity when no slot is open."))
 
 
 class PeriodActivityFinishedTask(ModelPeriodicTask):
@@ -213,6 +241,8 @@ class TeamSlotFinishedTask(SlotFinishedTask):
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
     DateActivityFinishedTask,
+    # DateActivityCheckFull,
+    # DateActivityCheckNotFull
 ]
 
 DateActivitySlot.periodic_tasks = [

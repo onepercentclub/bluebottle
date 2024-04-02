@@ -125,6 +125,20 @@ def has_no_participants(effect):
     return len(effect.instance.active_participants) == 0
 
 
+def has_open_slots(effect):
+    """
+    has open slots
+    """
+    return effect.instance.slots.filter(status='open').exits()
+
+
+def has_no_open_slots(effect):
+    """
+    has no open slots
+    """
+    return not has_open_slots(effect)
+
+
 def is_finished(effect):
     """
     is finished

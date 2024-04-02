@@ -305,6 +305,15 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         automatic=True,
     )
 
+    schedule = Transition(
+        [scheduled],
+        ParticipantStateMachine.accepted,
+        name=_("Unschedule"),
+        description=_("Unchedule this participant the Activity."),
+        passed_label=_("unscheduled"),
+        automatic=True,
+    )
+
 
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):

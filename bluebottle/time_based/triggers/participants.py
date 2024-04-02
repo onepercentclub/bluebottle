@@ -4,9 +4,7 @@ from bluebottle.activities.triggers import (
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import (
-    TransitionTrigger, register
-)
+from bluebottle.fsm.triggers import TransitionTrigger, register, ModelChangedTrigger
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
 from bluebottle.time_based.effects.participant import (
@@ -472,6 +470,10 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
         """Has assigned slot"""
         return effect.instance.slot
 
+    def has_no_slot(effect):
+        """Has no assigned slot"""
+        return not effect.instance.slot
+
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -633,6 +635,17 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 )
+            ],
+        ),
+        ModelChangedTrigger(
+            "slot_id",
+            effects=[
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]
+                ),
             ],
         ),
     ]

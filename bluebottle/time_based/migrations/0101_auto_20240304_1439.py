@@ -113,12 +113,16 @@ def migrate_periodic_participants(apps, schema_editor):
                             status="finished",
                         )
 
+                    participant_status_map = {"failed": "withdrawn"}
+
                     periodic_participant = PeriodicParticipant.objects.create(
                         slot=slot,
                         registration=registration,
                         user=participant.user,
                         activity=activity,
-                        status=contribution.status,
+                        status=participant_status_map.get(
+                            contribution.status, contribution.status
+                        ),
                         polymorphic_ctype=periodic_participant_ctype,
                     )
 

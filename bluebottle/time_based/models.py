@@ -1382,6 +1382,7 @@ class ScheduleParticipant(Participant, Contributor):
         related_name="participants",
         on_delete=models.CASCADE,
         null=True,
+        blank=True,
     )
 
     class Meta:

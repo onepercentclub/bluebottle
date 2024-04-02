@@ -29,7 +29,10 @@ from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
 )
-from bluebottle.time_based.states.registrations import PeriodicRegistrationStateMachine
+from bluebottle.time_based.states.registrations import (
+    PeriodicRegistrationStateMachine,
+    ScheduleRegistrationStateMachine,
+)
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
 
@@ -232,15 +235,6 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
         ),
         TransitionTrigger(
             RegistrationStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
                     "participants",

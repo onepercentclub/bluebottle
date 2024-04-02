@@ -19,10 +19,17 @@ class ContactEmailField(serializers.CharField):
 
     def to_representation(self, value):
         user = self.context["request"].user
-        activity = self.parent.instance
+        if isinstance(self.parent.instance, list):
+            activity = self.parent.instance[0].activity
+        else:
+            activity = self.parent.instance.activity
 
         if user.is_authenticated and (
-            user.is_staff or user in [activity.owner] + activity.activity_managers.all()
+            user.is_staff or
+            user.is_superuser or
+            user == activity.owner or
+            user == activity.initiative.owner or
+            user in activity.initiative.activity_managers.all()
         ):
             return super().to_representation(value)
 

@@ -63,15 +63,11 @@ class DateActivityFinishedTask(ModelPeriodicTask):
 
 class DateActivityCheckFull(ModelPeriodicTask):
 
-    args = {
-        'title': 'title'
-    }
-
     def get_queryset(self):
         return self.model.objects.filter(slots__status='open').filter(status__in=['full', 'succeeded']).all()
 
     effects = [
-        LogErrorEffect('Activity {title} is full but there are still open slots.'),
+        LogErrorEffect('Activity {title} is {status} but there are still open slots.'),
         TransitionEffect(TimeBasedStateMachine.reopen),
     ]
 
@@ -85,7 +81,7 @@ class DateActivityCheckNotFull(ModelPeriodicTask):
         return self.model.objects.exclude(slots__status='open').filter(status='open').all()
 
     effects = [
-        LogErrorEffect('Activity {title} is full but there are still open slots.'),
+        LogErrorEffect("Activity {title} is not full but there aren't open slots."),
         TransitionEffect(TimeBasedStateMachine.lock),
     ]
 
@@ -245,8 +241,8 @@ class TeamSlotFinishedTask(SlotFinishedTask):
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
     DateActivityFinishedTask,
-    DateActivityCheckFull,
-    DateActivityCheckNotFull
+    # DateActivityCheckFull,
+    # DateActivityCheckNotFull
 ]
 
 DateActivitySlot.periodic_tasks = [

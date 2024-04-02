@@ -119,11 +119,13 @@ class BaseLogErrorEffect(Effect):
 
     def get_args(self):
         return {
-            'title': self.instance.title
+            'title': self.instance.title,
+            'status': self.instance.status
         }
 
     def post_save(self, **kwargs):
         if self.is_valid:
+            print(self.message.format(**self.get_args()))
             logger.error(self.message.format(**self.get_args()))
 
     def __repr__(self):

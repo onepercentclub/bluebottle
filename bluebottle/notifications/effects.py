@@ -1,9 +1,12 @@
+import logging
+
+from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
-from django.utils.translation import gettext_lazy as _
-from django.template.loader import render_to_string
-
 from bluebottle.fsm.effects import Effect
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -108,3 +111,52 @@ def NotificationEffect(message, conditions=None):
         conditions = _conditions or []
 
     return _NotificationEffect
+
+
+class BaseLogErrorEffect(Effect):
+    title = _('Raise error')
+    template = 'admin/notification_effect.html'
+
+    def get_args(self):
+        return {
+            'title': self.instance.title
+        }
+
+    def post_save(self, **kwargs):
+        if self.is_valid:
+            logger.error(self.message.format(**self.get_args()))
+
+    def __repr__(self):
+        return '<Effect: Raise error {}>'.format(self.message)
+
+    def __str__(self):
+        return 'Raise error "{}"'.format(self.message)
+
+    @property
+    def is_valid(self):
+        return (
+            all([condition(self) for condition in self.conditions]) and
+            self.message
+        )
+
+    def to_html(self):
+        return 'Raise error "{}"'.format(self.message)
+
+    @property
+    def description(self):
+        return 'Raise error "{}"'.format(self.message)
+
+    @property
+    def help(self):
+        return 'Raise error "{}"'.format(self.message)
+
+
+def LogErrorEffect(message, conditions=None):
+    _message = message
+    _conditions = conditions
+
+    class _LogErrorEffect(BaseLogErrorEffect):
+        message = _message
+        conditions = _conditions or []
+
+    return _LogErrorEffect

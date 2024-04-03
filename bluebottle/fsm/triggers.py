@@ -11,22 +11,6 @@ from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import pre_state_transition
 
-from threading import local
-
-
-effects = local()
-
-
-def get_local_effects():
-    return getattr(effects, "effects", [])
-
-
-def append_effect(effect):
-    if hasattr(effects, "effects"):
-        effects.effects = [effect] + effects.effects
-    else:
-        effects.effects = [effect]
-
 
 class TriggerManager(object):
     pass

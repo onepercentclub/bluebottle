@@ -5,7 +5,8 @@ from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
-from bluebottle.time_based.models import TimeContribution, ContributionTypeChoices, DeadlineRegistration
+from bluebottle.time_based.models import TimeContribution, ContributionTypeChoices, DeadlineRegistration, \
+    DeadlineParticipant, PeriodicParticipant, PeriodicRegistration, ScheduleParticipant, ScheduleRegistration
 
 
 class CreateTimeContributionEffect(Effect):
@@ -66,8 +67,17 @@ class CreateRegistrationEffect(Effect):
     def without_registration(self):
         return not self.instance.registration
 
+    def get_registration_model(self):
+        if isinstance(self.instance, DeadlineParticipant):
+            return DeadlineRegistration
+        if isinstance(self.instance, PeriodicParticipant):
+            return PeriodicRegistration
+        if isinstance(self.instance, ScheduleParticipant):
+            return ScheduleRegistration
+
     def post_save(self, **kwargs):
-        registration = DeadlineRegistration.objects.create(
+        Registration = self.get_registration_model()
+        registration = Registration.objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
             status='accepted'

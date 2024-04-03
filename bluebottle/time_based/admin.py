@@ -540,7 +540,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
-    participant_count.short_description = _('Accepted participants')
+    participant_count.short_description = _('Participants')
 
     def current_status(self, obj):
         return obj.states.current_state.name

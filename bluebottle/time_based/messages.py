@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone

@@ -101,6 +101,20 @@ def has_no_participants(effect):
     return len(effect.instance.active_participants) == 0
 
 
+def has_open_slots(effect):
+    """
+    has open slots
+    """
+    return effect.instance.slots.filter(status='open').exits()
+
+
+def has_no_open_slots(effect):
+    """
+    has no open slots
+    """
+    return not has_open_slots(effect)
+
+
 def is_finished(effect):
     """
     is finished
@@ -213,7 +227,10 @@ def slot_is_full(effect):
     """
     Slot is full. Capacity is filled by participants.
     """
-    participant_count = effect.instance.slot_participants.filter(participant__status='accepted').count()
+    participant_count = effect.instance.slot_participants.filter(
+        participant__status='accepted',
+        status__in=['registered', 'succeeded']
+    ).count()
     if effect.instance.capacity and participant_count >= effect.instance.capacity:
         return True
     return False

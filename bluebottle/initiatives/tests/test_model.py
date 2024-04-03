@@ -9,7 +9,6 @@ class InitiativeTestCase(TestCase):
 
     def test_status_changes(self):
         initiative = InitiativeFactory.create(title="Dharma initiative")
-        __import__("ipdb").set_trace()
         self.assertEqual(initiative.status, "draft")
 
         initiative.states.submit(save=True)

@@ -14,7 +14,7 @@ class CreateSlotTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_slot_time_contribution.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         slot = self.instance.slot
         if slot.start and slot.duration:
             end = slot.start + slot.duration
@@ -33,7 +33,7 @@ class CreatePreparationTimeContributionEffect(Effect):
     title = _('Create preparation time contribution')
     template = 'admin/create_preparation_time_contribution.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         activity = self.instance.activity
         if activity.preparation:
             start = now()
@@ -50,7 +50,7 @@ class UpdateSlotTimeContributionEffect(Effect):
     title = _('Update related contributions')
     template = 'admin/update_slot_time_contribution.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         slot = self.instance
         for participant in slot.accepted_participants.all():
             for contribution in participant.contributions.all():
@@ -62,7 +62,7 @@ class CreateOverallTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_period_time_contribution.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         activity = self.instance.activity
         tz = get_current_timezone()
         if activity.start and activity.start > date.today():
@@ -93,7 +93,7 @@ class CreatePeriodTimeContributionEffect(Effect):
     title = _('Create contribution')
     template = 'admin/create_period_time_contribution.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         tz = get_current_timezone()
         activity = self.instance.activity
 
@@ -137,22 +137,24 @@ class SetEndDateEffect(Effect):
     title = _('End the activity')
     template = 'admin/set_end_date.html'
 
-    def pre_save(self, **kwargs):
+    def execute(self, **kwargs):
         self.instance.deadline = date.today() - timedelta(days=1)
+        self.instance.save()
 
 
 class ClearDeadlineEffect(Effect):
     title = _('Clear the deadline of the activity')
     template = 'admin/clear_deadline.html'
 
-    def pre_save(self, **kwargs):
+    def execute(self, **kwargs):
         self.instance.deadline = None
+        self.instance.save()
 
 
 class RescheduleOverallPeriodActivityDurationsEffect(Effect):
     display = False
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         if self.instance.duration_period == 'overall':
             tz = get_current_timezone()
 
@@ -176,7 +178,7 @@ class RescheduleOverallPeriodActivityDurationsEffect(Effect):
 class RescheduleSlotDurationsEffect(Effect):
     display = False
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         if self.instance.start and self.instance.duration:
             self.instance.durations.update(
                 start=self.instance.start,
@@ -209,16 +211,12 @@ class BaseActiveDurationsTransitionEffect(Effect):
             )
         )
 
-    def pre_save(self, effects):
+    def execute(self):
         self.transitioned_durations = []
         for duration in self.instance.active_durations:
             if self.transition in duration.states.possible_transitions():
-                self.transitioned_durations.append(duration)
                 self.transition.execute(duration.states)
-
-    def post_save(self):
-        for duration in self.transitioned_durations:
-            duration.save()
+                duration.save()
 
 
 def ActiveTimeContributionsTransitionEffect(transition, conditions=None):
@@ -241,7 +239,7 @@ class CreateSlotParticipantsForSlotsEffect(Effect):
         return self.instance.activity.slot_selection == 'all' \
             and self.instance.activity.active_participants.count()
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         slot = self.instance
         activity = self.instance.activity
         if activity.slot_selection == 'all':
@@ -261,7 +259,7 @@ class CreateSlotParticipantsForParticipantsEffect(Effect):
         return self.instance.activity.slot_selection == 'all' \
             and self.instance.activity.slots.count()
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         participant = self.instance
         activity = self.instance.activity
         if activity.slot_selection == 'all':
@@ -289,7 +287,7 @@ class UnlockUnfilledSlotsEffect(Effect):
         slots = self.instance.activity.slots.filter(status='full')
         return [slot for slot in slots.all() if slot.accepted_participants.count() < slot.capacity]
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         for slot in self.slots:
             slot.states.unlock(save=True)
 
@@ -321,7 +319,8 @@ class LockFilledSlotsEffect(Effect):
             if slot.capacity and slot.accepted_participants.count() >= slot.capacity
         ]
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
+        __import__("ipdb").set_trace()
         for slot in self.slots:
             slot.states.lock(save=True)
 
@@ -339,8 +338,9 @@ class UnsetCapacityEffect(Effect):
 
     template = 'admin/unset_capacity.html'
 
-    def pre_save(self, **kwargs):
+    def execute(self, **kwargs):
         self.instance.capacity = None
+        self.instance.save()
 
     @property
     def is_valid(self):

@@ -8,8 +8,9 @@ from bluebottle.test.factory_models.organizations import OrganizationFactory, Or
 class InitiativeTestCase(TestCase):
 
     def test_status_changes(self):
-        initiative = InitiativeFactory.create(title='Dharma initiative')
-        self.assertEqual(initiative.status, 'draft')
+        initiative = InitiativeFactory.create(title="Dharma initiative")
+        __import__("ipdb").set_trace()
+        self.assertEqual(initiative.status, "draft")
 
         initiative.states.submit(save=True)
         self.assertEqual(initiative.status, 'submitted')

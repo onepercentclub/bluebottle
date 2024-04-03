@@ -9,7 +9,7 @@ class FollowActivityEffect(Effect):
 
     template = 'admin/follow_effect.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         if self.instance.user:
             follow(self.instance.user, self.instance.activity)
 
@@ -28,7 +28,7 @@ class UnFollowActivityEffect(Effect):
 
     template = 'admin/unfollow_effect.html'
 
-    def post_save(self, **kwargs):
+    def execute(self, **kwargs):
         if self.instance.user:
             unfollow(self.instance.user, self.instance.activity)
 

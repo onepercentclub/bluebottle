@@ -11,6 +11,22 @@ from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import pre_state_transition
 
+from threading import local
+
+
+effects = local()
+
+
+def get_local_effects():
+    return getattr(effects, "effects", [])
+
+
+def append_effect(effect):
+    if hasattr(effects, "effects"):
+        effects.effects = [effect] + effects.effects
+    else:
+        effects.effects = [effect]
+
 
 class TriggerManager(object):
     pass
@@ -21,8 +37,8 @@ class BoundTrigger(object):
         self.instance = instance
         self.trigger = trigger
 
-    def execute(self, previous_effects, **options):
-        return self.trigger.execute(self.instance, previous_effects, **options)
+    def execute(self):
+        return self.trigger.execute(self.instance)
 
 
 @python_2_unicode_compatible
@@ -33,18 +49,13 @@ class Trigger(object):
 
         self.effects = effects
 
-    def execute(self, instance, previous_effects, **options):
+    def execute(self, instance):
         for effect_cls in self.effects:
-            effect = effect_cls(instance, **options)
+            effect = effect_cls(instance)
 
-            if effect.is_valid and effect not in previous_effects:
-                previous_effects.append(effect)
-                effect.pre_save(effects=previous_effects)
-                if effect.post_save and effect not in instance._postponed_effects:
+            if effect.is_valid:
+                effect.execute()
 
-                    instance._postponed_effects.insert(0, effect)
-
-        return previous_effects
 
     def __str__(self):
         return str(_("Model has been changed"))
@@ -93,7 +104,7 @@ def pre_delete_trigger(sender, instance, **kwargs):
     if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
         for trigger in instance.triggers.triggers:
             if isinstance(trigger, ModelDeletedTrigger):
-                BoundTrigger(instance, trigger).execute([])
+                BoundTrigger(instance, trigger).execute()
 
 
 @receiver(post_delete)
@@ -195,9 +206,7 @@ class TriggerMixin(object):
                 if isinstance(trigger, ModelCreatedTrigger):
                     self._triggers.append(BoundTrigger(self, trigger))
 
-    def execute_triggers(self, effects=None, **options):
-        if 'user' not in options and get_current_user():
-            options['user'] = get_current_user()
+    def _execute_triggers(self):
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
                 machine = getattr(self, machine_name)
@@ -207,29 +216,19 @@ class TriggerMixin(object):
         self._check_model_changed_triggers()
         self._check_model_created_triggers()
 
-        if effects is None:
-            effects = []
-
         while self._triggers:
             trigger = self._triggers.pop()
-            trigger.execute(effects, **options)
+            trigger.execute()
 
         self._triggers = []
 
         return effects
 
     def save(self, run_triggers=True, *args, **kwargs):
-        if run_triggers:
-            self.execute_triggers()
-
         super(TriggerMixin, self).save(*args, **kwargs)
 
         if run_triggers:
-            while self._postponed_effects:
-                effect = self._postponed_effects.pop()
-                effect.post_save()
-
-            self._postponed_effects = []
+            self._execute_triggers()
 
         self._initial_values = dict(
             (field.name, getattr(self, field.name))

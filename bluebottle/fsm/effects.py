@@ -8,6 +8,7 @@ from django.template.loader import render_to_string
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.fsm.local_effects import local_effects
 
 
 @python_2_unicode_compatible
@@ -39,8 +40,8 @@ class Effect(object):
     def __eq__(self, other):
         return self.instance == other.instance and type(self) == type(other)
 
-    def pre_save(self, **kwargs):
-        pass
+    def execute(self, **kwargs):
+        local_effects.append(self)
 
     @property
     def is_valid(self):
@@ -75,7 +76,8 @@ class BaseTransitionEffect(Effect):
             self.transition in self.machine.possible_transitions()
         )
 
-    def pre_save(self, **kwargs):
+    def execute(self, **kwargs):
+        super().execute(**kwargs)
         try:
             self.transition.execute(self.machine)
         except TransitionNotPossible:
@@ -152,23 +154,19 @@ class BaseRelatedTransitionEffect(Effect):
             else:
                 self.instances = [relation]
 
-    def pre_save(self, effects):
+    def execute(self):
+        super().execute()
         for instance in self.instances:
             effect = self.transition_effect_class(
                 instance, parent=self.instance, **self.options
             )
+            if (
+                effect.is_valid
+                and self.transition in effect.machine.transitions.values()
+            ):
+                effect.execute()
 
-            if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
-                self.executed = True
-                effect.pre_save(effects=effects)
-                effects.append(effect)
-
-            instance.execute_triggers(effects=effects)
-
-    def post_save(self):
-        if self.executed:
-            for instance in self.instances:
-                instance.save()
+            instance.save()
 
     def __str__(self):
         if self.description:

@@ -464,9 +464,11 @@ def participant_slot_will_be_full(effect):
     participant_count = effect.instance.slot.slot_participants.filter(
         status="registered", participant__status="accepted"
     ).count()
-    if effect.instance.slot.capacity \
-            and effect.instance.participant.status == 'accepted' \
-            and participant_count + 1 >= effect.instance.slot.capacity:
+    if (
+        effect.instance.slot.capacity
+        and effect.instance.participant.status == "accepted"
+        and participant_count >= effect.instance.slot.capacity
+    ):
         return True
     return False
 
@@ -479,8 +481,10 @@ def participant_slot_will_be_not_full(effect):
         status='registered',
         participant__status='accepted'
     ).count()
-    if effect.instance.slot.capacity \
-            and participant_count - 1 < effect.instance.slot.capacity:
+    if (
+        effect.instance.slot.capacity
+        and participant_count < effect.instance.slot.capacity
+    ):
         return True
     return False
 

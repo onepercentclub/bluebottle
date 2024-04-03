@@ -232,6 +232,7 @@ class TransitionMessage(object):
         return []
 
     def compose_and_send(self, **base_context):
+        print("Sending", self.subject)
         for message in self.get_messages(**base_context):
             context = self.get_context(message.recipient, **base_context)
             message.save()

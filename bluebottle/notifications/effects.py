@@ -4,7 +4,10 @@ from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
+from django.db import transaction
+
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.local_effects import local_effects
 
 logger = logging.getLogger(__name__)
 
@@ -14,17 +17,16 @@ class BaseNotificationEffect(Effect):
     title = _('Send email')
     template = 'admin/notification_effect.html'
 
-    def post_save(self, **kwargs):
-        if self.options.get('send_messages', True) and self.is_valid:
+    def execute(self):
+        super().execute()
+
+        if local_effects.send_messages and self.is_valid:
             message = self.message(
                 self.instance,
                 custom_message=self.options.get('message'),
                 **self.options
             )
-            if self.message.delay and self.message.task_id:
-                message.send_delayed()
-            else:
-                message.compose_and_send()
+            transaction.on_commit(message.compose_and_send)
 
     def __repr__(self):
         return '<Effect: Send {}>'.format(self.message)

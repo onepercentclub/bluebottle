@@ -5,6 +5,7 @@ from collections import defaultdict
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.messages import get_messages
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -14,8 +15,11 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.fsm.local_effects import local_effects
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
+
+from django.db import transaction
 
 
 def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
@@ -40,76 +44,75 @@ def get_effects(effects):
     return [cls.render(grouped) for (cls, instance_cls), grouped in list(grouped_effects.items())]
 
 
+class HasEffects(Exception):
+    def __init__(self, effects):
+        self.effects = effects
+        super().__init__()
+
+
 class StateMachineAdminMixin(object):
     form = StateMachineModelForm
 
-    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+    def changeform_view(self, request, object_id, *args, **kwargs):
         """
         Determines the HttpResponse for the change_view stage.
         """
-        if (
-            object_id and
-            request.method == 'POST' and
-            not request.POST.get('post', False) and
-            '_saveasnew' not in request.POST
-        ):
-            obj = self.model.objects.get(pk=object_id)
-            ModelForm = self.get_form(request, obj)
-            form = ModelForm(request.POST, request.FILES, instance=obj)
-            # If there are form errors, then don't go to the confirm page yet.
-            if not form.is_valid():
-                return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+        try:
+            with transaction.atomic():
+                result = super().changeform_view(request, object_id, *args, **kwargs)
 
-            new_obj = self.save_form(request, form, change=True)
+                if (
+                    object_id
+                    and request.method == "POST"
+                    and not request.POST.get("post", False)
+                    and "_saveasnew" not in request.POST
+                ):
 
-            send_messages = request.POST.get('enable_messages') == 'on'
-            effects = new_obj.execute_triggers(user=request.user, send_messages=send_messages)
+                    effects = local_effects.effects
+                    rendered_effects = get_effects(effects)
+                    if effects:
+                        raise HasEffects(rendered_effects)
 
-            formsets, inline_instances = self._create_formsets(request, new_obj, change=True)
+                return result
+        except HasEffects as e:
+            rendered_effects = e.effects
 
-            for formset in formsets:
-                for form in formset:
-                    if isinstance(form.instance, TriggerMixin):
-                        if form.is_valid():
-                            form.save(commit=False)
-                            if form.instance:
-                                effects += form.instance.execute_triggers(
-                                    user=request.user,
-                                    send_messages=send_messages
-                                )
-            rendered_effects = get_effects(effects)
-            if rendered_effects:
+            storage = get_messages(request)
+            for _message in storage:
+                # This is important
+                # Without this loop `_loaded_messages` is empty
+                pass
 
-                cancel_link = reverse(
-                    'admin:{}_{}_change'.format(
-                        self.model._meta.app_label, self.model._meta.model_name
-                    ),
-                    args=(object_id, )
-                )
-                action_text = ' and '.join(
-                    str(trigger.title) for trigger in obj._triggers
-                ) or _('perform changes')
+            for _message in list(storage._loaded_messages):
+                del storage._loaded_messages[0]
 
-                context = dict(
-                    obj=obj,
-                    title=_('Are you sure'),
-                    cancel_url=cancel_link,
-                    post=request.POST,
-                    opts=self.model._meta,
-                    action_text=action_text,
-                    media=self.media,
-                    has_notifications=any(
-                        isinstance(effect, BaseNotificationEffect)
-                        for effect in effects
-                    ),
-                    effects=rendered_effects
-                )
+            effects = local_effects.effects
 
-                return TemplateResponse(
-                    request, "admin/change_effects_confirmation.html", context
-                )
+            cancel_link = reverse(
+                "admin:{}_{}_change".format(
+                    self.model._meta.app_label, self.model._meta.model_name
+                ),
+                args=(object_id,),
+            )
 
-        return super(StateMachineAdminMixin, self).changeform_view(request, object_id, form_url, extra_context)
+            context = dict(
+                obj=self.model.objects.get(pk=object_id),
+                title=_("Are you sure"),
+                cancel_url=cancel_link,
+                post=request.POST,
+                opts=self.model._meta,
+                action_text=_("perform changes"),
+                media=self.media,
+                has_notifications=any(
+                    isinstance(effect, BaseNotificationEffect) for effect in effects
+                ),
+                effects=rendered_effects,
+            )
+
+            return TemplateResponse(
+                request, "admin/change_effects_confirmation.html", context
+            )
+
 
     def save_model(self, request, obj, form, change):
         """
@@ -164,12 +167,13 @@ class StateMachineAdminMixin(object):
 
         if 'confirm' in request.POST and request.POST['confirm']:
             if form.is_valid():
-                send_messages = form.cleaned_data['send_messages']
+                if not form.cleaned_data["send_messages"]:
+                    local_effects.disable_messages()
+
                 getattr(state_machine, transition_name)(
                     user=request.user
                 )
                 try:
-                    instance.execute_triggers(user=request.user, send_messages=send_messages)
                     instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
@@ -183,39 +187,47 @@ class StateMachineAdminMixin(object):
                 return HttpResponseRedirect(link)
 
         getattr(state_machine, transition_name)()
-        effects = instance.execute_triggers(user=request.user)
-        rendered_effects = get_effects(effects)
-        cancel_link = reverse(
-            'admin:{}_{}_change'.format(
-                self.model._meta.app_label, self.model._meta.model_name
-            ),
-            args=(pk, )
-        )
-        action_text = "change the status to {}".format(transition.target.name)
 
-        context = dict(
-            self.admin_site.each_context(request),
-            title=TransitionConfirmationForm.title,
-            action=transition.field,
-            opts=self.model._meta,
-            cancel_url=cancel_link,
-            obj=instance,
-            pk=instance.pk,
-            transition=transition,
-            action_text=action_text,
-            form=form,
-            has_notifications=any(
-                isinstance(effect, BaseNotificationEffect)
-                for effect in effects
-            ),
-            source=instance.status,
-            effects=rendered_effects,
-            target=transition.target.name,
-        )
+        try:
+            with transaction.atomic():
+                instance.save()
+                effects = local_effects.effects
+                raise HasEffects(effects)
 
-        return TemplateResponse(
-            request, 'admin/change_effects_confirmation.html', context
-        )
+        except HasEffects as e:
+            effects = e.effects
+            rendered_effects = get_effects(effects)
+
+            cancel_link = reverse(
+                "admin:{}_{}_change".format(
+                    self.model._meta.app_label, self.model._meta.model_name
+                ),
+                args=(pk,),
+            )
+            action_text = "change the status to {}".format(transition.target.name)
+
+            context = dict(
+                self.admin_site.each_context(request),
+                title=TransitionConfirmationForm.title,
+                action=transition.field,
+                opts=self.model._meta,
+                cancel_url=cancel_link,
+                obj=instance,
+                pk=instance.pk,
+                transition=transition,
+                action_text=action_text,
+                form=form,
+                has_notifications=any(
+                    isinstance(effect, BaseNotificationEffect) for effect in effects
+                ),
+                source=instance.status,
+                effects=rendered_effects,
+                target=transition.target.name,
+            )
+
+            return TemplateResponse(
+                request, "admin/change_effects_confirmation.html", context
+            )
 
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()

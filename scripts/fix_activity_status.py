@@ -1,6 +1,3 @@
-from django.db.models import Q
-from django.utils.timezone import now
-
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import DateActivity
@@ -13,8 +10,7 @@ def run(*args):
             full_activities = DateActivity.objects.filter(
                 slots__status='open',
                 status__in=['full', 'succeeded'],
-            ).filter(
-                Q(registration_deadline__gt=now()) | Q(registration_deadline__isnull=True)
+                registration_deadline__isnull=True
             ).all()
 
             open_activities = DateActivity.objects.exclude(

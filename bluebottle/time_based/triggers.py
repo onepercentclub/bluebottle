@@ -441,9 +441,11 @@ def slot_is_full(effect):
     """
     Slot is full. Capacity is filled by participants.
     """
-    participant_count = effect.instance.slot_participants.filter(participant__status='accepted').count()
-    if effect.instance.capacity \
-            and participant_count >= effect.instance.capacity:
+    participant_count = effect.instance.slot_participants.filter(
+        participant__status='accepted',
+        status__in=['registered', 'succeeded']
+    ).count()
+    if effect.instance.capacity and participant_count >= effect.instance.capacity:
         return True
     return False
 

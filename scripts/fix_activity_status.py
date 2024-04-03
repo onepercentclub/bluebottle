@@ -8,9 +8,9 @@ def run(*args):
     for client in Client.objects.all():
         with LocalTenant(client):
             full_activities = DateActivity.objects.filter(
-                slots__status='open'
-            ).filter(
-                status__in=['full', 'succeeded']
+                slots__status='open',
+                status__in=['full', 'succeeded'],
+                registration_deadline__isnull=True
             ).all()
 
             open_activities = DateActivity.objects.exclude(

@@ -209,7 +209,6 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         name=_("Reject"),
         description=_("Reject this person as a participant in the activity."),
         automatic=True,
-        permission=ParticipantStateMachine.can_accept_participant,
     )
 
     restore = Transition(
@@ -278,6 +277,11 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
     def participant_has_a_slot(self):
         return self.instance.slot is not None
 
+    accepted = State(
+        _("unscheduled"),
+        "accepted",
+        _("This person takes part in the activity, but needs to be assigned a slot."),
+    )
     scheduled = State(_("scheduled"), "scheduled", _("This person is assigned a slot."))
 
     accept = Transition(
@@ -289,6 +293,19 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Accept"),
         description=_("Accept this person as a participant to the Activity."),
         passed_label=_("accepted"),
+        automatic=True,
+    )
+
+    reject = Transition(
+        [
+            ContributorStateMachine.new,
+            RegistrationParticipantStateMachine.accepted,
+            RegistrationParticipantStateMachine.succeeded,
+            scheduled,
+        ],
+        RegistrationParticipantStateMachine.rejected,
+        name=_("Reject"),
+        description=_("Reject this person as a participant in the activity."),
         automatic=True,
     )
 
@@ -305,7 +322,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         automatic=True,
     )
 
-    schedule = Transition(
+    unschedule = Transition(
         [scheduled],
         ParticipantStateMachine.accepted,
         name=_("Unschedule"),

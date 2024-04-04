@@ -242,4 +242,13 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.reject,
+                ),
+            ],
+        ),
     ]

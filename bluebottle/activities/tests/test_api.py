@@ -2260,6 +2260,13 @@ class TeamMemberListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 

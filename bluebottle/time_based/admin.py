@@ -120,6 +120,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     status_fields = (
         'initiative',
         'owner',
+        'slug',
         'highlight',
         'created',
         'updated',

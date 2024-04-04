@@ -19,7 +19,6 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
     CreatePreparationTimeContributionEffect,
-    CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect,
     CreateSlotTimeContributionEffect,
     LockFilledSlotsEffect,
@@ -893,12 +892,6 @@ class ParticipantTriggers(ContributorTriggers):
 @register(DateParticipant)
 class DateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
-        TransitionTrigger(
-            ParticipantStateMachine.initiate,
-            effects=[
-                CreateSlotParticipantsForParticipantsEffect
-            ]
-        ),
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[

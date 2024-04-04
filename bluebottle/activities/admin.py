@@ -104,7 +104,7 @@ class BaseContributorInline(TabularInlinePaginated):
     edit.short_description = _('Edit')
 
     def status_label(self, obj):
-        return not obj.states.current_state.name
+        return obj.states.current_state.name
 
 
 class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):

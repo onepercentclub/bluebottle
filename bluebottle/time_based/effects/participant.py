@@ -61,7 +61,7 @@ class CreateScheduleContributionEffect(Effect):
 
 class CreateRegistrationEffect(Effect):
     title = _('Create registration for this participant')
-    template = 'admin/create_deadline_participant.html'
+    template = 'admin/create_deadline_registration.html'
 
     def without_registration(self):
         return not self.instance.registration

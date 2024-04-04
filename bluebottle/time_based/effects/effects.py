@@ -211,28 +211,6 @@ class CreateSlotParticipantsForSlotsEffect(Effect):
                 SlotParticipant.objects.create(participant=participant, slot=slot)
 
 
-class CreateSlotParticipantsForParticipantsEffect(Effect):
-    """
-    Create register participants for all slots
-    """
-    title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_participant.html'
-
-    @property
-    def display(self):
-        return self.instance.activity.slot_selection == 'all' \
-            and self.instance.activity.slots.count()
-
-    def post_save(self, **kwargs):
-        participant = self.instance
-        activity = self.instance.activity
-        if activity.slot_selection == 'all':
-            for slot in activity.slots.all():
-                slot_participant = SlotParticipant(participant=participant, slot=slot)
-                slot_participant.execute_triggers(**self.options)
-                slot_participant.save()
-
-
 class UnlockUnfilledSlotsEffect(Effect):
     """
     Open up slots that are no longer full

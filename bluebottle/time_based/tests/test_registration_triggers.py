@@ -123,7 +123,7 @@ class RegistrationTriggerTestCase:
         self.assertEqual(self.activity.status, "open")
 
 
-class DeadlineRegistationTriggerTestCase(
+class DeadlineRegistrationTriggerTestCase(
     RegistrationTriggerTestCase, BluebottleTestCase
 ):
     activity_factory = DeadlineActivityFactory

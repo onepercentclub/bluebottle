@@ -27,7 +27,7 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -55,16 +55,28 @@ from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
-class BaseParticipantAdminInline(TabularInlinePaginated):
+class ParticipantInlineForm(ModelForm):
+
+    send_messages = BooleanField(
+        label=_('Send messages'),
+        required=False,
+        initial=True,
+    )
+
+
+class BaseParticipantAdminInline(StateMachineAdminMixin, TabularInlinePaginated):
     model = Participant
     per_page = 20
-    readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
-                       'created', 'transition_date', 'status')
+    form = ParticipantInlineForm
+    readonly_fields = ('edit', 'created', 'transition_date', 'status_label')
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
         if obj and getattr(obj, 'has_deleted_data', False):
-            fields += ('user',)
+            fields += ('user', )
         return fields
 
     raw_id_fields = ('user',)
@@ -109,6 +121,11 @@ class BaseParticipantAdminInline(TabularInlinePaginated):
                 args=(obj.id,)),
             _('Edit participant')
         )
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
 
 
 class DateParticipantAdminInline(BaseParticipantAdminInline):
@@ -333,13 +350,7 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
     raw_id_fields = BaseParticipantAdminInline.raw_id_fields
-    readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'user', 'status_label',)
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
+    fields = ('edit', 'send_messages', 'user', 'status_label',)
 
 
 class ScheduleParticipantAdminInline(DeadlineParticipantAdminInline):

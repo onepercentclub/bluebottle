@@ -69,6 +69,13 @@ class StatisticsTest(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 class DateActivityStatisticsTest(StatisticsTest):
     def setUp(self):
         super(DateActivityStatisticsTest, self).setUp()
@@ -182,8 +189,8 @@ class DateActivityStatisticsTest(StatisticsTest):
 
     def test_participant_noshow(self):
         contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
-        self.activity.states.succeed(save=True)
         contribution.states.remove(save=True)
+        self.activity.states.succeed(save=True)
 
         self.assertEqual(
             self.stats.activities_online, 0

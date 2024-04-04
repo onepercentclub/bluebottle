@@ -93,13 +93,21 @@ class BaseContributorInline(TabularInlinePaginated):
 
     template = 'admin/participant_list.html'
 
+    can_delete = True
+
     def has_change_permission(self, request, obj=None):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
 
     def edit(self, obj):
         if not obj.user and obj.activity.has_deleted_data:
             return format_html(f'<i>{_("Anonymous")}</i>')
-        url = reverse('admin:collect_collectcontributor_change', args=(obj.id,))
+        url = reverse('admin:{}_{}_change'.format(
+            obj._meta.app_label,
+            obj._meta.model_name
+        ), args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
     edit.short_description = _('Edit')
 

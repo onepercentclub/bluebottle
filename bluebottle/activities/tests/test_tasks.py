@@ -1,31 +1,28 @@
-from bluebottle.members.models import MemberPlatformSettings
 from dateutil.relativedelta import relativedelta
-from django.test.utils import override_settings
-from django.test import tag
 from django.contrib.gis.geos import Point
 from django.core import mail
+from django.test import tag
+from django.test.utils import override_settings
 from django.utils.timezone import now
-
 from django_elasticsearch_dsl.test import ESTestCase
 
-from bluebottle.activities.models import Contributor
-from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
-from bluebottle.segments.tests.factories import SegmentFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase
-
+from bluebottle.activities.models import Contributor, Contribution
 from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
+from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
+from bluebottle.segments.tests.factories import SegmentFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory, DeadlineParticipantFactory, SkillFactory,
     DateActivityFactory, DateParticipantFactory
 )
-from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
-
-from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 @override_settings(
@@ -380,6 +377,8 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
+        self.assertEqual(Contributor.objects.count(), 9)
+        self.assertEqual(Contribution.objects.count(), 7)
         self.task()
         self.assertEqual(Contributor.objects.count(), 7)
         self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
@@ -387,3 +386,4 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.assertEqual(self.activity1.deleted_successful_contributors, 1)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
+        self.assertEqual(Contribution.objects.count(), 7)

@@ -179,7 +179,6 @@ class SlotParticipantFactory(FSMModelFactory):
         model = SlotParticipant
 
     slot = factory.SubFactory(DateActivitySlotFactory)
-    participant = factory.SubFactory(DateParticipantFactory)
 
 
 class TeamSlotFactory(factory.DjangoModelFactory):

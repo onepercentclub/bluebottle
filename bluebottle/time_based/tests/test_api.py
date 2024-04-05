@@ -2192,6 +2192,16 @@ class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
             user=self.supporter2,
             activity=self.activity
         )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(
+                participant=self.participant1,
+                slot=slot
+            )
+            SlotParticipantFactory.create(
+                participant=self.participant2,
+                slot=slot
+            )
+
         self.participant2.states.withdraw(save=True)
 
         p1_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
@@ -2221,6 +2231,10 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.activity = DateActivityFactory.create()
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.participant = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(
+            participant=self.participant,
+            slot=self.slot
+        )
         self.slot_participant = self.participant.slot_participants.get(
             participant=self.participant, slot=self.slot
         )
@@ -2361,6 +2375,11 @@ class TimeContributionDetailAPIViewTestCase():
         self.participant = self.participant_factory.create(
             activity=self.activity
         )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(
+                participant=self.participant,
+                slot=slot
+            )
         self.contribution = self.participant.contributions.get()
 
         self.url = reverse(

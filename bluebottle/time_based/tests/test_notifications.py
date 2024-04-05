@@ -94,6 +94,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             activity=self.activity,
             user=self.supporter
         )
+        for slot in self.slots:
+            SlotParticipantFactory.create(
+                slot=slot,
+                participant=self.obj,
+            )
 
     def test_participant_registered_notification(self):
         self.obj = self.obj.slot_participants.first()

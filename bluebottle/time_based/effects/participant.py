@@ -104,3 +104,17 @@ class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipants
                 start=start,
             )
             contribution.save()
+
+
+class DeleteRelatedRegistrationEffect(Effect):
+    title = _('Delete related registration')
+    template = 'admin/delete_registration.html'
+
+    def post_delete(self, **kwargs):
+        self.instance.registration.delete()
+
+    def is_valid(self):
+        return self.instance.registration.participants.count() == 1
+
+    def __str__(self):
+        return _('Delete related registration')

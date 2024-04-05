@@ -53,13 +53,14 @@ class TimeBasedStateMachine(ActivityStateMachine):
         [
             full,
             ActivityStateMachine.succeeded,
-            ActivityStateMachine.expired,
+            ActivityStateMachine.expired
         ],
         ActivityStateMachine.open,
-        name=_("Unlock"),
-        passed_label=_('unlocked'),
+        name=_("Reopen"),
+        passed_label=_('reopened'),
+        automatic=True,
         description=_(
-            "The number of participants has fallen below the required number. "
+            "The number of participants has fallen below the required number or new slots have been added. "
             "People can sign up again for the task."
         )
     )

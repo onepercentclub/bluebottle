@@ -4,7 +4,10 @@ from bluebottle.activities.triggers import (
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-from bluebottle.fsm.triggers import TransitionTrigger, register, ModelChangedTrigger
+
+from bluebottle.fsm.triggers import (
+    TransitionTrigger, register, ModelDeletedTrigger
+)
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
 from bluebottle.time_based.effects.participant import (
@@ -45,9 +48,13 @@ class ParticipantTriggers(ContributorTriggers):
         return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
+        ModelDeletedTrigger(
+
+        ),
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
+                FollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,

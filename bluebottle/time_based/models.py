@@ -148,12 +148,14 @@ class TimeBasedActivity(Activity):
 
     @property
     def active_participants(self):
-        return self.participants.filter(status__in=["accepted", "new", "participating"])
+        return self.participants.filter(
+            status__in=["accepted", "new"]
+        )
 
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "succeeded", "participating"]
+            status__in=["accepted", "succeeded"]
         )
 
     @property
@@ -359,7 +361,10 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(status='registered', participant__status='accepted')
+        return self.slot_participants.filter(
+            status__in=['registered', 'new', 'succeeded'],
+            participant__status='accepted'
+        )
 
     @property
     def durations(self):
@@ -1442,7 +1447,8 @@ class PeriodicSlot(TriggerMixin, Slot):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "participating", "succeeded"]
+            status__in=["accepted", "participating", "succeeded", "new"],
+            registration__status='accepted'
         )
 
 

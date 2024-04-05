@@ -69,6 +69,13 @@ class StatisticsTest(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 class DateActivityStatisticsTest(StatisticsTest):
     def setUp(self):
         super(DateActivityStatisticsTest, self).setUp()

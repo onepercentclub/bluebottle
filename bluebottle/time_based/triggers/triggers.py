@@ -23,7 +23,7 @@ from bluebottle.time_based.effects import (
     CreateSlotTimeContributionEffect,
     LockFilledSlotsEffect,
     RescheduleSlotDurationsEffect,
-    UnlockUnfilledSlotsEffect,
+    UnlockUnfilledSlotsEffect, CreateSlotParticipantsForParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -892,6 +892,12 @@ class ParticipantTriggers(ContributorTriggers):
 @register(DateParticipant)
 class DateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
+        TransitionTrigger(
+            ParticipantStateMachine.initiate,
+            effects=[
+                CreateSlotParticipantsForParticipantsEffect
+            ]
+        ),
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[

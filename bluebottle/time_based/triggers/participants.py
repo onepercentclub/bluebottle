@@ -6,7 +6,10 @@ from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffe
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 
 from bluebottle.fsm.triggers import (
-    TransitionTrigger, register, ModelDeletedTrigger
+    TransitionTrigger,
+    register,
+    ModelDeletedTrigger,
+    ModelChangedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect

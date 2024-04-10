@@ -9,7 +9,6 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
-from bluebottle.time_based.states.registrations import RegistrationStateMachine
 from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 

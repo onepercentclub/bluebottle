@@ -224,6 +224,7 @@ class ScheduleParticipantFactory(FSMModelFactory):
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
+
 class PeriodicRegistrationFactory(FSMModelFactory):
     class Meta(object):
         model = PeriodicRegistration

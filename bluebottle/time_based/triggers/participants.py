@@ -502,6 +502,9 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 CreateRegistrationEffect,
                 NotificationEffect(ManagerParticipantAddedOwnerNotification),
                 NotificationEffect(ParticipantAddedNotification),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     DeadlineActivityStateMachine.lock,

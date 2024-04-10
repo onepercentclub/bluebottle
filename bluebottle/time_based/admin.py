@@ -518,13 +518,10 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(StateMachineAdmin):
-    list_display = ("start", "duration", "activity", "participant_count")
+    list_display = ("start", "duration", "activity", )
     raw_id_fields = ('activity',)
     readonly_fields = ("status",)
     fields = readonly_fields + ("activity", "start", "duration")
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

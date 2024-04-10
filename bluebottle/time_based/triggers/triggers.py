@@ -651,11 +651,8 @@ def activity_will_be_full(effect):
             activity.capacity <= accepted_teams
         )
 
-    if (
-        isinstance(activity, DateActivity) and
-        activity.slots.count() > 1 and
-        activity.slot_selection == 'free'
-    ):
+    if isinstance(activity, DateActivity) and activity.slot_selection == 'free':
+        # Don't trigger 'full' effects on DateActivity, slots will trigger them
         return False
 
     return (
@@ -669,13 +666,15 @@ def activity_will_not_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+    if isinstance(activity, DateActivity) and activity.slot_selection == 'free':
+        # Don't trigger 'full' effects on DateActivity, slots will trigger them
+        return False
     if activity.team_activity == 'teams':
         accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
         return (
             not activity.capacity or
             activity.capacity > accepted_teams
         )
-
     return (
         not activity.capacity or
         activity.capacity >= len(activity.accepted_participants)

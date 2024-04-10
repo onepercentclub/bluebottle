@@ -21,7 +21,7 @@ from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory, DeadlineParticipantFactory, SkillFactory,
-    DateActivityFactory, DateParticipantFactory
+    DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
 )
 
 
@@ -357,7 +357,8 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         months_ago_8 = now() - relativedelta(months=8)
         months_ago_2 = now() - relativedelta(months=2)
 
-        self.activity1 = DateActivityFactory.create()
+        self.activity1 = DateActivityFactory.create(slots=[])
+        DateActivitySlotFactory.create(activity=self.activity1, start=now() - relativedelta(months=1))
         self.activity2 = DeadlineActivityFactory.create()
         self.activity3 = DeedFactory.create()
 
@@ -378,12 +379,12 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         member_settings.retention_anonymize = 6
         member_settings.save()
         self.assertEqual(Contributor.objects.count(), 9)
-        self.assertEqual(Contribution.objects.count(), 7)
+        self.assertEqual(Contribution.objects.count(), 9)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 7)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 5)
         self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
         self.activity1.refresh_from_db()
         self.assertEqual(self.activity1.deleted_successful_contributors, 1)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 7)
+        self.assertEqual(Contribution.objects.count(), 9)

@@ -31,7 +31,6 @@ from bluebottle.time_based.states.participants import (
 )
 from bluebottle.time_based.states.registrations import (
     PeriodicRegistrationStateMachine,
-    ScheduleRegistrationStateMachine,
 )
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 

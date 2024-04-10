@@ -846,6 +846,10 @@ class ScheduleActivity(RegistrationActivity):
         blank=True,
     )
 
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(status__in=["accepted", "succeeded"])
+
     class Meta:
         verbose_name = _("Schedule activity")
         verbose_name_plural = _("Schedule activities")

@@ -31,6 +31,7 @@ from bluebottle.time_based.states.participants import (
 )
 from bluebottle.time_based.states.registrations import (
     PeriodicRegistrationStateMachine,
+    ScheduleRegistrationStateMachine,
 )
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
@@ -141,14 +142,18 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return False
-        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
         return effect.instance.activity.capacity <= accepted + 1
 
     def activity_spots_left(effect):
         """Activity has spots available after this effect"""
         if not effect.instance.activity.capacity:
             return True
-        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
         return effect.instance.activity.capacity > accepted - 1
 
     triggers = RegistrationTriggers.triggers + [
@@ -234,6 +239,15 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
         ),
         TransitionTrigger(
             RegistrationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
                     "participants",

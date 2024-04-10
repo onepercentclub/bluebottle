@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from django.db.models import ObjectDoesNotExist
 
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
@@ -43,17 +44,22 @@ class CreateScheduleContributionEffect(Effect):
     template = "admin/create_deadline_time_contribution.html"
 
     def post_save(self, **kwargs):
-        if self.instance.slot:
-            contribution = TimeContribution(
-                contributor=self.instance,
-                contribution_type=ContributionTypeChoices.period,
-                value=self.instance.slot.duration,
-                start=self.instance.slot.start,
-                end=self.instance.slot.end,
+        try:
+            self.instance.contributions.get(
+                timecontribution__contribution_type="period"
             )
+        except ObjectDoesNotExist:
+            if self.instance.slot:
+                contribution = TimeContribution(
+                    contributor=self.instance,
+                    contribution_type=ContributionTypeChoices.period,
+                    value=self.instance.slot.duration,
+                    start=self.instance.slot.start,
+                    end=self.instance.slot.end,
+                )
 
-            contribution.execute_triggers(**self.options)
-            contribution.save()
+                contribution.execute_triggers(**self.options)
+                contribution.save()
 
     def __str__(self):
         return _('Create contribution')

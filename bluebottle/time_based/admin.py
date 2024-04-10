@@ -213,14 +213,14 @@ class DateActivitySlotInline(TabularInlinePaginated):
         },
     }
     ordering = ['-start']
-    readonly_fields = ['link', 'timezone', ]
+    readonly_fields = ['link', 'timezone', 'status_label']
     fields = [
         'link',
-        'title',
         'start',
         'timezone',
         'duration',
         'is_online',
+        'status_label'
     ]
 
     extra = 0
@@ -231,11 +231,14 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
     def timezone(self, obj):
         if not obj.is_online and obj.location:
-            return f'{obj.start.astimezone(timezone(obj.location.timezone))} ({obj.location.timezone})'
+            return f'{obj.location.timezone}'
         else:
             return str(obj.start.astimezone(get_current_timezone()).tzinfo)
-
     timezone.short_description = _('Timezone')
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+    status_label.short_description = _('Status')
 
 
 @admin.register(DateActivity)

@@ -178,7 +178,6 @@ def api_user_joins_period_activity(
 def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=201, msg=None):
     if not request_user:
         request_user = supporter
-    participant = slot.activity.contributors.filter(user=supporter).get()
     test.data = {
         'data': {
             'type': 'contributors/time-based/slot-participants',
@@ -187,12 +186,6 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
                     'data': {
                         'type': 'activities/time-based/date-slots',
                         'id': slot.id
-                    },
-                },
-                'participant': {
-                    'data': {
-                        'type': 'contributors/time-based/date-participants',
-                        'id': participant.id
                     },
                 },
             }

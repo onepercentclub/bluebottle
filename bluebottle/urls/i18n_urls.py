@@ -9,7 +9,7 @@ from bluebottle.auth.views import admin_password_reset, admin_logout
 from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView  # noqa This has to be imported early so that custom urls will work
 
-from two_factor.urls import urlpatterns as tf_urls  # noqa This has to be imported early so that custom urls will work
+from two_factor.urls import urlpatterns as tf_urls
 
 
 admin.autodiscover()

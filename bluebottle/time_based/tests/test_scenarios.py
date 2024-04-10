@@ -240,16 +240,13 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.slot1.save()
         self.slot2.capacity = 2
         self.slot2.save()
+        supporter1 = BlueBottleUserFactory.create()
         supporter2 = BlueBottleUserFactory.create()
         supporter3 = BlueBottleUserFactory.create()
-        api_user_joins_activity(self, self.activity, self.supporter)
-        api_user_joins_activity(self, self.activity, supporter2)
-        api_user_joins_activity(self, self.activity, supporter3)
-        assert_participant_status(self, self.activity, self.supporter, status='new')
-        api_user_joins_slot(self, self.slot1, self.supporter)
+        api_user_joins_slot(self, self.slot1, supporter1)
         api_user_joins_slot(self, self.slot1, supporter2)
         api_user_joins_slot(self, self.slot1, supporter3)
-        api_user_joins_slot(self, self.slot2, self.supporter)
+        api_user_joins_slot(self, self.slot2, supporter1)
         api_user_joins_slot(self, self.slot2, supporter2)
         api_user_joins_slot(self, self.slot2, supporter3)
         assert_status(self, self.slot1, 'open')
@@ -259,28 +256,27 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
             'Slots should not have any accepted members yet'
         )
 
-        api_participant_transition(self, self.activity, self.supporter,
-                                   transition='accept', request_user=self.owner)
-        assert_status(
-            self, self.slot1, 'full',
-            'Slot1 should be full now.'
-        )
-        assert_status(
-            self, self.slot2, 'open',
-            'Slot2 still has spots left and should be open.'
-        )
+        api_participant_transition(
+            self, self.activity, supporter1,
+            transition='accept', request_user=self.owner)
 
-        api_participant_transition(self, self.activity, supporter2,
-                                   transition='accept', request_user=self.owner)
+        assert_status(self, self.slot1, 'full')
+        assert_status(self, self.slot2, 'open')
+
+        api_participant_transition(
+            self, self.activity, supporter2,
+            transition='accept', request_user=self.owner
+        )
         assert_status(self, self.slot1, 'full')
         assert_status(self, self.slot2, 'full')
 
         api_participant_transition(
             self, self.activity, supporter3,
-            transition='accept', request_user=self.owner)
+            transition='accept', request_user=self.owner
+        )
 
-        assert_slot_participant_status(self, self.slot1, self.supporter, 'registered')
-        assert_participant_status(self, self.activity, self.supporter, 'accepted')
+        assert_slot_participant_status(self, self.slot1, supporter1, 'registered')
+        assert_participant_status(self, self.activity, supporter1, 'accepted')
         assert_participant_status(self, self.activity, supporter2, 'accepted')
         assert_participant_status(self, self.activity, supporter3, 'accepted')
         self.assertEqual(

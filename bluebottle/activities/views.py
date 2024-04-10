@@ -272,7 +272,7 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
             queryset = queryset.filter(status__in=status.split(","))
 
         my = self.request.query_params.get("filter[my]")
-        if my and self.request.user.is_authenticated:
+        if my:
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(user=self.request.user)
             else:

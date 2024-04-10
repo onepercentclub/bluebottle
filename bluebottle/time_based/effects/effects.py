@@ -256,7 +256,7 @@ class UnlockUnfilledSlotsEffect(Effect):
             slot.states.unlock(save=True)
 
     def __repr__(self):
-        return '<Effect: Unlock unfilled slots for by {}>'.format(self.instance.activity)
+        return '<Effect: Unlock unfilled slots for {activity}>'.format(activity=self.instance.activity)
 
     def __str__(self):
         return _('Unlock unfilled slots for {activity}').format(activity=self.instance.activity)

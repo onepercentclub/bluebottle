@@ -17,14 +17,10 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    ActiveTimeContributionsTransitionEffect,
-    CreatePreparationTimeContributionEffect,
-    CreateSlotParticipantsForParticipantsEffect,
-    CreateSlotParticipantsForSlotsEffect,
-    CreateSlotTimeContributionEffect,
-    LockFilledSlotsEffect,
     RescheduleSlotDurationsEffect,
-    UnlockUnfilledSlotsEffect,
+    ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
+    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
+    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -648,6 +644,13 @@ def activity_will_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+    if activity.team_activity == 'teams':
+        accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            activity.capacity and
+            activity.capacity <= accepted_teams
+        )
+
     if (
         isinstance(activity, DateActivity) and
         activity.slots.count() > 1 and
@@ -666,6 +669,13 @@ def activity_will_not_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
+    if activity.team_activity == 'teams':
+        accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
+        return (
+            not activity.capacity or
+            activity.capacity > accepted_teams
+        )
+
     return (
         not activity.capacity or
         activity.capacity >= len(activity.accepted_participants)

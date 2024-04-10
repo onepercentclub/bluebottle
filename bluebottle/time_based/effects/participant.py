@@ -5,7 +5,16 @@ from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
-from bluebottle.time_based.models import TimeContribution, ContributionTypeChoices, DeadlineRegistration
+from bluebottle.time_based.models import (
+    DeadlineParticipant,
+    PeriodicParticipant,
+    PeriodicRegistration,
+    ScheduleParticipant,
+    ScheduleRegistration,
+    TimeContribution,
+    ContributionTypeChoices,
+    DeadlineRegistration,
+)
 
 
 class CreateTimeContributionEffect(Effect):
@@ -59,6 +68,12 @@ class CreateScheduleContributionEffect(Effect):
         return _('Create contribution')
 
 
+REGISTRATION_MAPPING = {
+    DeadlineParticipant: DeadlineRegistration,
+    ScheduleParticipant: ScheduleRegistration,
+    PeriodicParticipant: PeriodicRegistration,
+}
+
 class CreateRegistrationEffect(Effect):
     title = _('Create registration for this participant')
     template = 'admin/create_deadline_participant.html'
@@ -67,7 +82,8 @@ class CreateRegistrationEffect(Effect):
         return not self.instance.registration
 
     def post_save(self, **kwargs):
-        registration = DeadlineRegistration.objects.create(
+        model = REGISTRATION_MAPPING[self.instance.__class__]
+        registration = model.objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
             status='accepted'

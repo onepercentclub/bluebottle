@@ -328,8 +328,7 @@ class DateActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
-    model = DeadlineParticipant
+class RegistrationParticipantAdminInline(BaseParticipantAdminInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
     raw_id_fields = BaseParticipantAdminInline.raw_id_fields
@@ -342,11 +341,15 @@ class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
     status_label.short_description = _('Status')
 
 
-class ScheduleParticipantAdminInline(DeadlineParticipantAdminInline):
+class DeadlineParticipantAdminInline(RegistrationParticipantAdminInline):
+    model = DeadlineParticipant
+
+
+class ScheduleParticipantAdminInline(RegistrationParticipantAdminInline):
     model = ScheduleParticipant
 
 
-class PeriodicParticipantAdminInline(DeadlineParticipantAdminInline):
+class PeriodicParticipantAdminInline(RegistrationParticipantAdminInline):
     model = PeriodicParticipant
 
 

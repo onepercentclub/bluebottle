@@ -9,6 +9,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.models import (
     DeadlineParticipant,
 )
+from bluebottle.time_based.states.registrations import RegistrationStateMachine
 from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 
@@ -307,6 +308,38 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Reject"),
         description=_("Reject this person as a participant in the activity."),
         automatic=True,
+    )
+
+    remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.succeeded,
+            scheduled,
+        ],
+        ParticipantStateMachine.removed,
+        name=_("Remove"),
+        passed_label=_("removed"),
+        description=_("Remove this person as a participant from the activity."),
+        automatic=False,
+        permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    withdraw = Transition(
+        [
+            ContributorStateMachine.new,
+            RegistrationParticipantStateMachine.succeeded,
+            RegistrationParticipantStateMachine.accepted,
+            scheduled,
+        ],
+        RegistrationParticipantStateMachine.withdrawn,
+        name=_("Withdraw"),
+        passed_label=_("withdrawn"),
+        description=_(
+            "Cancel your participation in the activity. Participation hours will not be counted."
+        ),
+        automatic=False,
+        permission=RegistrationParticipantStateMachine.is_user,
+        hide_from_admin=True,
     )
 
     schedule = Transition(

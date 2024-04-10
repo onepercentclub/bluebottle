@@ -52,6 +52,22 @@ class CreatePreparationTimeContributionEffect(Effect):
             contribution.save()
 
 
+class CreateSchedulePreparationTimeContributionEffect(Effect):
+    title = _("Create preparation time contribution")
+    template = "admin/create_preparation_time_contribution.html"
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        if activity.preparation:
+            contribution = TimeContribution(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.preparation,
+                value=activity.preparation,
+                start=self.instance.slot.start,
+            )
+            contribution.save()
+
+
 class UpdateSlotTimeContributionEffect(Effect):
     title = _('Update related contributions')
     template = 'admin/update_slot_time_contribution.html'

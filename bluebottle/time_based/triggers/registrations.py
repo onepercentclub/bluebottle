@@ -31,8 +31,12 @@ from bluebottle.time_based.states.participants import (
 )
 from bluebottle.time_based.states.registrations import (
     PeriodicRegistrationStateMachine,
+    ScheduleRegistrationStateMachine,
 )
-from bluebottle.time_based.states.states import PeriodicActivityStateMachine
+from bluebottle.time_based.states.states import (
+    PeriodicActivityStateMachine,
+    ScheduleActivityStateMachine,
+)
 
 
 class RegistrationTriggers(TriggerManager):
@@ -135,21 +139,24 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
     ]
 
 
+def activity_no_spots_left(effect):
+    """Activity has spots available after this effect"""
+    if not effect.instance.activity.capacity:
+        return False
+    accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+    return effect.instance.activity.capacity <= accepted + 1
+
+
+def activity_spots_left(effect):
+    """Activity has spots available after this effect"""
+    if not effect.instance.activity.capacity:
+        return True
+    accepted = effect.instance.activity.registrations.filter(status="accepted").count()
+    return effect.instance.activity.capacity > accepted - 1
+
+
 @register(PeriodicRegistration)
 class PeriodicRegistrationTriggers(RegistrationTriggers):
-    def activity_no_spots_left(effect):
-        """Activity has spots available after this effect"""
-        if not effect.instance.activity.capacity:
-            return False
-        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
-        return effect.instance.activity.capacity <= accepted + 1
-
-    def activity_spots_left(effect):
-        """Activity has spots available after this effect"""
-        if not effect.instance.activity.capacity:
-            return True
-        accepted = effect.instance.activity.registrations.filter(status="accepted").count()
-        return effect.instance.activity.capacity > accepted - 1
 
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
@@ -239,6 +246,25 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                     "participants",
                     ScheduleParticipantStateMachine.accept,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -247,6 +273,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
                 ),
             ],
         ),

@@ -246,7 +246,7 @@ class ScheduleRegistationTriggerTestCase(
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(len(self.registration.participants.all()), 1)
-        self.assertEqual(self.registration.participants.get().status, "accepted")
+        self.assertEqual(self.registration.participants.get().status, "new")
 
     def test_accept(self):
         super().test_accept()
@@ -260,4 +260,4 @@ class ScheduleRegistationTriggerTestCase(
         super().test_reject()
         self.registration.states.accept(save=True)
 
-        self.assertEqual(self.registration.participants.get().status, "succeeded")
+        self.assertEqual(self.registration.participants.get().status, "accepted")

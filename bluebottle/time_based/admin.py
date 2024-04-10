@@ -525,12 +525,6 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
         'start', 'end_date', 'duration_string', 'participant_count'
     ]
 
-    def get_detail_fields(self, request, obj):
-        fields = super().get_detail_fields(request, obj) + (
-            'expertise',
-        )
-        return fields
-
     date_fields = [
         'period',
         'duration',

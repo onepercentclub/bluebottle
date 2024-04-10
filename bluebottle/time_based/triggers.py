@@ -30,6 +30,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
     UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
+    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -1561,6 +1562,25 @@ class DateParticipantTriggers(ParticipantTriggers):
             ParticipantStateMachine.initiate,
             effects=[
                 CreateSlotParticipantsForParticipantsEffect
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.accept,
+            effects=[
+                LockFilledSlotsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.reject,
+            effects=[
+                UnlockUnfilledSlotsEffect,
+            ]
+        ),
+
+        TransitionTrigger(
+            ParticipantStateMachine.remove,
+            effects=[
+                UnlockUnfilledSlotsEffect,
             ]
         ),
     ]

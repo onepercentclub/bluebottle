@@ -234,6 +234,7 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'start',
         'timezone',
         'duration',
+        'is_online',
         'status_label'
     ]
 

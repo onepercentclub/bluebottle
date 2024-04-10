@@ -20,10 +20,11 @@ def run(*args):
             ).all()
 
             if full_activities.count() > 0 or open_activities.count() > 0:
-                print("### Tenant {}".format(client.name))
+                print("### Tenant {}:".format(client.name))
             for activity in full_activities:
                 print(
-                    "Activity {title} is {status} but there are still open slots.".format(
+                    "Activity [{id}] '{title}' is {status} but there are still open slots.".format(
+                        id=activity.id,
                         title=activity.title,
                         status=activity.status
                     )
@@ -32,7 +33,8 @@ def run(*args):
                     activity.states.reopen(save=True)
             for activity in open_activities:
                 print(
-                    "Activity {title} is {status} but there aren't any open slots.".format(
+                    "Activity [{id}] '{title}' is {status} but there aren't any open slots.".format(
+                        id=activity.id,
                         title=activity.title,
                         status=activity.status
                     )

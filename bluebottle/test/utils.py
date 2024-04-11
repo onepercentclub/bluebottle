@@ -797,9 +797,12 @@ class NotificationTestCase(BluebottleTestCase):
         )
 
     def assertRecipients(self, recipients):
-        if list(recipients) != list(self.message.get_recipients()):
+        sorting = lambda user: user.id
+        actual = list(self.message.get_recipients()).sort(key=sorting)
+        expected = list(recipients).sort(key=sorting)
+        if actual != expected:
             self.fail("Recipients did not match: '{}' != '{}'".format(
-                list(recipients), list(self.message.get_recipients()))
+                actual, expected)
             )
 
     def assertSubject(self, subject):

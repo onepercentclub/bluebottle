@@ -122,6 +122,7 @@ class ScheduleActivityFactory(TimeBasedFactory):
     is_online = False
     location = factory.SubFactory(GeolocationFactory)
     expertise = factory.SubFactory(SkillFactory)
+    duration = timedelta(hours=2)
 
     start = (now() - timedelta(weeks=2)).date()
 

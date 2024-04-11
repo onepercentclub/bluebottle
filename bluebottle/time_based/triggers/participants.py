@@ -106,6 +106,8 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.withdraw,
             effects=[
+                NotificationEffect(UserParticipantWithdrewNotification),
+                NotificationEffect(ManagerParticipantWithdrewNotification),
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
@@ -127,6 +129,8 @@ class ParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.remove,
             effects=[
+                NotificationEffect(UserParticipantRemovedNotification),
+                NotificationEffect(ManagerParticipantRemovedNotification),
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
@@ -260,8 +264,6 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.withdraw,
             effects=[
-                NotificationEffect(UserParticipantWithdrewNotification),
-                NotificationEffect(ManagerParticipantWithdrewNotification),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,
@@ -328,8 +330,6 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.remove,
             effects=[
-                NotificationEffect(UserParticipantRemovedNotification),
-                NotificationEffect(ManagerParticipantRemovedNotification),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.unlock,

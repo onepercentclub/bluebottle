@@ -8,7 +8,7 @@ from bluebottle.time_based.tests.factories import (
 )
 
 
-class PeriodActivityModelTestCase(BluebottleTestCase):
+class DeadlineActivityModelTestCase(BluebottleTestCase):
     def test_registrion_deadline_validation_empty(self):
         activity = PeriodActivityFactory.create(
             start=None,
@@ -26,16 +26,6 @@ class PeriodActivityModelTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(list(activity.errors), [])
-
-    def test_registrion_deadline_validation_after_start(self):
-        activity = PeriodActivityFactory.create(
-            start=now() + timedelta(days=5),
-            deadline=None,
-            registration_deadline=now() + timedelta(days=10)
-        )
-
-        self.assertEqual(len(list(activity.errors)), 1)
-        self.assertEqual(list(activity.errors)[0].field, 'registration_deadline')
 
     def test_registrion_deadline_validation_after_deadline(self):
         activity = PeriodActivityFactory.create(

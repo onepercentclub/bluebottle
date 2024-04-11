@@ -15,7 +15,9 @@ from bluebottle.time_based.tests.factories import (
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
-    ScheduleSlotFactory, ScheduleRegistrationFactory,
+    ScheduleSlotFactory,
+    ScheduleRegistrationFactory,
+    ScheduleActivityFactory,
 )
 
 
@@ -61,7 +63,9 @@ class ParticipantTriggerTestCase:
 
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.value, self.activity.preparation)
-        self.assertEqual(preparation_contribution.status, "succeeded")
+        self.assertEqual(
+            preparation_contribution.status, self.expected_contribution_status
+        )
 
     def test_withdraw(self):
         self.test_initial()
@@ -104,7 +108,9 @@ class ParticipantTriggerTestCase:
         self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
+        self.assertEqual(
+            preparation_contribution.status, self.expected_contribution_status
+        )
 
     def test_remove(self):
         self.test_initial()
@@ -152,7 +158,9 @@ class ParticipantTriggerTestCase:
         self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
+        self.assertEqual(
+            preparation_contribution.status, self.expected_contribution_status
+        )
 
     def test_reject(self):
         self.test_initial()
@@ -186,7 +194,9 @@ class ParticipantTriggerTestCase:
         self.assertEqual(contribution.status, self.expected_contribution_status)
 
         preparation_contribution = self.participant.preparation_contributions.first()
-        self.assertEqual(preparation_contribution.status, "succeeded")
+        self.assertEqual(
+            preparation_contribution.status, self.expected_contribution_status
+        )
 
 
 class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
@@ -278,12 +288,17 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    activity_factory = PeriodicActivityFactory
-    expected_status = "accepted"
+    activity_factory = ScheduleActivityFactory
+    expected_status = "scheduled"
+    expected_contribution_status = "new"
 
     def register(self):
         self.registration = ScheduleRegistrationFactory.create(activity=self.activity)
         self.participant = self.registration.participants.first()
+        self.participant.slot = ScheduleSlotFactory.create(
+            activity=self.activity, duration=self.activity.duration
+        )
+        self.participant.save()
 
     def test_initial(self):
         super().test_initial()
@@ -291,11 +306,3 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.registration.refresh_from_db()
 
         self.assertEqual(self.registration.status, "accepted")
-
-    def test_schedule(self):
-        self.test_initial()
-
-        self.partcipant.slot = ScheduleSlotFactory.create()
-        self.participants.save()
-
-        self.assertEqual(self.participant.status, "scheduled")

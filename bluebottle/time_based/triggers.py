@@ -805,7 +805,31 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
+            ActivitySlotStateMachine.start,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.lock,
+                    conditions=[
+                        all_slots_will_be_full,
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             ActivitySlotStateMachine.unlock,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    TimeBasedStateMachine.unlock,
+                    conditions=[
+                        activity_has_status_full
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            ActivitySlotStateMachine.reopen,
             effects=[
                 RelatedTransitionEffect(
                     'activity',

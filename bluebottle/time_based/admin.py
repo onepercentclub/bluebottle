@@ -289,8 +289,8 @@ class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant
     verbose_name = _("Participation")
     verbose_name_plural = _("Participation")
-    readonly_fields = BaseContributorInline.readonly_fields + ['start', 'end']
-    fields = ['edit', 'start', 'end', 'user', 'status_label']
+    readonly_fields = ['edit', 'start', 'end', 'status_label']
+    fields = readonly_fields
 
     def start(self, obj):
         return obj.slot.start.date()
@@ -497,13 +497,25 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "duration", "participant_count", "status_label")
+    readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
     fields = readonly_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
     participant_count.short_description = _('Participants')
+
+    def start_date(self, obj):
+        return obj.start.date()
+    start_date.short_description = _('Start')
+
+    def end_date(self, obj):
+        return obj.end.date()
+    end_date.short_description = _('End')
+
+    def duration_readable(self, obj):
+        return get_human_readable_duration(str(obj.duration)).lower()
+    duration_readable.short_description = _('Hours')
 
     def current_status(self, obj):
         return obj.states.current_state.name

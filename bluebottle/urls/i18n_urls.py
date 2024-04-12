@@ -1,4 +1,4 @@
-from django.conf.urls import include, url	
+from django.conf.urls import include, url
 from django.contrib import admin
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView
 from django.urls import reverse_lazy

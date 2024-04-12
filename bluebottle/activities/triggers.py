@@ -1,6 +1,5 @@
 from bluebottle.activities.effects import (
-    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect,
-)
+    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect, )
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
@@ -125,7 +124,13 @@ class ActivityTriggers(TriggerManager):
 
 
 class ContributorTriggers(TriggerManager):
-    triggers = []
+    triggers = [
+        ModelDeletedTrigger(
+            effects=[
+                DeleteRelatedContributionsEffect
+            ]
+        )
+    ]
 
 
 class ContributionTriggers(TriggerManager):

@@ -7,7 +7,7 @@ from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, T
 from django.http import HttpResponseRedirect
 from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import resolve, reverse
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
@@ -23,7 +23,7 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin,
+    ContributorChildAdmin, BaseContributorInline,
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
@@ -39,7 +39,6 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     DeadlineRegistration,
-    Participant,
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
@@ -55,68 +54,10 @@ from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
-class BaseParticipantAdminInline(TabularInlinePaginated):
-    model = Participant
-    per_page = 20
-    readonly_fields = ('contributor_date', 'motivation', 'document', 'edit',
-                       'created', 'transition_date', 'status')
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = self.readonly_fields
-        if obj and getattr(obj, 'has_deleted_data', False):
-            fields += ('user',)
-        return fields
-
-    raw_id_fields = ('user',)
-    extra = 0
-    ordering = ['-created']
-    template = 'admin/participant_list.html'
-
-    def get_template(self):
-        pass
-
-    def can_edit(self, obj):
-        return obj and obj.id and obj.status in ['open', 'succeeded', 'full', 'submitted']
-
-    def has_delete_permission(self, request, obj=None):
-        return self.can_edit(obj)
-
-    def has_add_permission(self, request, obj=None):
-        activity = self.get_parent_object_from_request(request)
-        return self.can_edit(activity)
-
-    def get_parent_object_from_request(self, request):
-        """
-        Returns the parent object from the request or None.
-
-        Note that this only works for Inlines, because the `parent_model`
-        is not available in the regular admin.ModelAdmin as an attribute.
-        """
-        resolved = resolve(request.path_info)
-        if 'object_id' in resolved.kwargs:
-            return self.parent_model.objects.get(pk=resolved.kwargs['object_id'])
-        return None
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        if not obj.id:
-            return '-'
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse(
-                'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
-                args=(obj.id,)),
-            _('Edit participant')
-        )
-
-
-class DateParticipantAdminInline(BaseParticipantAdminInline):
+class DateParticipantAdminInline(BaseContributorInline):
     model = DateParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
-    readonly_fields = BaseParticipantAdminInline.readonly_fields
-    fields = ('edit', 'user', 'status')
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
@@ -179,6 +120,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     status_fields = (
         'initiative',
         'owner',
+        'slug',
         'highlight',
         'created',
         'updated',
@@ -331,33 +273,28 @@ class DateActivityAdmin(TimeBasedAdmin):
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
 
-class DeadlineParticipantAdminInline(BaseParticipantAdminInline):
+class DeadlineParticipantAdminInline(BaseContributorInline):
     model = DeadlineParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
-    raw_id_fields = BaseParticipantAdminInline.raw_id_fields
-    readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'user', 'status_label',)
-
-    def status_label(self, obj):
-        return obj.states.current_state.name
-
-    status_label.short_description = _('Status')
 
 
-class ScheduleParticipantAdminInline(DeadlineParticipantAdminInline):
+class ScheduleParticipantAdminInline(BaseContributorInline):
     model = ScheduleParticipant
 
 
-class PeriodicParticipantAdminInline(DeadlineParticipantAdminInline):
+class PeriodicParticipantAdminInline(BaseContributorInline):
+    verbose_name = _("Participation")
+    verbose_name_plural = _("Participation")
     model = PeriodicParticipant
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
-    verbose_name = _("Registration")
-    verbose_name_plural = _("Registrations")
-    readonly_fields = ('status', 'edit')
-    fields = ('edit', 'user', 'status',)
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
+
+    readonly_fields = ('status_label', 'edit')
+    fields = ('edit', 'send_messages', 'user', 'status_label',)
     raw_id_fields = ('user',)
 
     def edit(self, obj):
@@ -370,8 +307,16 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
             reverse(
                 'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
                 args=(obj.id,)),
-            _('Edit registration')
+            _('Edit')
         )
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
 
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):
@@ -537,7 +482,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "duration", "participant_count")
+    readonly_fields = ("edit", "start", "end", "duration", "participant_count", "status_label")
     fields = readonly_fields
 
     def participant_count(self, obj):
@@ -560,8 +505,11 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
                 "admin:time_based_{}_change".format(obj.__class__.__name__.lower()),
                 args=(obj.id,),
             ),
-            _("Edit slot"),
+            _("Edit"),
         )
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
 
 
 @admin.register(PeriodicActivity)
@@ -1021,7 +969,7 @@ class TimeContributionInlineAdmin(admin.TabularInline):
             reverse(
                 'admin:time_based_{}_change'.format(obj.__class__.__name__.lower()),
                 args=(obj.id,)),
-            _('Edit duration')
+            _('Edit')
         )
 
 

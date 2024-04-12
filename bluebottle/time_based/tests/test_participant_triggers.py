@@ -69,8 +69,18 @@ class ParticipantTriggerTestCase:
 
     def test_withdraw(self):
         self.test_initial()
+        mail.outbox = []
         self.participant.states.withdraw(save=True)
         self.assertEqual(self.participant.status, "withdrawn")
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have withdrawn from the activity "{}"'.format(self.activity.title),
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has withdrawn from your activity "{}"'.format(self.activity.title),
+        )
 
         self.assertFalse(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -104,8 +114,22 @@ class ParticipantTriggerTestCase:
 
     def test_remove(self):
         self.test_initial()
+        mail.outbox = []
         self.participant.states.remove(save=True)
         self.assertEqual(self.participant.status, "removed")
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been removed as participant for the activity "{}"'.format(
+                self.activity.title
+            )
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A participant has been removed from your activity "{}"'.format(
+                self.activity.title
+            )
+        )
 
         self.assertFalse(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -120,6 +144,7 @@ class ParticipantTriggerTestCase:
 
     def test_readd(self):
         self.test_remove()
+        mail.outbox = []
         self.participant.states.readd(save=True)
         self.assertEqual(self.participant.status, self.expected_status)
 

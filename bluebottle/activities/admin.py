@@ -7,7 +7,7 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_admin_inline_paginator.admin import PaginationFormSetBase
+from django_admin_inline_paginator.admin import PaginationFormSetBase, TabularInlinePaginated
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
@@ -79,7 +79,40 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
         )
         return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
-    contributor_link.short_description = _('Edit contributor')
+    contributor_link.short_description = _('Edit')
+
+
+class BaseContributorInline(TabularInlinePaginated):
+    model = Contributor
+    raw_id_fields = ['user']
+    readonly_fields = ['edit', 'created', 'status_label']
+    fields = ['edit', 'created', 'user', 'status_label']
+    extra = 0
+    per_page = 20
+    ordering = ['-created']
+
+    template = 'admin/participant_list.html'
+
+    can_delete = True
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    def edit(self, obj):
+        if not obj.user and obj.activity.has_deleted_data:
+            return format_html(f'<i>{_("Anonymous")}</i>')
+        url = reverse('admin:{}_{}_change'.format(
+            obj._meta.app_label,
+            obj._meta.model_name
+        ), args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
+    edit.short_description = _('Edit')
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
 
 
 class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
@@ -653,7 +686,7 @@ class ActivityInlineChild(StackedPolymorphicInline.Child):
         )
         return format_html(u"<a href='{}'>{}</a>", url, obj.title or '-empty-')
 
-    activity_link.short_description = _('Edit activity')
+    activity_link.short_description = _('Edit')
 
 
 class ActivityAdminInline(StackedPolymorphicInline):
@@ -724,3 +757,16 @@ class ActivityAdminInline(StackedPolymorphicInline):
         PaginationFormSet.request = request
         PaginationFormSet.per_page = self.per_page
         return PaginationFormSet
+
+
+class BaseContributionInline(admin.TabularInline):
+    model = Contribution
+    extra = 0
+    readonly_fields = ('status_label', 'start',)
+    fields = readonly_fields + ('value',)
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def status_label(self, obj):
+        return not obj.states.current_state.name

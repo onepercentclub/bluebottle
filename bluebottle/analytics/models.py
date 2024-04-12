@@ -35,10 +35,6 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         max_length=10
     )
 
-    plausible_embed_link = models.CharField(
-        _("Plausibe embed link"), null=True, blank=True, max_length=256
-    )
-
     class Meta(object):
         verbose_name_plural = _('reporting platform settings')
         verbose_name = _('reporting platform settings')

@@ -5,6 +5,7 @@ from bluebottle.time_based.models import DateActivity
 
 def run(*args):
     fix = 'fix' in args
+    errors = False
     for client in Client.objects.all():
         with LocalTenant(client):
             full_activities = DateActivity.objects.filter(
@@ -20,6 +21,7 @@ def run(*args):
             ).all()
 
             if full_activities.count() > 0 or open_activities.count() > 0:
+                errors = True
                 print("### Tenant {}:".format(client.name))
             for activity in full_activities:
                 print(
@@ -41,5 +43,7 @@ def run(*args):
                 )
                 if fix:
                     activity.states.lock(save=True)
-    if not fix:
+    if not fix and errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")
+    if not errors:
+        print("No errors found! 🎉🎉🎉")

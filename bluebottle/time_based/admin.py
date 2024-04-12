@@ -281,12 +281,22 @@ class DeadlineParticipantAdminInline(BaseContributorInline):
 
 class ScheduleParticipantAdminInline(BaseContributorInline):
     model = ScheduleParticipant
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
+    model = PeriodicParticipant
     verbose_name = _("Participation")
     verbose_name_plural = _("Participation")
-    model = PeriodicParticipant
+    readonly_fields = BaseContributorInline.readonly_fields + ['start', 'end']
+    fields = ['edit', 'start', 'end', 'user', 'status_label']
+
+    def start(self, obj):
+        return obj.slot.start.date()
+
+    def end(self, obj):
+        return obj.slot.end.date()
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
@@ -294,7 +304,7 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Participants")
 
     readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'send_messages', 'user', 'status_label',)
+    fields = ('edit', 'user', 'status_label',)
     raw_id_fields = ('user',)
 
     def edit(self, obj):
@@ -312,6 +322,11 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    can_delete = True
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -413,7 +428,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets
@@ -498,6 +513,11 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     def has_add_permission(self, request, obj):
         return False
 
+    def has_delete_permission(self, request, obj):
+        return True
+
+    can_delete = True
+
     def edit(self, obj):
         return format_html(
             '<a href="{}">{}</a>',
@@ -543,7 +563,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets

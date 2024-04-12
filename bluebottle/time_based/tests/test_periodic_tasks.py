@@ -299,6 +299,44 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, 'succeeded')
 
+    def test_finished_started_slot(self):
+
+        activity = DateActivityFactory.create(
+            slot_selection='all',
+            owner=BlueBottleUserFactory.create(),
+            review=False,
+            status='open',
+            slots=[]
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            capacity=5,
+            duration=timedelta(hours=3)
+        )
+
+        participant = DateParticipantFactory.create(
+            activity=activity,
+            status='accepted'
+        )
+
+        SlotParticipantFactory.create(
+            slot=slot,
+            participant=participant
+        )
+
+        self.run_task(now() + timedelta(days=1))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'running')
+        self.assertEqual(activity.status, 'full')
+
+        self.run_task(now() + timedelta(days=2))
+        activity.refresh_from_db()
+        slot.refresh_from_db()
+        self.assertEqual(slot.status, 'finished')
+        self.assertEqual(activity.status, 'succeeded')
+
     def test_finished_expired_slot(self):
 
         activity = DateActivityFactory.create(
@@ -318,7 +356,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         activity.refresh_from_db()
         slot.refresh_from_db()
         self.assertEqual(slot.status, 'running')
-        self.assertEqual(activity.status, 'open')
+        self.assertEqual(activity.status, 'full')
         self.run_task(now() + timedelta(days=2))
         activity.refresh_from_db()
         slot.refresh_from_db()

@@ -1,5 +1,6 @@
 {% extends "base.mail.html" %}
 {% load i18n %}
+{% load message_url %}
 
 {% block content %}
     <p>
@@ -9,11 +10,11 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
+<a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
 {% endblock %}`
 
 {% block end_message %}
     {% blocktrans %}
-        Go to <a href="{{ opt_out_link }}">your profile</a> to opt-out.
+    Go to <a href="{% message_url opt_out_link %}">your profile</a> to opt-out.
     {% endblocktrans %}
 {% endblock %}

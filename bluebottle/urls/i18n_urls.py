@@ -1,9 +1,9 @@
+from django.conf.urls import include, url	
+from django.contrib import admin
 from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfirmView
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 
-from django.conf.urls import include, url	
-from django.contrib import admin
 from bluebottle.views import HomeView
 from bluebottle.auth.views import admin_password_reset, admin_logout
 from bluebottle.bluebottle_dashboard.views import locked_out

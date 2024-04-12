@@ -281,12 +281,22 @@ class DeadlineParticipantAdminInline(BaseContributorInline):
 
 class ScheduleParticipantAdminInline(BaseContributorInline):
     model = ScheduleParticipant
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
+    model = PeriodicParticipant
     verbose_name = _("Participation")
     verbose_name_plural = _("Participation")
-    model = PeriodicParticipant
+    readonly_fields = ['edit', 'start', 'end', 'status_label']
+    fields = readonly_fields
+
+    def start(self, obj):
+        return obj.slot.start.date()
+
+    def end(self, obj):
+        return obj.slot.end.date()
 
 
 class BaseRegistrationAdminInline(TabularInlinePaginated):
@@ -294,7 +304,7 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Participants")
 
     readonly_fields = ('status_label', 'edit')
-    fields = ('edit', 'send_messages', 'user', 'status_label',)
+    fields = ('edit', 'user', 'status_label',)
     raw_id_fields = ('user',)
 
     def edit(self, obj):
@@ -312,6 +322,11 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+    can_delete = True
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -413,7 +428,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets
@@ -482,13 +497,25 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     model = PeriodicSlot
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
-    readonly_fields = ("edit", "start", "end", "duration", "participant_count", "status_label")
+    readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
     fields = readonly_fields
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
     participant_count.short_description = _('Participants')
+
+    def start_date(self, obj):
+        return obj.start.date()
+    start_date.short_description = _('Start')
+
+    def end_date(self, obj):
+        return obj.end.date()
+    end_date.short_description = _('End')
+
+    def duration_readable(self, obj):
+        return get_human_readable_duration(str(obj.duration)).lower()
+    duration_readable.short_description = _('Hours')
 
     def current_status(self, obj):
         return obj.states.current_state.name
@@ -497,6 +524,11 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
 
     def has_add_permission(self, request, obj):
         return False
+
+    def has_delete_permission(self, request, obj):
+        return True
+
+    can_delete = True
 
     def edit(self, obj):
         return format_html(
@@ -543,7 +575,7 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
-        fieldsets.insert(1, (
+        fieldsets.insert(2, (
             _('Date & time'), {'fields': self.date_fields}
         ))
         return fieldsets

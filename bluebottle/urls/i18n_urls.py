@@ -11,6 +11,7 @@ from bluebottle.looker.dashboard_views import \
     LookerEmbedView  # noqa This has to be imported early so that custom urls will work
 from bluebottle.views import HomeView
 
+
 admin.autodiscover()
 
 

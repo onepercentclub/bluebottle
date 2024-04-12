@@ -11,6 +11,7 @@ from bluebottle.looker.dashboard_views import LookerEmbedView  # noqa This has t
 
 from two_factor.urls import urlpatterns as tf_urls
 
+
 admin.autodiscover()
 
 
@@ -35,7 +36,6 @@ urlpatterns = [
     url(r'^admin/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         PasswordResetConfirmView.as_view(),
         {'post_reset_redirect': '/admin'}, name='password_reset_confirm'),
-    url(r'^admin/exportdb/', include('bluebottle.exports.urls')),
     url(r'^admin/', admin.site.urls),
 
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),

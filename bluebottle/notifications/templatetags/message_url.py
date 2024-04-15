@@ -20,7 +20,7 @@ def message_url(context, path=""):
 
     return ParseResult(
         "https",
-        tenant_url(),
+        parsed.netloc or tenant_url(),
         parsed.path,
         parsed.params,
         urlencode(query),

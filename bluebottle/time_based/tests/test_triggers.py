@@ -484,6 +484,86 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             mail.outbox[0].body
         )
 
+    def test_lock_on_start(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateParticipantFactory.create(activity=self.activity)
+        second = DateParticipantFactory.create(activity=self.activity)
+        third = DateParticipantFactory.create(activity=self.activity)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot2)
+        SlotParticipantFactory.create(participant=second, slot=self.slot2)
+        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+
+        self.slot.states.start(save=True)
+        self.assertStatus(self.slot, 'running')
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'full')
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.activity, 'full')
+
+    def test_start_single_slot(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateParticipantFactory.create(activity=self.activity)
+        SlotParticipantFactory.create(participant=first, slot=self.slot)
+
+        self.slot.states.start(save=True)
+        self.assertStatus(self.slot, 'running')
+        self.assertStatus(self.activity, 'full')
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.slot, 'finished')
+        self.assertStatus(self.activity, 'succeeded')
+
+    def test_cancel_and_restore(self):
+        self.activity.slot_selection = 'free'
+        self.activity.save()
+
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateParticipantFactory.create(activity=self.activity)
+        second = DateParticipantFactory.create(activity=self.activity)
+        third = DateParticipantFactory.create(activity=self.activity)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot)
+
+        SlotParticipantFactory.create(participant=first, slot=self.slot2)
+        SlotParticipantFactory.create(participant=second, slot=self.slot2)
+        SlotParticipantFactory.create(participant=third, slot=self.slot2)
+
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.slot, 'open')
+        self.assertStatus(self.activity, 'open')
+
+        self.slot.states.cancel(save=True)
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.slot, 'cancelled')
+        self.assertStatus(self.activity, 'full')
+
+        self.slot.states.reopen(save=True)
+        self.assertStatus(self.slot2, 'full')
+        self.assertStatus(self.slot, 'open')
+        self.assertStatus(self.activity, 'open')
+
 
 class ParticipantTriggerTestCase(object):
 

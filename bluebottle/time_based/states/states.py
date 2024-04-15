@@ -114,6 +114,21 @@ class TimeBasedStateMachine(ActivityStateMachine):
         permission=ActivityStateMachine.is_owner,
     )
 
+    expire = Transition(
+        [
+            ActivityStateMachine.open,
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.succeeded,
+            full
+        ],
+        ActivityStateMachine.expired,
+        name=_('Expire'),
+        description=_(
+            "The activity will be cancelled because no one has signed up for the registration deadline."
+        ),
+        automatic=True,
+    )
+
     submit = None
 
     publish = Transition(

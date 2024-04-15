@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 from django.db.models import Count
+from django.utils.timezone import now
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.time_based.models import DateActivity, DateActivitySlot
+from bluebottle.time_based.models import DateActivity, DateActivitySlot, TimeContribution
 
 
 def get_open_activities():
@@ -39,10 +42,27 @@ def get_open_slots():
     ).annotate(participants=Count('slot_participants')).all()
 
 
+def get_succeeded_contributions():
+    return TimeContribution.objects.filter(
+        created__gt=now() - timedelta(days=60),
+        status='succeeded',
+        slot_participant__status__in=['removed', 'withdrawn', 'failed'],
+    ).all()
+
+
+def get_failed_contributions():
+    return TimeContribution.objects.filter(
+        created__gt=now() - timedelta(days=60),
+        status__in=['failed', 'new'],
+        slot_participant__status__in=['succeeded', 'registered'],
+        slot_participant__slot__status='finished'
+    ).all()
+
+
 def run(*args):
     fix = 'fix' in args
     errors = False
-    for client in Client.objects.all():
+    for client in Client.objects.filter(schema_name='deloitte_uk').all():
         with (LocalTenant(client)):
 
             full_activities = get_full_activities()
@@ -51,11 +71,16 @@ def run(*args):
             full_slots = get_full_slots()
             open_slots = get_open_slots()
 
+            succeeded_contributions = get_succeeded_contributions()
+            failed_contributions = get_failed_contributions()
+
             if (
                 full_activities.count() > 0 or
                 open_activities.count() > 0 or
                 full_slots.count() > 0 or
-                open_slots.count() > 0
+                open_slots.count() > 0 or
+                succeeded_contributions.count() > 0 or
+                failed_contributions.count() > 0
             ):
                 errors = True
                 print("### Tenant {}:".format(client.name))
@@ -91,7 +116,7 @@ def run(*args):
                     )
                 )
                 if fix:
-                    slot.states.reopen(save=True)
+                    slot.states.unlock(save=True)
 
             for slot in open_slots:
                 print(
@@ -104,7 +129,44 @@ def run(*args):
                     )
                 )
                 if fix:
-                    slot.states.reopen(save=True)
+                    slot.states.lock(save=True)
+
+            if succeeded_contributions.count() > 0:
+                print(
+                    "Succeeded contributions with failed participants: "
+                    "{count}".format(count=succeeded_contributions.count())
+                )
+
+            for contribution in succeeded_contributions:
+                print(
+                    "Contribution [{id}] for activity '{activity}' is succeeded, "
+                    "but the participant is {status}.".format(
+                        id=contribution.id,
+                        activity=contribution.slot_participant.slot.activity.title,
+                        status=contribution.slot_participant.status
+                    )
+                )
+                if fix:
+                    contribution.states.failed(save=True)
+
+            if failed_contributions.count() > 0:
+                print(
+                    "Failed contributions with successful participants: "
+                    "{count}".format(count=failed_contributions.count())
+                )
+
+            for contribution in failed_contributions:
+                print(
+                    "Contribution [{id}] for activity '{activity}' is {status}, "
+                    "but the participant is {participant_status}.".format(
+                        id=contribution.id,
+                        status=contribution.status,
+                        activity=contribution.slot_participant.slot.activity.title,
+                        participant_status=contribution.slot_participant.status
+                    )
+                )
+                if fix:
+                    contribution.states.failed(save=True)
 
     if not fix and errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

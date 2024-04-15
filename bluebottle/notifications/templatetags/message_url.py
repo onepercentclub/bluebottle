@@ -19,5 +19,10 @@ def message_url(context, path=""):
         query["utm_campaign"] = context["utm_campaign"]
 
     return ParseResult(
-        "https", tenant_url(), path, parsed.params, urlencode(query), parsed.fragment
+        "https",
+        tenant_url(),
+        parsed.path,
+        parsed.params,
+        urlencode(query),
+        parsed.fragment,
     ).geturl()

@@ -13,7 +13,6 @@ from bluebottle.test.utils import (
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
 )
 from bluebottle.time_based.tests.steps import (
     api_user_joins_activity,
@@ -21,9 +20,7 @@ from bluebottle.time_based.tests.steps import (
     api_participant_transition,
     assert_status,
     assert_slot_participant_status,
-    assert_not_slot_participant,
     api_user_joins_slot,
-    api_slot_participant_transition,
     api_create_date_activity,
     api_create_date_slot,
     api_update_date_slot,
@@ -180,14 +177,33 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_user_joins_slot(self, slot=self.slot3, supporter=self.supporter)
         api_user_joins_slot(self, slot=self.slot4, supporter=self.supporter)
 
-        assert_participant_status(self, self.activity, self.supporter, status='accepted')
-        assert_status(self, model=self.activity, status='full')
-        api_participant_transition(self, self.activity, self.supporter, transition='withdraw')
-        assert_participant_status(self, self.activity, self.supporter, status='withdrawn')
-        assert_status(self, model=self.activity, status='open')
-        api_participant_transition(self, self.activity, self.supporter, transition='reapply')
-        assert_participant_status(self, self.activity, self.supporter, status='accepted')
-        assert_status(self, model=self.activity, status='full')
+        assert_participant_status(
+            self, self.activity, self.supporter, status="accepted"
+        )
+        assert_status(self, model=self.activity, status="full")
+        api_participant_transition(
+            self,
+            self.activity,
+            self.supporter,
+            transition="reject",
+            request_user=self.activity.owner,
+        )
+        assert_participant_status(
+            self, self.activity, self.supporter, status="rejected"
+        )
+        assert_status(self, model=self.activity, status="open")
+        api_participant_transition(
+            self,
+            self.activity,
+            self.supporter,
+            transition="accept",
+            request_user=self.activity.owner,
+        )
+        assert_participant_status(
+            self, self.activity, self.supporter, status="accepted"
+        )
+        assert_status(self, model=self.activity, status="full")
+
         api_participant_transition(self, self.activity, self.supporter,
                                    transition='remove', request_user=self.owner)
         assert_participant_status(self, self.activity, self.supporter, status='rejected')

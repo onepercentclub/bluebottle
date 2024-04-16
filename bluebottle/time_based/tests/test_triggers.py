@@ -715,6 +715,11 @@ class ParticipantTriggerTestCase(object):
         self.participants = self.participant_factory.create_batch(
             self.activity.capacity, activity=self.activity
         )
+        for participant in self.participants:
+            SlotParticipantFactory.create(
+                slot=self.activity.slots.get(), participant=participant
+            )
+
         self.activity.refresh_from_db()
 
         self.assertEqual(self.activity.status, "full")
@@ -794,90 +799,6 @@ class ParticipantTriggerTestCase(object):
             self.review_activity.followers.filter(user=participant.user).exists()
         )
 
-    def test_withdraw(self):
-        self.participants = self.participant_factory.create_batch(
-            self.activity.capacity,
-            activity=self.activity,
-            user=BlueBottleUserFactory.create(),
-        )
-        for participant in self.participants:
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
-            )
-
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, "full")
-        mail.outbox = []
-
-        self.participants[0].states.withdraw(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "open")
-
-        self.assertEqual(
-            self.participants[0]
-            .contributions.exclude(timecontribution__contribution_type="preparation")
-            .get()
-            .status,
-            "failed",
-        )
-
-        self.assertFalse(
-            self.activity.followers.filter(user=self.participants[0].user).exists()
-        )
-
-        subjects = [mail.subject for mail in mail.outbox]
-        self.assertTrue(
-            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
-        )
-        self.assertTrue(
-            f'A participant has withdrawn from your activity "{self.activity.title}"'
-            in subjects
-        )
-
-    def test_reapply_cancelled(self):
-        self.participants = self.participant_factory.create_batch(
-            self.activity.capacity,
-            activity=self.activity,
-            user=BlueBottleUserFactory.create(),
-        )
-        for participant in self.participants:
-            SlotParticipantFactory.create(
-                slot=self.activity.slots.get(), participant=participant
-            )
-
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, "full")
-        mail.outbox = []
-
-        self.participants[0].states.withdraw(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "open")
-
-        self.assertEqual(
-            self.participants[0]
-            .contributions.exclude(timecontribution__contribution_type="preparation")
-            .get()
-            .status,
-            "failed",
-        )
-
-        self.assertFalse(
-            self.activity.followers.filter(user=self.participants[0].user).exists()
-        )
-
-        subjects = [mail.subject for mail in mail.outbox]
-        self.assertTrue(
-            f'You have withdrawn from the activity "{self.activity.title}"' in subjects
-        )
-        self.assertTrue(
-            f'A participant has withdrawn from your activity "{self.activity.title}"'
-            in subjects
-        )
-
 
 class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
     factory = DateActivityFactory
@@ -905,9 +826,9 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "full")
 
-        self.assertEqual(self.participants[0].contributions.first().status, "succeeded")
+        self.assertEqual(self.participants[0].contributions.first().status, "new")
 
-        self.assertEqual(self.participants[0].contributions.last().status, "new")
+        self.assertEqual(self.participants[0].contributions.last().status, "succeeded")
         self.assertTrue(
             self.activity.followers.filter(user=self.participants[0].user).exists()
         )
@@ -974,21 +895,6 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         prep = participant.preparation_contributions.first()
         self.assertEqual(prep.value, self.review_activity.preparation)
         self.assertEqual(prep.status, "new")
-
-    def test_reapply(self):
-        self.test_withdraw()
-
-        self.participants[0].states.reapply(save=True)
-
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'full')
-        self.assertEqual(
-            self.participants[0].contributions.
-            exclude(timecontribution__contribution_type='preparation').get().status,
-            'new'
-        )
-        self.assertTrue(self.activity.followers.filter(user=self.participants[0].user).exists())
 
 
 @mock.patch.object(ParticipantJoinedNotification, "delay", 2)

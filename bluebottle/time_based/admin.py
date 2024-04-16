@@ -850,7 +850,12 @@ class DateSlotAdmin(SlotAdmin):
 
     date_hierarchy = 'start'
     list_display = [
-        '__str__', 'start', 'activity_link', 'attendee_limit', 'participants', 'duration_string', 'required',
+        "__str__",
+        "start",
+        "activity_link",
+        "attendee_limit",
+        "participants",
+        "duration_string",
     ]
     list_filter = [
         'status',

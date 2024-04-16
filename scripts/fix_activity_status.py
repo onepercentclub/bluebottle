@@ -52,17 +52,18 @@ def get_succeeded_contributions():
 
 def get_failed_contributions():
     return TimeContribution.objects.filter(
-        created__gt=now() - timedelta(days=60),
+        start__year=2023,
         status__in=['failed', 'new'],
         slot_participant__status__in=['succeeded', 'registered'],
-        slot_participant__slot__status='finished'
+        slot_participant__slot__status='finished',
+        slot_participant__participant__status__in=['succeeded', 'registered', 'accepted'],
     ).all()
 
 
 def run(*args):
     fix = 'fix' in args
     errors = False
-    for client in Client.objects.filter(schema_name='deloitte_uk').all():
+    for client in Client.objects.all():
         with (LocalTenant(client)):
 
             full_activities = get_full_activities()
@@ -137,17 +138,17 @@ def run(*args):
                     "{count}".format(count=succeeded_contributions.count())
                 )
 
-            for contribution in succeeded_contributions:
-                print(
-                    "Contribution [{id}] for activity '{activity}' is succeeded, "
-                    "but the participant is {status}.".format(
-                        id=contribution.id,
-                        activity=contribution.slot_participant.slot.activity.title,
-                        status=contribution.slot_participant.status
-                    )
-                )
-                if fix:
-                    contribution.states.failed(save=True)
+            # for contribution in succeeded_contributions:
+            #     print(
+            #         "Contribution [{id}] for activity '{activity}' is succeeded, "
+            #         "but the participant is {status}.".format(
+            #             id=contribution.id,
+            #             activity=contribution.slot_participant.slot.activity.title,
+            #             status=contribution.slot_participant.status
+            #         )
+            #     )
+            #     if fix:
+            #         contribution.states.failed(save=True)
 
             if failed_contributions.count() > 0:
                 print(
@@ -155,18 +156,18 @@ def run(*args):
                     "{count}".format(count=failed_contributions.count())
                 )
 
-            for contribution in failed_contributions:
-                print(
-                    "Contribution [{id}] for activity '{activity}' is {status}, "
-                    "but the participant is {participant_status}.".format(
-                        id=contribution.id,
-                        status=contribution.status,
-                        activity=contribution.slot_participant.slot.activity.title,
-                        participant_status=contribution.slot_participant.status
-                    )
-                )
-                if fix:
-                    contribution.states.failed(save=True)
+            # for contribution in failed_contributions:
+            #     print(
+            #         "Contribution [{id}] for activity '{activity}' is {status}, "
+            #         "but the participant is {participant_status}.".format(
+            #             id=contribution.id,
+            #             status=contribution.status,
+            #             activity=contribution.slot_participant.slot.activity.title,
+            #             participant_status=contribution.slot_participant.status
+            #         )
+            #     )
+            #     if fix:
+            #         contribution.states.failed(save=True)
 
     if not fix and errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

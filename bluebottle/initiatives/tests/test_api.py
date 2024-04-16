@@ -29,8 +29,12 @@ from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFacto
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
-    DeadlineActivityFactory, DateActivityFactory, DeadlineParticipantFactory, DateParticipantFactory,
-    DateActivitySlotFactory
+    DeadlineActivityFactory,
+    DateActivityFactory,
+    DeadlineParticipantFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -433,12 +437,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         )
         date_activity.states.publish(save=True)
-        DateActivitySlotFactory.create(
+        slot = DateActivitySlotFactory.create(
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        DateParticipantFactory.create_batch(3, activity=date_activity)
-        DateParticipantFactory.create_batch(3, activity=date_activity, status='withdrawn')
+        for participant in DateParticipantFactory.create_batch(
+            3, activity=date_activity
+        ):
+            SlotParticipantFactory.create(participant=participant, slot=slot)
+        for participant in DateParticipantFactory.create_batch(
+            3, activity=date_activity, status="rejected"
+        ):
+            SlotParticipantFactory.create(participant=participant, slot=slot)
 
         funding = FundingFactory.create(
             initiative=self.initiative,

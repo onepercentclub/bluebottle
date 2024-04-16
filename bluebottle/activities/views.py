@@ -29,6 +29,7 @@ from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import (
     DateParticipant,
+    ScheduleParticipant,
     DeadlineParticipant,
     PeriodicParticipant,
 )
@@ -151,6 +152,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
                 Donor,
                 DateParticipant,
                 PeriodicParticipant,
+                ScheduleParticipant,
                 DeedParticipant,
                 DeadlineParticipant,
                 CollectContributor,

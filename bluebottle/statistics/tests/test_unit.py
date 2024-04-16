@@ -18,8 +18,10 @@ from bluebottle.statistics.statistics import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory
+    DateActivityFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -142,7 +144,12 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        participant = DateParticipantFactory.create(
+            activity=self.activity, user=self.other_user
+        )
+        SlotParticipantFactory.create(
+            slot=self.activity.slots.get(), participant=participant
+        )
         self.activity.states.succeed(save=True)
 
         self.assertEqual(
@@ -627,16 +634,17 @@ class StatisticsDateTest(BluebottleTestCase):
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )
-            DateActivitySlotFactory.create(
+            slot = DateActivitySlotFactory.create(
                 activity=activity,
                 start=past_date,
                 duration=datetime.timedelta(minutes=60),
             )
 
-            DateParticipantFactory.create(
+            participant = DateParticipantFactory.create(
                 activity=activity,
                 user=other_user
             )
+            SlotParticipantFactory.create(participant=participant, slot=slot)
             activity.states.publish(save=True)
 
     def test_all(self):

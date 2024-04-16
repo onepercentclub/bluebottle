@@ -32,8 +32,13 @@ from bluebottle.test.factory_models.geo import (
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DeadlineActivityFactory, DateParticipantFactory,
-    DeadlineParticipantFactory, DateActivitySlotFactory, SkillFactory
+    DateActivityFactory,
+    DeadlineActivityFactory,
+    DateParticipantFactory,
+    DeadlineParticipantFactory,
+    DateActivitySlotFactory,
+    SkillFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -1534,7 +1539,7 @@ class ContributorListAPITestCase(BluebottleTestCase):
         participants = DateParticipantFactory.create_batch(2, user=self.user)
         for participant in participants:
             slot = DateActivitySlotFactory.create(activity=participant.activity)
-            slot.slot_participants.all()[0].states.remove(save=True)
+            SlotParticipantFactory.create(slot=slot, participant=participant)
 
         DeadlineParticipantFactory.create_batch(2, user=self.user)
         DonorFactory.create_batch(2, user=self.user, status='succeeded')
@@ -1542,7 +1547,12 @@ class ContributorListAPITestCase(BluebottleTestCase):
         DeedParticipantFactory.create_batch(2, user=self.user)
         CollectContributorFactory.create_batch(2, user=self.user)
 
-        DateParticipantFactory.create()
+        participant = DateParticipantFactory.create(user=self.user)
+        SlotParticipantFactory.create(
+            slot=participant.activity.slots.first(), participant=participant
+        )
+        participant.states.reject(save=True)
+
         DeadlineParticipantFactory.create()
         DonorFactory.create()
         DeedParticipantFactory.create()

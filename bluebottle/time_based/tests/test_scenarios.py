@@ -19,6 +19,8 @@ from bluebottle.time_based.tests.steps import (
     assert_participant_status,
     api_participant_transition,
     assert_status,
+    assert_not_slot_participant,
+    api_slot_participant_transition,
     assert_slot_participant_status,
     api_user_joins_slot,
     api_create_date_activity,

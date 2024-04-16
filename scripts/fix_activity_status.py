@@ -1,7 +1,4 @@
-from datetime import timedelta
-
 from django.db.models import Count
-from django.utils.timezone import now
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -42,21 +39,43 @@ def get_open_slots():
     ).annotate(participants=Count('slot_participants')).all()
 
 
-def get_succeeded_contributions():
+def get_succeeded_date_contributions():
     return TimeContribution.objects.filter(
-        created__gt=now() - timedelta(days=60),
+        start__year=2024,
         status='succeeded',
-        slot_participant__status__in=['removed', 'withdrawn', 'failed'],
+        slot_participant__status__in=['removed', 'withdrawn'],
     ).all()
 
 
-def get_failed_contributions():
+def get_succeeded_period_contributions():
     return TimeContribution.objects.filter(
-        start__year=2023,
+        start__year=2024,
+        status='succeeded',
+        contributor__status__in=['removed', 'withdrawn'],
+        contribution_type='period',
+    ).all()
+
+
+def get_failed_date_contributions():
+    return TimeContribution.objects.filter(
+        start__year=2024,
         status__in=['failed', 'new'],
         slot_participant__status__in=['succeeded', 'registered'],
         slot_participant__slot__status='finished',
-        slot_participant__participant__status__in=['succeeded', 'registered', 'accepted'],
+        contributor__status__in=['succeeded', 'registered', 'accepted'],
+        contributor__activity__status__in=['open', 'full', 'succeeded'],
+    ).all()
+
+
+def get_failed_period_contributions():
+    return TimeContribution.objects.filter(
+        start__year=2023,
+        status__in=['failed', 'new'],
+        contribution_type='period',
+        contributor__status__in=['succeeded', 'registered', 'accepted'],
+        contributor__activity__status__in=['open', 'full', 'succeeded'],
+    ).exclude(
+        contributor__team__status=['rejected', 'deleted', 'withdrawn']
     ).all()
 
 
@@ -72,8 +91,11 @@ def run(*args):
             full_slots = get_full_slots()
             open_slots = get_open_slots()
 
-            succeeded_contributions = get_succeeded_contributions()
-            failed_contributions = get_failed_contributions()
+            succeeded_contributions = get_succeeded_date_contributions()
+            failed_contributions = get_failed_date_contributions()
+
+            succeeded_period_contributions = get_succeeded_period_contributions()
+            failed_period_contributions = get_failed_period_contributions()
 
             if (
                 full_activities.count() > 0 or
@@ -81,7 +103,9 @@ def run(*args):
                 full_slots.count() > 0 or
                 open_slots.count() > 0 or
                 succeeded_contributions.count() > 0 or
-                failed_contributions.count() > 0
+                failed_contributions.count() > 0 or
+                succeeded_period_contributions.count() > 0 or
+                failed_period_contributions.count() > 0
             ):
                 errors = True
                 print("### Tenant {}:".format(client.name))
@@ -134,7 +158,7 @@ def run(*args):
 
             if succeeded_contributions.count() > 0:
                 print(
-                    "Succeeded contributions with failed participants: "
+                    "Succeeded contributions with failed date participants: "
                     "{count}".format(count=succeeded_contributions.count())
                 )
 
@@ -149,6 +173,12 @@ def run(*args):
             #     )
             #     if fix:
             #         contribution.states.failed(save=True)
+
+            if succeeded_period_contributions.count() > 0:
+                print(
+                    "Succeeded contributions with failed period participants: "
+                    "{count}".format(count=succeeded_period_contributions.count())
+                )
 
             if failed_contributions.count() > 0:
                 print(
@@ -168,6 +198,12 @@ def run(*args):
             #     )
             #     if fix:
             #         contribution.states.failed(save=True)
+
+            if failed_period_contributions.count() > 0:
+                print(
+                    "Failed contributions with successful period participants: "
+                    "{count}".format(count=failed_period_contributions.count())
+                )
 
     if not fix and errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

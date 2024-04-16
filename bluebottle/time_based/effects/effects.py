@@ -10,7 +10,6 @@ from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import (
     ContributionTypeChoices,
     PeriodicSlot,
-    SlotParticipant,
     TimeContribution,
     PeriodicParticipant
 )

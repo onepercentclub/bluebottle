@@ -5,12 +5,30 @@ from django.utils.timezone import now
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
-from bluebottle.time_based.tests.steps import api_user_joins_activity, assert_participant_status, \
-    api_participant_transition, assert_status, assert_slot_participant_status, assert_not_slot_participant, \
-    api_user_joins_slot, api_slot_participant_transition, api_create_date_activity, api_create_date_slot, \
-    api_update_date_slot, api_activity_transition
+from bluebottle.test.utils import (
+    BluebottleTestCase,
+    JSONAPITestClient,
+    BluebottleAdminTestCase,
+)
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
+)
+from bluebottle.time_based.tests.steps import (
+    api_user_joins_activity,
+    assert_participant_status,
+    api_participant_transition,
+    assert_status,
+    assert_slot_participant_status,
+    assert_not_slot_participant,
+    api_user_joins_slot,
+    api_slot_participant_transition,
+    api_create_date_activity,
+    api_create_date_slot,
+    api_update_date_slot,
+    api_activity_transition,
+)
 
 
 class DateActivityScenarioTestCase(BluebottleAdminTestCase):
@@ -26,7 +44,6 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         activity_data = {
             'title': 'Beach clean-up Katwijk',
             'review': False,
-            'slot_selection': 'free',
             'registration-deadline': str(date.today() + timedelta(days=1)),
             'capacity': 10,
             'description': 'We will clean up the beach south of Katwijk'
@@ -90,11 +107,18 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
         self.slot3 = DateActivitySlotFactory.create(activity=self.activity)
         self.slot4 = DateActivitySlotFactory.create(activity=self.activity)
+
         self.client = JSONAPITestClient()
 
     def test_user_joins_activity(self):
         api_user_joins_activity(self, self.activity, self.supporter)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
+
+        api_user_joins_slot(self, slot=self.slot1, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot2, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot3, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot4, supporter=self.supporter)
+
         assert_slot_participant_status(self, self.slot1, self.supporter, status='registered')
         assert_slot_participant_status(self, self.slot2, self.supporter, status='registered')
         assert_slot_participant_status(self, self.slot3, self.supporter, status='registered')
@@ -137,9 +161,25 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, self.activity, self.supporter, status='rejected')
 
     def test_user_fills_activity(self):
-        self.activity.capacity = 1
-        self.activity.save()
+        self.slot1.capacity = 1
+        self.slot1.save()
+
+        self.slot2.capacity = 1
+        self.slot2.save()
+
+        self.slot3.capacity = 1
+        self.slot3.save()
+
+        self.slot4.capacity = 1
+        self.slot4.save()
+
         api_user_joins_activity(self, self.activity, self.supporter)
+
+        api_user_joins_slot(self, slot=self.slot1, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot2, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot3, supporter=self.supporter)
+        api_user_joins_slot(self, slot=self.slot4, supporter=self.supporter)
+
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         assert_status(self, model=self.activity, status='full')
         api_participant_transition(self, self.activity, self.supporter, transition='withdraw')
@@ -154,7 +194,6 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_status(self, model=self.activity, status='open')
 
     def test_user_selects_slots(self):
-        self.activity.slot_selection = 'free'
         self.activity.save()
         api_user_joins_activity(self, self.activity, self.supporter)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
@@ -167,7 +206,6 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_slot_participant_status(self, self.slot2, self.supporter, status='registered')
 
     def test_user_fills_slot(self):
-        self.activity.slot_selection = 'free'
         self.activity.save()
         self.slot1.capacity = 1
         self.slot1.save()
@@ -205,7 +243,6 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         api_user_joins_slot(self, self.slot2, self.supporter, status_code=400)
 
     def test_slot_reopens(self):
-        self.activity.slot_selection = 'free'
         self.activity.save()
         self.slot1.capacity = 1
         self.slot1.save()
@@ -233,7 +270,6 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_status(self, self.slot1, 'open')
 
     def test_accept_more_users_to_slot_review_activity(self):
-        self.activity.slot_selection = 'free'
         self.activity.review = True
         self.activity.save()
         self.slot1.capacity = 1

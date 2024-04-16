@@ -76,7 +76,6 @@ class DateActivityFactory(TimeBasedFactory):
     class Meta:
         model = DateActivity
 
-    slot_selection = 'all'
     expertise = factory.SubFactory(SkillFactory)
 
     slots = factory.RelatedFactory(

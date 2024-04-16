@@ -770,32 +770,6 @@ class SlotTimeFilter(SimpleListFilter):
             return queryset
 
 
-class RequiredSlotFilter(SimpleListFilter):
-    title = _('Slot required')
-    parameter_name = 'required'
-
-    def lookups(self, request, model_admin):
-        return [
-            ('all', _('All')),
-            ('required', _('Required')),
-            ('optional', _('Optional')),
-        ]
-
-    def queryset(self, request, queryset):
-        if self.value() == 'all':
-            return queryset
-        elif self.value() == 'required':
-            return queryset.filter(
-                activity__slot_selection='all'
-            )
-        elif self.value() == 'optional':
-            return queryset.filter(
-                activity__slot_selection='free'
-            )
-        else:
-            return queryset
-
-
 class SlotDuplicateForm(forms.Form):
     INTERVAL_CHOICES = (
         ('day', _('day')),
@@ -874,11 +848,6 @@ class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
 
-    def lookup_allowed(self, lookup, value):
-        if lookup == 'activity__slot_selection__exact':
-            return True
-        return super(DateSlotAdmin, self).lookup_allowed(lookup, value)
-
     date_hierarchy = 'start'
     list_display = [
         '__str__', 'start', 'activity_link', 'attendee_limit', 'participants', 'duration_string', 'required',
@@ -886,7 +855,6 @@ class DateSlotAdmin(SlotAdmin):
     list_filter = [
         'status',
         SlotTimeFilter,
-        RequiredSlotFilter,
     ]
 
     def attendee_limit(self, obj):
@@ -896,13 +864,6 @@ class DateSlotAdmin(SlotAdmin):
         return obj.accepted_participants.count()
 
     participants.short_description = _('Accepted participants')
-
-    def required(self, obj):
-        if obj.activity.slot_selection == 'free':
-            return _('Optional')
-        return _('Required')
-
-    required.short_description = _('Required')
 
     detail_fields = SlotAdmin.detail_fields + [
         'title',

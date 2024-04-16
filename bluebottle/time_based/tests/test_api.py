@@ -502,9 +502,15 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertTransitionInData('cancel', self.data)
 
     def test_get_contributors(self):
-        self.participant_factory.create_batch(4, activity=self.activity)
+        participants = self.participant_factory.create_batch(4, activity=self.activity)
         withdrawn = self.participant_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
+
+        for participant in [withdrawn] + participants:
+            SlotParticipantFactory.create(
+                participant=participant, slot=self.activity.slots.get()
+            )
+
         response = self.client.get(self.url, user=self.activity.owner)
 
         self.response_data = response.json()['data']
@@ -527,9 +533,15 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors_anonymous(self):
-        self.participant_factory.create_batch(4, activity=self.activity)
+        participants = self.participant_factory.create_batch(4, activity=self.activity)
         withdrawn = self.participant_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
+
+        for participant in [withdrawn] + participants:
+            SlotParticipantFactory.create(
+                participant=participant, slot=self.activity.slots.get()
+            )
+
         response = self.client.get(self.url)
 
         self.response_data = response.json()['data']
@@ -552,13 +564,18 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors_participant(self):
-        self.participant_factory.create_batch(4, activity=self.activity)
+        participants = self.participant_factory.create_batch(4, activity=self.activity)
         withdrawn = self.participant_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
-        participant = self.participant_factory.create(activity=self.activity)
-        participant.states.withdraw(save=True)
+        used_participant = self.participant_factory.create(activity=self.activity)
+        used_participant.states.withdraw(save=True)
 
-        response = self.client.get(self.url, user=participant.user)
+        for participant in [withdrawn, used_participant] + participants:
+            SlotParticipantFactory.create(
+                participant=participant, slot=self.activity.slots.get()
+            )
+
+        response = self.client.get(self.url, user=used_participant.user)
 
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -569,8 +586,8 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
         response = self.client.get(
-            self.response_data['relationships']['contributors']['links']['related'],
-            user=participant.user
+            self.response_data["relationships"]["contributors"]["links"]["related"],
+            user=used_participant.user,
         )
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -966,7 +983,7 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
         self.url = reverse('date-slot-list')
-        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.activity = DateActivityFactory.create(slots=[])
 
         self.data = {
             'data': {
@@ -2036,7 +2053,7 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         super().setUp()
 
         self.client = JSONAPITestClient()
-        self.activity = self.factory.create(slot_selection='free')
+        self.activity = self.factory.create()
         DateActivitySlotFactory.create(activity=self.activity)
 
         self.participants = []
@@ -2080,7 +2097,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
-        self.activity = DateActivityFactory.create(review=False, slot_selection='free')
+        self.activity = DateActivityFactory.create(review=False)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.participant = DateParticipantFactory.create(activity=self.activity)
 
@@ -2188,10 +2205,13 @@ class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
             user=self.supporter1,
             activity=self.activity
         )
+        SlotParticipantFactory.create(slot=self.slot, participant=self.participant1)
+
         self.participant2 = DateParticipantFactory.create(
             user=self.supporter2,
             activity=self.activity
         )
+        SlotParticipantFactory.create(slot=self.slot, participant=self.participant2)
         self.participant2.states.withdraw(save=True)
 
         p1_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
@@ -2221,7 +2241,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.activity = DateActivityFactory.create()
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.participant = DateParticipantFactory.create(activity=self.activity)
-        self.slot_participant = self.participant.slot_participants.get(
+        self.slot_participant = SlotParticipantFactory.create(
             participant=self.participant, slot=self.slot
         )
 
@@ -2359,7 +2379,10 @@ class TimeContributionDetailAPIViewTestCase():
         self.client = JSONAPITestClient()
         self.activity = self.factory.create()
         self.participant = self.participant_factory.create(
-            activity=self.activity
+            activity=self.activity,
+        )
+        SlotParticipantFactory.create(
+            slot=self.activity.slots.first(), participant=self.participant
         )
         self.contribution = self.participant.contributions.get()
 
@@ -2553,7 +2576,12 @@ class DateIcalTestCase(BluebottleTestCase):
         self.unsigned_url = reverse('slot-ical', args=(self.activity.pk,))
 
     def test_get_applied_to_all(self):
-        DateParticipantFactory.create(activity=self.activity, user=self.user)
+        participant = DateParticipantFactory.create(
+            activity=self.activity, user=self.user
+        )
+        for slot in self.activity.slots.all():
+            SlotParticipantFactory.create(slot=slot, participant=participant)
+
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -2594,8 +2622,6 @@ class DateIcalTestCase(BluebottleTestCase):
             self.assertEqual(ical_event['organizer'], 'MAILTO:{}'.format(self.activity.owner.email))
 
     def test_get_applied_to_first(self):
-        self.activity.slot_selection = 'free'
-        self.activity.save()
         participant = DateParticipantFactory.create(activity=self.activity, user=self.user)
         SlotParticipantFactory.create(slot=self.slots[0], participant=participant)
 
@@ -2679,7 +2705,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
     def setUp(self):
         self.client = JSONAPITestClient()
 
-        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.activity = DateActivityFactory.create(slots=[])
         self.slots = DateActivitySlotFactory.create_batch(5, activity=self.activity)
 
         self.participant = DateParticipantFactory.create(activity=self.activity)
@@ -2723,7 +2749,7 @@ class SlotRelatedParticipantListTestCase(APITestCase):
     def setUp(self):
         self.client = JSONAPITestClient()
 
-        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.activity = DateActivityFactory.create(slots=[])
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
 
         self.participants = DateParticipantFactory.create_batch(5, activity=self.activity)

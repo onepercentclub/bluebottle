@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load message_url}
+
 <table class="donation-table twelve columns">
     <tr class="donation-table-row">
         <th class="donation-title">
@@ -6,7 +8,7 @@
         </th>
         <th class="donation-amount">{{ obj.amount }}</th>
         <tr class="donation-location">
-            <td><a href="{{obj.activity.get_absolute_url}}">{{obj.activity.title}}</a></td>
+            <td><a href="{% message_url obj.activity.get_absolute_url %}">{{obj.activity.title}}</a></td>
         </tr>
     </tr>
     <tr class="donation-table-row">

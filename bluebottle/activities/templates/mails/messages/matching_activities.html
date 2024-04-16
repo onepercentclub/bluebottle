@@ -1,5 +1,6 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
+{% load message_url}
 
 {% block message %}
     <p>
@@ -12,7 +13,7 @@
 
     {% if profile_incomplete%}
         <p class="matching-activities-profile-incomplete">
-            <a class="matching-activities-profile-link" href="{{site}}/member/profile">
+            <a class="matching-activities-profile-link" href="{% message_url 'member/profile' %}">
                 {% trans "Complete your profile" %}
             </a>
             {% trans ", so that we can select even more relevant activities for you." %}
@@ -31,7 +32,7 @@
                     <td class="column">
                         <div class="matching-item p-0">
                             <label class="matching-item-title">
-                                <a class="matching-item-link" href="{{activity.url}}?utm_source=matching_email&utm_medium=email&utm_campaign=matching">{{activity.title}}</a>
+                                <a class="matching-item-link" href="{% message_url activity.url %}">{{activity.title}}</a>
                             </label>
                             <div class="matching-item-location">
                                 {% if activity.is_online %}

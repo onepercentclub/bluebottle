@@ -1,5 +1,6 @@
 {% extends "base.mail.html" %}
 {% load i18n %}
+{% load message_url}
 
 {% block content %}
 {% blocktrans context 'email' %}
@@ -13,7 +14,7 @@ Nice! You just received a new donation. Why not head over to your campaign page 
 {% endblock %}
 
 {% block action %}
-    <a href="{{ obj.activity.get_absolute_url }}" class="action-email">
-       {% trans 'Go to campaign' context 'email' %}:
+    <a href="{% message_url obj.activity.get_absolute_url %}" class="action-email">
+       {% trans 'Go to campaign' context 'email' %}
     </a>
 {% endblock %}`

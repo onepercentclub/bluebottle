@@ -18,9 +18,11 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     RescheduleSlotDurationsEffect,
-    ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect,
+    ActiveTimeContributionsTransitionEffect,
+    CreateSlotTimeContributionEffect,
     CreatePreparationTimeContributionEffect,
-    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect, CreateSlotParticipantsForParticipantsEffect,
+    LockFilledSlotsEffect,
+    UnlockUnfilledSlotsEffect,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -60,11 +62,7 @@ def is_full(effect):
     """
     the activity is full
     """
-    if (
-        isinstance(effect.instance, DateActivity) and
-        effect.instance.slots.count() > 1 and
-        effect.instance.slot_selection == 'free'
-    ):
+    if isinstance(effect.instance, DateActivity) and effect.instance.slots.count() > 1:
         return False
 
     return (
@@ -280,7 +278,6 @@ class ActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             ActivitySlotStateMachine.initiate,
             effects=[
-                CreateSlotParticipantsForSlotsEffect,
                 TransitionEffect(
                     ActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
@@ -668,7 +665,7 @@ def activity_will_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
-    if isinstance(activity, DateActivity) and activity.slot_selection == 'free':
+    if isinstance(activity, DateActivity):
         # Don't trigger 'full' effects on DateActivity, slots will trigger them
         return False
 
@@ -690,15 +687,10 @@ def activity_will_not_be_full(effect):
     the activity is full
     """
     activity = effect.instance.activity
-    if isinstance(activity, DateActivity) and activity.slot_selection == 'free':
+    if isinstance(activity, DateActivity):
         # Don't trigger 'full' effects on DateActivity, slots will trigger them
         return False
-    if activity.team_activity == 'teams':
-        accepted_teams = activity.teams.filter(status__in=['open', 'running', 'finished']).count()
-        return (
-            not activity.capacity or
-            activity.capacity > accepted_teams
-        )
+
     return (
         not activity.capacity or
         activity.capacity >= len(activity.accepted_participants)
@@ -926,12 +918,6 @@ class ParticipantTriggers(ContributorTriggers):
 @register(DateParticipant)
 class DateParticipantTriggers(ParticipantTriggers):
     triggers = ParticipantTriggers.triggers + [
-        TransitionTrigger(
-            ParticipantStateMachine.initiate,
-            effects=[
-                CreateSlotParticipantsForParticipantsEffect
-            ]
-        ),
         TransitionTrigger(
             ParticipantStateMachine.accept,
             effects=[

@@ -123,11 +123,12 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def test_reminder_single_date(self):
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=eng,
             created=now() - timedelta(days=10)
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 1)
@@ -155,10 +156,11 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def test_no_reminder_almost_started(self):
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=eng,
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
         mail.outbox = []
         self.run_task(self.almost)
         self.assertEqual(len(mail.outbox), 0)
@@ -170,11 +172,12 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.slot.save()
 
         eng = BlueBottleUserFactory.create(primary_language='en')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=eng,
             created=now() - timedelta(days=10)
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(
@@ -198,11 +201,12 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     def test_reminder_single_date_dutch(self):
         nld = BlueBottleUserFactory.create(primary_language='nl')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=nld,
             created=now() - timedelta(days=10)
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(
@@ -233,11 +237,14 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             duration=timedelta(hours=3)
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=eng,
             created=now() - timedelta(days=10)
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
+        SlotParticipantFactory.create(participant=participant, slot=self.slot2)
+
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 1)
@@ -269,8 +276,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             duration=timedelta(hours=3),
             status='open'
         )
-        self.activity.slot_selection = 'free'
-        self.activity.save()
 
         participant = DateParticipantFactory.create(
             activity=self.activity,
@@ -300,7 +305,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
     def test_finished_started_slot(self):
 
         activity = DateActivityFactory.create(
-            slot_selection='all',
             owner=BlueBottleUserFactory.create(),
             review=False,
             status='open',
@@ -338,7 +342,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
     def test_finished_expired_slot(self):
 
         activity = DateActivityFactory.create(
-            slot_selection='all',
             owner=BlueBottleUserFactory.create(),
             status='open',
             slots=[]
@@ -371,11 +374,13 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             duration=timedelta(hours=3)
         )
         eng = BlueBottleUserFactory.create(primary_language='eng')
-        DateParticipantFactory.create(
+        participant = DateParticipantFactory.create(
             activity=self.activity,
             user=eng,
             created=now() - timedelta(days=10)
         )
+        SlotParticipantFactory.create(participant=participant, slot=self.slot)
+        SlotParticipantFactory.create(participant=participant, slot=self.slot2)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 1)
@@ -456,7 +461,7 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
 
     def test_finish_free(self):
         self.activity = DateActivityFactory.create(
-            slot_selection='free', initiative=self.initiative, review=False
+            initiative=self.initiative, review=False
         )
         self.activity.states.publish(save=True)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)

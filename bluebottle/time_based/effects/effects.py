@@ -10,7 +10,6 @@ from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import (
     ContributionTypeChoices,
     PeriodicSlot,
-    SlotParticipant,
     TimeContribution,
     PeriodicParticipant
 )
@@ -210,45 +209,6 @@ def ActiveTimeContributionsTransitionEffect(transition, conditions=None):
     return _ActiveDurationsTransitionEffect
 
 
-class CreateSlotParticipantsForSlotsEffect(Effect):
-    title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_slot.html'
-
-    @property
-    def display(self):
-        return self.instance.activity.slot_selection == 'all' \
-            and self.instance.activity.active_participants.count()
-
-    def post_save(self, **kwargs):
-        slot = self.instance
-        activity = self.instance.activity
-        if activity.slot_selection == 'all':
-            for participant in activity.accepted_participants:
-                SlotParticipant.objects.create(participant=participant, slot=slot)
-
-
-class CreateSlotParticipantsForParticipantsEffect(Effect):
-    """
-    Create register participants for all slots
-    """
-    title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_participant.html'
-
-    @property
-    def display(self):
-        return self.instance.activity.slot_selection == 'all' \
-            and self.instance.activity.slots.count()
-
-    def post_save(self, **kwargs):
-        participant = self.instance
-        activity = self.instance.activity
-        if activity.slot_selection == 'all':
-            for slot in activity.slots.all():
-                slot_participant = SlotParticipant(participant=participant, slot=slot)
-                slot_participant.execute_triggers(**self.options)
-                slot_participant.save()
-
-
 class UnlockUnfilledSlotsEffect(Effect):
     """
     Open up slots that are no longer full
@@ -262,8 +222,6 @@ class UnlockUnfilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        if self.instance.activity.slot_selection == 'all':
-            return []
         slots = self.instance.activity.slots.filter(status='full')
         return [slot for slot in slots.all() if slot.accepted_participants.count() < slot.capacity]
 
@@ -291,8 +249,6 @@ class LockFilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        if self.instance.activity.slot_selection == 'all':
-            return []
         slots = self.instance.activity.slots.filter(status='open')
         return [
             slot for slot in slots.all()
@@ -308,27 +264,6 @@ class LockFilledSlotsEffect(Effect):
 
     def __str__(self):
         return _('Lock filled slots for {activity}').format(activity=self.instance.activity)
-
-
-class UnsetCapacityEffect(Effect):
-    """
-    Unset the capacity when slot selection becomes free
-    """
-
-    template = 'admin/unset_capacity.html'
-
-    def pre_save(self, **kwargs):
-        self.instance.capacity = None
-
-    @property
-    def is_valid(self):
-        return self.instance.slot_selection == 'free' and self.instance.capacity
-
-    def __repr__(self):
-        return '<Effect: Unset the capacity>'
-
-    def __str__(self):
-        return _('Reset slot selection to "all" for {activity}').format(activity=self.instance)
 
 
 class CreateFirstSlotEffect(Effect):

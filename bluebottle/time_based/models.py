@@ -197,19 +197,6 @@ class SlotSelectionChoices(DjangoChoices):
 
 
 class DateActivity(TimeBasedActivity):
-
-    slot_selection = models.CharField(
-        _('Slot selection'),
-        help_text=_(
-            'All: Participant will join all time slots. '
-            'Free: Participant can pick any number of slots to join.'),
-        max_length=20,
-        blank=True,
-        null=True,
-        default=SlotSelectionChoices.free,
-        choices=SlotSelectionChoices.choices,
-    )
-
     old_online_meeting_url = models.TextField(
         _('online meeting link'),
         blank=True, default='',

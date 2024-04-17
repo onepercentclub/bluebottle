@@ -16,7 +16,6 @@ from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, regi
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
-    UnsetCapacityEffect,
     CreateFirstSlotEffect
 )
 from bluebottle.time_based.effects.contributions import (
@@ -54,11 +53,7 @@ def is_full(effect):
             effect.instance.capacity <= accepted_teams
         )
 
-    if (
-        isinstance(effect.instance, DateActivity) and
-        effect.instance.slots.count() > 1 and
-        effect.instance.slot_selection == 'free'
-    ):
+    if isinstance(effect.instance, DateActivity) and effect.instance.slots.count() > 1:
         return False
 
     return (
@@ -280,14 +275,6 @@ class TimeBasedTriggers(ActivityTriggers):
 @register(DateActivity)
 class DateActivityTriggers(TimeBasedTriggers):
     triggers = TimeBasedTriggers.triggers + [
-
-        ModelChangedTrigger(
-            'slot_selection',
-            effects=[
-                UnsetCapacityEffect
-            ]
-        ),
-
         TransitionTrigger(
             DateStateMachine.reopen_manually,
             effects=[

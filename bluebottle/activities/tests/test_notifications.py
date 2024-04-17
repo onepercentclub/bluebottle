@@ -87,7 +87,6 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.obj.save()
         activity = DateActivityFactory.create(
             slots=[],
-            slot_selection='free',
         )
 
         slot1 = DateActivitySlotFactory.create(

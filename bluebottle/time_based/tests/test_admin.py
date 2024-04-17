@@ -98,7 +98,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         self.assertEqual(activity.slots.count(), 2)
 
     def test_add_slot_participants(self):
-        activity = DateActivityFactory.create(initiative=self.initiative, slot_selection='free')
+        activity = DateActivityFactory.create(initiative=self.initiative)
         DateActivitySlotFactory.create_batch(2, activity=activity)
         participant = DateParticipantFactory.create(activity=activity)
         self.assertEqual(len(participant.slot_participants.all()), 0)
@@ -197,7 +197,6 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super().setUp()
         self.activity1 = DateActivityFactory.create(
-            slot_selection='free',
             capacity=None,
             slots=[]
         )
@@ -217,7 +216,6 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
             capacity=None
         )
         self.activity2 = DateActivityFactory.create(
-            slot_selection='all',
             capacity=5,
             slots=[]
         )
@@ -242,12 +240,8 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('<td class="field-attendee_limit">-</td>' in page.text)
         self.assertTrue('<td class="field-attendee_limit">5</td>' in page.text)
 
-        self.assertTrue('<td class="field-required">Required</td>' in page.text)
-        self.assertTrue('<td class="field-required">Optional</td>' in page.text)
         page = page.click('Upcoming')
         self.assertTrue('3 slots' in page.text)
-        page = page.click('Required')
-        self.assertTrue('1 slot' in page.text)
 
 
 class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):

@@ -19,9 +19,15 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.time_based.models import DateParticipant
 from bluebottle.time_based.tests.factories import (
-    DeadlineActivityFactory, DeadlineParticipantFactory, SkillFactory,
-    DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+    SkillFactory,
+    DateActivityFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -349,6 +355,10 @@ class ContributorDataRetentionTest(BluebottleTestCase):
             contributor = factory.create(activity=activity)
             contributor.created = date
             contributor.save()
+            if isinstance(contributor, DateParticipant):
+                SlotParticipantFactory.create(
+                    slot=activity.slots.get(), participant=contributor
+                )
             contributor.contributions.update(status='succeeded')
 
     def setUp(self):

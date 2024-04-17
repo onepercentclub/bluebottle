@@ -474,7 +474,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
-            'slot_selection',
             'preparation',
             'participants_export_url',
             'date_info',

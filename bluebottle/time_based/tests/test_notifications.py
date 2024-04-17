@@ -96,7 +96,9 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         )
 
     def test_participant_registered_notification(self):
-        self.obj = self.obj.slot_participants.first()
+        self.obj = SlotParticipantFactory.create(
+            participant=self.obj, slot=self.obj.activity.slots.first()
+        )
         self.message_class = ParticipantSlotParticipantRegisteredNotification
         self.create()
         self.assertRecipients([self.supporter])
@@ -110,7 +112,9 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.activity.save()
         self.obj.motivation = 'Par-bleu yellow'
         self.obj.save()
-        self.obj = self.obj.slot_participants.first()
+        self.obj = SlotParticipantFactory.create(
+            participant=self.obj, slot=self.obj.activity.slots.first()
+        )
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
         self.assertRecipients([self.activity.owner])
@@ -191,6 +195,10 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_participant_joined_notification(self):
+        SlotParticipantFactory.create(
+            participant=self.obj, slot=self.obj.activity.slots.first()
+        )
+
         self.message_class = ParticipantJoinedNotification
         self.create()
         self.assertRecipients([self.supporter])

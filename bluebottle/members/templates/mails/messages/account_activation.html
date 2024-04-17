@@ -20,7 +20,7 @@
 {% if token %}
 
 {% with url='/auth/set-password/?token='|add:uid|add:'-'|add:token %}
-<a href={% message_url url}"
+<a href={% message_url url %}"
        class="action-email">{% trans 'Set password' context 'email' %}</a>
 {% endwith %}
 {% else %}

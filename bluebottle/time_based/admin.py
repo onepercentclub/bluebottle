@@ -50,7 +50,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
-from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action
+from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -132,14 +132,28 @@ class TimeBasedAdmin(ActivityChildAdmin):
     registration_fields = (
         'expertise',
         'review',
+        'preparation',
+        'registration_deadline',
         'registration_flow',
+        'registration_question',
         'review_title',
         'review_description',
         'review_document_enabled',
+        'registration_link',
         'review_link',
-        'preparation',
-        'registration_deadline',
     )
+
+    readonly_fields = ActivityChildAdmin.readonly_fields + ['registration_link', 'registration_question']
+
+    def registration_link(self, obj):
+        return admin_info_box(
+            _("Answer this question if you selected 'Direct the participants to a questionnaire'")
+        )
+
+    def registration_question(self, obj):
+        return admin_info_box(
+            _("Answer these questions if you selected 'Ask a single question on the platform'")
+        )
 
     def get_registration_fields(self, request, obj):
         return self.registration_fields

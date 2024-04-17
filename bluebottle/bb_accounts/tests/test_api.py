@@ -504,7 +504,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
-        self.assertTrue('[Take me there](https://testserver)' in welcome_email.body)
+        self.assertTrue("[Take me there](https://testserver?" in welcome_email.body)
 
     @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create_closed_site(self):

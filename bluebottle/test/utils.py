@@ -3,7 +3,7 @@ from builtins import object
 from builtins import str
 from contextlib import contextmanager
 from importlib import import_module
-from urllib.parse import parse_qs, urlencode, urlparse, parse_qsl, ParseResult, urljoin
+from urllib.parse import urlencode, urlparse, parse_qsl, ParseResult
 
 from bs4 import BeautifulSoup
 from celery.contrib.testing.worker import start_worker
@@ -809,7 +809,6 @@ class NotificationTestCase(BluebottleTestCase):
 
     def assertHtmlBodyContains(self, text):
         if text not in self.html_content:
-            __import__("ipdb").set_trace()
             self.fail("HTML body does not contain '{}'".format(text))
 
     def assertBodyNotContains(self, text):
@@ -836,7 +835,7 @@ class NotificationTestCase(BluebottleTestCase):
         link = self._html.find_all("a", {"class": "action-email"})[0]
         parsed = urlparse(link["href"])
 
-        qs = parse_qs(parsed.query)
+        qs = dict(parse_qsl(parsed.query))
         qs_without_utm_tags = urlencode(
             dict((key, value) for key, value in qs.items() if not key.startswith("utm"))
         )

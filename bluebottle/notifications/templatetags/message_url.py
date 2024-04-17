@@ -1,4 +1,4 @@
-from urllib.parse import parse_qs, ParseResult, urlparse, urlencode
+from urllib.parse import parse_qsl, ParseResult, urlparse, urlencode
 
 from django import template
 from django.db import connection
@@ -10,7 +10,7 @@ register = template.Library()
 def message_url(context, path=""):
     parsed = urlparse(path)
 
-    query = parse_qs(parsed.query)
+    query = dict(parse_qsl(parsed.query))
 
     query["utm_source"] = "platform-mail"
     query["utm_medium"] = "email"

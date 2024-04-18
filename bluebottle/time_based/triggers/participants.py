@@ -34,7 +34,7 @@ from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
-    ManagerParticipantWithdrewNotification,
+    ManagerParticipantWithdrewNotification, UserScheduledNotification,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -699,6 +699,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             ScheduleParticipantStateMachine.schedule,
             effects=[
+                NotificationEffect(UserScheduledNotification),
                 CreateSchedulePreparationTimeContributionEffect,
                 CreateScheduleContributionEffect,
             ],

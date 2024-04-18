@@ -23,9 +23,11 @@ from bluebottle.time_based.messages import (
     ParticipantAppliedNotification,
     ParticipantChangedNotification,
     ParticipantJoinedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, )
+from bluebottle.time_based.notifications.participants import UserScheduledNotification
 from bluebottle.time_based.notifications.registrations import UserJoinedNotification, \
     ManagerRegistrationCreatedNotification, UserAppliedNotification, ManagerRegistrationCreatedReviewNotification, \
-    UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification
+    UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
+    UserRegistrationRestartedNotification
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -34,8 +36,8 @@ from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
     PeriodicSlotFactory,
-    SlotParticipantFactory, DeadlineActivityFactory, ScheduleRegistrationFactory,
-    ScheduleActivityFactory, DeadlineRegistrationFactory, )
+    SlotParticipantFactory, ScheduleRegistrationFactory,
+    ScheduleActivityFactory, ScheduleSlotFactory, )
 
 
 class TimeBasedActivityTriggerTestCase():
@@ -1415,14 +1417,54 @@ class PeriodicRegistrationTriggersTestCase(RegistrationTriggerTestBase):
     factory = PeriodicRegistrationFactory
     activity_factory = PeriodicActivityFactory
 
+    def test_user_stops(self):
+        self.test_join()
+        self.model.states.stop()
+        with self.execute(user=self.user):
+            self.assertNotificationEffect(
+                UserRegistrationStoppedNotification
+            )
+
+    def test_user_restarts(self):
+        self.test_user_stops()
+        self.model.states.start()
+        with self.execute(user=self.user):
+            self.assertNotificationEffect(
+                UserRegistrationRestartedNotification
+            )
+
+    def test_manager_stops(self):
+        self.test_join()
+        self.model.states.stop()
+        with self.execute(user=self.manager):
+            self.assertNotificationEffect(
+                UserRegistrationStoppedNotification
+            )
+
+    def test_manager_restarts(self):
+        self.test_manager_stops()
+        self.model.states.start()
+        with self.execute(user=self.manager):
+            self.assertNotificationEffect(
+                UserRegistrationRestartedNotification
+            )
+
 
 class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase):
 
     factory = ScheduleRegistrationFactory
     activity_factory = ScheduleActivityFactory
 
-
-class DeadlineParticipantTriggersTestCase(RegistrationTriggerTestBase):
-
-    factory = DeadlineRegistrationFactory
-    activity_factory = DeadlineActivityFactory
+    def test_manager_schedules_slot(self):
+        self.test_join()
+        slot = ScheduleSlotFactory.create(
+            activity=self.activity,
+        )
+        registration = self.model
+        registration.save()
+        self.model = registration.participants.first()
+        self.model.slot = slot
+        with self.execute(user=self.manager):
+            self.assertNotificationEffect(
+                UserScheduledNotification
+            )

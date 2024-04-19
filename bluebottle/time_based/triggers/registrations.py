@@ -55,7 +55,7 @@ class RegistrationTriggers(TriggerManager):
     def is_admin(effect):
         """ Is not user """
         user = effect.options.get('user')
-        return effect.instance.user != user and (user.is_staff or user.is_superuser)
+        return user and effect.instance.user != user and (user.is_staff or user.is_superuser)
 
     triggers = [
         TransitionTrigger(

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.models import PeriodicActivity
+from bluebottle.utils.widgets import duration_to_hours
 
 
 class ManagerRegistrationNotification(TransitionMessage):
@@ -40,6 +43,17 @@ class UserRegistrationNotification(TransitionMessage):
 
     def get_context(self, recipient):
         context = super(UserRegistrationNotification, self).get_context(recipient)
+        if isinstance(self.obj.activity, PeriodicActivity):
+            context['start'] = self.obj.activity.start
+            context['end'] = self.obj.activity.deadline
+            context['duration'] = duration_to_hours(self.obj.activity.duration)
+            if self.obj.activity.period == 'days':
+                context['period'] = _('day')
+            if self.obj.activity.period == 'weeks':
+                context['period'] = _('week')
+            if self.obj.activity.period == 'months':
+                context['period'] = _('month')
+
         return context
 
     @property

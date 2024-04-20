@@ -2,10 +2,13 @@ from django.db.models import Sum, Q
 
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant
+from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
+    TeamScheduleParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
-    DeadlineParticipantTransitionSerializer, ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
+    DeadlineParticipantTransitionSerializer,
+    ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
+    TeamScheduleParticipantSerializer
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -68,6 +71,14 @@ class ScheduleParticipantList(ParticipantList):
     serializer = ScheduleParticipantSerializer
 
 
+class TeamScheduleParticipantList(ParticipantList):
+    queryset = TeamScheduleParticipant.objects.prefetch_related(
+        "user",
+        "activity",
+    )
+    serializer = TeamScheduleParticipantSerializer
+
+
 class PeriodicParticipantList(ParticipantList):
     queryset = PeriodicParticipant.objects.prefetch_related(
         "user", "activity"
@@ -89,6 +100,11 @@ class DeadlineParticipantDetail(ParticipantDetail):
 class ScheduleParticipantDetail(ParticipantDetail):
     queryset = ScheduleParticipant.objects.all()
     serializer_class = ScheduleParticipantSerializer
+
+
+class TeamScheduleParticipantDetail(ParticipantDetail):
+    queryset = TeamScheduleParticipant.objects.all()
+    serializer_class = TeamScheduleParticipantSerializer
 
 
 class PeriodicParticipantDetail(ParticipantDetail):
@@ -123,6 +139,13 @@ class ScheduleRelatedParticipantList(RelatedContributorListView):
     serializer_class = ScheduleParticipantSerializer
 
 
+class TeamScheduleRelatedParticipantList(RelatedContributorListView):
+    queryset = TeamScheduleParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = TeamScheduleParticipantSerializer
+
+
 class PeriodicRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodicParticipant.objects.prefetch_related(
         'user', 'activity'
@@ -143,6 +166,11 @@ class DeadlineParticipantTransitionList(TransitionList):
 class ScheduleParticipantTransitionList(TransitionList):
     serializer_class = ScheduleParticipantTransitionSerializer
     queryset = ScheduleParticipant.objects.all()
+
+
+class TeamScheduleParticipantTransitionList(TransitionList):
+    serializer_class = ScheduleParticipantTransitionSerializer
+    queryset = TeamScheduleParticipant.objects.all()
 
 
 class PeriodicParticipantTransitionList(TransitionList):

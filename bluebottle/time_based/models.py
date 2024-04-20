@@ -1172,6 +1172,8 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.activity.anonymized
 
     def __str__(self):
+        if self.activity and self.activity.team_activity == 'teams':
+            return _('Team {name} for {activity}').format(name=self.user, activity=self.activity)
         return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
 
     class Meta:
@@ -1372,6 +1374,48 @@ class DeadlineParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/deadline-participants'
 
 
+class TeamRegistration(Registration):
+    pass
+
+
+class TeamScheduleRegistration(TeamRegistration):
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/team-schedule-registrations'
+
+    class Meta:
+        verbose_name = _("Team for schedule activities")
+        verbose_name_plural = _("Teams for schedule activities")
+
+        permissions = (
+            ("api_read_teamscheduleregistration", "Can view candidates through the API"),
+            ("api_add_teamscheduleregistration", "Can add candidates through the API"),
+            (
+                "api_change_teamscheduleregistration",
+                "Can change candidates through the API",
+            ),
+            (
+                "api_delete_teamscheduleregistration",
+                "Can delete candidates through the API",
+            ),
+            (
+                "api_read_own_teamscheduleregistration",
+                "Can view own candidates through the API",
+            ),
+            (
+                "api_add_own_teamscheduleregistration",
+                "Can add own candidates through the API",
+            ),
+            (
+                "api_change_own_teamscheduleregistration",
+                "Can change own candidates through the API",
+            ),
+            (
+                "api_delete_own_teamscheduleregistration",
+                "Can delete own candidates through the API",
+            ),
+        )
+
+
 class ScheduleParticipant(Participant, Contributor):
     slot = models.ForeignKey(
         "time_based.ScheduleSlot",
@@ -1418,6 +1462,60 @@ class ScheduleParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/schedule-participants'
 
 
+class TeamScheduleParticipant(Participant, Contributor):
+    slot = models.ForeignKey(
+        "time_based.TeamScheduleSlot",
+        related_name="participants",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
+    registration = models.ForeignKey(
+        'time_based.TeamRegistration',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='participants'
+    )
+
+    class Meta:
+        verbose_name = _("Team to schedule activities")
+        verbose_name_plural = _("Teams to schedule activities")
+
+        permissions = (
+            ("api_read_scheduleparticipant", "Can view participant through the API"),
+            ("api_add_scheduleparticipant", "Can add participant through the API"),
+            (
+                "api_change_scheduleparticipant",
+                "Can change participant through the API",
+            ),
+            (
+                "api_delete_scheduleparticipant",
+                "Can delete participant through the API",
+            ),
+            (
+                "api_read_own_scheduleparticipant",
+                "Can view own participant through the API",
+            ),
+            (
+                "api_add_own_scheduleparticipant",
+                "Can add own participant through the API",
+            ),
+            (
+                "api_change_own_scheduleparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_scheduleparticipant",
+                "Can delete own participant through the API",
+            ),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/team-schedule-participants'
+
+
 class Slot(models.Model):
     status = models.CharField(max_length=40)
 
@@ -1443,10 +1541,7 @@ class PeriodicSlot(TriggerMixin, Slot):
         )
 
 
-class ScheduleSlot(TriggerMixin, Slot):
-    activity = models.ForeignKey(
-        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
-    )
+class BaseScheduleSlot(TriggerMixin, Slot):
     duration = models.DurationField(_("duration"), null=True, blank=True)
 
     is_online = models.BooleanField(
@@ -1471,6 +1566,21 @@ class ScheduleSlot(TriggerMixin, Slot):
     def end(self):
         if self.duration and self.start:
             return self.start + self.duration
+
+    class Meta:
+        abstract = True
+
+
+class ScheduleSlot(BaseScheduleSlot):
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
+    )
+
+
+class TeamScheduleSlot(BaseScheduleSlot):
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
+    )
 
 
 class PeriodicParticipant(Participant, Contributor):

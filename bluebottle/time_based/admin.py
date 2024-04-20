@@ -46,6 +46,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
+    TeamScheduleRegistration, TeamScheduleParticipant,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -299,6 +300,18 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name_plural = _("Participants")
 
 
+class TeamScheduleParticipantAdminInline(BaseContributorInline):
+    model = TeamScheduleParticipant
+    verbose_name = _("Team participation")
+    verbose_name_plural = _("Team participation")
+
+
+class TeamScheduleRegistrationAdminInline(BaseContributorInline):
+    model = TeamScheduleRegistration
+    verbose_name = _("Team")
+    verbose_name_plural = _("Teams")
+
+
 class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant
     verbose_name = _("Participation")
@@ -415,7 +428,15 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 class ScheduleActivityAdmin(TimeBasedAdmin):
     base_model = ScheduleActivity
 
-    inlines = (ScheduleParticipantAdminInline,) + TimeBasedAdmin.inlines
+    def get_inlines(self, request, obj):
+        inlines = super().get_inlines(request, obj)
+        if obj and obj.id:
+            if obj.team_activity == 'teams':
+                return (TeamScheduleRegistrationAdminInline,) + inlines
+            else:
+                return (ScheduleParticipantAdminInline,) + inlines
+        return inlines
+
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
@@ -1274,6 +1295,11 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
+@admin.register(TeamScheduleParticipant)
+class TeamScheduleParticipantAdmin(ScheduleParticipantAdmin):
+    model = TeamScheduleParticipant
+
+
 @admin.register(Registration)
 class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Registration
@@ -1319,6 +1345,11 @@ class DeadlineRegistrationAdmin(RegistrationChildAdmin):
 @admin.register(ScheduleRegistration)
 class ScheduleRegistrationAdmin(RegistrationChildAdmin):
     inlines = [ScheduleParticipantAdminInline]
+
+
+@admin.register(TeamScheduleRegistration)
+class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
+    inlines = [TeamScheduleParticipantAdminInline]
 
 
 @admin.register(PeriodicRegistration)

@@ -12,6 +12,11 @@ from bluebottle.time_based.views import (
     ScheduleParticipantDetail,
     ScheduleSlotListView,
     ScheduleSlotDetailView,
+    TeamScheduleRegistrationList,
+    TeamScheduleRegistrationDetail,
+    TeamScheduleRelatedRegistrationList,
+    TeamScheduleParticipantDetail,
+    TeamScheduleRelatedParticipantList
 )
 
 urlpatterns = [
@@ -41,6 +46,16 @@ urlpatterns = [
         ScheduleRegistrationDocumentDetail.as_view(),
         name='schedule-registration-document'),
 
+    url(r'^/(?P<activity_id>\d+)/team-registrations/$',
+        TeamScheduleRelatedRegistrationList.as_view(),
+        name='related-team-schedule-registrations'),
+    url(r'^/team-registrations/$',
+        TeamScheduleRegistrationList.as_view(),
+        name='team-schedule-registration-list'),
+    url(r'^/team-registrations/(?P<pk>\d+)$',
+        TeamScheduleRegistrationDetail.as_view(),
+        name='team-schedule-registration-detail'),
+
     url(r'^/(?P<activity_id>\d+)/participants$',
         ScheduleRelatedParticipantList.as_view(),
         name='schedule-participants'),
@@ -50,6 +65,16 @@ urlpatterns = [
     url(r'^/participants/(?P<pk>\d+)$',
         ScheduleParticipantDetail.as_view(),
         name="schedule-participant-detail"),
+
+    url(r'^/(?P<activity_id>\d+)/team-participants$',
+        TeamScheduleRelatedParticipantList.as_view(),
+        name='team-schedule-participants'),
+    url(r'^/team-participants/(?P<pk>\d+)$',
+        TeamScheduleParticipantDetail.as_view(),
+        name="team-schedule-participant-detail"),
+
+
+
     url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),
     url(
         r"^/slots/(?P<pk>\d+)$",

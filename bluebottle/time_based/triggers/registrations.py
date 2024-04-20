@@ -4,11 +4,13 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registration import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
+
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
+    TeamScheduleRegistration
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -230,6 +232,45 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
 
 @register(ScheduleRegistration)
 class ScheduleRegistrationTriggers(RegistrationTriggers):
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
+            effects=[
+                CreateParticipantEffect,
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleRegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.reject,
+                ),
+            ],
+        ),
+    ]
+
+
+@register(TeamScheduleRegistration)
+class TeamScheduleRegistrationTriggers(RegistrationTriggers):
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
             RegistrationStateMachine.initiate,

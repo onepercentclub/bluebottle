@@ -7,7 +7,11 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     DeadlineRegistration,
     PeriodicParticipant,
-    PeriodicRegistration, ScheduleParticipant, ScheduleRegistration,
+    PeriodicRegistration,
+    ScheduleParticipant,
+    ScheduleRegistration,
+    TeamScheduleParticipant,
+    TeamScheduleRegistration
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -78,6 +82,25 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "slot": "bluebottle.time_based.serializers.ScheduleSlotSerializer",
+        }
+    )
+
+
+class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
+    permissions = ResourcePermissionField('team-schedule-participant-detail', view_args=('pk',))
+    registration = ResourceRelatedField(queryset=TeamScheduleRegistration.objects.all())
+
+    class Meta(ScheduleParticipantSerializer.Meta):
+        model = TeamScheduleParticipant
+
+    class JSONAPIMeta(ScheduleParticipantSerializer.JSONAPIMeta):
+        resource_name = "contributors/time-based/team-schedule-participants"
+
+    included_serializers = dict(
+        ScheduleParticipantSerializer.included_serializers,
+        **{
+            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+            "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
         }
     )
 

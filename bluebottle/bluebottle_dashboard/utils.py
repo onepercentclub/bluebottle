@@ -51,18 +51,8 @@ def get_menu_items(context):
         if group["app_label"] == "looker":
             (analytics_settings, _) = AnalyticsPlatformSettings.objects.get_or_create()
 
-            group['items'] = [{
-                'url': reverse('jet-dashboard:looker-embed', args=(look.id,)),
-                'url_blank': False,
-                'name': 'lookerembed',
-                'object_name': 'LookerEmbed',
-                'label': look.title,
-                'has_perms': True,
-                'current': False} for look in LookerEmbed.objects.all()
-            ]
-
             if analytics_settings.plausible_embed_link:
-                group["items"].append(
+                group["items"] = [
                     {
                         "url": reverse("jet-dashboard:plausible-embed"),
                         "url_blank": False,
@@ -72,7 +62,21 @@ def get_menu_items(context):
                         "has_perms": True,
                         "current": False,
                     }
-                )
+                ]
+
+            group["items"] += [
+                {
+                    "url": reverse("jet-dashboard:looker-embed", args=(look.id,)),
+                    "url_blank": False,
+                    "name": "lookerembed",
+                    "object_name": "LookerEmbed",
+                    "label": look.title,
+                    "has_perms": True,
+                    "current": False,
+                }
+                for look in LookerEmbed.objects.all()
+            ]
+
         if group["app_label"] == "segments":
             group["items"] += [
                 {

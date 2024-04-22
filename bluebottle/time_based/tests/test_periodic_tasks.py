@@ -19,14 +19,22 @@ from bluebottle.notifications.models import Message
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.tasks import date_activity_tasks, periodic_activity_tasks, periodic_slot_tasks
+from bluebottle.time_based.tasks import (
+    date_activity_tasks,
+    periodic_activity_tasks,
+    periodic_slot_tasks,
+    schedule_slot_tasks,
+)
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory, DateActivitySlotFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
+    ScheduleParticipantFactory,
+    ScheduleSlotFactory,
     SlotParticipantFactory
 )
+from bluebottle.time_based.triggers.triggers import slot_is_full
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -596,3 +604,57 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
         self.run_task(self.finished)
 
         self.assertEqual(self.activity.status, 'expired')
+
+
+class ScheduleSlotTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(ScheduleSlotTestCase, self).setUp()
+        self.initiative = InitiativeFactory.create(status="approved")
+
+        self.slot = ScheduleSlotFactory.create(
+            start=now() + timedelta(days=5), duration=timedelta(hours=5)
+        )
+        self.participant = ScheduleParticipantFactory.create(
+            activity=self.slot.activity
+        )
+        self.participant.slot = self.slot
+        self.participant.save()
+        self.participant.refresh_from_db()
+
+    def run_task(self, when):
+        tz = get_current_timezone()
+
+        with mock.patch.object(timezone, "now", return_value=when):
+            schedule_slot_tasks()
+
+        with LocalTenant(connection.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+            self.participant.refresh_from_db()
+
+    @property
+    def before(self):
+        return self.slot.start - timedelta(days=1)
+
+    @property
+    def started(self):
+        return self.slot.start + timedelta(hours=1)
+
+    @property
+    def finished(self):
+        return self.slot.end + timedelta(hours=1)
+
+    def test_before(self):
+        self.run_task(self.before)
+        self.assertEqual(self.slot.status, "new")
+        self.assertEqual(self.participant.status, "scheduled")
+
+    def test_during(self):
+        self.run_task(self.started)
+        self.assertEqual(self.slot.status, "running")
+        self.assertEqual(self.participant.status, "scheduled")
+
+    def test_after(self):
+        self.run_task(self.finished)
+        self.assertEqual(self.slot.status, "finished")
+        self.assertEqual(self.participant.status, "succeeded")

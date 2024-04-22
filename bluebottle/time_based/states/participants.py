@@ -350,7 +350,6 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Schedule"),
         description=_("Schedule this participant the Activity."),
         passed_label=_("scheduled"),
-        conditions=[participant_has_a_slot],
         automatic=True,
     )
 
@@ -360,6 +359,24 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Unschedule"),
         description=_("Unchedule this participant the Activity."),
         passed_label=_("unscheduled"),
+        automatic=True,
+    )
+
+    succeed = Transition(
+        scheduled,
+        ParticipantStateMachine.succeeded,
+        name=_("Schedule"),
+        description=_("Succeed this participant for the Activity."),
+        passed_label=_("succeeded"),
+        automatic=True,
+    )
+
+    reset = Transition(
+        ParticipantStateMachine.succeeded,
+        scheduled,
+        name=_("Reset"),
+        description=_("Reset participant to scheduled"),
+        passed_label=_("reset"),
         automatic=True,
     )
 

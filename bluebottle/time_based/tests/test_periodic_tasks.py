@@ -34,7 +34,6 @@ from bluebottle.time_based.tests.factories import (
     ScheduleSlotFactory,
     SlotParticipantFactory
 )
-from bluebottle.time_based.triggers.triggers import slot_is_full
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -623,8 +622,6 @@ class ScheduleSlotTestCase(BluebottleTestCase):
         self.participant.refresh_from_db()
 
     def run_task(self, when):
-        tz = get_current_timezone()
-
         with mock.patch.object(timezone, "now", return_value=when):
             schedule_slot_tasks()
 

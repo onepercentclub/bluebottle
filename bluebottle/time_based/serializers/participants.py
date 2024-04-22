@@ -161,6 +161,17 @@ class ScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):
         resource_name = 'contributors/time-based/schedule-participant-transitions'
 
 
+class TeamScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=TeamScheduleParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.TeamScheduleParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/team-schedule-participant-transitions'
+
+
 class PeriodicParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=PeriodicParticipant.objects.all())
     included_serializers = {

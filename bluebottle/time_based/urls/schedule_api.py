@@ -12,11 +12,15 @@ from bluebottle.time_based.views import (
     ScheduleParticipantDetail,
     ScheduleSlotListView,
     ScheduleSlotDetailView,
+
     TeamScheduleRegistrationList,
     TeamScheduleRegistrationDetail,
     TeamScheduleRelatedRegistrationList,
+    TeamScheduleRegistrationTransitionList,
+
     TeamScheduleParticipantDetail,
-    TeamScheduleRelatedParticipantList
+    TeamScheduleRelatedParticipantList,
+    TeamScheduleParticipantTransitionList
 )
 
 urlpatterns = [
@@ -55,6 +59,9 @@ urlpatterns = [
     url(r'^/team-registrations/(?P<pk>\d+)$',
         TeamScheduleRegistrationDetail.as_view(),
         name='team-schedule-registration-detail'),
+    url(r'^/team-registrations/transitions$',
+        TeamScheduleRegistrationTransitionList.as_view(),
+        name='schedule-registration-transitions'),
 
     url(r'^/(?P<activity_id>\d+)/participants$',
         ScheduleRelatedParticipantList.as_view(),
@@ -72,7 +79,9 @@ urlpatterns = [
     url(r'^/team-participants/(?P<pk>\d+)$',
         TeamScheduleParticipantDetail.as_view(),
         name="team-schedule-participant-detail"),
-
+    url(r'^/team-participants/transitions$',
+        TeamScheduleParticipantTransitionList.as_view(),
+        name='team-schedule-participant-transitions'),
 
 
     url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),

@@ -1374,13 +1374,13 @@ class DeadlineParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/deadline-participants'
 
 
-class TeamRegistration(Registration):
-    pass
-
-
-class TeamScheduleRegistration(TeamRegistration):
+class TeamScheduleRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
+
+    @property
+    def participants(self):
+        return self.scheduleparticipant_set.all()
 
     class Meta:
         verbose_name = _("Team for schedule activities")
@@ -1472,7 +1472,7 @@ class TeamScheduleParticipant(Participant, Contributor):
     )
 
     registration = models.ForeignKey(
-        'time_based.TeamRegistration',
+        'time_based.TeamScheduleRegistration',
         on_delete=models.CASCADE,
         blank=True,
         null=True,

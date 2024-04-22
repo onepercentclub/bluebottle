@@ -6,9 +6,14 @@ from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration, \
     TeamScheduleRegistration
 from bluebottle.time_based.serializers import (
-    DeadlineRegistrationSerializer, DeadlineRegistrationTransitionSerializer,
-    PeriodicRegistrationSerializer, PeriodicRegistrationTransitionSerializer, ScheduleRegistrationSerializer,
-    ScheduleRegistrationTransitionSerializer, TeamScheduleRegistrationSerializer
+    DeadlineRegistrationSerializer,
+    DeadlineRegistrationTransitionSerializer,
+    PeriodicRegistrationSerializer,
+    PeriodicRegistrationTransitionSerializer,
+    ScheduleRegistrationSerializer,
+    ScheduleRegistrationTransitionSerializer,
+    TeamScheduleRegistrationSerializer,
+    TeamScheduleRegistrationTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import (
     AnonimizeMembersMixin, FilterRelatedUserMixin,
@@ -155,6 +160,11 @@ class DeadlineRegistrationTransitionList(TransitionList):
 class ScheduleRegistrationTransitionList(TransitionList):
     serializer_class = ScheduleRegistrationTransitionSerializer
     queryset = ScheduleRegistration.objects.all()
+
+
+class TeamScheduleRegistrationTransitionList(TransitionList):
+    serializer_class = TeamScheduleRegistrationTransitionSerializer
+    queryset = TeamScheduleRegistration.objects.all()
 
 
 class PeriodicRegistrationTransitionList(TransitionList):

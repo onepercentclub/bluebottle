@@ -8,7 +8,7 @@ from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
     ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer
+    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -169,7 +169,7 @@ class ScheduleParticipantTransitionList(TransitionList):
 
 
 class TeamScheduleParticipantTransitionList(TransitionList):
-    serializer_class = ScheduleParticipantTransitionSerializer
+    serializer_class = TeamScheduleParticipantTransitionSerializer
     queryset = TeamScheduleParticipant.objects.all()
 
 

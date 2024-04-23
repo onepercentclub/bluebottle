@@ -1,3 +1,4 @@
+from bluebottle.follow.effects import FollowActivityEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -200,6 +201,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -211,6 +213,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -222,6 +225,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),

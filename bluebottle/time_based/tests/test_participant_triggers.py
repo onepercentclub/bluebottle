@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from django.core import mail
-from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -38,7 +37,6 @@ class ParticipantTriggerTestCase:
 
         self.activity = self.activity_factory.create(
             initiative=self.initiative,
-            start=now() - timedelta(days=1),
             review=False,
             capacity=4,
             registration_deadline=None,
@@ -216,7 +214,12 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         )
 
     def register(self):
-        registration = DeadlineRegistrationFactory.create(activity=self.activity)
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
         self.participant = registration.participants.get()
 
     def test_initial_added_through_admin(self):
@@ -281,6 +284,7 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         slot = self.participant.slot
         slot.states.start(save=True)
         slot.states.finish(save=True)
+        self.participant.refresh_from_db()
 
     def test_single_preparation_contribution(self):
         self.register()

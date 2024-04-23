@@ -204,6 +204,17 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             ],
         ),
         TransitionTrigger(
+            PeriodicRegistrationStateMachine.add,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+                CreateInitialPeriodicParticipantEffect,
+            ],
+        ),
+        TransitionTrigger(
             PeriodicRegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(

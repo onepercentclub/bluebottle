@@ -136,6 +136,7 @@ class TimeBasedActivity(Activity):
             DeadlineParticipant,
             PeriodicParticipant,
             ScheduleParticipant,
+            TeamScheduleParticipant
         )
 
     @property

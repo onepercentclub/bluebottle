@@ -43,7 +43,7 @@ class TimeBasedInfoMixin(object):
         if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
-            participant = self.obj.activity.participants.get(user=recipient)
+            participant = self.obj.activity.participants.filter(user=recipient).first()
         elif isinstance(self.obj, SlotParticipant):
             participant = self.obj.participant
         else:

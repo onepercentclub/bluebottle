@@ -1,6 +1,7 @@
 {% extends "base.mail.html" %}
 {% load djmoney %}
 {% load i18n %}
+{% load message_url %}
 
 {% block content %}
     <p class="donation-intro">
@@ -13,7 +14,7 @@
 {% endblock content %} 
 
 {% block action %}
-    <a href="{{ obj.get_absolute_url }}" class="action-email">
+    <a href="{% message_url obj.get_absolute_url %}" class="action-email">
        {% trans 'Go to campaign' context 'email' %}
     </a>
 {% endblock %}`

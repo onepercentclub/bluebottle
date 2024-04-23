@@ -297,7 +297,12 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     expected_contribution_status = "new"
 
     def register(self):
-        self.registration = ScheduleRegistrationFactory.create(activity=self.activity)
+        user = BlueBottleUserFactory.create()
+        self.registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
         self.participant = self.registration.participants.first()
         self.participant.slot = ScheduleSlotFactory.create(
             activity=self.activity, duration=self.activity.duration

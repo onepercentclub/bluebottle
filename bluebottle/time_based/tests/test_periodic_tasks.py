@@ -586,8 +586,13 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
         self.assertEqual(self.activity.slots.order_by('-start').first().status, 'running')
 
     def test_succeed(self):
-        self.participant = PeriodicRegistrationFactory.create(activity=self.activity)
-
+        user = BlueBottleUserFactory.create()
+        self.registration = PeriodicRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
+        self.participant = self.registration.participants.first()
         self.run_task(self.finished)
 
         self.assertEqual(self.activity.status, 'succeeded')

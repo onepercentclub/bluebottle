@@ -88,7 +88,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         accepted,
         name=_('Accept'),
-        description=_("Accept this person as a participant to the Activity."),
+        description=_("Accept this person as a participant of this Activity."),
         passed_label=_('accepted'),
         permission=can_accept_participant,
         automatic=False,
@@ -100,7 +100,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         ],
         accepted,
         name=_('Add'),
-        description=_("Add this person as a participant to the activity."),
+        description=_("Add this person as a participant of this activity."),
         automatic=True
     )
 
@@ -108,7 +108,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         [ContributorStateMachine.new, accepted, succeeded],
         rejected,
         name=_("Reject"),
-        description=_("Reject this person as a participant in the activity."),
+        description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -135,7 +135,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         rejected,
         name=_('Remove'),
         passed_label=_('removed'),
-        description=_("Remove this person as a participant from the activity."),
+        description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_participant,
     )
@@ -194,7 +194,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         ],
         ParticipantStateMachine.succeeded,
         name=_("Accept"),
-        description=_("Accept this person as a participant to the Activity."),
+        description=_("Accept this person as a participant of this Activity."),
         passed_label=_("accepted"),
         automatic=True,
     )
@@ -207,7 +207,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         ],
         ParticipantStateMachine.rejected,
         name=_("Reject"),
-        description=_("Reject this person as a participant in the activity."),
+        description=_("Reject this person as a participant of this activity."),
         automatic=True,
     )
 
@@ -242,7 +242,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         ParticipantStateMachine.removed,
         name=_('Remove'),
         passed_label=_('removed'),
-        description=_("Remove this person as a participant from the activity."),
+        description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )
@@ -254,7 +254,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         ParticipantStateMachine.new,
         name=_("Re-add"),
         passed_label=_("re-added"),
-        description=_("Re-add this person as a participant to the activity"),
+        description=_("Re-add this person as a participant of this activity"),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )
@@ -267,7 +267,7 @@ class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
         [ContributorStateMachine.new],
         ParticipantStateMachine.succeeded,
         name=_("Add"),
-        description=_("Add this person as a participant to the activity."),
+        description=_("Add this person as a participant of this activity."),
         automatic=True,
     )
 
@@ -291,7 +291,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
-        description=_("Accept this person as a participant to the Activity."),
+        description=_("Accept this person as a participant of this Activity."),
         passed_label=_("accepted"),
         automatic=True,
     )
@@ -305,7 +305,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         ],
         RegistrationParticipantStateMachine.rejected,
         name=_("Reject"),
-        description=_("Reject this person as a participant in the activity."),
+        description=_("Reject this person as a participant of this activity."),
         automatic=True,
     )
 
@@ -318,7 +318,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         ParticipantStateMachine.removed,
         name=_("Remove"),
         passed_label=_("removed"),
-        description=_("Remove this person as a participant from the activity."),
+        description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
     )

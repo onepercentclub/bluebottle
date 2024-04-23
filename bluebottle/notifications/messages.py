@@ -147,6 +147,7 @@ class TransitionMessage(object):
             "first_name": recipient.first_name,
             "action_link": getattr(self, "action_link", None),
             "action_title": getattr(self, "action_title", None),
+            "utm_campaign": self.__class__.__name__,
         }
         for key, item in list(self.context.items()):
             try:

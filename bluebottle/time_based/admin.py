@@ -1351,13 +1351,11 @@ class SlotParticipantAdmin(StateMachineAdmin):
         },
     }
 
-    detail_fields = ['participant', 'slot']
-    status_fields = ['status', 'states']
+    detail_fields = ['participant', 'slot', 'status', 'states']
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
             (_('Detail'), {'fields': self.detail_fields}),
-            (_('Status'), {'fields': self.status_fields}),
         )
         if request.user.is_superuser:
             fieldsets += (

@@ -1,13 +1,26 @@
-from bluebottle.fsm.effects import RelatedTransitionEffect
+from django.utils.timezone import now
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
-    register, TransitionTrigger, TriggerManager
+    register,
+    TransitionTrigger,
+    TriggerManager,
+    ModelChangedTrigger,
 )
-from bluebottle.time_based.effects.effects import CreateNextSlotEffect, CreatePeriodicParticipantsEffect
-from bluebottle.time_based.models import PeriodicSlot
+from bluebottle.time_based.effects.effects import (
+    CreateNextSlotEffect,
+    CreatePeriodicParticipantsEffect,
+    RescheduleScheduleSlotContributions,
+)
+
+from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot
 from bluebottle.time_based.states import (
-    PeriodicSlotStateMachine
+    PeriodicSlotStateMachine,
+    ScheduleSlotStateMachine,
 )
-from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
+from bluebottle.time_based.states.participants import (
+    PeriodicParticipantStateMachine,
+    ScheduleParticipantStateMachine,
+)
 
 
 @register(PeriodicSlot)
@@ -28,5 +41,62 @@ class PeriodicSlotTriggers(TriggerManager):
                     PeriodicParticipantStateMachine.succeed,
                 ),
             ]
+        ),
+    ]
+
+
+@register(ScheduleSlot)
+class ScheduleSlotTriggers(TriggerManager):
+
+    def slot_is_finished(effect):
+        return effect.instance.end < now()
+
+    def slot_is_not_finished(effect):
+        return effect.instance.end > now()
+
+    triggers = [
+        TransitionTrigger(
+            ScheduleSlotStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    ScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
+                ),
+            ],
+        ),
+        ModelChangedTrigger(
+            "start",
+            effects=[
+                RescheduleScheduleSlotContributions,
+                TransitionEffect(
+                    ScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
+                ),
+                TransitionEffect(
+                    ScheduleSlotStateMachine.reopen, conditions=[slot_is_not_finished]
+                ),
+            ],
+        ),
+        ModelChangedTrigger(
+            "duration",
+            effects=[
+                RescheduleScheduleSlotContributions,
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.succeed,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.reopen,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.reset,
+                ),
+            ],
         ),
     ]

@@ -56,6 +56,7 @@ class CreateScheduleContributionEffect(Effect):
                     value=self.instance.slot.duration,
                     start=self.instance.slot.start,
                     end=self.instance.slot.end,
+                    status="succeeded" if self.instance.slot.end < now() else "new",
                 )
 
                 contribution.execute_triggers(**self.options)

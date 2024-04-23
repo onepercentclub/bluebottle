@@ -3,6 +3,7 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.utils.widgets import duration_to_hours
 
 
 class ManagerRegistrationNotification(TransitionMessage):
@@ -75,6 +76,17 @@ class UserRegistrationRestartedNotification(UserRegistrationNotification):
         "email", 'Your contribution to the activity "{title}" has been restarted'
     )
     template = "messages/registrations/user_restarted"
+
+    def get_context(self, recipient):
+        context = super(UserRegistrationNotification, self).get_context(recipient)
+        context['duration'] = duration_to_hours(self.obj.activity.duration)
+        if self.obj.activity.period == 'days':
+            context['period'] = pgettext('email', 'day')
+        if self.obj.activity.period == 'weeks':
+            context['period'] = pgettext('email', 'week')
+        if self.obj.activity.period == 'months':
+            context['period'] = pgettext('email', 'months')
+        return context
 
 
 class UserAppliedNotification(UserRegistrationNotification):

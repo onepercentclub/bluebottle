@@ -9,6 +9,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.time_based.models import (
     PeriodActivity,
+    ScheduleActivity,
     TimeContribution, DeadlineActivity
 )
 from bluebottle.time_based.states import (
@@ -37,6 +38,9 @@ def should_succeed_instantly(effect):
         effect.instance.contributor.registration.status == 'accepted'
     ):
         return True
+    elif isinstance(activity, ScheduleActivity):
+        return False
+
     return (
         (
             effect.instance.end is None or

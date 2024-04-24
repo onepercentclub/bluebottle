@@ -308,7 +308,7 @@ class ContributionStateMachine(ModelStateMachine):
     succeed = Transition(
         [new, failed],
         succeeded,
-        name=_('succeeded'),
+        name=_("succeed"),
         description=_("The contribution succeeded. It will be visible in reports."),
     )
 

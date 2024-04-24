@@ -206,8 +206,6 @@ class TriggerMixin(object):
 
         self._triggers = []
 
-        return effects
-
     def save(self, run_triggers=True, *args, **kwargs):
         super(TriggerMixin, self).save(*args, **kwargs)
 
@@ -219,3 +217,6 @@ class TriggerMixin(object):
             for field in self._meta.fields
             if not field.is_relation
         )
+
+
+from bluebottle.fsm.signals import *

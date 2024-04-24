@@ -178,22 +178,13 @@ class StateMachineAdminMixin(object):
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
 
-                log_action(
-                    instance,
-                    request.user,
-                    'Changed status to {}'.format(transition.target.value)
-                )
-
                 return HttpResponseRedirect(link)
-
-        getattr(state_machine, transition_name)()
-
         try:
             with transaction.atomic():
+                getattr(state_machine, transition_name)()
                 instance.save()
                 effects = local_effects.effects
                 raise HasEffects(effects)
-
         except HasEffects as e:
             effects = e.effects
             rendered_effects = get_effects(effects)

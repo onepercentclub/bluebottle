@@ -824,7 +824,11 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        SlotParticipant, null=True, blank=True, related_name='contributions', on_delete=models.SET_NULL
+        SlotParticipant,
+        null=True,
+        blank=True,
+        related_name="contributions",
+        on_delete=models.CASCADE,
     )
 
     class JSONAPIMeta:

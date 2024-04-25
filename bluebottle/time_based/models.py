@@ -1420,8 +1420,10 @@ class ScheduleParticipant(Participant, Contributor):
 
 class Slot(models.Model):
     status = models.CharField(max_length=40)
-
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
+
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
@@ -1444,6 +1446,8 @@ class PeriodicSlot(TriggerMixin, Slot):
 
 
 class ScheduleSlot(TriggerMixin, Slot):
+    start = models.DateTimeField(_('start date and time'))
+
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
     )

@@ -318,6 +318,8 @@ class CreatePeriodicParticipantsEffect(Effect):
 
 
 class RescheduleScheduleSlotContributions(Effect):
+    template = 'admin/time_based/periodic/reschedule_schedule_slot.html'
+
     def post_save(self):
         for participant in self.instance.participants.all():
             for contribution in participant.contributions.all():

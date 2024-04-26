@@ -301,6 +301,15 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
+    fields = ['edit', 'slot_date', 'user', 'status_label']
+    readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
+
+    def slot_date(self, obj):
+        if obj.slot:
+            return obj.slot.start.strftime('%Y-%m-%d %H:%M')
+        else:
+            return format_html('<i>{}</i>', _('unscheduled'))
+
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant

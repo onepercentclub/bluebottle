@@ -1476,6 +1476,10 @@ class ScheduleSlot(TriggerMixin, Slot):
         if self.duration and self.start:
             return self.start + self.duration
 
+    def __str__(self):
+        start = self.start.strftime("%Y-%m-%d %H:%M") if self.start else self.id
+        return str(_(f'Slot {start}'))
+
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(

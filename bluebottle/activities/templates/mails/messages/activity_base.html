@@ -1,5 +1,6 @@
 {% extends "base.mail.html" %}
 {% load i18n %}
+{% load message_url %}
 
 {% block content %}
     <p>
@@ -9,5 +10,5 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}" class="action-email">{{ action_title }}</a>
+<a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
 {% endblock %}`

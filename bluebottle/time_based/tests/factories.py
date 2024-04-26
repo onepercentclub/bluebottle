@@ -260,6 +260,7 @@ class ScheduleSlotFactory(factory.DjangoModelFactory):
 
     is_online = False
 
+    activity = factory.SubFactory(ScheduleActivityFactory)
     location = factory.SubFactory(GeolocationFactory)
     start = now() + timedelta(weeks=4)
     duration = timedelta(hours=2)

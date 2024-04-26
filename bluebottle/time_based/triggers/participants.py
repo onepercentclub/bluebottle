@@ -1,3 +1,4 @@
+from django.utils.timezone import now
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -500,6 +501,10 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
         """Has assigned slot"""
         return effect.instance.slot
 
+    def slot_is_finished(effect):
+        """Has assigned slot"""
+        return effect.instance.slot and effect.instance.slot.end < now()
+
     def has_no_slot(effect):
         """Has no assigned slot"""
         return not effect.instance.slot
@@ -568,7 +573,20 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     "activity",
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
-                )
+                ),
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.succeed,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleParticipantStateMachine.reset,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -701,12 +719,15 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreateSchedulePreparationTimeContributionEffect,
                 CreateScheduleContributionEffect,
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
+                ),
             ],
         ),
         ModelChangedTrigger(
             "slot_id",
             effects=[
-                CreateScheduleContributionEffect,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),

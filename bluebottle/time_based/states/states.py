@@ -307,13 +307,18 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     finish = Transition(
-        running,
+        [new, running],
         finished,
-        name=_('Finish'),
-        description=_(
-            'The slot has finished.'
-        ),
-        automatic=True
+        name=_("Finish"),
+        description=_("The slot has finished."),
+        automatic=True,
+    )
+    reopen = Transition(
+        [running, finished],
+        new,
+        name=_("Re-open"),
+        description=_("The slot is reopend."),
+        automatic=True,
     )
 
 

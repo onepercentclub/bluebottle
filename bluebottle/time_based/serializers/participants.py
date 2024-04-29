@@ -97,10 +97,11 @@ class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
         resource_name = "contributors/time-based/team-schedule-participants"
 
     included_serializers = dict(
-        ScheduleParticipantSerializer.included_serializers,
+        ParticipantSerializer.included_serializers,
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
+            "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         }
     )
 

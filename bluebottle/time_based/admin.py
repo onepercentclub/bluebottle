@@ -49,7 +49,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant,
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -444,7 +444,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         inlines = super().get_inlines(request, obj)
         if obj and obj.id:
             if obj.team_activity == 'teams':
-                return (TeamScheduleRegistrationAdminInline,) + inlines
+                return (TeamScheduleParticipantAdminInline, TeamScheduleRegistrationAdminInline) + inlines
             else:
                 return (ScheduleParticipantAdminInline,) + inlines
         return inlines
@@ -522,6 +522,28 @@ class PeriodicSlotAdmin(StateMachineAdmin):
         if request.user.is_superuser:
             fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
         return fieldsets
+
+
+@admin.register(ScheduleSlot)
+class ScheduleSlotAdmin(StateMachineAdmin):
+    list_display = ("start", "duration", "activity", "participant_count")
+    raw_id_fields = ('activity',)
+    readonly_fields = ("status",)
+    fields = readonly_fields + ("activity", "start", "duration")
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+        return fieldsets
+
+
+@admin.register(TeamScheduleSlot)
+class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
+    inlines = [TeamScheduleParticipantAdminInline]
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
@@ -773,17 +795,6 @@ class SlotAdmin(StateMachineAdmin):
                 )}),
             )
         return fieldsets
-
-
-@admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(SlotAdmin):
-    list_display = ("start", "duration", "activity")
-    raw_id_fields = ('activity', 'location')
-
-    detail_fields = SlotAdmin.detail_fields + [
-        'start',
-        'duration',
-    ]
 
 
 class SlotTimeFilter(SimpleListFilter):
@@ -1366,7 +1377,9 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Registration
     child_models = (
         PeriodicRegistration,
-        DeadlineRegistration
+        DeadlineRegistration,
+        ScheduleRegistration,
+        TeamScheduleRegistration,
     )
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)

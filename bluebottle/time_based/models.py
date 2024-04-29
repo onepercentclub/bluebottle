@@ -1417,6 +1417,22 @@ class TeamScheduleRegistration(Registration):
         )
 
 
+class ScheduleTeamMember(Registration):
+    team = models.ForeignKey(
+        'time_based.TeamScheduleRegistration',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/schedule-team-members'
+
+    class Meta:
+        verbose_name = _("Team member  for schedule activities")
+        verbose_name_plural = _("Team members for schedule activities")
+
+
 class ScheduleParticipant(Participant, Contributor):
     slot = models.ForeignKey(
         "time_based.ScheduleSlot",
@@ -1516,6 +1532,11 @@ class TeamScheduleParticipant(Participant, Contributor):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-participants'
 
+    def save(self, run_triggers=True, *args, **kwargs):
+        if not self.activity_id and self.slot:
+            self.activity = self.slot.activity
+        return super().save(run_triggers, *args, **kwargs)
+
 
 class Slot(models.Model):
     status = models.CharField(max_length=40)
@@ -1545,7 +1566,7 @@ class PeriodicSlot(TriggerMixin, Slot):
 
 
 class BaseScheduleSlot(TriggerMixin, Slot):
-    start = models.DateTimeField(_('start date and time'))
+    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
 
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
@@ -1593,6 +1614,10 @@ class TeamScheduleSlot(BaseScheduleSlot):
     activity = models.ForeignKey(
         ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
     )
+
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(status__in=["accepted", "participating", "succeeded", "new"])
 
 
 class PeriodicParticipant(Participant, Contributor):
@@ -1644,5 +1669,4 @@ class PeriodicParticipant(Participant, Contributor):
 
 
 from bluebottle.time_based.periodic_tasks import *  # noqa
-
 from bluebottle.time_based.signals import *  # noqa

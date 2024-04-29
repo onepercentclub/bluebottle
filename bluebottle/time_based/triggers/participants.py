@@ -752,7 +752,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.add, conditions=[has_slot]
+                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),
             ],
         ),

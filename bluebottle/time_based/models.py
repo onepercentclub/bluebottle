@@ -1173,9 +1173,9 @@ class Registration(TriggerMixin, PolymorphicModel):
         return self.activity.anonymized
 
     def __str__(self):
-        if self.activity and self.activity.team_activity == 'teams':
-            return _('Team {name} for {activity}').format(name=self.user, activity=self.activity)
-        return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
+        if self.activity_id:
+            return _('Candidate {name} for {activity}').format(name=self.user, activity=self.activity)
+        return _('Candidate {name}').format(name=self.user)
 
     class Meta:
         verbose_name = _("Candidate")
@@ -1379,10 +1379,6 @@ class TeamScheduleRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
-    @property
-    def participants(self):
-        return self.scheduleparticipant_set.all()
-
     class Meta:
         verbose_name = _("Team for schedule activities")
         verbose_name_plural = _("Teams for schedule activities")
@@ -1420,6 +1416,7 @@ class TeamScheduleRegistration(Registration):
 class ScheduleTeamMember(Registration):
     team = models.ForeignKey(
         'time_based.TeamScheduleRegistration',
+        related_name='team_members',
         on_delete=models.CASCADE,
         blank=True,
         null=True
@@ -1431,6 +1428,11 @@ class ScheduleTeamMember(Registration):
     class Meta:
         verbose_name = _("Team member  for schedule activities")
         verbose_name_plural = _("Team members for schedule activities")
+
+    def save(self, run_triggers=True, *args, **kwargs):
+        if not self.activity_id:
+            self.activity = self.team.activity
+        return super().save(run_triggers, *args, **kwargs)
 
 
 class ScheduleParticipant(Participant, Contributor):
@@ -1489,7 +1491,7 @@ class TeamScheduleParticipant(Participant, Contributor):
     )
 
     registration = models.ForeignKey(
-        'time_based.TeamScheduleRegistration',
+        'time_based.Registration',
         on_delete=models.CASCADE,
         blank=True,
         null=True,

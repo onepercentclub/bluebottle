@@ -150,5 +150,5 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
 
 
 @register(ScheduleTeamMember)
-class ScheduleTeamMeberStateMachine(RegistrationStateMachine):
+class ScheduleTeamMemberStateMachine(RegistrationStateMachine):
     pass

@@ -49,7 +49,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot,
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, ScheduleTeamMember,
 )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
@@ -444,7 +444,10 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         inlines = super().get_inlines(request, obj)
         if obj and obj.id:
             if obj.team_activity == 'teams':
-                return (TeamScheduleParticipantAdminInline, TeamScheduleRegistrationAdminInline) + inlines
+                return (
+                    TeamScheduleRegistrationAdminInline,
+                    TeamScheduleParticipantAdminInline
+                ) + inlines
             else:
                 return (ScheduleParticipantAdminInline,) + inlines
         return inlines
@@ -1380,6 +1383,7 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DeadlineRegistration,
         ScheduleRegistration,
         TeamScheduleRegistration,
+        ScheduleTeamMember
     )
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -1421,9 +1425,22 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
     inlines = [ScheduleParticipantAdminInline]
 
 
+@admin.register(ScheduleTeamMember)
+class ScheduleTeamMemberAdmin(RegistrationChildAdmin):
+    inlines = [TeamScheduleParticipantAdminInline]
+
+
+class ScheduleTeamMemberAdminInline(BaseContributorInline):
+    model = ScheduleTeamMember
+    fk_name = 'team'
+
+
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
-    inlines = [TeamScheduleParticipantAdminInline]
+    inlines = [
+        TeamScheduleParticipantAdminInline,
+        ScheduleTeamMemberAdminInline
+    ]
 
 
 @admin.register(PeriodicRegistration)

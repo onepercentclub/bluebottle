@@ -1428,6 +1428,8 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
 @admin.register(ScheduleTeamMember)
 class ScheduleTeamMemberAdmin(RegistrationChildAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
+    raw_id_fields = ["user", "activity", "team"]
+    fields = RegistrationChildAdmin.fields + ["team"]
 
 
 class ScheduleTeamMemberAdminInline(BaseContributorInline):

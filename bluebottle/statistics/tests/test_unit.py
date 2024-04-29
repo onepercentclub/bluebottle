@@ -18,8 +18,10 @@ from bluebottle.statistics.statistics import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
-    PeriodActivityFactory, PeriodParticipantFactory, DateActivitySlotFactory
+    DateActivityFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -69,11 +71,19 @@ class StatisticsTest(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
 
+@override_settings(
+    CACHES={
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 class DateActivityStatisticsTest(StatisticsTest):
     def setUp(self):
         super(DateActivityStatisticsTest, self).setUp()
         self.activity = DateActivityFactory.create(
             initiative=self.initiative,
+            preparation=None,
             owner=self.some_user,
             capacity=10,
             slots=[]
@@ -134,7 +144,12 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        participant = DateParticipantFactory.create(
+            activity=self.activity, user=self.other_user
+        )
+        SlotParticipantFactory.create(
+            slot=self.activity.slots.get(), participant=participant
+        )
         self.activity.states.succeed(save=True)
 
         self.assertEqual(
@@ -181,10 +196,11 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_noshow(self):
-        contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        participant = DateParticipantFactory.create(
+            activity=self.activity, user=self.other_user
+        )
         self.activity.states.succeed(save=True)
-        contribution.states.remove(save=True)
-
+        participant.states.remove(save=True)
         self.assertEqual(
             self.stats.activities_online, 0
         )
@@ -199,137 +215,6 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
         self.assertEqual(
             self.stats.activity_participants, 0
-        )
-        self.assertEqual(
-            self.stats.people_involved, 1
-        )
-
-
-class PeriodActivityStatisticsTest(StatisticsTest):
-    def setUp(self):
-        super(PeriodActivityStatisticsTest, self).setUp()
-        self.activity = PeriodActivityFactory.create(
-            owner=self.some_user,
-            initiative=self.initiative,
-            registration_deadline=(timezone.now() + datetime.timedelta(hours=24)).date(),
-            deadline=datetime.date.today() + datetime.timedelta(days=48),
-            duration=datetime.timedelta(minutes=6)
-        )
-        self.activity.states.submit(save=True)
-
-    def test_open(self):
-        self.assertEqual(
-            self.stats.activities_online, 1
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 0
-        )
-        self.assertEqual(
-            self.stats.people_involved, 1
-        )
-
-    def test_succeeded(self):
-        self.activity.states.succeed(save=True)
-
-        self.assertEqual(
-            self.stats.activities_online, 0
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.people_involved, 1
-        )
-
-    def test_cancelled(self):
-        self.activity.states.cancel(save=True)
-
-        self.assertEqual(
-            self.stats.activities_online, 0
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 0
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 0
-        )
-        self.assertEqual(
-            self.stats.people_involved, 1
-        )
-
-    def test_applicant(self):
-        contributor = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
-        self.activity.states.succeed(save=True)
-        contributor.refresh_from_db()
-        contribution = contributor.contributions.get()
-        contribution.value = datetime.timedelta(hours=4)
-
-        contribution.save()
-        self.assertEqual(
-            self.stats.activities_online, 0
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_spent, 4.0
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.people_involved, 2
-        )
-
-    def test_applicant_withdrawn(self):
-        contribution = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
-        contribution.states.withdraw(save=True)
-        self.activity.states.succeed(save=True)
-
-        self.assertEqual(
-            self.stats.activities_online, 0
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_spent, 0
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.people_involved, 1
-        )
-
-    def test_participant_rejected(self):
-        contribution = PeriodParticipantFactory.create(activity=self.activity, user=self.other_user)
-        contribution.states.remove(save=True)
-        self.activity.states.succeed(save=True)
-
-        self.assertEqual(
-            self.stats.activities_online, 0
-        )
-        self.assertEqual(
-            self.stats.activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
-        )
-        self.assertEqual(
-            self.stats.time_spent, 0
-        )
-        self.assertEqual(
-            self.stats.time_activities_succeeded, 1
         )
         self.assertEqual(
             self.stats.people_involved, 1
@@ -751,16 +636,17 @@ class StatisticsDateTest(BluebottleTestCase):
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )
-            DateActivitySlotFactory.create(
+            slot = DateActivitySlotFactory.create(
                 activity=activity,
                 start=past_date,
                 duration=datetime.timedelta(minutes=60),
             )
 
-            DateParticipantFactory.create(
+            participant = DateParticipantFactory.create(
                 activity=activity,
                 user=other_user
             )
+            SlotParticipantFactory.create(participant=participant, slot=slot)
             activity.states.publish(save=True)
 
     def test_all(self):

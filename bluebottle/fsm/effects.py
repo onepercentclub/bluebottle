@@ -1,10 +1,10 @@
+from builtins import object
+from builtins import str
 from collections import Iterable
 from functools import partial
 
-from builtins import str
-from builtins import object
-from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible
@@ -80,6 +80,7 @@ class BaseTransitionEffect(Effect):
         super().execute(**kwargs)
         try:
             self.transition.execute(self.machine)
+            self.instance.save()
         except TransitionNotPossible:
             pass
 
@@ -157,6 +158,7 @@ class BaseRelatedTransitionEffect(Effect):
     def execute(self):
         super().execute()
         for instance in self.instances:
+
             effect = self.transition_effect_class(
                 instance, parent=self.instance, **self.options
             )

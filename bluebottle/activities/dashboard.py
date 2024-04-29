@@ -5,6 +5,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
 from bluebottle.activities.models import Activity, Contributor
+from bluebottle.time_based.models import PeriodActivity
 
 
 class UnPublishedActivities(DashboardModule):
@@ -27,8 +28,13 @@ class RecentActivities(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        activities = Activity.objects.filter(status='submitted').order_by('-created')
-        self.children = activities[:self.limit]
+        # Temporary fix until we ge rid of PeriodActivity
+        activities = (
+            Activity.objects.not_instance_of(PeriodActivity)
+            .filter(status="submitted")
+            .order_by("-created")
+        )
+        self.children = activities[: self.limit]
 
 
 class RecentContributors(DashboardModule):

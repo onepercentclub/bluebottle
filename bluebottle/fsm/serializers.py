@@ -51,13 +51,17 @@ class CurrentStatusField(ReadOnlyField):
 class TransitionSerializer(serializers.Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    send_email = serializers.BooleanField(default=True, allow_null=True)
 
     field = 'states'
 
     def save(self):
-        resource = self.validated_data['resource']
-        transition_name = self.validated_data['transition']
-        message = self.validated_data.get('message', '')
+        resource = self.validated_data["resource"]
+        transition_name = self.validated_data["transition"]
+        message = self.validated_data.get("message", None)
+        send_email = self.validated_data.get("send_email", True)
+        if send_email is None:
+            send_email = True
         states = getattr(resource, self.field)
         user = self.context['request'].user
 

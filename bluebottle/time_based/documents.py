@@ -5,7 +5,15 @@ from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.activities.documents import ActivityDocument, activity, get_translated_list
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, DateActivitySlot
+    DateActivity,
+    DeadlineActivity,
+    DeadlineParticipant,
+    PeriodicActivity,
+    PeriodicParticipant,
+    ScheduleActivity,
+    ScheduleParticipant,
+    DateParticipant,
+    DateActivitySlot,
 )
 
 SCORE_MAP = {
@@ -137,9 +145,8 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return any(slot.is_online for slot in instance.slots.all())
 
 
-@registry.register_document
-@activity.doc_type
-class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class RegistrationActivityDocument(ActivityDocument):
+
     contribution_duration = fields.NestedField(properties={
         'period': fields.KeywordField(),
         'value': fields.FloatField()
@@ -151,25 +158,26 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         if result is not None:
             return result
 
-        if isinstance(related_instance, PeriodParticipant):
-            return PeriodActivity.objects.filter(contributors=related_instance)
-
-    class Django:
-        related_models = ActivityDocument.Django.related_models + (PeriodParticipant, )
-        model = PeriodActivity
+        if isinstance(related_instance, self.participant_class):
+            return DeadlineActivity.objects.filter(contributors=related_instance)
 
     def prepare_contribution_duration(self, instance):
         if instance.duration:
-            return [{
-                'period': instance.duration_period,
-                'start': instance.start,
-                'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
-            }]
-        return [{
-            'period': instance.duration_period,
-            'start': instance.start,
-            'value': 0
-        }]
+            return [
+                {
+                    "period": 0,
+                    "start": instance.start,
+                    "value": instance.duration.seconds / (60 * 60)
+                    + instance.duration.days * 24,
+                }
+            ]
+        return [
+            {
+                "start": instance.start,
+                "value": 0,
+                "period": 0,
+            }
+        ]
 
     def prepare_position(self, instance):
         if not instance.is_online and instance.location:
@@ -191,5 +199,67 @@ class PeriodActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     def prepare_duration(self, instance):
         if instance.start and instance.deadline and instance.start > instance.deadline:
             return {}
+        return {"gte": instance.start, "lte": instance.deadline}
 
-        return {'gte': instance.start, 'lte': instance.deadline}
+
+@registry.register_document
+@activity.doc_type
+class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = DeadlineParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    "period": "once",
+                    "value": instance.duration.seconds / (60 * 60)
+                    + instance.duration.days * 24,
+                }
+            ]
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
+        model = DeadlineActivity
+
+
+@registry.register_document
+@activity.doc_type
+class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = PeriodicParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    "period": instance.period,
+                    "value": instance.duration.seconds / (60 * 60)
+                    + instance.duration.days * 24,
+                }
+            ]
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (PeriodicParticipant,)
+        model = PeriodicActivity
+
+
+@registry.register_document
+@activity.doc_type
+class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+    participant_class = ScheduleParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    "period": "once",
+                    "value": instance.duration.seconds / (60 * 60)
+                    + instance.duration.days * 24,
+                }
+            ]
+
+    class Django:
+
+        related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
+        model = ScheduleActivity

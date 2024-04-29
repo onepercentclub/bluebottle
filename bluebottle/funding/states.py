@@ -1,7 +1,14 @@
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
+from bluebottle.activities.states import (
+    ActivityStateMachine,
+    ContributorStateMachine,
+    ContributionStateMachine,
+    is_valid,
+    is_complete,
+    initiative_is_approved,
+)
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
 
@@ -78,11 +85,7 @@ class FundingStateMachine(ActivityStateMachine):
         description=_('The campaign will be visible in the frontend and people can donate.'),
         automatic=False,
         permission=can_approve,
-        conditions=[
-            ActivityStateMachine.initiative_is_approved,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.is_complete
-        ],
+        conditions=[initiative_is_approved, is_valid, is_complete],
     )
 
     cancel = Transition(

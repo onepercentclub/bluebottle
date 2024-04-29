@@ -260,8 +260,9 @@ class ActivitySearch(Search):
             field='is_online',
             labels={'0': _('In-person'), '1': _('Online/remote')}
         ),
-        'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': UntranslatedModelFacet('office', Location),
+        "team_activity": TeamActivityFacet(field="team_activity"),
+        "office": UntranslatedModelFacet("office", Location),
+        "date": ActivityDateRangeFacet(),
     }
 
     possible_facets = {
@@ -269,7 +270,6 @@ class ActivitySearch(Search):
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
-        'date': ActivityDateRangeFacet(),
     }
 
     def sort(self, search):

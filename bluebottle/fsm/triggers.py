@@ -1,15 +1,17 @@
-from django.dispatch import receiver
-from django.db.models.signals import post_delete, pre_delete
-
 from builtins import str
-from builtins import zip
 from builtins import object
+from builtins import zip
+from operator import ipow
+
+from django.db.models.signals import post_delete, pre_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
-
+from django.template.loader import render_to_string
 
 from bluebottle.fsm.state import pre_state_transition
+from bluebottle.fsm.effects import Effect
 
 
 class TriggerManager(object):
@@ -91,14 +93,6 @@ def pre_delete_trigger(sender, instance, **kwargs):
                 BoundTrigger(instance, trigger).execute()
 
 
-@receiver(post_delete)
-def post_delete_trigger(sender, instance, **kwargs):
-    if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
-        while instance._postponed_effects:
-            effect = instance._postponed_effects.pop()
-            effect.post_save()
-
-
 @python_2_unicode_compatible
 class TransitionTrigger(Trigger):
     def __init__(self, transition, *args, **kwargs):
@@ -112,14 +106,6 @@ class TransitionTrigger(Trigger):
         return "MISSING TITLE"
 
 
-@receiver(pre_state_transition)
-def transition_trigger(sender, instance, transition, **kwargs):
-    if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
-        for trigger in instance.triggers.triggers:
-            if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
-                instance._triggers.append(BoundTrigger(instance, trigger))
-
-
 def register(model_cls):
     def _register(TriggerManager):
         model_cls.triggers = TriggerManager()
@@ -127,6 +113,36 @@ def register(model_cls):
 
     return _register
 
+
+class TransitionEffect(Effect):
+    def __init__(self, instance, transition):
+        self.transition = transition
+        super().__init__(instance)
+
+    def execute(self):
+        print(
+            f"transition {self.instance} to {self.transition} from {self.instance.status}"
+        )
+        self.transition.execute(self.instance.states)
+        super().execute()
+
+    def __str__(self):
+        return "Transition"
+
+    template = "admin/transition_effect.html"
+
+    @classmethod
+    def render(cls, effects):
+        final_transition = effects[-1].transition.target
+        context = {
+            "opts": effects[0].instance.__class__._meta,
+            "effects": [
+                effect
+                for effect in effects
+                if effect.transition.target == final_transition
+            ],
+        }
+        return render_to_string(cls.template, context)
 
 class TriggerMixin(object):
     periodic_tasks = []
@@ -147,9 +163,6 @@ class TriggerMixin(object):
 
     def __init__(self, *args, **kwargs):
         super(TriggerMixin, self).__init__(*args, **kwargs)
-        self._triggers = []
-        self._postponed_effects = []
-        self._transitions = []
 
         if hasattr(self, '_state_machines'):
             for name, machine_class in list(self._state_machines.items()):
@@ -184,12 +197,6 @@ class TriggerMixin(object):
                     if trigger.changed(self):
                         self._triggers.append(BoundTrigger(self, trigger))
 
-    def _check_model_created_triggers(self):
-        if hasattr(self, 'triggers') and not self.pk:
-            for trigger in self.triggers.triggers:
-                if isinstance(trigger, ModelCreatedTrigger):
-                    self._triggers.append(BoundTrigger(self, trigger))
-
     def _execute_triggers(self):
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:
@@ -197,20 +204,19 @@ class TriggerMixin(object):
                 if not machine.state and machine.initial_transition:
                     machine.initial_transition.execute(machine)
 
-        self._check_model_changed_triggers()
-        self._check_model_created_triggers()
+        while self.states.automatic_transitions():
+            transition = self.states.automatic_transitions()[0]
+            effect = TransitionEffect(self, transition)
+            effect.execute()
 
-        while self._triggers:
-            trigger = self._triggers.pop()
-            trigger.execute()
+    def save(self, *args, **kwargs):
+        self._execute_triggers()
 
-        self._triggers = []
-
-    def save(self, run_triggers=True, *args, **kwargs):
         super(TriggerMixin, self).save(*args, **kwargs)
 
-        if run_triggers:
-            self._execute_triggers()
+        for instance in self.states.related_models:
+            if instance.states.automatic_transitions():
+                instance.save()
 
         self._initial_values = dict(
             (field.name, getattr(self, field.name))

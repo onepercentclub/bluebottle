@@ -43,7 +43,7 @@ class TimeBasedInfoMixin(object):
         if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
-            participant = self.obj.activity.participants.get(user=recipient)
+            participant = self.obj.activity.participants.filter(user=recipient).first()
         elif isinstance(self.obj, SlotParticipant):
             participant = self.obj.participant
         else:
@@ -805,8 +805,11 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     """
     Slot participant registered for a time slot for an activity
     """
-    subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
-    template = 'messages/participant/slot_participant_registered'
+
+    subject = pgettext(
+        "email", 'You\'ve registered for a time slot for the activity "{title}"'
+    )
+    template = "messages/participants/slot_participant_registered"
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',

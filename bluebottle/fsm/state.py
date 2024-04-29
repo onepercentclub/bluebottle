@@ -26,8 +26,19 @@ def register(model_cls):
 
 @python_2_unicode_compatible
 class BaseTransition(object):
-    def __init__(self, sources, target, name='', description='', description_front_end='',
-                 passed_label=None, automatic=True, conditions=None, effects=None, **options):
+    def __init__(
+        self,
+        sources,
+        target,
+        name="",
+        description="",
+        description_front_end="",
+        passed_label=None,
+        automatic=True,
+        conditions=None,
+        effects=None,
+        **options
+    ):
         self.name = name
 
         if not isinstance(sources, (list, tuple)):
@@ -52,7 +63,7 @@ class BaseTransition(object):
         return [source.value for source in self.sources]
 
     def is_valid(self, machine):
-        if not all(condition(machine) for condition in self.conditions):
+        if not all(condition(machine.instance) for condition in self.conditions):
             raise TransitionNotPossible(
                 _('Conditions not met for transition')
             )
@@ -80,6 +91,10 @@ class BaseTransition(object):
     def execute(self, machine, **kwargs):
         self.can_execute(machine, **kwargs)
         self.on_execute(machine, **kwargs)
+
+        if self.effects:
+            for effect in self.effects:
+                effect(machine.instance).execute()
 
     def __get__(self, instance, owner):
         if instance and isinstance(instance, StateMachine):
@@ -215,6 +230,8 @@ class StateMachineMeta(type):
 
 
 class StateMachine(with_metaclass(StateMachineMeta, object)):
+    related_models = []
+
     @property
     def initial_transition(self):
         initial_transitions = [
@@ -246,6 +263,13 @@ class StateMachine(with_metaclass(StateMachineMeta, object)):
                 pass
 
         return result
+
+    def automatic_transitions(self, **kwargs):
+        return [
+            transition
+            for transition in self.possible_transitions()
+            if transition.automatic
+        ]
 
 
 class ModelStateMachineMeta(StateMachineMeta):

@@ -1,21 +1,31 @@
 from datetime import date, timedelta
 
-from django.db.models import DateTimeField, ExpressionWrapper, F, Q
+from django.db.models import DateTimeField, ExpressionWrapper, F
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.effects import TransitionEffect
 from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
-from bluebottle.notifications.effects import NotificationEffect, LogErrorEffect
-from bluebottle.time_based.effects import CreatePeriodTimeContributionEffect
-from bluebottle.time_based.messages import ReminderSlotNotification, ReminderTeamSlotNotification
+from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.messages import ReminderSlotNotification
 from bluebottle.time_based.models import (
-    DateActivity, PeriodActivity, PeriodParticipant, TimeContribution, DateActivitySlot, TeamSlot
+    DateActivity,
+    DeadlineActivity,
+    PeriodicActivity,
+    PeriodicSlot,
+    TimeContribution,
+    DateActivitySlot,
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine, TeamSlotStateMachine
+    TimeBasedStateMachine,
+    TimeContributionStateMachine,
+    ActivitySlotStateMachine,
 )
-from bluebottle.time_based.triggers import has_participants, has_no_participants
+from bluebottle.time_based.states.states import PeriodicSlotStateMachine
+from bluebottle.time_based.triggers.triggers import (
+    has_participants,
+    has_no_participants,
+)
 
 
 class TimeBasedActivityRegistrationDeadlinePassedTask(ModelPeriodicTask):
@@ -59,79 +69,6 @@ class DateActivityFinishedTask(ModelPeriodicTask):
 
     def __str__(self):
         return str(_("Finish an activity when all slots are completed."))
-
-
-class DateActivityCheckFull(ModelPeriodicTask):
-
-    def get_queryset(self):
-        return self.model.objects.filter(slots__status='open').filter(status__in=['full', 'succeeded']).all()
-
-    effects = [
-        LogErrorEffect('Activity {title} is {status} but there are still open slots.'),
-        TransitionEffect(TimeBasedStateMachine.reopen),
-    ]
-
-    def __str__(self):
-        return str(_("Reopen full activity when a slot is open."))
-
-
-class DateActivityCheckNotFull(ModelPeriodicTask):
-
-    def get_queryset(self):
-        return self.model.objects.exclude(slots__status='open').filter(status='open').all()
-
-    effects = [
-        LogErrorEffect("Activity {title} is not full but there aren't open slots."),
-        TransitionEffect(TimeBasedStateMachine.lock),
-    ]
-
-    def __str__(self):
-        return str(_("Close an open activity when no slot is open."))
-
-
-class PeriodActivityFinishedTask(ModelPeriodicTask):
-
-    def get_queryset(self):
-        return self.model.objects.filter(
-            deadline__lt=date.today(),
-            status__in=['open', 'full']
-        )
-
-    effects = [
-        TransitionEffect(TimeBasedStateMachine.succeed, conditions=[
-            has_participants
-        ]),
-        TransitionEffect(TimeBasedStateMachine.expire, conditions=[
-            has_no_participants
-        ]),
-    ]
-
-    def __str__(self):
-        return str(_("Finish an activity when deadline has passed."))
-
-
-class NewPeriodForParticipantTask(ModelPeriodicTask):
-    """
-    Create a new contribution when, the participant is new or
-    accepted, and the activity is open or full.
-    """
-
-    def get_queryset(self):
-        return self.model.objects.filter(
-            current_period__lte=date.today(),
-            status__in=('accepted', 'new',)
-        ).filter(
-            Q(
-                activity__status__in=['open', 'full'],
-            )
-        )
-
-    effects = [
-        CreatePeriodTimeContributionEffect
-    ]
-
-    def __str__(self):
-        return str(_("Create a new contribution for participant"))
 
 
 class SlotStartedTask(ModelPeriodicTask):
@@ -204,45 +141,46 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
         return str(_("Send a reminder 24 hours before the activity slot."))
 
 
-class TeamSlotReminderTask(ModelPeriodicTask):
-
+class ActivityFinishedTask(ModelPeriodicTask):
     def get_queryset(self):
-        return TeamSlot.objects.filter(
-            start__lte=timezone.now() + timedelta(days=5),
-            start__gt=timezone.now(),
-            status__in=['open', 'full'],
-            activity__status__in=['open', 'full']
+        return self.model.objects.filter(
+            deadline__lt=date.today(), status__in=["open", "full"]
         )
 
     effects = [
-        NotificationEffect(
-            ReminderTeamSlotNotification,
+        TransitionEffect(TimeBasedStateMachine.succeed, conditions=[has_participants]),
+        TransitionEffect(
+            TimeBasedStateMachine.expire, conditions=[has_no_participants]
         ),
     ]
 
     def __str__(self):
-        return str(_("Send a reminder five days before the team activity slot."))
+        return str(_("Finish an activity when deadline has passed."))
 
 
-class TeamSlotStartedTask(SlotStartedTask):
+class PeriodicSlotStartedTask(ModelPeriodicTask):
+    def get_queryset(self):
+        return PeriodicSlot.objects.filter(start__lte=timezone.now(), status="new")
 
-    effects = [
-        TransitionEffect(TeamSlotStateMachine.start),
-    ]
+    effects = [TransitionEffect(PeriodicSlotStateMachine.start)]
+
+    def __str__(self):
+        return str(_("Start a new slot when the current one is finished"))
 
 
-class TeamSlotFinishedTask(SlotFinishedTask):
+class PeriodicSlotFinishedTask(ModelPeriodicTask):
+    def get_queryset(self):
+        return PeriodicSlot.objects.filter(end__lte=timezone.now(), status="running")
 
-    effects = [
-        TransitionEffect(TeamSlotStateMachine.finish),
-    ]
+    effects = [TransitionEffect(PeriodicSlotStateMachine.finish)]
+
+    def __str__(self):
+        return str(_("Start a new slot when the current one is finished"))
 
 
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
     DateActivityFinishedTask,
-    # DateActivityCheckFull,
-    # DateActivityCheckNotFull
 ]
 
 DateActivitySlot.periodic_tasks = [
@@ -251,16 +189,8 @@ DateActivitySlot.periodic_tasks = [
     SlotFinishedTask,
 ]
 
-TeamSlot.periodic_tasks = [
-    TeamSlotReminderTask,
-    TeamSlotStartedTask,
-    TeamSlotFinishedTask,
-]
-
-PeriodActivity.periodic_tasks = [
-    PeriodActivityFinishedTask,
-    TimeBasedActivityRegistrationDeadlinePassedTask
-]
-
-PeriodParticipant.periodic_tasks = [NewPeriodForParticipantTask]
 TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
+
+DeadlineActivity.periodic_tasks = [ActivityFinishedTask]
+PeriodicActivity.periodic_tasks = [ActivityFinishedTask]
+PeriodicSlot.periodic_tasks = [PeriodicSlotStartedTask, PeriodicSlotFinishedTask]

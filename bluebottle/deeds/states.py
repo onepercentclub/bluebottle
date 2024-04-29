@@ -1,6 +1,12 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
+from bluebottle.activities.states import (
+    ActivityStateMachine,
+    ContributorStateMachine,
+    is_complete,
+    is_valid,
+    initiative_is_approved,
+)
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 
@@ -29,11 +35,7 @@ class DeedStateMachine(ActivityStateMachine):
         automatic=False,
         name=_('Publish'),
         permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
+        conditions=[is_complete, is_valid, initiative_is_approved],
     )
 
     succeed = Transition(

@@ -1,14 +1,54 @@
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from bluebottle.activities.models import Organizer, EffortContribution, Team
-from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
+from bluebottle.fsm.state import (
+    ModelStateMachine,
+    State,
+    EmptyState,
+    AllStates,
+    Transition,
+    register,
+)
+
+
+def is_complete(instance):
+    """all required information has been submitted"""
+    return not list(instance.required)
+
+
+def is_valid(instance):
+    """all fields passed validation and are correct"""
+    return not list(instance.errors)
+
+
+def initiative_is_approved(instance):
+    """the initiative has been approved"""
+    return instance.initiative_id and instance.initiative.status == "approved"
+
+
+def initiative_is_submitted(instance):
+    """the initiative has been submitted"""
+    return instance.initiative.status == "submitted"
+
+
+def initiative_is_not_approved(instance):
+    """the initiative has not yet been approved"""
+    return not initiative_is_approved(instance)
+
+
+def should_auto_approve(instance):
+    """the activity should be approved automatically"""
+    return instance.auto_approve
 
 
 class ActivityStateMachine(ModelStateMachine):
     draft = State(
-        _('draft'),
-        'draft',
-        _('The activity has been created, but not yet completed. An activity manager is still editing the activity.')
+        _("draft"),
+        "draft",
+        _(
+            "The activity has been created, but not yet completed. An activity manager is still editing the activity."
+        ),
     )
     submitted = State(
         _('submitted'),
@@ -55,36 +95,10 @@ class ActivityStateMachine(ModelStateMachine):
             'but counts in the report. The activity cannot be edited by an activity manager.'
         )
     )
-    open = State(
-        _('open'),
-        'open',
-        _('The activity is accepting new contributions.')
-    )
+    open = State(_("open"), "open", _("The activity is accepting new contributions."))
     succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _('The activity has ended successfully.')
+        _("succeeded"), "succeeded", _("The activity has ended successfully.")
     )
-
-    def is_complete(self):
-        """all required information has been submitted"""
-        return not list(self.instance.required)
-
-    def is_valid(self):
-        """all fields passed validation and are correct"""
-        return not list(self.instance.errors)
-
-    def initiative_is_approved(self):
-        """the initiative has been approved"""
-        return self.instance.initiative_id and self.instance.initiative.status == 'approved'
-
-    def initiative_is_submitted(self):
-        """the initiative has been submitted"""
-        return self.instance.initiative.status in ('submitted', 'approved')
-
-    def initiative_is_not_approved(self):
-        """the initiative has not yet been approved"""
-        return not self.initiative_is_approved()
 
     def is_staff(self, user):
         """user is a staff member"""
@@ -93,21 +107,17 @@ class ActivityStateMachine(ModelStateMachine):
     def is_owner(self, user):
         """user is the owner"""
         return (
-            user == self.instance.owner or
-            user == self.instance.initiative.owner or
-            user in self.instance.initiative.activity_managers.all() or
-            user.is_staff
+            user == self.instance.owner
+            or user == self.instance.initiative.owner
+            or user in self.instance.initiative.activity_managers.all()
+            or user.is_staff
         )
-
-    def should_auto_approve(self):
-        """the activity should be approved automatically"""
-        return self.instance.auto_approve
 
     initiate = Transition(
         EmptyState(),
         draft,
-        name=_('Create'),
-        description=_('The activity will be created.'),
+        name=_("Create"),
+        description=_("The activity will be created."),
     )
 
     auto_submit = Transition(
@@ -116,20 +126,20 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         submitted,
-        description=_('The activity will be submitted for review.'),
+        description=_("The activity will be submitted for review."),
         automatic=True,
-        name=_('Submit'),
-        conditions=[is_complete, is_valid],
+        name=_("Submit"),
+        conditions=[is_complete, is_valid, initiative_is_submitted],
     )
 
     reject = Transition(
         AllStates(),
         rejected,
-        name=_('Reject'),
+        name=_("Reject"),
         description=_(
-            'Reject the activity if it does not fit the programme or '
-            'if it does not comply with the rules. '
-            'The activity manager can no longer edit the activity.'
+            "Reject the activity if it does not fit the programme or "
+            "if it does not comply with the rules. "
+            "The activity manager can no longer edit the activity."
         ),
         automatic=False,
         permission=is_staff,
@@ -149,14 +159,14 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     auto_approve = Transition(
-        [
-            submitted,
-            rejected
-        ],
+        [submitted, rejected],
         open,
-        name=_('Approve'),
+        name=_("Approve"),
         automatic=True,
-        conditions=[should_auto_approve],
+        conditions=[
+            should_auto_approve,
+            lambda instance: instance.initiative.status == "approved",
+        ],
         description=_(
             "The activity will be visible in the frontend and people can apply to "
             "the activity."
@@ -232,27 +242,21 @@ class ActivityStateMachine(ModelStateMachine):
     succeed = Transition(
         open,
         succeeded,
-        name=_('Succeed'),
+        name=_("Succeed"),
         automatic=True,
     )
 
 
 class ContributorStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _("The user started a contribution")
-    )
+    @property
+    def related_models(self):
+        return self.instance.contributions.all()
+
+    new = State(_("new"), "new", _("The user started a contribution"))
     succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _("The contribution was successful.")
+        _("succeeded"), "succeeded", _("The contribution was successful.")
     )
-    failed = State(
-        _('failed'),
-        'failed',
-        _("The contribution failed.")
-    )
+    failed = State(_("failed"), "failed", _("The contribution failed."))
 
     def is_user(self, user):
         return self.instance.user == user
@@ -260,33 +264,17 @@ class ContributorStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         new,
-        name=_('initiate'),
-        description=_('The contribution was created.')
-    )
-    fail = Transition(
-        (new, succeeded, failed,),
-        failed,
-        name=_('fail'),
-        description=_("The contribution failed. It will not be visible in reports."),
+        name=_("initiate"),
+        description=_("The contribution was created."),
     )
 
 
 class ContributionStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _("The user started a contribution")
-    )
+    new = State(_("new"), "new", _("The user started a contribution"))
     succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _("The contribution was successful.")
+        _("succeeded"), "succeeded", _("The contribution was successful.")
     )
-    failed = State(
-        _('failed'),
-        'failed',
-        _("The contribution failed.")
-    )
+    failed = State(_("failed"), "failed", _("The contribution failed."))
 
     def is_user(self, user):
         return self.instance.user == user
@@ -294,77 +282,90 @@ class ContributionStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         new,
-        name=_('initiate'),
-        description=_('The contribution was created.')
+        name=_("initiate"),
+        description=_("The contribution was created."),
+        automatic=True,
     )
 
     fail = Transition(
         [new, succeeded],
         failed,
-        name=_('fail'),
+        name=_("fail"),
         description=_("The contribution failed. It will not be visible in reports."),
-    )
-
-    succeed = Transition(
-        [new, failed],
-        succeeded,
-        name=_('succeeded'),
-        description=_("The contribution succeeded. It will be visible in reports."),
+        automatic=True,
+        conditions=[
+            lambda instance: instance.contributor.status
+            not in ("new", "accepted", "scheduled", "succeeded"),
+        ],
     )
 
     reset = Transition(
         [failed, succeeded],
         new,
-        name=_('reset'),
+        name=_("reset"),
         description=_("The contribution is reset."),
+        conditions=[
+            lambda instance: instance.contributor.status
+            in ("new", "accepted", "scheduled"),
+        ],
+    )
+
+    succeed = Transition(
+        [new],
+        succeeded,
+        name=_("succeeded"),
+        description=_("The contribution succeeded. It will be visible in reports."),
+        automatic=True,
+        conditions=[lambda instance: instance.contributor.status == "succeeded"],
     )
 
 
 @register(Organizer)
 class OrganizerStateMachine(ContributorStateMachine):
     succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed
-        ],
+        [ContributorStateMachine.new, ContributorStateMachine.failed],
         ContributorStateMachine.succeeded,
-        name=_('succeed'),
-        description=_('The organizer was successful in setting up the activity.')
+        name=_("succeed"),
+        description=_("The organizer was successful in setting up the activity."),
+        automatic=True,
+        conditions=[
+            lambda instance: instance.activity.status
+            in ("draft", "needs_work", "submitted"),
+        ],
     )
     fail = Transition(
-        AllStates(),
+        [ContributionStateMachine.new, ContributionStateMachine.succeeded],
         ContributorStateMachine.failed,
-        name=_('fail'),
-        description=_('The organizer failed to set up the activity.')
+        name=_("fail"),
+        description=_("The organizer failed to set up the activity."),
+        automatic=True,
+        conditions=[
+            lambda instance: instance.activity.status
+            in ("cancelled", "rejected", "expired"),
+        ],
     )
     reset = Transition(
-        [
-            ContributorStateMachine.succeeded,
-            ContributorStateMachine.failed
-        ],
+        [ContributorStateMachine.succeeded, ContributorStateMachine.failed],
         ContributorStateMachine.new,
-        name=_('reset'),
-        description=_('The organizer is still busy setting up the activity.')
+        name=_("reset"),
+        description=_("The organizer is still busy setting up the activity."),
+        automatic=True,
+        conditions=[
+            lambda instance: instance.activity.status in ("open", "succeeded"),
+        ],
     )
 
 
 @register(EffortContribution)
 class EffortContributionStateMachine(ContributionStateMachine):
+    related_models = []
     pass
 
 
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _('The team has yet to be accepted')
-    )
-    open = State(
-        _('open'),
-        'open',
-        _('The team is open for contributors')
-    )
+    new = State(_("new"), "new", _("The team has yet to be accepted"))
+    open = State(_("open"), "open", _("The team is open for contributors"))
     withdrawn = State(
         _('withdrawn'),
         'withdrawn',

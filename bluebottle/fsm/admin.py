@@ -113,26 +113,6 @@ class StateMachineAdminMixin(object):
                 request, "admin/change_effects_confirmation.html", context
             )
 
-
-    def save_model(self, request, obj, form, change):
-        """
-        Given a model instance save it to the database.
-        """
-        send_messages = request.POST.get('send_messages') == 'on'
-        obj.execute_triggers(user=request.user, send_messages=send_messages)
-        obj.save()
-
-    def save_formset(self, request, form, formset, change):
-        """
-        Given an inline formset save it to the database.
-        """
-        send_messages = request.POST.get('send_messages') == 'on'
-        for form in formset.forms:
-            if isinstance(form.instance, TriggerMixin):
-                form.instance.execute_triggers(user=request.user, send_messages=send_messages)
-
-        formset.save()
-
     def get_transition(self, instance, name, field_name):
         transitions = getattr(instance, field_name).all_transitions
         for transition in transitions:

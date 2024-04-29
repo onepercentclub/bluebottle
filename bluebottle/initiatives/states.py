@@ -4,10 +4,46 @@ from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, Transitio
 from bluebottle.initiatives.models import Initiative
 
 
+from bluebottle.initiatives.messages import (
+    InitiativeRejectedOwnerMessage,
+    InitiativeApprovedOwnerMessage,
+    InitiativeCancelledOwnerMessage,
+    InitiativeSubmittedStaffMessage,
+)
+from bluebottle.initiatives.models import Initiative
+from bluebottle.notifications.effects import NotificationEffect
+
+
+def is_complete(instance):
+    """The initiative is complete"""
+    if instance.organization and list(instance.organization.required):
+        return False
+
+    if instance.organization_contact and list(instance.organization_contact.required):
+        return False
+
+    return not list(instance.required)
+
+
+def is_valid(instance):
+    """The initiative is valid"""
+    if instance.organization and list(instance.organization.errors):
+        return False
+
+    if instance.organization_contact and list(instance.organization_contact.errors):
+        return False
+
+    return not list(instance.errors)
+
+
 @register(Initiative)
 class ReviewStateMachine(ModelStateMachine):
     field = 'status'
     model = Initiative
+
+    @property
+    def related_models(self):
+        return self.instance.activities.all()
 
     draft = State(
         _('Draft'),
@@ -52,26 +88,6 @@ class ReviewStateMachine(ModelStateMachine):
         _('The initiative is visible in the frontend and completed activities are open for contributions.')
     )
 
-    def is_complete(self):
-        """The initiative is complete"""
-        if self.instance.organization and list(self.instance.organization.required):
-            return False
-
-        if self.instance.organization_contact and list(self.instance.organization_contact.required):
-            return False
-
-        return not list(self.instance.required)
-
-    def is_valid(self):
-        """The initiative is valid"""
-        if self.instance.organization and list(self.instance.organization.errors):
-            return False
-
-        if self.instance.organization_contact and list(self.instance.organization_contact.errors):
-            return False
-
-        return not list(self.instance.errors)
-
     def is_staff(self, user):
         return user.is_staff
 
@@ -89,6 +105,7 @@ class ReviewStateMachine(ModelStateMachine):
         description=_("The initiative will be submitted for review."),
         conditions=[is_complete, is_valid],
         automatic=False,
+        effects=[NotificationEffect(InitiativeSubmittedStaffMessage)],
     )
 
     approve = Transition(
@@ -102,6 +119,7 @@ class ReviewStateMachine(ModelStateMachine):
         conditions=[is_complete, is_valid],
         automatic=False,
         permission=is_staff,
+        effects=[NotificationEffect(InitiativeApprovedOwnerMessage)],
     )
 
     request_changes = Transition(
@@ -129,6 +147,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "The initiative will still be available in the back office and appear in your reporting. "),
         automatic=False,
         permission=is_staff,
+        effects=[NotificationEffect(InitiativeRejectedOwnerMessage)],
     )
 
     cancel = Transition(
@@ -140,6 +159,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
+        effects=[NotificationEffect(InitiativeCancelledOwnerMessage)],
     )
 
     delete = Transition(

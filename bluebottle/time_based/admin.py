@@ -1,7 +1,10 @@
+from urllib.parse import urlencode
+
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, widgets
+from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
@@ -298,6 +301,15 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
+    fields = ['edit', 'slot_date', 'user', 'status_label']
+    readonly_fields = BaseContributorInline.readonly_fields + ['slot_date']
+
+    def slot_date(self, obj):
+        if obj.slot:
+            return obj.slot.start.strftime('%Y-%m-%d %H:%M')
+        else:
+            return format_html('<i>{}</i>', _('unscheduled'))
+
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant
@@ -432,6 +444,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     date_fields = [
         'start',
         'deadline',
+        'duration',
         'is_online',
         'location',
         'location_hint',
@@ -479,23 +492,6 @@ class PeriodicSlotAdmin(StateMachineAdmin):
     fields = readonly_fields + ("start", "end", "duration")
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
-
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        if request.user.is_superuser:
-            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
-        return fieldsets
-
-
-@admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(StateMachineAdmin):
-    list_display = ("start", "duration", "activity", "participant_count")
-    raw_id_fields = ('activity',)
-    readonly_fields = ("status",)
-    fields = readonly_fields + ("activity", "start", "duration")
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -756,6 +752,17 @@ class SlotAdmin(StateMachineAdmin):
                 )}),
             )
         return fieldsets
+
+
+@admin.register(ScheduleSlot)
+class ScheduleSlotAdmin(SlotAdmin):
+    list_display = ("start", "duration", "activity")
+    raw_id_fields = ('activity', 'location')
+
+    detail_fields = SlotAdmin.detail_fields + [
+        'start',
+        'duration',
+    ]
 
 
 class SlotTimeFilter(SimpleListFilter):
@@ -1218,10 +1225,64 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
     list_display = ["__str__", "activity_link", "status"]
 
 
+class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
+
+    def __init__(self, rel, admin_site, attrs=None, using=None):
+        attrs['class'] = 'slot-selector'
+        super().__init__(rel, admin_site, attrs, using)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        rel_to = self.rel.model
+        if value:
+            related_url = reverse(
+                'admin:%s_%s_change' % (
+                    rel_to._meta.app_label,
+                    rel_to._meta.model_name,
+                ),
+                current_app=self.admin_site.name,
+                args=(value,)
+            )
+            context['related_url'] = related_url
+            context['link_label'] = _('View slot')
+        else:
+            related_url = reverse(
+                'admin:%s_%s_add' % (
+                    rel_to._meta.app_label,
+                    rel_to._meta.model_name,
+                ),
+                current_app=self.admin_site.name,
+            )
+            params = {}
+            parent = self.attrs.get('parent')
+            if parent:
+                params = {
+                    'activity': parent.activity.id,
+                    'duration': parent.activity.duration,
+                    'is_online': parent.activity.is_online,
+                    'location_hint': parent.activity.location_hint,
+                    'online_meeting_url': parent.activity.online_meeting_url,
+                    '_to_field': 'id',
+                    '_popup': 1,
+
+                }
+                if parent.activity.location:
+                    params['location'] = parent.activity.location.id
+            context['related_url'] = related_url + '?' + urlencode(params)
+            context['link_label'] = _('Create slot')
+        return context
+
+
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
+    readonly_fields = ['user', 'activity', 'created', 'updated', 'slot_info']
 
-    raw_id_fields = ContributorChildAdmin.raw_id_fields + ("slot",)
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'slot':
+            id = request.path.split('/')[5]
+            obj = self.get_object(request, id)
+            kwargs['widget'] = SlotForeignKeyRawIdWidget(db_field.remote_field, self.admin_site, attrs={'parent': obj})
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
@@ -1231,7 +1292,7 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
 
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot", "slot_info"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]
 
     def get_fields(self, request, obj=None):
@@ -1267,7 +1328,7 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
     def slot_info(self, obj):
         if not obj.slot:
             return "-"
-        return format_html("{} to {}", obj.slot.start.date(), obj.slot.end.date())
+        return format_html("{} from {} to  {}", obj.slot.start.date(), obj.slot.start.time(), obj.slot.end.time())
 
     registration_info.short_description = _('Registration')
 

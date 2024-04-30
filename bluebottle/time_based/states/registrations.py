@@ -68,7 +68,7 @@ class RegistrationStateMachine(ModelStateMachine):
         [new, rejected],
         accepted,
         name=_('Accept'),
-        description=_("Accept this person as a participant to the activity."),
+        description=_("Accept this person as a participant of this activity."),
         passed_label=_('accepted'),
         automatic=False,
         permission=can_accept_registration,
@@ -78,7 +78,7 @@ class RegistrationStateMachine(ModelStateMachine):
         [new, accepted],
         rejected,
         name=_('Reject'),
-        description=_("Reject this person as a participant in the activity."),
+        description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_registration,
     )

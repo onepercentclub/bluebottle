@@ -1,5 +1,8 @@
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.core import mail
+
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -10,6 +13,9 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
+    ScheduleActivityFactory,
+    ScheduleParticipantFactory,
+    ScheduleSlotFactory,
 )
 
 
@@ -89,3 +95,73 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
             second_slot.end,
             self.first_slot.end + relativedelta(**{self.activity.period: 1}),
         )
+
+
+class ScheduleSlotTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=["scheduleactivity"]
+        )
+        self.admin_user = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory()
+
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = ScheduleActivityFactory.create(
+            initiative=self.initiative, registration_deadline=None, review=False
+        )
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+        self.participant = ScheduleParticipantFactory.create(activity=self.activity)
+
+        mail.outbox = []
+
+    def create(self, duration=timedelta(hours=2), is_online=True, **kwargs):
+
+        self.slot = ScheduleSlotFactory.create(
+            activity=self.activity, is_online=is_online, duration=duration, **kwargs
+        )
+        self.participant.slot = self.slot
+        self.participant.save()
+
+    def assertStatus(self, status, obj=None):
+        if not obj:
+            obj = self.slot
+
+        obj.refresh_from_db()
+
+        self.assertEqual(obj.status, status)
+
+    def test_initial_future(self):
+        self.create(start=now() + timedelta(days=2))
+
+        self.assertStatus("new")
+        self.assertStatus("scheduled", self.participant)
+        self.assertStatus("new", self.participant.contributions.get())
+
+    def test_change_start_finish(self):
+        self.create(start=now() + timedelta(days=2))
+        self.slot.start = now() - timedelta(days=2)
+        self.slot.save()
+
+        self.assertStatus("finished")
+        self.assertStatus("succeeded", self.participant)
+        self.assertStatus("succeeded", self.participant.contributions.get())
+
+    def test_initial_passed(self):
+        self.create(start=now() - timedelta(days=2))
+
+        self.assertStatus("finished")
+        self.assertStatus("succeeded", self.participant)
+        self.assertStatus("succeeded", self.participant.contributions.get())
+
+    def test_change_start_reopen(self):
+        self.create(start=now() - timedelta(days=2))
+        self.slot.start = now() + timedelta(days=2)
+        self.slot.save()
+
+        self.assertStatus("new")
+        self.assertStatus("scheduled", self.participant)
+        self.assertStatus("new", self.participant.contributions.get())

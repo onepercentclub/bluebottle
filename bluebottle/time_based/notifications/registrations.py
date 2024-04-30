@@ -90,6 +90,17 @@ class UserRegistrationRestartedNotification(UserRegistrationNotification):
     )
     template = "messages/registrations/user_restarted"
 
+    def get_context(self, recipient):
+        context = super(UserRegistrationNotification, self).get_context(recipient)
+        context['duration'] = duration_to_hours(self.obj.activity.duration)
+        if self.obj.activity.period == 'days':
+            context['period'] = pgettext('email', 'day')
+        if self.obj.activity.period == 'weeks':
+            context['period'] = pgettext('email', 'week')
+        if self.obj.activity.period == 'months':
+            context['period'] = pgettext('email', 'months')
+        return context
+
 
 class UserAppliedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have applied to the activity "{title}"')

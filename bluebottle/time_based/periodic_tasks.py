@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from django.db.models import DateTimeField, ExpressionWrapper, F
+from django.db.models import DateTimeField, ExpressionWrapper, F, fields
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -9,10 +9,19 @@ from bluebottle.fsm.periodic_tasks import ModelPeriodicTask
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import ReminderSlotNotification
 from bluebottle.time_based.models import (
-    DateActivity, DeadlineActivity, PeriodicActivity, PeriodicSlot, TimeContribution, DateActivitySlot
+    DateActivity,
+    DeadlineActivity,
+    PeriodicActivity,
+    PeriodicSlot,
+    TimeContribution,
+    DateActivitySlot,
+    ScheduleSlot,
 )
 from bluebottle.time_based.states import (
-    TimeBasedStateMachine, TimeContributionStateMachine, ActivitySlotStateMachine
+    TimeBasedStateMachine,
+    TimeContributionStateMachine,
+    ActivitySlotStateMachine,
+    ScheduleSlotStateMachine,
 )
 from bluebottle.time_based.states.states import PeriodicSlotStateMachine
 from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
@@ -181,6 +190,40 @@ class PeriodicSlotFinishedTask(ModelPeriodicTask):
         return str(_("Start a new slot when the current one is finished"))
 
 
+class ScheduleSlotStartedTask(ModelPeriodicTask):
+    def get_queryset(self):
+        end_time = ExpressionWrapper(
+            F("start") + F("duration"), output_field=fields.DateTimeField()
+        )
+        return (
+            ScheduleSlot.objects.filter(status="new")
+            .annotate(end_time=end_time)
+            .filter(end_time__gte=timezone.now(), start__lte=timezone.now())
+        )
+
+    effects = [TransitionEffect(ScheduleSlotStateMachine.start)]
+
+    def __str__(self):
+        return str(_("Start a new slot when the current one is finished"))
+
+
+class ScheduleSlotFinishedTask(ModelPeriodicTask):
+    def get_queryset(self):
+        end_time = ExpressionWrapper(
+            F("start") + F("duration"), output_field=fields.DateTimeField()
+        )
+        return (
+            ScheduleSlot.objects.filter(status__in=["new", "running"])
+            .annotate(end_time=end_time)
+            .filter(end_time__lte=timezone.now())
+        )
+
+    effects = [TransitionEffect(ScheduleSlotStateMachine.finish)]
+
+    def __str__(self):
+        return str(_("Start a new slot when the current one is finished"))
+
+
 DateActivity.periodic_tasks = [
     TimeBasedActivityRegistrationDeadlinePassedTask,
     DateActivityFinishedTask,
@@ -197,3 +240,4 @@ TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
 DeadlineActivity.periodic_tasks = [ActivityFinishedTask]
 PeriodicActivity.periodic_tasks = [ActivityFinishedTask]
 PeriodicSlot.periodic_tasks = [PeriodicSlotStartedTask, PeriodicSlotFinishedTask]
+ScheduleSlot.periodic_tasks = [ScheduleSlotStartedTask, ScheduleSlotFinishedTask]

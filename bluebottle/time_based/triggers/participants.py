@@ -30,6 +30,7 @@ from bluebottle.time_based.messages import (
 from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicParticipant, ScheduleParticipant,
+    ScheduleRegistration,
 )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
@@ -46,6 +47,7 @@ from bluebottle.time_based.states import (
     RegistrationParticipantStateMachine,
 )
 from bluebottle.time_based.states.participants import ScheduleParticipantStateMachine
+from bluebottle.time_based.states.registrations import ScheduleRegistrationStateMachine
 from bluebottle.time_based.states.states import ScheduleActivityStateMachine
 
 
@@ -722,6 +724,9 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
+                ),
+                RelatedTransitionEffect(
+                    "registration", ScheduleRegistrationStateMachine.auto_accept
                 ),
             ],
         ),

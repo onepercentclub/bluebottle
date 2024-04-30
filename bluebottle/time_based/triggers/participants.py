@@ -726,7 +726,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     conditions=[slot_is_finished],
                 ),
                 RelatedTransitionEffect(
-                    "registration", ScheduleRegistrationStateMachine.auto_accept
+                    "registration", ScheduleRegistrationStateMachine.schedule
                 ),
             ],
         ),

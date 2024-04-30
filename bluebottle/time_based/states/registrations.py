@@ -55,6 +55,15 @@ class RegistrationStateMachine(ModelStateMachine):
         automatic=True,
     )
 
+    schedule = Transition(
+        new,
+        accepted,
+        name=_("Schedule"),
+        description=_("Automatically accept because the user is scheduled."),
+        passed_label=_("scheduled"),
+        automatic=True,
+    )
+
     accept = Transition(
         [new, rejected],
         accepted,

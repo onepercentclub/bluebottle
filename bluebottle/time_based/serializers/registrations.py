@@ -145,6 +145,9 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
 
     class Meta(RegistrationSerializer.Meta):
         model = TeamScheduleRegistration
+        fields = RegistrationSerializer.Meta.fields + [
+            "invite_code",
+        ]
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/team-schedule-registrations'

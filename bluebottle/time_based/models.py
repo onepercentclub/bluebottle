@@ -1,3 +1,4 @@
+import uuid
 from html import unescape
 from urllib.parse import urlencode
 
@@ -1376,6 +1377,8 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class TeamScheduleRegistration(Registration):
+    invite_code = models.UUIDField(default=uuid.uuid4)
+
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 

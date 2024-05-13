@@ -12,6 +12,8 @@ from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
 from timezonefinder import TimezoneFinder
 
+from django_better_admin_arrayfield.models.fields import ArrayField
+
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
@@ -163,14 +165,27 @@ class Location(models.Model):
         ]
     )
 
+    alternate_names = ArrayField(
+        models.CharField(max_length=200), default=list, blank=True
+    )
+
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
         verbose_name = _('office')
         verbose_name_plural = _('offices')
 
     def save(self, *args, **kwargs):
+
+        __import__("ipdb").set_trace()
+
         if not self.slug:
             self.slug = slugify(self.name)
+
+        if self.name not in self.alternate_names:
+            self.alternate_names.append(self.name)
+
+        if self.slug not in self.alternate_names:
+            self.alternate_names.append(self.slug)
 
         super(Location, self).save()
 

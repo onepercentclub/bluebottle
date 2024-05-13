@@ -1,6 +1,7 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.messages import get_slot_info
 
 
 class ManagerParticipantNotification(TransitionMessage):
@@ -67,3 +68,16 @@ class UserParticipantWithdrewNotification(UserParticipantNotification):
     """
     subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_participant_withdrew'
+
+
+class UserScheduledNotification(UserParticipantNotification):
+    """
+    The participant was removed from the activity
+    """
+    subject = pgettext('email', 'You have been scheduled for the activity "{title}"')
+    template = 'messages/participants/user_participant_scheduled'
+
+    def get_context(self, recipient):
+        context = super(UserScheduledNotification, self).get_context(recipient)
+        context['slot'] = get_slot_info(self.obj.slot)
+        return context

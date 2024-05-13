@@ -212,7 +212,11 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
 
     def test_register(self):
         mail.outbox = []
-        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
+        )
         self.assertEqual(
             registration.status,
             'accepted'
@@ -239,7 +243,11 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
         mail.outbox = []
         self.activity.review = True
         self.activity.save()
-        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
+        )
         self.assertEqual(
             registration.status,
             'new'

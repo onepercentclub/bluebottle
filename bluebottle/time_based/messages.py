@@ -24,7 +24,7 @@ def get_slot_info(slot):
     end = slot.end.astimezone(tz)
 
     return {
-        'title': slot.title or str(slot),
+        'title': getattr(slot, 'title', ''),
         'is_online': slot.is_online,
         'online_meeting_url': slot.online_meeting_url,
         'location': slot.location.formatted_address if slot.location else '',

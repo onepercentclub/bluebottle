@@ -39,7 +39,11 @@ class RegistrationTriggerTestCase:
         mail.outbox = []
 
     def create(self):
-        self.registration = self.factory.create(activity=self.activity)
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        )
 
     def test_initial(self):
         self.create()
@@ -82,7 +86,12 @@ class RegistrationTriggerTestCase:
         )
 
     def test_fill(self):
-        self.factory.create_batch(self.activity.capacity - 1, activity=self.activity)
+        self.factory.create_batch(
+            self.activity.capacity - 1,
+            activity=self.activity,
+            user=BlueBottleUserFactory(),
+            as_relation='user'
+        )
         self.create()
         self.assertEqual(self.registration.status, "accepted")
         self.assertEqual(self.registration.activity.status, "full")

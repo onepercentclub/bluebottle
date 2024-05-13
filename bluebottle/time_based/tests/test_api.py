@@ -2157,7 +2157,6 @@ class ParticipantTransitionAPIViewTestCase():
         }
 
     def test_withdraw_by_user(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
 
         response = self.client.post(
@@ -2176,7 +2175,6 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(participant[0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
 
         response = self.client.post(
@@ -2187,7 +2185,6 @@ class ParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_remove_by_activity_owner(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'remove'
 
         response = self.client.post(
@@ -2221,6 +2218,36 @@ class DateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestC
     participant_type = 'contributors/time-based/date-participant'
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
+
+    def test_withdraw_by_user_with_preparation(self):
+        self.activity.preparation = timedelta(hours=3)
+        self.activity.save()
+
+        participant = self.participant_factory.create(
+            activity=self.activity
+        )
+
+        self.data['data']['attributes']['transition'] = 'withdraw'
+
+        contributions = participant.contributions.all()
+        self.assertEqual(contributions.count(), 2)
+        self.assertEqual(contributions[0].status, 'succeeded')
+        self.assertEqual(contributions[1].status, 'new')
+
+        self.data['data']['attributes']['transition'] = 'withdraw'
+        self.data['data']['relationships']['resource']['data']['id'] = participant.pk
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        participant.refresh_from_db()
+        contributions = self.participant.contributions.all()
+        self.assertEqual(contributions[0].status, 'failed')
+        self.assertEqual(contributions[1].status, 'failed')
 
 
 class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
@@ -2420,7 +2447,6 @@ class ReviewParticipantTransitionAPIViewTestCase():
         }
 
     def test_withdraw_by_user(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
 
         response = self.client.post(
@@ -2439,7 +2465,6 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(participant[0]['attributes']['status'], 'withdrawn')
 
     def test_withdraw_by_other_user(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'withdraw'
 
         response = self.client.post(
@@ -2450,7 +2475,6 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_reject_by_activity_owner(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'reject'
 
         response = self.client.post(
@@ -2468,7 +2492,6 @@ class ReviewParticipantTransitionAPIViewTestCase():
         self.assertEqual(participant[0]['attributes']['status'], 'rejected')
 
     def test_reject_by_user(self):
-        # Owner can delete the event
         self.data['data']['attributes']['transition'] = 'reject'
 
         response = self.client.post(

@@ -55,6 +55,7 @@ class SegmentAdminForm(forms.ModelForm):
             'story': SummernoteWidget(attrs={'height': 400})
         }
 
+
 class SegmentMergeForm(forms.Form):
     to = forms.ModelChoiceField(
         label=_("Merge with"),

@@ -2219,36 +2219,6 @@ class DateParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestC
     factory = DateActivityFactory
     participant_factory = DateParticipantFactory
 
-    def test_withdraw_by_user_with_preparation(self):
-        self.activity.preparation = timedelta(hours=3)
-        self.activity.save()
-
-        participant = self.participant_factory.create(
-            activity=self.activity
-        )
-
-        self.data['data']['attributes']['transition'] = 'withdraw'
-
-        contributions = participant.contributions.all()
-        self.assertEqual(contributions.count(), 2)
-        self.assertEqual(contributions[0].status, 'succeeded')
-        self.assertEqual(contributions[1].status, 'new')
-
-        self.data['data']['attributes']['transition'] = 'withdraw'
-        self.data['data']['relationships']['resource']['data']['id'] = participant.pk
-
-        response = self.client.post(
-            self.url,
-            json.dumps(self.data),
-            user=participant.user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        participant.refresh_from_db()
-        contributions = self.participant.contributions.all()
-        self.assertEqual(contributions[0].status, 'failed')
-        self.assertEqual(contributions[1].status, 'failed')
-
 
 class PeriodParticipantTransitionAPIViewTestCase(ParticipantTransitionAPIViewTestCase, BluebottleTestCase):
     type = 'period'

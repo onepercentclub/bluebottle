@@ -3,8 +3,6 @@ from django.conf import settings
 from django.db import models
 from future.utils import python_2_unicode_compatible
 
-from djchoices.choices import DjangoChoices, ChoiceItem
-
 
 @python_2_unicode_compatible
 class CheckedToken(models.Model):

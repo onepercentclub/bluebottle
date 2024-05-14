@@ -175,9 +175,6 @@ class Location(models.Model):
         verbose_name_plural = _('offices')
 
     def save(self, *args, **kwargs):
-
-        __import__("ipdb").set_trace()
-
         if not self.slug:
             self.slug = slugify(self.name)
 
@@ -188,6 +185,15 @@ class Location(models.Model):
             self.alternate_names.append(self.slug)
 
         super(Location, self).save()
+
+    def merge(self, other):
+        self.alternate_names += other.alternate_names
+        self.save()
+
+        other.member_set.update(location=self)
+        other.activity_set.update(office_location=self)
+
+        other.delete()
 
     class JSONAPIMeta(object):
         resource_name = 'locations'

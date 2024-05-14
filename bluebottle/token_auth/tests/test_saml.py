@@ -14,6 +14,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
+from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
 
 standard_library.install_aliases()
@@ -103,6 +104,7 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.username, 'smartin')
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+            self.assertTrue(len(SAMLLog.objects.all()), 1)
 
     @patch('bluebottle.token_auth.auth.saml.logger.error')
     def test_auth_session_reuse(self, error):
@@ -128,6 +130,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 auth_backend.authenticate
             )
             error.assert_called()
+            self.assertTrue(len(SAMLLog.objects.all()), 1)
 
     def test_auth_success_missing_field(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)

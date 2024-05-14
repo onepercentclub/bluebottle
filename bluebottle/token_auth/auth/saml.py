@@ -1,4 +1,6 @@
 from future import standard_library
+
+from bluebottle.token_auth.models import SAMLLog
 standard_library.install_aliases()
 import logging
 import urllib.parse
@@ -112,6 +114,7 @@ class SAMLAuthentication(BaseTokenAuthentication):
         #     raise TokenAuthenticationError(error)
         try:
             self.auth.process_response(saml_request_id)
+            SAMLLog.log(body=self.auth.get_last_response_xml())
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))
             raise TokenAuthenticationError(e)
@@ -123,11 +126,11 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
             return self.parse_user(user_data)
         else:
-            logger.error(
-                'Saml login error: {}, reason: {}, assertions: {}'.format(
-                    self.auth.get_errors(), self.auth.get_last_error_reason(),
-                    self.auth.get_attributes()
-                )
+            error = "Saml login error: {}, reason: {}, assertions: {}".format(
+                self.auth.get_errors(),
+                self.auth.get_last_error_reason(),
+                self.auth.get_attributes(),
             )
+            logger.error(error)
 
             raise TokenAuthenticationError(self.auth.get_errors())

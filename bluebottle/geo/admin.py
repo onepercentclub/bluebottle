@@ -106,8 +106,22 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     region_link.short_description = _('Office region')
 
     fieldsets = (
-        (_('Info'), {'fields': ('name', 'slug', 'subregion', 'description', 'city', 'country', 'image')}),
-        (_('Map'), {'fields': ('position', )})
+        (
+            _("Info"),
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "subregion",
+                    "description",
+                    "city",
+                    "country",
+                    "image",
+                )
+            },
+        ),
+        (_("Map"), {"fields": ("position",)}),
+        (_("SSO"), {"fields": ("alternate_names",)}),
     )
 
     merge_form = LocationMergeForm

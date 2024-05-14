@@ -2913,6 +2913,39 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
             'contributors/time-based/slot-participants'
         )
         self.assertEqual(data['included'][2]['meta']['status'], 'withdrawn')
+        self.participant.refresh_from_db()
+        contribution = self.participant.contributions.first()
+        self.assertEqual(contribution.status, 'failed')
+
+    def test_withdraw_by_user_with_preparation(self):
+        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.activity.preparation = timedelta(hours=3)
+        self.activity.save()
+        self.participant = DateParticipantFactory.create(activity=self.activity)
+        self.slot_participant = SlotParticipantFactory.create(
+            participant=self.participant,
+            slot=self.slot
+        )
+        self.data['data']['attributes']['transition'] = 'withdraw'
+        self.data['data']['relationships']['resource']['data']['type'] = 'contributors/time-based/slot-participants'
+        self.data['data']['relationships']['resource']['data']['id'] = self.slot_participant.pk
+
+        contributions = self.participant.contributions.all()
+        self.assertEqual(contributions[0].status, 'new')
+        self.assertEqual(contributions[1].status, 'succeeded')
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.participant.refresh_from_db()
+        contributions = self.participant.contributions.all()
+        self.assertEqual(contributions[0].status, 'failed')
+        self.assertEqual(contributions[1].status, 'failed')
 
     def test_reapply_by_user(self):
         self.test_withdraw_by_user()
@@ -2929,6 +2962,25 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['included'][2]['meta']['status'], 'registered')
+
+    def test_reapply_by_user_with_prep_time(self):
+        self.test_withdraw_by_user_with_preparation()
+
+        self.data['data']['attributes']['transition'] = 'reapply'
+
+        response = self.client.post(
+            self.url,
+            json.dumps(self.data),
+            user=self.participant.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['included'][2]['meta']['status'], 'registered')
+        contributions = self.participant.contributions.all()
+        self.assertEqual(contributions[0].status, 'new')
+        self.assertEqual(contributions[1].status, 'succeeded')
 
     def test_withdraw_by_owner(self):
         self.data['data']['attributes']['transition'] = 'withdraw'

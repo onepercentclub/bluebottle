@@ -175,9 +175,6 @@ class Location(models.Model):
         verbose_name_plural = _('offices')
 
     def save(self, *args, **kwargs):
-
-        __import__("ipdb").set_trace()
-
         if not self.slug:
             self.slug = slugify(self.name)
 

@@ -217,7 +217,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "unscheduled": ["accepted"],
             "failed": ["rejected", "withdrawn", "removed"],
-            "active": ["scheduled", "succeeded"],
+            "active": ["accepted", "scheduled", "succeeded"],
         },
     )
     registrations = RelatedLinkFieldByStatus(

@@ -1512,7 +1512,9 @@ class TeamScheduleParticipant(Participant, Contributor):
     team_member = models.ForeignKey(
         'time_based.TeamMember',
         related_name='participations',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     slot = models.ForeignKey(
@@ -1596,9 +1598,6 @@ class PeriodicSlot(TriggerMixin, Slot):
 class BaseScheduleSlot(TriggerMixin, Slot):
     start = models.DateTimeField(_('start date and time'), null=True, blank=True)
 
-    activity = models.ForeignKey(
-        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
-    )
     duration = models.DurationField(_("duration"), null=True, blank=True)
 
     is_online = models.BooleanField(
@@ -1633,14 +1632,22 @@ class BaseScheduleSlot(TriggerMixin, Slot):
 
 
 class ScheduleSlot(BaseScheduleSlot):
-    pass
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
+    )
 
 
 class TeamScheduleSlot(BaseScheduleSlot):
+    activity = models.ForeignKey(
+        ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
+    )
+
     team = models.ForeignKey(
         'time_based.Team',
         related_name='slots',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
 

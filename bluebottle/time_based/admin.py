@@ -49,8 +49,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, ScheduleTeamMember,
-)
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -1383,7 +1382,6 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DeadlineRegistration,
         ScheduleRegistration,
         TeamScheduleRegistration,
-        ScheduleTeamMember
     )
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -1425,23 +1423,10 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
     inlines = [ScheduleParticipantAdminInline]
 
 
-@admin.register(ScheduleTeamMember)
-class ScheduleTeamMemberAdmin(RegistrationChildAdmin):
-    inlines = [TeamScheduleParticipantAdminInline]
-    raw_id_fields = ["user", "activity", "team"]
-    fields = RegistrationChildAdmin.fields + ["team"]
-
-
-class ScheduleTeamMemberAdminInline(BaseContributorInline):
-    model = ScheduleTeamMember
-    fk_name = 'team'
-
-
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
     inlines = [
         TeamScheduleParticipantAdminInline,
-        ScheduleTeamMemberAdminInline
     ]
 
 

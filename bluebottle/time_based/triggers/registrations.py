@@ -4,15 +4,12 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registration import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamMemberParticipantEffect
-
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
     TeamScheduleRegistration,
-    ScheduleTeamMember
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -278,48 +275,6 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.initiate,
             effects=[
                 CreateParticipantEffect,
-            ],
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            ScheduleRegistrationStateMachine.auto_accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.reject,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.reject,
-                ),
-            ],
-        ),
-    ]
-
-
-@register(ScheduleTeamMember)
-class ScheduleTeamMemberTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            RegistrationStateMachine.initiate,
-            effects=[
-                CreateTeamMemberParticipantEffect,
-                TransitionEffect(
-                    RegistrationStateMachine.auto_accept,
-                ),
             ],
         ),
         TransitionTrigger(

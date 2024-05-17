@@ -12,10 +12,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant,
-    ScheduleTeamMember,
-    TeamScheduleRegistration,
-    TeamScheduleParticipant
+    ScheduleParticipant
 )
 
 
@@ -88,10 +85,6 @@ class CreateRegistrationEffect(Effect):
             return DeadlineRegistration
         if isinstance(self.instance, ScheduleParticipant):
             return ScheduleRegistration
-        if isinstance(self.instance, TeamScheduleParticipant):
-            if self.instance.slot:
-                return ScheduleTeamMember
-            return TeamScheduleRegistration
         raise ValueError(f'No registration defined for participant model {self.instance.__class__.__name__}')
 
     def post_save(self, **kwargs):

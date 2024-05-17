@@ -1377,7 +1377,6 @@ class DeadlineParticipant(Participant, Contributor):
 
 
 class TeamScheduleRegistration(Registration):
-    invite_code = models.UUIDField(default=uuid.uuid4)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
@@ -1416,26 +1415,51 @@ class TeamScheduleRegistration(Registration):
         )
 
 
-class ScheduleTeamMember(Registration):
-    team = models.ForeignKey(
-        'time_based.TeamScheduleRegistration',
-        related_name='team_members',
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True
+class Team(TriggerMixin, models.Model):
+    invite_code = models.UUIDField(default=uuid.uuid4)
+    registration = models.OneToOneField(
+        Registration,
+        related_name='team',
+        on_delete=models.CASCADE
     )
 
+    activity = models.ForeignKey(
+        TimeBasedActivity,
+        related_name='teams',
+        on_delete=models.CASCADE
+    )
+
+    user = models.ForeignKey(
+        'members.Member',
+        related_name='team_captains',
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(max_length=40)
+    created = models.DateTimeField(default=timezone.now)
+
     class JSONAPIMeta(object):
-        resource_name = 'contributors/time-based/schedule-team-members'
+        resource_name = 'teams/teams'
 
-    class Meta:
-        verbose_name = _("Team member  for schedule activities")
-        verbose_name_plural = _("Team members for schedule activities")
 
-    def save(self, run_triggers=True, *args, **kwargs):
-        if not self.activity_id:
-            self.activity = self.team.activity
-        return super().save(run_triggers, *args, **kwargs)
+class TeamMember(TriggerMixin, models.Model):
+    team = models.ForeignKey(
+        'time_based.Team',
+        related_name='team_members',
+        on_delete=models.CASCADE,
+    )
+
+    user = models.ForeignKey(
+        'members.Member',
+        related_name='team_members',
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(max_length=40)
+    created = models.DateTimeField(default=timezone.now)
+
+    class JSONAPIMeta(object):
+        resource_name = 'teams/team-members'
 
 
 class ScheduleParticipant(Participant, Contributor):
@@ -1485,6 +1509,12 @@ class ScheduleParticipant(Participant, Contributor):
 
 
 class TeamScheduleParticipant(Participant, Contributor):
+    team_member = models.ForeignKey(
+        'time_based.TeamMember',
+        related_name='participations',
+        on_delete=models.CASCADE
+    )
+
     slot = models.ForeignKey(
         "time_based.TeamScheduleSlot",
         related_name="participants",
@@ -1493,40 +1523,38 @@ class TeamScheduleParticipant(Participant, Contributor):
         blank=True,
     )
 
-    registration = models.ForeignKey(
-        'time_based.Registration',
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        related_name='participants'
-    )
-
     class Meta:
-        verbose_name = _("Team to schedule activities")
-        verbose_name_plural = _("Teams to schedule activities")
+        verbose_name = _("Team member participation")
+        verbose_name_plural = _("Team member participations")
 
         permissions = (
-            ("api_read_scheduleparticipant", "Can view participant through the API"),
-            ("api_add_scheduleparticipant", "Can add participant through the API"),
             (
-                "api_change_scheduleparticipant",
-                "Can change participant through the API",
+                "api_read_teamscheduleparticipant",
+                "Can view team member participant through the API"
             ),
             (
-                "api_delete_scheduleparticipant",
-                "Can delete participant through the API",
+                "api_add_teamscheduleparticipant",
+                "Can add team member participant through the API"
             ),
             (
-                "api_read_own_scheduleparticipant",
-                "Can view own participant through the API",
+                "api_change_teamscheduleparticipant",
+                "Can change team member participant through the API",
             ),
             (
-                "api_add_own_scheduleparticipant",
-                "Can add own participant through the API",
+                "api_delete_teamscheduleparticipant",
+                "Can delete team member participant through the API",
             ),
             (
-                "api_change_own_scheduleparticipant",
-                "Can change own participant through the API",
+                "api_read_own_teamscheduleparticipant",
+                "Can view own team member participant through the API",
+            ),
+            (
+                "api_add_own_teamscheduleparticipant",
+                "Can add own team member participant through the API",
+            ),
+            (
+                "api_change_own_teamscheduleparticipant",
+                "Can change own team member participant through the API",
             ),
             (
                 "api_delete_own_scheduleparticipant",
@@ -1536,11 +1564,6 @@ class TeamScheduleParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-participants'
-
-    def save(self, run_triggers=True, *args, **kwargs):
-        if not self.activity_id and self.slot:
-            self.activity = self.slot.activity
-        return super().save(run_triggers, *args, **kwargs)
 
 
 class Slot(models.Model):
@@ -1610,19 +1633,15 @@ class BaseScheduleSlot(TriggerMixin, Slot):
 
 
 class ScheduleSlot(BaseScheduleSlot):
-    activity = models.ForeignKey(
-        ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
-    )
+    pass
 
 
 class TeamScheduleSlot(BaseScheduleSlot):
-    activity = models.ForeignKey(
-        ScheduleActivity, on_delete=models.CASCADE, related_name="team_slots"
+    team = models.ForeignKey(
+        'time_based.Team',
+        related_name='slots',
+        on_delete=models.CASCADE
     )
-
-    @property
-    def accepted_participants(self):
-        return self.participants.filter(status__in=["accepted", "participating", "succeeded", "new"])
 
 
 class PeriodicParticipant(Participant, Contributor):

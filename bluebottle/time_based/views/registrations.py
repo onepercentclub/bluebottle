@@ -23,7 +23,7 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission,
+    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
 )
 from bluebottle.utils.views import (
     JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
@@ -117,6 +117,9 @@ class TeamScheduleRelatedRegistrationList(RelatedRegistrationListView):
         'user', 'activity'
     )
     serializer_class = TeamScheduleRegistrationSerializer
+    permission_classes = (
+        IsAuthenticated, IsOwnerOrReadOnly
+    )
 
 
 class PeriodicRelatedRegistrationList(RelatedRegistrationListView):
@@ -145,6 +148,9 @@ class ScheduleRegistrationDetail(RegistrationDetail):
 class TeamScheduleRegistrationDetail(RegistrationDetail):
     queryset = TeamScheduleRegistration.objects.all()
     serializer_class = TeamScheduleRegistrationSerializer
+    permission_classes = (
+        IsAuthenticated, IsOwnerOrReadOnly
+    )
 
 
 class PeriodicRegistrationDetail(RegistrationDetail):

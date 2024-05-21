@@ -1469,6 +1469,9 @@ class TeamMember(TriggerMixin, models.Model):
     class JSONAPIMeta(object):
         resource_name = 'teams/team-members'
 
+    def __str__(self):
+        return _('Team member {name}').format(name=self.user.full_name)
+
 
 class ScheduleParticipant(Participant, Contributor):
     slot = models.ForeignKey(

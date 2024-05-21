@@ -3,7 +3,11 @@ from bluebottle.fsm.triggers import (
     TransitionTrigger,
     TriggerManager,
 )
-from bluebottle.time_based.effects.teams import CreateTeamRegistrationEffect, CreateCaptainTeamMemberEffect
+from bluebottle.time_based.effects.teams import (
+    CreateTeamRegistrationEffect,
+    CreateCaptainTeamMemberEffect,
+    CreateTeamSlotEffect,
+)
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.states.teams import (
     TeamStateMachine
@@ -18,7 +22,8 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.initiate,
             effects=[
                 CreateTeamRegistrationEffect,
-                CreateCaptainTeamMemberEffect
+                CreateCaptainTeamMemberEffect,
+                CreateTeamSlotEffect,
             ]
         ),
     ]

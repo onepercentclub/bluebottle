@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.contrib.admin import SimpleListFilter, widgets
+from django.contrib.admin import SimpleListFilter, widgets, StackedInline
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
@@ -317,9 +317,18 @@ class TeamScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name_plural = _("Team participation")
 
 
+@admin.register(TeamMember)
+class TeamMemberAdmin(StateMachineAdmin):
+    model = TeamMember
+    list_display = ('user', 'status', 'created',)
+    readonly_fields = ('status', 'created')
+    fields = ('team', 'user', 'status', 'created')
+    raw_id_fields = ('user', 'team')
+
+
 class TeamMemberAdminInline(TabularInlinePaginated):
     model = TeamMember
-    readonly_fields = ('user', 'status_label')
+    readonly_fields = ('link', 'user', 'status_label')
     fields = readonly_fields
 
     def status_label(self, obj):
@@ -327,15 +336,48 @@ class TeamMemberAdminInline(TabularInlinePaginated):
 
     status_label.short_description = _('Status')
 
+    def link(self, obj):
+        url = reverse('admin:time_based_teammember_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+    link.short_description = _('Edit')
+
+
+class TeamScheduleSlotAdminInline(StackedInline):
+    model = TeamScheduleSlot
+    extra = 0
+
+    can_delete = True
+    readonly_fields = ('link', 'created', 'status_label', 'activity')
+    fields = ('link', 'start', 'duration', 'created', 'status_label', 'is_online')
+
+    def link(self, obj):
+        url = reverse('admin:time_based_teamscheduleslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+    link.short_description = _('Edit')
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+    status_label.short_description = _('Status')
+
+    def has_add_permission(self, request, obj):
+        return True
+
 
 @admin.register(Team)
-class TeamAdmin(StateMachineAdmin):
+class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'status', 'created',)
     readonly_fields = ('status', 'created', 'invite_code')
     fields = ('activity', 'registration', 'user', 'status', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
+
+    def get_inlines(self, request, obj):
+        inlines = super().get_inlines(request, obj)
+        if obj and obj.id and obj.activity and isinstance(obj.activity, ScheduleActivity):
+            return inlines + [TeamScheduleSlotAdminInline]
+        return inlines
 
 
 class TeamAdminInline(TabularInlinePaginated):

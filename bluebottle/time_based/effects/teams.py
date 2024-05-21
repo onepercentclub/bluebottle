@@ -1,7 +1,7 @@
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import ScheduleActivity, TeamScheduleRegistration, TeamMember
+from bluebottle.time_based.models import ScheduleActivity, TeamScheduleRegistration, TeamMember, TeamScheduleSlot
 
 
 class CreateTeamRegistrationEffect(Effect):
@@ -45,4 +45,33 @@ class CreateCaptainTeamMemberEffect(Effect):
 
     conditions = [
         without_team_members
+    ]
+
+
+class CreateTeamSlotEffect(Effect):
+    title = _('Create slot for this team')
+    template = 'admin/create_team_slot.html'
+
+    def without_slot(self):
+        return not self.instance.slots.exists()
+
+    def get_slot_model(self):
+        if isinstance(self.instance.activity, ScheduleActivity):
+            return TeamScheduleSlot
+        raise ValueError(f'No slot defined for activity model {self.instance.activity.__class__.__name__}')
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        self.get_slot_model().objects.create(
+            activity=activity,
+            is_online=activity.is_online,
+            location_id=activity.location_id,
+            location_hint=activity.location_hint,
+            duration=activity.duration,
+            online_meeting_url=activity.online_meeting_url,
+            team=self.instance
+        )
+
+    conditions = [
+        without_slot
     ]

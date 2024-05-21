@@ -1420,17 +1420,22 @@ class Team(TriggerMixin, models.Model):
     registration = models.OneToOneField(
         Registration,
         related_name='team',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
     )
 
     activity = models.ForeignKey(
         TimeBasedActivity,
         related_name='teams',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
     )
 
     user = models.ForeignKey(
         'members.Member',
+        verbose_name=_('Team captain'),
         related_name='team_captains',
         on_delete=models.CASCADE
     )
@@ -1440,6 +1445,9 @@ class Team(TriggerMixin, models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'teams/teams'
+
+    def __str__(self):
+        return _('Team {name}').format(name=self.user.full_name)
 
 
 class TeamMember(TriggerMixin, models.Model):

@@ -49,7 +49,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, )
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -317,10 +317,41 @@ class TeamScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name_plural = _("Team participation")
 
 
-class TeamScheduleRegistrationAdminInline(BaseContributorInline):
-    model = TeamScheduleRegistration
-    verbose_name = _("Team")
-    verbose_name_plural = _("Teams")
+class TeamMemberAdminInline(TabularInlinePaginated):
+    model = TeamMember
+    readonly_fields = ('user', 'status_label')
+    fields = readonly_fields
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
+
+
+@admin.register(Team)
+class TeamAdmin(StateMachineAdmin):
+    model = Team
+    list_display = ('user', 'status', 'created',)
+    readonly_fields = ('status', 'created', 'invite_code')
+    fields = ('activity', 'user', 'status', 'created', 'invite_code')
+    raw_id_fields = ('user', 'registration', 'activity')
+    inlines = [TeamMemberAdminInline]
+
+
+class TeamAdminInline(TabularInlinePaginated):
+    model = Team
+    readonly_fields = ('link', 'created', 'status_label', 'invite_code')
+    raw_id_fields = ('user', 'registration')
+    fields = ('link', 'user', 'status_label', 'invite_code')
+
+    def link(self, obj):
+        url = reverse('admin:time_based_team_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):
@@ -444,8 +475,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         if obj and obj.id:
             if obj.team_activity == 'teams':
                 return (
-                    TeamScheduleRegistrationAdminInline,
-                    TeamScheduleParticipantAdminInline
+                    TeamAdminInline,
                 ) + inlines
             else:
                 return (ScheduleParticipantAdminInline,) + inlines

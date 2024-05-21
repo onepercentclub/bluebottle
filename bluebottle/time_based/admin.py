@@ -606,9 +606,12 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
-    raw_id_fields = ('activity',)
-    readonly_fields = ("status",)
-    fields = readonly_fields + ("activity", "start", "duration")
+    raw_id_fields = ('activity', "location")
+    readonly_fields = ("activity", "status",)
+    fields = readonly_fields + (
+        "start", "duration", "is_online",
+        "location", "location_hint", "online_meeting_url"
+    )
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -623,6 +626,8 @@ class ScheduleSlotAdmin(StateMachineAdmin):
 @admin.register(TeamScheduleSlot)
 class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
+    raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team', )
+    fields = ScheduleSlotAdmin.fields + ('team',)
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):

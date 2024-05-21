@@ -1,9 +1,9 @@
 {% load i18n %}
-<h3>{%trans "Create a registration" %}</h3>
+<h3>{%trans "Add captain as team member" %}</h3>
 
 <p>
 {% blocktrans with instance=effects.0.instance %}
-    Create a registration for "{{instance.activity}}"
+    Add the team captain as a team member to activity "{{instance.activity}}"
 {% endblocktrans %}
 
 {% if effects|length > 1%} 

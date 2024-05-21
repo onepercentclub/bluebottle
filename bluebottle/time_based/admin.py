@@ -333,7 +333,7 @@ class TeamAdmin(StateMachineAdmin):
     model = Team
     list_display = ('user', 'status', 'created',)
     readonly_fields = ('status', 'created', 'invite_code')
-    fields = ('activity', 'user', 'status', 'created', 'invite_code')
+    fields = ('activity', 'registration', 'user', 'status', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -352,6 +352,11 @@ class TeamAdminInline(TabularInlinePaginated):
         return obj.states.current_state.name
 
     status_label.short_description = _('Status')
+
+    can_delete = True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):

@@ -1,7 +1,7 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects.registration import (
+from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
 )

@@ -12,7 +12,7 @@ def run(*args):
     for client in Client.objects.all():
         with (LocalTenant(client)):
             succeeded_contributions = TimeContribution.objects.filter(
-                status='succeeded',
+                status__in=['succeeded', 'new'],
                 slot_participant_id__isnull=False
             ).exclude(
                 Q(slot_participant__status__in=('registered', )) &

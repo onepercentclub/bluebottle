@@ -26,12 +26,19 @@ def run(*args):
 
                         if (
                             contribution.status == 'succeeded' and 
-                            'succeeded' not in related_contribution_statuses
-                            and contributor.status != 'accepted'
+                            related_contribution_statuses and (
+                                'succeeded' not in related_contribution_statuses and
+                                'new' not in related_contribution_statuses
+                            )
                         ):
-                            print('succeeded incorrectly')
-                            print(contribution.status, related_contribution_statuses)
-                            __import__('ipdb').set_trace()
+                            print(
+                                'succeeded incorrectly',
+                                contribution.status, 
+                                related_contribution_statuses, 
+                                [sp.status for sp in contributor.slot_participants.all()]
+                            )
+                            contribution.status = 'failed'
+                            contribution.save()
 
                         if (
                             contribution.status == 'failed' and 

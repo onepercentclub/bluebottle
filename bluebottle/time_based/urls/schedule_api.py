@@ -64,7 +64,7 @@ urlpatterns = [
         name='team-schedule-registration-detail'),
     url(r'^/team-registrations/transitions$',
         TeamScheduleRegistrationTransitionList.as_view(),
-        name='schedule-registration-transitions'),
+        name='team-schedule-registration-transitions'),
 
     url(r'^/(?P<activity_id>\d+)/participants$',
         ScheduleRelatedParticipantList.as_view(),

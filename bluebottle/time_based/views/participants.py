@@ -23,7 +23,7 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission,
+    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
 )
 from bluebottle.utils.views import (
     CreateAPIView,
@@ -105,6 +105,7 @@ class ScheduleParticipantDetail(ParticipantDetail):
 class TeamScheduleParticipantDetail(ParticipantDetail):
     queryset = TeamScheduleParticipant.objects.all()
     serializer_class = TeamScheduleParticipantSerializer
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
 class PeriodicParticipantDetail(ParticipantDetail):
@@ -144,6 +145,7 @@ class TeamScheduleRelatedParticipantList(RelatedContributorListView):
         'user', 'activity'
     )
     serializer_class = TeamScheduleParticipantSerializer
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
 class PeriodicRelatedParticipantList(RelatedContributorListView):

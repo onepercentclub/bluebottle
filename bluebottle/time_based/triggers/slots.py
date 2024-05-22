@@ -12,6 +12,9 @@ from bluebottle.time_based.effects.effects import (
     CreatePeriodicParticipantsEffect,
     RescheduleScheduleSlotContributions,
 )
+from bluebottle.time_based.effects.slots import (
+    CreateTeamSlotParticipantsEffect
+)
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.states import (
     PeriodicSlotStateMachine,
@@ -49,10 +52,10 @@ class PeriodicSlotTriggers(TriggerManager):
 class ScheduleSlotTriggers(TriggerManager):
 
     def slot_is_finished(effect):
-        return effect.instance.end < now()
+        return effect.instance.end and effect.instance.end < now()
 
     def slot_is_not_finished(effect):
-        return effect.instance.end > now()
+        return not effect.instance.end or effect.instance.end > now()
 
     triggers = [
         TransitionTrigger(
@@ -104,4 +107,11 @@ class ScheduleSlotTriggers(TriggerManager):
 
 @register(TeamScheduleSlot)
 class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
-    pass
+    triggers = ScheduleSlotTriggers.triggers + [
+        TransitionTrigger(
+            ScheduleSlotStateMachine.initiate,
+            effects=[
+                CreateTeamSlotParticipantsEffect,
+            ],
+        ),
+    ]

@@ -2,11 +2,10 @@ from bluebottle.follow.effects import FollowActivityEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects.registration import (
+from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamMemberParticipantEffect
-
+    CreateTeamEffect
 )
 from bluebottle.time_based.messages import ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification
 from bluebottle.time_based.models import (
@@ -14,7 +13,6 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     ScheduleRegistration,
     TeamScheduleRegistration,
-    ScheduleTeamMember
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -327,49 +325,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
-                CreateParticipantEffect,
-            ],
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            ScheduleRegistrationStateMachine.auto_accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.reject,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.reject,
-                ),
-            ],
-        ),
-    ]
-
-
-@register(ScheduleTeamMember)
-class ScheduleTeamMemberTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            RegistrationStateMachine.initiate,
-            effects=[
-                CreateTeamMemberParticipantEffect,
-                TransitionEffect(
-                    RegistrationStateMachine.auto_accept,
-                ),
+                CreateTeamEffect,
             ],
         ),
         TransitionTrigger(

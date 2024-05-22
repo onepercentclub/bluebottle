@@ -144,28 +144,8 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('team-schedule-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True)
 
-    def to_representation(self, instance):
-        result = super().to_representation(instance)
-
-        user = self.context['request'].user
-        if (user not in [
-            instance.user,
-            instance.activity.owner,
-        ] and user not in instance.activity.initiative.activity_managers.all() and
-            not user.is_staff and
-            not user.is_superuser
-        ):
-            # del result['answer']
-            # del result['document']
-            del result['invite_code']
-
-        return result
-
     class Meta(RegistrationSerializer.Meta):
         model = TeamScheduleRegistration
-        fields = RegistrationSerializer.Meta.fields + [
-            "invite_code",
-        ]
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/team-schedule-registrations'

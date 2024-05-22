@@ -351,3 +351,43 @@ class UnsetCapacityEffect(Effect):
 
     def __str__(self):
         return _('Reset slot selection to "all" for {activity}').format(activity=self.instance)
+
+
+class CheckPreparationTimeContributionEffect(Effect):
+    """
+    Check the status of preparation time contribution
+    """
+
+    template = 'admin/check_preparation_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        participant = self.instance.participant
+        participant.refresh_from_db()
+        has_registrations = participant.slot_participants.filter(
+            status__in=['registered']
+        ).exists()
+        prep_time = participant.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        ).first()
+        if prep_time:
+            if not has_registrations and prep_time.status in ['succeeded', 'new']:
+                prep_time.states.fail(save=True)
+            elif (
+                participant.status in ['new', 'accepted', 'succeeded'] and
+                has_registrations and
+                prep_time.status == 'failed'
+            ):
+                prep_time.states.succeed(save=True)
+
+    def is_valid(self):
+        participant = self.instance.participant
+        has_prep_time = participant.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        ).exists()
+        return has_prep_time
+
+    def __repr__(self):
+        return '<Effect: Check preparation time contribution>'
+
+    def __str__(self):
+        return _('Check preparation time contribution for {participant}').format(participant=self.instance.user)

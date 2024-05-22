@@ -30,7 +30,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
     CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
     UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
-    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect,
+    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect, CheckPreparationTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -1673,6 +1673,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.remove,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -1689,6 +1690,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.accept,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.succeed,
@@ -1706,6 +1708,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.withdraw,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -1724,6 +1727,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.reapply,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,

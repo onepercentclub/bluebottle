@@ -15,9 +15,9 @@ class RegistrationStateMachine(ModelStateMachine):
         _("This person has applied and must be reviewed.")
     )
     accepted = State(
-        _('participating'),
+        _('accepted'),
         'accepted',
-        _('This person takes part in the activity.')
+        _('This person is accepted to take part in the activity.')
     )
     rejected = State(
         _('rejected'),

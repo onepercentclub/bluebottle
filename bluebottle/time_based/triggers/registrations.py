@@ -1,3 +1,4 @@
+from bluebottle.follow.effects import FollowActivityEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -7,6 +8,7 @@ from bluebottle.time_based.effects.registration import (
     CreateTeamMemberParticipantEffect
 
 )
+from bluebottle.time_based.messages import ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
@@ -50,6 +52,16 @@ class RegistrationTriggers(TriggerManager):
         """ No review needed """
         return not effect.instance.activity.review
 
+    def is_user(effect):
+        """ Is user """
+        user = effect.options.get('user')
+        return effect.instance.user == user
+
+    def is_admin(effect):
+        """ Is not user """
+        user = effect.options.get('user')
+        return user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+
     triggers = [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
@@ -57,32 +69,56 @@ class RegistrationTriggers(TriggerManager):
                 TransitionEffect(
                     RegistrationStateMachine.auto_accept,
                     conditions=[
-                        no_review_needed
+                        no_review_needed,
+                        is_user
                     ]
                 ),
+                TransitionEffect(
+                    RegistrationStateMachine.add,
+                    conditions=[
+                        is_admin
+                    ]
+                ),
+
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[
-                        review_needed
+                        review_needed,
+                        is_user
                     ]
                 ),
                 NotificationEffect(
                     UserAppliedNotification,
                     conditions=[
-                        review_needed
+                        review_needed,
+                        is_user
                     ]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[
-                        no_review_needed
+                        no_review_needed,
+                        is_user
                     ]
                 ),
                 NotificationEffect(
                     UserJoinedNotification,
                     conditions=[
-                        no_review_needed
+                        no_review_needed,
+                        is_user
+
                     ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
                 ),
             ]
         ),
@@ -169,6 +205,19 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                FollowActivityEffect,
+                CreateInitialPeriodicParticipantEffect,
+            ],
+        ),
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.add,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -180,6 +229,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
+                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),

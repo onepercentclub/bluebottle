@@ -1,0 +1,10 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+  {% blocktrans context 'email' %}
+    <p>You have been scheduled from the activity "{{ title }}".</p>
+  {% endblocktrans %}
+
+  {% include 'mails/messages/partial/slot.html' %}
+{% endblock %}

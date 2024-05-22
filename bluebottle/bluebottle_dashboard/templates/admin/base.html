@@ -8,6 +8,8 @@
 {% endblock %}
 {% block extrahead %}
     <script type="text/javascript" src="{% static "/admin/js/dashboard.js" as url %}{{ url|jet_append_version }}"></script>
+
+  <script defer data-domain="all-platforms-admin" src="https://plausible.io/js/script.js"></script>
 {% endblock %}
 
 {% block welcome-msg %}

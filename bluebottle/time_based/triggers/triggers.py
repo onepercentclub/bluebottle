@@ -18,11 +18,8 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     RescheduleSlotDurationsEffect,
-    ActiveTimeContributionsTransitionEffect,
-    CreateSlotTimeContributionEffect,
-    CreatePreparationTimeContributionEffect,
-    LockFilledSlotsEffect,
-    UnlockUnfilledSlotsEffect,
+    ActiveTimeContributionsTransitionEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
+    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect, CheckPreparationTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -999,6 +996,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.remove,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -1015,6 +1013,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.accept,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.succeed,
@@ -1032,6 +1031,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.withdraw,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.fail,
@@ -1050,6 +1050,7 @@ class SlotParticipantTriggers(TriggerManager):
         TransitionTrigger(
             SlotParticipantStateMachine.reapply,
             effects=[
+                CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,

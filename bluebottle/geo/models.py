@@ -186,6 +186,15 @@ class Location(models.Model):
 
         super(Location, self).save()
 
+    def merge(self, other):
+        self.alternate_names += other.alternate_names
+        self.save()
+
+        other.member_set.update(location=self)
+        other.activity_set.update(office_location=self)
+
+        other.delete()
+
     class JSONAPIMeta(object):
         resource_name = 'locations'
 

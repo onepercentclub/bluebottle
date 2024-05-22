@@ -1664,6 +1664,12 @@ class ScheduleSlot(BaseScheduleSlot):
         ScheduleActivity, on_delete=models.CASCADE, related_name="slots"
     )
 
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(
+            status__in=["accepted", "participating", "succeeded", "new"],
+        )
+
 
 class TeamScheduleSlot(BaseScheduleSlot):
     activity = models.ForeignKey(
@@ -1680,6 +1686,13 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/team-schedule-slots"
+      
+    @property
+    def accepted_participants(self):
+        return self.participants.filter(
+            status__in=["accepted", "participating", "succeeded", "new"],
+            team_member__status__in=['accepted', 'new']
+        )
 
 
 class PeriodicParticipant(Participant, Contributor):

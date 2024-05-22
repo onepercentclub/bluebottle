@@ -12,7 +12,9 @@
     <b>{{ title }}</b>
   </p>
 
-  {% include 'mails/messages/partial/period.html' %}
+  {% if period %}
+    {% include 'mails/messages/partial/periodic.html' %}
+  {% endif %}
 {% endblock %}
 
 

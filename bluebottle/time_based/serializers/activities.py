@@ -231,6 +231,17 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
+    teams = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="related-teams",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "unscheduled": ["accepted"],
+            "active": ["scheduled", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
+    )
+
     registrations = RelatedLinkFieldByStatus(
         many=True,
         read_only=True,
@@ -243,13 +254,14 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     class Meta(TimeBasedBaseSerializer.Meta):
         model = ScheduleActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'start',
-            'deadline',
-            'duration',
-            'is_online',
-            'location',
-            'location_hint',
-            'team_activity',
+            "start",
+            "deadline",
+            "duration",
+            "is_online",
+            "location",
+            "location_hint",
+            "team_activity",
+            "teams",
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

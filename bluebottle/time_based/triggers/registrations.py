@@ -4,6 +4,7 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
+    CreateTeamEffect
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
@@ -274,7 +275,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
-                CreateParticipantEffect,
+                CreateTeamEffect,
             ],
         ),
         TransitionTrigger(

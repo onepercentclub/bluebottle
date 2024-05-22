@@ -1474,6 +1474,14 @@ class TeamMember(TriggerMixin, models.Model):
 
 
 class ScheduleParticipant(Participant, Contributor):
+    registration = models.ForeignKey(
+        'time_based.ScheduleRegistration',
+        related_name='participants',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
+
     slot = models.ForeignKey(
         "time_based.ScheduleSlot",
         related_name="participants",
@@ -1520,6 +1528,15 @@ class ScheduleParticipant(Participant, Contributor):
 
 
 class TeamScheduleParticipant(Participant, Contributor):
+
+    registration = models.ForeignKey(
+        'time_based.TeamScheduleRegistration',
+        related_name='participants',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
+
     team_member = models.ForeignKey(
         'time_based.TeamMember',
         related_name='participations',

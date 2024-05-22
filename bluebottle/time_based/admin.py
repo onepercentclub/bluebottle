@@ -317,6 +317,12 @@ class TeamScheduleParticipantAdminInline(BaseContributorInline):
     verbose_name_plural = _("Team participation")
 
 
+class TeamScheduleScheduleAdminInline(BaseContributorInline):
+    model = TeamScheduleRegistration
+    verbose_name = _("Team registration")
+    verbose_name_plural = _("Team registrations")
+
+
 @admin.register(TeamMember)
 class TeamMemberAdmin(StateMachineAdmin):
     model = TeamMember
@@ -523,6 +529,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
             if obj.team_activity == 'teams':
                 return (
                     TeamAdminInline,
+                    TeamScheduleScheduleAdminInline
                 ) + inlines
             else:
                 return (ScheduleParticipantAdminInline,) + inlines

@@ -1678,6 +1678,9 @@ class TeamScheduleSlot(BaseScheduleSlot):
         blank=True,
     )
 
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/team-schedule-slots"
+
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(

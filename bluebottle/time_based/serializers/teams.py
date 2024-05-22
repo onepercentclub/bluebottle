@@ -1,45 +1,62 @@
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from bluebottle.activities.utils import BaseContributorSerializer
+from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.fields import FSMField
+from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 
 
-class TeamSerializer(BaseContributorSerializer):
+class TeamSerializer(ModelSerializer):
     permissions = ResourcePermissionField("team-detail", view_args=("pk",))
     registration = ResourceRelatedField(read_only=True)
     activity = ResourceRelatedField(read_only=True)
-    members = ResourceRelatedField(many=True, read_only=True)
+    team_members = ResourceRelatedField(many=True, read_only=True)
+    captain = ResourceRelatedField(read_only=True, source="user")
+
+    transitions = AvailableTransitionsField(source="states")
+    current_status = CurrentStatusField(source="states.current_state")
 
     class Meta:
         model = Team
-        fields = BaseContributorSerializer.Meta.fields + (
+        fields = (
+            "id",
             "status",
             "registration",
-            "members",
+            "team_members",
             "activity",
+            "captain",
+            "slots",
         )
-        meta_fields = ("permissions",)
+        meta_fields = (
+            "permissions",
+            "transitions",
+            "current_status",
+        )
 
     class JSONAPIMeta:
-        resource_name = "contributors/time-based/team"
-        included_resources = ["members", "registration", "activity"]
+        resource_name = "contributors/time-based/teams"
+        included_resources = ["members", "registration", "activity", "captain"]
 
     included_serializers = {
         "members": "bluebottle.time_based.serializers.TeamMemberSerializer",
+        "captain": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
     }
 
 
-class TeamMemberSerializer(BaseContributorSerializer):
+class TeamMemberSerializer(ModelSerializer):
     team = ResourceRelatedField(read_only=True)
+
+    transitions = AvailableTransitionsField(source="states")
+    current_status = CurrentStatusField(source="states.current_state")
 
     class Meta:
         model = TeamMember
-        fields = BaseContributorSerializer.Meta.fields + ("status", "team")
+        fields = ("id", "status", "team" "transitions", "current_status")
         meta_fields = ("permissions",)
 
     class JSONAPIMeta:

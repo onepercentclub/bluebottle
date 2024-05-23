@@ -1,8 +1,11 @@
 from builtins import object
 from django.core.exceptions import ValidationError
 
+from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.geo.models import Region, SubRegion, Country
+from bluebottle.geo.models import Region, SubRegion, Country, Location
 
 
 class GeoTestsMixin(object):
@@ -143,3 +146,26 @@ class GeoTestCase(BluebottleTestCase):
         self.country.alpha3_code = "XFF"
         self.country.full_clean()
         self.country.save()
+
+
+class LocationTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.location = LocationFactory.create()
+
+        self.to_be_merged = LocationFactory.create()
+
+        self.member = BlueBottleUserFactory.create(location=self.to_be_merged)
+        self.activity = DeedFactory.create(office_location=self.to_be_merged)
+
+    def test_merge(self):
+        self.location.merge(self.to_be_merged)
+
+        self.assertTrue(self.activity in self.location.activity_set.all())
+        self.assertTrue(self.member in self.location.member_set.all())
+
+        for alternate_name in self.to_be_merged.alternate_names:
+            self.assertTrue(alternate_name in self.location.alternate_names)
+
+        self.assertRaises(
+            Location.DoesNotExist, Location.objects.get, pk=self.to_be_merged.pk
+        )

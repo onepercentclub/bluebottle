@@ -43,13 +43,13 @@ class TestBaseTokenAuthentication(TestCase):
         BaseTokenAuthentication,
         'authenticate_request',
         return_value={
-            'remote_id': 'test@example.com',
-            'email': 'test@example.com',
-            'location.slug': 'AMS'
-        }
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Amsterdam",
+        },
     )
     def test_user_created_location(self, authenticate_request):
-        location = LocationFactory.create(name='Amsterdam', slug='AMS')
+        location = LocationFactory.create(name="Amsterdam")
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
 
@@ -65,15 +65,61 @@ class TestBaseTokenAuthentication(TestCase):
         BaseTokenAuthentication,
         'authenticate_request',
         return_value={
-            'remote_id': 'test@example.com',
-            'email': 'test@example.com',
-            'location.slug': 'AMS'
-        }
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "amsterdam",
+        },
+    )
+    def test_user_created_location_different_case(self, authenticate_request):
+        location = LocationFactory.create(name="Amsterdam")
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+
+            user.refresh_from_db()
+
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Mokum",
+        },
+    )
+    def test_user_created_location_alternate_name(self, authenticate_request):
+        location = LocationFactory.create(name="Amsterdam", alternate_names=["Mokum"])
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+
+            user.refresh_from_db()
+
+            self.assertEqual(user.email, "test@example.com")
+            self.assertEqual(user.location, location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        "authenticate_request",
+        return_value={
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Amsterdam",
+        },
     )
     def test_user_updated_location(self, authenticate_request):
-        BlueBottleUserFactory.create(remote_id='test@example.com', location=None)
+        BlueBottleUserFactory.create(remote_id="test@example.com", location=None)
 
-        location = LocationFactory.create(name='Amsterdam', slug='AMS')
+        location = LocationFactory.create(name="Amsterdam")
+
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
 
@@ -89,20 +135,19 @@ class TestBaseTokenAuthentication(TestCase):
         BaseTokenAuthentication,
         'authenticate_request',
         return_value={
-            'remote_id': 'test@example.com',
-            'email': 'test@example.com',
-            'location.slug': 'AMS'
-        }
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Amsterdam",
+        },
     )
     def test_user_updated_location_verified(self, authenticate_request):
         location = LocationFactory.create()
+
         BlueBottleUserFactory.create(
-            remote_id='test@example.com',
-            location=location,
-            location_verified=True
+            remote_id="test@example.com", location=location, location_verified=True
         )
 
-        LocationFactory.create(name='Amsterdam', slug='AMS')
+        LocationFactory.create(name="Amsterdam")
 
         with self.settings(TOKEN_AUTH={}):
             user, created = self.auth.authenticate()
@@ -112,17 +157,17 @@ class TestBaseTokenAuthentication(TestCase):
 
             user.refresh_from_db()
 
-            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.email, "test@example.com")
             self.assertEqual(user.location, location)
 
     @patch.object(
         BaseTokenAuthentication,
-        'authenticate_request',
+        "authenticate_request",
         return_value={
-            'remote_id': 'test@example.com',
-            'email': 'test@example.com',
-            'location.slug': 'AMS'
-        }
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Amsterdam",
+        },
     )
     def test_user_created_location_missing(self, authenticate_request):
         with self.settings(TOKEN_AUTH={}):
@@ -131,6 +176,29 @@ class TestBaseTokenAuthentication(TestCase):
             self.assertEqual(authenticate_request.call_count, 1)
             self.assertTrue(created)
             self.assertEqual(user.email, 'test@example.com')
+            self.assertIsNone(user.location)
+
+    @patch.object(
+        BaseTokenAuthentication,
+        "authenticate_request",
+        return_value={
+            "remote_id": "test@example.com",
+            "email": "test@example.com",
+            "location.slug": "Amsterdam",
+        },
+    )
+    def test_user_created_location_missing_create(self, authenticate_request):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.create_locations = True
+        member_settings.save()
+
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.email, "test@example.com")
+            self.assertEqual(user.location.name, "Amsterdam")
 
     @patch.object(
         BaseTokenAuthentication,

@@ -385,6 +385,19 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
             return inlines + [TeamScheduleSlotAdminInline]
         return inlines
 
+    superadmin_fields = ['force_status']
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        fieldsets = (
+            (_('Details'), {'fields': fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
+
 
 class TeamAdminInline(TabularInlinePaginated):
     model = Team

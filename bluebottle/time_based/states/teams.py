@@ -18,6 +18,12 @@ class TeamStateMachine(ModelStateMachine):
         _("This team has been accepted.")
     )
 
+    scheduled = State(
+        _('scheduled'),
+        'scheduled',
+        _("This team has been scheduled.")
+    )
+
     initiate = Transition(
         EmptyState(),
         new,

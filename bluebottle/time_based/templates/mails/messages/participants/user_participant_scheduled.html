@@ -3,7 +3,11 @@
 
 {% block message %}
   {% blocktrans context 'email' %}
-    <p>You have been scheduled from the activity "{{ title }}".</p>
+    <p>You have been scheduled for the activity "{{ title }}".</p>
+  {% endblocktrans %}
+  <br />
+  {% blocktrans context 'email' %}
+    <b>Participation details:</b>
   {% endblocktrans %}
 
   {% include 'mails/messages/partial/slot.html' %}

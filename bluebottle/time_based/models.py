@@ -1684,6 +1684,9 @@ class TeamScheduleSlot(BaseScheduleSlot):
         blank=True,
     )
 
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/team-schedule-slots"
+      
     @property
     def accepted_participants(self):
         return self.participants.filter(

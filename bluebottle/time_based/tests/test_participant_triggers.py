@@ -214,7 +214,12 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         )
 
     def register(self):
-        registration = DeadlineRegistrationFactory.create(activity=self.activity)
+        user = BlueBottleUserFactory.create()
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
         self.participant = registration.participants.get()
 
     def test_initial_added_through_admin(self):
@@ -268,14 +273,17 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     activity_factory = PeriodicActivityFactory
 
     def register(self):
-        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
-
-        slot = self.activity.slots.get()
-        self.participant = self.registration.participants.get(slot=slot)
-
+        user = BlueBottleUserFactory.create()
+        self.registration = PeriodicRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
+        self.registration.refresh_from_db()
+        self.participant = self.registration.participants.first()
+        slot = self.participant.slot
         slot.states.start(save=True)
         slot.states.finish(save=True)
-
         self.participant.refresh_from_db()
 
     def test_single_preparation_contribution(self):
@@ -293,7 +301,12 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
     expected_contribution_status = "new"
 
     def register(self):
-        self.registration = ScheduleRegistrationFactory.create(activity=self.activity)
+        user = BlueBottleUserFactory.create()
+        self.registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
         self.participant = self.registration.participants.first()
         self.participant.slot = ScheduleSlotFactory.create(
             activity=self.activity, duration=self.activity.duration

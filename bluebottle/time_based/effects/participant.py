@@ -1,12 +1,19 @@
 from datetime import datetime, date
-from django.db.models import ObjectDoesNotExist
 
+from django.db.models import ObjectDoesNotExist
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.effects.effects import CreatePeriodicParticipantsEffect
-from bluebottle.time_based.models import TimeContribution, ContributionTypeChoices, DeadlineRegistration
+from bluebottle.time_based.models import (
+    TimeContribution,
+    ContributionTypeChoices,
+    DeadlineRegistration,
+    DeadlineParticipant,
+    ScheduleRegistration,
+    ScheduleParticipant,
+)
 
 
 class CreateTimeContributionEffect(Effect):
@@ -73,8 +80,15 @@ class CreateRegistrationEffect(Effect):
     def without_registration(self):
         return not self.instance.registration
 
+    def get_registration_model(self):
+        if isinstance(self.instance, DeadlineParticipant):
+            return DeadlineRegistration
+        if isinstance(self.instance, ScheduleParticipant):
+            return ScheduleRegistration
+        raise ValueError(f'No registration defined for participant model {self.instance.__class__.__name__}')
+
     def post_save(self, **kwargs):
-        registration = DeadlineRegistration.objects.create(
+        registration = self.get_registration_model().objects.create(
             activity=self.instance.activity,
             user=self.instance.user,
             status='accepted'

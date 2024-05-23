@@ -408,9 +408,13 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         ).count()
 
     def get_first_slot(self, instance):
-        return instance.slots.filter(
-            start__gte=now()
-        ).exclude(status__in=['draft', 'cancelled']).order_by('start').first()
+        slots = instance.slots.exclude(status__in=["draft", "cancelled"]).order_by(
+            "start"
+        )
+
+        if instance.status == "open":
+            slots = slots.filter(start__gte=now())
+        return slots.first()
 
     def get_slot_count(self, instance):
         return len(instance.slots.all())

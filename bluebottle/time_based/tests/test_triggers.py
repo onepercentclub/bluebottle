@@ -1339,7 +1339,7 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
         )
 
 
-class RegistrationTriggerTestBase(TriggerTestCase):
+class RegistrationTriggerTestBase:
     factory = None
     activity_factory = None
 
@@ -1412,7 +1412,7 @@ class RegistrationTriggerTestBase(TriggerTestCase):
             )
 
 
-class PeriodicRegistrationTriggersTestCase(RegistrationTriggerTestBase):
+class PeriodicRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerTestCase):
 
     factory = PeriodicRegistrationFactory
     activity_factory = PeriodicActivityFactory
@@ -1450,7 +1450,7 @@ class PeriodicRegistrationTriggersTestCase(RegistrationTriggerTestBase):
             )
 
 
-class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase):
+class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerTestCase):
 
     factory = ScheduleRegistrationFactory
     activity_factory = ScheduleActivityFactory

@@ -1,11 +1,7 @@
-
-from django.contrib.auth.base_user import is_password_usable
-from django.db.models import Q
-
+from bluebottle.activities.models import Contributor
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.time_based.models import TimeContribution, DateParticipant, PeriodParticipant
-from bluebottle.activities.models import Contributor
+from bluebottle.time_based.models import TimeContribution
 
 
 def run(*args):
@@ -15,26 +11,26 @@ def run(*args):
         with (LocalTenant(client)):
 
             for contribution in TimeContribution.objects.filter(contribution_type="preparation"):
-                
+
                 try:
                     contributor = contribution.contributor
                     if contributor:
                         related_contribution_statuses = [
-                                related_contribution.status for related_contribution 
-                                in contributor.contributions.exclude(pk=contribution.pk)
+                            related_contribution.status for related_contribution
+                            in contributor.contributions.exclude(pk=contribution.pk)
                         ]
 
                         if (
-                            contribution.status == 'succeeded' and 
-                            'succeeded' not in related_contribution_statuses
-                            and contributor.status != 'accepted'
+                            contribution.status == 'succeeded' and
+                            'succeeded' not in related_contribution_statuses and
+                            contributor.status != 'accepted'
                         ):
                             print('succeeded incorrectly')
                             print(contribution.status, related_contribution_statuses)
                             __import__('ipdb').set_trace()
 
                         if (
-                            contribution.status == 'failed' and 
+                            contribution.status == 'failed' and
                             not all([status == 'failed' for status in related_contribution_statuses])
                         ):
                             print('failed incorrectly')
@@ -50,7 +46,6 @@ def run(*args):
                         print(f'no contributor for {contribution.pk}')
                 except Contributor.DoesNotExist:
                     print(f'no contributor for {contribution.pk}')
-
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

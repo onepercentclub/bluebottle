@@ -44,7 +44,12 @@ class PeriodicSlotTriggerTestCase(BluebottleTestCase):
         mail.outbox = []
 
     def register(self):
-        self.registration = PeriodicRegistrationFactory.create(activity=self.activity)
+        user = BlueBottleUserFactory.create()
+        self.registration = PeriodicRegistrationFactory.create(
+            activity=self.activity,
+            user=user,
+            as_user=user
+        )
 
     @property
     def first_slot(self):

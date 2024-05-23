@@ -118,9 +118,20 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
     factory = DeadlineActivityFactory
 
     def create_participants(self):
-        self.registrations = DeadlineRegistrationFactory.create_batch(
-            2, activity=self.activity
-        )
+        user1 = BlueBottleUserFactory()
+        user2 = BlueBottleUserFactory()
+        self.registrations = [
+            DeadlineRegistrationFactory.create(
+                activity=self.activity,
+                user=user1,
+                as_user=user1
+            ),
+            DeadlineRegistrationFactory.create(
+                activity=self.activity,
+                user=user2,
+                as_user=user2
+            )
+        ]
 
     def test_change_capacity(self):
         self.publish()

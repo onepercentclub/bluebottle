@@ -26,7 +26,7 @@ class TeamSerializer(ModelSerializer):
             # "team_members",
             "activity",
             "captain",
-            "slots",
+            # "slots",
         )
         meta_fields = (
             "permissions",

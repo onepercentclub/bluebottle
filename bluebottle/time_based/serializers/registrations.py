@@ -164,7 +164,7 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
             'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
             'document': 'bluebottle.time_based.serializers.ScheduleRegistrationDocumentSerializer',
             'team': 'bluebottle.time_based.serializers.teams.TeamSerializer',
-            'team.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer'
+            # 'team.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer'
         }
     )
 

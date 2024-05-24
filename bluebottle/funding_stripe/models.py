@@ -28,6 +28,7 @@ class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
 
     created = models.DateTimeField(auto_now_add=True)
 

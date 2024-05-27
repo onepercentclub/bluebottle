@@ -1417,6 +1417,7 @@ class TeamScheduleRegistration(Registration):
 
 class Team(TriggerMixin, models.Model):
     invite_code = models.UUIDField(default=uuid.uuid4)
+
     registration = models.OneToOneField(
         Registration,
         related_name='team',

@@ -14,7 +14,7 @@ class TeamSerializer(ModelSerializer):
     registration = ResourceRelatedField(read_only=True)
     activity = ResourceRelatedField(read_only=True)
     team_members = ResourceRelatedField(many=True, read_only=True)
-    captain = ResourceRelatedField(read_only=True, source="user")
+    user = ResourceRelatedField(read_only=True)
 
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
@@ -27,7 +27,7 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "team_members",
             "activity",
-            "captain",
+            "user",
             "slots",
         )
         meta_fields = (
@@ -42,7 +42,7 @@ class TeamSerializer(ModelSerializer):
 
     included_serializers = {
         "members": "bluebottle.time_based.serializers.TeamMemberSerializer",
-        "captain": "bluebottle.initiatives.serializers.MemberSerializer",
+        "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
     }

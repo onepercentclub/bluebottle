@@ -6,16 +6,16 @@ from bluebottle.time_based.models import TeamMember, Team
 
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _("This team is new.")
-    )
+    new = State(_("Unscheduled"), "new", _("This team is unscheduled."))
 
-    accepted = State(
-        _('accepted'),
-        'accepted',
-        _("This team has been accepted.")
+    accepted = State(_("accepted"), "accepted", _("This team has been accepted."))
+
+    rejected = State(_("rejected"), "rejected", _("This team has been accepted."))
+
+    scheduled = State(_("Scheduled"), "scheduled", _("This team is scheduled"))
+
+    removed = State(
+        _("Removed"), "removed", _("This team is removed from the activity")
     )
 
     initiate = Transition(
@@ -28,28 +28,94 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     accept = Transition(
-        new,
+        [new, rejected],
         accepted,
-        name=_('Accept'),
-        description=_(
-            'The team has been accepted.'
-        ),
+        name=_("Accept"),
+        description=_("Accept this team."),
+        automatic=True,
+    )
+
+    reject = Transition(
+        [new, accepted],
+        rejected,
+        name=_("Reject"),
+        description=_("Reject this team."),
+        automatic=True,
+    )
+
+    schedule = Transition(
+        [new, accepted],
+        scheduled,
+        name=_("Schedule"),
+        description=_("Assign a slot to this activity"),
+        automatic=True,
+    )
+
+    remove = Transition(
+        [accepted, scheduled],
+        removed,
+        name=_("Removed"),
+        description=_("Remove this team from the activity."),
+    )
+
+    readd = Transition(
+        removed,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
     )
 
 
 @register(TeamMember)
 class TeamMemberStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _("This team member is new.")
+    new = State(_("Unscheduled"), "new", _("This team member is unscheduled."))
+
+    accepted = State(
+        _("accepted"), "accepted", _("This team member has been accepted.")
     )
+
+    rejected = State(
+        _("rejected"), "rejected", _("This team member has been accepted.")
+    )
+
+    removed = State(_("removed"), "removed", _("This team member is removed."))
 
     initiate = Transition(
         EmptyState(),
         new,
-        name=_('Initiate'),
-        description=_(
-            'The team member joined.'
-        ),
+        name=_("Initiate"),
+        description=_("The team member joined."),
+        automatic=True,
+    )
+
+    accept = Transition(
+        [new, rejected],
+        accepted,
+        name=_("Accept"),
+        description=_("Accept this team."),
+        automatic=True,
+    )
+
+    reject = Transition(
+        [new, accepted],
+        rejected,
+        name=_("Reject"),
+        description=_("Reject this team."),
+        automatic=True,
+    )
+
+    remove = Transition(
+        [accepted],
+        removed,
+        name=_("Removed"),
+        description=_("Remove this team from the activity."),
+        automatic=True,
+    )
+
+    readd = Transition(
+        removed,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=True,
     )

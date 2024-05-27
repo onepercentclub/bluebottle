@@ -30,7 +30,7 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
+from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -359,13 +359,21 @@ class TeamMemberAdminInline(TabularInlinePaginated):
     link.short_description = _('Edit')
 
 
-class TeamScheduleSlotAdminInline(StackedInline):
+class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
     model = TeamScheduleSlot
     extra = 0
 
+    raw_id_fields = ('location',)
+
     can_delete = True
-    readonly_fields = ('link', 'created', 'status_label', 'activity')
-    fields = ('link', 'start', 'duration', 'created', 'status_label', 'is_online')
+    readonly_fields = ('link', 'created', 'activity')
+    fields = (
+        'link',
+        'start', 'duration',
+        'created', 'states',
+        'is_online', 'location',
+        'location_hint', 'online_meeting_url'
+    )
 
     def link(self, obj):
         url = reverse('admin:time_based_teamscheduleslot_change', args=(obj.id,))
@@ -386,9 +394,9 @@ class TeamScheduleSlotAdminInline(StackedInline):
 @admin.register(Team)
 class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
-    list_display = ('user', 'status', 'created',)
-    readonly_fields = ('status', 'created', 'invite_code', 'registration_info')
-    fields = ('activity', 'registration_info', 'user', 'status', 'created', 'invite_code')
+    list_display = ('user', 'created', 'activity')
+    readonly_fields = ('created', 'invite_code', 'registration_info')
+    fields = ('activity', 'registration_info', 'user', 'states', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -667,9 +675,11 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 class ScheduleSlotAdmin(StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
     raw_id_fields = ('activity', "location")
-    readonly_fields = ("activity", "status",)
+    readonly_fields = ("activity",)
     fields = readonly_fields + (
-        "start", "duration", "is_online",
+        "states",
+        "start", "duration",
+        "is_online",
         "location", "location_hint", "online_meeting_url"
     )
 

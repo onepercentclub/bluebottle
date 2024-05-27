@@ -10,6 +10,7 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class TeamSerializer(ModelSerializer):
     permissions = ResourcePermissionField("team-detail", view_args=("pk",))
     registration = ResourceRelatedField(read_only=True)
+    # slots = ResourceRelatedField(many=True, read_only=True)
     activity = ResourceRelatedField(read_only=True)
     # team_members = ResourceRelatedField(many=True, read_only=True)
     captain = ResourceRelatedField(read_only=True, source="user")
@@ -40,11 +41,13 @@ class TeamSerializer(ModelSerializer):
             # "team_members",
             "registration",
             "activity",
-            "captain"
+            "captain",
+            "slots"
         ]
 
     included_serializers = {
         # "team_members": "bluebottle.time_based.serializers.TeamMemberSerializer",
+        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlot",
         "captain": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",

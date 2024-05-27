@@ -36,7 +36,7 @@ from bluebottle.time_based.models import (
     ScheduleActivity,
     TimeContribution,
     DeadlineParticipant,
-    PeriodicActivity,
+    PeriodicActivity, ScheduleParticipant, TeamScheduleParticipant,
 )
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
@@ -51,7 +51,9 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         DateParticipant,
         DeedParticipant,
         CollectContributor,
-        DeadlineParticipant
+        DeadlineParticipant,
+        ScheduleParticipant,
+        TeamScheduleParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)

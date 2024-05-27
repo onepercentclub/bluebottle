@@ -7,7 +7,11 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     DeadlineRegistration,
     PeriodicParticipant,
-    PeriodicRegistration, ScheduleParticipant, ScheduleRegistration,
+    PeriodicRegistration,
+    ScheduleParticipant,
+    ScheduleRegistration,
+    TeamScheduleParticipant,
+    TeamScheduleRegistration
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -70,6 +74,7 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         resource_name = "contributors/time-based/schedule-participants"
         included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + [
             "slot",
+            "slot.location",
         ]
 
     included_serializers = dict(
@@ -77,7 +82,32 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "slot": "bluebottle.time_based.serializers.ScheduleSlotSerializer",
+            "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
             "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
+        }
+    )
+
+
+class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
+    permissions = ResourcePermissionField('team-schedule-participant-detail', view_args=('pk',))
+    registration = ResourceRelatedField(queryset=TeamScheduleRegistration.objects.all())
+
+    class Meta(ScheduleParticipantSerializer.Meta):
+        model = TeamScheduleParticipant
+
+    class JSONAPIMeta(ScheduleParticipantSerializer.JSONAPIMeta):
+        resource_name = "contributors/time-based/team-schedule-participants"
+        included_resources = ScheduleParticipantSerializer.JSONAPIMeta.included_resources + [
+            "slot.location",
+        ]
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers,
+        **{
+            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+            "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
+            "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
+            "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         }
     )
 
@@ -136,6 +166,17 @@ class ScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-participant-transitions'
+
+
+class TeamScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=TeamScheduleParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.TeamScheduleParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/team-schedule-participant-transitions'
 
 
 class PeriodicParticipantTransitionSerializer(ParticipantTransitionSerializer):

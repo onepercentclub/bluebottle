@@ -225,7 +225,7 @@ class BaseActivitySerializer(ModelSerializer):
         ).count()
 
     def get_team_count(self, instance):
-        return instance.teams.filter(status__in=['open', 'finished']).count()
+        return instance.old_teams.filter(status__in=['open', 'finished']).count()
 
     class Meta(object):
         model = Activity

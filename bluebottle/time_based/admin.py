@@ -3,7 +3,7 @@ from urllib.parse import urlencode
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
-from django.contrib.admin import SimpleListFilter, widgets
+from django.contrib.admin import SimpleListFilter, widgets, StackedInline
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
@@ -49,7 +49,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-)
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -311,6 +311,115 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
             return format_html('<i>{}</i>', _('unscheduled'))
 
 
+class TeamScheduleParticipantAdminInline(BaseContributorInline):
+    model = TeamScheduleParticipant
+    verbose_name = _("Team participation")
+    verbose_name_plural = _("Team participation")
+
+
+class TeamScheduleScheduleAdminInline(BaseContributorInline):
+    model = TeamScheduleRegistration
+    verbose_name = _("Team registration")
+    verbose_name_plural = _("Team registrations")
+
+
+@admin.register(TeamMember)
+class TeamMemberAdmin(StateMachineAdmin):
+    model = TeamMember
+    list_display = ('user', 'status', 'created',)
+    readonly_fields = ('status', 'created')
+    fields = ('team', 'user', 'status', 'created')
+    raw_id_fields = ('user', 'team')
+
+
+class TeamMemberAdminInline(TabularInlinePaginated):
+    model = TeamMember
+    readonly_fields = ('link', 'user', 'status_label')
+    fields = readonly_fields
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
+
+    def link(self, obj):
+        url = reverse('admin:time_based_teammember_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+    link.short_description = _('Edit')
+
+
+class TeamScheduleSlotAdminInline(StackedInline):
+    model = TeamScheduleSlot
+    extra = 0
+
+    can_delete = True
+    readonly_fields = ('link', 'created', 'status_label', 'activity')
+    fields = ('link', 'start', 'duration', 'created', 'status_label', 'is_online')
+
+    def link(self, obj):
+        url = reverse('admin:time_based_teamscheduleslot_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+    link.short_description = _('Edit')
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+    status_label.short_description = _('Status')
+
+    def has_add_permission(self, request, obj):
+        return True
+
+
+@admin.register(Team)
+class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
+    model = Team
+    list_display = ('user', 'status', 'created',)
+    readonly_fields = ('status', 'created', 'invite_code')
+    fields = ('activity', 'registration', 'user', 'status', 'created', 'invite_code')
+    raw_id_fields = ('user', 'registration', 'activity')
+    inlines = [TeamMemberAdminInline]
+
+    def get_inlines(self, request, obj):
+        inlines = super().get_inlines(request, obj)
+        if obj and obj.id and obj.activity and isinstance(obj.activity, ScheduleActivity):
+            return inlines + [TeamScheduleSlotAdminInline]
+        return inlines
+
+    superadmin_fields = ['force_status']
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        fieldsets = (
+            (_('Details'), {'fields': fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
+
+
+class TeamAdminInline(TabularInlinePaginated):
+    model = Team
+    readonly_fields = ('link', 'created', 'status_label', 'invite_code')
+    raw_id_fields = ('user', 'registration')
+    fields = ('link', 'user', 'status_label', 'invite_code')
+
+    def link(self, obj):
+        url = reverse('admin:time_based_team_change', args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+    def status_label(self, obj):
+        return obj.states.current_state.name
+
+    status_label.short_description = _('Status')
+
+    can_delete = True
+
+    def has_delete_permission(self, request, obj=None):
+        return True
+
+
 class PeriodicParticipantAdminInline(BaseContributorInline):
     model = PeriodicParticipant
     verbose_name = _("Participation")
@@ -427,7 +536,18 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 class ScheduleActivityAdmin(TimeBasedAdmin):
     base_model = ScheduleActivity
 
-    inlines = (ScheduleParticipantAdminInline,) + TimeBasedAdmin.inlines
+    def get_inlines(self, request, obj):
+        inlines = super().get_inlines(request, obj)
+        if obj and obj.id:
+            if obj.team_activity == 'teams':
+                return (
+                    TeamAdminInline,
+                    TeamScheduleScheduleAdminInline
+                ) + inlines
+            else:
+                return (ScheduleParticipantAdminInline,) + inlines
+        return inlines
+
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
     form = TimeBasedActivityAdminForm
@@ -501,6 +621,33 @@ class PeriodicSlotAdmin(StateMachineAdmin):
         if request.user.is_superuser:
             fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
         return fieldsets
+
+
+@admin.register(ScheduleSlot)
+class ScheduleSlotAdmin(StateMachineAdmin):
+    list_display = ("start", "duration", "activity", "participant_count")
+    raw_id_fields = ('activity', "location")
+    readonly_fields = ("activity", "status",)
+    fields = readonly_fields + (
+        "start", "duration", "is_online",
+        "location", "location_hint", "online_meeting_url"
+    )
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets += ((_("Super admin"), {"fields": ("force_status", "states")}),)
+        return fieldsets
+
+
+@admin.register(TeamScheduleSlot)
+class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
+    inlines = [TeamScheduleParticipantAdminInline]
+    raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team', )
+    fields = ScheduleSlotAdmin.fields + ('team',)
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
@@ -752,17 +899,6 @@ class SlotAdmin(StateMachineAdmin):
                 )}),
             )
         return fieldsets
-
-
-@admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(SlotAdmin):
-    list_display = ("start", "duration", "activity")
-    raw_id_fields = ('activity', 'location')
-
-    detail_fields = SlotAdmin.detail_fields + [
-        'start',
-        'duration',
-    ]
 
 
 class SlotTimeFilter(SimpleListFilter):
@@ -1335,12 +1471,19 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
     list_display = ['__str__', 'activity_link', 'status']
 
 
+@admin.register(TeamScheduleParticipant)
+class TeamScheduleParticipantAdmin(ScheduleParticipantAdmin):
+    model = TeamScheduleParticipant
+
+
 @admin.register(Registration)
 class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     base_model = Registration
     child_models = (
         PeriodicRegistration,
-        DeadlineRegistration
+        DeadlineRegistration,
+        ScheduleRegistration,
+        TeamScheduleRegistration,
     )
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -1380,6 +1523,13 @@ class DeadlineRegistrationAdmin(RegistrationChildAdmin):
 @admin.register(ScheduleRegistration)
 class ScheduleRegistrationAdmin(RegistrationChildAdmin):
     inlines = [ScheduleParticipantAdminInline]
+
+
+@admin.register(TeamScheduleRegistration)
+class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
+    inlines = [
+        TeamScheduleParticipantAdminInline,
+    ]
 
 
 @admin.register(PeriodicRegistration)

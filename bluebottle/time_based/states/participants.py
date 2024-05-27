@@ -4,7 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant, ScheduleParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
@@ -357,7 +357,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         [scheduled],
         ParticipantStateMachine.accepted,
         name=_("Unschedule"),
-        description=_("Unchedule this participant the Activity."),
+        description=_("Unschedule this participant."),
         passed_label=_("unscheduled"),
         automatic=True,
     )
@@ -377,6 +377,92 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Reset"),
         description=_("Reset participant to scheduled"),
         passed_label=_("reset"),
+        automatic=True,
+    )
+
+
+@register(TeamScheduleParticipant)
+class TeamScheduleParticipantStateMachine(ContributorStateMachine):
+    new = State(
+        _("new"),
+        "new",
+        _("This team needs to be reviewed."),
+    )
+    accepted = State(
+        _('accepted'),
+        'accepted',
+        _('This is accepted, but needs to be assigned a slot.')
+    )
+    scheduled = State(_("scheduled"), "scheduled", _("This team is assigned a slot."))
+
+    removed = State(
+        _('removed'),
+        'removed',
+        _("This team's contribution is removed and the spent hours are reset to zero.")
+    )
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _('This person has withdrawn. Spent hours are retained.')
+    )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _("The activity has been cancelled. This person's contribution "
+          "is removed and the spent hours are reset to zero.")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _('This person hast successfully contributed.')
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_('Initiate'),
+        description=_("Member signs up for team"),
+    )
+
+    add = Transition(
+        new,
+        accepted,
+        name=_("Add"),
+        description=_("add this person as a participant to the activity."),
+        passed_label=_("added"),
+        automatic=True
+    )
+
+    accept = Transition(
+        [
+            new,
+            removed,
+            withdrawn
+        ],
+        accepted,
+        name=_("Accept"),
+        description=_("Accept this person as a participant to the activity."),
+        passed_label=_("accepted"),
+    )
+
+    schedule = Transition(
+        [
+            new,
+            accepted,
+        ],
+        scheduled,
+        name=_("Schedule"),
+        description=_("Schedule this participant the Activity."),
+        passed_label=_("scheduled"),
+        automatic=True,
+    )
+
+    unschedule = Transition(
+        [scheduled],
+        accepted,
+        name=_("Unschedule"),
+        description=_("Unchedule this participant the Activity."),
+        passed_label=_("unscheduled"),
         automatic=True,
     )
 

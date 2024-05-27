@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant,
+    ScheduleParticipant
 )
 
 

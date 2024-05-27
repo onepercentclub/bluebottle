@@ -1,4 +1,5 @@
 from django.utils.timezone import now
+
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register,
@@ -11,8 +12,10 @@ from bluebottle.time_based.effects.effects import (
     CreatePeriodicParticipantsEffect,
     RescheduleScheduleSlotContributions,
 )
-
-from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot
+from bluebottle.time_based.effects.slots import (
+    CreateTeamSlotParticipantsEffect
+)
+from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.states import (
     PeriodicSlotStateMachine,
     ScheduleSlotStateMachine,
@@ -49,10 +52,10 @@ class PeriodicSlotTriggers(TriggerManager):
 class ScheduleSlotTriggers(TriggerManager):
 
     def slot_is_finished(effect):
-        return effect.instance.end < now()
+        return effect.instance.end and effect.instance.end < now()
 
     def slot_is_not_finished(effect):
-        return effect.instance.end > now()
+        return not effect.instance.end or effect.instance.end > now()
 
     triggers = [
         TransitionTrigger(
@@ -97,6 +100,18 @@ class ScheduleSlotTriggers(TriggerManager):
                     "participants",
                     ScheduleParticipantStateMachine.reset,
                 ),
+            ],
+        ),
+    ]
+
+
+@register(TeamScheduleSlot)
+class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
+    triggers = ScheduleSlotTriggers.triggers + [
+        TransitionTrigger(
+            ScheduleSlotStateMachine.initiate,
+            effects=[
+                CreateTeamSlotParticipantsEffect,
             ],
         ),
     ]

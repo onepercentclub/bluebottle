@@ -3,7 +3,7 @@
 
 <p>
 {% blocktrans with instance=effects.0.instance %}
-    Create a registration for "{{instance.activity}}"
+    Create a registration for {{ instance }}.
 {% endblocktrans %}
 
 {% if effects|length > 1%} 

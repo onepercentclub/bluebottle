@@ -7,7 +7,11 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
-from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, Registration, ScheduleRegistration
+from bluebottle.time_based.models import (
+    DeadlineRegistration, PeriodicRegistration,
+    Registration, ScheduleRegistration,
+    TeamScheduleRegistration
+)
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
@@ -117,13 +121,14 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
 
 class ScheduleRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('schedule-registration-detail', view_args=('pk',))
-    participants = ResourceRelatedField(many=True, read_only=True, source='scheduleparticipant_set')
+    participants = ResourceRelatedField(many=True, read_only=True)
 
     class Meta(RegistrationSerializer.Meta):
         model = ScheduleRegistration
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-registrations'
+        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers,
@@ -131,6 +136,26 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
             'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
             'document': 'bluebottle.time_based.serializers.ScheduleRegistrationDocumentSerializer',
             'participants': 'bluebottle.time_based.serializers.ScheduleParticipantSerializer'
+        }
+    )
+
+
+class TeamScheduleRegistrationSerializer(RegistrationSerializer):
+    permissions = ResourcePermissionField('team-schedule-registration-detail', view_args=('pk',))
+    participants = ResourceRelatedField(many=True, read_only=True)
+
+    class Meta(RegistrationSerializer.Meta):
+        model = TeamScheduleRegistration
+
+    class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/team-schedule-registrations'
+
+    included_serializers = dict(
+        RegistrationSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.ScheduleRegistrationDocumentSerializer',
+            'participants': 'bluebottle.time_based.serializers.TeamScheduleParticipantSerializer'
         }
     )
 
@@ -190,6 +215,17 @@ class ScheduleRegistrationTransitionSerializer(RegistrationTransitionSerializer)
 
     class JSONAPIMeta(RegistrationTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/schedule-registration-transitions'
+
+
+class TeamScheduleRegistrationTransitionSerializer(RegistrationTransitionSerializer):
+    resource = ResourceRelatedField(queryset=TeamScheduleRegistration.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
+    }
+
+    class JSONAPIMeta(RegistrationTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/team-schedule-registration-transitions'
 
 
 class PeriodicRegistrationTransitionSerializer(RegistrationTransitionSerializer):

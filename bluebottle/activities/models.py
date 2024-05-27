@@ -353,7 +353,7 @@ class Team(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
 
     activity = models.ForeignKey(
-        Activity, related_name='teams', on_delete=NON_POLYMORPHIC_CASCADE
+        Activity, related_name='old_teams', on_delete=NON_POLYMORPHIC_CASCADE
     )
 
     created = models.DateTimeField(default=timezone.now)

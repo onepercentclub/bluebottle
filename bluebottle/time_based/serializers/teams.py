@@ -26,6 +26,7 @@ class TeamSerializer(ModelSerializer):
             "status",
             "registration",
             "team_members",
+            "invite_code",
             "activity",
             "user",
             "slots",
@@ -38,13 +39,14 @@ class TeamSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = "contributors/time-based/teams"
-        included_resources = ["members", "registration", "activity", "captain"]
+        included_resources = ["members", "registration", "activity", "captain", "slots"]
 
     included_serializers = {
         "members": "bluebottle.time_based.serializers.TeamMemberSerializer",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
+        "slots": "bluebottle.time_based.serializers.TeamScheduleSlotSerializer",
     }
 
 

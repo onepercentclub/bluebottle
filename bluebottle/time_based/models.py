@@ -1607,6 +1607,38 @@ class Slot(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def uid(self):
+        return "{}-{}-{}".format(connection.tenant.client_name, "dateactivity", self.pk)
+
+    @property
+    def google_calendar_link(self):
+        def format_date(date):
+            if date:
+                return date.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+        details = self.activity.details
+        if self.is_online and self.online_meeting_url:
+            details += _("\nJoin: {url}").format(url=self.online_meeting_url)
+
+        url = "https://calendar.google.com/calendar/render"
+        params = {
+            "action": "TEMPLATE",
+            "text": self.activity.title,
+            "dates": "{}/{}".format(
+                format_date(self.start), format_date(self.start + self.duration)
+            ),
+            "details": details,
+            "uid": self.uid,
+        }
+
+        if self.location:
+            params["location"] = self.location.formatted_address
+            if self.location_hint:
+                params["location"] = f'{params["location"]} ({self.location_hint})'
+
+        return "{}?{}".format(url, urlencode(params))
+
 
 class PeriodicSlot(TriggerMixin, Slot):
     activity = models.ForeignKey(

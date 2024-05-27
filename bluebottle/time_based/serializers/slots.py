@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer
+
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import ScheduleSlot
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot
 from bluebottle.utils.fields import FSMField
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class ScheduleSlotSerializer(ModelSerializer):
@@ -56,3 +57,12 @@ class ScheduleSlotSerializer(ModelSerializer):
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
     }
+
+
+class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
+
+    class Meta(ScheduleSlotSerializer.Meta):
+        model = TeamScheduleSlot
+
+    class JSONAPIMeta(ScheduleSlotSerializer.JSONAPIMeta):
+        resource_name = "activities/time-based/team-schedule-slots"

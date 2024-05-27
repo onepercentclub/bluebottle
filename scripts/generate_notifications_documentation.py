@@ -122,6 +122,7 @@ def run(*args):
         }
         url += '?expand=body.storage'
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
+
         if response.status_code == 200:
             print("[OK]")
             print(f"{total} messages")

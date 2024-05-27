@@ -3,11 +3,17 @@ from rest_framework import filters
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration
+from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration, \
+    TeamScheduleRegistration
 from bluebottle.time_based.serializers import (
-    DeadlineRegistrationSerializer, DeadlineRegistrationTransitionSerializer,
-    PeriodicRegistrationSerializer, PeriodicRegistrationTransitionSerializer, ScheduleRegistrationSerializer,
-    ScheduleRegistrationTransitionSerializer
+    DeadlineRegistrationSerializer,
+    DeadlineRegistrationTransitionSerializer,
+    PeriodicRegistrationSerializer,
+    PeriodicRegistrationTransitionSerializer,
+    ScheduleRegistrationSerializer,
+    ScheduleRegistrationTransitionSerializer,
+    TeamScheduleRegistrationSerializer,
+    TeamScheduleRegistrationTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import (
     AnonimizeMembersMixin, FilterRelatedUserMixin,
@@ -17,7 +23,7 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission,
+    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
 )
 from bluebottle.utils.views import (
     JsonApiViewMixin, ListAPIView, CreateAPIView, PrivateFileView,
@@ -44,6 +50,13 @@ class ScheduleRegistrationList(RegistrationList):
         'user', 'activity'
     )
     serializer_class = ScheduleRegistrationSerializer
+
+
+class TeamScheduleRegistrationList(RegistrationList):
+    queryset = TeamScheduleRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = TeamScheduleRegistrationSerializer
 
 
 class PeriodicRegistrationList(RegistrationList):
@@ -99,6 +112,16 @@ class ScheduleRelatedRegistrationList(RelatedRegistrationListView):
     serializer_class = ScheduleRegistrationSerializer
 
 
+class TeamScheduleRelatedRegistrationList(RelatedRegistrationListView):
+    queryset = TeamScheduleRegistration.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = TeamScheduleRegistrationSerializer
+    permission_classes = (
+        IsAuthenticated, IsOwnerOrReadOnly
+    )
+
+
 class PeriodicRelatedRegistrationList(RelatedRegistrationListView):
     queryset = PeriodicRegistration.objects.prefetch_related(
         'user', 'activity'
@@ -122,6 +145,14 @@ class ScheduleRegistrationDetail(RegistrationDetail):
     serializer_class = ScheduleRegistrationSerializer
 
 
+class TeamScheduleRegistrationDetail(RegistrationDetail):
+    queryset = TeamScheduleRegistration.objects.all()
+    serializer_class = TeamScheduleRegistrationSerializer
+    permission_classes = (
+        IsAuthenticated, IsOwnerOrReadOnly
+    )
+
+
 class PeriodicRegistrationDetail(RegistrationDetail):
     queryset = PeriodicRegistration.objects.all()
     serializer_class = PeriodicRegistrationSerializer
@@ -135,6 +166,11 @@ class DeadlineRegistrationTransitionList(TransitionList):
 class ScheduleRegistrationTransitionList(TransitionList):
     serializer_class = ScheduleRegistrationTransitionSerializer
     queryset = ScheduleRegistration.objects.all()
+
+
+class TeamScheduleRegistrationTransitionList(TransitionList):
+    serializer_class = TeamScheduleRegistrationTransitionSerializer
+    queryset = TeamScheduleRegistration.objects.all()
 
 
 class PeriodicRegistrationTransitionList(TransitionList):

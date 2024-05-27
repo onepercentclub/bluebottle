@@ -1,11 +1,11 @@
 from django.utils.timezone import now
+
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
 )
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
-
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
@@ -17,7 +17,7 @@ from bluebottle.time_based.effects import CreatePreparationTimeContributionEffec
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
-from bluebottle.time_based.effects.participant import (
+from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
@@ -29,7 +29,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant,
 )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
@@ -734,6 +734,26 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]
+                ),
+            ],
+        ),
+    ]
+
+
+@register(TeamScheduleParticipant)
+class TeamScheduleParticipantTriggers(ContributorTriggers):
+    def has_slot(effect):
+        """Has a slot"""
+        return effect.instance.slot
+
+    triggers = ContributorTriggers.triggers + [
+        TransitionTrigger(
+            ScheduleParticipantStateMachine.initiate,
+            effects=[
+                CreateScheduleContributionEffect,
+                CreateRegistrationEffect,
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),
             ],
         ),

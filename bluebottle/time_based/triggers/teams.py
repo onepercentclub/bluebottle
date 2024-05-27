@@ -2,12 +2,14 @@ from bluebottle.fsm.triggers import (
     register,
     TransitionTrigger,
     TriggerManager,
+    ModelDeletedTrigger
 )
 from bluebottle.time_based.effects.teams import (
     CreateTeamRegistrationEffect,
     CreateCaptainTeamMemberEffect,
     CreateTeamSlotEffect,
-    CreateTeamMemberSlotParticipantsEffect
+    CreateTeamMemberSlotParticipantsEffect,
+    DeleteTeamMemberSlotParticipantsEffect
 )
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.teams import (
@@ -39,6 +41,11 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.initiate,
             effects=[
                 CreateTeamMemberSlotParticipantsEffect,
+            ]
+        ),
+        ModelDeletedTrigger(
+            effects=[
+                DeleteTeamMemberSlotParticipantsEffect,
             ]
         ),
     ]

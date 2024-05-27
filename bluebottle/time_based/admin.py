@@ -334,8 +334,18 @@ class TeamMemberAdmin(StateMachineAdmin):
 
 class TeamMemberAdminInline(TabularInlinePaginated):
     model = TeamMember
-    readonly_fields = ('link', 'user', 'status_label')
-    fields = readonly_fields
+    fields = ('link', 'status_label', 'user',)
+    raw_id_fields = ('user',)
+
+    def has_change_permission(self, request, obj):
+        return False
+
+    def has_delete_permission(self, request, obj):
+        return True
+
+    can_delete = True
+
+    readonly_fields = ('link', 'status_label')
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -601,7 +611,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

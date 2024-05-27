@@ -75,3 +75,16 @@ class CreateTeamSlotEffect(Effect):
     conditions = [
         without_slot
     ]
+
+
+class CreateTeamMemberSlotParticipantsEffect(Effect):
+    title = _('Create participants for this team member')
+    template = 'admin/create_team_member_slot_participants.html'
+
+    def post_save(self, **kwargs):
+        team_member = self.instance
+        for slot in self.instance.team.slots.filter(status__in=['new', 'running']).all():
+            slot.participants.get_or_create(
+                user=team_member.user,
+                activity=slot.activity,
+            )

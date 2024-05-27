@@ -362,6 +362,9 @@ class TeamScheduleSlotAdminInline(StackedInline):
         return format_html('<a href="{}">{}</a>', url, obj)
     link.short_description = _('Edit')
 
+    verbose_name = _('Slot')
+    verbose_name_plural = _('Slots')
+
     def status_label(self, obj):
         return obj.states.current_state.name
     status_label.short_description = _('Status')
@@ -374,8 +377,8 @@ class TeamScheduleSlotAdminInline(StackedInline):
 class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'status', 'created',)
-    readonly_fields = ('status', 'created', 'invite_code')
-    fields = ('activity', 'registration', 'user', 'status', 'created', 'invite_code')
+    readonly_fields = ('status', 'created', 'invite_code', 'registration_info')
+    fields = ('activity', 'registration_info', 'user', 'status', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -398,6 +401,29 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
             )
         return fieldsets
 
+    def registration_info(self, obj):
+        url = reverse(
+            "admin:{}_{}_change".format(
+                obj.registration._meta.app_label, obj.registration._meta.model_name
+            ),
+            args=(obj.registration.id,),
+        )
+
+        status = obj.registration.states.current_state.name
+        if obj.registration.status == "new":
+            template = loader.get_template("admin/time_based/team_registration_info.html")
+            return template.render({"status": status, "url": url})
+        else:
+            title = _("Change review")
+            return format_html(
+                'Current status <b>{status}</b>. <a href="{url}">{title}</a>',
+                url=url,
+                status=status,
+                title=title,
+            )
+
+    registration_info.short_description = _('Registration')
+
 
 class TeamAdminInline(TabularInlinePaginated):
     model = Team
@@ -410,6 +436,10 @@ class TeamAdminInline(TabularInlinePaginated):
         return format_html('<a href="{}">{}</a>', url, obj)
 
     def status_label(self, obj):
+        if obj.registration.status == 'new':
+            return _('unreviewed')
+        if obj.status == 'new':
+            return _('unscheduled')
         return obj.states.current_state.name
 
     status_label.short_description = _('Status')
@@ -1411,7 +1441,6 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
-    readonly_fields = ['user', 'activity', 'created', 'updated', 'slot_info']
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'slot':
@@ -1437,6 +1466,7 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
+        "user", "activity", "created", "updated",
         "registration_info",
         "slot_info",
     ]
@@ -1461,12 +1491,12 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
                 title=title,
             )
 
+    registration_info.short_description = _('Registration')
+
     def slot_info(self, obj):
         if not obj.slot:
             return "-"
         return format_html("{} from {} to  {}", obj.slot.start.date(), obj.slot.start.time(), obj.slot.end.time())
-
-    registration_info.short_description = _('Registration')
 
     list_display = ['__str__', 'activity_link', 'status']
 
@@ -1498,10 +1528,12 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
     readonly_fields = [
+        "user",
+        "document",
         "created",
     ]
     raw_id_fields = ["user", "activity", "document"]
-    fields = ["user", "activity", "answer", "document", "status", "states"]
+    fields = readonly_fields + ["activity", "answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 
     formfield_overrides = {PrivateDocumentModelChoiceField: {"widget": DocumentWidget}}
@@ -1527,9 +1559,10 @@ class ScheduleRegistrationAdmin(RegistrationChildAdmin):
 
 @admin.register(TeamScheduleRegistration)
 class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
-    inlines = [
-        TeamScheduleParticipantAdminInline,
-    ]
+    readonly_fields = RegistrationChildAdmin.readonly_fields + ['team']
+    fields = ['team', 'states', 'answer', 'document']
+    verbose_name = _('Team registration')
+    verbose_name_plural = _('Team registrations')
 
 
 @admin.register(PeriodicRegistration)

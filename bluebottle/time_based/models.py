@@ -1381,6 +1381,11 @@ class TeamScheduleRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
+    def __str__(self):
+        if self.activity_id:
+            return _('Regsitration Team {name} for {activity}').format(name=self.user, activity=self.activity)
+        return _('Regsitration Team {name}').format(name=self.user)
+
     class Meta:
         verbose_name = _("Team for schedule activities")
         verbose_name_plural = _("Teams for schedule activities")
@@ -1686,7 +1691,7 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/team-schedule-slots"
-      
+
     @property
     def accepted_participants(self):
         return self.participants.filter(

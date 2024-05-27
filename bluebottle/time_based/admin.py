@@ -601,7 +601,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         'online_meeting_url',
     ]
 
-    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+    registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

@@ -54,8 +54,9 @@ class TeamStateMachine(ModelStateMachine):
     remove = Transition(
         [accepted, scheduled],
         removed,
-        name=_("Removed"),
+        name=_("Remove"),
         description=_("Remove this team from the activity."),
+        automatic=False,
     )
 
     readd = Transition(
@@ -63,6 +64,7 @@ class TeamStateMachine(ModelStateMachine):
         accepted,
         name=_("Re-add"),
         description=_("Re-add team to activity."),
+        automatic=False,
     )
 
 

@@ -2,7 +2,7 @@ from django.db.models import Sum, Q
 
 from bluebottle.activities.permissions import ContributorPermission
 
-from bluebottle.time_based.serializers import TeamSerializer
+from bluebottle.time_based.serializers import TeamSerializer, TeamTransitionSerializer
 from bluebottle.time_based.models import (
     Team,
 )
@@ -73,5 +73,5 @@ class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 
 
 class TeamTransitionList(TransitionList):
-    serializer_class = TeamSerializer
+    serializer_class = TeamTransitionSerializer
     queryset = Team.objects.all()

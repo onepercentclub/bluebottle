@@ -99,6 +99,8 @@ class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
         resource_name = "contributors/time-based/team-schedule-participants"
         included_resources = ScheduleParticipantSerializer.JSONAPIMeta.included_resources + [
             "slot.location",
+            "slot.team",
+            "slot.team.user"
         ]
 
     included_serializers = dict(
@@ -107,6 +109,8 @@ class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
             "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
             "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
+            "slot.team": "bluebottle.time_based.serializers.TeamSerializer",
+            "slot.team.user": "bluebottle.initiatives.serializers.MemberSerializer",
             "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         }
     )

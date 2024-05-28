@@ -648,7 +648,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
-    participant_count.short_description = _("Participants")
+    participant_count.short_description = _("Participants/Teams")
 
 
 @admin.register(PeriodicSlot)

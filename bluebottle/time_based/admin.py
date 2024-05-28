@@ -588,7 +588,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
         inlines = super().get_inlines(request, obj)
         if obj and obj.id:
             # get the stored object, so you can switch between teams/individuals
-            # without getting a form error
+            # without getting a form error, because of switching inlines
             stored = ScheduleActivity.objects.get(id=obj.id)
             if stored.team_activity == 'teams':
                 return (

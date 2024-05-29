@@ -1,13 +1,10 @@
 from django.db.models import Sum, Q
 
-from bluebottle.activities.permissions import ContributorPermission
-
-from bluebottle.time_based.serializers import TeamSerializer
 from bluebottle.time_based.models import (
     Team,
 )
+from bluebottle.time_based.serializers import TeamSerializer
 from bluebottle.time_based.views.mixins import (
-    AnonimizeMembersMixin,
     CreatePermissionMixin,
     FilterRelatedUserMixin,
 )
@@ -65,10 +62,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
 
 class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
-    queryset = Team.objects.prefetch_related("activity", "owner", "registration")
+    queryset = Team.objects.prefetch_related("activity", "user")
     serializer_class = TeamSerializer
 
 

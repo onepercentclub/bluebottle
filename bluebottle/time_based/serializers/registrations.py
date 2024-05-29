@@ -142,6 +142,7 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
 
 class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('team-schedule-registration-detail', view_args=('pk',))
+    participants = ResourceRelatedField(many=True, read_only=True)
     team = ResourceRelatedField(read_only=True)
 
     class Meta(RegistrationSerializer.Meta):

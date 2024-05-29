@@ -70,54 +70,40 @@ class TeamStateMachine(ModelStateMachine):
 
 @register(TeamMember)
 class TeamMemberStateMachine(ModelStateMachine):
-    new = State(_("Unscheduled"), "new", _("This team member is unscheduled."))
-
-    accepted = State(
-        _("accepted"), "accepted", _("This team member has been accepted.")
-    )
-
-    rejected = State(
-        _("rejected"), "rejected", _("This team member has been accepted.")
-    )
-
+    active = State(_("Active"), "active", _("This team member is active."))
     removed = State(_("removed"), "removed", _("This team member is removed."))
+    withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
 
     initiate = Transition(
         EmptyState(),
-        new,
+        active,
         name=_("Initiate"),
         description=_("The team member joined."),
         automatic=True,
     )
 
-    accept = Transition(
-        [new, rejected],
-        accepted,
-        name=_("Accept"),
-        description=_("Accept this team."),
-        automatic=True,
-    )
-
-    reject = Transition(
-        [new, accepted],
-        rejected,
-        name=_("Reject"),
-        description=_("Reject this team."),
-        automatic=True,
-    )
-
     remove = Transition(
-        [accepted],
+        [active],
         removed,
         name=_("Removed"),
-        description=_("Remove this team from the activity."),
-        automatic=True,
+        description=_("Remove this member from the team."),
     )
-
     readd = Transition(
         removed,
-        accepted,
+        active,
         name=_("Re-add"),
-        description=_("Re-add team to activity."),
-        automatic=True,
+        description=_("Re-add member to team."),
+    )
+
+    withdraw = Transition(
+        [active],
+        withdrawn,
+        name=_("Withdraw"),
+        description=_("Withdraw from this team."),
+    )
+    reapply = Transition(
+        withdrawn,
+        active,
+        name=_("Re-apply"),
+        description=_("Re-apply to team."),
     )

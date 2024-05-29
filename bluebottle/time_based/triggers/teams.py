@@ -25,40 +25,4 @@ class TeamTriggers(TriggerManager):
                 CreateTeamSlotEffect,
             ]
         ),
-        TransitionTrigger(
-            TeamStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    "team",
-                    TeamMemberStateMachine.accept,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            TeamStateMachine.reject,
-            effects=[
-                RelatedTransitionEffect(
-                    "team",
-                    TeamMemberStateMachine.reject,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            TeamStateMachine.remove,
-            effects=[
-                RelatedTransitionEffect(
-                    "team",
-                    TeamMemberStateMachine.remove,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            TeamStateMachine.readd,
-            effects=[
-                RelatedTransitionEffect(
-                    "team",
-                    TeamMemberStateMachine.readd,
-                ),
-            ],
-        ),
     ]

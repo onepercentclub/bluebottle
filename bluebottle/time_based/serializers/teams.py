@@ -25,6 +25,7 @@ class TeamSerializer(ModelSerializer):
             "team_members",
             "activity",
             "user",
+            "slots"
         )
         meta_fields = (
             "permissions",
@@ -39,12 +40,10 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "activity",
             "user",
-            "slots"
         ]
 
     included_serializers = {
         "team_members": "bluebottle.time_based.serializers.TeamMemberSerializer",
-        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlot",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",

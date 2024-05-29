@@ -16,6 +16,21 @@ class TeamSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
 
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+
+        user = self.context['request'].user
+        if (user not in [
+            instance.user,
+            instance.activity.owner,
+        ] and user not in instance.activity.initiative.activity_managers.all() and
+            not user.is_staff and
+            not user.is_superuser
+        ):
+            del result['invite_code']
+
+        return result
+
     class Meta:
         model = Team
         fields = (
@@ -25,7 +40,8 @@ class TeamSerializer(ModelSerializer):
             "team_members",
             "activity",
             "user",
-            "slots"
+            "slots",
+            "invite_code"
         )
         meta_fields = (
             "permissions",

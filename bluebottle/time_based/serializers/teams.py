@@ -40,6 +40,7 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "activity",
             "user",
+            "slots"
         ]
 
     included_serializers = {
@@ -47,6 +48,7 @@ class TeamSerializer(ModelSerializer):
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
+        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer"
     }
 
 

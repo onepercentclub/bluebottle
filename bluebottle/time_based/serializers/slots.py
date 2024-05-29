@@ -5,6 +5,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot
+from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -60,9 +61,30 @@ class ScheduleSlotSerializer(ModelSerializer):
 
 
 class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
+    team = ResourceRelatedField(
+        read_only=True
+    )
+
+    participants = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="slot-schedule-participants",
+        related_link_url_kwarg="slot_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
+    )
 
     class Meta(ScheduleSlotSerializer.Meta):
         model = TeamScheduleSlot
+        fields = ScheduleSlotSerializer.Meta.fields + ("participants", "team")
 
     class JSONAPIMeta(ScheduleSlotSerializer.JSONAPIMeta):
         resource_name = "activities/time-based/team-schedule-slots"
+        included_resources = ScheduleSlotSerializer.JSONAPIMeta.included_resources + ["team"]
+
+    included_serializers = {
+        "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
+        "location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+    }

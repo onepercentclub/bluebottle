@@ -23,7 +23,8 @@ from bluebottle.time_based.views import (
 
     TeamScheduleParticipantDetail,
     TeamScheduleRelatedParticipantList,
-    TeamScheduleParticipantTransitionList
+    TeamScheduleParticipantTransitionList,
+    TeamSlotScheduleRelatedParticipantList
 )
 
 urlpatterns = [
@@ -86,7 +87,6 @@ urlpatterns = [
         TeamScheduleParticipantTransitionList.as_view(),
         name='team-schedule-participant-transitions'),
 
-
     url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),
     url(
         r"^/slots/(?P<pk>\d+)$",
@@ -98,6 +98,10 @@ urlpatterns = [
         r"^/team-slots/(?P<pk>\d+)$",
         TeamScheduleSlotDetailView.as_view(),
         name="team-schedule-slot-detail"),
+
+    url(r'^/team-slots/(?P<slot_id>\d+)/team-participants$',
+        TeamSlotScheduleRelatedParticipantList.as_view(),
+        name='slot-schedule-participants'),
 
     url(
         r"^/export/(?P<pk>[\d]+)$",

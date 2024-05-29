@@ -148,6 +148,14 @@ class TeamScheduleRelatedParticipantList(RelatedContributorListView):
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
+class TeamSlotScheduleRelatedParticipantList(RelatedContributorListView):
+    queryset = TeamScheduleParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = TeamScheduleParticipantSerializer
+    permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
+
+
 class PeriodicRelatedParticipantList(RelatedContributorListView):
     queryset = PeriodicParticipant.objects.prefetch_related(
         'user', 'activity'

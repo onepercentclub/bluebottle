@@ -262,7 +262,6 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
-
     add = Transition(
         [ContributorStateMachine.new],
         ParticipantStateMachine.succeeded,
@@ -388,11 +387,7 @@ class TeamScheduleParticipantStateMachine(ContributorStateMachine):
         "new",
         _("This team needs to be reviewed."),
     )
-    accepted = State(
-        _('accepted'),
-        'accepted',
-        _('This is accepted, but needs to be assigned a slot.')
-    )
+
     scheduled = State(_("scheduled"), "scheduled", _("This team is assigned a slot."))
 
     removed = State(
@@ -404,12 +399,6 @@ class TeamScheduleParticipantStateMachine(ContributorStateMachine):
         _('withdrawn'),
         'withdrawn',
         _('This person has withdrawn. Spent hours are retained.')
-    )
-    cancelled = State(
-        _('cancelled'),
-        'cancelled',
-        _("The activity has been cancelled. This person's contribution "
-          "is removed and the spent hours are reset to zero.")
     )
     succeeded = State(
         _('succeeded'),
@@ -424,46 +413,33 @@ class TeamScheduleParticipantStateMachine(ContributorStateMachine):
         description=_("Member signs up for team"),
     )
 
-    add = Transition(
+    withdraw = Transition(
         new,
-        accepted,
-        name=_("Add"),
-        description=_("add this person as a participant to the activity."),
-        passed_label=_("added"),
-        automatic=True
+        withdrawn,
+        name=_("Withdraw"),
+        automatic=False,
+        permission=RegistrationParticipantStateMachine.is_user,
+        description=_("Participant withdraws from the team slot."),
+        passed_label=_("withdrawn"),
     )
 
-    accept = Transition(
-        [
-            new,
-            removed,
-            withdrawn
-        ],
-        accepted,
-        name=_("Accept"),
-        description=_("Accept this person as a participant to the activity."),
-        passed_label=_("accepted"),
+    reapply = Transition(
+        withdrawn,
+        new,
+        name=_("Reapply"),
+        automatic=False,
+        permission=RegistrationParticipantStateMachine.is_user,
+        description=_("Participant joins the team slot."),
     )
 
-    schedule = Transition(
-        [
-            new,
-            accepted,
-        ],
-        scheduled,
-        name=_("Schedule"),
-        description=_("Schedule this participant the Activity."),
-        passed_label=_("scheduled"),
-        automatic=True,
-    )
-
-    unschedule = Transition(
-        [scheduled],
-        accepted,
-        name=_("Unschedule"),
-        description=_("Unchedule this participant the Activity."),
-        passed_label=_("unscheduled"),
-        automatic=True,
+    remove = Transition(
+        new,
+        removed,
+        name=_("Remove"),
+        automatic=False,
+        permission=RegistrationParticipantStateMachine.can_accept_participant,
+        description=_("Remove this participant from the team slot."),
+        passed_label=_("removed"),
     )
 
 

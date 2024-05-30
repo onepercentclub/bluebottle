@@ -1431,7 +1431,7 @@ class Team(TriggerMixin, models.Model):
     )
 
     activity = models.ForeignKey(
-        TimeBasedActivity,
+        Activity,
         related_name='teams',
         on_delete=models.CASCADE,
         blank=True,

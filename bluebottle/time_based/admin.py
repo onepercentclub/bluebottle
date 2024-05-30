@@ -452,13 +452,16 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
 
 class TeamAdminInline(TabularInlinePaginated):
     model = Team
-    readonly_fields = ('link', 'created', 'status_label', 'invite_code')
+    readonly_fields = ('link', 'created', 'status_label', 'team_members_count')
     raw_id_fields = ('user', 'registration')
-    fields = ('link', 'user', 'status_label', 'invite_code')
+    fields = ('link', 'user', 'status_label', 'team_members_count')
 
     def link(self, obj):
         url = reverse('admin:time_based_team_change', args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def status_label(self, obj):
         if obj.registration.status == 'new':
@@ -473,6 +476,10 @@ class TeamAdminInline(TabularInlinePaginated):
 
     def has_delete_permission(self, request, obj=None):
         return True
+
+    def team_members_count(self, obj):
+        return obj.team_members.filter(status='active').count()
+    team_members_count.short_description = _('Members')
 
 
 class PeriodicParticipantAdminInline(BaseContributorInline):

@@ -18,7 +18,7 @@ class SlotParticipantPermission(IsOwner):
 class InviteCodePermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        return True
+        return str(obj.invite_code) == str(obj.team.invite_code)
 
     def has_action_permission(self, action, user, model_cls):
         return True

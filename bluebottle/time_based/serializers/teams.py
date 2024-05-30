@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     HyperlinkedRelatedField,
@@ -128,10 +129,11 @@ class TeamMemberSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
     # permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
+    invite_code = serializers.CharField(write_only=True)
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "transitions", "current_status", "user")
+        fields = ("id", "team", "transitions", "current_status", "user", "invite_code")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:

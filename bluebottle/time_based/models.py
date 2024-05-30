@@ -1465,6 +1465,8 @@ class Team(TriggerMixin, models.Model):
 
 
 class TeamMember(TriggerMixin, models.Model):
+    invite_code = models.UUIDField(blank=True, null=True)
+
     team = models.ForeignKey(
         'time_based.Team',
         related_name='team_members',

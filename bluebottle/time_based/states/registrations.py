@@ -91,11 +91,37 @@ class DeadlineRegistrationStateMachine(RegistrationStateMachine):
 
 @register(ScheduleRegistration)
 class ScheduleRegistrationStateMachine(RegistrationStateMachine):
-    pass
+    def is_user(self, user):
+        """is the participant"""
+        return user == self.instance.user
+
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _("This person has withdrawn from the activity. Contributions are not counted.")
+    )
+
+    withdraw = Transition(
+        [RegistrationStateMachine.accepted, RegistrationStateMachine.new],
+        withdrawn,
+        name=_('Withdraw'),
+        description=_("Withdraw from this activity."),
+        automatic=False,
+        permission=is_user,
+    )
+
+    reapply = Transition(
+        [withdrawn],
+        RegistrationStateMachine.new,
+        name=_('Reapply'),
+        description=_("Reapply for this activity."),
+        automatic=False,
+        permission=is_user,
+    )
 
 
 @register(TeamScheduleRegistration)
-class TeamScheduleRegistrationStateMachine(RegistrationStateMachine):
+class TeamScheduleRegistrationStateMachine(ScheduleRegistrationStateMachine):
     pass
 
 

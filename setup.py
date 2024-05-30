@@ -129,6 +129,7 @@ install_requires = [
     'wheel==0.29.0',
     'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
+    'xmlsec==1.3.14',
 
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',

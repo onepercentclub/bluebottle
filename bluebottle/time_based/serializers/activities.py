@@ -154,6 +154,14 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 "href": f'{url}?filter[status]={",".join(statuses)}',
                 "meta": {"count": queryset.filter(status__in=statuses).count()},
             }
+
+        return_data['my'] = {
+            'href': url + '?filter[my]=true',
+            'meta': {
+                'count': queryset.filter(user=self.context['request'].user).count()
+            }
+        }
+
         return_data['related'] = url
 
         return return_data
@@ -227,7 +235,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "unscheduled": ["accepted"],
             "failed": ["rejected", "withdrawn", "removed"],
-            "active": ["scheduled", "succeeded"],
+            "active": ["accepted", "scheduled", "succeeded"],
         },
     )
 

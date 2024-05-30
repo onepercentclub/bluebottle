@@ -18,6 +18,18 @@ class TeamStateMachine(ModelStateMachine):
         _("Removed"), "removed", _("This team is removed from the activity")
     )
 
+    scheduled = State(
+        _('scheduled'),
+        'scheduled',
+        _("This team has been scheduled.")
+    )
+
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _("This team has been cancelled.")
+    )
+
     initiate = Transition(
         EmptyState(),
         new,
@@ -65,6 +77,25 @@ class TeamStateMachine(ModelStateMachine):
         name=_("Re-add"),
         description=_("Re-add team to activity."),
         automatic=False,
+    )
+    cancel = Transition(
+        [new, accepted, scheduled],
+        cancelled,
+        name=_('Cancel'),
+        automatic=False,
+        description=_(
+            'The team has been cancelled.'
+        ),
+    )
+
+    restore = Transition(
+        cancelled,
+        new,
+        name=_('Restore'),
+        automatic=False,
+        description=_(
+            'The team has been restored.'
+        ),
     )
 
 

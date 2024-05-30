@@ -34,7 +34,7 @@ from bluebottle.utils.views import (
 class RegistrationList(JsonApiViewMixin, RequiredQuestionsMixin, CreateAPIView):
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, IsAuthenticated),
     )
 
 

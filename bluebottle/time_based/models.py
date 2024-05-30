@@ -837,7 +837,7 @@ class ScheduleActivity(RegistrationActivity):
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=["accepted", "succeeded", "scheduled"])
+        return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
 
     class Meta:
         verbose_name = _("Schedule activity")
@@ -1381,6 +1381,11 @@ class TeamScheduleRegistration(Registration):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
+    def __str__(self):
+        if self.activity_id:
+            return _('Regsitration Team {name} for {activity}').format(name=self.user, activity=self.activity)
+        return _('Regsitration Team {name}').format(name=self.user)
+
     class Meta:
         verbose_name = _("Team for schedule activities")
         verbose_name_plural = _("Teams for schedule activities")
@@ -1443,6 +1448,10 @@ class Team(TriggerMixin, models.Model):
 
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
+
+    @property
+    def owner(self):
+        return self.user
 
     class JSONAPIMeta(object):
         resource_name = 'teams/teams'
@@ -1719,7 +1728,7 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/team-schedule-slots"
-      
+
     @property
     def accepted_participants(self):
         return self.participants.filter(

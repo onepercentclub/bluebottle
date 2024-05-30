@@ -1,6 +1,6 @@
 from bluebottle.follow.effects import FollowActivityEffect
-from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
+from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
@@ -27,6 +27,7 @@ from bluebottle.time_based.notifications.registrations import (
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
     RegistrationStateMachine,
+    TeamStateMachine,
 )
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
@@ -332,8 +333,8 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
+                    "team",
+                    TeamStateMachine.accept,
                 ),
             ],
         ),
@@ -341,8 +342,8 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             ScheduleRegistrationStateMachine.auto_accept,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.accept,
+                    "team",
+                    TeamStateMachine.accept,
                 ),
             ],
         ),
@@ -350,8 +351,8 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.reject,
+                    "team",
+                    TeamStateMachine.reject,
                 ),
             ],
         ),

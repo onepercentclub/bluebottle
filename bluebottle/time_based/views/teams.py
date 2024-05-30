@@ -1,9 +1,10 @@
 from django.db.models import Sum, Q
 
-from bluebottle.time_based.models import (
-    Team,
-)
+from bluebottle.time_based.models import Team
+from bluebottle.time_based.models import TeamMember
 from bluebottle.time_based.serializers import TeamSerializer
+from bluebottle.time_based.serializers import TeamTransitionSerializer
+from bluebottle.time_based.serializers.teams import TeamMemberSerializer
 from bluebottle.time_based.views.mixins import (
     CreatePermissionMixin,
     FilterRelatedUserMixin,
@@ -19,6 +20,7 @@ from bluebottle.utils.views import (
     JsonApiViewMixin,
     ListAPIView,
     RetrieveUpdateAPIView,
+    ExportView,
 )
 
 
@@ -61,11 +63,41 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     serializer_class = TeamSerializer
 
 
+class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        return queryset.filter(**self.kwargs)
+
+    queryset = TeamMember.objects.all()
+    serializer_class = TeamMemberSerializer
+
+
 class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Team.objects.prefetch_related("activity", "user")
     serializer_class = TeamSerializer
 
 
 class TeamTransitionList(TransitionList):
-    serializer_class = TeamSerializer
+    serializer_class = TeamTransitionSerializer
     queryset = Team.objects.all()
+
+
+class TeamMemberExportView(ExportView):
+    filename = "team-members"
+
+    model = Team
+
+    def get_instances(self):
+        return self.get_object().team_members.all()
+
+    def get_fields(self):
+        fields = (
+            ("user__email", "Email"),
+            ("user__full_name", "Name"),
+            ("created", "Registration Date"),
+            ("status", "Status"),
+        )
+        return fields

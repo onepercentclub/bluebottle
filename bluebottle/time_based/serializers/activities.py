@@ -244,7 +244,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="related-teams",
         related_link_url_kwarg="activity_id",
         statuses={
-            "unscheduled": ["new", "accepted"],
+            "unscheduled": ["accepted"],
             "active": ["scheduled", "succeeded"],
             "failed": ["rejected", "withdrawn", "removed"],
         },

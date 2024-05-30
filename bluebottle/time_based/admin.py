@@ -313,11 +313,17 @@ class ScheduleParticipantAdminInline(BaseContributorInline):
 
 class TeamScheduleParticipantAdminInline(BaseContributorInline):
     model = TeamScheduleParticipant
-    verbose_name = _("Team participation")
-    verbose_name_plural = _("Team participation")
+    verbose_name = _("Team participants")
+    verbose_name_plural = _("Team participants")
+
+    readonly_fields = BaseContributorInline.readonly_fields + ['team_name']
+    fields = BaseContributorInline.fields + ['team_name']
+
+    def team_name(self, obj):
+        return obj.team_member.team
 
 
-class TeamScheduleScheduleAdminInline(BaseContributorInline):
+class TeamScheduleRegistrationAdminInline(BaseContributorInline):
     model = TeamScheduleRegistration
     verbose_name = _("Team registration")
     verbose_name_plural = _("Team registrations")
@@ -326,9 +332,10 @@ class TeamScheduleScheduleAdminInline(BaseContributorInline):
 @admin.register(TeamMember)
 class TeamMemberAdmin(StateMachineAdmin):
     model = TeamMember
+    inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
-    readonly_fields = ('status', 'created')
-    fields = ('team', 'user', 'status', 'created')
+    readonly_fields = ('team', 'user', 'created')
+    fields = ('team', 'user', 'states', 'created')
     raw_id_fields = ('user', 'team')
 
 
@@ -395,8 +402,8 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
 class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
-    readonly_fields = ('created', 'invite_code', 'registration_info')
-    fields = ('activity', 'registration_info', 'user', 'states', 'created', 'invite_code')
+    readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
+    fields = ('activity', 'user', 'registration_info', 'states', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -593,7 +600,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
             if stored.team_activity == 'teams':
                 return (
                     TeamAdminInline,
-                    TeamScheduleScheduleAdminInline
+                    TeamScheduleParticipantAdminInline,
                 ) + inlines
             else:
                 return (ScheduleParticipantAdminInline,) + inlines

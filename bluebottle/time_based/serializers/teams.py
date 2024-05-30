@@ -70,6 +70,21 @@ class TeamSerializer(ModelSerializer):
         read_only=True,
     )
 
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+
+        user = self.context['request'].user
+        if (user not in [
+            instance.user,
+            instance.activity.owner,
+        ] and user not in instance.activity.initiative.activity_managers.all() and
+            not user.is_staff and
+            not user.is_superuser
+        ):
+            del result['invite_code']
+
+        return result
+
     class Meta:
         model = Team
         fields = (
@@ -82,6 +97,7 @@ class TeamSerializer(ModelSerializer):
             "slots",
             "team_members",
             "member_export_url",
+            "invite_code"
         )
         meta_fields = (
             "permissions",

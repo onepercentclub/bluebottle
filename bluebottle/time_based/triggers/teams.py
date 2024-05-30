@@ -25,9 +25,9 @@ class TeamTriggers(TriggerManager):
         TransitionTrigger(
             TeamStateMachine.initiate,
             effects=[
-                CreateTeamRegistrationEffect,
-                CreateCaptainTeamMemberEffect,
                 CreateTeamSlotEffect,
+                CreateCaptainTeamMemberEffect,
+                CreateTeamRegistrationEffect,
             ]
         ),
     ]

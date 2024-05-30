@@ -1459,6 +1459,10 @@ class Team(TriggerMixin, models.Model):
     def __str__(self):
         return _('Team {name}').format(name=self.user.full_name)
 
+    def delete(self, using=None, keep_parents=False):
+        self.registration.delete()
+        return super().delete(using, keep_parents)
+
 
 class TeamMember(TriggerMixin, models.Model):
     team = models.ForeignKey(

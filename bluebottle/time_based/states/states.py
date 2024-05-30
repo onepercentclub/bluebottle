@@ -268,10 +268,9 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
 
 
 class SlotStateMachine(ModelStateMachine):
-    new = State(
-        _('new'),
-        'new',
-        _('The slot is in the future.')
+    new = State(_("unscheduled"), "new", _("The slot is not scheduled yet."))
+    scheduled = State(
+        _("scheduled"), "scheduled", _("The slot is scheduled for a future date.")
     )
 
     running = State(
@@ -296,6 +295,14 @@ class SlotStateMachine(ModelStateMachine):
         automatic=True
     )
 
+    schedule = Transition(
+        new,
+        scheduled,
+        name=_("Schedule"),
+        description=_("The slot is has a date and location."),
+        automatic=True,
+    )
+
     start = Transition(
         new,
         running,
@@ -313,6 +320,7 @@ class SlotStateMachine(ModelStateMachine):
         description=_("The slot has finished."),
         automatic=True,
     )
+
     reopen = Transition(
         [running, finished],
         new,

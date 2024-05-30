@@ -8,6 +8,7 @@ from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.utils import reverse_signed
 
 
 class ScheduleSlotSerializer(ModelSerializer):
@@ -20,6 +21,16 @@ class ScheduleSlotSerializer(ModelSerializer):
     )
     current_status = CurrentStatusField(source="states.current_state")
     timezone = serializers.SerializerMethodField()
+    links = serializers.SerializerMethodField()
+
+    def get_links(self, instance):
+        if instance.start and instance.duration:
+            return {
+                "ical": reverse_signed("slot-ical", args=(instance.pk,)),
+                "google": instance.google_calendar_link,
+            }
+        else:
+            return {}
 
     def get_timezone(self, instance):
         return (
@@ -42,6 +53,7 @@ class ScheduleSlotSerializer(ModelSerializer):
             "location_hint",
             "online_meeting_url",
             "location",
+            "links",
         )
         meta_fields = (
             "status",

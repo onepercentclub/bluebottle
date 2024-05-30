@@ -15,6 +15,15 @@ class SlotParticipantPermission(IsOwner):
         return not obj.participant or request.user == obj.participant.user
 
 
+class InviteCodePermission(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return True
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+
 class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (

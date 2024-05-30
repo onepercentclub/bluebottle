@@ -2,6 +2,7 @@ from django.db.models import Sum, Q
 
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
+from bluebottle.time_based.permissions import InviteCodePermission
 from bluebottle.time_based.serializers import TeamSerializer
 from bluebottle.time_based.serializers import TeamTransitionSerializer
 from bluebottle.time_based.serializers.teams import TeamMemberSerializer
@@ -101,3 +102,18 @@ class TeamMemberExportView(ExportView):
             ("status", "Status"),
         )
         return fields
+
+
+class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
+
+    permission_classes = (InviteCodePermission,)
+    queryset = Team.objects.prefetch_related("team", "user", "participants")
+    serializer_class = TeamMemberSerializer
+
+    def perform_create(self, serializer):
+        if hasattr(serializer.Meta, 'model'):
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**serializer.validated_data)
+            )
+        serializer.save(user=self.request.user)

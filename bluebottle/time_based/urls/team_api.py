@@ -6,11 +6,12 @@ from bluebottle.time_based.views import (
     TeamDetail,
     RelatedTeamList,
     RelatedTeamMembers,
-    TeamMemberExportView,
+    TeamMemberExportView, TeamMemberList,
 )
 
 urlpatterns = [
     url(r"^$", TeamList.as_view(), name="team-list"),
+
     url(r"^/(?P<pk>\d+)$", TeamDetail.as_view(), name="team-detail"),
     url(r"^/transitions$", TeamTransitionList.as_view(), name="team-transition-list"),
     url(
@@ -28,4 +29,7 @@ urlpatterns = [
         RelatedTeamList.as_view(),
         name="related-teams",
     ),
+
+    url(r"^/team-members$", TeamMemberList.as_view(), name="team-member-list"),
+
 ]

@@ -17,6 +17,11 @@ from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
 
+import yaml
+
+
+from base64 import b64encode
+
 standard_library.install_aliases()
 
 
@@ -41,6 +46,7 @@ class TestSAMLTokenAuthentication(TestCase):
         return request
 
     def test_sso_url(self):
+        settings = yaml
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
 
@@ -78,6 +84,38 @@ class TestSAMLTokenAuthentication(TestCase):
 
             self.assertTrue('SAMLRequest' in query)
             self.assertEqual(query['RelayState'][0], '/test')
+
+    def test_auth_shell(self):
+        with open(
+            "/home/ernst/Work/server-deployment/tenants/shell-disaster-relief/secrets/stage.yml"
+        ) as yml_file:
+            settings = yaml.safe_load(yml_file)
+
+        with self.settings(TOKEN_AUTH=settings["token_auth"]):
+
+            filename = os.path.join(os.path.dirname(__file__), "data/shell.xml")
+            with open(filename, "rb") as response_file:
+                response = b64encode(response_file.read())
+
+            request = self._request(
+                "post",
+                "/sso/auth",
+                session={
+                    "saml_request_id": "ONELOGIN_ca648e7858969b5362d5dbf290aaf711e5e5f091"
+                },
+                HTTP_HOST="www.stuff.com",
+                data={"SAMLResponse": response.decode("utf8")},
+            )
+            auth_backend = SAMLAuthentication(request)
+
+            user, created = auth_backend.authenticate()
+
+            self.assertTrue(created)
+
+            self.assertEqual(user.username, "smartin")
+            self.assertEqual(user.email, "smartin@yaco.es")
+            self.assertEqual(user.remote_id, "492882615acf31c8096b627245d76ae53036c090")
+            self.assertTrue(len(SAMLLog.objects.all()), 1)
 
     def test_auth_succes(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):

@@ -1,3 +1,4 @@
+from operator import ipow
 from future import standard_library
 
 from bluebottle.token_auth.models import SAMLLog
@@ -105,8 +106,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
         return data
 
     def authenticate_request(self):
-        saml_request_id = self.request.session.get('saml_request_id',
-                                                   self.auth.get_last_request_id())
+        __import__("ipdb").set_trace()
+        saml_request_id = self.request.session.get(
+            "saml_request_id", self.auth.get_last_request_id()
+        )
         # See BB-17150
         # if 'saml_request_id' not in self.request.session:
         #     error = 'SAML request id missing from session'
@@ -116,7 +119,8 @@ class SAMLAuthentication(BaseTokenAuthentication):
             self.auth.process_response(saml_request_id)
             SAMLLog.log(body=self.auth.get_last_response_xml())
         except OneLogin_Saml2_Error as e:
-            logger.error('Saml login error: {}'.format(e))
+            __import__("ipdb").set_trace()
+            logger.error("Saml login error: {}".format(e))
             raise TokenAuthenticationError(e)
 
         if self.auth.is_authenticated():

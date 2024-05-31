@@ -144,13 +144,15 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = '{} to {} ({})'.format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
-        self.assertTrue(expected in mail.outbox[0].body)
+
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
 
         mail.outbox = []
         self.run_task(self.nigh)
@@ -193,13 +195,15 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         )
         with TenantLanguage('en'):
             tz = pytz.timezone(self.slot.location.timezone)
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = '{} to {} ({})'.format(
                 defaultfilters.time(self.slot.start.astimezone(tz)),
                 defaultfilters.time(self.slot.end.astimezone(tz)),
                 self.slot.start.astimezone(tz).strftime('%Z'),
             )
-        self.assertTrue(expected in mail.outbox[0].body)
+
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
 
         self.assertTrue(
             "a.m." in mail.outbox[0].body,
@@ -221,14 +225,17 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             'The activity "{}" will take place tomorrow!'.format(self.activity.title)
         )
         with TenantLanguage('nl'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = '{} to {} ({})'.format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
 
-        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        print(expected_time, mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
+
         self.assertTrue(
             "a.m." not in mail.outbox[0].body,
             "Time strings should really be Dutch format"
@@ -262,13 +269,15 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             )
         )
         with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = '{} to {} ({})'.format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
-        self.assertTrue(expected in mail.outbox[0].body)
+
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
@@ -398,13 +407,15 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             )
         )
         with TenantLanguage('en'):
-            expected = '{} {} - {} ({})'.format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = '{} to {} ({})'.format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
             )
-        self.assertTrue(expected in mail.outbox[0].body)
+
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")

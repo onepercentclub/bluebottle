@@ -1465,6 +1465,8 @@ class Team(TriggerMixin, models.Model):
 
 
 class TeamMember(TriggerMixin, models.Model):
+    invite_code = models.UUIDField(blank=True, null=True)
+
     team = models.ForeignKey(
         'time_based.Team',
         related_name='team_members',
@@ -1479,6 +1481,10 @@ class TeamMember(TriggerMixin, models.Model):
 
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
+
+    @property
+    def owner(self):
+        return self.user
 
     class JSONAPIMeta(object):
         resource_name = 'teams/team-members'

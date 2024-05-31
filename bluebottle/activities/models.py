@@ -242,7 +242,7 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     team = models.ForeignKey(
-        'activities.Team', verbose_name=_('team'),
+        'activities.Team', verbose_name=_('Old team'),
         null=True, blank=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(

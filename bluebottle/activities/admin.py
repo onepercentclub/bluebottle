@@ -123,13 +123,13 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
-    raw_id_fields = ('user', 'activity', 'team')
+    raw_id_fields = ('user', 'activity')
 
     date_hierarchy = 'contributor_date'
 
     readonly_fields = [
         'transition_date', 'contributor_date',
-        'created', 'updated',
+        'created', 'updated', 'team'
     ]
 
     fields = ['activity', 'user', 'states', 'status'] + readonly_fields

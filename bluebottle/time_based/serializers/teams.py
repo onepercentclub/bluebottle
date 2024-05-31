@@ -1,21 +1,20 @@
+from rest_framework import serializers
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     HyperlinkedRelatedField,
 )
-
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.fsm.serializers import (
     AvailableTransitionsField,
     CurrentStatusField,
     TransitionSerializer,
 )
-
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class CountedHyperlinkedRelatedField(HyperlinkedRelatedField):
@@ -123,25 +122,26 @@ class TeamSerializer(ModelSerializer):
 
 
 class TeamMemberSerializer(ModelSerializer):
-    team = ResourceRelatedField(read_only=True)
+    team = ResourceRelatedField(queryset=Team.objects)
     user = ResourceRelatedField(read_only=True)
 
-    permissions = ResourcePermissionField("team-detail", view_args=("pk",))
+    permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
-    # permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
+    invite_code = serializers.CharField(write_only=True)
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "transitions", "current_status", "user")
+        fields = ("id", "team", "transitions", "current_status", "user", "invite_code")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:
         resource_name = "contributors/time-based/team-members"
-        included_resources = ["team", "user"]
+        included_resources = ["team", "user", "team.activity"]
 
     included_serializers = {
         "team": "bluebottle.time_based.serializers.TeamSerializer",
+        "team.activity": "bluebottle.time_based.serializers.activities.ScheduleActivitySerializer",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
     }
 

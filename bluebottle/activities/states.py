@@ -1,6 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.models import Organizer, EffortContribution, Team
+from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
 
 
@@ -351,5 +351,3 @@ class OrganizerStateMachine(ContributorStateMachine):
 @register(EffortContribution)
 class EffortContributionStateMachine(ContributionStateMachine):
     pass
-
-

@@ -123,7 +123,8 @@ urlpatterns = [
         name='skill'
     ),
 
-    url(r'^/period/(?P<pk>\d+)$',
+    url(
+        r'^/period/(?P<pk>\d+)$',
         PeriodActivityDetailView.as_view(),
         name="period-detail",
     ),

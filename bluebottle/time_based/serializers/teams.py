@@ -125,10 +125,9 @@ class TeamMemberSerializer(ModelSerializer):
     team = ResourceRelatedField(queryset=Team.objects)
     user = ResourceRelatedField(read_only=True)
 
-    permissions = ResourcePermissionField("team-detail", view_args=("pk",))
+    permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
-    # permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
     invite_code = serializers.CharField(write_only=True)
 
     class Meta:

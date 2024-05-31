@@ -117,3 +117,9 @@ class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
                 serializer.Meta.model(**serializer.validated_data)
             )
         serializer.save(user=self.request.user)
+
+
+class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    queryset = TeamMember.objects.prefetch_related("team",)
+    serializer_class = TeamMemberSerializer
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)

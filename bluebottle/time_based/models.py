@@ -1482,6 +1482,10 @@ class TeamMember(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
 
+    @property
+    def owner(self):
+        return self.user
+
     class JSONAPIMeta(object):
         resource_name = 'teams/team-members'
 

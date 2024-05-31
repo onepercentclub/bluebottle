@@ -81,7 +81,7 @@ class ScheduleParticipantSerializer(ParticipantSerializer):
         ParticipantSerializer.included_serializers,
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
-            "slot": "bluebottle.time_based.serializers.ScheduleSlotSerializer",
+            "slot": "bluebottle.time_based.serializers.slots.ScheduleSlotSerializer",
             "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
             "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
         }
@@ -94,24 +94,26 @@ class TeamScheduleParticipantSerializer(ScheduleParticipantSerializer):
 
     class Meta(ScheduleParticipantSerializer.Meta):
         model = TeamScheduleParticipant
+        fields = ScheduleParticipantSerializer.Meta.fields + ("team_member",)
 
     class JSONAPIMeta(ScheduleParticipantSerializer.JSONAPIMeta):
         resource_name = "contributors/time-based/team-schedule-participants"
+
         included_resources = ScheduleParticipantSerializer.JSONAPIMeta.included_resources + [
-            "slot.location",
+            "team_member",
             "slot.team",
             "slot.team.user"
         ]
 
     included_serializers = dict(
-        ParticipantSerializer.included_serializers,
+        ScheduleParticipantSerializer.included_serializers,
         **{
-            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+            "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
+            "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
+            "team_member": "bluebottle.time_based.serializers.teams.TeamMemberSerializer",
             "slot": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
-            "slot.location": "bluebottle.geo.serializers.GeolocationSerializer",
             "slot.team": "bluebottle.time_based.serializers.TeamSerializer",
             "slot.team.user": "bluebottle.initiatives.serializers.MemberSerializer",
-            "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         }
     )
 

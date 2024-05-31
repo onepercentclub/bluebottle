@@ -1541,6 +1541,8 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 @admin.register(TeamScheduleParticipant)
 class TeamScheduleParticipantAdmin(ScheduleParticipantAdmin):
     model = TeamScheduleParticipant
+    readonly_fields = ScheduleParticipantAdmin.readonly_fields + ["slot", "team_member"]
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot", "team_member"]
 
 
 @admin.register(Registration)

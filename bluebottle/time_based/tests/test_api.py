@@ -2276,7 +2276,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.assertEqual(contribution.status, 'failed')
 
     def test_withdraw_by_user_with_preparation(self):
-        self.activity = DateActivityFactory.create(slots=[], slot_selection='free')
+        self.activity = DateActivityFactory.create(slots=[])
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.activity.preparation = timedelta(hours=3)
         self.activity.save()

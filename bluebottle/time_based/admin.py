@@ -387,8 +387,8 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
         return format_html('<a href="{}">{}</a>', url, obj)
     link.short_description = _('Edit')
 
-    verbose_name = _('Slot')
-    verbose_name_plural = _('Slots')
+    verbose_name = _('Time, date & location')
+    verbose_name_plural = _('Time, date & location')
 
     def status_label(self, obj):
         return obj.states.current_state.name

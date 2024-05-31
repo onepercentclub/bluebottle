@@ -155,12 +155,21 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 "meta": {"count": queryset.filter(status__in=statuses).count()},
             }
 
-        return_data['my'] = {
-            'href': url + '?filter[my]=true',
-            'meta': {
-                'count': queryset.filter(user=self.context['request'].user).count()
+        if self.context['request'].user.is_authenticated:
+            return_data['my'] = {
+                'href': url + '?filter[my]=true',
+                'meta': {
+                    'count': queryset.filter(user=self.context['request'].user).count()
+                }
             }
-        }
+        else:
+            return_data['my'] = {
+                'href': url + '?filter[my]=true',
+                'meta': {
+                    'count': 0
+                }
+
+            }
 
         return_data['related'] = url
 

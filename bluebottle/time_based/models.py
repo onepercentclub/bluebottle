@@ -845,7 +845,11 @@ class ScheduleActivity(RegistrationActivity):
 
     duration = models.DurationField(
         _("Activity duration"),
-        help_text=_("How much time will a participant contribute?"),
+        help_text=_(
+            "How much time a participant is expected to contribute. "
+            "This will be an estimate since the exact hours will be based "
+            "on the start/end time set for each participant or team."
+        ),
         null=True,
         blank=True,
     )

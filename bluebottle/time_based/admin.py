@@ -387,8 +387,8 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
         return format_html('<a href="{}">{}</a>', url, obj)
     link.short_description = _('Edit')
 
-    verbose_name = _('Slot')
-    verbose_name_plural = _('Slots')
+    verbose_name = _('Time, date & location')
+    verbose_name_plural = _('Time, date & location')
 
     def status_label(self, obj):
         return obj.states.current_state.name
@@ -396,6 +396,24 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
 
     def has_add_permission(self, request, obj):
         return True
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
+    }
 
 
 @admin.register(Team)
@@ -690,6 +708,7 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(StateMachineAdmin):
+
     list_display = ("start", "duration", "activity", "participant_count")
     raw_id_fields = ('activity', "location")
     readonly_fields = ("activity",)
@@ -699,6 +718,24 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         "is_online",
         "location", "location_hint", "online_meeting_url"
     )
+
+    formfield_overrides = {
+        models.DurationField: {
+            'widget': TimeDurationWidget(
+                show_days=False,
+                show_hours=True,
+                show_minutes=True,
+                show_seconds=False)
+        },
+        models.TextField: {
+            'widget': Textarea(
+                attrs={
+                    'rows': 3,
+                    'cols': 80
+                }
+            )
+        },
+    }
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()

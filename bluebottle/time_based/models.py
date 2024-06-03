@@ -1736,6 +1736,12 @@ class TeamScheduleSlot(BaseScheduleSlot):
         blank=True,
     )
 
+    duration = models.DurationField(
+        _("Team duration"),
+        help_text=_('How much time the team is expected to contribute.'),
+        null=True, blank=True
+    )
+
     class JSONAPIMeta:
         resource_name = "activities/time-based/team-schedule-slots"
 

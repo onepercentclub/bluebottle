@@ -344,14 +344,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             'The details of activity "{}" have changed'.format(self.activity.title),
         )
         with TenantLanguage("en"):
-            expected = "{} {} - {} ({})".format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = "{} to {} ({})".format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
                 self.slot.start.astimezone(get_current_timezone()).strftime("%Z"),
             )
 
-        self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
 
     def test_changed_multiple_dates(self):
         eng = BlueBottleUserFactory.create(primary_language="en")
@@ -378,14 +379,15 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].to[0], participant.user.email)
 
         with TenantLanguage("en"):
-            expected = "{} {} - {} ({})".format(
-                defaultfilters.date(self.slot.start),
+            expected_date = defaultfilters.date(self.slot.start)
+            expected_time = "{} to {} ({})".format(
                 defaultfilters.time(self.slot.start.astimezone(get_current_timezone())),
                 defaultfilters.time(self.slot.end.astimezone(get_current_timezone())),
-                self.slot.start.astimezone(get_current_timezone()).strftime('%Z'),
+                self.slot.start.astimezone(get_current_timezone()).strftime("%Z"),
             )
 
-            self.assertTrue(expected in mail.outbox[0].body)
+        self.assertTrue(expected_date in mail.outbox[0].body)
+        self.assertTrue(expected_time in mail.outbox[0].body)
 
     def test_reschedule_contributions(self):
         DateParticipantFactory.create_batch(5, activity=self.activity)

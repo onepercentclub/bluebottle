@@ -828,6 +828,21 @@ class DeadlineActivity(RegistrationActivity):
 
 class ScheduleActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+
+    start = models.DateField(
+        _('Start date'),
+        help_text=_('The start of the period in which the teams/participants can take part in your activity.'),
+        null=True,
+        blank=True
+    )
+
+    deadline = models.DateField(
+        _('End date'),
+        help_text=_('The end of the period in which the teams/participants can take part in your activity.'),
+        null=True,
+        blank=True
+    )
+
     duration = models.DurationField(
         _("Activity duration"),
         help_text=_("How much time will a participant contribute?"),

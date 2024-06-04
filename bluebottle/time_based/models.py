@@ -18,7 +18,7 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
-    HasSlotValidator
+    HasSlotValidator, PeriodActivityStartDeadlineValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, to_text
@@ -558,7 +558,9 @@ class PeriodActivity(TimeBasedActivity):
         default=''
     )
 
-    validators = [PeriodActivityRegistrationDeadlineValidator]
+    validators = [
+        PeriodActivityRegistrationDeadlineValidator
+    ]
 
     @property
     def activity_date(self):
@@ -764,6 +766,11 @@ class RegistrationActivity(TimeBasedActivity):
     @property
     def accepted_participants(self):
         return self.participants.filter(status__in=["succeeded"])
+
+    validators = [
+        PeriodActivityRegistrationDeadlineValidator,
+        PeriodActivityStartDeadlineValidator
+    ]
 
     class Meta:
         abstract = True

@@ -884,6 +884,10 @@ class ScheduleActivity(RegistrationActivity):
     class JSONAPIMeta:
         resource_name = 'activities/time-based/schedules'
 
+    @property
+    def required_fields(self):
+        return super().required_fields + ["duration"]
+
 
 class PeriodChoices(DjangoChoices):
     hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing

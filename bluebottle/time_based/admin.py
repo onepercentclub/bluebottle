@@ -335,7 +335,7 @@ class TeamMemberAdmin(StateMachineAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
     readonly_fields = ('team', 'user', 'created')
-    fields = ('team', 'user', 'states', 'created')
+    fields = ('team', 'user', 'status', 'states', 'created')
     raw_id_fields = ('user', 'team')
 
     superadmin_fields = ['force_status']
@@ -389,10 +389,15 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
     readonly_fields = ('link', 'created', 'activity')
     fields = (
         'link',
-        'start', 'duration',
-        'created', 'states',
-        'is_online', 'location',
-        'location_hint', 'online_meeting_url'
+        'start',
+        'duration',
+        'created',
+        'status',
+        'states',
+        'is_online',
+        'location',
+        'location_hint',
+        'online_meeting_url'
     )
 
     def link(self, obj):
@@ -434,7 +439,7 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
-    fields = ('activity', 'user', 'registration_info', 'states', 'created', 'invite_code')
+    fields = ('activity', 'user', 'registration_info', 'status', 'states', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -726,10 +731,14 @@ class ScheduleSlotAdmin(StateMachineAdmin):
     raw_id_fields = ('activity', "location")
     readonly_fields = ("activity",)
     fields = readonly_fields + (
+        "status",
         "states",
-        "start", "duration",
+        "start",
+        "duration",
         "is_online",
-        "location", "location_hint", "online_meeting_url"
+        "location",
+        "location_hint",
+        "online_meeting_url"
     )
 
     formfield_overrides = {

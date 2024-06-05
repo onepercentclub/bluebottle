@@ -35,6 +35,16 @@ class SlotStateMachine(ModelStateMachine):
         _('The slot is cancelled')
     )
 
+    def is_activity_owner(self, user):
+        """Is manager of related activity"""
+        return (
+            user == self.instance.activity.owner or
+            user == self.instance.activity.initiative.owner or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
+        )
+
     initiate = Transition(
         EmptyState(),
         new,
@@ -82,6 +92,8 @@ class SlotStateMachine(ModelStateMachine):
     cancel = Transition(
         [new, running, scheduled],
         cancelled,
+        permission=is_activity_owner,
+        automatic=False,
         name=_("Cancel"),
         description=_("The slot was cancelled."),
     )
@@ -89,6 +101,8 @@ class SlotStateMachine(ModelStateMachine):
     restore = Transition(
         cancelled,
         new,
+        permission=is_activity_owner,
+        automatic=False,
         name=_("Restore"),
         description=_("The slot was restored."),
     )

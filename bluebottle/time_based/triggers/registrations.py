@@ -132,10 +132,23 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.accept,
             effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegistrationParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
                 FollowActivityEffect,
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegistrationParticipantStateMachine.accept,
+                ),
             ]
         ),
         TransitionTrigger(
@@ -362,7 +375,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.accept,
+                    TeamStateMachine.restore,
                 ),
                 RelatedTransitionEffect(
                     "participants",
@@ -380,7 +393,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.accept,
+                    TeamStateMachine.restore,
                 ),
                 RelatedTransitionEffect(
                     "activity",
@@ -408,7 +421,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.reject,
+                    TeamStateMachine.cancel,
                 ),
                 RelatedTransitionEffect(
                     "participants",

@@ -338,6 +338,19 @@ class TeamMemberAdmin(StateMachineAdmin):
     fields = ('team', 'user', 'states', 'created')
     raw_id_fields = ('user', 'team')
 
+    superadmin_fields = ['force_status']
+
+    def get_fieldsets(self, request, obj=None):
+        fields = self.get_fields(request, obj)
+        fieldsets = (
+            (_('Details'), {'fields': fields}),
+        )
+        if request.user.is_superuser:
+            fieldsets += (
+                (_('Super admin'), {'fields': self.superadmin_fields}),
+            )
+        return fieldsets
+
 
 class TeamMemberAdminInline(TabularInlinePaginated):
     model = TeamMember

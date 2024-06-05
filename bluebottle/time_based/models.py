@@ -1589,7 +1589,7 @@ class TeamScheduleParticipant(Participant, Contributor):
 
     team_member = models.ForeignKey(
         'time_based.TeamMember',
-        related_name='participations',
+        related_name='participants',
         on_delete=models.CASCADE,
         null=True,
         blank=True,

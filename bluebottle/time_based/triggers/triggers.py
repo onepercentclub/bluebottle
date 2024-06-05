@@ -46,7 +46,7 @@ from bluebottle.time_based.models import (
     SlotParticipant,
 )
 from bluebottle.time_based.states import (
-    ActivitySlotStateMachine,
+    DateActivitySlotStateMachine,
     DateStateMachine,
     ParticipantStateMachine,
     SlotParticipantStateMachine,
@@ -273,46 +273,46 @@ class ActivitySlotTriggers(TriggerManager):
 
     triggers = [
         TransitionTrigger(
-            ActivitySlotStateMachine.initiate,
+            DateActivitySlotStateMachine.initiate,
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.mark_complete,
+                    DateActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
                 ),
                 TransitionEffect(
-                    ActivitySlotStateMachine.finish,
+                    DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
                 ),
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.finish,
+            DateActivitySlotStateMachine.finish,
             effects=[
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.cancel,
+            DateActivitySlotStateMachine.cancel,
             effects=[
                 NotificationEffect(SlotCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.reopen,
+            DateActivitySlotStateMachine.reopen,
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.finish,
+                    DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.reschedule,
+            DateActivitySlotStateMachine.reschedule,
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.finish,
+                    DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
@@ -322,11 +322,11 @@ class ActivitySlotTriggers(TriggerManager):
             ['start', 'duration', 'is_online', 'location_id', 'location_hint'],
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.mark_complete,
+                    DateActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]
                 ),
                 TransitionEffect(
-                    ActivitySlotStateMachine.mark_incomplete,
+                    DateActivitySlotStateMachine.mark_incomplete,
                     conditions=[slot_is_incomplete]
                 ),
                 NotificationEffect(
@@ -351,17 +351,17 @@ class ActivitySlotTriggers(TriggerManager):
             'start',
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.start,
+                    DateActivitySlotStateMachine.start,
                     conditions=[slot_is_started, slot_is_not_finished]
                 ),
 
                 TransitionEffect(
-                    ActivitySlotStateMachine.finish,
+                    DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
                 ),
 
                 TransitionEffect(
-                    ActivitySlotStateMachine.reschedule,
+                    DateActivitySlotStateMachine.reschedule,
                     conditions=[slot_is_not_started]
                 ),
             ]
@@ -371,22 +371,22 @@ class ActivitySlotTriggers(TriggerManager):
             'capacity',
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[slot_is_full]
                 ),
 
                 TransitionEffect(
-                    ActivitySlotStateMachine.unlock,
+                    DateActivitySlotStateMachine.unlock,
                     conditions=[slot_is_not_full]
                 ),
             ]
         ),
 
         TransitionTrigger(
-            ActivitySlotStateMachine.reschedule,
+            DateActivitySlotStateMachine.reschedule,
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[slot_is_full]
                 ),
             ]
@@ -449,7 +449,7 @@ def activity_has_accepted_participants(effect):
 class DateActivitySlotTriggers(ActivitySlotTriggers):
     triggers = ActivitySlotTriggers.triggers + [
         TransitionTrigger(
-            ActivitySlotStateMachine.mark_complete,
+            DateActivitySlotStateMachine.mark_complete,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -492,9 +492,9 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
         ),
 
         TransitionTrigger(
-            ActivitySlotStateMachine.reschedule,
+            DateActivitySlotStateMachine.reschedule,
             effects=[
-                TransitionEffect(ActivitySlotStateMachine.lock, conditions=[is_full]),
+                TransitionEffect(DateActivitySlotStateMachine.lock, conditions=[is_full]),
 
                 RelatedTransitionEffect(
                     'activity',
@@ -503,7 +503,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.finish,
+            DateActivitySlotStateMachine.finish,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -525,7 +525,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.cancel,
+            DateActivitySlotStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -554,7 +554,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.lock,
+            DateActivitySlotStateMachine.lock,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -566,7 +566,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.start,
+            DateActivitySlotStateMachine.start,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -578,7 +578,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.unlock,
+            DateActivitySlotStateMachine.unlock,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -590,7 +590,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             ]
         ),
         TransitionTrigger(
-            ActivitySlotStateMachine.reopen,
+            DateActivitySlotStateMachine.reopen,
             effects=[
                 RelatedTransitionEffect(
                     'activity',
@@ -605,13 +605,13 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
             'start',
             effects=[
                 TransitionEffect(
-                    ActivitySlotStateMachine.finish,
+                    DateActivitySlotStateMachine.finish,
                     conditions=[
                         is_finished
                     ]
                 ),
                 TransitionEffect(
-                    ActivitySlotStateMachine.reschedule,
+                    DateActivitySlotStateMachine.reschedule,
                     conditions=[
                         is_not_finished
                     ]
@@ -973,7 +973,7 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(
@@ -1003,7 +1003,7 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.unlock,
+                    DateActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
@@ -1021,7 +1021,7 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
@@ -1038,7 +1038,7 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.unlock,
+                    DateActivitySlotStateMachine.unlock,
                     conditions=[participant_slot_will_be_not_full]
                 ),
                 NotificationEffect(
@@ -1057,12 +1057,12 @@ class SlotParticipantTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
                 RelatedTransitionEffect(
                     'slot',
-                    ActivitySlotStateMachine.lock,
+                    DateActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),

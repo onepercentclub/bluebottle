@@ -20,10 +20,10 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    ActivitySlotStateMachine,
+    DateActivitySlotStateMachine,
     ScheduleSlotStateMachine,
 )
-from bluebottle.time_based.states.states import PeriodicSlotStateMachine
+from bluebottle.time_based.states.slots import PeriodicSlotStateMachine
 from bluebottle.time_based.triggers.triggers import has_participants, has_no_participants
 
 
@@ -79,7 +79,7 @@ class SlotStartedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(ActivitySlotStateMachine.start),
+        TransitionEffect(DateActivitySlotStateMachine.start),
     ]
 
     def __str__(self):
@@ -95,7 +95,7 @@ class SlotFinishedTask(ModelPeriodicTask):
         )
 
     effects = [
-        TransitionEffect(ActivitySlotStateMachine.finish),
+        TransitionEffect(DateActivitySlotStateMachine.finish),
     ]
 
     def __str__(self):

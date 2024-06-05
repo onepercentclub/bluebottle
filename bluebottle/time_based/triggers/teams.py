@@ -59,6 +59,32 @@ class TeamTriggers(TriggerManager):
                 )
             ]
         ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.cancel,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.rejoin,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.restore,
+                )
+            ]
+        ),
     ]
 
 

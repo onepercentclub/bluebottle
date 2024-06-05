@@ -7,10 +7,9 @@ from bluebottle.time_based.models import TeamMember, Team
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
     new = State(_("Unscheduled"), "new", _("This team is unscheduled."))
-
     accepted = State(_("accepted"), "accepted", _("This team has been accepted."))
-
-    rejected = State(_("rejected"), "rejected", _("This team has been accepted."))
+    rejected = State(_("rejected"), "rejected", _("This team has been rejected."))
+    withdrawn = State(_("withdrawn"), "withdrawn", _("This team has withdrawn."))
 
     scheduled = State(
         _('scheduled'),
@@ -23,6 +22,18 @@ class TeamStateMachine(ModelStateMachine):
         'cancelled',
         _("This team has been cancelled.")
     )
+
+    def is_manager(self, user):
+        return (
+            user in self.instance.activity.initiative.activity_managers.all()
+            or user == self.instance.activity.owner
+            or user == self.instance.activity.initiative.owner
+            or user.is_staff
+            or user.is_superuser
+        )
+
+    def is_owner(self, user):
+        return user == self.instance.user
 
     initiate = Transition(
         EmptyState(),
@@ -62,6 +73,7 @@ class TeamStateMachine(ModelStateMachine):
         cancelled,
         name=_('Cancel'),
         automatic=False,
+        permission=is_manager,
         description=_(
             'This team will no longer participate in this activity and any hours spent will not be counted.'
         ),
@@ -72,8 +84,34 @@ class TeamStateMachine(ModelStateMachine):
         accepted,
         name=_('Restore'),
         automatic=False,
+        permission=is_manager,
         description=_(
             'Add this previously cancelled team back to the activity.'
+        ),
+    )
+
+    withdraw = Transition(
+        [new, accepted, scheduled],
+        withdrawn,
+        name=_('Withdrawn'),
+        automatic=False,
+        permission=is_owner,
+        hide_from_admin=True,
+        description=_(
+            'Withdraw your team. You will no longer participate in '
+            'this activity and any hours spent will not be counted.'
+        ),
+    )
+
+    rejoin = Transition(
+        withdrawn,
+        accepted,
+        name=_('Rejoin'),
+        automatic=False,
+        permission=is_owner,
+        hide_from_admin=True,
+        description=_(
+            'Join again with your team, that was previously withdrawn.'
         ),
     )
 
@@ -83,7 +121,7 @@ class TeamMemberStateMachine(ModelStateMachine):
     active = State(_("Active"), "active", _("This team member is active."))
     removed = State(_("removed"), "removed", _("This team member is removed."))
     withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
-    cancelled = State(_("cancelled"), "cancel", _("This team member is cancelled."))
+    cancelled = State(_("cancelled"), "cancelled", _("This team member is cancelled."))
 
     initiate = Transition(
         EmptyState(),

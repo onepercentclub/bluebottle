@@ -132,7 +132,7 @@ class TeamMemberSerializer(ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "transitions", "current_status", "user", "invite_code")
+        fields = ("id", "team", "user", "invite_code")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:

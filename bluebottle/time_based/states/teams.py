@@ -169,6 +169,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         hide_from_admin=True,
         permission=is_owner,
         description=_("Withdraw from this team."),
+        automatic=False,
     )
 
     reapply = Transition(
@@ -178,6 +179,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         hide_from_admin=True,
         permission=is_owner,
         description=_("Re-apply to team."),
+        automatic=False,
     )
 
     cancel = Transition(

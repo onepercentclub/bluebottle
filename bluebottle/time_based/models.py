@@ -18,7 +18,7 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
-    HasSlotValidator
+    HasSlotValidator, PeriodActivityStartDeadlineValidator
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, to_text
@@ -558,7 +558,9 @@ class PeriodActivity(TimeBasedActivity):
         default=''
     )
 
-    validators = [PeriodActivityRegistrationDeadlineValidator]
+    validators = [
+        PeriodActivityRegistrationDeadlineValidator
+    ]
 
     @property
     def activity_date(self):
@@ -765,6 +767,11 @@ class RegistrationActivity(TimeBasedActivity):
     def accepted_participants(self):
         return self.participants.filter(status__in=["succeeded"])
 
+    validators = [
+        PeriodActivityRegistrationDeadlineValidator,
+        PeriodActivityStartDeadlineValidator
+    ]
+
     class Meta:
         abstract = True
 
@@ -828,9 +835,28 @@ class DeadlineActivity(RegistrationActivity):
 
 class ScheduleActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/schedule/{}/{}"
+
+    start = models.DateField(
+        _('Start date'),
+        help_text=_('The start of the period in which the teams/participants can take part in your activity.'),
+        null=True,
+        blank=True
+    )
+
+    deadline = models.DateField(
+        _('End date'),
+        help_text=_('The end of the period in which the teams/participants can take part in your activity.'),
+        null=True,
+        blank=True
+    )
+
     duration = models.DurationField(
         _("Activity duration"),
-        help_text=_("How much time will a participant contribute?"),
+        help_text=_(
+            "How much time a participant is expected to contribute. "
+            "This will be an estimate since the exact hours will be based "
+            "on the start/end time set for each participant or team."
+        ),
         null=True,
         blank=True,
     )

@@ -98,4 +98,4 @@ class DeleteTeamMemberSlotParticipantsEffect(Effect):
 
     def post_save(self, **kwargs):
         team_member = self.instance
-        team_member.participations.all().delete()
+        team_member.participants.all().delete()

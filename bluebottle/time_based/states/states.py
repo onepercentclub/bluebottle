@@ -20,7 +20,7 @@ from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
 
 class TimeBasedStateMachine(ActivityStateMachine):
     full = State(
-        _('full'),
+        _('Full'),
         'full',
         _('The number of people needed is reached and people can no longer register.')
     )

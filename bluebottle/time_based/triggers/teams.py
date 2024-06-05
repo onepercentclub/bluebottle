@@ -174,7 +174,16 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.withdraw,
+                    ParticipantStateMachine.cancel,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.restore,
                 )
             ]
         ),

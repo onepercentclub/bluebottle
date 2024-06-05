@@ -156,10 +156,23 @@ class TeamStateMachine(ModelStateMachine):
 @register(TeamMember)
 class TeamMemberStateMachine(ModelStateMachine):
     active = State(_("Active"), "active", _("This team member is active."))
-    removed = State(_("removed"), "removed", _("This team member is removed."))
-    withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
-    rejected = State(_("rejected"), "rejected", _("This team member is rejected."))
-    cancelled = State(_("cancelled"), "cancel", _("This team member is cancelled."))
+    removed = State(_("Removed"), "removed", _("This team member is removed."))
+    withdrawn = State(_("Withdrawn"), "withdrawn", _("This team member is withdrawn."))
+    cancelled = State(_("Cancelled"), "cancelled", _("This team member is cancelled."))
+    rejected = State(_("Rejected"), "rejected", _("This team member is rejected."))
+
+    def is_manager(self, user):
+        return (
+            user == self.instance.team.user
+            or user in self.instance.team.activity.initiative.activity_managers.all()
+            or user == self.instance.team.activity.owner
+            or user == self.instance.team.activity.initiative.owner
+            or user.is_staff
+            or user.is_superuser
+        )
+
+    def is_owner(self, user):
+        return user == self.instance.user
 
     initiate = Transition(
         EmptyState(),
@@ -172,14 +185,17 @@ class TeamMemberStateMachine(ModelStateMachine):
     remove = Transition(
         [active],
         removed,
+        automatic=False,
+        permission=is_manager,
         name=_("Remove"),
         description=_("Remove this member from the team."),
-        automatic=False,
     )
 
     readd = Transition(
         removed,
         active,
+        automatic=False,
+        permission=is_manager,
         name=_("Re-add"),
         description=_("Re-add member to team."),
         automatic=False,
@@ -190,6 +206,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         withdrawn,
         name=_("Withdraw"),
         hide_from_admin=True,
+        permission=is_owner,
         description=_("Withdraw from this team."),
         automatic=False,
     )
@@ -199,6 +216,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         active,
         name=_("Re-apply"),
         hide_from_admin=True,
+        permission=is_owner,
         description=_("Re-apply to team."),
         automatic=False,
     )

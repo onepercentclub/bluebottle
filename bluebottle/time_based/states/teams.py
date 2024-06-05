@@ -116,14 +116,16 @@ class TeamMemberStateMachine(ModelStateMachine):
     remove = Transition(
         [active],
         removed,
-        name=_("Removed"),
+        name=_("Remove"),
         description=_("Remove this member from the team."),
+        automatic=False,
     )
     readd = Transition(
         removed,
         active,
         name=_("Re-add"),
         description=_("Re-add member to team."),
+        automatic=False,
     )
 
     withdraw = Transition(
@@ -131,10 +133,12 @@ class TeamMemberStateMachine(ModelStateMachine):
         withdrawn,
         name=_("Withdraw"),
         description=_("Withdraw from this team."),
+        automatic=False,
     )
     reapply = Transition(
         withdrawn,
         active,
         name=_("Re-apply"),
         description=_("Re-apply to team."),
+        automatic=False,
     )

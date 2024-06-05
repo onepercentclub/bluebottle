@@ -14,38 +14,38 @@ from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
-        _("new"),
+        _("New"),
         "new",
         _("This participant is new and will waiting for the registration to be accepted."),
     )
     accepted = State(
-        _('participating'),
+        _('Participating'),
         'accepted',
         _('This person takes part in the activity.')
     )
     rejected = State(
-        _('rejected'),
+        _('Rejected'),
         'rejected',
         _("This person's contribution is rejected and the spent hours are reset to zero.")
     )
     removed = State(
-        _('removed'),
+        _('Removed'),
         'removed',
         _("This person's contribution is removed and the spent hours are reset to zero.")
     )
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _('This person has withdrawn. Spent hours are retained.')
     )
     cancelled = State(
-        _('cancelled'),
+        _('Cancelled'),
         'cancelled',
         _("The activity has been cancelled. This person's contribution "
           "is removed and the spent hours are reset to zero.")
     )
     succeeded = State(
-        _('succeeded'),
+        _('Succeeded'),
         'succeeded',
         _('This person hast successfully contributed.')
     )

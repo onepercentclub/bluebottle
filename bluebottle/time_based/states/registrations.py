@@ -10,17 +10,17 @@ from bluebottle.time_based.models import (
 
 class RegistrationStateMachine(ModelStateMachine):
     new = State(
-        _('pending'),
+        _('Pending'),
         'new',
         _("This person has applied and must be reviewed.")
     )
     accepted = State(
-        _('accepted'),
+        _('Accepted'),
         'accepted',
         _('This person is accepted to take part in the activity.')
     )
     rejected = State(
-        _('rejected'),
+        _('Rejected'),
         'rejected',
         _("This person is not selected for the activity.")
     )

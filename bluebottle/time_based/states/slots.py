@@ -12,25 +12,25 @@ from bluebottle.time_based.models import (
 
 
 class SlotStateMachine(ModelStateMachine):
-    new = State(_("unscheduled"), "new", _("The slot is not scheduled yet."))
+    new = State(_("Unscheduled"), "new", _("The slot is not scheduled yet."))
     scheduled = State(
-        _("scheduled"), "scheduled", _("The slot is scheduled for a future date.")
+        _("Scheduled"), "scheduled", _("The slot is scheduled for a future date.")
     )
 
     running = State(
-        _('running'),
+        _('Running'),
         'running',
         _('The slot running.')
     )
 
     finished = State(
-        _('finished'),
+        _('Finished'),
         'finished',
         _('The slot is finished')
     )
 
     cancelled = State(
-        _('cancelled'),
+        _('Cancelled'),
         'cancelled',
         _('The slot is cancelled')
     )

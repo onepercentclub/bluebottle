@@ -7,21 +7,23 @@ from bluebottle.time_based.models import TeamMember, Team
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
     new = State(_("Unscheduled"), "new", _("This team is unscheduled."))
-    accepted = State(_("accepted"), "accepted", _("This team has been accepted."))
-    rejected = State(_("rejected"), "rejected", _("This team has been rejected."))
-    withdrawn = State(_("withdrawn"), "withdrawn", _("This team has withdrawn."))
-
-    scheduled = State(_("Scheduled"), "scheduled", _("This team is scheduled"))
+    accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
+    rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
+    withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
 
     removed = State(
         _("Removed"), "removed", _("This team is removed from the activity")
     )
+    scheduled = State(
+        _('Scheduled'),
+        'scheduled',
+        _("This team has been scheduled.")
 
     withdrawn = State(
         _("Withdrawn"), "withdrawn", _("This team is withdrawn from the activity")
     )
     cancelled = State(
-        _('cancelled'),
+        _('Cancelled'),
         'cancelled',
         _("This team has been cancelled.")
     )

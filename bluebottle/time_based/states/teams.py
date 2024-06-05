@@ -12,12 +12,6 @@ class TeamStateMachine(ModelStateMachine):
 
     rejected = State(_("rejected"), "rejected", _("This team has been accepted."))
 
-    scheduled = State(_("Scheduled"), "scheduled", _("This team is scheduled"))
-
-    removed = State(
-        _("Removed"), "removed", _("This team is removed from the activity")
-    )
-
     scheduled = State(
         _('scheduled'),
         'scheduled',
@@ -63,38 +57,23 @@ class TeamStateMachine(ModelStateMachine):
         automatic=True,
     )
 
-    remove = Transition(
-        [accepted, scheduled],
-        removed,
-        name=_("Remove"),
-        description=_("Remove this team from the activity."),
-        automatic=False,
-    )
-
-    readd = Transition(
-        removed,
-        accepted,
-        name=_("Re-add"),
-        description=_("Re-add team to activity."),
-        automatic=False,
-    )
     cancel = Transition(
         [new, accepted, scheduled],
         cancelled,
         name=_('Cancel'),
         automatic=False,
         description=_(
-            'The team has been cancelled.'
+            'This team will no longer participate in this activity and any hours spent will not be counted.'
         ),
     )
 
     restore = Transition(
         cancelled,
-        new,
+        accepted,
         name=_('Restore'),
         automatic=False,
         description=_(
-            'The team has been restored.'
+            'Add this previously cancelled team back to the activity.'
         ),
     )
 
@@ -104,6 +83,7 @@ class TeamMemberStateMachine(ModelStateMachine):
     active = State(_("Active"), "active", _("This team member is active."))
     removed = State(_("removed"), "removed", _("This team member is removed."))
     withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
+    cancelled = State(_("cancelled"), "cancel", _("This team member is cancelled."))
 
     initiate = Transition(
         EmptyState(),
@@ -119,6 +99,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         name=_("Removed"),
         description=_("Remove this member from the team."),
     )
+
     readd = Transition(
         removed,
         active,
@@ -130,11 +111,30 @@ class TeamMemberStateMachine(ModelStateMachine):
         [active],
         withdrawn,
         name=_("Withdraw"),
+        hide_from_admin=True,
         description=_("Withdraw from this team."),
     )
+
     reapply = Transition(
         withdrawn,
         active,
         name=_("Re-apply"),
+        hide_from_admin=True,
         description=_("Re-apply to team."),
+    )
+
+    cancel = Transition(
+        [active],
+        cancelled,
+        name=_("Cancel"),
+        automatic=True,
+        description=_("Cancel this team member, because the team is cancelled."),
+    )
+
+    restore = Transition(
+        [cancelled],
+        active,
+        name=_("Restore"),
+        automatic=True,
+        description=_("Restore this team member, because the team is restored."),
     )

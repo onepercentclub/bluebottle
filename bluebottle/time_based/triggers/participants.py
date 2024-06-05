@@ -9,7 +9,6 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
-    ModelDeletedTrigger,
     ModelChangedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
@@ -55,9 +54,6 @@ class ParticipantTriggers(ContributorTriggers):
         return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
-        ModelDeletedTrigger(
-
-        ),
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
@@ -458,11 +454,14 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
 
 @register(ScheduleParticipant)
 class ScheduleParticipantTriggers(ParticipantTriggers):
-    def registration_is_accepted(effect):
+    def is_accepted(effect):
         """Review needed"""
         return (
             effect.instance.registration
             and effect.instance.registration.status == "accepted"
+        ) or (
+            effect.instance.team
+            and effect.instance.team.status == "accepted"
         )
 
     def is_admin(effect):
@@ -520,7 +519,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted],
+                    conditions=[is_accepted],
                 ),
             ],
         ),
@@ -607,8 +606,14 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            DeadlineParticipantStateMachine.restore,
+            ScheduleParticipantStateMachine.restore,
             effects=[
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.accept,
+                    conditions=[
+                        is_accepted,
+                    ],
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     ScheduleActivityStateMachine.lock,
@@ -623,7 +628,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[
-                        registration_is_accepted,
+                        is_accepted,
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -643,7 +648,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[
-                        registration_is_accepted,
+                        is_accepted,
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -705,7 +710,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.cancelled,
+            ScheduleParticipantStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
                     "activity",

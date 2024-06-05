@@ -1,6 +1,6 @@
 from bluebottle.follow.effects import FollowActivityEffect
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
@@ -124,8 +124,21 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.accept,
             effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegistrationParticipantStateMachine.accept,
+                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegistrationParticipantStateMachine.accept,
                 ),
             ]
         ),
@@ -334,7 +347,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.accept,
+                    TeamStateMachine.restore,
                 ),
             ],
         ),
@@ -343,7 +356,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.accept,
+                    TeamStateMachine.restore,
                 ),
             ],
         ),
@@ -352,7 +365,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.reject,
+                    TeamStateMachine.cancel,
                 ),
             ],
         ),

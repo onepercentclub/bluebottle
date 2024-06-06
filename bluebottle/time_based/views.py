@@ -700,9 +700,9 @@ class PeriodParticipantExportView(ExportView):
     fields = (
         ('user__email', 'Email'),
         ('user__full_name', 'Name'),
-        ('motivation', 'Motivation'),
         ('created', 'Registration Date'),
         ('status', 'Status'),
+        ('motivation', 'Motivation'),
     )
 
     model = PeriodActivity
@@ -725,17 +725,13 @@ class PeriodParticipantExportView(ExportView):
         return row
 
     def get_fields(self):
-        question = self.get_object().review_title
         fields = (
             ('user__email', 'Email'),
             ('user__full_name', 'Name'),
             ('created', 'Registration Date'),
             ('status', 'Status'),
+            ('motivation', 'Motivation'),
         )
-        if question:
-            fields += (
-                ('participant__motivation', question),
-            )
 
         segments = tuple(
             (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()

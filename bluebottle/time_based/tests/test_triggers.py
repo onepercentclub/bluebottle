@@ -2481,7 +2481,23 @@ class FreeSlotParticipantTriggerTestCase(BluebottleTestCase):
     def test_withdraw_from_slot(self):
         slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
         slot_participant.states.withdraw(save=True)
-        self.assertStatus(slot_participant, 'withdrawn')
+
+        self.assertStatus(slot_participant, "withdrawn")
+        self.assertStatus(slot_participant.contributions.first(), "failed")
+
+    def test_withdraw_from_slot_finish(self):
+        slot_participant = SlotParticipantFactory.create(
+            slot=self.slot1, participant=self.participant
+        )
+        slot_participant.states.withdraw(save=True)
+
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+
+        slot_participant.refresh_from_db()
+
+        self.assertStatus(slot_participant, "withdrawn")
+        self.assertStatus(slot_participant.contributions.first(), "failed")
 
     def test_withdraw_from_all_slots(self):
         slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)

@@ -1,3 +1,5 @@
+from bluebottle.fsm.effects import TransitionEffect
+
 from bluebottle.fsm.triggers import (
     register,
     TransitionTrigger,
@@ -20,6 +22,8 @@ from bluebottle.time_based.states.teams import (
 
 @register(Team)
 class TeamTriggers(TriggerManager):
+    def should_auto_accept(effect):
+        return effect.instance.activity.review == False
 
     triggers = [
         TransitionTrigger(
@@ -28,14 +32,16 @@ class TeamTriggers(TriggerManager):
                 CreateTeamSlotEffect,
                 CreateCaptainTeamMemberEffect,
                 CreateTeamRegistrationEffect,
-            ]
+                TransitionEffect(
+                    TeamStateMachine.accept, conditions=[should_auto_accept]
+                ),
+            ],
         ),
     ]
 
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             TeamMemberStateMachine.initiate,

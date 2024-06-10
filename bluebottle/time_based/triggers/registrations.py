@@ -1,4 +1,4 @@
-from bluebottle.follow.effects import FollowActivityEffect
+from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.notifications.effects import NotificationEffect
@@ -33,6 +33,7 @@ from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
+    TeamScheduleParticipantStateMachine,
 )
 from bluebottle.time_based.states.registrations import (
     PeriodicRegistrationStateMachine,
@@ -119,6 +120,13 @@ class RegistrationTriggers(TriggerManager):
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
                 ),
+                FollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                FollowActivityEffect,
             ]
         ),
         TransitionTrigger(
@@ -127,6 +135,7 @@ class RegistrationTriggers(TriggerManager):
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
+                FollowActivityEffect,
             ]
         ),
         TransitionTrigger(
@@ -139,6 +148,7 @@ class RegistrationTriggers(TriggerManager):
                     'participants',
                     RegistrationParticipantStateMachine.reject,
                 ),
+                UnFollowActivityEffect,
             ]
         )
 
@@ -204,7 +214,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -216,7 +225,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -228,7 +236,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                FollowActivityEffect,
                 CreateInitialPeriodicParticipantEffect,
             ],
         ),
@@ -322,6 +329,27 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
 
 @register(TeamScheduleRegistration)
 class TeamScheduleRegistrationTriggers(RegistrationTriggers):
+    def activity_no_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return False
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
+
+        return effect.instance.activity.capacity <= accepted + 1
+
+    def activity_spots_left(effect):
+        """Activity has spots available after this effect"""
+        if not effect.instance.activity.capacity:
+            return True
+
+        accepted = effect.instance.activity.registrations.filter(
+            status="accepted"
+        ).count()
+        return effect.instance.activity.capacity > accepted - 1
+
     triggers = RegistrationTriggers.triggers + [
         TransitionTrigger(
             RegistrationStateMachine.initiate,
@@ -336,6 +364,15 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                     "team",
                     TeamStateMachine.accept,
                 ),
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.accept,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -345,6 +382,25 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                     "team",
                     TeamStateMachine.accept,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleRegistrationStateMachine.add,
+            effects=[
+                RelatedTransitionEffect(
+                    "team",
+                    TeamStateMachine.accept,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -353,6 +409,15 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "team",
                     TeamStateMachine.reject,
+                ),
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.reject,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
                 ),
             ],
         ),

@@ -381,66 +381,8 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
 
 
 @register(TeamScheduleParticipant)
-class TeamScheduleParticipantStateMachine(ContributorStateMachine):
-    new = State(
-        _("new"),
-        "new",
-        _("This team needs to be reviewed."),
-    )
-
-    scheduled = State(_("scheduled"), "scheduled", _("This team is assigned a slot."))
-
-    removed = State(
-        _('removed'),
-        'removed',
-        _("This team's contribution is removed and the spent hours are reset to zero.")
-    )
-    withdrawn = State(
-        _('withdrawn'),
-        'withdrawn',
-        _('This person has withdrawn. Spent hours are retained.')
-    )
-    succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _('This person hast successfully contributed.')
-    )
-
-    initiate = Transition(
-        EmptyState(),
-        new,
-        name=_('Initiate'),
-        description=_("Member signs up for team"),
-    )
-
-    withdraw = Transition(
-        new,
-        withdrawn,
-        name=_("Withdraw"),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.is_user,
-        description=_("Participant withdraws from the team slot."),
-        passed_label=_("withdrawn"),
-    )
-
-    reapply = Transition(
-        withdrawn,
-        new,
-        name=_("Reapply"),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.is_user,
-        description=_("Participant joins the team slot."),
-    )
-
-    remove = Transition(
-        new,
-        removed,
-        name=_("Remove"),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.can_accept_participant,
-        description=_("Remove this participant from the team slot."),
-        passed_label=_("removed"),
-    )
+class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
+    pass
 
 
 @register(PeriodicParticipant)

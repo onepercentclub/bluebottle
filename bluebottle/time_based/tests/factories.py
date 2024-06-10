@@ -25,7 +25,11 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TeamSlot,
-    TimeContribution, ScheduleActivity, ScheduleRegistration, ScheduleParticipant,
+    TimeContribution,
+    ScheduleActivity,
+    ScheduleRegistration,
+    ScheduleParticipant,
+    TeamScheduleRegistration,
 )
 from bluebottle.utils.models import Language
 
@@ -211,6 +215,14 @@ class DeadlineParticipantFactory(FSMModelFactory):
 class ScheduleRegistrationFactory(FSMModelFactory):
     class Meta(object):
         model = ScheduleRegistration
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TeamScheduleRegistrationFactory(FSMModelFactory):
+    class Meta(object):
+        model = TeamScheduleRegistration
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

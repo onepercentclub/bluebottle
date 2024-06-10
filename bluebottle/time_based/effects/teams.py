@@ -88,6 +88,7 @@ class CreateTeamMemberSlotParticipantsEffect(Effect):
                 user=team_member.user,
                 team_member=team_member,
                 activity=slot.activity,
+                registration=self.instance.team.registration,
             )
 
 

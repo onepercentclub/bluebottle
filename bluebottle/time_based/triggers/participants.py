@@ -44,9 +44,10 @@ from bluebottle.time_based.states import (
     RegistrationActivityStateMachine,
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
+    ScheduleParticipantStateMachine,
+    ScheduleActivityStateMachine,
+    TeamScheduleParticipantStateMachine,
 )
-from bluebottle.time_based.states.participants import ScheduleParticipantStateMachine
-from bluebottle.time_based.states.states import ScheduleActivityStateMachine
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -744,16 +745,23 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
 class TeamScheduleParticipantTriggers(ContributorTriggers):
     def has_slot(effect):
         """Has a slot"""
-        return effect.instance.slot
+        return effect.instance.slot.status == "scheduled"
+
+    def team_is_accepted(effect):
+        """Team is accepted"""
+        return effect.instance.team_member.team.status != "new"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             ScheduleParticipantStateMachine.initiate,
             effects=[
                 CreateScheduleContributionEffect,
-                CreateRegistrationEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
                 ),
             ],
         ),

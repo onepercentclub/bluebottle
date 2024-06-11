@@ -18,6 +18,9 @@ class TeamStateMachine(ModelStateMachine):
         _("Removed"), "removed", _("This team is removed from the activity")
     )
 
+    withdrawn = State(
+        _("Withdrawn"), "withdrawn", _("This team is withdrawn from the activity")
+    )
     scheduled = State(
         _('scheduled'),
         'scheduled',
@@ -78,6 +81,22 @@ class TeamStateMachine(ModelStateMachine):
         description=_("Re-add team to activity."),
         automatic=False,
     )
+
+    withdraw = Transition(
+        [accepted, scheduled],
+        withdrawn,
+        name=_("Remove"),
+        description=_("Remove this team from the activity."),
+        automatic=False,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
+    )
     cancel = Transition(
         [new, accepted, scheduled],
         cancelled,
@@ -104,6 +123,7 @@ class TeamMemberStateMachine(ModelStateMachine):
     active = State(_("Active"), "active", _("This team member is active."))
     removed = State(_("removed"), "removed", _("This team member is removed."))
     withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
+    rejected = State(_("rejected"), "rejected", _("This team member is rejected."))
 
     initiate = Transition(
         EmptyState(),
@@ -141,4 +161,19 @@ class TeamMemberStateMachine(ModelStateMachine):
         name=_("Re-apply"),
         description=_("Re-apply to team."),
         automatic=False,
+    )
+
+    reject = Transition(
+        [active],
+        rejected,
+        name=_("Rejected"),
+        description=_("Reject user from this team."),
+        automatic=True,
+    )
+    accept = Transition(
+        rejected,
+        active,
+        name=_("accept"),
+        description=_("Accept user to team."),
+        automatic=True,
     )

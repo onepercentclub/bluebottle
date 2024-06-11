@@ -311,6 +311,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
     remove = Transition(
         [
             ParticipantStateMachine.new,
+            RegistrationParticipantStateMachine.accepted,
             ParticipantStateMachine.succeeded,
             scheduled,
         ],

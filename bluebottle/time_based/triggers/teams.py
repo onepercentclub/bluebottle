@@ -1,4 +1,4 @@
-from bluebottle.fsm.effects import TransitionEffect
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 
 from bluebottle.fsm.triggers import (
     register,
@@ -11,13 +11,13 @@ from bluebottle.time_based.effects.teams import (
     CreateCaptainTeamMemberEffect,
     CreateTeamSlotEffect,
     CreateTeamMemberSlotParticipantsEffect,
-    DeleteTeamMemberSlotParticipantsEffect
+    DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.time_based.states.teams import (
-    TeamStateMachine,
-    TeamMemberStateMachine
+from bluebottle.time_based.states.participants import (
+    TeamScheduleParticipantStateMachine,
 )
+from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberStateMachine
 
 
 @register(Team)
@@ -37,6 +37,69 @@ class TeamTriggers(TriggerManager):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TeamStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.reject,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.withdraw,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.reapply,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.readd,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.readd,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.remove,
+                ),
+            ],
+        ),
     ]
 
 
@@ -53,5 +116,41 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 DeleteTeamMemberSlotParticipantsEffect,
             ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "participations",
+                    TeamScheduleParticipantStateMachine.withdraw,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    "participations",
+                    TeamScheduleParticipantStateMachine.reapply,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "participations",
+                    TeamScheduleParticipantStateMachine.remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.readd,
+            effects=[
+                RelatedTransitionEffect(
+                    "participations",
+                    TeamScheduleParticipantStateMachine.readd,
+                ),
+            ],
         ),
     ]

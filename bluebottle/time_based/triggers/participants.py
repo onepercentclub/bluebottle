@@ -765,4 +765,30 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            ScheduleParticipantStateMachine.reapply,
+            effects=[
+                CreateScheduleContributionEffect,
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleParticipantStateMachine.readd,
+            effects=[
+                CreateScheduleContributionEffect,
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
+                ),
+            ],
+        ),
     ]

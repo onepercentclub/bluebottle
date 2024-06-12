@@ -24,6 +24,7 @@ from bluebottle.time_based.states import (
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     ScheduleParticipantStateMachine,
+    TeamScheduleParticipantStateMachine,
 )
 from bluebottle.time_based.states.states import TeamScheduleSlotStateMachine
 
@@ -50,14 +51,16 @@ class PeriodicSlotTriggers(TriggerManager):
     ]
 
 
+def slot_is_finished(effect):
+    return effect.instance.end and effect.instance.end < now()
+
+
+def slot_is_not_finished(effect):
+    return not effect.instance.end or effect.instance.end > now()
+
+
 @register(ScheduleSlot)
 class ScheduleSlotTriggers(TriggerManager):
-
-    def slot_is_finished(effect):
-        return effect.instance.end and effect.instance.end < now()
-
-    def slot_is_not_finished(effect):
-        return not effect.instance.end or effect.instance.end > now()
 
     triggers = [
         TransitionTrigger(
@@ -107,14 +110,20 @@ class ScheduleSlotTriggers(TriggerManager):
     ]
 
 
+def slot_is_complete(effect):
+    return (
+        effect.instance.start
+        and effect.instance.duration
+        and (effect.instance.is_online is True or effect.instance.location)
+    )
+
+
+def slot_is_incomplete(effect):
+    return not slot_is_complete(effect)
+
+
 @register(TeamScheduleSlot)
 class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
-    def slot_is_complete(effect):
-        return (
-            effect.instance.start
-            and effect.instance.duration
-            and (effect.instance.is_online is True or effect.instance.location)
-        )
 
     triggers = ScheduleSlotTriggers.triggers + [
         TransitionTrigger(
@@ -127,14 +136,46 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
             ScheduleSlotStateMachine.schedule,
             effects=[
                 RelatedTransitionEffect("team", TeamStateMachine.schedule),
+                RelatedTransitionEffect(
+                    "participants", TeamScheduleParticipantStateMachine.schedule
+                ),
             ],
         ),
         ModelChangedTrigger(
             ["start", "end", "location", "is_online"],
             effects=[
                 TransitionEffect(
-                    TeamScheduleSlotStateMachine.schedule, conditions=[slot_is_complete]
+                    TeamScheduleSlotStateMachine.schedule,
+                    conditions=[slot_is_complete, slot_is_not_finished],
+                ),
+                TransitionEffect(
+                    TeamScheduleSlotStateMachine.reset, conditions=[slot_is_incomplete]
+                ),
+                TransitionEffect(
+                    TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
                 )
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleSlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.succeed,
+                ),
+            ],
+        ),
+        ModelChangedTrigger(
+            "start",
+            effects=[
+                RescheduleScheduleSlotContributions,
+                TransitionEffect(
+                    TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
+                ),
+                TransitionEffect(
+                    TeamScheduleSlotStateMachine.reopen,
+                    conditions=[slot_is_not_finished],
+                ),
             ],
         ),
     ]

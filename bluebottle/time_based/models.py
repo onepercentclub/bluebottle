@@ -364,7 +364,8 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     @property
     def active_durations(self):
         return self.durations.filter(
-            slot_participant__participant__status__in=('new', 'accepted')
+            slot_participant__status__in=("registered", "succeeded"),
+            slot_participant__participant__status__in=("new", "accepted"),
         )
 
     class Meta:

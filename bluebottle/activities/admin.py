@@ -34,6 +34,11 @@ from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParti
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
 
+from bluebottle.wallposts.models import Wallpost
+from bluebottle.follow.models import Follow
+from bluebottle.notifications.models import Message
+from bluebottle.updates.models import Update
+
 
 @admin.register(Contributor)
 class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
@@ -285,6 +290,25 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
+
+    skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
+
+    def get_formsets_with_inlines(self, request, obj=None):
+        formsets = super().get_formsets_with_inlines(request, obj)
+
+        if "_saveasnew" in request.POST:
+            __import__("ipdb").set_trace()
+            formsets = [
+                (inline, formset)
+                for (inline, formset) in formsets
+                if not any(
+                    issubclass(formset.model, skipped_model)
+                    for skipped_model in self.skip_on_duplicate
+                )
+            ]
+
+        return formsets
+
 
     def lookup_allowed(self, key, value):
         if key in [

@@ -734,7 +734,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]
+                    ScheduleParticipantStateMachine.reset, conditions=[has_no_slot]
                 ),
             ],
         ),

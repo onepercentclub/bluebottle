@@ -345,6 +345,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded,
         ],
         scheduled,
         name=_("Schedule"),

@@ -1751,7 +1751,7 @@ class ScheduleSlot(BaseScheduleSlot):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "participating", "succeeded", "new", "scheduled", "unscheduled"],
+            status__in=["accepted", "succeeded", "new", "scheduled"],
         )
 
 

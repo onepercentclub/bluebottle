@@ -60,7 +60,8 @@ class TeamStateMachine(ModelStateMachine):
         description=_("Assign a slot to this activity"),
         automatic=True,
     )
-    unschedule = Transition(
+
+    reset = Transition(
         scheduled,
         accepted,
         name=_("Unschedule"),

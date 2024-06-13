@@ -157,7 +157,7 @@ class DeadlineActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
         super().test_reject()
 
         for registration in self.registrations:
-            self.assertEqual(registration.participants.first().status, "rejected")
+            self.assertEqual(registration.participants.first().status, "cancelled")
 
     def test_restore(self):
         self.test_reject()

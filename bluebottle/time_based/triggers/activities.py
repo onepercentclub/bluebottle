@@ -382,7 +382,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
             TimeBasedStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "accepted_participants", RegistrationParticipantStateMachine.reject
+                    "accepted_participants", RegistrationParticipantStateMachine.cancel
                 ),
             ],
         ),

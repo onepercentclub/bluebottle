@@ -760,12 +760,12 @@ class RegistrationActivity(TimeBasedActivity):
     @property
     def active_participants(self):
         return self.participants.filter(
-            status__in=["new", "succeeded", "participating"]
+            status__in=["new", "accepted", "succeeded", "participating"]
         )
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=["succeeded"])
+        return self.participants.filter(status__in=["succeeded", "accepted"])
 
     validators = [
         PeriodActivityRegistrationDeadlineValidator,

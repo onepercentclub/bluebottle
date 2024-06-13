@@ -9,7 +9,6 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
-    ModelDeletedTrigger,
     ModelChangedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
@@ -44,9 +43,10 @@ from bluebottle.time_based.states import (
     RegistrationActivityStateMachine,
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
+    ScheduleParticipantStateMachine,
+    ScheduleActivityStateMachine,
+    TeamScheduleParticipantStateMachine,
 )
-from bluebottle.time_based.states.participants import ScheduleParticipantStateMachine
-from bluebottle.time_based.states.states import ScheduleActivityStateMachine
 
 
 class ParticipantTriggers(ContributorTriggers):
@@ -55,9 +55,6 @@ class ParticipantTriggers(ContributorTriggers):
         return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
-        ModelDeletedTrigger(
-
-        ),
         TransitionTrigger(
             RegistrationParticipantStateMachine.succeed,
             effects=[
@@ -206,6 +203,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.accept,
             effects=[
+                TransitionEffect(DeadlineParticipantStateMachine.succeed),
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,
@@ -416,6 +414,10 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
                     "contributions",
                     ContributionStateMachine.succeed,
                 ),
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -458,11 +460,14 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
 
 @register(ScheduleParticipant)
 class ScheduleParticipantTriggers(ParticipantTriggers):
-    def registration_is_accepted(effect):
+    def is_accepted(effect):
         """Review needed"""
         return (
             effect.instance.registration
             and effect.instance.registration.status == "accepted"
+        ) or (
+            effect.instance.team
+            and effect.instance.team.status == "accepted"
         )
 
     def is_admin(effect):
@@ -520,7 +525,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted],
+                    conditions=[is_accepted],
                 ),
             ],
         ),
@@ -607,8 +612,14 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            DeadlineParticipantStateMachine.restore,
+            ScheduleParticipantStateMachine.restore,
             effects=[
+                TransitionEffect(
+                    ScheduleParticipantStateMachine.accept,
+                    conditions=[
+                        is_accepted,
+                    ],
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     ScheduleActivityStateMachine.lock,
@@ -623,7 +634,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[
-                        registration_is_accepted,
+                        is_accepted,
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -643,7 +654,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
                     conditions=[
-                        registration_is_accepted,
+                        is_accepted,
                     ],
                 ),
                 RelatedTransitionEffect(
@@ -705,7 +716,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.cancelled,
+            ScheduleParticipantStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
                     "activity",
@@ -744,16 +755,127 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
 class TeamScheduleParticipantTriggers(ContributorTriggers):
     def has_slot(effect):
         """Has a slot"""
-        return effect.instance.slot
+        return effect.instance.slot.status == "scheduled"
+
+    def team_is_accepted(effect):
+        """Team is accepted"""
+        return effect.instance.team_member.team.status != "new"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            ScheduleParticipantStateMachine.initiate,
+            TeamScheduleParticipantStateMachine.initiate,
             effects=[
                 CreateScheduleContributionEffect,
-                CreateRegistrationEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.reapply,
+            effects=[
+                CreateScheduleContributionEffect,
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.readd,
+            effects=[
+                CreateScheduleContributionEffect,
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                ),
+                TransitionEffect(
+                    TeamScheduleParticipantStateMachine.accept,
+                    conditions=[team_is_accepted],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.succeed,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.reset,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.withdraw,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.reapply,
+            effects=[
+                FollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.readd,
+            effects=[
+                FollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.remove,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.fail,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.reject,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
                 ),
             ],
         ),

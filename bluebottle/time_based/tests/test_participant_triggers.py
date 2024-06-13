@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.core import mail
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -18,6 +19,8 @@ from bluebottle.time_based.tests.factories import (
     ScheduleSlotFactory,
     ScheduleRegistrationFactory,
     ScheduleActivityFactory,
+    TeamFactory,
+    TeamMemberFactory,
 )
 
 
@@ -50,6 +53,7 @@ class ParticipantTriggerTestCase:
 
     def test_initial(self):
         self.register()
+
         self.assertEqual(self.participant.status, self.expected_status)
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -319,3 +323,55 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.registration.refresh_from_db()
 
         self.assertEqual(self.registration.status, "accepted")
+
+
+class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.captain = BlueBottleUserFactory.create()
+        initiative = InitiativeFactory.create()
+        activity = ScheduleActivityFactory.create(
+            team_activity=True, initiative=initiative
+        )
+        initiative.states.submit()
+        initiative.states.approve(save=True)
+        activity.states.publish(save=True)
+
+        self.team = TeamFactory.create(activity=activity, user=self.captain)
+        self.team_member = TeamMemberFactory.create(team=self.team)
+        self.participant = self.team_member.participants.get()
+
+    def test_initiate(self):
+        self.assertEqual(self.participant.status, "accepted")
+
+        self.assertEqual(self.participant.contributions.get().status, "new")
+
+    def test_schedule(self):
+        slot = self.team.slots.get()
+
+        slot.start = now()
+        slot.duration = timedelta(hours=2)
+        slot.is_online = True
+
+        slot.save()
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, "scheduled")
+
+        self.assertEqual(self.participant.contributions.get().status, "new")
+
+    def test_succeed(self):
+        slot = self.team.slots.get()
+
+        slot.start = now()
+        slot.duration = timedelta(hours=2)
+        slot.is_online = True
+
+        slot.save()
+
+        slot.start = now() - timedelta(days=2)
+        slot.save()
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, "succeeded")
+
+        self.assertEqual(self.participant.contributions.get().status, "succeeded")

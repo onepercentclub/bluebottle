@@ -36,6 +36,9 @@ from bluebottle.time_based.states import (
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
 )
+from bluebottle.time_based.states.slots import (
+    ScheduleSlotStateMachine,
+)
 from bluebottle.time_based.states.states import (
     RegistrationActivityStateMachine,
     PeriodicActivityStateMachine,
@@ -379,7 +382,7 @@ class RegistrationActivityTriggers(TimeBasedTriggers):
             TimeBasedStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
-                    "accepted_participants", RegistrationParticipantStateMachine.reject
+                    "accepted_participants", RegistrationParticipantStateMachine.cancel
                 ),
             ],
         ),
@@ -480,6 +483,16 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    ScheduleSlotStateMachine.cancel
+                ),
+            ],
+        ),
+
     ]
 
 

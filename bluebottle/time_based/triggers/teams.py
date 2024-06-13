@@ -23,7 +23,7 @@ from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberState
 @register(Team)
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
-        return effect.instance.activity.review == False
+        return not effect.instance.activity.review
 
     triggers = [
         TransitionTrigger(

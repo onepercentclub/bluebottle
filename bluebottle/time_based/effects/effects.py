@@ -324,7 +324,10 @@ class RescheduleScheduleSlotContributions(Effect):
         for participant in self.instance.participants.all():
             for contribution in participant.contributions.all():
                 contribution.start = self.instance.start
-                contribution.end = self.instance.start + self.instance.duration
+                if self.instance.duration and self.instance.start:
+                    contribution.end = self.instance.start + self.instance.duration
+                else:
+                    contribution.end = None
                 contribution.value = self.instance.duration
                 contribution.save()
 

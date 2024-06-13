@@ -170,15 +170,6 @@ class TeamMemberTriggers(TriggerManager):
             ]
         ),
         TransitionTrigger(
-            TeamMemberStateMachine.withdraw,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    ParticipantStateMachine.cancel,
-                )
-            ]
-        ),
-        TransitionTrigger(
             TeamMemberStateMachine.reapply,
             effects=[
                 RelatedTransitionEffect(
@@ -214,7 +205,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.withdraw,
                 ),
             ],
@@ -223,7 +214,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.reapply,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.reapply,
                 ),
             ],
@@ -232,7 +223,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.remove,
                 ),
             ],
@@ -241,7 +232,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.readd,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.readd,
                 ),
             ],

@@ -404,40 +404,16 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
 
 @register(TeamScheduleParticipant)
 class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
-    new = State(
-        _("new"),
-        "new",
-        _("This team needs to be reviewed."),
-    )
-
-    scheduled = State(_("scheduled"), "scheduled", _("This team is assigned a slot."))
-
-    removed = State(
-        _('removed'),
-        'removed',
-        _("This team's contribution is removed and the spent hours are reset to zero.")
-    )
-    withdrawn = State(
-        _('withdrawn'),
-        'withdrawn',
-        _('This person has withdrawn. Spent hours are retained.')
-    )
-    succeeded = State(
-        _('succeeded'),
-        'succeeded',
-        _('This person hast successfully contributed.')
-    )
-
     initiate = Transition(
         EmptyState(),
-        new,
+        ScheduleParticipantStateMachine.new,
         name=_('Initiate'),
         description=_("Member signs up for team"),
     )
 
     withdraw = Transition(
-        new,
-        withdrawn,
+        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
+        ScheduleParticipantStateMachine.withdrawn,
         name=_("Withdraw"),
         automatic=False,
         hide_from_admin=True,
@@ -447,8 +423,8 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
     )
 
     reapply = Transition(
-        withdrawn,
-        new,
+        ScheduleParticipantStateMachine.withdrawn,
+        ScheduleParticipantStateMachine.new,
         name=_("Reapply"),
         automatic=False,
         hide_from_admin=True,
@@ -457,8 +433,8 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
     )
 
     remove = Transition(
-        new,
-        removed,
+        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
+        ScheduleParticipantStateMachine.removed,
         name=_("Remove"),
         automatic=False,
         permission=RegistrationParticipantStateMachine.can_accept_participant,

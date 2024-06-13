@@ -203,6 +203,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.accept,
             effects=[
+                TransitionEffect(DeadlineParticipantStateMachine.succeed),
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,
@@ -412,6 +413,10 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.succeed,
+                ),
+                TransitionEffect(
+                    PeriodicParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished],
                 ),
             ],
         ),
@@ -758,7 +763,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            ScheduleParticipantStateMachine.initiate,
+            TeamScheduleParticipantStateMachine.initiate,
             effects=[
                 CreateScheduleContributionEffect,
                 TransitionEffect(
@@ -771,7 +776,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.reapply,
+            TeamScheduleParticipantStateMachine.reapply,
             effects=[
                 CreateScheduleContributionEffect,
                 TransitionEffect(
@@ -784,7 +789,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.readd,
+            TeamScheduleParticipantStateMachine.readd,
             effects=[
                 CreateScheduleContributionEffect,
                 TransitionEffect(
@@ -797,7 +802,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.succeed,
+            TeamScheduleParticipantStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
                     "contributions",
@@ -806,7 +811,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.reset,
+            TeamScheduleParticipantStateMachine.reset,
             effects=[
                 RelatedTransitionEffect(
                     "contributions",
@@ -815,7 +820,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.withdraw,
+            TeamScheduleParticipantStateMachine.withdraw,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
@@ -825,7 +830,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.reapply,
+            TeamScheduleParticipantStateMachine.reapply,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -835,7 +840,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.readd,
+            TeamScheduleParticipantStateMachine.readd,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -845,7 +850,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.remove,
+            TeamScheduleParticipantStateMachine.remove,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
@@ -855,7 +860,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.fail,
+            TeamScheduleParticipantStateMachine.fail,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
@@ -865,7 +870,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            ScheduleParticipantStateMachine.reject,
+            TeamScheduleParticipantStateMachine.reject,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(

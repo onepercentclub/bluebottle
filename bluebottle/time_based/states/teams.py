@@ -14,10 +14,7 @@ class TeamStateMachine(ModelStateMachine):
     removed = State(
         _("Removed"), "removed", _("This team is removed from the activity")
     )
-    scheduled = State(
-        _('Scheduled'),
-        'scheduled',
-        _("This team has been scheduled.")
+    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
 
     withdrawn = State(
         _("Withdrawn"), "withdrawn", _("This team is withdrawn from the activity")
@@ -198,7 +195,6 @@ class TeamMemberStateMachine(ModelStateMachine):
         permission=is_manager,
         name=_("Re-add"),
         description=_("Re-add member to team."),
-        automatic=False,
     )
 
     withdraw = Transition(

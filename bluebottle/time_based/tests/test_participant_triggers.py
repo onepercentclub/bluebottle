@@ -53,6 +53,7 @@ class ParticipantTriggerTestCase:
 
     def test_initial(self):
         self.register()
+
         self.assertEqual(self.participant.status, self.expected_status)
         self.assertTrue(
             self.activity.followers.filter(user=self.participant.user).exists()
@@ -337,7 +338,7 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
 
         self.team = TeamFactory.create(activity=activity, user=self.captain)
         self.team_member = TeamMemberFactory.create(team=self.team)
-        self.participant = self.team_member.participations.get()
+        self.participant = self.team_member.participants.get()
 
     def test_initiate(self):
         self.assertEqual(self.participant.status, "accepted")
@@ -364,8 +365,6 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
         slot.start = now()
         slot.duration = timedelta(hours=2)
         slot.is_online = True
-
-        __import__("ipdb").set_trace()
 
         slot.save()
 

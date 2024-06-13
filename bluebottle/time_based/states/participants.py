@@ -354,7 +354,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
     )
 
     unschedule = Transition(
-        [scheduled],
+        scheduled,
         ParticipantStateMachine.accepted,
         name=_("Unschedule"),
         description=_("Unschedule this participant."),

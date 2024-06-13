@@ -302,6 +302,7 @@ class SlotStateMachine(ModelStateMachine):
         description=_("The slot is has a date and location."),
         automatic=True,
     )
+
     reset = Transition(
         scheduled,
         new,

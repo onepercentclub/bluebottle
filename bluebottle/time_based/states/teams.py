@@ -21,11 +21,6 @@ class TeamStateMachine(ModelStateMachine):
     withdrawn = State(
         _("Withdrawn"), "withdrawn", _("This team is withdrawn from the activity")
     )
-    scheduled = State(
-        _('scheduled'),
-        'scheduled',
-        _("This team has been scheduled.")
-    )
 
     cancelled = State(
         _('cancelled'),
@@ -63,6 +58,13 @@ class TeamStateMachine(ModelStateMachine):
         scheduled,
         name=_("Schedule"),
         description=_("Assign a slot to this activity"),
+        automatic=True,
+    )
+    unschedule = Transition(
+        scheduled,
+        accepted,
+        name=_("Unschedule"),
+        description=_("Unassign the slot for this activity"),
         automatic=True,
     )
 

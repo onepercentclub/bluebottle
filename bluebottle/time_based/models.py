@@ -1734,8 +1734,10 @@ class BaseScheduleSlot(TriggerMixin, Slot):
             return self.start + self.duration
 
     def __str__(self):
-        start = self.start.strftime("%Y-%m-%d %H:%M") if self.start else self.id
-        return str(_(f'Slot {start}'))
+        if self.start:
+            start = self.start.strftime("%Y-%m-%d %H:%M")
+            return _('Slot {start}').format(start=start)
+        return str(_('Unscheduled slot #{id}')).format(id=self.id)
 
     class Meta:
         abstract = True
@@ -1749,7 +1751,7 @@ class ScheduleSlot(BaseScheduleSlot):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "participating", "succeeded", "new"],
+            status__in=["accepted", "participating", "succeeded", "new", "scheduled", "unscheduled"],
         )
 
 
@@ -1778,8 +1780,7 @@ class TeamScheduleSlot(BaseScheduleSlot):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "participating", "succeeded", "new"],
-            team_member__status__in=['accepted', 'new']
+            status__in=["accepted", "participating", "succeeded", "new", "scheduled"],
         )
 
 

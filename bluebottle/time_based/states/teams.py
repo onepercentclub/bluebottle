@@ -10,20 +10,9 @@ class TeamStateMachine(ModelStateMachine):
     accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
     rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
-
-    removed = State(
-        _("Removed"), "removed", _("This team is removed from the activity")
-    )
     scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
-
-    withdrawn = State(
-        _("Withdrawn"), "withdrawn", _("This team is withdrawn from the activity")
-    )
-    cancelled = State(
-        _('Cancelled'),
-        'cancelled',
-        _("This team has been cancelled.")
-    )
+    removed = State(_("Removed"), "removed", _("This team is removed from the activity"))
+    cancelled = State(_('Cancelled'), 'cancelled', _("This team has been cancelled."))
 
     def is_manager(self, user):
         return (

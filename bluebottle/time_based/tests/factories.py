@@ -24,8 +24,13 @@ from bluebottle.time_based.models import (
     ScheduleSlot,
     Skill,
     SlotParticipant,
-    TeamSlot,
-    TimeContribution, ScheduleActivity, ScheduleRegistration, ScheduleParticipant,
+    TimeContribution,
+    ScheduleActivity,
+    ScheduleRegistration,
+    ScheduleParticipant,
+    TeamScheduleRegistration,
+    Team,
+    TeamMember,
 )
 from bluebottle.utils.models import Language
 
@@ -182,14 +187,19 @@ class SlotParticipantFactory(FSMModelFactory):
     participant = factory.SubFactory(DateParticipantFactory)
 
 
-class TeamSlotFactory(factory.DjangoModelFactory):
+class TeamFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = TeamSlot
+        model = Team
 
-    is_online = False
-    location = factory.SubFactory(GeolocationFactory)
-    start = now() + timedelta(weeks=4)
-    duration = timedelta(hours=2)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TeamMemberFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TeamMember
+
+    user = factory.SubFactory(BlueBottleUserFactory)
+    team = factory.SubFactory(TeamFactory)
 
 
 class DeadlineRegistrationFactory(FSMModelFactory):
@@ -211,6 +221,14 @@ class DeadlineParticipantFactory(FSMModelFactory):
 class ScheduleRegistrationFactory(FSMModelFactory):
     class Meta(object):
         model = ScheduleRegistration
+
+    activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TeamScheduleRegistrationFactory(FSMModelFactory):
+    class Meta(object):
+        model = TeamScheduleRegistration
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

@@ -7,22 +7,24 @@ from bluebottle.time_based.models import TeamMember, Team
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
     new = State(_("Unscheduled"), "new", _("This team is unscheduled."))
+    accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
+    rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
+    withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
+    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
+    removed = State(_("Removed"), "removed", _("This team is removed from the activity"))
+    cancelled = State(_('Cancelled'), 'cancelled', _("This team has been cancelled."))
 
-    accepted = State(_("accepted"), "accepted", _("This team has been accepted."))
+    def is_manager(self, user):
+        return (
+            user in self.instance.activity.initiative.activity_managers.all()
+            or user == self.instance.activity.owner
+            or user == self.instance.activity.initiative.owner
+            or user.is_staff
+            or user.is_superuser
+        )
 
-    rejected = State(_("rejected"), "rejected", _("This team has been accepted."))
-
-    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled"))
-
-    removed = State(
-        _("Removed"), "removed", _("This team is removed from the activity")
-    )
-
-    cancelled = State(
-        _('cancelled'),
-        'cancelled',
-        _("This team has been cancelled.")
-    )
+    def is_owner(self, user):
+        return user == self.instance.user
 
     initiate = Transition(
         EmptyState(),
@@ -72,23 +74,67 @@ class TeamStateMachine(ModelStateMachine):
         description=_("Re-add team to activity."),
         automatic=False,
     )
+
+    withdraw = Transition(
+        [accepted, scheduled],
+        withdrawn,
+        name=_("Remove"),
+        description=_("Remove this team from the activity."),
+        automatic=False,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
+    )
+
     cancel = Transition(
         [new, accepted, scheduled],
         cancelled,
         name=_('Cancel'),
         automatic=False,
+        permission=is_manager,
         description=_(
-            'The team has been cancelled.'
+            'This team will no longer participate in this activity and any hours spent will not be counted.'
         ),
     )
 
     restore = Transition(
         cancelled,
-        new,
+        accepted,
         name=_('Restore'),
         automatic=False,
+        permission=is_manager,
         description=_(
-            'The team has been restored.'
+            'Add this previously cancelled team back to the activity.'
+        ),
+    )
+
+    withdraw = Transition(
+        [new, accepted, scheduled],
+        withdrawn,
+        name=_('Withdrawn'),
+        automatic=False,
+        permission=is_owner,
+        hide_from_admin=True,
+        description=_(
+            'Withdraw your team. You will no longer participate in '
+            'this activity and any hours spent will not be counted.'
+        ),
+    )
+
+    rejoin = Transition(
+        withdrawn,
+        accepted,
+        name=_('Rejoin'),
+        automatic=False,
+        permission=is_owner,
+        hide_from_admin=True,
+        description=_(
+            'Join again with your team, that was previously withdrawn.'
         ),
     )
 
@@ -96,8 +142,23 @@ class TeamStateMachine(ModelStateMachine):
 @register(TeamMember)
 class TeamMemberStateMachine(ModelStateMachine):
     active = State(_("Active"), "active", _("This team member is active."))
-    removed = State(_("removed"), "removed", _("This team member is removed."))
-    withdrawn = State(_("withdrawn"), "withdrawn", _("This team member is withdrawn."))
+    removed = State(_("Removed"), "removed", _("This team member is removed."))
+    withdrawn = State(_("Withdrawn"), "withdrawn", _("This team member is withdrawn."))
+    cancelled = State(_("Cancelled"), "cancelled", _("This team member is cancelled."))
+    rejected = State(_("Rejected"), "rejected", _("This team member is rejected."))
+
+    def is_manager(self, user):
+        return (
+            user == self.instance.team.user
+            or user in self.instance.team.activity.initiative.activity_managers.all()
+            or user == self.instance.team.activity.owner
+            or user == self.instance.team.activity.initiative.owner
+            or user.is_staff
+            or user.is_superuser
+        )
+
+    def is_owner(self, user):
+        return user == self.instance.user
 
     initiate = Transition(
         EmptyState(),
@@ -110,29 +171,68 @@ class TeamMemberStateMachine(ModelStateMachine):
     remove = Transition(
         [active],
         removed,
+        automatic=False,
+        permission=is_manager,
         name=_("Remove"),
         description=_("Remove this member from the team."),
-        automatic=False,
     )
+
     readd = Transition(
         removed,
         active,
+        automatic=False,
+        permission=is_manager,
         name=_("Re-add"),
         description=_("Re-add member to team."),
-        automatic=False,
     )
 
     withdraw = Transition(
         [active],
         withdrawn,
         name=_("Withdraw"),
+        hide_from_admin=True,
+        permission=is_owner,
         description=_("Withdraw from this team."),
         automatic=False,
     )
+
     reapply = Transition(
         withdrawn,
         active,
         name=_("Re-apply"),
+        hide_from_admin=True,
+        permission=is_owner,
         description=_("Re-apply to team."),
         automatic=False,
+    )
+
+    reject = Transition(
+        [active],
+        rejected,
+        name=_("Rejected"),
+        description=_("Reject user from this team."),
+        automatic=True,
+    )
+    accept = Transition(
+        rejected,
+        active,
+        name=_("accept"),
+        description=_("Accept user to team."),
+        automatic=True,
+    )
+
+    cancel = Transition(
+        [active],
+        cancelled,
+        name=_("Cancel"),
+        automatic=True,
+        description=_("Cancel this team member, because the team is cancelled."),
+    )
+
+    restore = Transition(
+        [cancelled],
+        active,
+        name=_("Restore"),
+        automatic=True,
+        description=_("Restore this team member, because the team is restored."),
     )

@@ -1,5 +1,4 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
-
 from bluebottle.fsm.triggers import (
     register,
     TransitionTrigger,
@@ -14,10 +13,10 @@ from bluebottle.time_based.effects.teams import (
     DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
+from bluebottle.time_based.states.participants import ParticipantStateMachine
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
-from bluebottle.time_based.states.participants import ParticipantStateMachine
 from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
 from bluebottle.time_based.states.teams import (
     TeamStateMachine,
@@ -70,7 +69,7 @@ class TeamTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
-            TeamStateMachine.reapply,
+            TeamStateMachine.rejoin,
             effects=[
                 RelatedTransitionEffect(
                     "team_members",
@@ -88,7 +87,7 @@ class TeamTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
-            TeamStateMachine.readd,
+            TeamStateMachine.rejoin,
             effects=[
                 RelatedTransitionEffect(
                     "team_members",

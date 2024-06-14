@@ -11,16 +11,11 @@ class TeamStateMachine(ModelStateMachine):
     rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
 
-    scheduled = State(
-        _('Scheduled'),
-        'scheduled',
-        _("This team has been scheduled.")
-    )
+    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
 
-    cancelled = State(
-        _('Cancelled'),
-        'cancelled',
-        _("This team has been cancelled.")
+    cancelled = State(_("Cancelled"), "cancelled", _("This team has been cancelled."))
+    removed = State(
+        _("Removed"), "removed", _("This team is removed from the activity")
     )
 
     def is_manager(self, user):
@@ -68,10 +63,42 @@ class TeamStateMachine(ModelStateMachine):
         automatic=True,
     )
 
+    remove = Transition(
+        [accepted, scheduled],
+        removed,
+        name=_("Remove"),
+        description=_("Remove this team from the activity."),
+        automatic=False,
+    )
+
+    readd = Transition(
+        removed,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
+    )
+
+    withdraw = Transition(
+        [accepted, scheduled],
+        withdrawn,
+        name=_("Remove"),
+        description=_("Remove this team from the activity."),
+        automatic=False,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
+    )
+
     cancel = Transition(
         [new, accepted, scheduled],
         cancelled,
-        name=_('Cancel'),
+        name=_("Cancel"),
         automatic=False,
         permission=is_manager,
         description=_(
@@ -122,6 +149,7 @@ class TeamMemberStateMachine(ModelStateMachine):
     removed = State(_("Removed"), "removed", _("This team member is removed."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team member is withdrawn."))
     cancelled = State(_("Cancelled"), "cancelled", _("This team member is cancelled."))
+    rejected = State(_("Rejected"), "rejected", _("This team member is rejected."))
 
     def is_manager(self, user):
         return (
@@ -180,6 +208,21 @@ class TeamMemberStateMachine(ModelStateMachine):
         permission=is_owner,
         description=_("Re-apply to team."),
         automatic=False,
+    )
+
+    reject = Transition(
+        [active],
+        rejected,
+        name=_("Rejected"),
+        description=_("Reject user from this team."),
+        automatic=True,
+    )
+    accept = Transition(
+        rejected,
+        active,
+        name=_("accept"),
+        description=_("Accept user to team."),
+        automatic=True,
     )
 
     cancel = Transition(

@@ -1,4 +1,5 @@
-from bluebottle.fsm.effects import RelatedTransitionEffect
+from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
+
 from bluebottle.fsm.triggers import (
     register,
     TransitionTrigger,
@@ -10,9 +11,12 @@ from bluebottle.time_based.effects.teams import (
     CreateCaptainTeamMemberEffect,
     CreateTeamSlotEffect,
     CreateTeamMemberSlotParticipantsEffect,
-    DeleteTeamMemberSlotParticipantsEffect
+    DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
+from bluebottle.time_based.states.participants import (
+    TeamScheduleParticipantStateMachine,
+)
 from bluebottle.time_based.states.participants import ParticipantStateMachine
 from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
 from bluebottle.time_based.states.teams import (
@@ -23,6 +27,8 @@ from bluebottle.time_based.states.teams import (
 
 @register(Team)
 class TeamTriggers(TriggerManager):
+    def should_auto_accept(effect):
+        return not effect.instance.activity.review
 
     triggers = [
         TransitionTrigger(
@@ -31,7 +37,125 @@ class TeamTriggers(TriggerManager):
                 CreateTeamSlotEffect,
                 CreateCaptainTeamMemberEffect,
                 CreateTeamRegistrationEffect,
-            ]
+                TransitionEffect(
+                    TeamStateMachine.accept, conditions=[should_auto_accept]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.reject,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.withdraw,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.reapply,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.readd,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.readd,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.restore,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.rejoin,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.restore,
+                ),
+            ],
         ),
         TransitionTrigger(
             TeamStateMachine.cancel,
@@ -90,7 +214,6 @@ class TeamTriggers(TriggerManager):
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             TeamMemberStateMachine.initiate,
@@ -138,5 +261,41 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 DeleteTeamMemberSlotParticipantsEffect,
             ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.withdraw,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.reapply,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.readd,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.readd,
+                ),
+            ],
         ),
     ]

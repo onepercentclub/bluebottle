@@ -35,6 +35,8 @@ class TenantProperties(local):
                      self.tenant_properties)
 
         except (ImportError, AttributeError, IOError):
+            from tenant_schemas.postgresql_backend.base import FakeTenant
+
             if not isinstance(tenant, FakeTenant):
                 logger.debug('No tenant properties found for: {0}'.format(tenant.client_name))
 

@@ -773,7 +773,17 @@ class ScheduleSlotAdmin(StateMachineAdmin):
 class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
     raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team', )
-    fields = ScheduleSlotAdmin.fields + ('team',)
+    readonly_fields = ScheduleSlotAdmin.readonly_fields + ('team', )
+    fields = readonly_fields + (
+        "status",
+        "states",
+        "start",
+        "duration",
+        "is_online",
+        "location",
+        "location_hint",
+        "online_meeting_url"
+    )
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):

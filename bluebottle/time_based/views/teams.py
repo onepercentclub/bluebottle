@@ -1,5 +1,6 @@
 from django.db.models import Sum, Q
 
+from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
 from bluebottle.time_based.permissions import InviteCodePermission
@@ -14,8 +15,7 @@ from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission,
-)
+    ResourcePermission, )
 from bluebottle.utils.views import (
     CreateAPIView,
     JsonApiViewMixin,
@@ -65,7 +65,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
 
 class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+    permission_classes = [IsAuthenticatedOrOpenPermission]
 
     def get_queryset(self):
         queryset = super().get_queryset()

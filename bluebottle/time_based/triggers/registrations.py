@@ -385,7 +385,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.restore,
+                    TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
                     "participants",
@@ -431,7 +431,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.cancel,
+                    TeamStateMachine.reject,
                 ),
                 RelatedTransitionEffect(
                     "participants",

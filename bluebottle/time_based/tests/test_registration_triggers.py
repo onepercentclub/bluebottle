@@ -40,7 +40,6 @@ class RegistrationTriggerTestCase:
         mail.outbox = []
 
     def create(self):
-        print("creating")
         self.registration = self.factory.create(
             activity=self.activity,
             user=self.user,
@@ -298,7 +297,7 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.assertEqual(self.registration.team.status, "accepted")
         self.assertEqual(self.registration.team.team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participations.get().status,
+            self.registration.team.team_members.get().participants.get().status,
             "accepted",
         )
 
@@ -318,17 +317,17 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.assertEqual(self.registration.team.status, "new")
         self.assertEqual(self.registration.team.team_members.get().status, "active")
         self.assertEqual(
-            self.registration.team.team_members.get().participations.get().status, "new"
+            self.registration.team.team_members.get().participants.get().status, "new"
         )
 
     def test_reject(self):
         super().test_reject()
 
         self.assertEqual(self.registration.team.status, "rejected")
-        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(self.registration.team.team_members.get().status, "rejected")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participations.get().status,
+            self.registration.team.team_members.get().participants.get().status,
             "rejected",
         )
 
@@ -339,6 +338,6 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.assertEqual(self.registration.team.team_members.get().status, "active")
 
         self.assertEqual(
-            self.registration.team.team_members.get().participations.get().status,
+            self.registration.team.team_members.get().participants.get().status,
             "accepted",
         )

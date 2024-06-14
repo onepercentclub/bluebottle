@@ -17,7 +17,12 @@ from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
-from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberStateMachine
+from bluebottle.time_based.states.participants import ParticipantStateMachine
+from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
+from bluebottle.time_based.states.teams import (
+    TeamStateMachine,
+    TeamMemberStateMachine
+)
 
 
 @register(Team)
@@ -100,6 +105,58 @@ class TeamTriggers(TriggerManager):
                 ),
             ],
         ),
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.cancel,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.restore,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.cancel,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamStateMachine.rejoin,
+            effects=[
+                RelatedTransitionEffect(
+                    'slots',
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    'team_members',
+                    TeamMemberStateMachine.restore,
+                )
+            ]
+        ),
     ]
 
 
@@ -112,6 +169,33 @@ class TeamMemberTriggers(TriggerManager):
                 CreateTeamMemberSlotParticipantsEffect,
             ]
         ),
+        TransitionTrigger(
+            TeamMemberStateMachine.reapply,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.restore,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.cancel,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.restore,
+                )
+            ]
+        ),
         ModelDeletedTrigger(
             effects=[
                 DeleteTeamMemberSlotParticipantsEffect,
@@ -121,7 +205,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.withdraw,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.withdraw,
                 ),
             ],
@@ -130,7 +214,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.reapply,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.reapply,
                 ),
             ],
@@ -139,7 +223,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.remove,
                 ),
             ],
@@ -148,7 +232,7 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.readd,
             effects=[
                 RelatedTransitionEffect(
-                    "participations",
+                    "participants",
                     TeamScheduleParticipantStateMachine.readd,
                 ),
             ],

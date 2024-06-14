@@ -14,38 +14,38 @@ from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
-        _("new"),
+        _("New"),
         "new",
-        _("This participant is new and ready to participate once the slot starts."),
+        _("This participant is new and will waiting for the registration to be accepted."),
     )
     accepted = State(
-        _('participating'),
+        _('Participating'),
         'accepted',
         _('This person takes part in the activity.')
     )
     rejected = State(
-        _('rejected'),
+        _('Rejected'),
         'rejected',
         _("This person's contribution is rejected and the spent hours are reset to zero.")
     )
     removed = State(
-        _('removed'),
+        _('Removed'),
         'removed',
         _("This person's contribution is removed and the spent hours are reset to zero.")
     )
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _('This person has withdrawn. Spent hours are retained.')
     )
     cancelled = State(
-        _('cancelled'),
+        _('Cancelled'),
         'cancelled',
         _("The activity has been cancelled. This person's contribution "
           "is removed and the spent hours are reset to zero.")
     )
     succeeded = State(
-        _('succeeded'),
+        _('Succeeded'),
         'succeeded',
         _('This person hast successfully contributed.')
     )
@@ -171,12 +171,21 @@ class ParticipantStateMachine(ContributorStateMachine):
         [
             ContributorStateMachine.new,
             accepted,
-            succeeded
+            succeeded,
         ],
         cancelled,
         name=_('Cancel'),
         passed_label=_('cancelled'),
         description=_("Cancel the participant, because the activity was cancelled."),
+        automatic=True,
+    )
+
+    restore = Transition(
+        cancelled,
+        accepted,
+        name=_('Restore'),
+        passed_label=_('restored'),
+        description=_("Restore the participant, because the activity was restored."),
         automatic=True,
     )
 
@@ -187,12 +196,13 @@ class DateParticipantStateMachine(ParticipantStateMachine):
 
 
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
+
     accept = Transition(
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
         ],
-        ParticipantStateMachine.succeeded,
+        ParticipantStateMachine.accepted,
         name=_("Accept"),
         description=_("Accept this person as a participant of this Activity."),
         passed_label=_("accepted"),
@@ -212,21 +222,18 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
     )
 
     restore = Transition(
-        [
-            ParticipantStateMachine.withdrawn,
-            ParticipantStateMachine.rejected,
-            ParticipantStateMachine.cancelled,
-        ],
-        ParticipantStateMachine.new,
+        ParticipantStateMachine.cancelled,
+        ParticipantStateMachine.accepted,
         name=_("Restore"),
-        description=_("Restore previously failed participant"),
+        description=_("Restore previously cancelled participant"),
         automatic=True,
     )
 
     succeed = Transition(
         [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.failed,
         ],
         ParticipantStateMachine.succeeded,
         name=_('Succeed'),
@@ -237,6 +244,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
     remove = Transition(
         [
             ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
             ParticipantStateMachine.succeeded
         ],
         ParticipantStateMachine.removed,
@@ -379,11 +387,60 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         passed_label=_("reset"),
         automatic=True,
     )
+    cancel = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded,
+            scheduled
+        ],
+        ParticipantStateMachine.cancelled,
+        name=_('Cancel'),
+        passed_label=_('cancelled'),
+        description=_("Cancel the participant, because the activity was cancelled."),
+        automatic=True,
+    )
 
 
 @register(TeamScheduleParticipant)
 class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
-    pass
+    initiate = Transition(
+        EmptyState(),
+        ScheduleParticipantStateMachine.new,
+        name=_('Initiate'),
+        description=_("Member signs up for team"),
+    )
+
+    withdraw = Transition(
+        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
+        ScheduleParticipantStateMachine.withdrawn,
+        name=_("Withdraw"),
+        automatic=False,
+        hide_from_admin=True,
+        permission=RegistrationParticipantStateMachine.is_user,
+        description=_("Participant withdraws from the team slot."),
+        passed_label=_("withdrawn"),
+    )
+
+    reapply = Transition(
+        ScheduleParticipantStateMachine.withdrawn,
+        ScheduleParticipantStateMachine.new,
+        name=_("Reapply"),
+        automatic=False,
+        hide_from_admin=True,
+        permission=RegistrationParticipantStateMachine.is_user,
+        description=_("Participant joins the team slot."),
+    )
+
+    remove = Transition(
+        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
+        ScheduleParticipantStateMachine.removed,
+        name=_("Remove"),
+        automatic=False,
+        permission=RegistrationParticipantStateMachine.can_accept_participant,
+        description=_("Remove this participant from the team slot."),
+        passed_label=_("removed"),
+    )
 
 
 @register(PeriodicParticipant)

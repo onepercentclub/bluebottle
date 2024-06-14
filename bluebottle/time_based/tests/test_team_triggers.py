@@ -32,10 +32,10 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.team.team_members.get().status, "active")
         self.assertEqual(self.team.team_members.get().user, self.captain)
         self.assertEqual(
-            self.team.team_members.get().participations.get().status, "accepted"
+            self.team.team_members.get().participants.get().status, "accepted"
         )
         self.assertEqual(
-            self.team.team_members.get().participations.get().user, self.captain
+            self.team.team_members.get().participants.get().user, self.captain
         )
 
     def test_withdraw(self):
@@ -107,30 +107,30 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
     def test_initiate(self):
         self.assertEqual(self.team_member.status, "active")
 
-        self.assertEqual(self.team_member.participations.get().status, "accepted")
+        self.assertEqual(self.team_member.participants.get().status, "accepted")
 
     def test_withdraw(self):
         self.team_member.states.withdraw(save=True)
 
         self.assertEqual(self.team_member.status, "withdrawn")
-        self.assertEqual(self.team_member.participations.get().status, "withdrawn")
+        self.assertEqual(self.team_member.participants.get().status, "withdrawn")
 
     def test_reapply(self):
         self.team_member.states.withdraw(save=True)
         self.team_member.states.reapply(save=True)
 
         self.assertEqual(self.team_member.status, "active")
-        self.assertEqual(self.team_member.participations.get().status, "accepted")
+        self.assertEqual(self.team_member.participants.get().status, "accepted")
 
     def test_remove(self):
         self.team_member.states.remove(save=True)
 
         self.assertEqual(self.team_member.status, "removed")
-        self.assertEqual(self.team_member.participations.get().status, "removed")
+        self.assertEqual(self.team_member.participants.get().status, "removed")
 
     def test_readd(self):
         self.team_member.states.remove(save=True)
         self.team_member.states.readd(save=True)
 
         self.assertEqual(self.team_member.status, "active")
-        self.assertEqual(self.team_member.participations.get().status, "accepted")
+        self.assertEqual(self.team_member.participants.get().status, "accepted")

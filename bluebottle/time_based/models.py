@@ -364,7 +364,8 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     @property
     def active_durations(self):
         return self.durations.filter(
-            slot_participant__participant__status__in=('new', 'accepted')
+            slot_participant__status__in=("registered", "succeeded"),
+            slot_participant__participant__status__in=("new", "accepted"),
         )
 
     class Meta:
@@ -760,12 +761,12 @@ class RegistrationActivity(TimeBasedActivity):
     @property
     def active_participants(self):
         return self.participants.filter(
-            status__in=["new", "succeeded", "participating"]
+            status__in=["new", "accepted", "succeeded", "participating"]
         )
 
     @property
     def accepted_participants(self):
-        return self.participants.filter(status__in=["succeeded"])
+        return self.participants.filter(status__in=["succeeded", "accepted"])
 
     validators = [
         PeriodActivityRegistrationDeadlineValidator,
@@ -1589,7 +1590,7 @@ class TeamScheduleParticipant(Participant, Contributor):
 
     team_member = models.ForeignKey(
         'time_based.TeamMember',
-        related_name='participations',
+        related_name='participants',
         on_delete=models.CASCADE,
         null=True,
         blank=True,

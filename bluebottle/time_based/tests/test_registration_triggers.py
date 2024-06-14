@@ -13,6 +13,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 
@@ -270,3 +271,73 @@ class ScheduleRegistationTriggerTestCase(
         self.registration.states.accept(save=True)
 
         self.assertEqual(self.registration.participants.get().status, "accepted")
+
+
+class TeamScheduleRegistrationTriggerTestCase(
+    RegistrationTriggerTestCase, BluebottleTestCase
+):
+    activity_factory = ScheduleActivityFactory
+    factory = TeamScheduleRegistrationFactory
+
+    def setUp(self):
+        super().setUp()
+        self.activity.team_activity = True
+        self.activity.save()
+
+    def create(self):
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        )
+
+    def test_initial(self):
+        self.create()
+        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(self.registration.team.status, "accepted")
+        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(
+            self.registration.team.team_members.get().participants.get().status,
+            "accepted",
+        )
+
+        self.assertEqual(
+            mail.outbox[-2].subject,
+            'You have a new participant for your activity "{}" 🎉'.format(
+                self.activity.title
+            ),
+        )
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'You have joined the activity "{}"'.format(self.activity.title),
+        )
+
+    def test_initial_review(self):
+        super().test_initial_review()
+        self.assertEqual(self.registration.team.status, "new")
+        self.assertEqual(self.registration.team.team_members.get().status, "active")
+        self.assertEqual(
+            self.registration.team.team_members.get().participants.get().status, "new"
+        )
+
+    def test_reject(self):
+        super().test_reject()
+
+        self.assertEqual(self.registration.team.status, "rejected")
+        self.assertEqual(self.registration.team.team_members.get().status, "rejected")
+
+        self.assertEqual(
+            self.registration.team.team_members.get().participants.get().status,
+            "rejected",
+        )
+
+    def test_accept(self):
+        super().test_accept()
+
+        self.assertEqual(self.registration.team.status, "accepted")
+        self.assertEqual(self.registration.team.team_members.get().status, "active")
+
+        self.assertEqual(
+            self.registration.team.team_members.get().participants.get().status,
+            "accepted",
+        )

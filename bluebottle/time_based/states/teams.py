@@ -10,13 +10,10 @@ class TeamStateMachine(ModelStateMachine):
     accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
     rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
-
-    scheduled = State(
-        _('Scheduled'),
-        'scheduled',
-        _("This team has been scheduled.")
+    removed = State(
+        _("Removed"), "removed", _("This team is removed from the activity")
     )
-
+    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
     cancelled = State(
         _('Cancelled'),
         'cancelled',
@@ -66,6 +63,30 @@ class TeamStateMachine(ModelStateMachine):
         name=_("Schedule"),
         description=_("Assign a slot to this activity"),
         automatic=True,
+    )
+
+    remove = Transition(
+        [accepted, scheduled],
+        removed,
+        name=_("Remove"),
+        description=_("Remove this team from the activity."),
+        automatic=False,
+    )
+
+    readd = Transition(
+        removed,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        accepted,
+        name=_("Re-add"),
+        description=_("Re-add team to activity."),
+        automatic=False,
     )
 
     cancel = Transition(
@@ -122,6 +143,7 @@ class TeamMemberStateMachine(ModelStateMachine):
     removed = State(_("Removed"), "removed", _("This team member is removed."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team member is withdrawn."))
     cancelled = State(_("Cancelled"), "cancelled", _("This team member is cancelled."))
+    rejected = State(_("Rejected"), "rejected", _("This team member is rejected."))
 
     def is_manager(self, user):
         return (
@@ -180,6 +202,21 @@ class TeamMemberStateMachine(ModelStateMachine):
         permission=is_owner,
         description=_("Re-apply to team."),
         automatic=False,
+    )
+
+    reject = Transition(
+        [active],
+        rejected,
+        name=_("Rejected"),
+        description=_("Reject user from this team."),
+        automatic=True,
+    )
+    accept = Transition(
+        rejected,
+        active,
+        name=_("accept"),
+        description=_("Accept user to team."),
+        automatic=True,
     )
 
     cancel = Transition(

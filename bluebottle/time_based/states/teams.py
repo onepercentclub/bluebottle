@@ -12,16 +12,10 @@ class TeamStateMachine(ModelStateMachine):
 
     rejected = State(_("rejected"), "rejected", _("This team has been accepted."))
 
-    scheduled = State(_("Scheduled"), "scheduled", _("This team is scheduled"))
+    scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled"))
 
     removed = State(
         _("Removed"), "removed", _("This team is removed from the activity")
-    )
-
-    scheduled = State(
-        _('scheduled'),
-        'scheduled',
-        _("This team has been scheduled.")
     )
 
     cancelled = State(

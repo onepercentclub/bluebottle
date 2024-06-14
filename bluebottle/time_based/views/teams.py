@@ -77,6 +77,7 @@ class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
 
 class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
     queryset = Team.objects.prefetch_related("activity", "user")
     serializer_class = TeamSerializer
 

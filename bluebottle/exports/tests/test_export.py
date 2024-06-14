@@ -11,8 +11,8 @@ from bluebottle.exports.exporter import Exporter
 from bluebottle.exports.tasks import plain_export
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.impact.models import ImpactType
-from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase

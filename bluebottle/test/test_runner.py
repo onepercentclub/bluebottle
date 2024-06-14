@@ -1,64 +1,43 @@
-import locale
-from builtins import range
-
 from django.conf import settings
-from django.db import connection, IntegrityError
+from django.test.runner import ParallelTestSuite
+from django_elasticsearch_dsl.registries import registry
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
-from djmoney.contrib.exchange.models import Rate, ExchangeBackend
-from tenant_schemas.utils import get_tenant_model
+from elasticsearch_dsl.connections import connections
 
-from bluebottle.test.utils import InitProjectDataMixin
+_worker_id = 0
 
 
-class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
-    def setup_databases(self, *args, **kwargs):
-        self.keepdb = getattr(settings, 'KEEPDB', self.keepdb)
-        parallel = self.parallel
-        self.parallel = 0
-        result = super(MultiTenantRunner, self).setup_databases(**kwargs)
-        self.parallel = parallel
-        # Set local explicitely so test also run on OSX
-        locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
+def _elastic_search_init_worker(counter):
+    global _worker_id
 
-        connection.set_schema_to_public()
+    with counter.get_lock():
+        counter.value += 1
+        _worker_id = counter.value
 
-        tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url='testserver2',
-            name='Test Too',
-            schema_name='test2',
-            client_name='test2')
+    for alias in connections:
+        connection = connections[alias]
+        settings_dict = connection.creation.get_test_db_clone_settings(_worker_id)
+        connection.settings_dict.update(settings_dict)
+        connection.close()
 
-        connection.set_tenant(tenant2)
-        self.init_projects()
+    worker_connection_postfix = f"_worker_{_worker_id}"
+    for alias in connections:
+        connections.configure(**{alias + worker_connection_postfix: settings.ELASTICSEARCH_DSL["default"]})
 
-        connection.set_schema_to_public()
+    for doc in registry.get_documents():
+        doc._doc_type.index += f"_{_worker_id}"
+        doc._doc_type._using = doc.doc_type._using + worker_connection_postfix
 
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url='testserver',
-            name='Test',
-            schema_name='test',
-            client_name='test')
+    for index in registry.get_indices():
+        index._name += f"_{_worker_id}"
+        index._using = doc.doc_type._using + worker_connection_postfix
+        index.delete(ignore=[404])
+        index.create()
 
-        connection.set_tenant(tenant)
-        self.init_projects()
 
-        try:
-            backend, _created = ExchangeBackend.objects.get_or_create(base_currency='USD')
-            Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
-            Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
-            Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})
-            Rate.objects.update_or_create(backend=backend, currency='NGN', defaults={'value': 500})
-            Rate.objects.update_or_create(backend=backend, currency='UGX', defaults={'value': 5000})
-            Rate.objects.update_or_create(backend=backend, currency='KES', defaults={'value': 100})
-        except IntegrityError:
-            pass
+class ElasticParallelTestSuite(ParallelTestSuite):
+    init_worker = _elastic_search_init_worker
 
-        if parallel > 1:
-            for index in range(parallel):
-                connection.creation.clone_test_db(
-                    number=index + 1,
-                    verbosity=self.verbosity,
-                    keepdb=self.keepdb,
-                )
 
-        return result
+class MultiTenantRunner(DiscoverSlowestTestsRunner):
+    parallel_test_suite = ElasticParallelTestSuite

@@ -22,22 +22,21 @@ from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
+from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.notifications.models import Message
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import DateActivity, PeriodActivity, DateParticipant, PeriodParticipant, \
     TimeContribution
+from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
-
 from bluebottle.wallposts.models import Wallpost
-from bluebottle.follow.models import Follow
-from bluebottle.notifications.models import Message
-from bluebottle.updates.models import Update
 
 
 @admin.register(Contributor)
@@ -297,7 +296,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         formsets = super().get_formsets_with_inlines(request, obj)
 
         if "_saveasnew" in request.POST:
-            __import__("ipdb").set_trace()
             formsets = [
                 (inline, formset)
                 for (inline, formset) in formsets
@@ -308,7 +306,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
             ]
 
         return formsets
-
 
     def lookup_allowed(self, key, value):
         if key in [

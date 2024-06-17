@@ -87,7 +87,7 @@ class TeamTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
-            TeamStateMachine.rejoin,
+            TeamStateMachine.readd,
             effects=[
                 RelatedTransitionEffect(
                     "team_members",

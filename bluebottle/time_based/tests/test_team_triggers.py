@@ -48,7 +48,7 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_reapply(self):
         self.team.states.withdraw(save=True)
-        self.team.states.reapply(save=True)
+        self.team.states.rejoin(save=True)
         self.assertEqual(self.team.status, "accepted")
 
         self.assertEqual(self.team.registration.status, "accepted")
@@ -67,9 +67,7 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.team.states.remove(save=True)
         self.team.states.readd(save=True)
         self.assertEqual(self.team.status, "accepted")
-
         self.assertEqual(self.team.registration.status, "accepted")
-
         self.assertEqual(self.team.team_members.get().status, "active")
 
     def test_reject(self):

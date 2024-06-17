@@ -46,6 +46,7 @@ from bluebottle.time_based.models import (
     PeriodicParticipant,
     PeriodicRegistration,
     ScheduleSlot,
+    BaseScheduleSlot,
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
@@ -65,6 +66,9 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 class TimeBasedAdmin(ActivityChildAdmin):
     inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
+    skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
+        Registration,
+    ]
 
     formfield_overrides = {
         models.DurationField: {
@@ -633,6 +637,7 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
 @admin.register(ScheduleActivity)
 class ScheduleActivityAdmin(TimeBasedAdmin):
     base_model = ScheduleActivity
+    skip_on_duplicate = TimeBasedAdmin.skip_on_duplicate + [BaseScheduleSlot, Team]
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -830,6 +835,9 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
 @admin.register(PeriodicActivity)
 class PeriodicActivityAdmin(TimeBasedAdmin):
     base_model = PeriodicActivity
+    skip_on_duplicate = TimeBasedAdmin.skip_on_duplicate + [
+        PeriodicSlot,
+    ]
 
     inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']

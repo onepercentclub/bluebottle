@@ -109,6 +109,58 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.restore,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.rejoin,
+            effects=[
+                RelatedTransitionEffect(
+                    "slots",
+                    TeamScheduleSlotStateMachine.restore,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.restore,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
                     'slots',
                     TeamScheduleSlotStateMachine.cancel,
                 ),
@@ -167,6 +219,15 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.initiate,
             effects=[
                 CreateTeamMemberSlotParticipantsEffect,
+            ]
+        ),
+        TransitionTrigger(
+            TeamMemberStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    ParticipantStateMachine.cancel,
+                )
             ]
         ),
         TransitionTrigger(

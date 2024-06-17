@@ -17,13 +17,13 @@ from bluebottle.time_based.effects.slots import (
 )
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.states import (
-    PeriodicSlotStateMachine,
     ScheduleSlotStateMachine,
-    TeamScheduleParticipantStateMachine,
     PeriodicParticipantStateMachine,
     ScheduleParticipantStateMachine,
     TeamScheduleSlotStateMachine,
-    TeamStateMachine
+    TeamStateMachine,
+    PeriodicSlotStateMachine,
+    TeamScheduleParticipantStateMachine,
 )
 
 

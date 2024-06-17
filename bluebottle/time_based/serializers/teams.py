@@ -124,6 +124,7 @@ class TeamSerializer(ModelSerializer):
 class TeamMemberSerializer(ModelSerializer):
     team = ResourceRelatedField(queryset=Team.objects)
     user = ResourceRelatedField(read_only=True)
+    participants = ResourceRelatedField(read_only=True, many=True)
 
     permissions = ResourcePermissionField("team-member-detail", view_args=("pk",))
     transitions = AvailableTransitionsField(source="states")
@@ -132,17 +133,18 @@ class TeamMemberSerializer(ModelSerializer):
 
     class Meta:
         model = TeamMember
-        fields = ("id", "team", "user", "invite_code")
+        fields = ("id", "team", "user", "invite_code", "participants")
         meta_fields = ("permissions", "transitions", "current_status")
 
     class JSONAPIMeta:
         resource_name = "contributors/time-based/team-members"
-        included_resources = ["team", "user", "team.activity"]
+        included_resources = ["team", "user", "team.activity", "participants"]
 
     included_serializers = {
         "team": "bluebottle.time_based.serializers.TeamSerializer",
         "team.activity": "bluebottle.time_based.serializers.activities.ScheduleActivitySerializer",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
+        "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
     }
 
 
@@ -166,10 +168,17 @@ class TeamMemberTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta:
         resource_name = "contributors/time-based/team-member-transitions"
-        included_resources = ["resource", "resource.team", "resource.team.activity"]
+        fields = ("resource", "transition", )
+        included_resources = [
+            "resource",
+            "resource.team",
+            "resource.team.activity",
+            "resource.participants"
+        ]
 
     included_serializers = {
         "resource": "bluebottle.time_based.serializers.TeamMemberSerializer",
         "resource.team": "bluebottle.time_based.serializers.TeamSerializer",
         "resource.team.activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+        "resource.participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
     }

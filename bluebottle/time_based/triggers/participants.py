@@ -45,7 +45,7 @@ from bluebottle.time_based.states import (
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
-    TeamScheduleParticipantStateMachine,
+    TeamScheduleParticipantStateMachine, TeamMemberStateMachine,
 )
 
 
@@ -778,7 +778,6 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.reapply,
             effects=[
-                CreateScheduleContributionEffect,
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),
@@ -786,12 +785,15 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     TeamScheduleParticipantStateMachine.accept,
                     conditions=[team_is_accepted],
                 ),
+                RelatedTransitionEffect(
+                    "team_member",
+                    TeamMemberStateMachine.reapply,
+                )
             ],
         ),
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.readd,
             effects=[
-                CreateScheduleContributionEffect,
                 TransitionEffect(
                     TeamScheduleParticipantStateMachine.schedule, conditions=[has_slot]
                 ),

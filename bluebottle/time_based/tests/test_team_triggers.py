@@ -83,6 +83,7 @@ class TeamTriggerTestCase(BluebottleTestCase):
     def test_reaccept(self):
         self.team.registration.states.reject(save=True)
         self.team.registration.states.accept(save=True)
+
         self.assertEqual(self.team.status, "accepted")
 
         self.assertEqual(self.team.registration.status, "accepted")

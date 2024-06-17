@@ -6,8 +6,8 @@ from bluebottle.time_based.models import TeamMember, Team
 
 @register(Team)
 class TeamStateMachine(ModelStateMachine):
-    new = State(_("Unscheduled"), "new", _("This team is unscheduled."))
-    accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
+    new = State(_("Pending"), "new", _("This team is pending review."))
+    accepted = State(_("Unscheled"), "accepted", _("This team has been accepted."))
     rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
 

@@ -38,6 +38,22 @@ class TeamTriggerTestCase(BluebottleTestCase):
             self.team.team_members.get().participants.get().user, self.captain
         )
 
+    def test_cancel_activity(self):
+        self.team.activity.states.cancel(save=True)
+
+        self.team.refresh_from_db()
+
+        self.assertEqual(self.team.status, "cancelled")
+
+        self.assertEqual(self.team.team_members.get().status, "cancelled")
+        self.assertEqual(
+            self.team.team_members.get().participants.get().status, "cancelled"
+        )
+        self.assertEqual(
+            self.team.team_members.get().participants.get().contributions.get().status,
+            "failed",
+        )
+
     def test_withdraw(self):
         self.team.states.withdraw(save=True)
         self.assertEqual(self.team.status, "withdrawn")

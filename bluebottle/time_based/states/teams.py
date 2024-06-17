@@ -110,8 +110,7 @@ class TeamStateMachine(ModelStateMachine):
         [new, accepted, scheduled],
         cancelled,
         name=_("Cancel"),
-        automatic=False,
-        permission=is_manager,
+        automatic=True,
         description=_(
             'This team will no longer participate in this activity and any hours spent will not be counted.'
         ),
@@ -119,10 +118,9 @@ class TeamStateMachine(ModelStateMachine):
 
     restore = Transition(
         cancelled,
-        accepted,
+        new,
         name=_('Restore'),
-        automatic=False,
-        permission=is_manager,
+        automatic=True,
         description=_(
             'Add this previously cancelled team back to the activity.'
         ),

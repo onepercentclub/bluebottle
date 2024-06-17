@@ -99,15 +99,6 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
-                    "team_members",
-                    TeamMemberStateMachine.remove,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            TeamStateMachine.cancel,
-            effects=[
-                RelatedTransitionEffect(
                     "slots",
                     TeamScheduleSlotStateMachine.cancel,
                 ),

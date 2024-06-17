@@ -41,7 +41,6 @@ from bluebottle.time_based.effects import (
     UnlockUnfilledSlotsEffect,
     CheckPreparationTimeContributionEffect,
     RelatedPreparationTimeContributionEffect,
-    CreatePreparationTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,

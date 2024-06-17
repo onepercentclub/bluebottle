@@ -43,6 +43,7 @@ from bluebottle.time_based.states.states import (
     RegistrationActivityStateMachine,
     PeriodicActivityStateMachine,
 )
+from bluebottle.time_based.states.teams import TeamStateMachine
 
 
 def is_full(effect):
@@ -493,6 +494,12 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
             ],
         ),
 
+        TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect("teams", TeamStateMachine.cancel),
+            ],
+        ),
     ]
 
 

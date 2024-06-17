@@ -141,6 +141,15 @@ class RegistrationTriggers(TriggerManager):
                     UserRegistrationAcceptedNotification,
                 ),
                 FollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    RegistrationParticipantStateMachine.accept,
+                ),
             ]
         ),
         TransitionTrigger(

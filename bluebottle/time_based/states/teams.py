@@ -10,9 +10,13 @@ class TeamStateMachine(ModelStateMachine):
     accepted = State(_("Accepted"), "accepted", _("This team has been accepted."))
     rejected = State(_("Rejected"), "rejected", _("This team has been rejected."))
     withdrawn = State(_("Withdrawn"), "withdrawn", _("This team has withdrawn."))
+
     scheduled = State(_("Scheduled"), "scheduled", _("This team has been scheduled."))
-    removed = State(_("Removed"), "removed", _("This team is removed from the activity"))
-    cancelled = State(_('Cancelled'), 'cancelled', _("This team has been cancelled."))
+
+    cancelled = State(_("Cancelled"), "cancelled", _("This team has been cancelled."))
+    removed = State(
+        _("Removed"), "removed", _("This team is removed from the activity")
+    )
 
     def is_manager(self, user):
         return (
@@ -94,7 +98,7 @@ class TeamStateMachine(ModelStateMachine):
     cancel = Transition(
         [new, accepted, scheduled],
         cancelled,
-        name=_('Cancel'),
+        name=_("Cancel"),
         automatic=False,
         permission=is_manager,
         description=_(

@@ -83,7 +83,7 @@ class CreateTeamMemberSlotParticipantsEffect(Effect):
 
     def post_save(self, **kwargs):
         team_member = self.instance
-        for slot in self.instance.team.slots.filter(status__in=['new', 'running', 'scheduled']).all():
+        for slot in self.instance.team.slots.filter(status__in=['new', 'running', 'scheduled', 'finished']).all():
             slot.participants.get_or_create(
                 user=team_member.user,
                 team_member=team_member,

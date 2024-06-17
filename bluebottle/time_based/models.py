@@ -1517,6 +1517,10 @@ class TeamMember(TriggerMixin, models.Model):
     def owner(self):
         return self.user
 
+    @property
+    def is_captain(self):
+        return self.user_id == self.team.user_id
+
     class JSONAPIMeta(object):
         resource_name = 'teams/team-members'
 

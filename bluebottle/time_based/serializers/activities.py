@@ -1,5 +1,6 @@
 import dateutil
 from django.db.models import Count
+from mock import PropertyMock
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -267,6 +268,13 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg="activity_id",
         statuses={"new": ["new"], "accepted": ["accepted"], "rejected": ["rejected"]},
     )
+
+    @property
+    def export_view_name(self):
+        if self.instance.team_activity == "teams":
+            return "team-schedule-participant-export"
+        else:
+            return "schedule-participant-export"
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = ScheduleActivity

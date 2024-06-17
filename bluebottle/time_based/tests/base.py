@@ -1016,8 +1016,6 @@ class TimeBasedActivityAPIExportTestCase:
 
         sheet = workbook.get_active_sheet()
 
-        sheet = workbook.get_active_sheet()
-
         self.assertEqual(
             tuple(sheet.values)[0],
             ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )

@@ -29,7 +29,8 @@ from bluebottle.time_based.models import (
     PeriodicParticipant,
     SlotParticipant,
     TeamSlot,
-    TimeContribution, ScheduleActivity, ScheduleParticipant,
+    TimeContribution, ScheduleActivity, ScheduleParticipant, DeadlineRegistration, ScheduleRegistration,
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamMember, PeriodicRegistration,
 )
 
 
@@ -91,6 +92,11 @@ def setup_instance(model):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
+    if isinstance(instance, DeadlineRegistration):
+        instance.activity = DeadlineActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
     if isinstance(instance, DeadlineParticipant):
         instance.activity = DeadlineActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
@@ -100,7 +106,33 @@ def setup_instance(model):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
+    if isinstance(instance, ScheduleRegistration):
+        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
     if isinstance(instance, ScheduleParticipant):
+        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, Team):
+        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, TeamMember):
+        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.Team = Team(activity=instance.activity)
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, TeamScheduleRegistration):
+        instance.activity = ScheduleActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
+    if isinstance(instance, TeamScheduleParticipant):
         instance.activity = ScheduleActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
@@ -109,9 +141,15 @@ def setup_instance(model):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
+    if isinstance(instance, PeriodicRegistration):
+        instance.activity = PeriodicActivity(title="[activity title]")
+        instance.activity.pre_save_polymorphic()
+        instance.user = Member(first_name='[first name]', last_name='[last name]')
+
     if isinstance(instance, PeriodicParticipant):
         instance.activity = PeriodicActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
+        instance.registration = PeriodicRegistration(activity=instance.activity)
         instance.user = Member(first_name='[first name]', last_name='[last name]')
 
     if isinstance(instance, DateActivity):

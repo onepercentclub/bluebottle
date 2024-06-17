@@ -4,7 +4,7 @@ from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
 from bluebottle.time_based.permissions import InviteCodePermission
-from bluebottle.time_based.serializers import TeamSerializer
+from bluebottle.time_based.serializers import TeamSerializer, TeamMemberTransitionSerializer
 from bluebottle.time_based.serializers import TeamTransitionSerializer
 from bluebottle.time_based.serializers.teams import TeamMemberSerializer
 from bluebottle.time_based.views.mixins import (
@@ -124,3 +124,8 @@ class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TeamMember.objects.prefetch_related("team",)
     serializer_class = TeamMemberSerializer
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+
+
+class TeamMemberTransitionList(TransitionList):
+    serializer_class = TeamMemberTransitionSerializer
+    queryset = TeamMember.objects.all()

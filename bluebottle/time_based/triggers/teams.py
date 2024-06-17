@@ -13,7 +13,6 @@ from bluebottle.time_based.effects.teams import (
     DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.time_based.states.participants import ParticipantStateMachine
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
@@ -216,7 +215,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.cancel,
+                    TeamScheduleParticipantStateMachine.withdraw,
                 )
             ]
         ),
@@ -225,7 +224,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.restore,
+                    TeamScheduleParticipantStateMachine.restore,
                 )
             ]
         ),
@@ -234,7 +233,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.cancel,
+                    TeamScheduleParticipantStateMachine.cancel,
                 )
             ]
         ),
@@ -243,7 +242,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.restore,
+                    TeamScheduleParticipantStateMachine.restore,
                 )
             ]
         ),

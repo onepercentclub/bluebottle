@@ -412,7 +412,11 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
     )
 
     withdraw = Transition(
-        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
+        [
+            ScheduleParticipantStateMachine.new,
+            ScheduleParticipantStateMachine.accepted,
+            ScheduleParticipantStateMachine.scheduled,
+        ],
         ScheduleParticipantStateMachine.withdrawn,
         name=_("Withdraw"),
         automatic=False,

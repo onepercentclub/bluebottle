@@ -158,3 +158,18 @@ class TeamTransitionSerializer(TransitionSerializer):
         "resource": "bluebottle.time_based.serializers.TeamSerializer",
         "resource.activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
     }
+
+
+class TeamMemberTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=TeamMember.objects.all())
+    field = "states"
+
+    class JSONAPIMeta:
+        resource_name = "contributors/time-based/team-member-transitions"
+        included_resources = ["resource", "resource.team", "resource.team.activity"]
+
+    included_serializers = {
+        "resource": "bluebottle.time_based.serializers.TeamMemberSerializer",
+        "resource.team": "bluebottle.time_based.serializers.TeamSerializer",
+        "resource.team.activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+    }

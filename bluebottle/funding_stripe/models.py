@@ -205,6 +205,22 @@ class StripePaymentProvider(PaymentProvider):
 
     title = 'Stripe'
 
+    stripe_secret = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe secret key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
+
+    stripe_publishable_key = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe publishable key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
+
     stripe_payment_methods = [
         PaymentMethod(
             provider='stripe',
@@ -240,7 +256,7 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def public_settings(self):
         return {
-            'publishable_key': settings.STRIPE['publishable_key'],
+            'publishable_key': self.stripe_publishable_key or settings.STRIPE['publishable_key'],
             'credit-card': self.credit_card,
             'ideal': self.ideal,
             'bancontact': self.bancontact,
@@ -250,9 +266,9 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def private_settings(self):
         return {
-            'api_key': settings.STRIPE['api_key'],
-            'webhook_secret': settings.STRIPE['webhook_secret'],
-            'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
+            'api_key': self.stripe_secret or settings.STRIPE['api_key'],
+            'webhook_secret': self.stripe_secret or settings.STRIPE['webhook_secret'],
+            'webhook_secret_connect': self.stripe_secret or settings.STRIPE['webhook_secret_connect'],
         }
 
     credit_card = models.BooleanField(_('Credit card'), default=True)

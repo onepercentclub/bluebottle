@@ -26,6 +26,7 @@ from bluebottle.time_based.states.teams import (
 @register(Team)
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
+        """ Check if the team should be auto accepted """
         return not effect.instance.activity.review
 
     triggers = [

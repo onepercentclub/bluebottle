@@ -7,7 +7,12 @@ from bluebottle.time_based.effects.registrations import (
     CreateParticipantEffect,
     CreateTeamEffect
 )
-from bluebottle.time_based.messages import ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification
+from bluebottle.time_based.messages import (
+    ParticipantAddedNotification,
+    ManagerParticipantAddedOwnerNotification,
+    TeamAddedNotification,
+    ManagerTeamAddedOwnerNotification,
+)
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
@@ -19,8 +24,14 @@ from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedReviewNotification,
     UserAppliedNotification,
     UserJoinedNotification,
+    ManagerTeamRegistrationCreatedNotification,
+    ManagerTeamRegistrationCreatedReviewNotification,
+    TeamAppliedNotification,
+    TeamJoinedNotification,
     UserRegistrationAcceptedNotification,
+    UserTeamRegistrationAcceptedNotification,
     UserRegistrationRejectedNotification,
+    UserTeamRegistrationRejectedNotification,
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
 )
@@ -43,25 +54,32 @@ from bluebottle.time_based.states.registrations import (
 from bluebottle.time_based.states.states import PeriodicActivityStateMachine
 
 
+def review_needed(effect):
+    """Review needed"""
+    return effect.instance.activity.review
+
+
+def no_review_needed(effect):
+    """No review needed"""
+    return not effect.instance.activity.review
+
+
+def is_user(effect):
+    """Is user"""
+    user = effect.options.get("user")
+    return effect.instance.user == user
+
+
+def is_admin(effect):
+    """Is not user"""
+    user = effect.options.get("user")
+    return (
+        user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+    )
+
+
 class RegistrationTriggers(TriggerManager):
 
-    def review_needed(effect):
-        """ Review needed """
-        return effect.instance.activity.review
-
-    def no_review_needed(effect):
-        """ No review needed """
-        return not effect.instance.activity.review
-
-    def is_user(effect):
-        """ Is user """
-        user = effect.options.get('user')
-        return effect.instance.user == user
-
-    def is_admin(effect):
-        """ Is not user """
-        user = effect.options.get('user')
-        return user and effect.instance.user != user and (user.is_staff or user.is_superuser)
 
     triggers = [
         TransitionTrigger(
@@ -80,49 +98,7 @@ class RegistrationTriggers(TriggerManager):
                         is_admin
                     ]
                 ),
-
-                NotificationEffect(
-                    ManagerRegistrationCreatedReviewNotification,
-                    conditions=[
-                        review_needed,
-                        is_user
-                    ]
-                ),
-                NotificationEffect(
-                    UserAppliedNotification,
-                    conditions=[
-                        review_needed,
-                        is_user
-                    ]
-                ),
-                NotificationEffect(
-                    ManagerRegistrationCreatedNotification,
-                    conditions=[
-                        no_review_needed,
-                        is_user
-                    ]
-                ),
-                NotificationEffect(
-                    UserJoinedNotification,
-                    conditions=[
-                        no_review_needed,
-                        is_user
-
-                    ]
-                ),
             ]
-        ),
-        TransitionTrigger(
-            RegistrationStateMachine.add,
-            effects=[
-                NotificationEffect(
-                    ParticipantAddedNotification,
-                ),
-                NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification,
-                ),
-                FollowActivityEffect,
-            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
@@ -185,7 +161,32 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.initiate,
             effects=[
                 CreateParticipantEffect,
+                NotificationEffect(
+                    ManagerRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    ManagerRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
             ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                ),
+            ],
         ),
         TransitionTrigger(
             RegistrationStateMachine.accept,
@@ -193,6 +194,9 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     DeadlineParticipantStateMachine.accept,
+                ),
+                NotificationEffect(
+                    UserRegistrationAcceptedNotification,
                 ),
             ],
         ),
@@ -202,6 +206,14 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
@@ -229,6 +241,36 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         return effect.instance.activity.capacity > accepted - 1
 
     triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
+            effects=[
+                NotificationEffect(
+                    ManagerRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    ManagerRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                ),
+            ],
+        ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.auto_accept,
             effects=[
@@ -260,6 +302,9 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[activity_no_spots_left],
                 ),
                 CreateInitialPeriodicParticipantEffect,
+                NotificationEffect(
+                    UserRegistrationAcceptedNotification,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -269,7 +314,10 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     "activity",
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
-                )
+                ),
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -318,6 +366,31 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.initiate,
             effects=[
                 CreateParticipantEffect,
+                NotificationEffect(
+                    ManagerRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    ManagerRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -326,6 +399,9 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.accept,
+                ),
+                NotificationEffect(
+                    UserRegistrationAcceptedNotification,
                 ),
             ],
         ),
@@ -344,6 +420,9 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
+                ),
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
@@ -378,6 +457,31 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             RegistrationStateMachine.initiate,
             effects=[
                 CreateTeamEffect,
+                NotificationEffect(
+                    ManagerTeamRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    ManagerTeamRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    TeamAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    TeamJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    TeamAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerTeamAddedOwnerNotification,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -395,6 +499,9 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                     "activity",
                     ScheduleActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
+                ),
+                NotificationEffect(
+                    UserTeamRegistrationAcceptedNotification,
                 ),
             ],
         ),
@@ -441,6 +548,9 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                     "activity",
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
+                ),
+                NotificationEffect(
+                    UserTeamRegistrationRejectedNotification,
                 ),
             ],
         ),

@@ -191,6 +191,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
         msg = None
         print("Exception while rendering email template: {0}".format(e))
         logger.error("Exception while rendering email template: {0}".format(e))
+        raise e
         return
 
     # Explicetly set CELERY usage in properties. Used primarily for

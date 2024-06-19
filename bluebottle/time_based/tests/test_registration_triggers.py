@@ -303,17 +303,28 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-2].subject,
-            'You have a new participant for your activity "{}" 🎉'.format(
-                self.activity.title
-            ),
+            'You have a new team for your activity "{}" 🎉'.format(self.activity.title),
         )
         self.assertEqual(
             mail.outbox[-1].subject,
-            'You have joined the activity "{}"'.format(self.activity.title),
+            'Your team has joined the activity "{}"'.format(self.activity.title),
         )
 
     def test_initial_review(self):
-        super().test_initial_review()
+        self.activity.review = True
+        self.activity.save()
+
+        self.create()
+        self.assertEqual(self.registration.status, "new")
+
+        self.assertEqual(
+            mail.outbox[-2].subject,
+            f'A new team has applied to your activity "{self.activity.title}" 🎉',
+        )
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            f'Your team has applied to the activity "{self.activity.title}"',
+        )
         self.assertEqual(self.registration.team.status, "new")
         self.assertEqual(self.registration.team.team_members.get().status, "active")
         self.assertEqual(

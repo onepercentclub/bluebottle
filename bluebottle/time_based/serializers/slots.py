@@ -13,7 +13,7 @@ from bluebottle.utils.utils import reverse_signed
 
 class ScheduleSlotSerializer(ModelSerializer):
     is_online = serializers.BooleanField(required=False, allow_null=True)
-    permissions = ResourcePermissionField("date-slot-detail", view_args=("pk",))
+    permissions = ResourcePermissionField("schedule-slot-detail", view_args=("pk",))
     transitions = AvailableTransitionsField(source="states")
     status = FSMField(read_only=True)
     location = ResourceRelatedField(
@@ -73,9 +73,10 @@ class ScheduleSlotSerializer(ModelSerializer):
 
 
 class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
-    team = ResourceRelatedField(
-        read_only=True
+    permissions = ResourcePermissionField(
+        "team-schedule-slot-detail", view_args=("pk",)
     )
+    team = ResourceRelatedField(read_only=True)
 
     participants = RelatedLinkFieldByStatus(
         read_only=True,

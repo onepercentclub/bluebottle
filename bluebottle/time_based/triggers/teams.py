@@ -13,7 +13,6 @@ from bluebottle.time_based.effects.teams import (
     DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.time_based.states.participants import ParticipantStateMachine
 from bluebottle.time_based.states.participants import (
     TeamScheduleParticipantStateMachine,
 )
@@ -27,6 +26,7 @@ from bluebottle.time_based.states.teams import (
 @register(Team)
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
+        """ Check if the team should be auto accepted """
         return not effect.instance.activity.review
 
     triggers = [
@@ -92,15 +92,6 @@ class TeamTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "team_members",
                     TeamMemberStateMachine.readd,
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            TeamStateMachine.cancel,
-            effects=[
-                RelatedTransitionEffect(
-                    "team_members",
-                    TeamMemberStateMachine.remove,
                 ),
             ],
         ),
@@ -225,7 +216,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.cancel,
+                    TeamScheduleParticipantStateMachine.withdraw,
                 )
             ]
         ),
@@ -234,7 +225,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.restore,
+                    TeamScheduleParticipantStateMachine.restore,
                 )
             ]
         ),
@@ -243,7 +234,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.cancel,
+                    TeamScheduleParticipantStateMachine.cancel,
                 )
             ]
         ),
@@ -252,7 +243,7 @@ class TeamMemberTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     'participants',
-                    ParticipantStateMachine.restore,
+                    TeamScheduleParticipantStateMachine.restore,
                 )
             ]
         ),

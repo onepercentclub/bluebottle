@@ -1484,6 +1484,20 @@ class Team(TriggerMixin, models.Model):
     def owner(self):
         return self.user
 
+    class Meta:
+        verbose_name = _("Team")
+        verbose_name_plural = _("Teams")
+        permissions = (
+            ("api_read_team", "Can view on a team through the API"),
+            ("api_add_team", "Can add on a team through the API"),
+            ("api_change_team", "Can change on a team through the API"),
+            ("api_delete_team", "Can delete on a team through the API"),
+            ("api_read_own_team", "Can view own on a team through the API"),
+            ("api_add_own_team", "Can add own on a team through the API"),
+            ("api_change_own_team", "Can change own on a team through the API"),
+            ("api_delete_own_team", "Can delete own on a team through the API"),
+        )
+
     class JSONAPIMeta(object):
         resource_name = 'teams/teams'
 
@@ -1520,6 +1534,29 @@ class TeamMember(TriggerMixin, models.Model):
     @property
     def is_captain(self):
         return self.user_id == self.team.user_id
+
+    class Meta:
+        verbose_name = _("Team member")
+        verbose_name_plural = _("Team members")
+        permissions = (
+            ("api_read_teammember", "Can view on a team member through the API"),
+            ("api_add_teammember", "Can add on a team member through the API"),
+            ("api_change_teammember", "Can change on a team member through the API"),
+            ("api_delete_teammember", "Can delete on a team member through the API"),
+            (
+                "api_read_own_teammember",
+                "Can view own on a team member through the API",
+            ),
+            ("api_add_own_teammember", "Can add own on a team member through the API"),
+            (
+                "api_change_own_teammember",
+                "Can change own on a team member through the API",
+            ),
+            (
+                "api_delete_own_teammember",
+                "Can delete own on a team member through the API",
+            ),
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'teams/team-members'

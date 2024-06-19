@@ -239,17 +239,17 @@ class ActivityStateMachine(ModelStateMachine):
 
 class ContributorStateMachine(ModelStateMachine):
     new = State(
-        _('new'),
+        _('New'),
         'new',
         _("The user started a contribution")
     )
     succeeded = State(
-        _('succeeded'),
+        _('Succeeded'),
         'succeeded',
         _("The contribution was successful.")
     )
     failed = State(
-        _('failed'),
+        _('Failed'),
         'failed',
         _("The contribution failed.")
     )
@@ -260,13 +260,13 @@ class ContributorStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         new,
-        name=_('initiate'),
+        name=_('Initiate'),
         description=_('The contribution was created.')
     )
     fail = Transition(
         (new, succeeded, failed,),
         failed,
-        name=_('fail'),
+        name=_('Fail'),
         description=_("The contribution failed. It will not be visible in reports."),
     )
 

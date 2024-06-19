@@ -8,7 +8,7 @@ from bluebottle.time_based.views import (
     RelatedTeamMembers,
     TeamMemberExportView,
     TeamMemberList,
-    TeamMemberDetail
+    TeamMemberDetail, TeamMemberTransitionList
 )
 
 urlpatterns = [
@@ -34,4 +34,6 @@ urlpatterns = [
 
     url(r"^/team-members$", TeamMemberList.as_view(), name="team-member-list"),
     url(r"^/team-members/(?P<pk>\d+)$", TeamMemberDetail.as_view(), name="team-member-detail"),
+    url(r"^/team-members/transitions$", TeamMemberTransitionList.as_view(), name="team-member-transition-list"),
+
 ]

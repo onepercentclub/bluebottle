@@ -54,7 +54,8 @@ class TimeBasedInfoMixin(object):
             for slot_participant in participant.slot_participants.filter(
                     status='registered'
             ):
-                slots.append(get_slot_info(slot_participant.slot))
+                if slot_participant.slot and slot_participant.slot.start:
+                    slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
 

@@ -20,7 +20,7 @@ from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
-    CreatePeriodicPreparationTimeContributionEffect,
+    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect,
 )
 from bluebottle.time_based.messages import (
     ManagerParticipantAddedOwnerNotification,
@@ -508,7 +508,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
 
     def slot_is_finished(effect):
         """Has assigned slot"""
-        return effect.instance.slot and effect.instance.slot.end < now()
+        return effect.instance.slot and effect.instance.slot.end and effect.instance.slot.end < now()
 
     def has_no_slot(effect):
         """Has no assigned slot"""
@@ -520,6 +520,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             effects=[
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
+                CreateScheduleSlotEffect,
                 TransitionEffect(
                     ScheduleParticipantStateMachine.add, conditions=[is_admin]
                 ),

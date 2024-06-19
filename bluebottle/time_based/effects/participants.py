@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant
+    ScheduleParticipant, ScheduleSlot
 )
 
 
@@ -143,3 +143,27 @@ class DeleteRelatedRegistrationEffect(Effect):
 
     def __str__(self):
         return _('Delete related registration')
+
+
+class CreateScheduleSlotEffect(Effect):
+    title = _('Create slot for this participant')
+    template = 'admin/create_schedule_slot.html'
+
+    def without_slot(self):
+        return not self.instance.slot_id
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        self.instance.slot = ScheduleSlot.objects.create(
+            activity=activity,
+            is_online=activity.is_online,
+            location_id=activity.location_id,
+            location_hint=activity.location_hint,
+            duration=activity.duration,
+            online_meeting_url=activity.online_meeting_url,
+        )
+        self.instance.save()
+
+    conditions = [
+        without_slot
+    ]

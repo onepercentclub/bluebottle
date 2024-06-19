@@ -446,31 +446,31 @@ class StripePayoutAccount(PayoutAccount):
     def check_status(self):
         if self.account:
             del self.account
-        account_details = getattr(self.account, 'individual', None)
-        if account_details:
-            if getattr(account_details.verification, 'document', None) and \
-                    account_details.verification.document.details:
+        individual_details = getattr(self.account, 'individual', None)
+        if individual_details:
+            if (
+                getattr(individual_details.verification, 'document', None) and
+                individual_details.verification.document.details
+            ):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
-            elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
-                if self.status != self.states.verified.value:
-                    self.states.verify()
-            elif len(self.missing_fields):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif len(self.pending_fields):
-                if self.status != self.states.pending.value:
-                    # Submit to transition to pending
-                    self.states.submit()
-            else:
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
+
+        if getattr(self.account.requirements, 'disabled_reason', None):
+            if self.status != self.states.rejected.value:
+                self.states.reject()
+        elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
+            if self.status != self.states.verified.value:
+                self.states.verify()
+        elif len(self.missing_fields):
+            if self.status != self.states.rejected.value:
+                self.states.reject()
+        elif len(self.pending_fields):
+            if self.status != self.states.pending.value:
+                # Submit to transition to pending
+                self.states.submit()
         else:
-            if self.status != self.states.incomplete.value:
-                self.states.set_incomplete()
+            if self.status != self.states.rejected.value:
+                self.states.reject()
 
         externals = self.account['external_accounts']['data']
         for external in externals:
@@ -503,16 +503,20 @@ class StripePayoutAccount(PayoutAccount):
                 campaign.states.put_on_hold()
                 campaign.save()
 
+    def retrieve_account(self):
+        try:
+            stripe = get_stripe()
+            account = stripe.Account.retrieve(self.account_id)
+        except AuthenticationError:
+            account = {}
+        if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in account:
+            account = {}
+        return account
+
     @cached_property
     def account(self):
         if not hasattr(self, '_account'):
-            try:
-                stripe = get_stripe()
-                self._account = stripe.Account.retrieve(self.account_id)
-            except AuthenticationError:
-                self._account = {}
-            if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in self._account:
-                self._account = {}
+            self._account = self.retrieve_account()
         return self._account
 
     def save(self, *args, **kwargs):
@@ -550,6 +554,13 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.account_id:
             self.eventually_due = self.account.requirements.eventually_due
+
+        for bank_account in self.account.external_accounts:
+            external_account, _created = ExternalAccount.objects.get_or_create(
+                account_id=bank_account.id
+            )
+            external_account.connect_account = self
+            external_account.save()
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 

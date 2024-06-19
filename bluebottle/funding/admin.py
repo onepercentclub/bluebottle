@@ -610,7 +610,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'funding_links')
     list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
@@ -618,6 +618,9 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
                      'flutterwavebankaccount__account_holder_name',
                      'pledgebankaccount__account_holder_name',
                      ]
+
+    def owner(self, obj):
+        return obj.connect_account and obj.connect_account.owner
 
     ordering = ('-created',)
     child_models = [

@@ -111,13 +111,27 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     check_status.short_description = _('Check status at Stripe')
 
     def account_details(self, obj):
-        individual = obj.account.get('individual')
+        individual = obj.account.get('individual', None)
+        business = obj.account.get('business_profile', None)
         if individual:
             if obj.status == 'verified':
                 template = loader.get_template(
                     'admin/funding_stripe/stripepayoutaccount/detail_fields.html'
                 )
                 return template.render({'info': individual})
+            elif obj.status == 'pending':
+                return _('Pending verification')
+            else:
+                template = loader.get_template(
+                    'admin/funding_stripe/stripepayoutaccount/missing_fields.html'
+                )
+                return template.render({'fields': obj.missing_fields})
+        elif business:
+            if obj.status == 'verified':
+                template = loader.get_template(
+                    'admin/funding_stripe/stripepayoutaccount/business_fields.html'
+                )
+                return template.render({'info': business})
             elif obj.status == 'pending':
                 return _('Pending verification')
             else:

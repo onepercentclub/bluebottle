@@ -460,6 +460,7 @@ class PeriodicParticipantTriggers(ParticipantTriggers):
 
 @register(ScheduleParticipant)
 class ScheduleParticipantTriggers(ParticipantTriggers):
+
     def is_accepted(effect):
         """Review needed"""
         return (
@@ -723,6 +724,10 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     "activity",
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
+                ),
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
                 )
             ],
         ),
@@ -731,10 +736,22 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             effects=[
                 NotificationEffect(UserScheduledNotification),
                 CreateSchedulePreparationTimeContributionEffect,
-                CreateScheduleContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.reset,
+                ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleParticipantStateMachine.unschedule,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.reset,
                 ),
             ],
         ),

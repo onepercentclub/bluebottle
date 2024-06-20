@@ -243,7 +243,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         related_link_url_kwarg="activity_id",
         statuses={
             "unscheduled": ["accepted"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
             "active": ["accepted", "scheduled", "succeeded"],
         },
     )

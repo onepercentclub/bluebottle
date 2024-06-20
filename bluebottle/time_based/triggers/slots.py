@@ -54,7 +54,15 @@ def slot_is_finished(effect):
 
 
 def slot_is_not_finished(effect):
-    return not effect.instance.end or effect.instance.end > now()
+    return effect.instance.end and effect.instance.end > now()
+
+
+def slot_has_end(effect):
+    return effect.instance.end
+
+
+def slot_has_no_end(effect):
+    return not effect.instance.end
 
 
 @register(ScheduleSlot)
@@ -77,7 +85,10 @@ class ScheduleSlotTriggers(TriggerManager):
                     ScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
                 ),
                 TransitionEffect(
-                    ScheduleSlotStateMachine.reopen, conditions=[slot_is_not_finished]
+                    ScheduleSlotStateMachine.unschedule, conditions=[slot_has_no_end]
+                ),
+                TransitionEffect(
+                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_not_finished, slot_has_end]
                 ),
             ],
         ),
@@ -97,15 +108,6 @@ class ScheduleSlotTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
-            ScheduleSlotStateMachine.reopen,
-            effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    ScheduleParticipantStateMachine.reset,
-                ),
-            ],
-        ),
-        TransitionTrigger(
             ScheduleSlotStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(
@@ -117,9 +119,32 @@ class ScheduleSlotTriggers(TriggerManager):
         TransitionTrigger(
             ScheduleSlotStateMachine.restore,
             effects=[
+                TransitionEffect(
+                    ScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
+                ),
+                TransitionEffect(
+                    ScheduleSlotStateMachine.unschedule, conditions=[slot_has_no_end]
+                ),
+                TransitionEffect(
+                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_not_finished, slot_has_end]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.schedule,
+            effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    ScheduleParticipantStateMachine.restore,
+                    ScheduleParticipantStateMachine.schedule,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.unschedule,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.unschedule,
                 ),
             ],
         ),
@@ -166,7 +191,7 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
                     conditions=[slot_is_complete, slot_is_not_finished],
                 ),
                 TransitionEffect(
-                    TeamScheduleSlotStateMachine.reset, conditions=[slot_is_incomplete]
+                    TeamScheduleSlotStateMachine.unschedule, conditions=[slot_is_incomplete]
                 ),
                 TransitionEffect(
                     TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
@@ -179,19 +204,6 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     TeamScheduleParticipantStateMachine.succeed,
-                ),
-            ],
-        ),
-        ModelChangedTrigger(
-            "start",
-            effects=[
-                RescheduleScheduleSlotContributions,
-                TransitionEffect(
-                    TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
-                ),
-                TransitionEffect(
-                    TeamScheduleSlotStateMachine.reopen,
-                    conditions=[slot_is_not_finished],
                 ),
             ],
         ),

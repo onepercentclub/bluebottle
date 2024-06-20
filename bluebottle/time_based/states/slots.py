@@ -56,15 +56,15 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     schedule = Transition(
-        new,
+        [new, finished, running],
         scheduled,
         name=_("Schedule"),
         description=_("The slot now has a date and location."),
         automatic=True,
     )
 
-    reset = Transition(
-        scheduled,
+    unschedule = Transition(
+        [scheduled, running, finished],
         new,
         name=_("Reset"),
         description=_("The slot no longer has a date and location."),
@@ -86,14 +86,6 @@ class SlotStateMachine(ModelStateMachine):
         finished,
         name=_("Finish"),
         description=_("The slot has finished."),
-        automatic=True,
-    )
-
-    reopen = Transition(
-        [running, finished],
-        new,
-        name=_("Re-open"),
-        description=_("The slot is reopened."),
         automatic=True,
     )
 

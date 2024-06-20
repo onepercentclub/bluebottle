@@ -1,6 +1,5 @@
 import dateutil
 from django.db.models import Count
-from mock import PropertyMock
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (

@@ -7,9 +7,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleActivity,
     ScheduleParticipant,
-    TeamScheduleParticipant,
     PeriodicRegistration,
-    Team,
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
@@ -65,6 +63,7 @@ class ScheduleParticipantExportView(TimebasedExportView):
     model = ScheduleActivity
     participant_model = ScheduleParticipant
 
+
 class TeamScheduleParticipantExportView(TimebasedExportView):
     model = ScheduleActivity
     fields = (
@@ -107,6 +106,7 @@ class TeamScheduleParticipantExportView(TimebasedExportView):
 
             for index, row in enumerate(self.get_team_data(team)):
                 worksheet.write_row(index + 1, 0, row)
+
 
 class PeriodicParticipantExportView(TimebasedExportView):
     model = PeriodicActivity

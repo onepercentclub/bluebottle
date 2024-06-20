@@ -174,6 +174,12 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
             ],
         ),
         TransitionTrigger(
+            ScheduleSlotStateMachine.finish,
+            effects=[
+                RelatedTransitionEffect("team", TeamStateMachine.succeed),
+            ],
+        ),
+        TransitionTrigger(
             ScheduleSlotStateMachine.schedule,
             effects=[
                 RelatedTransitionEffect("participants", TeamScheduleParticipantStateMachine.schedule),

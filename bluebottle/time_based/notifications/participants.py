@@ -79,5 +79,6 @@ class UserScheduledNotification(UserParticipantNotification):
 
     def get_context(self, recipient):
         context = super(UserScheduledNotification, self).get_context(recipient)
-        context['slot'] = get_slot_info(self.obj.slot)
+        if self.obj.slot and self.obj.slot.start:
+            context['slot'] = get_slot_info(self.obj.slot)
         return context

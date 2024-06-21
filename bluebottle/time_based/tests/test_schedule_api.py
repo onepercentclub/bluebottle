@@ -1,4 +1,8 @@
 from datetime import date, timedelta
+from io import BytesIO
+
+from openpyxl import load_workbook
+from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import APITestCase
@@ -27,6 +31,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
     ScheduleRegistrationFactory,
+    TeamFactory,
 )
 
 
@@ -179,3 +184,52 @@ class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITest
         'start': date.today() + timedelta(days=10),
         'deadline': date.today() + timedelta(days=20),
     }
+
+
+class TeamScheduleActivityExportTestCase(
+    TimeBasedActivityAPIExportTestCase, APITestCase
+):
+    factory = ScheduleActivityFactory
+    participant_factory = TeamFactory
+    url_name = "schedule-detail"
+
+    activity_defaults = {
+        "start": date.today() + timedelta(days=10),
+        "deadline": date.today() + timedelta(days=20),
+        "team_activity": "teams",
+    }
+
+    def test_get(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), self.activity.teams.count() + 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(len(tuple(sheet.values)), self.activity.teams.count() + 1)
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            (
+                "Captain email",
+                "Captain name",
+                "Registration Date",
+                "Status",
+                "Registration answer",
+            ),
+        )
+
+        for sheet in workbook.worksheets[1:]:
+            self.assertEqual(
+                tuple(sheet.values)[0],
+                (
+                    "Email",
+                    "Name",
+                    "Registration Date",
+                    "Status",
+                    "Is captain",
+                ),
+            )

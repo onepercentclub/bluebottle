@@ -64,10 +64,11 @@ class ScheduleSlotSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/schedule-slots"
-        included_resources = ["location", "activity"]
+        included_resources = ["location", "location.country", "activity"]
 
     included_serializers = {
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "location.country": "bluebottle.geo.serializers.CountrySerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
     }
 

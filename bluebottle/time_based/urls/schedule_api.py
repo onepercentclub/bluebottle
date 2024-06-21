@@ -8,6 +8,7 @@ from bluebottle.time_based.views import (
     ScheduleRegistrationDocumentDetail,
     ScheduleParticipantTransitionList,
     ScheduleParticipantExportView,
+    TeamScheduleParticipantExportView,
     ScheduleRelatedParticipantList,
     ScheduleParticipantDetail,
 
@@ -106,5 +107,11 @@ urlpatterns = [
     url(
         r"^/export/(?P<pk>[\d]+)$",
         ScheduleParticipantExportView.as_view(),
-        name='schedule-participant-export'),
+        name="schedule-participant-export",
+    ),
+    url(
+        r"^/teams/export/(?P<pk>[\d]+)$",
+        TeamScheduleParticipantExportView.as_view(),
+        name="team-schedule-participant-export",
+    ),
 ]

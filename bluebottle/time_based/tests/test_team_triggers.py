@@ -1,3 +1,5 @@
+from django.core import mail
+
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
 )
@@ -62,6 +64,11 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(self.team.team_members.get().status, "withdrawn")
 
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            f'A team has withdrawn from your activity "{self.team.activity.title}"',
+        )
+
     def test_reapply(self):
         self.team.states.withdraw(save=True)
         self.team.states.rejoin(save=True)
@@ -85,6 +92,11 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.team.status, "accepted")
         self.assertEqual(self.team.registration.status, "accepted")
         self.assertEqual(self.team.team_members.get().status, "active")
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            f'A team has been removed from your activity "{self.team.activity.title}"',
+        )
 
     def test_reject(self):
         self.team.registration.states.reject(save=True)

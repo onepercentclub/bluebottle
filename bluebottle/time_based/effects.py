@@ -49,6 +49,7 @@ class CreatePreparationTimeContributionEffect(Effect):
 class RelatedPreparationTimeContributionEffect(Effect):
     title = _("Create preparation time contribution")
     template = "admin/create_preparation_time_contribution.html"
+    display = False
 
     def post_save(self, **kwargs):
         if self.instance.preparation:

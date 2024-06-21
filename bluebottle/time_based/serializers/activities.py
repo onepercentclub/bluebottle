@@ -229,7 +229,6 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
 class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
-    export_view_name = 'schedule-participant-export'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)

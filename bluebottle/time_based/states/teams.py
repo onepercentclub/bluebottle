@@ -43,6 +43,7 @@ class TeamStateMachine(ModelStateMachine):
         [new, rejected],
         accepted,
         name=_("Accept"),
+        passed_label=_("accepted"),
         description=_("Accept this team."),
         automatic=True,
     )
@@ -51,6 +52,7 @@ class TeamStateMachine(ModelStateMachine):
         [new, accepted],
         rejected,
         name=_("Reject"),
+        passed_label=_("rejected"),
         description=_("Reject this team."),
         automatic=True,
     )
@@ -59,6 +61,7 @@ class TeamStateMachine(ModelStateMachine):
         [new, accepted],
         scheduled,
         name=_("Schedule"),
+        passed_label=_("scheduled"),
         description=_("Assign a slot to this activity"),
         automatic=True,
     )
@@ -67,6 +70,7 @@ class TeamStateMachine(ModelStateMachine):
         [accepted, scheduled],
         removed,
         name=_("Remove"),
+        passed_label=_("removed"),
         description=_("Remove this team from the activity."),
         automatic=False,
         permission=is_manager,
@@ -76,6 +80,7 @@ class TeamStateMachine(ModelStateMachine):
         removed,
         accepted,
         name=_("Re-add"),
+        passed_label=_("re-added"),
         description=_("Re-add team to activity."),
         automatic=False,
         permission=is_manager,
@@ -84,7 +89,8 @@ class TeamStateMachine(ModelStateMachine):
     withdraw = Transition(
         [new, accepted, scheduled],
         withdrawn,
-        name=_('Withdrawn'),
+        name=_("Withdraw"),
+        passed_label=_("withdrawn"),
         automatic=False,
         permission=is_owner,
         hide_from_admin=True,
@@ -97,7 +103,8 @@ class TeamStateMachine(ModelStateMachine):
     rejoin = Transition(
         withdrawn,
         accepted,
-        name=_('Rejoin'),
+        name=_("Rejoin"),
+        passed_label=_("rejoined"),
         automatic=False,
         permission=is_owner,
         hide_from_admin=True,
@@ -110,6 +117,7 @@ class TeamStateMachine(ModelStateMachine):
         [new, accepted, scheduled],
         cancelled,
         name=_("Cancel"),
+        passed_label=_("cancelled"),
         automatic=True,
         description=_(
             'This team will no longer participate in this activity and any hours spent will not be counted.'
@@ -121,9 +129,8 @@ class TeamStateMachine(ModelStateMachine):
         new,
         name=_('Restore'),
         automatic=True,
-        description=_(
-            'Add this previously cancelled team back to the activity.'
-        ),
+        passed_label=_("restored"),
+        description=_("Add this previously cancelled team back to the activity."),
     )
 
 
@@ -162,6 +169,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_manager,
         name=_("Remove"),
+        passed_label=_("removed"),
         description=_("Remove this member from the team."),
     )
 
@@ -171,6 +179,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         automatic=False,
         permission=is_manager,
         name=_("Re-add"),
+        passed_label=_("re-added"),
         description=_("Re-add member to team."),
     )
 
@@ -178,6 +187,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         [active],
         withdrawn,
         name=_("Withdraw"),
+        passed_label=_("withdrawn"),
         hide_from_admin=True,
         permission=is_owner,
         description=_("Withdraw from this team."),
@@ -188,6 +198,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         withdrawn,
         active,
         name=_("Re-apply"),
+        passed_label=_("re-applied"),
         hide_from_admin=True,
         permission=is_owner,
         description=_("Re-apply to team."),
@@ -198,6 +209,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         [active],
         rejected,
         name=_("Rejected"),
+        passed_label=_("rejected"),
         description=_("Reject user from this team."),
         automatic=True,
     )
@@ -205,6 +217,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         rejected,
         active,
         name=_("accept"),
+        passed_label=_("accepted"),
         description=_("Accept user to team."),
         automatic=True,
     )
@@ -213,6 +226,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         [active],
         cancelled,
         name=_("Cancel"),
+        passed_label=_("cancelled"),
         automatic=True,
         description=_("Cancel this team member, because the team is cancelled."),
     )
@@ -221,6 +235,7 @@ class TeamMemberStateMachine(ModelStateMachine):
         [cancelled],
         active,
         name=_("Restore"),
+        passed_label=_("restored"),
         automatic=True,
         description=_("Restore this team member, because the team is restored."),
     )

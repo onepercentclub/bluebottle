@@ -1,8 +1,8 @@
 from datetime import date, timedelta
-
-from rest_framework import status
-from openpyxl import load_workbook
 from io import BytesIO
+
+from openpyxl import load_workbook
+from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import APITestCase

@@ -503,9 +503,9 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             > effect.instance.activity.accepted_participants.count() - 1
         )
 
-    def has_slot(effect):
+    def has_scheduled_slot(effect):
         """Has assigned slot"""
-        return effect.instance.slot
+        return effect.instance.slot and effect.instance.slot.end
 
     def slot_is_finished(effect):
         """Has assigned slot"""
@@ -513,7 +513,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
 
     def has_no_slot(effect):
         """Has no assigned slot"""
-        return not effect.instance.slot
+        return not effect.instance.slot or not effect.instance.slot.end
 
     triggers = ParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -545,7 +545,8 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
                     ContributionStateMachine.reset,
                 ),
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                    ScheduleParticipantStateMachine.schedule,
+                    conditions=[has_scheduled_slot]
                 ),
             ],
         ),
@@ -736,6 +737,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             effects=[
                 NotificationEffect(UserScheduledNotification),
                 CreateSchedulePreparationTimeContributionEffect,
+                CreateScheduleContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     ContributionStateMachine.reset,
@@ -759,7 +761,7 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             "slot_id",
             effects=[
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.schedule, conditions=[has_slot]
+                    ScheduleParticipantStateMachine.schedule, conditions=[has_scheduled_slot]
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.unschedule, conditions=[has_no_slot]

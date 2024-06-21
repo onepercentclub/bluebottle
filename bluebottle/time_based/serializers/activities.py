@@ -270,7 +270,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
 
     @property
     def export_view_name(self):
-        if self.instance.team_activity == "teams":
+        if self.instance and self.instance.team_activity == "teams":
             return "team-schedule-participant-export"
         else:
             return "schedule-participant-export"

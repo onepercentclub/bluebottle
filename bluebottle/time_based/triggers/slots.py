@@ -57,7 +57,7 @@ def slot_is_not_finished(effect):
     return effect.instance.end and effect.instance.end > now()
 
 
-def slot_has_end(effect):
+def slot_is_scheduled(effect):
     return effect.instance.end
 
 
@@ -88,7 +88,7 @@ class ScheduleSlotTriggers(TriggerManager):
                     ScheduleSlotStateMachine.unschedule, conditions=[slot_has_no_end]
                 ),
                 TransitionEffect(
-                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_not_finished, slot_has_end]
+                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_scheduled, slot_is_not_finished]
                 ),
             ],
         ),
@@ -126,7 +126,7 @@ class ScheduleSlotTriggers(TriggerManager):
                     ScheduleSlotStateMachine.unschedule, conditions=[slot_has_no_end]
                 ),
                 TransitionEffect(
-                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_not_finished, slot_has_end]
+                    ScheduleSlotStateMachine.schedule, conditions=[slot_is_scheduled, slot_is_not_finished]
                 ),
             ],
         ),

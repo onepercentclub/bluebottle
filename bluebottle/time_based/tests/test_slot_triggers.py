@@ -1,7 +1,7 @@
 from datetime import timedelta
+
 from dateutil.relativedelta import relativedelta
 from django.core import mail
-
 from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import (
@@ -162,6 +162,6 @@ class ScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.slot.start = now() + timedelta(days=2)
         self.slot.save()
 
-        self.assertStatus("new")
+        self.assertStatus("scheduled")
         self.assertStatus("scheduled", self.participant)
         self.assertStatus("new", self.participant.contributions.get())

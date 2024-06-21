@@ -1,6 +1,6 @@
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
-from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
+from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
@@ -510,7 +510,7 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 RelatedTransitionEffect(
                     "team",
-                    TeamStateMachine.restore,
+                    TeamStateMachine.accept,
                 ),
                 RelatedTransitionEffect(
                     "activity",

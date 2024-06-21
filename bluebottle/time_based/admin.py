@@ -50,7 +50,7 @@ from bluebottle.time_based.models import (
     Skill,
     SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, )
+    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, ActivitySlot, )
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -383,8 +383,8 @@ class TeamMemberAdminInline(TabularInlinePaginated):
     link.short_description = _('Edit')
 
 
-class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
-    model = TeamScheduleSlot
+class BaseSlotAdminInline(StateMachineAdminMixin, StackedInline):
+    model = ActivitySlot
     extra = 0
 
     raw_id_fields = ('location',)
@@ -405,7 +405,10 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
     )
 
     def link(self, obj):
-        url = reverse('admin:time_based_teamscheduleslot_change', args=(obj.id,))
+        url = reverse(
+            "admin:{}_{}_change".format(obj._meta.app_label, obj._meta.model_name),
+            args=(obj.id,)
+        )
         return format_html('<a href="{}">{}</a>', url, obj)
     link.short_description = _('Edit')
 
@@ -436,6 +439,14 @@ class TeamScheduleSlotAdminInline(StateMachineAdminMixin, StackedInline):
             )
         },
     }
+
+
+class ScheduleSlotAdminInline(BaseSlotAdminInline):
+    model = ScheduleSlot
+
+
+class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
+    model = TeamScheduleSlot
 
 
 @admin.register(Team)
@@ -732,9 +743,9 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 @admin.register(ScheduleSlot)
 class ScheduleSlotAdmin(StateMachineAdmin):
 
-    list_display = ("start", "duration", "activity", "participant_count")
+    list_display = ("start", "duration", "activity", "participant")
     raw_id_fields = ('activity', "location")
-    readonly_fields = ("activity",)
+    readonly_fields = ("activity", "participant")
     fields = readonly_fields + (
         "status",
         "states",
@@ -764,8 +775,10 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         },
     }
 
-    def participant_count(self, obj):
-        return obj.accepted_participants.count()
+    def participant(self, obj):
+        participant = obj.participants.first()
+        url = reverse('admin:time_based_scheduleparticipant_change', args=(participant.id,))
+        return format_html("<a href='{}'>{}</a>", url, participant)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -777,8 +790,9 @@ class ScheduleSlotAdmin(StateMachineAdmin):
 @admin.register(TeamScheduleSlot)
 class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
     inlines = [TeamScheduleParticipantAdminInline]
+    list_display = ("start", "duration", "activity", "participant_count")
     raw_id_fields = ScheduleSlotAdmin.raw_id_fields + ('team', )
-    readonly_fields = ScheduleSlotAdmin.readonly_fields + ('team', )
+    readonly_fields = ('activity', 'team', )
     fields = readonly_fields + (
         "status",
         "states",
@@ -789,6 +803,9 @@ class TeamScheduleSlotAdmin(ScheduleSlotAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    def participant_count(self, obj):
+        return obj.accepted_participants.count()
 
 
 class PeriodicSlotAdminInline(TabularInlinePaginated):
@@ -1556,22 +1573,9 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == 'slot':
-            id = request.path.split('/')[5]
-            obj = self.get_object(request, id)
-            kwargs['widget'] = SlotForeignKeyRawIdWidget(db_field.remote_field, self.admin_site, attrs={'parent': obj})
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def get_inline_instances(self, request, obj=None):
-        inlines = super().get_inline_instances(request, obj)
-        for inline in inlines:
-            inline.parent_object = obj
-        return inlines
-
     inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
 
-    fields = ContributorChildAdmin.fields + ["registration_info", "slot", "slot_info"]
+    fields = ContributorChildAdmin.fields + ["registration_info", "slot_info"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]
 
     def get_fields(self, request, obj=None):
@@ -1609,8 +1613,22 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
 
     def slot_info(self, obj):
         if not obj.slot:
-            return "-"
-        return format_html("{} from {} to  {}", obj.slot.start.date(), obj.slot.start.time(), obj.slot.end.time())
+            return "- no slot set -"
+        url = reverse("admin:time_based_scheduleslot_change", args=(obj.slot.id,))
+        if obj.slot.start:
+            return format_html(
+                "<div style='display:inline-block'>{}<br/>{} - {} <br/>{}<br/><a href='{}'>Edit</a></span>",
+                obj.slot.start.date(),
+                obj.slot.start.time(),
+                obj.slot.end.time(),
+                obj.slot.is_online and _("Remote/Online") or obj.slot.location,
+                url,
+            )
+        return format_html(
+            "<a href='{}'>- no time set -</a>",
+            url,
+        )
+    slot_info.short_description = _('Date, Time & Location')
 
     list_display = ['__str__', 'activity_link', 'status']
 

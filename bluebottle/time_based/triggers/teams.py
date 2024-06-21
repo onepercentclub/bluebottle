@@ -36,7 +36,11 @@ from bluebottle.time_based.notifications.teams import (
 class TeamTriggers(TriggerManager):
     def should_auto_accept(effect):
         """ Check if the team should be auto accepted """
-        return not effect.instance.activity.review
+        user = effect.options.get('user')
+        is_admin = user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+        return (
+            not effect.instance.activity.review or is_admin
+        )
 
     triggers = [
         TransitionTrigger(

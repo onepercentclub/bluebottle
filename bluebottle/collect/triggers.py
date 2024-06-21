@@ -181,7 +181,7 @@ def activity_will_be_empty(effect):
         ).filter(
             status=CollectContributorStateMachine.succeeded
         )
-    ) == 1
+    ) < 2
 
 
 def is_not_user(effect):

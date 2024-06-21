@@ -1,3 +1,5 @@
+import re
+
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DeadlineActivity,
@@ -62,13 +64,57 @@ class ScheduleParticipantExportView(TimebasedExportView):
     participant_model = ScheduleParticipant
 
 
+class TeamScheduleParticipantExportView(TimebasedExportView):
+    model = ScheduleActivity
+    fields = (
+        ("user__email", "Captain email"),
+        ("user__full_name", "Captain name"),
+        ("created", "Registration Date"),
+        ("team__status", "Status"),
+        ("answer", "Registration answer"),
+    )
+    team_fields = (
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
+        ("created", "Registration Date"),
+        ("status", "Status"),
+        ("is_captain", "Is captain"),
+    )
+
+    def get_instances(self):
+        return (
+            self.get_object()
+            .registrations.prefetch_related("user__segments")
+            .select_related("user")
+        )
+
+    def get_team_row(self, team):
+        return [prep_field(self.request, team, field[0]) for field in self.team_fields]
+
+    def get_team_data(self, team):
+        return [self.get_team_row(instance) for instance in team.team_members.all()]
+
+    def write_data(self, workbook):
+        super().write_data(workbook)
+
+        for team in self.get_object().teams.all():
+            title = re.sub("[\[\]\\:*?/]", "", str(team)[:30])
+
+            worksheet = workbook.add_worksheet(title)
+            worksheet.set_column(0, 10, 30)
+            worksheet.write_row(0, 0, [field[1] for field in self.team_fields])
+
+            for index, row in enumerate(self.get_team_data(team)):
+                worksheet.write_row(index + 1, 0, row)
+
+
 class PeriodicParticipantExportView(TimebasedExportView):
     model = PeriodicActivity
     participant_model = PeriodicRegistration
 
     fields = (
-        ("user__email", "Email"),
-        ("user__full_name", "Name"),
+        ("user__email", "Captain Email"),
+        ("user__full_name", "Captain"),
         ("created", "Registration Date"),
         ("status", "Status"),
         ("answer", "Registration answer"),

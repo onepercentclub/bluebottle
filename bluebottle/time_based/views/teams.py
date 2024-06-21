@@ -3,7 +3,7 @@ from django.db.models import Sum, Q
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
-from bluebottle.time_based.permissions import InviteCodePermission
+from bluebottle.time_based.permissions import InviteCodePermission, TeamMemberPermission
 from bluebottle.time_based.serializers import TeamSerializer, TeamMemberTransitionSerializer
 from bluebottle.time_based.serializers import TeamTransitionSerializer
 from bluebottle.time_based.serializers.teams import TeamMemberSerializer
@@ -40,7 +40,11 @@ class TeamList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
         )
         my = self.request.query_params.get("filter[my]")
         if my:
-            queryset = queryset.filter(user=self.request.user)
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
+
         return queryset
 
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
@@ -57,6 +61,13 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
         status = self.request.query_params.get("filter[status]")
         if status:
             queryset = queryset.filter(status__in=status.split(","))
+
+        my = self.request.query_params.get("filter[my]")
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         return queryset.filter(activity_id=self.kwargs["activity_id"])
 
@@ -123,7 +134,9 @@ class TeamMemberList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 class TeamMemberDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TeamMember.objects.prefetch_related("team",)
     serializer_class = TeamMemberSerializer
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission, TeamMemberPermission),
+    )
 
 
 class TeamMemberTransitionList(TransitionList):

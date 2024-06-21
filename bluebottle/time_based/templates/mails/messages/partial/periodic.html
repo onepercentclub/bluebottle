@@ -1,0 +1,26 @@
+{% load i18n %}
+<p>
+    {% if start and end %}
+        {% blocktrans context 'email' %}
+          You are expected to contribute {{duration}} hours every {{period}} between {{start}} and {{end}}.
+        {% endblocktrans %}
+    {% elif start %}
+        {% blocktrans context 'email' %}
+          You are expected to contribute {{duration}} hours every {{period}} from {{start}}.
+        {% endblocktrans %}
+    {% elif end %}
+      {% blocktrans context 'email' %}
+        You are expected to contribute {{duration}} hours every {{period}} until {{end}}.
+      {% endblocktrans %}
+    {% else %}
+      {% blocktrans context 'email' %}
+        You are expected to contribute {{duration}} hours indefinitely.
+      {% endblocktrans %}
+    {% endif %}
+</p>
+<p>
+  {% blocktrans context 'email' %}
+    You can always stop your contributions anytime and resume them at a later date.
+  {% endblocktrans %}
+
+</p>

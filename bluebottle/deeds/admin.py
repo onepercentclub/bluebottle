@@ -1,12 +1,9 @@
 from django.contrib import admin
-from django.urls import reverse
-from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline
+    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline, BaseContributorInline
 )
 from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -40,28 +37,8 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     inlines = ContributorChildAdmin.inlines + [EffortContributionInlineAdmin]
 
 
-class DeedParticipantInline(TabularInlinePaginated):
+class DeedParticipantInline(BaseContributorInline):
     model = DeedParticipant
-    per_page = 20
-    ordering = ['-created']
-    raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status']
-    fields = ['edit', 'user', 'created', 'status']
-    extra = 0
-    template = 'admin/participant_list.html'
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        url = reverse('admin:deeds_deedparticipant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit participant'))
-    edit.short_description = _('Edit participant')
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = self.readonly_fields
-        if obj and obj.has_deleted_data:
-            fields += ('user',)
-        return fields
 
 
 @admin.register(Deed)

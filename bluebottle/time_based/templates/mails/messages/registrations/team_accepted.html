@@ -1,0 +1,12 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+        <p>Good news, your team has been accepted for the activity "{{ title }}"!</p>
+        <p>If your team is unable to participate, please withdraw via the activity page so that others can take your place.</p>
+    {% endblocktrans %}
+  {% if period %}
+    {% include 'mails/messages/partial/periodic.html' %}
+  {% endif %}
+{% endblock %}

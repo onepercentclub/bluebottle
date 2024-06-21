@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Create slot participation for the team member" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance team=effects.0.instance.team %}
+    Create slot participants for the new team member for all slots of {{ team }}.
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

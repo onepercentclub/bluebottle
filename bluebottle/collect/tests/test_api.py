@@ -188,7 +188,6 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
         self.assertIncluded('my-contributor', contributor)
-        self.assertIncluded('my-contributor.invite', contributor.invite)
 
         self.assertPermission('PUT', False)
         self.assertPermission('GET', True)

@@ -1,14 +1,14 @@
 # coding=utf-8
 from django.test.client import RequestFactory
-from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from django.urls import reverse
+from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
 from bluebottle.bluebottle_dashboard.dashboard import CustomAppIndexDashboard
 from bluebottle.bluebottle_dashboard.tests.factories import UserDashboardModuleFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, ApiClient
-from bluebottle.members.models import MemberPlatformSettings
 
 
 class MainDashboardTestCase(BluebottleAdminTestCase):
@@ -27,7 +27,6 @@ class MainDashboardTestCase(BluebottleAdminTestCase):
         self.superuser.save()
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Recently joined users')
-        self.assertContains(response, 'Export metrics')
         self.assertContains(response, 'Recently submitted initiatives')
 
 

@@ -117,7 +117,6 @@ class BasePermissionField(serializers.Field):
     def _get_view(self, value):
         args = [getattr(value, arg) for arg in self.view_args]
         view_func = resolve(reverse(self.view_name, args=args)).func
-
         return view_func.view_class(**view_func.view_initkwargs)
 
     def _method_permissions(self, method, user, view, value):
@@ -143,6 +142,7 @@ class BasePermissionField(serializers.Field):
         # Loop over all methods and check the permissions on the view
         permissions = {}
         user = self.context['request'].user
+
         for method in view.allowed_methods:
             permissions[method] = self._method_permissions(method, user, view, value)
         return permissions

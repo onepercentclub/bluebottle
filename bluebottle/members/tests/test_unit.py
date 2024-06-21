@@ -65,7 +65,6 @@ class MemberTestCase(BluebottleTestCase):
 
     def test_hours_spent(self):
         activity = DateActivityFactory.create(
-            slot_selection='free',
             initiative=InitiativeFactory.create(status="approved")
         )
         activity.states.publish(save=True)
@@ -121,7 +120,6 @@ class MemberTestCase(BluebottleTestCase):
         nov19 = datetime.datetime(2019, 11, 3, tzinfo=UTC)
 
         activity = DateActivityFactory.create(
-            slot_selection='free',
             initiative=InitiativeFactory.create(status="approved")
         )
         activity.states.publish(save=True)

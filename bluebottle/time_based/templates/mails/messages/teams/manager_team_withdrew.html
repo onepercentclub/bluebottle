@@ -1,0 +1,7 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>{{ name }}'s team has withdrawn from your activity "{{ title }}"!</p>
+{% endblocktrans %}{% endblock %}
+

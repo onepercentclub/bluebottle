@@ -214,6 +214,7 @@ def data_retention_contribution_task():
                         activity = Activity.objects.filter(id=success['activity_id']).get()
                         activity.deleted_successful_contributors = success['total']
                         activity.save(run_triggers=False)
-
-                    for contributor in contributors.all():
+                    for contributor in contributors:
+                        contributions = contributor.contributions.all()
+                        contributions.update(contributor=None)
                         contributor.delete()

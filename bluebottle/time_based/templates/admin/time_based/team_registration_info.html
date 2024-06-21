@@ -1,0 +1,14 @@
+{% load i18n %}
+<div class="info_field">
+  <h3>{% trans "Review pending" %}</h3>
+
+  <p>
+  {% blocktrans with instance=effects.0.instance %}
+    This team has a pending registration. You can review it by clicking the button below.
+  {% endblocktrans %}
+  </p>
+  <a href="{{ url }}" class="button">
+    {% trans "Review team" %}
+  </a>
+
+</div>

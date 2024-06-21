@@ -7,7 +7,11 @@ from bluebottle.deeds.models import Deed
 from bluebottle.funding.models import Funding
 from bluebottle.geo.models import Geolocation
 from bluebottle.initiatives.models import Initiative, Theme
-from bluebottle.time_based.models import PeriodActivity, DateActivity
+from bluebottle.time_based.models import (
+    DeadlineActivity,
+    PeriodicActivity,
+    DateActivity,
+)
 from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.utils.models import Language
 
@@ -141,7 +145,8 @@ class InitiativeDocument(Document):
             Geolocation,
             Theme,
             Funding,
-            PeriodActivity,
+            DeadlineActivity,
+            PeriodicActivity,
             DateActivity,
             Deed
         )

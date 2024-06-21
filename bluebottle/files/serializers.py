@@ -115,7 +115,6 @@ class DocumentSerializer(ModelSerializer):
 
 
 class PrivateDocumentSerializer(DocumentSerializer):
-
     def get_link(self, obj):
         if self.relationship:
             parent = getattr(obj, self.relationship).first()

@@ -1,0 +1,12 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}{{ name }} has been removed from your team for the activity "{{ title }}".{% endblocktrans %}
+    </p>
+
+    <p>
+        {% blocktrans context 'email' %}If you have any questions, you can contact the platform manager by replying to this email.{% endblocktrans %}
+    </p>
+{% endblock %}

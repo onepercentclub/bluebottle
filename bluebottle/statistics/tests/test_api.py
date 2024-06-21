@@ -20,7 +20,11 @@ from bluebottle.statistics.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateParticipantFactory,
+    SlotParticipantFactory,
+)
 
 
 @override_settings(
@@ -228,8 +232,13 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         slot2.duration = datetime.timedelta(hours=8)
         slot2.save()
 
-        DateParticipantFactory.create_batch(3, activity=activity1)
-        DateParticipantFactory.create_batch(2, activity=activity2)
+        participants = DateParticipantFactory.create_batch(3, activity=activity1)
+        for participant in participants:
+            SlotParticipantFactory.create(participant=participant, slot=slot1)
+
+        participants = DateParticipantFactory.create_batch(2, activity=activity2)
+        for participant in participants:
+            SlotParticipantFactory.create(participant=participant, slot=slot2)
 
         self.impact_type = ImpactTypeFactory.create()
 

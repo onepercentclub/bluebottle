@@ -84,8 +84,8 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
         related_link_view_name="slot-schedule-participants",
         related_link_url_kwarg="slot_id",
         statuses={
-            "active": ["new", "succeeded", "scheduled"],
-            "failed": ["rejected", "withdrawn", "removed"],
+            "active": ["new", "succeeded", "scheduled", "accepted"],
+            "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
     )
 

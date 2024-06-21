@@ -1,6 +1,5 @@
 import dateutil
 from django.db.models import Count
-from mock import PropertyMock
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -230,7 +229,6 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 
 class ScheduleActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'schedule-detail'
-    export_view_name = 'schedule-participant-export'
 
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     deadline = serializers.DateField(allow_null=True)

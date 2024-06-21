@@ -378,7 +378,6 @@ class TeamAddedNotification(TransitionMessage):
             return []
 
 
-
 class TeamParticipantAddedNotification(TransitionMessage):
     """
     A participant was added to a team manually (through back-office)

@@ -80,7 +80,6 @@ def is_admin(effect):
 
 class RegistrationTriggers(TriggerManager):
 
-
     triggers = [
         TransitionTrigger(
             RegistrationStateMachine.initiate,

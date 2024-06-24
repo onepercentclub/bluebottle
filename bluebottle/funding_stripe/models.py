@@ -46,7 +46,8 @@ class PaymentIntent(models.Model):
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
-            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            provider = StripePaymentProvider.objects.get()
+            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES or provider.stripe_secret:
                 intent_args['on_behalf_of'] = connect_account.account_id
             stripe = get_stripe()
             intent = stripe.PaymentIntent.create(
@@ -560,7 +561,8 @@ class StripePayoutAccount(PayoutAccount):
                 account_id=bank_account.id
             )
             external_account.connect_account = self
-            external_account.save()
+            if self.id:
+                external_account.save()
 
         super(StripePayoutAccount, self).save(*args, **kwargs)
 

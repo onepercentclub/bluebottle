@@ -24,13 +24,23 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    CreatePeriodTimeContributionEffect, CreateOverallTimeContributionEffect, SetEndDateEffect,
+    CreatePeriodTimeContributionEffect,
+    CreateOverallTimeContributionEffect,
+    CreatePreparationTimeContributionEffect,
+    SetEndDateEffect,
     ClearDeadlineEffect,
     RescheduleSlotDurationsEffect,
-    ActiveTimeContributionsTransitionEffect, CreateSlotParticipantsForParticipantsEffect,
-    CreateSlotParticipantsForSlotsEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
-    UnsetCapacityEffect, RescheduleOverallPeriodActivityDurationsEffect, UpdateSlotTimeContributionEffect,
-    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect, CheckPreparationTimeContributionEffect,
+    ActiveTimeContributionsTransitionEffect,
+    CreateSlotParticipantsForParticipantsEffect,
+    CreateSlotParticipantsForSlotsEffect,
+    CreateSlotTimeContributionEffect,
+    UnsetCapacityEffect,
+    RescheduleOverallPeriodActivityDurationsEffect,
+    UpdateSlotTimeContributionEffect,
+    LockFilledSlotsEffect,
+    UnlockUnfilledSlotsEffect,
+    CheckPreparationTimeContributionEffect,
+    RelatedPreparationTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     DeadlineChangedNotification,
@@ -255,7 +265,10 @@ class TimeBasedTriggers(ActivityTriggers):
                         registration_deadline_is_not_passed
                     ]
                 ),
-            ]
+            ],
+        ),
+        ModelChangedTrigger(
+            "preparation", effects=[RelatedPreparationTimeContributionEffect]
         ),
 
         TransitionTrigger(

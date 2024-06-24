@@ -185,7 +185,10 @@ class TeamMemberStateMachine(ModelStateMachine):
     )
 
     readd = Transition(
-        removed,
+        [
+            removed,
+            cancelled
+        ],
         active,
         automatic=False,
         permission=is_manager,

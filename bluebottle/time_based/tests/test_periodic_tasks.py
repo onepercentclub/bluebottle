@@ -95,6 +95,10 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
                 mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
                 date_activity_tasks()
 
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        return self.assertEqual(obj.status, status)
+
     @property
     def almost(self):
         return self.slot.start - timedelta(hours=3)
@@ -398,6 +402,56 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         mail.outbox = []
         self.run_task(self.nigh)
         self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
+
+    def test_finished_withdrawn_slot(self):
+
+        activity = DateActivityFactory.create(
+            slot_selection='free',
+            owner=BlueBottleUserFactory.create(),
+            review=False,
+            status='open',
+            slots=[]
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            capacity=5,
+            duration=timedelta(hours=3)
+        )
+
+        participant = DateParticipantFactory.create(
+            activity=activity,
+            status='accepted'
+        )
+
+        SlotParticipantFactory.create(
+            slot=slot,
+            participant=participant
+        )
+
+        splitter = DateParticipantFactory.create(
+            activity=activity,
+            status='accepted'
+        )
+
+        slot_participant = SlotParticipantFactory.create(
+            slot=slot,
+            participant=splitter
+        )
+
+        contribution = splitter.contributions.first()
+        slot_participant.states.withdraw(save=True)
+
+        self.assertStatus(splitter, 'accepted')
+        self.assertStatus(slot_participant, 'withdrawn')
+        self.assertStatus(contribution, 'failed')
+
+        self.run_task(now() + timedelta(days=3))
+        activity.refresh_from_db()
+
+        self.assertStatus(splitter, 'accepted')
+        self.assertStatus(slot_participant, 'withdrawn')
+        self.assertStatus(contribution, 'failed')
 
 
 class PeriodActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, BluebottleTestCase):

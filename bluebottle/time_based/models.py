@@ -215,6 +215,13 @@ class DateActivity(TimeBasedActivity):
     def active_slots(self):
         return self.slots.filter(status__in=['open', 'full', 'running', 'finished']).order_by('start', 'id')
 
+    @property
+    def active_durations(self):
+        return self.durations.filter(
+            slot_participant__status__in=("registered", "succeeded"),
+            contributor__status__in=('new', 'accepted')
+        )
+
     class Meta:
         verbose_name = _("Activity on a date")
         verbose_name_plural = _("Activities on a date")
@@ -357,7 +364,7 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
     def active_durations(self):
         return self.durations.filter(
             slot_participant__status__in=("registered", "succeeded"),
-            slot_participant__participant__status__in=("new", "accepted"),
+            contributor__status__in=("new", "accepted"),
         )
 
     class Meta:

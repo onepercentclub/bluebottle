@@ -500,6 +500,12 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
                 RelatedTransitionEffect("teams", TeamStateMachine.cancel),
             ],
         ),
+        TransitionTrigger(
+            TimeBasedStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect("teams", TeamStateMachine.restore),
+            ],
+        ),
     ]
 
 

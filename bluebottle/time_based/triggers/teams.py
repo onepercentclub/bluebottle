@@ -14,11 +14,6 @@ from bluebottle.time_based.effects.teams import (
     DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.time_based.states.participants import (
-    TeamScheduleParticipantStateMachine,
-)
-from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
-from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberStateMachine
 from bluebottle.time_based.notifications.teams import (
     ManagerTeamRemovedNotification,
     UserTeamRemovedNotification,
@@ -30,6 +25,11 @@ from bluebottle.time_based.notifications.teams import (
     CaptainTeamMemberRemovedNotification,
     UserTeamMemberRemovedNotification,
 )
+from bluebottle.time_based.states.participants import (
+    TeamScheduleParticipantStateMachine,
+)
+from bluebottle.time_based.states.slots import TeamScheduleSlotStateMachine
+from bluebottle.time_based.states.teams import TeamStateMachine, TeamMemberStateMachine
 
 
 @register(Team)

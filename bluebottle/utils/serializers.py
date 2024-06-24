@@ -173,13 +173,14 @@ class ResourcePermissionField(BasePermissionField):
             ):
                 return False
 
-        for related, permissions in list(view.related_permission_classes.items()):
-            related_obj = attrgetter(related)(value)
-            for permission in permissions:
-                if not permission().has_object_action_permission(
-                    method, user, related_obj
-                ):
-                    return False
+        if hasattr(view, "related_permission_classes"):
+            for related, permissions in list(view.related_permission_classes.items()):
+                related_obj = attrgetter(related)(value)
+                for permission in permissions:
+                    if not permission().has_object_action_permission(
+                        method, user, related_obj
+                    ):
+                        return False
 
         return True
 

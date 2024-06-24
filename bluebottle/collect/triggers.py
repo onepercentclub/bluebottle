@@ -175,11 +175,11 @@ def activity_is_finished(effect):
 
 def activity_will_be_empty(effect):
     """activity will be empty"""
-    return len(
-        effect.instance.activity.contributors.instance_of(
-            CollectContributor
-        ).filter(
-            status=CollectContributorStateMachine.succeeded
+    return (
+        len(
+            effect.instance.activity.contributors.instance_of(
+                CollectContributor
+            ).filter(status=CollectContributorStateMachine.succeeded.value)
         )
     ) < 2
 

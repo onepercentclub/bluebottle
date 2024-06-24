@@ -208,14 +208,6 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 ),
             ],
         ),
-        TransitionTrigger(
-            RegistrationStateMachine.reject,
-            effects=[
-                NotificationEffect(
-                    UserRegistrationRejectedNotification,
-                ),
-            ],
-        ),
     ]
 
 
@@ -313,9 +305,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     "activity",
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
-                ),
-                NotificationEffect(
-                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
@@ -419,9 +408,6 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
-                ),
-                NotificationEffect(
-                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),

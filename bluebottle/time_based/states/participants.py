@@ -257,6 +257,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
     readd = Transition(
         [
             ParticipantStateMachine.removed,
+            ParticipantStateMachine.cancelled,
         ],
         ParticipantStateMachine.new,
         name=_("Re-add"),

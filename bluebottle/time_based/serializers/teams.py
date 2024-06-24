@@ -60,7 +60,9 @@ class TeamSerializer(ModelSerializer):
         many=True,
         related_link_view_name="related-team-members",
         related_link_url_kwarg="team_id",
+
     )
+
     member_export_url = PrivateFileSerializer(
         "team-members-export",
         url_args=("pk",),

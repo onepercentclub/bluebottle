@@ -54,7 +54,8 @@ class TimeBasedInfoMixin(object):
             for slot_participant in participant.slot_participants.filter(
                     status='registered'
             ):
-                slots.append(get_slot_info(slot_participant.slot))
+                if slot_participant.slot and slot_participant.slot.start:
+                    slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
 
@@ -343,6 +344,31 @@ class ParticipantAddedNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
+
+
+class TeamAddedNotification(TransitionMessage):
+    """
+    A team was added manually (through back-office)
+    """
+
+    subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
+    template = "messages/team_added"
+    context = {
+        "title": "activity.title",
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext("email", "View activity")
 
     def get_recipients(self):
         """participant"""
@@ -848,6 +874,29 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
+
+
+class ManagerTeamAddedOwnerNotification(TransitionMessage):
+    """
+    A team added notify owner
+    """
+
+    subject = pgettext("email", 'A team has been added to your activity "{title}" 🎉')
+    template = "messages/team_added_owner"
+    context = {"title": "activity.title", "participant_name": "user.full_name"}
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext("email", "Open your activity")
 
     def get_recipients(self):
         """activity owner"""

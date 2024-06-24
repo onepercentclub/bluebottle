@@ -196,7 +196,6 @@ class DateParticipantStateMachine(ParticipantStateMachine):
 
 
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
-
     accept = Transition(
         [
             ParticipantStateMachine.new,
@@ -285,11 +284,11 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         return self.instance.slot is not None
 
     accepted = State(
-        _("unscheduled"),
+        _("Unscheduled"),
         "accepted",
         _("This person takes part in the activity, but needs to be assigned a slot."),
     )
-    scheduled = State(_("scheduled"), "scheduled", _("This person is assigned a slot."))
+    scheduled = State(_("Scheduled"), "scheduled", _("This person is assigned a slot."))
 
     accept = Transition(
         [
@@ -353,16 +352,21 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.accepted,
+            ParticipantStateMachine.cancelled,
+            ParticipantStateMachine.succeeded,
         ],
         scheduled,
         name=_("Schedule"),
         description=_("Schedule this participant the Activity."),
-        passed_label=_("scheduled"),
+        passed_label=_("Scheduled"),
         automatic=True,
     )
 
     unschedule = Transition(
-        [scheduled],
+        [
+            scheduled,
+            ParticipantStateMachine.succeeded,
+        ],
         ParticipantStateMachine.accepted,
         name=_("Unschedule"),
         description=_("Unschedule this participant."),
@@ -371,7 +375,12 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
     )
 
     succeed = Transition(
-        scheduled,
+        [
+            scheduled,
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.cancelled
+        ],
         ParticipantStateMachine.succeeded,
         name=_("Schedule"),
         description=_("Succeed this participant for the Activity."),

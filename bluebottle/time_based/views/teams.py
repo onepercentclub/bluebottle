@@ -61,6 +61,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
         status = self.request.query_params.get("filter[status]")
         if status:
             queryset = queryset.filter(status__in=status.split(","))
+            queryset = queryset.order_by('slots__start')
 
         my = self.request.query_params.get("filter[my]")
         if my:

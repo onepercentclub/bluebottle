@@ -1,7 +1,8 @@
 from builtins import object
+
 import factory.fuzzy
-import munch
 import mock
+import munch
 
 from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_stripe.models import (
@@ -9,7 +10,7 @@ from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount,
     ExternalAccount, StripePaymentProvider
 )
-from bluebottle.funding_stripe.utils import stripe
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
@@ -21,6 +22,7 @@ class StripeSourcePaymentFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        stripe = get_stripe()
         source_payment = stripe.Source(kwargs.get('souce_id', 'some source id'))
         source_payment.update({
             'client_secret': 'some client secret',
@@ -37,6 +39,7 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        stripe = get_stripe()
         payment_intent = stripe.PaymentIntent(kwargs.get('intent_id', 'some intent id'))
         payment_intent.update({
             'client_secret': 'some client secret',
@@ -63,6 +66,7 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        stripe = get_stripe()
         account_id = 'acct_1234567890'
         account = stripe.Account(
             id=account_id,

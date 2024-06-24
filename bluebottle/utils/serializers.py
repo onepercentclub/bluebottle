@@ -16,7 +16,7 @@ from django.core.validators import BaseValidator
 from django.http.request import validate_host
 from django.utils.translation import gettext_lazy as _
 from moneyed import Money
-from rest_framework import permissions, serializers
+from rest_framework import serializers
 from rest_framework.utils import model_meta
 
 from rest_framework_json_api.relations import ResourceRelatedField

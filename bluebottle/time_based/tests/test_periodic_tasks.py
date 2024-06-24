@@ -237,7 +237,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
             )
 
         self.assertTrue(expected_date in mail.outbox[0].body)
-        print(expected_time, mail.outbox[0].body)
         self.assertTrue(expected_time in mail.outbox[0].body)
 
         self.assertTrue(
@@ -427,7 +426,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
     def test_finished_withdrawn_slot(self):
 
         activity = DateActivityFactory.create(
-            slot_selection='free',
             owner=BlueBottleUserFactory.create(),
             review=False,
             status='open',

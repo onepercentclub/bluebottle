@@ -735,6 +735,7 @@ class TimeBasedRegistrationTransitionListAPITestCase:
         self.defaults["transition"] = "reject"
         mail.outbox = []
         self.perform_create(user=self.activity.owner)
+
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,

@@ -113,8 +113,8 @@ class PeriodicParticipantExportView(TimebasedExportView):
     participant_model = PeriodicRegistration
 
     fields = (
-        ("user__email", "Captain Email"),
-        ("user__full_name", "Captain"),
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
         ("created", "Registration Date"),
         ("status", "Status"),
         ("answer", "Registration answer"),

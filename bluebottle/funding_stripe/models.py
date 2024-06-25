@@ -213,6 +213,14 @@ class StripePaymentProvider(PaymentProvider):
 
     title = 'Stripe'
 
+    stripe_publishable_key = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe publishable key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
+
     stripe_secret = models.CharField(
         max_length=200,
         null=True,
@@ -221,12 +229,28 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('This is only needed if you want to use a specific Stripe account.')
     )
 
-    stripe_publishable_key = models.CharField(
+    webhook_secret_connect = models.CharField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_('Stripe publishable key'),
-        help_text=_('This is only needed if you want to use a specific Stripe account.')
+        verbose_name=_('Stripe connect webhook secret'),
+        help_text=_('The secret for connect webhook.')
+    )
+
+    webhook_secret_intents = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe payment intents webhook secret'),
+        help_text=_('The secret for payment intents webhook.')
+    )
+
+    webhook_secret_sources = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe payment sources webhook secret'),
+        help_text=_('The secret for payment sources webhook.')
     )
 
     stripe_payment_methods = [

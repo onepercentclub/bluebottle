@@ -236,7 +236,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        source="participants",
+        source="paris:open ticipants",
         related_link_view_name="schedule-participants",
         related_link_team_view_name="team-schedule-participants",
         related_link_url_kwarg="activity_id",

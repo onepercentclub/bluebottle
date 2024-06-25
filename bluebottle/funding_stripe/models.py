@@ -556,7 +556,7 @@ class StripePayoutAccount(PayoutAccount):
         if self.account_id:
             self.eventually_due = self.account.requirements.eventually_due
 
-        for bank_account in self.account.external_accounts:
+        for bank_account in getattr(self.account, 'external_accounts', []):
             external_account, _created = ExternalAccount.objects.get_or_create(
                 account_id=bank_account.id
             )

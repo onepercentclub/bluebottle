@@ -479,8 +479,7 @@ class StripePayoutAccount(PayoutAccount):
             ):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
-
-        if getattr(self.account.requirements, 'disabled_reason', None):
+        elif getattr(self.account.requirements, 'disabled_reason', None):
             if self.status != self.states.rejected.value:
                 self.states.reject()
         elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
@@ -579,15 +578,6 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.account_id:
             self.eventually_due = self.account.requirements.eventually_due
-
-        for bank_account in getattr(self.account, 'external_accounts', []):
-            external_account, _created = ExternalAccount.objects.get_or_create(
-                account_id=bank_account.id
-            )
-            external_account.connect_account = self
-            if self.id:
-                external_account.save()
-
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
     def update(self, token):

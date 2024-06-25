@@ -1,5 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
+
+from operator import attrgetter
 from builtins import str
 from builtins import object
 import json
@@ -164,10 +166,23 @@ class ResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permissions for a view with object. """
 
     def _method_permissions(self, method, user, view, value):
-        return all(
-            (perm.has_object_action_permission(method, user, value) and
-             perm.has_action_permission(method, user, view.model))
-            for perm in view.get_permissions())
+        for permission in view.get_permissions():
+            if not (
+                permission.has_object_action_permission(method, user, value)
+                and permission.has_action_permission(method, user, view.model)
+            ):
+                return False
+
+        if hasattr(view, "related_permission_classes"):
+            for related, permissions in list(view.related_permission_classes.items()):
+                related_obj = attrgetter(related)(value)
+                for permission in permissions:
+                    if not permission().has_object_action_permission(
+                        method, user, related_obj
+                    ):
+                        return False
+
+        return True
 
 
 class RelatedResourcePermissionField(BasePermissionField):

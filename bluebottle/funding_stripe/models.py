@@ -467,12 +467,23 @@ class StripePayoutAccount(PayoutAccount):
                     account_details.verification.document.details:
                 missing += [account_details.verification.document.details]
             return missing
+        account_details = self.account
+        if account_details.requirements:
+            requirements = account_details.requirements
+            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
+            if getattr(self.account.requirements, 'disabled_reason', None):
+                missing += [self.account.requirements.disabled_reason]
+            return missing
         return []
 
     @property
     def pending_fields(self):
         account_details = getattr(self.account, 'individual', None)
         if account_details:
+            requirements = account_details.requirements
+            return requirements.pending_verification
+        account_details = self.account
+        if getattr(self.account, 'requirements', None):
             requirements = account_details.requirements
             return requirements.pending_verification
         return []
@@ -482,6 +493,7 @@ class StripePayoutAccount(PayoutAccount):
             del self.account
 
         individual_details = getattr(self.account, 'individual', None)
+
         if individual_details:
             if (
                 getattr(individual_details.verification, 'document', None) and
@@ -489,22 +501,39 @@ class StripePayoutAccount(PayoutAccount):
             ):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
-        elif getattr(self.account.requirements, 'disabled_reason', None):
-            if self.status != self.states.rejected.value:
-                self.states.reject()
-        elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
-            if self.status != self.states.verified.value:
-                self.states.verify()
-        elif len(self.missing_fields):
-            if self.status != self.states.rejected.value:
-                self.states.reject()
-        elif len(self.pending_fields):
-            if self.status != self.states.pending.value:
-                # Submit to transition to pending
-                self.states.submit()
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
+            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
+                if self.status != self.states.verified.value:
+                    self.states.verify()
+            elif len(self.missing_fields):
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
+            elif len(self.pending_fields):
+                if self.status != self.states.pending.value:
+                    # Submit to transition to pending
+                    self.states.submit()
+            else:
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
         else:
-            if self.status != self.states.rejected.value:
-                self.states.reject()
+            if len(self.missing_fields):
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
+            elif len(self.missing_fields) == 0:
+                if self.status != self.states.verified.value:
+                    self.states.verify()
+            elif len(self.pending_fields):
+                if self.status != self.states.pending.value:
+                    # Submit to transition to pending
+                    self.states.submit()
+            else:
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
 
         externals = self.account['external_accounts']['data']
         for external in externals:

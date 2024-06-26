@@ -82,12 +82,12 @@ class TeamTriggers(TriggerManager):
             TeamStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
-                    "team_members",
-                    TeamMemberStateMachine.remove,
-                ),
-                RelatedTransitionEffect(
                     "slots",
                     TeamScheduleSlotStateMachine.cancel,
+                ),
+                RelatedTransitionEffect(
+                    "team_members",
+                    TeamMemberStateMachine.remove,
                 ),
                 NotificationEffect(UserTeamRemovedNotification),
                 NotificationEffect(ManagerTeamRemovedNotification),

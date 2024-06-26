@@ -29,7 +29,7 @@ class TeamMemberPermission(ResourceOwnerPermission):
                 activity_owner,
                 obj.team.activity.initiative.owner,
             ]
-            or user in obj.activity.initiative.activity_managers.all()
+            or user in obj.team.activity.initiative.activity_managers.all()
         )
 
 

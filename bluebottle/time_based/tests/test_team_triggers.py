@@ -144,6 +144,16 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(self.team_member.participants.get().status, "accepted")
 
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            f'A participant has joined your team for the activity "{self.team.activity.title}"',
+        )
+
+        self.assertEqual(
+            mail.outbox[-2].subject,
+            f'You joined {self.team.user.full_name}\'s team for the activity "{self.team.activity.title}"',
+        )
+
     def test_withdraw(self):
         self.team_member.states.withdraw(save=True)
 

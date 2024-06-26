@@ -115,7 +115,7 @@ class CaptainTeamMemberJoinedNotification(CaptainTeamMemberNotification):
     subject = pgettext(
         "email", 'A participant has joined your team for the activity "{title}"'
     )
-    template = "messages/teams/manager_teammember_joined"
+    template = "messages/teams/captain_teammember_joined"
 
 
 class CaptainTeamMemberRemovedNotification(CaptainTeamMemberNotification):

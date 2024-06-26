@@ -15,7 +15,9 @@ from bluebottle.time_based.effects.teams import (
 )
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.notifications.teams import (
+    CaptainTeamMemberJoinedNotification,
     ManagerTeamRemovedNotification,
+    UserTeamMemberJoinedNotification,
     UserTeamRemovedNotification,
     UserTeamWithdrewNotification,
     ManagerTeamWithdrewNotification,
@@ -170,6 +172,8 @@ class TeamMemberTriggers(TriggerManager):
             TeamMemberStateMachine.initiate,
             effects=[
                 CreateTeamMemberSlotParticipantsEffect,
+                NotificationEffect(UserTeamMemberJoinedNotification),
+                NotificationEffect(CaptainTeamMemberJoinedNotification),
             ]
         ),
         TransitionTrigger(

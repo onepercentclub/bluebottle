@@ -6,7 +6,7 @@ from operator import attrgetter
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, lazy
 from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
@@ -21,6 +21,7 @@ from bluebottle.funding.models import (
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.models import ValidatorError
+from ..geo.models import Country
 
 
 @python_2_unicode_compatible
@@ -341,9 +342,17 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+def country_list():
+    if connection.tenant.schema_name != 'public':
+        return Country.get_country_choices()
+    return []
+
+
 class StripePayoutAccount(PayoutAccount):
-    account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
-    country = models.CharField(max_length=2)
+
+    account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
+    country = models.CharField(max_length=2, choices=lazy(country_list, list)())
+
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = models.JSONField(null=True, default=list)
 
@@ -471,6 +480,7 @@ class StripePayoutAccount(PayoutAccount):
     def check_status(self):
         if self.account:
             del self.account
+
         individual_details = getattr(self.account, 'individual', None)
         if individual_details:
             if (

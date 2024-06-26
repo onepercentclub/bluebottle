@@ -569,8 +569,8 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 @admin.register(PayoutAccount)
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'owner',)
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'owner',)
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
     search_fields = [

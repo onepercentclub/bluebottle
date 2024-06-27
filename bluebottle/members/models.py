@@ -136,8 +136,17 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     create_segments = models.BooleanField(
         default=False,
-        help_text=_('Create new segments when a user logs in. '
-                    'Leave unchecked if only priorly specified ones should be used.')
+        help_text=_(
+            "Create new segments when a user logs in. "
+            "Leave unchecked if only priorly specified ones should be used."
+        ),
+    )
+    create_locations = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Create new office locations when a user logs in. "
+            "Leave unchecked if only priorly specified ones should be used."
+        ),
     )
 
     anonymization_age = models.IntegerField(

@@ -1,4 +1,4 @@
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import F
@@ -7,7 +7,12 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import TimeContribution, SlotParticipant, ContributionTypeChoices
+from bluebottle.time_based.models import (
+    ContributionTypeChoices,
+    PeriodicSlot,
+    TimeContribution,
+    PeriodicParticipant
+)
 
 
 class CreateSlotTimeContributionEffect(Effect):
@@ -42,6 +47,22 @@ class CreatePreparationTimeContributionEffect(Effect):
                 contribution_type=ContributionTypeChoices.preparation,
                 value=activity.preparation,
                 start=start,
+            )
+            contribution.save()
+
+
+class CreateSchedulePreparationTimeContributionEffect(Effect):
+    title = _("Create preparation time contribution")
+    template = "admin/create_preparation_time_contribution.html"
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+        if activity.preparation:
+            contribution = TimeContribution(
+                contributor=self.instance,
+                contribution_type=ContributionTypeChoices.preparation,
+                value=activity.preparation,
+                start=self.instance.slot.start,
             )
             contribution.save()
 
@@ -87,50 +108,6 @@ class CreateOverallTimeContributionEffect(Effect):
     @property
     def is_valid(self):
         return super().is_valid and self.instance.activity.duration_period == 'overall'
-
-
-class CreatePeriodTimeContributionEffect(Effect):
-    title = _('Create contribution')
-    template = 'admin/create_period_time_contribution.html'
-
-    def post_save(self, **kwargs):
-        tz = get_current_timezone()
-        activity = self.instance.activity
-
-        if self.instance.current_period or not activity.start:
-            # Use today if we already have previous contributions
-            # or when we create a new contribution and now start
-            start = date.today()
-        else:
-            # The first contribution should start on the start
-            start = activity.start
-
-        # Calculate the next end
-        end = start + relativedelta(**{activity.duration_period: 1})
-        if activity.deadline and end > activity.deadline:
-            # the end is passed the deadline
-            end = activity.deadline
-
-        # Update the current_period
-        self.instance.current_period = end
-        self.instance.save()
-
-        if not activity.deadline or start < activity.deadline:
-            # Only when the deadline is not passed, create the new contribution
-            TimeContribution.objects.create(
-                contributor=self.instance,
-                contribution_type=ContributionTypeChoices.period,
-                value=activity.duration,
-                start=tz.localize(datetime.combine(start, datetime.min.time())),
-                end=tz.localize(datetime.combine(end, datetime.min.time())) if end else None,
-            )
-
-    def __str__(self):
-        return _('Create contribution')
-
-    @property
-    def is_valid(self):
-        return super().is_valid and self.instance.activity.duration_period != 'overall'
 
 
 class SetEndDateEffect(Effect):
@@ -232,45 +209,6 @@ def ActiveTimeContributionsTransitionEffect(transition, conditions=None):
     return _ActiveDurationsTransitionEffect
 
 
-class CreateSlotParticipantsForSlotsEffect(Effect):
-    title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_slot.html'
-
-    @property
-    def display(self):
-        return self.instance.activity.slot_selection == 'all' \
-            and self.instance.activity.active_participants.count()
-
-    def post_save(self, **kwargs):
-        slot = self.instance
-        activity = self.instance.activity
-        if activity.slot_selection == 'all':
-            for participant in activity.accepted_participants:
-                SlotParticipant.objects.create(participant=participant, slot=slot)
-
-
-class CreateSlotParticipantsForParticipantsEffect(Effect):
-    """
-    Create register participants for all slots
-    """
-    title = _('Add participants to all slots if slot selection is set to "all"')
-    template = 'admin/create_slot_participants_for_participant.html'
-
-    @property
-    def display(self):
-        return self.instance.activity.slot_selection == 'all' \
-            and self.instance.activity.slots.count()
-
-    def post_save(self, **kwargs):
-        participant = self.instance
-        activity = self.instance.activity
-        if activity.slot_selection == 'all':
-            for slot in activity.slots.all():
-                slot_participant = SlotParticipant(participant=participant, slot=slot)
-                slot_participant.execute_triggers(**self.options)
-                slot_participant.save()
-
-
 class UnlockUnfilledSlotsEffect(Effect):
     """
     Open up slots that are no longer full
@@ -284,8 +222,6 @@ class UnlockUnfilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        if self.instance.activity.slot_selection == 'all':
-            return []
         slots = self.instance.activity.slots.filter(status='full')
         return [slot for slot in slots.all() if slot.accepted_participants.count() < slot.capacity]
 
@@ -294,7 +230,7 @@ class UnlockUnfilledSlotsEffect(Effect):
             slot.states.unlock(save=True)
 
     def __repr__(self):
-        return '<Effect: Unlock unfilled slots for by {}>'.format(self.instance.activity)
+        return '<Effect: Unlock unfilled slots for {activity}>'.format(activity=self.instance.activity)
 
     def __str__(self):
         return _('Unlock unfilled slots for {activity}').format(activity=self.instance.activity)
@@ -313,8 +249,6 @@ class LockFilledSlotsEffect(Effect):
 
     @property
     def slots(self):
-        if self.instance.activity.slot_selection == 'all':
-            return []
         slots = self.instance.activity.slots.filter(status='open')
         return [
             slot for slot in slots.all()
@@ -332,22 +266,107 @@ class LockFilledSlotsEffect(Effect):
         return _('Lock filled slots for {activity}').format(activity=self.instance.activity)
 
 
-class UnsetCapacityEffect(Effect):
-    """
-    Unset the capacity when slot selection becomes free
-    """
+class CreateFirstSlotEffect(Effect):
 
-    template = 'admin/unset_capacity.html'
+    template = 'admin/time_based/periodic/create_first_slot.html'
 
-    def pre_save(self, **kwargs):
-        self.instance.capacity = None
-
-    @property
     def is_valid(self):
-        return self.instance.slot_selection == 'free' and self.instance.capacity
+        return self.instance.slots.count() == 0
+
+    def post_save(self):
+        tz = get_current_timezone()
+        start = tz.localize(
+            datetime.combine(self.instance.start, datetime.min.time())
+        ) if self.instance.start else now()
+
+        PeriodicSlot.objects.create(
+            activity=self.instance,
+            start=start,
+            end=start + relativedelta(**{self.instance.period: 1}),
+            duration=self.instance.duration
+        )
+
+
+class CreateNextSlotEffect(Effect):
+
+    def post_save(self):
+        activity = self.instance.activity
+        if activity.status == 'open':
+
+            slot = PeriodicSlot.objects.create(
+                activity=activity,
+                start=self.instance.end,
+                end=self.instance.end + relativedelta(**{activity.period: 1}),
+                duration=activity.duration
+            )
+
+            slot.states.start(save=True)
+
+
+class CreatePeriodicParticipantsEffect(Effect):
+
+    def post_save(self):
+        for registration in self.instance.activity.registrations.filter(
+            status="accepted"
+        ):
+            PeriodicParticipant.objects.create(
+                user=registration.user,
+                slot=self.instance,
+                activity=self.instance.activity,
+                registration=registration,
+            )
+
+
+class RescheduleScheduleSlotContributions(Effect):
+    template = 'admin/time_based/periodic/reschedule_schedule_slot.html'
+
+    def post_save(self):
+        for participant in self.instance.participants.all():
+            for contribution in participant.contributions.all():
+                contribution.start = self.instance.start
+                if self.instance.duration and self.instance.start:
+                    contribution.end = self.instance.start + self.instance.duration
+                else:
+                    contribution.end = None
+                contribution.value = self.instance.duration
+                contribution.save()
+
+
+class CheckPreparationTimeContributionEffect(Effect):
+    """
+    Check the status of preparation time contribution
+    """
+
+    template = 'admin/check_preparation_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        participant = self.instance.participant
+        participant.refresh_from_db()
+        has_registrations = participant.slot_participants.filter(
+            status__in=['registered']
+        ).exists()
+        prep_time = participant.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        ).first()
+        if prep_time:
+            if not has_registrations and prep_time.status in ['succeeded', 'new']:
+                prep_time.states.fail(save=True)
+            elif (
+                participant.status in ['new', 'accepted', 'succeeded'] and
+                has_registrations and
+                prep_time.status == 'failed'
+            ):
+                prep_time.states.succeed(save=True)
+
+    def is_valid(self):
+        participant = self.instance.participant
+        has_prep_time = participant.contributions.filter(
+            timecontribution__contribution_type=ContributionTypeChoices.preparation
+        ).exists()
+        return has_prep_time
 
     def __repr__(self):
-        return '<Effect: Unset the capacity>'
+        return '<Effect: Check preparation time contribution>'
 
     def __str__(self):
-        return _('Reset slot selection to "all" for {activity}').format(activity=self.instance)
+        return _('Check preparation time contribution for {participant}').format(participant=self.instance.user)

@@ -225,7 +225,7 @@ class BaseActivitySerializer(ModelSerializer):
         ).count()
 
     def get_team_count(self, instance):
-        return instance.teams.filter(status__in=['open', 'finished']).count()
+        return instance.old_teams.filter(status__in=['open', 'finished']).count()
 
     class Meta(object):
         model = Activity
@@ -466,8 +466,8 @@ class BaseContributionSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contribution
-        fields = ('value', 'status',)
-        meta_fields = ('created',)
+        fields = ("value", "status", "start", "end")
+        meta_fields = ("created",)
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'

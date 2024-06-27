@@ -327,6 +327,9 @@ fieldset {
     opacity: 0;
 }
 
+.field-image .related-widget-wrapper-icon {
+    opacity: 1;
+}
 
 
 html {
@@ -345,4 +348,12 @@ html {
 
 .info_field h3 {
     padding-left: 0
+}
+
+.slot-selector {
+    width: 80px
+}
+
+.field-slot .related-lookup:before {
+    content: "\e604"
 }

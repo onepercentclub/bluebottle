@@ -1,5 +1,6 @@
 {% extends "base.mail.html" %}
 {% load i18n %}
+{% load message_url %}
 
 {% block content %}
     {% blocktrans context 'email' %}
@@ -10,9 +11,10 @@
     {% else %}
         {% block message %}{% endblock %}
     {% endif %}
+    {% block additional %} {% endblock %}
 {% endblock %}
 
 {% block action %}
-    <a href="{{ action_link }}"
+  <a href="{% message_url action_link %}"
        class="action-email">{{ action_title }}</a>
 {% endblock %}`

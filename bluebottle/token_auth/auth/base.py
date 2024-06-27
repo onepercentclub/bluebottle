@@ -50,24 +50,24 @@ class BaseTokenAuthentication():
         return dict([(key, value) for key, value in list(data.items()) if hasattr(user_model, key)])
 
     def set_location(self, user, data):
-        if 'location.slug' in data:
-            try:
-                if user.location_verified:
-                    return
+        name = data.get("location.name", data.get("location.slug", None))
 
-                user.location = Location.objects.get(slug=data['location.slug'])
+        if name and not user.location_verified:
+            try:
+                location = Location.objects.extra(
+                    where=["%s ILIKE ANY (alternate_names)"],
+                    params=[
+                        name.lower(),
+                    ],
+                ).get()
+
+                user.location = location
                 user.save()
             except Location.DoesNotExist:
-                pass
-        if 'location.name' in data:
-            try:
-                if user.location_verified:
-                    return
-
-                user.location = Location.objects.get(name=data['location.name'])
-                user.save()
-            except Location.DoesNotExist:
-                pass
+                if MemberPlatformSettings.load().create_locations:
+                    location = Location.objects.create(name=name)
+                    user.location = location
+                    user.save()
 
     def get_segments_from_data(self, data):
         segment_list = {}

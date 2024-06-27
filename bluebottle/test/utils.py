@@ -3,9 +3,7 @@ from builtins import object
 from builtins import str
 from contextlib import contextmanager
 from importlib import import_module
-from urllib.parse import (
-    urlencode, urlparse, parse_qsl, ParseResult
-)
+from urllib.parse import urlencode, urlparse, parse_qsl, ParseResult
 
 from bs4 import BeautifulSoup
 from celery.contrib.testing.worker import start_worker
@@ -386,6 +384,13 @@ class APITestCase(BluebottleTestCase):
         Assert that the status code of the response is as expected
         """
         self.assertEqual(self.response.status_code, status)
+
+    def assertResourceStatus(self, resource, status):
+        """
+        Assert that the status a resource as expected
+        """
+        resource.refresh_from_db()
+        self.assertEqual(resource.status, status)
 
     def assertTotal(self, count):
         """
@@ -790,9 +795,12 @@ class NotificationTestCase(BluebottleTestCase):
         )
 
     def assertRecipients(self, recipients):
-        if list(recipients) != list(self.message.get_recipients()):
+        sorting = lambda user: user.id
+        actual = list(self.message.get_recipients()).sort(key=sorting)
+        expected = list(recipients).sort(key=sorting)
+        if actual != expected:
             self.fail("Recipients did not match: '{}' != '{}'".format(
-                list(recipients), list(self.message.get_recipients()))
+                actual, expected)
             )
 
     def assertSubject(self, subject):
@@ -834,11 +842,24 @@ class NotificationTestCase(BluebottleTestCase):
         return self.message.get_content_html(self.message.get_recipients()[0])
 
     def assertActionLink(self, url):
-        link = self._html.find_all('a', {'class': 'action-email'})[0]
-        if url != link['href']:
-            self.fail("Action link did not match: '{}' != '{}'".format(
-                url, link['href'])
-            )
+        link = self._html.find_all("a", {"class": "action-email"})[0]
+        parsed = urlparse(link["href"])
+
+        qs = dict(parse_qsl(parsed.query))
+        qs_without_utm_tags = urlencode(
+            dict((key, value) for key, value in qs.items() if not key.startswith("utm"))
+        )
+        found_url = ParseResult(
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            qs_without_utm_tags,
+            parsed.fragment,
+        ).geturl()
+
+        if url != found_url:
+            self.fail("Action link did not match: '{}' != '{}'".format(url, found_url))
 
     def assertActionTitle(self, title):
         link = self._html.find_all('a', {'class': 'action-email'})[0]

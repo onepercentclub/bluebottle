@@ -1,9 +1,9 @@
 {% load i18n %}
-<h3>{%trans "Create participant" %}</h3>
+<h3>{%trans "Create a participant" %}</h3>
 
 <p>
-{% blocktrans with activity=effects.0.instance.activity %}
-    Create a time contribution for "{{activity}}"
+{% blocktrans with instance=effects.0.instance %}
+    Create a participant for "{{instance.activity}}"
 {% endblocktrans %}
 
 {% if effects|length > 1%} 
@@ -11,3 +11,6 @@
         and {{count}} others
     {% endblocktrans %}
 {% endif %} 
+{% blocktrans with duration=effects.0.instance.activity.duration %}
+with a duration of {{ duration }}.
+{% endblocktrans %}

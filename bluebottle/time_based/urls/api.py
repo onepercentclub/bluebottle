@@ -23,7 +23,7 @@ from bluebottle.time_based.views import (
     SkillDetail,
     RelatedSlotParticipantListView,
     DateSlotTransitionList,
-    SlotParticipantExportView
+    SlotParticipantExportView, PeriodActivityDetailView
 )
 
 urlpatterns = [
@@ -123,5 +123,13 @@ urlpatterns = [
         name='skill'
     ),
 
-    url(r'^/deadline', include('bluebottle.time_based.urls.deadline_api')),
+    url(
+        r'^/period/(?P<pk>\d+)$',
+        PeriodActivityDetailView.as_view(),
+        name="period-detail",
+    ),
+    url(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
+    url(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),
+    url(r"^/schedule", include("bluebottle.time_based.urls.schedule_api")),
+    url(r"^/teams", include("bluebottle.time_based.urls.team_api")),
 ]

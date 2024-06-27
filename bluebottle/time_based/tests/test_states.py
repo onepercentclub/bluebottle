@@ -4,17 +4,15 @@ from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
-from bluebottle.activities.tests.factories import TeamFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.states import (
-    DateStateMachine, TimeBasedStateMachine, PeriodStateMachine, DateActivitySlotStateMachine,
-    PeriodParticipantStateMachine
+    DateStateMachine, TimeBasedStateMachine, DateActivitySlotStateMachine
 )
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, PeriodActivityFactory,
-    DateParticipantFactory, PeriodParticipantFactory, DateActivitySlotFactory, DeadlineActivityFactory,
+    DateActivityFactory,
+    DateParticipantFactory, DateActivitySlotFactory, DeadlineActivityFactory,
     DeadlineRegistrationFactory,
 )
 
@@ -153,97 +151,6 @@ class DateActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTest
         )
 
 
-class PeriodActivityStatesTestCase(TimeBasedActivityStatesTestCase, BluebottleTestCase):
-    factory = PeriodActivityFactory
-    participant_factory = PeriodParticipantFactory
-
-    def test_approved(self):
-        self.activity.states.publish(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(
-            self.activity.status, 'open'
-        )
-        self.assertTrue(
-            TimeBasedStateMachine.cancel in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.succeed in
-            self.activity.states.possible_transitions()
-        )
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(
-            organizer.status,
-            'succeeded'
-        )
-        self.assertEqual(organizer.contributions.first().contribution_type, 'organizer')
-        organizer_contribution = organizer.contributions.get()
-        self.assertEqual(
-            organizer_contribution.status,
-            'succeeded'
-        )
-        self.assertAlmostEqual(
-            organizer_contribution.start,
-            now(),
-            delta=timedelta(minutes=2)
-        )
-
-    def test_draft(self):
-        self.assertTrue(
-            TimeBasedStateMachine.publish in
-            self.activity.states.possible_transitions()
-        )
-
-        self.assertTrue(
-            TimeBasedStateMachine.reject in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_no_participants(self):
-        self.activity.duration_period = 'weeks'
-        self.activity.states.publish(save=True)
-        self.activity.refresh_from_db()
-        self.assertFalse(
-            PeriodStateMachine.succeed_manually in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_overall(self):
-        self.activity.duration_period = 'overall'
-
-        self.activity.states.publish(save=True)
-
-        self.participant_factory.create(activity=self.activity)
-
-        self.activity.refresh_from_db()
-
-        self.assertTrue(
-            PeriodStateMachine.succeed_manually in
-            self.activity.states.possible_transitions()
-        )
-
-    def test_succeed_manually_(self):
-        self.activity.duration_period = 'weeks'
-
-        self.activity.states.publish(save=True)
-
-        self.participant_factory.create(activity=self.activity)
-
-        self.activity.refresh_from_db()
-
-        self.activity.states.succeed_manually()
-        self.assertEqual(
-            self.activity.status, 'succeeded'
-        )
-        self.assertTrue(
-            PeriodStateMachine.cancel in
-            self.activity.states.possible_transitions()
-        )
-
-
 class DateActivitySlotStatesTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
@@ -289,33 +196,6 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
         )
 
 
-class PeriodParticipantStatesTestCase(BluebottleTestCase):
-    def setUp(self):
-        super().setUp()
-        self.user = BlueBottleUserFactory()
-        self.initiative = InitiativeFactory(owner=self.user, status='approved')
-        self.activity = PeriodActivityFactory.create(
-            initiative=self.initiative,
-            status='open'
-        )
-        self.participant = PeriodParticipantFactory.create(activity=self.activity)
-
-    def test_stop(self):
-        self.assertTrue(
-            PeriodParticipantStateMachine.stop in
-            self.participant.states.possible_transitions()
-        )
-
-    def test_stop_team(self):
-        self.participant.team = TeamFactory.create()
-        self.participant.save()
-
-        self.assertTrue(
-            PeriodParticipantStateMachine.stop not in
-            self.participant.states.possible_transitions()
-        )
-
-
 class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -332,16 +212,26 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
 
     def test_register(self):
         mail.outbox = []
-        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
+        )
         self.assertEqual(
             registration.status,
             'accepted'
         )
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have a new participant for your activity "Some good stuff"'
+        self.assertEqual(len(mail.outbox), 2)
+        subjects = [message.subject for message in mail.outbox]
+
+        self.assertTrue(
+            'You have a new participant for your activity "Some good stuff" 🎉' in subjects
         )
+
+        self.assertTrue(
+            'You have joined the activity "Some good stuff"' in subjects
+        )
+
         participants = registration.deadlineparticipant_set
         participant = participants.first()
         self.assertEqual(participants.count(), 1)
@@ -353,16 +243,17 @@ class DeadlineRegistrationStatesTestCase(BluebottleTestCase):
         mail.outbox = []
         self.activity.review = True
         self.activity.save()
-        registration = DeadlineRegistrationFactory.create(activity=self.activity, user=self.user)
+        registration = DeadlineRegistrationFactory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user
+        )
         self.assertEqual(
             registration.status,
             'new'
         )
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have a new application for your activity "Some good stuff"'
-        )
+        self.assertEqual(len(mail.outbox), 2)
+
         participants = registration.deadlineparticipant_set
         participant = participants.first()
         self.assertEqual(participants.count(), 1)

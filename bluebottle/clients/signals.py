@@ -1,4 +1,3 @@
-
 from django.db import models, connection
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import CelerySignalProcessor
@@ -22,6 +21,17 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
     but using `pickle` opens the application up to security concerns.
     """
 
+    def __init__(self, *args, **kwargs):
+        self.models = registry.get_models()
+
+        self.related_models = []
+
+        for doc in registry.get_documents():
+            for related_model in doc.Django.related_models:
+                self.related_models.append(related_model)
+
+        super().__init__(*args, **kwargs)
+
     def handle_save(self, sender, instance, **kwargs):
         """Handle save with a Celery task.
 
@@ -33,8 +43,16 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
         model_name = instance.__class__.__name__
 
         tenant = connection.tenant.schema_name
-        self.registry_update_task.apply_async(args=[pk, app_label, model_name, tenant], countdown=2)
-        self.registry_update_related_task.apply_async(args=[pk, app_label, model_name, tenant], countdown=2)
+        if sender in self.models:
+            self.registry_update_task.apply_async(
+                args=[pk, app_label, model_name, tenant], countdown=2
+            )
+
+        if sender in self.related_models:
+
+            self.registry_update_related_task.apply_async(
+                args=[pk, app_label, model_name, tenant], countdown=2
+            )
 
     def handle_pre_delete(self, sender, instance, **kwargs):
         """Handle removing of instance object from related models instance.
@@ -69,8 +87,9 @@ class TenantCelerySignalProcessor(CelerySignalProcessor):
                     object_list = [related]
                 else:
                     object_list = related
-                bulk_data = list(doc_instance._get_actions(object_list, action)),
-                self.registry_delete_task.delay(doc_instance.__class__.__name__, bulk_data, tenant)
+                bulk_data = list(doc_instance._get_actions(object_list, action))
+
+                self.registry_delete_task.delay(doc_instance, bulk_data, tenant)
 
     @shared_task()
     def registry_delete_task(doc_instance, data, tenant):

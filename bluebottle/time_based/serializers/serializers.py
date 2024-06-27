@@ -95,6 +95,7 @@ class ActivitySlotSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     location = ResourceRelatedField(queryset=Geolocation.objects, required=False, allow_null=True)
     current_status = CurrentStatusField(source='states.current_state')
+    timezone = serializers.SerializerMethodField()
 
     my_contributor = SerializerMethodResourceRelatedField(
         model=SlotParticipant,
@@ -109,6 +110,9 @@ class ActivitySlotSerializer(ModelSerializer):
         read_only=True
     )
 
+    def get_timezone(self, instance):
+        return instance.location.timezone if not instance.is_online and instance.location else None
+
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
@@ -122,6 +126,7 @@ class ActivitySlotSerializer(ModelSerializer):
             'end',
             'transitions',
             'is_online',
+            'timezone',
             'location_hint',
             'online_meeting_url',
             'my_contributor',
@@ -216,13 +221,20 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
 
     class JSONAPIMeta(ActivitySlotSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/date-slots'
-        included_resources = ['activity', 'my_contributor', 'my_contributor.participant.user', 'location']
+        included_resources = [
+            'activity',
+            'my_contributor',
+            'my_contributor.participant.user',
+            'location',
+            'location.country'
+        ]
 
     included_serializers = dict(
         ActivitySlotSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'country': 'bluebottle.geo.serializers.CountrySerializer',
             'my_contributor': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
             'my_contributor.participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
@@ -396,9 +408,13 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         ).count()
 
     def get_first_slot(self, instance):
-        return instance.slots.filter(
-            start__gte=now()
-        ).exclude(status__in=['draft', 'cancelled']).order_by('start').first()
+        slots = instance.slots.exclude(status__in=["draft", "cancelled"]).order_by(
+            "start"
+        )
+
+        if instance.status == "open":
+            slots = slots.filter(start__gte=now())
+        return slots.first()
 
     def get_slot_count(self, instance):
         return len(instance.slots.all())
@@ -462,7 +478,6 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'links',
             'my_contributor',
-            'slot_selection',
             'preparation',
             'participants_export_url',
             'date_info',
@@ -761,12 +776,14 @@ class SlotParticipantSerializer(ModelSerializer):
         resource_name = 'contributors/time-based/slot-participants'
         included_resources = [
             'participant',
+            'participant.user',
             'slot',
             'slot.activity',
         ]
 
     included_serializers = {
         'participant': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'participant.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'slot.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
     }
@@ -790,8 +807,8 @@ class TimeContributionSerializer(BaseContributionSerializer):
 
     class Meta(BaseContributionSerializer.Meta):
         model = TimeContribution
-
-        meta_fields = BaseContributionSerializer.Meta.meta_fields + ('permissions',)
+        fields = BaseContributionSerializer.Meta.fields + ("contribution_type",)
+        meta_fields = BaseContributionSerializer.Meta.meta_fields + ("permissions",)
 
     class JSONAPIMeta(BaseContributionSerializer.JSONAPIMeta):
         resource_name = 'contributions/time-contributions'

@@ -55,6 +55,16 @@ def get_human_readable_duration(value):
     return " ".join(format_list)
 
 
+def duration_to_hours(value):
+    days, hours, minutes, seconds = get_time_factors(value)
+    total_hours = hours + (minutes / 60) + (seconds / 3600)
+
+    if total_hours.is_integer():
+        return int(total_hours)
+    else:
+        return total_hours
+
+
 class LabeledNumberInput(Input):
     input_type = "number"
     template_name = 'widgets/labeled_number_input.html'

@@ -1,0 +1,7 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+  <p>{{ applicant_name }}'s team applied to your activity "{{ title}}".<p>
+  <p>Review the application and decide if this team is the right fit.</p>
+{% endblocktrans %}{% endblock %}

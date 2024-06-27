@@ -1,12 +1,11 @@
-from django.utils.timezone import now
 from django.template.loader import render_to_string
-
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.fsm.effects import Effect, TransitionEffect
 from bluebottle.activities.models import (
     Contributor, Organizer, EffortContribution, Activity, Team, Invite
 )
+from bluebottle.fsm.effects import Effect, TransitionEffect
 
 
 class CreateOrganizer(Effect):
@@ -199,3 +198,14 @@ class ResetTeamParticipantsEffect(Effect):
 
     def __str__(self):
         return str(_('Reset Team'))
+
+
+class DeleteRelatedContributionsEffect(Effect):
+    "Delete the related contributions when participant is deleted manually"
+    display = True
+
+    def pre_save(self, **kwargs):
+        self.instance.contributions.all().delete()
+
+    def __str__(self):
+        return str(_('Delete related contributions'))

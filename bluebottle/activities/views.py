@@ -27,7 +27,12 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+from bluebottle.time_based.models import (
+    DateParticipant,
+    ScheduleParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -47,11 +52,9 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         TenantConditionalOpenClose,
     )
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
     def get_queryset(self):
-        queryset = Activity.objects.filter(status__in=("succeeded", "open"))
+        queryset = Activity.objects.filter(status__in=("succeeded", "open", "full", "running"))
+
         collects = [
             activity for activity
             in queryset.annotate(
@@ -143,26 +146,26 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
     def get_queryset(self):
-        return Contributor.objects.prefetch_related(
-            'user', 'activity', 'contributions'
-        ).instance_of(
-            Donor,
-            DateParticipant,
-            PeriodParticipant,
-            DeedParticipant,
-            CollectContributor,
-        ).filter(
-            user=self.request.user
-        ).exclude(
-            status__in=['rejected', 'failed']
-        ).exclude(
-            donor__status__in=['new']
-        ).order_by(
-            '-created'
-        ).annotate(
-            total_duration=Sum(
-                'contributions__timecontribution__value',
-                filter=Q(contributions__status__in=['succeeded', 'new'])
+        return (
+            Contributor.objects.prefetch_related("user", "activity", "contributions")
+            .instance_of(
+                Donor,
+                DateParticipant,
+                PeriodicParticipant,
+                ScheduleParticipant,
+                DeedParticipant,
+                DeadlineParticipant,
+                CollectContributor,
+            )
+            .filter(user=self.request.user)
+            .exclude(status__in=["rejected", "failed"])
+            .exclude(donor__status__in=["new"])
+            .order_by("-created")
+            .annotate(
+                total_duration=Sum(
+                    "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
             )
         )
 
@@ -256,19 +259,26 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 queryset = self.queryset
             else:
                 queryset = self.queryset.filter(
-                    Q(user=self.request.user) |
-                    Q(activity__owner=self.request.user) |
-                    Q(activity__initiative__activity_manager=self.request.user) |
-                    Q(status__in=('accepted', 'succeeded',))
-                ).order_by('-id')
+                    Q(user=self.request.user)
+                    | Q(activity__owner=self.request.user)
+                    | Q(activity__initiative__activity_manager=self.request.user)
+                    | Q(status__in=("accepted", "succeeded", "scheduled"))
+                ).order_by("-id")
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
-            ).order_by('-id')
+                status__in=("accepted", "succeeded", "scheduled")
+            ).order_by("-id")
 
         status = self.request.query_params.get('filter[status]')
         if status:
-            queryset = queryset.filter(status=status)
+            queryset = queryset.filter(status__in=status.split(","))
+
+        my = self.request.query_params.get("filter[my]")
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

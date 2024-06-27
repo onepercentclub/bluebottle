@@ -22,7 +22,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     StripePaymentSerializer
 )
-from bluebottle.funding_stripe.utils import stripe
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView, RetrieveAPIView,
@@ -106,6 +106,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         if token:
+            stripe = get_stripe()
             try:
                 serializer.instance.update(token)
             except stripe.error.InvalidRequestError as e:
@@ -163,7 +164,7 @@ class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
-
+        stripe = get_stripe()
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_intents
@@ -227,6 +228,7 @@ class SourceWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        stripe = get_stripe()
 
         try:
             event = stripe.Webhook.construct_event(
@@ -318,6 +320,7 @@ class ConnectWebHookView(View):
 
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        stripe = get_stripe()
 
         try:
             event = stripe.Webhook.construct_event(

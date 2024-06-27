@@ -5,7 +5,8 @@
         {% trans "Changed" %}
     {% endif %}
     <br/>
-    {{ slot.start_date }} {{ slot.start_time }} - {{ slot.end_time }} <b>({{slot.timezone}})</b>
+    {{ slot.start_date }} <br/>
+    {{ slot.start_time }} to {{ slot.end_time }} ({{slot.timezone}})
     <br/>
     {% if slot.is_online %}
         {% if slot.online_meeting_url %}

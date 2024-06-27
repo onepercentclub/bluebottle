@@ -253,12 +253,13 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = SorlImageField('200x200', crop='center')
+    image = SorlImageField("500x500", upscale=False)
+
     text = SafeField(required=False, allow_blank=True)
 
     class Meta(object):
         model = Step
-        fields = ('id', 'image', 'header', 'text', 'link', 'external')
+        fields = ('id', 'image', 'header', 'text', 'link', 'link_text', 'external')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/steps/steps'
@@ -756,7 +757,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImagePlainTextItem
         fields = (
-            'id', 'text', 'image', 'ratio', 'align', 'type', 'title', 'sub_title',
+            'id', 'text', 'image', 'video_url', 'ratio', 'align', 'type', 'title', 'sub_title',
             'action_text', 'action_link'
         )
 
@@ -769,7 +770,7 @@ class ImageBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ImageItem
-        fields = ('id', 'type', 'image', 'title', 'sub_title')
+        fields = ('id', 'type', 'video_url', 'image', 'title', 'sub_title')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

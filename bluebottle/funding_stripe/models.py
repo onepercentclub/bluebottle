@@ -19,7 +19,7 @@ from bluebottle.funding.models import Donor
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
-from bluebottle.funding_stripe.utils import stripe
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.models import ValidatorError
 
 
@@ -54,7 +54,7 @@ class PaymentIntent(models.Model):
             )
             if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                 intent_args['on_behalf_of'] = connect_account.account_id
-
+            stripe = get_stripe()
             intent = stripe.PaymentIntent.create(
                 **intent_args
             )
@@ -66,6 +66,7 @@ class PaymentIntent(models.Model):
 
     @property
     def intent(self):
+        stripe = get_stripe()
         return stripe.PaymentIntent.retrieve(self.intent_id)
 
     @property
@@ -108,6 +109,7 @@ class StripePayment(Payment):
         )
 
     def update(self):
+        stripe = get_stripe()
         intent = self.payment_intent.intent
         if len(intent.charges) == 0:
             # No charge. Do we still need to charge?
@@ -135,20 +137,24 @@ class StripeSourcePayment(Payment):
     @property
     def charge(self):
         if self.charge_token:
+            stripe = get_stripe()
             return stripe.Charge.retrieve(self.charge_token)
 
     @property
     def source(self):
         if self.source_token:
+            stripe = get_stripe()
             return stripe.Source.retrieve(self.source_token)
 
     def refund(self):
+        stripe = get_stripe()
         charge = stripe.Charge.retrieve(self.charge_token)
         charge.refund(
             reverse_transfer=True,
         )
 
     def do_charge(self):
+        stripe = get_stripe()
         connect_account = self.donation.activity.bank_account.connect_account
 
         statement_descriptor = connection.tenant.name[:22]
@@ -206,6 +212,7 @@ class StripeSourcePayment(Payment):
         super(StripeSourcePayment, self).save()
 
         if created:
+            stripe = get_stripe()
             stripe.Source.modify(self.source_token, metadata=self.metadata)
 
     @property
@@ -221,6 +228,22 @@ class StripeSourcePayment(Payment):
 class StripePaymentProvider(PaymentProvider):
 
     title = 'Stripe'
+
+    stripe_secret = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe secret key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
+
+    stripe_publishable_key = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe publishable key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
 
     stripe_payment_methods = [
         PaymentMethod(
@@ -257,7 +280,7 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def public_settings(self):
         return {
-            'publishable_key': settings.STRIPE['publishable_key'],
+            'publishable_key': self.stripe_publishable_key or settings.STRIPE['publishable_key'],
             'credit-card': self.credit_card,
             'ideal': self.ideal,
             'bancontact': self.bancontact,
@@ -267,9 +290,9 @@ class StripePaymentProvider(PaymentProvider):
     @property
     def private_settings(self):
         return {
-            'api_key': settings.STRIPE['api_key'],
-            'webhook_secret': settings.STRIPE['webhook_secret'],
-            'webhook_secret_connect': settings.STRIPE['webhook_secret_connect'],
+            'api_key': self.stripe_secret or settings.STRIPE['api_key'],
+            'webhook_secret': self.stripe_secret or settings.STRIPE['webhook_secret'],
+            'webhook_secret_connect': self.stripe_secret or settings.STRIPE['webhook_secret_connect'],
         }
 
     credit_card = models.BooleanField(_('Credit card'), default=True)
@@ -297,6 +320,7 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
+    stripe = get_stripe()
     return stripe.CountrySpec.retrieve(country)
 
 
@@ -501,6 +525,7 @@ class StripePayoutAccount(PayoutAccount):
     def account(self):
         if not hasattr(self, '_account'):
             try:
+                stripe = get_stripe()
                 self._account = stripe.Account.retrieve(self.account_id)
             except AuthenticationError:
                 self._account = {}
@@ -526,6 +551,7 @@ class StripePayoutAccount(PayoutAccount):
             if self.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                 capabilities.append('card_payments')
 
+            stripe = get_stripe()
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
@@ -546,6 +572,7 @@ class StripePayoutAccount(PayoutAccount):
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
     def update(self, token):
+        stripe = get_stripe()
         self._account = stripe.Account.modify(
             self.account_id,
             account_token=token
@@ -637,7 +664,7 @@ class ExternalAccount(BankAccount):
     def create(self, token):
         if self.account_id:
             raise ProgrammingError('Stripe Account is already created')
-
+        stripe = get_stripe()
         self._account = stripe.Account.create_external_account(
             self.connect_account.account_id,
             external_account=token

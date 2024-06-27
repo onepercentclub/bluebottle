@@ -35,7 +35,8 @@ from bluebottle.time_based.serializers import (
     DateParticipantSerializer,
     DateParticipantListSerializer,
     DeadlineParticipantSerializer,
-    PeriodicParticipantSerializer
+    PeriodicParticipantSerializer,
+    ScheduleActivitySerializer
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
@@ -378,6 +379,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
     ]
 
     included_serializers = {

@@ -6,7 +6,7 @@ from operator import attrgetter
 from django.conf import settings
 from django.db import ProgrammingError
 from django.db import models, connection
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, lazy
 from django.utils.translation import gettext_lazy as _
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
@@ -21,6 +21,7 @@ from bluebottle.funding.models import (
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.models import ValidatorError
+from ..geo.models import Country
 
 
 @python_2_unicode_compatible
@@ -46,7 +47,8 @@ class PaymentIntent(models.Model):
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata
             )
-            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            provider = StripePaymentProvider.objects.get()
+            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES or provider.stripe_secret:
                 intent_args['on_behalf_of'] = connect_account.account_id
             stripe = get_stripe()
             intent = stripe.PaymentIntent.create(
@@ -212,6 +214,14 @@ class StripePaymentProvider(PaymentProvider):
 
     title = 'Stripe'
 
+    stripe_publishable_key = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe publishable key'),
+        help_text=_('This is only needed if you want to use a specific Stripe account.')
+    )
+
     stripe_secret = models.CharField(
         max_length=200,
         null=True,
@@ -220,12 +230,28 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('This is only needed if you want to use a specific Stripe account.')
     )
 
-    stripe_publishable_key = models.CharField(
+    webhook_secret_connect = models.CharField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_('Stripe publishable key'),
-        help_text=_('This is only needed if you want to use a specific Stripe account.')
+        verbose_name=_('Stripe connect webhook secret'),
+        help_text=_('The secret for connect webhook.')
+    )
+
+    webhook_secret_intents = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe payment intents webhook secret'),
+        help_text=_('The secret for payment intents webhook.')
+    )
+
+    webhook_secret_sources = models.CharField(
+        max_length=200,
+        null=True,
+        blank=True,
+        verbose_name=_('Stripe payment sources webhook secret'),
+        help_text=_('The secret for payment sources webhook.')
     )
 
     stripe_payment_methods = [
@@ -316,9 +342,17 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+def country_list():
+    if connection.tenant.schema_name != 'public':
+        return Country.get_country_choices()
+    return []
+
+
 class StripePayoutAccount(PayoutAccount):
-    account_id = models.CharField(max_length=40, help_text=_("Starts with 'acct_...'"))
-    country = models.CharField(max_length=2)
+
+    account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
+    country = models.CharField(max_length=2, choices=lazy(country_list, list)())
+
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = models.JSONField(null=True, default=list)
 
@@ -433,6 +467,13 @@ class StripePayoutAccount(PayoutAccount):
                     account_details.verification.document.details:
                 missing += [account_details.verification.document.details]
             return missing
+        account_details = self.account
+        if account_details.requirements:
+            requirements = account_details.requirements
+            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
+            if getattr(self.account.requirements, 'disabled_reason', None):
+                missing += [self.account.requirements.disabled_reason]
+            return missing
         return []
 
     @property
@@ -441,15 +482,23 @@ class StripePayoutAccount(PayoutAccount):
         if account_details:
             requirements = account_details.requirements
             return requirements.pending_verification
+        account_details = self.account
+        if getattr(self.account, 'requirements', None):
+            requirements = account_details.requirements
+            return requirements.pending_verification
         return []
 
     def check_status(self):
         if self.account:
             del self.account
-        account_details = getattr(self.account, 'individual', None)
-        if account_details:
-            if getattr(account_details.verification, 'document', None) and \
-                    account_details.verification.document.details:
+
+        individual_details = getattr(self.account, 'individual', None)
+
+        if individual_details:
+            if (
+                getattr(individual_details.verification, 'document', None) and
+                individual_details.verification.document.details
+            ):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
             elif getattr(self.account.requirements, 'disabled_reason', None):
@@ -469,8 +518,22 @@ class StripePayoutAccount(PayoutAccount):
                 if self.status != self.states.rejected.value:
                     self.states.reject()
         else:
-            if self.status != self.states.incomplete.value:
-                self.states.set_incomplete()
+            if len(self.missing_fields):
+                if self.status != self.states.incomplete.value:
+                    self.states.set_incomplete()
+            elif getattr(self.account.requirements, 'disabled_reason', None):
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
+            elif len(self.missing_fields) == 0:
+                if self.status != self.states.verified.value:
+                    self.states.verify()
+            elif len(self.pending_fields):
+                if self.status != self.states.pending.value:
+                    # Submit to transition to pending
+                    self.states.submit()
+            else:
+                if self.status != self.states.rejected.value:
+                    self.states.reject()
 
         externals = self.account['external_accounts']['data']
         for external in externals:
@@ -503,16 +566,20 @@ class StripePayoutAccount(PayoutAccount):
                 campaign.states.put_on_hold()
                 campaign.save()
 
+    def retrieve_account(self):
+        try:
+            stripe = get_stripe()
+            account = stripe.Account.retrieve(self.account_id)
+        except AuthenticationError:
+            account = {}
+        if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in account:
+            account = {}
+        return account
+
     @cached_property
     def account(self):
         if not hasattr(self, '_account'):
-            try:
-                stripe = get_stripe()
-                self._account = stripe.Account.retrieve(self.account_id)
-            except AuthenticationError:
-                self._account = {}
-            if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in self._account:
-                self._account = {}
+            self._account = self.retrieve_account()
         return self._account
 
     def save(self, *args, **kwargs):
@@ -550,7 +617,6 @@ class StripePayoutAccount(PayoutAccount):
 
         if self.account_id:
             self.eventually_due = self.account.requirements.eventually_due
-
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
     def update(self, token):

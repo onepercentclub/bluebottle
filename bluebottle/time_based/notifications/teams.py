@@ -67,7 +67,7 @@ class UserTeamRemovedNotification(UserTeamNotification):
 
 class UserTeamWithdrewNotification(UserTeamNotification):
     """
-    The participant was removed from the activity
+    Team withdrew from activity
     """
 
     subject = pgettext("email", 'You withdrew your team from the activity "{title}"')
@@ -76,7 +76,7 @@ class UserTeamWithdrewNotification(UserTeamNotification):
 
 class UserTeamScheduledNotification(UserTeamNotification):
     """
-    The participant was removed from the activity
+    Team is scheduled for activity
     """
 
     subject = pgettext(
@@ -84,9 +84,15 @@ class UserTeamScheduledNotification(UserTeamNotification):
     )
     template = "messages/teams/user_team_scheduled"
 
+    def get_slot(self):
+        return self.obj.slots.first()
+
+    def get_event_data(self, recipient=None):
+        return self.get_slot().event_data
+
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        context["slot"] = get_slot_info(self.obj.slots.first())
+        context["slot"] = get_slot_info(self.get_slot())
         return context
 
 
@@ -191,7 +197,7 @@ class UserTeamMemberWithdrewNotification(UserTeamMemberNotification):
 
 class UserTeamMemberScheduledNotification(UserTeamNotification):
     """
-    The participant was removed from the team
+    Your team has been scheduled for activity
     """
 
     subject = pgettext(
@@ -203,3 +209,40 @@ class UserTeamMemberScheduledNotification(UserTeamNotification):
         context = super().get_context(recipient)
         context["slot"] = get_slot_info(self.obj.team.slots.first())
         return context
+
+
+class UserTeamMemberChangedNotification(TransitionMessage):
+    """
+    The date/time for your team has been changed
+    """
+
+    subject = pgettext(
+        "email", 'The date or location for your team has been changed for the activity "{title}"'
+    )
+
+    template = "messages/teams/user_teamslot_changed"
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context["slot"] = get_slot_info(self.obj.team.slots.first())
+        context["name"] = recipient.first_name
+        return context
+
+    context = {
+        "title": "activity.title",
+    }
+
+    def get_event_data(self, recipient):
+        return self.obj.event_data
+
+    @property
+    def action_link(self):
+        team = self.obj.team
+        activity = team.activity
+        return activity.get_absolute_url() + f"?teamId={team.pk}"
+
+    action_title = pgettext("email", "View team")
+
+    def get_recipients(self):
+        """participants"""
+        return [p.user for p in self.obj.accepted_participants.all()]

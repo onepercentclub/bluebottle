@@ -56,7 +56,7 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     schedule = Transition(
-        [new, finished, running],
+        [new, finished, running, scheduled],
         scheduled,
         name=_("Schedule"),
         description=_("The slot now has a date and location."),

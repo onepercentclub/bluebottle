@@ -1747,13 +1747,13 @@ class Slot(models.Model):
 
     @property
     def organizer(self):
-        return self.activity.ower
+        return self.activity.owner
 
     @property
     def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full']:
+        if self.end < now() or self.status not in ['open', 'full', 'scheduled']:
             return None
-        title = f'{self.activity.title} - {self.title or self.id}'
+        title = f'{self.activity.title} - {self.id}'
         location = ''
         if self.is_online:
             location = _('Anywhere/Online')
@@ -1865,6 +1865,10 @@ class TeamScheduleSlot(BaseScheduleSlot):
         return self.participants.filter(
             status__in=["accepted", "participating", "succeeded", "scheduled"],
         )
+
+    @property
+    def owner(self):
+        return self.team.owner
 
 
 class PeriodicParticipant(Participant, Contributor):

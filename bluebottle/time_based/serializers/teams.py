@@ -98,7 +98,8 @@ class TeamSerializer(ModelSerializer):
             "slots",
             "team_members",
             "member_export_url",
-            "invite_code"
+            "invite_code",
+            "name"
         )
         meta_fields = (
             "permissions",

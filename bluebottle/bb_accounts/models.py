@@ -276,7 +276,12 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """
         Returns the first_name plus the last_name, with a space in between.
         """
-        full_name = u'{0} {1}'.format(self.first_name, self.last_name)
+        from bluebottle.members.models import MemberPlatformSettings
+        display = MemberPlatformSettings.objects.get().display_member_names
+        if display == 'first_name':
+            full_name = self.first_name
+        else:
+            full_name = u'{0} {1}'.format(self.first_name, self.last_name)
         return full_name.strip()
 
     def anonymize(self):

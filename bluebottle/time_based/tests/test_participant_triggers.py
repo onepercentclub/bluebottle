@@ -256,6 +256,7 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.participant.save()
 
         self.assertEqual(self.participant.status, "removed")
+        self.assertEqual(self.participant.contributions.first().status, "failed")
 
         self.assertEqual(len(mail.outbox), 2)
 

@@ -177,8 +177,8 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
     start = Transition(
         [stopped],
         RegistrationStateMachine.accepted,
-        name=_('Start again'),
-        description=_("Start contributing to this activity again."),
+        name=_("Resume"),
+        description=_("Resume this persons participation in your activity."),
         automatic=False,
         permission=is_user_or_manager,
     )

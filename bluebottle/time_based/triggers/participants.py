@@ -244,11 +244,13 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             ]
         ),
         TransitionTrigger(
-            DeadlineParticipantStateMachine.readd,
+            RegistrationParticipantStateMachine.readd,
             effects=[
-                RelatedTransitionEffect(
-                    "contributions",
-                    ContributionStateMachine.succeed,
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        registration_is_accepted,
+                    ],
                 ),
                 RelatedTransitionEffect(
                     'activity',
@@ -463,8 +465,7 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                 FollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
-                    ContributionStateMachine.succeed,
-                    conditions=[slot_is_finished],
+                    ContributionStateMachine.reset,
                 ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,

@@ -84,6 +84,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         [
             ContributorStateMachine.new,
             withdrawn,
+            removed,
             rejected
         ],
         accepted,
@@ -323,6 +324,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
+            ParticipantStateMachine.removed,
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),

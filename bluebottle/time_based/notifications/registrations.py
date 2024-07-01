@@ -142,5 +142,5 @@ class TeamAppliedNotification(UserRegistrationNotification):
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
-    subject = pgettext("email", 'You have registered your team on  "{site_name}"')
+    subject = pgettext("email", 'You have registered your team on "{site_name}"')
     template = "messages/registrations/team_joined"

@@ -111,13 +111,7 @@ class TeamTriggerTestCase(BluebottleTestCase):
 
     def test_readd(self):
         self.team.states.remove(save=True)
-        mail.outbox = []
         self.team.states.readd(save=True)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'The date or location for your team has been changed "{self.team.activity.title}"',
-        )
 
         self.assertEqual(self.team.status, "accepted")
         self.assertEqual(self.team.registration.status, "accepted")

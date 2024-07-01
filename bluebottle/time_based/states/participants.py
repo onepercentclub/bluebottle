@@ -61,8 +61,8 @@ class ParticipantStateMachine(ContributorStateMachine):
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or
-            (self.instance.team and self.instance.team.owner == user) or
             user.is_staff or
+            user.is_superuser or
             user in self.instance.activity.initiative.activity_managers.all()
         )
 
@@ -129,6 +129,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     remove = Transition(
         [
+            new,
             accepted,
             succeeded
         ],
@@ -142,6 +143,7 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     auto_remove = Transition(
         [
+            new,
             accepted,
             succeeded,
         ],

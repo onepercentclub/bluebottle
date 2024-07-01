@@ -276,8 +276,6 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
 class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = PeriodicActivityFactory
-    expected_contribution_status = "new"
-    expected_status = "new"
 
     def register(self):
         user = BlueBottleUserFactory.create()

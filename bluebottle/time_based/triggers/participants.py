@@ -449,18 +449,6 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            PeriodicParticipantStateMachine.remove,
-            effects=[
-                NotificationEffect(UserParticipantRemovedNotification),
-                NotificationEffect(ManagerParticipantRemovedNotification),
-                UnFollowActivityEffect,
-                RelatedTransitionEffect(
-                    "contributions",
-                    ContributionStateMachine.fail,
-                ),
-            ],
-        ),
-        TransitionTrigger(
             PeriodicParticipantStateMachine.restore,
             effects=[
                 TransitionEffect(
@@ -475,7 +463,8 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                 FollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
-                    ContributionStateMachine.reset,
+                    ContributionStateMachine.succeed,
+                    conditions=[slot_is_finished],
                 ),
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,

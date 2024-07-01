@@ -214,6 +214,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
+            ParticipantStateMachine.removed
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),

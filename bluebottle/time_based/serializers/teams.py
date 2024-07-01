@@ -112,14 +112,16 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "activity",
             "user",
-            "slots"
+            "slots",
+            "slots.location",
         ]
 
     included_serializers = {
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
         "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
-        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer"
+        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
+        "slots.location": "bluebottle.geo.serializers.GeolocationSerializer",
     }
 
 

@@ -132,12 +132,24 @@ class ParticipantStateMachine(ContributorStateMachine):
             accepted,
             succeeded
         ],
-        rejected,
+        removed,
         name=_('Remove'),
         passed_label=_('removed'),
         description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_participant,
+    )
+
+    auto_remove = Transition(
+        [
+            accepted,
+            succeeded,
+        ],
+        removed,
+        name=_('Auto remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person because a parent object was removed."),
+        automatic=True,
     )
 
     withdraw = Transition(
@@ -254,6 +266,19 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
     )
 
+    auto_remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded
+        ],
+        ParticipantStateMachine.removed,
+        name=_('Auto remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person as a participant because a parent object has been removed."),
+        automatic=True,
+    )
+
     readd = Transition(
         [
             ParticipantStateMachine.removed,
@@ -329,6 +354,20 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    auto_remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            RegistrationParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded,
+            scheduled,
+        ],
+        ParticipantStateMachine.removed,
+        name=_("Auto remove"),
+        passed_label=_("removed"),
+        description=_("Remove this person as a participant because a parent object got removed."),
+        automatic=True,
     )
 
     withdraw = Transition(
@@ -444,16 +483,6 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
         hide_from_admin=True,
         permission=RegistrationParticipantStateMachine.is_user,
         description=_("Participant joins the team slot."),
-    )
-
-    remove = Transition(
-        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
-        ScheduleParticipantStateMachine.removed,
-        name=_("Remove"),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.can_accept_participant,
-        description=_("Remove this participant from the team slot."),
-        passed_label=_("removed"),
     )
 
 

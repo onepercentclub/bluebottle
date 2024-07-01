@@ -184,6 +184,7 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
         TransitionTrigger(
             ScheduleSlotStateMachine.schedule,
             effects=[
+                NotificationEffect(UserTeamMemberChangedNotification),
                 RelatedTransitionEffect("participants", TeamScheduleParticipantStateMachine.schedule),
                 RelatedTransitionEffect("team", TeamStateMachine.schedule),
                 RelatedTransitionEffect(
@@ -194,7 +195,6 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
         ModelChangedTrigger(
             ["start", "end", "location", "is_online"],
             effects=[
-                NotificationEffect(UserTeamMemberChangedNotification),
                 TransitionEffect(
                     TeamScheduleSlotStateMachine.schedule,
                     conditions=[slot_is_complete, slot_is_not_finished],

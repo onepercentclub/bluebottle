@@ -83,11 +83,11 @@ class TeamTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "slots",
-                    TeamScheduleSlotStateMachine.cancel,
+                    TeamScheduleSlotStateMachine.auto_cancel,
                 ),
                 RelatedTransitionEffect(
                     "team_members",
-                    TeamMemberStateMachine.remove,
+                    TeamMemberStateMachine.auto_remove,
                 ),
                 NotificationEffect(UserTeamRemovedNotification),
                 NotificationEffect(ManagerTeamRemovedNotification),
@@ -234,11 +234,20 @@ class TeamMemberTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
+            TeamMemberStateMachine.auto_remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.auto_remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamMemberStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    TeamScheduleParticipantStateMachine.remove,
+                    TeamScheduleParticipantStateMachine.auto_remove,
                 ),
                 NotificationEffect(CaptainTeamMemberRemovedNotification),
                 NotificationEffect(UserTeamMemberRemovedNotification),

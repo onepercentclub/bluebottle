@@ -1751,7 +1751,7 @@ class Slot(models.Model):
 
     @property
     def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full', 'scheduled']:
+        if not self.end or self.end < now() or self.status not in ['open', 'full', 'scheduled']:
             return None
         title = f'{self.activity.title} - {self.id}'
         location = ''

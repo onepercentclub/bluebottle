@@ -98,6 +98,14 @@ class SlotStateMachine(ModelStateMachine):
         description=_("The slot was cancelled."),
     )
 
+    auto_cancel = Transition(
+        [new, running, scheduled],
+        cancelled,
+        automatic=True,
+        name=_("Auto cancel"),
+        description=_("The slot was cancelled because a parent object was cancelled"),
+    )
+
     restore = Transition(
         cancelled,
         new,

@@ -42,7 +42,6 @@ from bluebottle.time_based.states import (
     DeadlineActivityStateMachine,
     RegistrationActivityStateMachine,
     PeriodicParticipantStateMachine,
-    RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
     TeamScheduleParticipantStateMachine, TeamMemberStateMachine,
@@ -56,7 +55,7 @@ class ParticipantTriggers(ContributorTriggers):
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
-            RegistrationParticipantStateMachine.succeed,
+            ParticipantStateMachine.succeed,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -71,7 +70,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.accept,
+            ParticipantStateMachine.accept,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -82,7 +81,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.reject,
+            ParticipantStateMachine.reject,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
@@ -92,7 +91,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.cancel,
+            ParticipantStateMachine.cancel,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(
@@ -102,7 +101,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.withdraw,
+            ParticipantStateMachine.withdraw,
             effects=[
                 NotificationEffect(UserParticipantWithdrewNotification),
                 NotificationEffect(ManagerParticipantWithdrewNotification),
@@ -114,7 +113,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.reapply,
+            ParticipantStateMachine.reapply,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -125,7 +124,7 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.remove,
+            ParticipantStateMachine.remove,
             effects=[
                 NotificationEffect(UserParticipantRemovedNotification),
                 NotificationEffect(ManagerParticipantRemovedNotification),
@@ -137,7 +136,17 @@ class ParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.readd,
+            ParticipantStateMachine.auto_remove,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ParticipantStateMachine.restore,
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
@@ -311,7 +320,7 @@ class DeadlineParticipantTriggers(ParticipantTriggers):
             ]
         ),
         TransitionTrigger(
-            RegistrationParticipantStateMachine.readd,
+            ParticipantStateMachine.restore,
             effects=[
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
@@ -689,6 +698,21 @@ class ScheduleParticipantTriggers(ParticipantTriggers):
             ],
         ),
         TransitionTrigger(
+            ScheduleParticipantStateMachine.auto_remove,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
+        ),
+        TransitionTrigger(
             ScheduleParticipantStateMachine.fail,
             effects=[
                 UnFollowActivityEffect,
@@ -873,6 +897,16 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
         ),
         TransitionTrigger(
             TeamScheduleParticipantStateMachine.remove,
+            effects=[
+                UnFollowActivityEffect,
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.fail,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            TeamScheduleParticipantStateMachine.auto_remove,
             effects=[
                 UnFollowActivityEffect,
                 RelatedTransitionEffect(

@@ -12,6 +12,7 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -83,6 +84,9 @@ class TeamSerializer(ModelSerializer):
             not user.is_superuser
         ):
             del result['invite_code']
+            member_settings = MemberPlatformSettings.load()
+            if member_settings.display_member_names != 'full_name':
+                result['name'] = instance.short_name
 
         return result
 

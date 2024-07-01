@@ -1,0 +1,23 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>Your have joined {name}'s team for the activity "{{ title }}".</p>
+{% endblocktrans %}
+
+{% if slots %}
+    {% include 'mails/messages/partial/slots.html' %}
+{% endif %}
+{% endblock %}
+
+
+{% block end_message %}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}
+

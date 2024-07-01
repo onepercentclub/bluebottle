@@ -307,7 +307,7 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has joined the activity "{}"'.format(self.activity.title),
+            'You have registered your team on "Test"',
         )
 
     def test_initial_review(self):
@@ -323,7 +323,7 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
         self.assertEqual(
             mail.outbox[-1].subject,
-            f'Your team has applied to the activity "{self.activity.title}"',
+            'You have registered your team on "Test"'
         )
         self.assertEqual(self.registration.team.status, "new")
         self.assertEqual(self.registration.team.team_members.get().status, "active")

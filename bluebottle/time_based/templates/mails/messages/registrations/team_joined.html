@@ -4,17 +4,23 @@
 {% block message %}
   <p>
     {% blocktrans context 'email' %}
-      Your team joined an activity on <b>{{ site_name }}!</b>
+      You have registered your team for <b>{{ title }}!</b>
     {% endblocktrans %}
   </p>
 
   <p>
-    <b>{{ title }}</b>
+    <b>
+      {% blocktrans context 'email' %}
+        Next steps:
+      {% endblocktrans %}
+    </b>
+    {% blocktrans context 'email' %}
+      <ol>
+        <li>The activity manager will be in contact to discuss a specific date, time and location for when your team can take part in the activity. </li>
+        <li>You can start inviting team members, or wait until the details have been set.</li>
+      </ol>
+    {% endblocktrans %}
   </p>
-
-  {% if period %}
-    {% include 'mails/messages/partial/periodic.html' %}
-  {% endif %}
 {% endblock %}
 
 

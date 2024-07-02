@@ -56,7 +56,7 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     schedule = Transition(
-        [new, finished, running],
+        [new, finished, running, scheduled],
         scheduled,
         name=_("Schedule"),
         description=_("The slot now has a date and location."),
@@ -96,6 +96,14 @@ class SlotStateMachine(ModelStateMachine):
         automatic=False,
         name=_("Cancel"),
         description=_("The slot was cancelled."),
+    )
+
+    auto_cancel = Transition(
+        [new, running, scheduled],
+        cancelled,
+        automatic=True,
+        name=_("Auto cancel"),
+        description=_("The slot was cancelled because a parent object was cancelled"),
     )
 
     restore = Transition(

@@ -4,20 +4,23 @@
 {% block message %}
     <p>
         {% blocktrans context 'email' %}
-            Your team has applied to an activity on <b>{{ site_name }}!</b>
+          You have registered your team for <b>{{ title }}!</b>
         {% endblocktrans %}
     </p>
 
     <p>
-        <b>{{ title }}</b>
-    </p>
-
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                You will receive a notification by email when the activity manager accepts your application.
-            {% endblocktrans %}
-        </i>
+        <b>
+        {% blocktrans context 'email' %}
+          Next steps:
+        {% endblocktrans %}
+        </b>
+        {% blocktrans context 'email' %}
+          <ol>
+            <li>The activity manager will review your application and either accept or reject your team.</li>
+            <li>If accepted the activity manager will be in contact to discuss a specific date, time and location for when your team can take part in the activity.</li>
+            <li>You can start inviting team members after you have been accepted, or wait until the details have been set.</li>
+          </ol>
+        {% endblocktrans %}
     </p>
 {% endblock %}
 
@@ -25,7 +28,7 @@
     <p>
         <i>
             {% blocktrans context 'email' %}
-                If you are unable to participate, please withdraw your team via the activity page so that others can take your place.
+              If your team is unable to participate, please withdraw via the activity page so that another team can take your place.
             {% endblocktrans %}
         </i>
     </p>

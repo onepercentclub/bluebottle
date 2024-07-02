@@ -133,7 +133,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
         api_participant_transition(self, self.activity, self.supporter,
                                    transition='remove', request_user=self.owner)
-        assert_participant_status(self, self.activity, self.supporter, status='rejected')
+        assert_participant_status(self, self.activity, self.supporter, status='removed')
         api_participant_transition(self, self.activity, self.supporter,
                                    transition='accept', request_user=self.owner)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
@@ -208,7 +208,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
 
         api_participant_transition(self, self.activity, self.supporter,
                                    transition='remove', request_user=self.owner)
-        assert_participant_status(self, self.activity, self.supporter, status='rejected')
+        assert_participant_status(self, self.activity, self.supporter, status='removed')
         assert_status(self, model=self.activity, status='open')
 
     def test_user_selects_slots(self):

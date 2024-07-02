@@ -169,7 +169,7 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         [RegistrationStateMachine.accepted],
         stopped,
         name=_('Stop'),
-        description=_("Stop contributing to this activity."),
+        description=_("This person will no longer actively participate."),
         automatic=False,
         permission=is_user_or_manager,
     )

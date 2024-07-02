@@ -546,6 +546,10 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         """Has no assigned slot"""
         return not effect.instance.slot or not effect.instance.slot.end
 
+    def is_not_self(self):
+        user = self.options.get('user')
+        return self.instance.user != user and self.instance.activity.owner != user
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -585,8 +589,14 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(ManagerParticipantAddedOwnerNotification),
-                NotificationEffect(ParticipantAddedNotification),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                    conditions=[is_not_self],
+                ),
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                    conditions=[is_not_self],
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     ScheduleActivityStateMachine.lock,

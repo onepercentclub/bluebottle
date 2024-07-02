@@ -36,7 +36,6 @@ def migrate_team_activities(apps, schema_editor):
 def migrate_team_participants(apps, schema_editor):
     ContentType = apps.get_model("contenttypes.ContentType")
 
-    Contribution = apps.get_model("activities", "Contribution")
     ScheduleActivity = apps.get_model("time_based", "ScheduleActivity")
     TeamScheduleRegistration = apps.get_model("time_based", "TeamScheduleRegistration")
     TeamScheduleSlot = apps.get_model("time_based", "TeamScheduleSlot")
@@ -45,8 +44,6 @@ def migrate_team_participants(apps, schema_editor):
     TeamMember = apps.get_model("time_based", "TeamMember")
 
     LegacyTeam = apps.get_model("activities", "Team")
-
-    PeriodParticipant = apps.get_model("time_based", "PeriodParticipant")
 
     activities = ScheduleActivity.objects.filter(team_activity="teams")
 
@@ -202,17 +199,7 @@ def migrate_team_participants(apps, schema_editor):
                 for contribution in member.contributions.all():
                     contribution.contributor = participant
                     contribution.status = get_contribution_status(participant)
-                    print(
-                        contribution.status,
-                        participant.status,
-                        team_member.status,
-                        team.status,
-                        slot.status,
-                        activity.status,
-                    )
                     contribution.save()
-
-    raise Exception
 
 
 class Migration(migrations.Migration):

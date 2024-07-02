@@ -157,7 +157,7 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            f"Someone has joined your team on Test",
+            "Someone has joined your team on Test",
         )
 
         self.assertEqual(

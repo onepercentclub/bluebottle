@@ -96,7 +96,7 @@ class ScheduleRegistrationStateMachine(RegistrationStateMachine):
         return user == self.instance.user
 
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _("This person has withdrawn from the activity. Contributions are not counted.")
     )
@@ -136,13 +136,13 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         return self.is_user(user) or self.can_accept_registration(user)
 
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _("This person has withdrawn from the activity. Contributions are not counted.")
     )
 
     stopped = State(
-        _('stopped'),
+        _('Stopped'),
         'stopped',
         _("This person stopped contributing to this activity.")
     )

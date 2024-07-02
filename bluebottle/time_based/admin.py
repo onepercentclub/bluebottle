@@ -515,10 +515,8 @@ class TeamAdminInline(TabularInlinePaginated):
         return False
 
     def status_label(self, obj):
-        if obj.registration.status == 'new':
-            return _('unreviewed')
-        if obj.status == 'new':
-            return _('unscheduled')
+        if obj.registration.status != 'accepted':
+            return obj.registration.states.current_state.name
         return obj.states.current_state.name
 
     status_label.short_description = _('Status')

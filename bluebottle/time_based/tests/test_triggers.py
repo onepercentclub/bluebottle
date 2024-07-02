@@ -625,7 +625,7 @@ class ParticipantTriggerTestCase(object):
         participant.execute_triggers(user=self.admin_user, send_messages=True)
         participant.save()
 
-        self.assertEqual(participant.status, "rejected")
+        self.assertEqual(participant.status, "removed")
 
         self.assertEqual(len(mail.outbox), 2)
 

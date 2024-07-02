@@ -1787,7 +1787,7 @@ class ParticipantTransitionAPIViewTestCase():
             include for include in data['included'] if include['type'] == '{}s'.format(self.participant_type)
         ]
         self.assertEqual(len(participant), 1)
-        self.assertEqual(participant[0]['attributes']['status'], 'rejected')
+        self.assertEqual(participant[0]['attributes']['status'], 'removed')
 
     def test_remove_by_user(self):
         self.data['data']['attributes']['transition'] = 'remove'

@@ -20,6 +20,9 @@ def get_slot_info(slot):
     else:
         tz = get_current_timezone()
 
+    if not slot.end:
+        return
+
     start = slot.start.astimezone(tz)
     end = slot.end.astimezone(tz)
 

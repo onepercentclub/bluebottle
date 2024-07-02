@@ -184,6 +184,15 @@ class TeamMemberStateMachine(ModelStateMachine):
         description=_("Remove this member from the team."),
     )
 
+    auto_remove = Transition(
+        [active],
+        removed,
+        automatic=True,
+        name=_("Auto remove"),
+        passed_label=_("removed"),
+        description=_("Remove this member because the team has been removed."),
+    )
+
     readd = Transition(
         [
             removed,

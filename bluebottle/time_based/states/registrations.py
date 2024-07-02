@@ -169,7 +169,13 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         [RegistrationStateMachine.accepted],
         stopped,
         name=_('Stop'),
-        description=_("This person will no longer actively participate."),
+        description=_(
+            "This person will no longer actively participate in your activity and "
+            "their contribution hours will stop being counted. The hours that have "
+            "already been counted will be retained. You can resume their participation "
+            "anytime."
+        ),
+        short_description=_("This person will no longer actively participate."),
         automatic=False,
         permission=is_user_or_manager,
     )
@@ -178,7 +184,12 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         [stopped],
         RegistrationStateMachine.accepted,
         name=_("Resume"),
-        description=_("Resume this persons participation in your activity."),
+        description=_(
+            "This person will start actively participating in the activity and their "
+            "contribution hours will be counted. You can stop their participation at "
+            "any time, and their contribution hours will stop being counted."
+        ),
+        short_description=_("Resume this persons participation in your activity."),
         automatic=False,
         permission=is_user_or_manager,
     )

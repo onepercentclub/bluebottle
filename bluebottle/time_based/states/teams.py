@@ -99,6 +99,7 @@ class TeamStateMachine(ModelStateMachine):
             "Your team will no longer participate in this activity. "
             "The activity manager and team members will be notified. Any hours spent will not be be counted."
         ),
+        short_description=_("Your team will no longer participate in this activity. "),
     )
 
     rejoin = Transition(

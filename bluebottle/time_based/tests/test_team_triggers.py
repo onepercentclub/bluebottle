@@ -157,12 +157,12 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            f'A participant has joined your team for the activity "{self.team.activity.title}"',
+            f"Someone has joined your team on Test",
         )
 
         self.assertEqual(
             mail.outbox[-2].subject,
-            f'You joined {self.team.user.full_name}\'s team for the activity "{self.team.activity.title}"',
+            f"You are now part of {self.team.user.full_name}'s team on Test",
         )
 
     def test_withdraw(self):

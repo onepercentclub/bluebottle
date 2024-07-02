@@ -167,7 +167,7 @@ class UserTeamMemberJoinedNotification(UserTeamMemberNotification):
     The participant joined your team
     """
 
-    subject = pgettext("email", 'You are now part of {name}\'s team on "{site_name}"')
+    subject = pgettext("email", "You are now part of {name}'s team on {site_name}")
     template = "messages/teams/user_teammember_joined"
 
 

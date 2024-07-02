@@ -12,6 +12,8 @@ class ManagerRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
+        'team_name': 'team.name',
+        'captain_email': 'team.user.email',
     }
 
     @property

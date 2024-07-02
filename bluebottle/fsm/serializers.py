@@ -24,12 +24,13 @@ class AvailableTransitionsField(ReadOnlyField):
 
         return (
             {
-                'name': transition.field,
-                'target': transition.target.value,
-                'label': transition.name,
-                'passed_label': transition.passed_label,
-                'description': transition.description_front_end,
-                'available': True,
+                "name": transition.field,
+                "target": transition.target.value,
+                "label": transition.name,
+                "passed_label": transition.passed_label,
+                "description": transition.description_front_end,
+                "short_description": transition.short_description,
+                "available": True,
             }
             for transition in states.possible_transitions(user=user)
             if not transition.automatic

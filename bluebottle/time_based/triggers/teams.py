@@ -167,9 +167,10 @@ class TeamTriggers(TriggerManager):
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
-    def is_not_self(self):
-        user = self.options.get('user')
-        return self.instance.user != user and self.instance.activity.owner != user
+    def is_not_captain(self):
+        return (
+            self.instance.team.user != self.instance.user
+        )
 
     triggers = [
         TransitionTrigger(
@@ -178,11 +179,11 @@ class TeamMemberTriggers(TriggerManager):
                 CreateTeamMemberSlotParticipantsEffect,
                 NotificationEffect(
                     UserTeamMemberJoinedNotification,
-                    conditions=[is_not_self],
+                    conditions=[is_not_captain],
                 ),
                 NotificationEffect(
                     CaptainTeamMemberJoinedNotification,
-                    conditions=[is_not_self],
+                    conditions=[is_not_captain],
                 ),
             ]
         ),

@@ -114,6 +114,7 @@ class TeamSerializer(ModelSerializer):
             "user",
             "slots",
             "slots.location",
+            "slots.location.country",
         ]
 
     included_serializers = {
@@ -122,6 +123,7 @@ class TeamSerializer(ModelSerializer):
         "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
         "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
         "slots.location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "slots.location.country": "bluebottle.geo.serializers.CountrySerializer",
     }
 
 

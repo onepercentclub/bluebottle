@@ -301,12 +301,14 @@ class TeamScheduleRegistrationTriggerTestCase(
             "accepted",
         )
 
+        self.assertEqual(len(mail.outbox), 2)
+
         self.assertEqual(
-            mail.outbox[-2].subject,
+            mail.outbox[0].subject,
             'You have a new team for your activity "{}" 🎉'.format(self.activity.title),
         )
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[1].subject,
             'You have registered your team on "Test"',
         )
 
@@ -317,12 +319,14 @@ class TeamScheduleRegistrationTriggerTestCase(
         self.create()
         self.assertEqual(self.registration.status, "new")
 
+        self.assertEqual(len(mail.outbox), 2)
+
         self.assertEqual(
-            mail.outbox[-2].subject,
+            mail.outbox[0].subject,
             f'A new team has applied to your activity "{self.activity.title}" 🎉',
         )
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[1].subject,
             'You have registered your team on "Test"'
         )
         self.assertEqual(self.registration.team.status, "new")

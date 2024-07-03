@@ -1544,7 +1544,8 @@ class TeamMember(TriggerMixin, models.Model):
     user = models.ForeignKey(
         'members.Member',
         related_name='team_members',
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True,
     )
 
     status = models.CharField(max_length=40)

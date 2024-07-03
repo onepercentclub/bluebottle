@@ -167,13 +167,24 @@ class TeamTriggers(TriggerManager):
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
+    def is_not_captain(self):
+        return (
+            self.instance.team.user != self.instance.user
+        )
+
     triggers = [
         TransitionTrigger(
             TeamMemberStateMachine.initiate,
             effects=[
                 CreateTeamMemberSlotParticipantsEffect,
-                NotificationEffect(UserTeamMemberJoinedNotification),
-                NotificationEffect(CaptainTeamMemberJoinedNotification),
+                NotificationEffect(
+                    UserTeamMemberJoinedNotification,
+                    conditions=[is_not_captain],
+                ),
+                NotificationEffect(
+                    CaptainTeamMemberJoinedNotification,
+                    conditions=[is_not_captain],
+                ),
             ]
         ),
         TransitionTrigger(
@@ -183,8 +194,12 @@ class TeamMemberTriggers(TriggerManager):
                     'participants',
                     TeamScheduleParticipantStateMachine.withdraw,
                 ),
-                NotificationEffect(CaptainTeamMemberWithdrewNotification),
-                NotificationEffect(UserTeamMemberWithdrewNotification),
+                NotificationEffect(
+                    CaptainTeamMemberWithdrewNotification
+                ),
+                NotificationEffect(
+                    UserTeamMemberWithdrewNotification
+                ),
             ],
         ),
         TransitionTrigger(
@@ -253,8 +268,12 @@ class TeamMemberTriggers(TriggerManager):
                     "participants",
                     TeamScheduleParticipantStateMachine.auto_remove,
                 ),
-                NotificationEffect(CaptainTeamMemberRemovedNotification),
-                NotificationEffect(UserTeamMemberRemovedNotification),
+                NotificationEffect(
+                    CaptainTeamMemberRemovedNotification
+                ),
+                NotificationEffect(
+                    UserTeamMemberRemovedNotification
+                ),
             ],
         ),
         TransitionTrigger(

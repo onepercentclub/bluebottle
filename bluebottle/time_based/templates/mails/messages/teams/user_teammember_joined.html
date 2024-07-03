@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block message %}{% blocktrans context 'email' %}
-<p>Your have joined {name}'s team for the activity "{{ title }}".</p>
+<p>Your have joined {{name}}'s team for the activity "{{ title }}".</p>
 {% endblocktrans %}
 
 {% if slots %}

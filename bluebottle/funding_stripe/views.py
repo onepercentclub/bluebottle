@@ -161,11 +161,18 @@ class IntentWebHookView(View):
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.succeeded.value:
                     payment.states.succeed()
-                    transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
-                    # Fix this if we're going to support currencies that don't hae smaller units, like yen.
-                    payment.donation.payout_amount = Money(
-                        transfer.amount / 100.0, transfer.currency
-                    )
+                    try:
+                        # Check if it's an old webhook call or a new one
+                        transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
+                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
+                        payment.donation.payout_amount = Money(
+                            transfer.amount / 100.0, transfer.currency
+                        )
+                    except AttributeError:
+                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
+                        payment.donation.payout_amount = Money(
+                            event.data.object.amount / 100.0, event.data.object.currency
+                        )
                     payment.donation.save()
                     payment.save()
 

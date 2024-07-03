@@ -170,6 +170,37 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, "open")
 
+    def test_change_preparation_time(self):
+        self.initiative.states.submit(save=True)
+        self.initiative.states.approve(save=True)
+
+        self.activity.refresh_from_db()
+
+        self.participant_factory.create_batch(
+            3, activity=self.activity, status="accepted"
+        )
+
+        self.activity.preparation = timedelta(hours=2)
+        self.activity.save()
+
+        for participant in self.activity.participants.all():
+            preparation_contributions = participant.contributions.filter(
+                timecontribution__contribution_type="preparation"
+            )
+
+            self.assertEqual(len(preparation_contributions), 1)
+            self.assertEqual(preparation_contributions.get().value, timedelta(hours=2))
+
+        self.activity.preparation = None
+        self.activity.save()
+
+        for participant in self.activity.participants.all():
+            preparation_contributions = participant.contributions.filter(
+                timecontribution__contribution_type="preparation"
+            )
+
+            self.assertEqual(len(preparation_contributions), 0)
+
 
 class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTestCase):
     factory = DateActivityFactory

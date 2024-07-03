@@ -18,6 +18,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.time_based.models import TeamMember
 
 logger = logging.getLogger('bluebottle')
 
@@ -203,6 +204,17 @@ def data_retention_contribution_task():
                         user=None,
                     )
 
+                team_members = TeamMember.objects.filter(
+                    created__lt=history, user__isnull=False
+                )
+                if contributors.count():
+                    logger.info(
+                        f"DATA RETENTION: {tenant.schema_name} anonymizing {team_members.count()} team members"
+                    )
+                    team_members.update(
+                        user=None,
+                    )
+
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
@@ -218,3 +230,10 @@ def data_retention_contribution_task():
                         contributions = contributor.contributions.all()
                         contributions.update(contributor=None)
                         contributor.delete()
+
+                team_members = TeamMember.objects.filter(created__lt=history)
+                if team_members.count():
+                    logger.info(
+                        f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
+                    )
+                    team_members.delete()

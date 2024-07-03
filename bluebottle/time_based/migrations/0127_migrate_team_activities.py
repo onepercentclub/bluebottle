@@ -74,7 +74,7 @@ def migrate_team_participants(apps, schema_editor):
                 if invite:
                     invite_code = invite.invite.pk
                 else:
-                    continue
+                    invite_code = str(uuid.uuid4())
             except AttributeError:
                 # No invite found: generate one
                 invite_code = str(uuid.uuid4())
@@ -200,6 +200,8 @@ def migrate_team_participants(apps, schema_editor):
                     contribution.contributor = participant
                     contribution.status = get_contribution_status(participant)
                     contribution.save()
+
+                member.delete()
 
 
 class Migration(migrations.Migration):

@@ -67,6 +67,35 @@ class CreateSchedulePreparationTimeContributionEffect(Effect):
             contribution.save()
 
 
+class RelatedPreparationTimeContributionEffect(Effect):
+    title = _("Create preparation time contribution")
+    template = "admin/create_preparation_time_contribution.html"
+    display = False
+
+    def post_save(self, **kwargs):
+        if self.instance.preparation:
+            TimeContribution.objects.filter(
+                contribution_type=ContributionTypeChoices.preparation,
+                contributor__activity=self.instance,
+            ).update(value=self.instance.preparation)
+
+            for participant in self.instance.participants.exclude(
+                contributions__timecontribution__contribution_type=ContributionTypeChoices.preparation
+            ):
+                contribution = TimeContribution(
+                    contributor=participant,
+                    contribution_type=ContributionTypeChoices.preparation,
+                    value=self.instance.preparation,
+                    start=now(),
+                )
+                contribution.save()
+        else:
+            TimeContribution.objects.filter(
+                contribution_type=ContributionTypeChoices.preparation,
+                contributor__activity=self.instance,
+            ).delete()
+
+
 class UpdateSlotTimeContributionEffect(Effect):
     title = _('Update related contributions')
     template = 'admin/update_slot_time_contribution.html'

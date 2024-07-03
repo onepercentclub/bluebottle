@@ -18,6 +18,7 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
     CreateFirstSlotEffect
 )
+from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffect
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect,
 )
@@ -216,7 +217,9 @@ class TimeBasedTriggers(ActivityTriggers):
                 ),
             ]
         ),
-
+        ModelChangedTrigger(
+            "preparation", effects=[RelatedPreparationTimeContributionEffect]
+        ),
         TransitionTrigger(
             TimeBasedStateMachine.publish,
             effects=[

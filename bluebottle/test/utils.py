@@ -530,7 +530,7 @@ class APITestCase(BluebottleTestCase):
             self.assertTrue(attr in data['attributes'])
 
         if value:
-            self.assertEqual(getattr(self.model, attr.replace('-', '_')), value)
+            self.assertEqual(data['attributes'][attr], value)
 
     def assertNoAttribute(self, attr):
         """

@@ -56,6 +56,20 @@ class TeamSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
 
+    captain_email = serializers.SerializerMethodField()
+
+    def get_captain_email(self, obj):
+        user = self.context['request'].user
+        if (
+            user == obj.activity.owner or
+            user == obj.activity.initiative.owner or
+            user in obj.activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
+        ):
+            return obj.user.email
+        return
+
     team_members = CountedHyperlinkedRelatedField(
         read_only=True,
         many=True,
@@ -103,7 +117,8 @@ class TeamSerializer(ModelSerializer):
             "team_members",
             "member_export_url",
             "invite_code",
-            "name"
+            "name",
+            "captain_email"
         )
         meta_fields = (
             "permissions",

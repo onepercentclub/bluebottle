@@ -13,7 +13,9 @@ def migrate_periodic_activities(apps, schema_editor):
     PeriodicActivity = apps.get_model("time_based", "PeriodicActivity")
     periodic_activity_ctype = ContentType.objects.get_for_model(PeriodicActivity)
 
-    activities = PeriodActivity.objects.exclude(duration_period="overall")
+    activities = PeriodActivity.objects.exclude(duration_period="overall").exclude(
+        team_activity="teams"
+    )
 
     for activity in activities:
         print(
@@ -80,7 +82,7 @@ def migrate_periodic_participants(apps, schema_editor):
                 start = end
 
             for participant in activity.contributors.filter(
-                polymorphic_ctype=period_participant_ctype, user__isnull=False
+                polymorphic_ctype=period_participant_ctype
             ):
                 registration_status_map = {
                     "new": "new",
@@ -88,13 +90,18 @@ def migrate_periodic_participants(apps, schema_editor):
                     "rejected": "rejected",
                     "withdrawn": "stopped",
                 }
+                registration = None
 
-                registration, _created = PeriodicRegistration.objects.get_or_create(
-                    user=participant.user,
-                    activity=activity,
-                    status=registration_status_map.get(participant.status, "accepted"),
-                    polymorphic_ctype=periodic_registration_ctype,
-                )
+                if participant.user:
+                    registration, _created = PeriodicRegistration.objects.get_or_create(
+                        user=participant.user,
+                        activity=activity,
+                        status=registration_status_map.get(
+                            participant.status, "accepted"
+                        ),
+                        polymorphic_ctype=periodic_registration_ctype,
+                    )
+
                 for contribution in participant.contributions.filter(
                     timecontribution__contribution_type="period"
                 ):
@@ -130,15 +137,16 @@ def migrate_periodic_participants(apps, schema_editor):
                     contribution.save()
 
                 try:
-                    preparation = participant.contributions.get(
-                        timecontribution__contribution_type="preparation"
-                    )
-                    preparation.contributor = (
-                        registration.periodicparticipant_set.order_by(
-                            "slot__start"
-                        ).first()
-                    )
-                    preparation.save()
+                    if registration:
+                        preparation = participant.contributions.get(
+                            timecontribution__contribution_type="preparation"
+                        )
+                        preparation.contributor = (
+                            registration.periodicparticipant_set.order_by(
+                                "slot__start"
+                            ).first()
+                        )
+                        preparation.save()
                 except Contribution.DoesNotExist:
                     pass
 

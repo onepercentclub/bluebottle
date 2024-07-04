@@ -13,7 +13,9 @@ def migrate_periodic_activities(apps, schema_editor):
     PeriodicActivity = apps.get_model("time_based", "PeriodicActivity")
     periodic_activity_ctype = ContentType.objects.get_for_model(PeriodicActivity)
 
-    activities = PeriodActivity.objects.exclude(duration_period="overall")
+    activities = PeriodActivity.objects.exclude(duration_period="overall").exclude(
+        team_activity="teams"
+    )
 
     for activity in activities:
         print(

@@ -14,7 +14,9 @@ def migrate_team_activities(apps, schema_editor):
     ScheduleActivity = apps.get_model("time_based", "ScheduleActivity")
     schedule_activity_ctype = ContentType.objects.get_for_model(ScheduleActivity)
 
-    activities = PeriodActivity.objects.filter(team_activity="teams")
+    activities = PeriodActivity.objects.filter(
+        team_activity="teams", duration_period="overall"
+    )
 
     for activity in activities:
         schedule_activity = ScheduleActivity(
@@ -42,6 +44,7 @@ def migrate_team_participants(apps, schema_editor):
     TeamScheduleParticipant = apps.get_model("time_based", "TeamScheduleParticipant")
     Team = apps.get_model("time_based", "Team")
     TeamMember = apps.get_model("time_based", "TeamMember")
+    PeriodParticipant = apps.get_model("time_based", "PeriodParticipant")
 
     LegacyTeam = apps.get_model("activities", "Team")
 
@@ -62,19 +65,23 @@ def migrate_team_participants(apps, schema_editor):
                 continue
 
             try:
-                captain_contributor = legacy_team.members.get(user=legacy_team.owner)
+                captain_contributor = legacy_team.members.filter(
+                    user=legacy_team.owner
+                ).first()
 
-                invite = (
-                    captain_contributor.invite or captain_contributor.accepted_invite
-                )
-                invite_code = invite.pk
-            except ObjectDoesNotExist:
-                # Captain is not a member. Use invite of the first member
-                invite = legacy_team.members.filter(invite__isnull=False).first()
-                if invite:
-                    invite_code = invite.invite.pk
+                if captain_contributor:
+                    invite = (
+                        captain_contributor.invite
+                        or captain_contributor.accepted_invite
+                    )
+                    invite_code = invite.pk
                 else:
-                    invite_code = str(uuid.uuid4())
+                    # Captain is not a member. Use invite of the first member
+                    invite = legacy_team.members.filter(invite__isnull=False).first()
+                    if invite:
+                        invite_code = invite.invite.pk
+                    else:
+                        invite_code = str(uuid.uuid4())
             except AttributeError:
                 # No invite found: generate one
                 invite_code = str(uuid.uuid4())
@@ -202,6 +209,11 @@ def migrate_team_participants(apps, schema_editor):
                     contribution.save()
 
                 member.delete()
+
+    incorrect_participants = PeriodParticipant.objects.filter(
+        activity__team_activity="teams",
+    )
+    print(incorrect_participants.delete())
 
 
 class Migration(migrations.Migration):

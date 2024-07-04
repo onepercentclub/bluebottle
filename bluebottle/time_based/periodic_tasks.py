@@ -172,7 +172,7 @@ class PeriodicSlotStartedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return str(_("Start a new slot when the current one is finished"))
+        return str(_("Start a slot when the start date passed"))
 
 
 class PeriodicSlotFinishedTask(ModelPeriodicTask):
@@ -187,7 +187,7 @@ class PeriodicSlotFinishedTask(ModelPeriodicTask):
     ]
 
     def __str__(self):
-        return str(_("Start a new slot when the current one is finished"))
+        return str(_("Finish a slot when the end date passed"))
 
 
 class ScheduleSlotStartedTask(ModelPeriodicTask):

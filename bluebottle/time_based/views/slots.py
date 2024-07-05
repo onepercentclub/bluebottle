@@ -27,7 +27,6 @@ class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
         "activity": [
             ActivityStatusPermission,
             OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
-            DeleteActivityPermission,
         ]
     }
 
@@ -41,8 +40,10 @@ class ScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
         "activity": [
             ActivityStatusPermission,
             OneOf(ActivityOwnerPermission, IsAdminPermission),
+            DeleteActivityPermission,
         ]
     }
+    permission_classes = [TenantConditionalOpenClose]
     queryset = ScheduleSlot.objects.all()
     serializer_class = ScheduleSlotSerializer
 
@@ -51,7 +52,7 @@ class TeamScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            ActivityOwnerPermission,
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
         ]
     }
@@ -65,7 +66,7 @@ class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView)
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            ActivityOwnerPermission,
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
         ]
     }
     queryset = TeamScheduleSlot.objects.all()

@@ -67,8 +67,10 @@ def migrate_periodic_participants(apps, schema_editor):
         )
 
         if activity.period:
-
-            while start < now():
+            until = deadline
+            if deadline > now():
+                until = now()
+            while start < until:
                 end = start + relativedelta(**{activity.period: 1})
 
                 PeriodicSlot.objects.create(

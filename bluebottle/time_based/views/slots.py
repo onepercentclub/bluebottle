@@ -2,6 +2,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission,
     ActivityStatusPermission,
     DeleteActivityPermission,
+    IsAdminPermission
 )
 from bluebottle.time_based.models import (
     ScheduleSlot, TeamScheduleSlot,
@@ -25,7 +26,7 @@ class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
+            OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
         ]
     }
@@ -39,7 +40,7 @@ class ScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            OneOf(ActivityOwnerPermission),
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
         ]
     }
     queryset = ScheduleSlot.objects.all()

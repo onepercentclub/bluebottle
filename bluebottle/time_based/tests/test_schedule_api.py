@@ -1,10 +1,12 @@
 from datetime import date, timedelta
 from io import BytesIO
 
+from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     ScheduleActivitySerializer,
@@ -12,7 +14,7 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantTransitionSerializer,
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
-    ScheduleTransitionSerializer,
+    ScheduleTransitionSerializer, ScheduleSlotSerializer,
 )
 from bluebottle.time_based.tests.base import (
     TimeBasedActivityAPIExportTestCase,
@@ -31,7 +33,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
     ScheduleRegistrationFactory,
-    TeamFactory,
+    TeamFactory, ScheduleSlotFactory,
 )
 
 
@@ -173,6 +175,59 @@ class ScheduleParticipantTransitionListAPITestCase(TimeBasedParticipantTransitio
 
     transition = 'remove'
     target_status = 'removed'
+
+
+class ScheduleSlotDetailAPITestCase(APITestCase):
+    url_name = 'schedule-slot-detail'
+    serializer = ScheduleSlotSerializer
+    factory = ScheduleSlotFactory
+
+    fields = []
+    attributes = [
+        'start', 'duration'
+    ]
+
+    defaults = {}
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.admin = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory.create()
+        self.participant = BlueBottleUserFactory.create()
+        self.activity = ScheduleActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            owner=self.manager,
+        )
+        registration = ScheduleRegistrationFactory.create(
+            activity=self.activity,
+            user=self.participant,
+        )
+        participant = registration.participants.first()
+        self.model = participant.slot
+        self.url = reverse(self.url_name, args=(self.model.pk,))
+
+    def test_set_date_activity_manager(self):
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_set_date_admin(self):
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.admin)
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_set_date_participant(self):
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.participant)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_set_date_user(self):
+        start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.user)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
 class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):

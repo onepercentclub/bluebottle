@@ -31,6 +31,7 @@ def migrate_team_activities(apps, schema_editor):
             review=activity.review,
         )
         schedule_activity.save_base(raw=True)
+        print(schedule_activity.pk)
 
     ScheduleActivity.objects.update(polymorphic_ctype=schedule_activity_ctype)
 

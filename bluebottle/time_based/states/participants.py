@@ -4,7 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, PeriodParticipant
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
@@ -493,10 +493,4 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
-    pass
-
-
-@register(PeriodParticipant)
-class PeriodParticipantStateMachine(ParticipantStateMachine):
-    # For legacy reasons, we need to keep the PeriodParticipantStateMachine
     pass

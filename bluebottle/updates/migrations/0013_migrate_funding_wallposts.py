@@ -28,6 +28,9 @@ def migrate_funding_wallposts(apps, schema_editor):
     funding_content_type = ContentType.objects.get_for_model(Funding)
 
     for wallpost in MediaWallpost.objects.filter(content_type=funding_content_type, deleted__isnull=True):
+        check = Funding.objects.filter(pk=wallpost.object_id).exists()
+        if not check:
+            continue
         try:
             update = Update.objects.create(
                 created=wallpost.created,

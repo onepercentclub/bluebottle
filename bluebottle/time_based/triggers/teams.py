@@ -15,7 +15,9 @@ from bluebottle.time_based.effects.teams import (
 )
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.time_based.notifications.teams import (
+    CaptainTeamMemberJoinedNotification,
     ManagerTeamRemovedNotification,
+    UserTeamMemberJoinedNotification,
     UserTeamRemovedNotification,
     UserTeamWithdrewNotification,
     ManagerTeamWithdrewNotification,
@@ -83,11 +85,11 @@ class TeamTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "slots",
-                    TeamScheduleSlotStateMachine.cancel,
+                    TeamScheduleSlotStateMachine.auto_cancel,
                 ),
                 RelatedTransitionEffect(
                     "team_members",
-                    TeamMemberStateMachine.remove,
+                    TeamMemberStateMachine.auto_remove,
                 ),
                 NotificationEffect(UserTeamRemovedNotification),
                 NotificationEffect(ManagerTeamRemovedNotification),
@@ -165,11 +167,24 @@ class TeamTriggers(TriggerManager):
 
 @register(TeamMember)
 class TeamMemberTriggers(TriggerManager):
+    def is_not_captain(self):
+        return (
+            self.instance.team.user != self.instance.user
+        )
+
     triggers = [
         TransitionTrigger(
             TeamMemberStateMachine.initiate,
             effects=[
                 CreateTeamMemberSlotParticipantsEffect,
+                NotificationEffect(
+                    UserTeamMemberJoinedNotification,
+                    conditions=[is_not_captain],
+                ),
+                NotificationEffect(
+                    CaptainTeamMemberJoinedNotification,
+                    conditions=[is_not_captain],
+                ),
             ]
         ),
         TransitionTrigger(
@@ -179,8 +194,12 @@ class TeamMemberTriggers(TriggerManager):
                     'participants',
                     TeamScheduleParticipantStateMachine.withdraw,
                 ),
-                NotificationEffect(CaptainTeamMemberWithdrewNotification),
-                NotificationEffect(UserTeamMemberWithdrewNotification),
+                NotificationEffect(
+                    CaptainTeamMemberWithdrewNotification
+                ),
+                NotificationEffect(
+                    UserTeamMemberWithdrewNotification
+                ),
             ],
         ),
         TransitionTrigger(
@@ -234,14 +253,27 @@ class TeamMemberTriggers(TriggerManager):
             ],
         ),
         TransitionTrigger(
+            TeamMemberStateMachine.auto_remove,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    TeamScheduleParticipantStateMachine.auto_remove,
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamMemberStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    TeamScheduleParticipantStateMachine.remove,
+                    TeamScheduleParticipantStateMachine.auto_remove,
                 ),
-                NotificationEffect(CaptainTeamMemberRemovedNotification),
-                NotificationEffect(UserTeamMemberRemovedNotification),
+                NotificationEffect(
+                    CaptainTeamMemberRemovedNotification
+                ),
+                NotificationEffect(
+                    UserTeamMemberRemovedNotification
+                ),
             ],
         ),
         TransitionTrigger(

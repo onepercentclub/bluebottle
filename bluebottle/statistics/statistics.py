@@ -15,7 +15,9 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.time_based.models import (
     DateActivity,
-    PeriodActivity,
+    PeriodicActivity,
+    DeadlineActivity,
+    ScheduleActivity,
     TimeContribution
 )
 from bluebottle.utils.exchange_rates import convert
@@ -97,11 +99,19 @@ class Statistics(object):
             status='succeeded'
         )
 
-        period_activities = PeriodActivity.objects.filter(
+        period_activities = PeriodicActivity.objects.filter(
             self.date_filter('deadline'),
             status='succeeded'
         )
-        return len(date_activities) + len(period_activities)
+        schedule_activities = ScheduleActivity.objects.filter(
+            self.date_filter('deadline'),
+            status='succeeded'
+        )
+        deadline_activities = DeadlineActivity.objects.filter(
+            self.date_filter('deadline'),
+            status='succeeded'
+        )
+        return len(date_activities) + len(period_activities) + len(schedule_activities) + len(deadline_activities)
 
     @property
     @memoize(timeout=timeout)
@@ -132,11 +142,19 @@ class Statistics(object):
             status__in=('open', 'full', 'running')
         )
 
-        period_activities = PeriodActivity.objects.filter(
+        period_activities = PeriodicActivity.objects.filter(
             self.date_filter('deadline'),
             status__in=('open', 'full', 'running')
         )
-        return len(date_activities) + len(period_activities)
+        deadline_activities = DeadlineActivity.objects.filter(
+            self.date_filter('deadline'),
+            status__in=('open', 'full', 'running')
+        )
+        schedule_activities = ScheduleActivity.objects.filter(
+            self.date_filter('deadline'),
+            status__in=('open', 'full', 'running')
+        )
+        return len(date_activities) + len(period_activities) + len(deadline_activities) + len(schedule_activities)
 
     @property
     @memoize(timeout=timeout)
@@ -167,7 +185,15 @@ class Statistics(object):
             status='succeeded'
         )
 
-        period_activities = PeriodActivity.objects.filter(
+        periodic_activities = PeriodicActivity.objects.filter(
+            self.date_filter('deadline'),
+            status='succeeded'
+        )
+        deadline_activities = DeadlineActivity.objects.filter(
+            self.date_filter('deadline'),
+            status='succeeded'
+        )
+        schedule_activities = ScheduleActivity.objects.filter(
             self.date_filter('deadline'),
             status='succeeded'
         )
@@ -181,7 +207,14 @@ class Statistics(object):
             self.date_filter('end'),
             status='succeeded'
         )
-        return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
+        return (
+            len(date_activities) +
+            len(funding_activities) +
+            len(periodic_activities) +
+            len(deadline_activities) +
+            len(schedule_activities) +
+            len(deed_activities)
+        )
 
     @property
     @memoize(timeout=timeout)
@@ -192,7 +225,17 @@ class Statistics(object):
             status__in=('open', 'full', 'running',)
         )
 
-        period_activities = PeriodActivity.objects.filter(
+        periodic_activities = PeriodicActivity.objects.filter(
+            self.date_filter('deadline'),
+            status__in=('open', 'full', 'running',)
+        )
+
+        deadline_activities = DeadlineActivity.objects.filter(
+            self.date_filter('deadline'),
+            status__in=('open', 'full', 'running',)
+        )
+
+        schedule_activities = ScheduleActivity.objects.filter(
             self.date_filter('deadline'),
             status__in=('open', 'full', 'running',)
         )
@@ -206,7 +249,14 @@ class Statistics(object):
             self.date_filter('end'),
             status__in=('open', 'running',)
         )
-        return len(date_activities) + len(funding_activities) + len(period_activities) + len(deed_activities)
+        return (
+            len(date_activities) +
+            len(funding_activities) +
+            len(periodic_activities) +
+            len(deadline_activities) +
+            len(schedule_activities) +
+            len(deed_activities)
+        )
 
     @property
     @memoize(timeout=timeout)

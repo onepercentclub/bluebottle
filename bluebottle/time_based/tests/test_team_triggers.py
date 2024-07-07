@@ -17,7 +17,8 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.captain = BlueBottleUserFactory.create()
         initiative = InitiativeFactory.create()
         activity = ScheduleActivityFactory.create(
-            team_activity=True, initiative=initiative
+            team_activity='teams',
+            initiative=initiative
         )
         initiative.states.submit()
         initiative.states.approve(save=True)
@@ -80,8 +81,22 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.team.team_members.get().status, "active")
 
     def test_remove(self):
+        mail.outbox = []
         self.team.states.remove(save=True)
         self.assertEqual(self.team.status, "removed")
+        print([m.subject for m in mail.outbox])
+        self.assertEqual(
+            len(mail.outbox),
+            2
+        )
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'Your team was removed from the activity "{self.team.activity.title}"',
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A team has been removed from your activity "{self.team.activity.title}"',
+        )
 
         self.assertEqual(self.team.registration.status, "accepted")
 
@@ -97,14 +112,10 @@ class TeamTriggerTestCase(BluebottleTestCase):
     def test_readd(self):
         self.team.states.remove(save=True)
         self.team.states.readd(save=True)
+
         self.assertEqual(self.team.status, "accepted")
         self.assertEqual(self.team.registration.status, "accepted")
         self.assertEqual(self.team.team_members.get().status, "active")
-
-        self.assertEqual(
-            mail.outbox[-1].subject,
-            f'A team has been removed from your activity "{self.team.activity.title}"',
-        )
 
     def test_reject(self):
         self.team.registration.states.reject(save=True)
@@ -143,6 +154,16 @@ class TeamMemberTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.team_member.status, "active")
 
         self.assertEqual(self.team_member.participants.get().status, "accepted")
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            "Someone has joined your team on Test",
+        )
+
+        self.assertEqual(
+            mail.outbox[-2].subject,
+            f"You are now part of {self.team.user.full_name}'s team on Test",
+        )
 
     def test_withdraw(self):
         self.team_member.states.withdraw(save=True)

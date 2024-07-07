@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
+from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -66,6 +66,13 @@ class RegistrationSerializer(ModelSerializer):
         meta_fields = (
             'permissions', 'current_status', 'transitions'
         )
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=('user', 'activity'),
+                message=_("Registration for this user already exists on this activity.")
+            )
+        ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = ['user', 'document', 'activity', 'participants']

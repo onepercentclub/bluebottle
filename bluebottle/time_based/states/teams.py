@@ -96,9 +96,10 @@ class TeamStateMachine(ModelStateMachine):
         permission=is_owner,
         hide_from_admin=True,
         description=_(
-            'Withdraw your team. You will no longer participate in '
-            'this activity and any hours spent will not be counted.'
+            "Your team will no longer participate in this activity. "
+            "The activity manager and team members will be notified. Any hours spent will not be be counted."
         ),
+        short_description=_("Your team will no longer participate in this activity. "),
     )
 
     rejoin = Transition(
@@ -182,6 +183,15 @@ class TeamMemberStateMachine(ModelStateMachine):
         name=_("Remove"),
         passed_label=_("removed"),
         description=_("Remove this member from the team."),
+    )
+
+    auto_remove = Transition(
+        [active],
+        removed,
+        automatic=True,
+        name=_("Auto remove"),
+        passed_label=_("removed"),
+        description=_("Remove this member because the team has been removed."),
     )
 
     readd = Transition(

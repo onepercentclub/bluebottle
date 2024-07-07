@@ -375,6 +375,34 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
             contributor__status__in=("new", "accepted"),
         )
 
+    @property
+    def organizer(self):
+        return self.activity.owner
+
+    @property
+    def event_data(self):
+        if self.end < now() or self.status not in ['open', 'full']:
+            return None
+        title = f'{self.activity.title} - {self.title or self.id}'
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality or self.location.formatted_address or ''
+            if self.location_hint:
+                location += f" {self.location_hint}"
+
+        return {
+            'uid': f"{connection.tenant.client_name}-{self.id}",
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.organizer.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
+
     class Meta:
         abstract = True
         ordering = ['start', 'id']
@@ -444,30 +472,6 @@ class DateActivitySlot(ActivitySlot):
             self.pk
 
         )
-
-    @property
-    def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full']:
-            return None
-        title = f'{self.activity.title} - {self.title or self.id}'
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality or self.location.formatted_address or ''
-            if self.location_hint:
-                location += f" {self.location_hint}"
-
-        return {
-            'uid': f"{connection.tenant.client_name}-{self.id}",
-            'summary': title,
-            'description': self.activity.description,
-            'organizer': self.activity.owner.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
 
     class Meta:
         verbose_name = _('slot')
@@ -649,6 +653,10 @@ class TeamSlot(ActivitySlot):
     @property
     def is_complete(self):
         return self.start and self.duration
+
+    @property
+    def organizer(self):
+        return self.team.owner
 
     class Meta:
         verbose_name = _('team slot')
@@ -1509,7 +1517,15 @@ class Team(TriggerMixin, models.Model):
         resource_name = 'teams/teams'
 
     def __str__(self):
+        return self.name
+
+    @property
+    def name(self):
         return _('Team {name}').format(name=self.user.full_name)
+
+    @property
+    def short_name(self):
+        return _('Team {name}').format(name=self.user.first_name)
 
     def delete(self, using=None, keep_parents=False):
         self.registration.delete()
@@ -1528,7 +1544,8 @@ class TeamMember(TriggerMixin, models.Model):
     user = models.ForeignKey(
         'members.Member',
         related_name='team_members',
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True,
     )
 
     status = models.CharField(max_length=40)
@@ -1737,6 +1754,34 @@ class Slot(models.Model):
 
         return "{}?{}".format(url, urlencode(params))
 
+    @property
+    def organizer(self):
+        return self.activity.owner
+
+    @property
+    def event_data(self):
+        if not self.end or self.end < now() or self.status not in ['open', 'full', 'scheduled']:
+            return None
+        title = f'{self.activity.title} - {self.id}'
+        location = ''
+        if self.is_online:
+            location = _('Anywhere/Online')
+        elif self.location:
+            location = self.location.locality or self.location.formatted_address or ''
+            if self.location_hint:
+                location += f" {self.location_hint}"
+
+        return {
+            'uid': f"{connection.tenant.client_name}-{self.id}",
+            'summary': title,
+            'description': self.activity.description,
+            'organizer': self.organizer.email,
+            'url': self.activity.get_absolute_url(),
+            'location': location,
+            'start_time': self.start,
+            'end_time': self.end,
+        }
+
 
 class PeriodicSlot(TriggerMixin, Slot):
     activity = models.ForeignKey(
@@ -1827,9 +1872,12 @@ class TeamScheduleSlot(BaseScheduleSlot):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "participating", "succeeded", "new"],
-            team_member__status__in=['accepted', 'new']
+            status__in=["accepted", "participating", "succeeded", "scheduled"],
         )
+
+    @property
+    def owner(self):
+        return self.team.owner
 
 
 class PeriodicParticipant(Participant, Contributor):

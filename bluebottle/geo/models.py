@@ -7,12 +7,11 @@ from django.contrib.gis.geos import Point
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 from parler.models import TranslatedFields
 from sorl.thumbnail import ImageField
 from timezonefinder import TimezoneFinder
-
-from django_better_admin_arrayfield.models.fields import ArrayField
 
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
@@ -106,6 +105,10 @@ class Country(GeoBaseModel):
     @property
     def code(self):
         return self.alpha2_code
+
+    @staticmethod
+    def get_country_choices():
+        return [(country.alpha2_code, country.name) for country in Country.objects.all()]
 
     class Meta(GeoBaseModel.Meta):
         verbose_name = _("country")

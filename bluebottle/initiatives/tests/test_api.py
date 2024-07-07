@@ -376,7 +376,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 'passed_label': None,
                 'description': "The status of the initiative is set to 'Needs work'. The " +
                                "initiator can edit and resubmit the initiative. Don't forget " +
-                               "to inform the initiator of the necessary adjustments."
+                               "to inform the initiator of the necessary adjustments.",
+                'short_description': None
             }])
         self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))

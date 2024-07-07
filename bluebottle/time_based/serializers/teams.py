@@ -12,6 +12,7 @@ from bluebottle.fsm.serializers import (
     TransitionSerializer,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team, TeamMember
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -55,6 +56,20 @@ class TeamSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source="states")
     current_status = CurrentStatusField(source="states.current_state")
 
+    captain_email = serializers.SerializerMethodField()
+
+    def get_captain_email(self, obj):
+        user = self.context['request'].user
+        if (
+            user == obj.activity.owner or
+            user == obj.activity.initiative.owner or
+            user in obj.activity.initiative.activity_managers.all() or
+            user.is_staff or
+            user.is_superuser
+        ):
+            return obj.user.email
+        return
+
     team_members = CountedHyperlinkedRelatedField(
         read_only=True,
         many=True,
@@ -83,6 +98,9 @@ class TeamSerializer(ModelSerializer):
             not user.is_superuser
         ):
             del result['invite_code']
+            member_settings = MemberPlatformSettings.load()
+            if member_settings.display_member_names != 'full_name':
+                result['name'] = instance.short_name
 
         return result
 
@@ -98,7 +116,9 @@ class TeamSerializer(ModelSerializer):
             "slots",
             "team_members",
             "member_export_url",
-            "invite_code"
+            "invite_code",
+            "name",
+            "captain_email"
         )
         meta_fields = (
             "permissions",
@@ -112,14 +132,18 @@ class TeamSerializer(ModelSerializer):
             "registration",
             "activity",
             "user",
-            "slots"
+            "slots",
+            "slots.location",
+            "slots.location.country",
         ]
 
     included_serializers = {
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
-        "registration": "bluebottle.time_based.serializers.ScheduleRegistrationSerializer",
-        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer"
+        "registration": "bluebottle.time_based.serializers.TeamScheduleRegistrationSerializer",
+        "slots": "bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer",
+        "slots.location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "slots.location.country": "bluebottle.geo.serializers.CountrySerializer",
     }
 
 

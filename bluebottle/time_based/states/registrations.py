@@ -96,7 +96,7 @@ class ScheduleRegistrationStateMachine(RegistrationStateMachine):
         return user == self.instance.user
 
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _("This person has withdrawn from the activity. Contributions are not counted.")
     )
@@ -136,13 +136,13 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         return self.is_user(user) or self.can_accept_registration(user)
 
     withdrawn = State(
-        _('withdrawn'),
+        _('Withdrawn'),
         'withdrawn',
         _("This person has withdrawn from the activity. Contributions are not counted.")
     )
 
     stopped = State(
-        _('stopped'),
+        _('Stopped'),
         'stopped',
         _("This person stopped contributing to this activity.")
     )
@@ -169,7 +169,13 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         [RegistrationStateMachine.accepted],
         stopped,
         name=_('Stop'),
-        description=_("Stop contributing to this activity."),
+        description=_(
+            "This person will no longer actively participate in your activity and "
+            "their contribution hours will stop being counted. The hours that have "
+            "already been counted will be retained. You can resume their participation "
+            "anytime."
+        ),
+        short_description=_("This person will no longer actively participate."),
         automatic=False,
         permission=is_user_or_manager,
     )
@@ -177,8 +183,13 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
     start = Transition(
         [stopped],
         RegistrationStateMachine.accepted,
-        name=_('Start again'),
-        description=_("Start contributing to this activity again."),
+        name=_("Resume"),
+        description=_(
+            "This person will start actively participating in the activity and their "
+            "contribution hours will be counted. You can stop their participation at "
+            "any time, and their contribution hours will stop being counted."
+        ),
+        short_description=_("Resume this persons participation in your activity."),
         automatic=False,
         permission=is_user_or_manager,
     )

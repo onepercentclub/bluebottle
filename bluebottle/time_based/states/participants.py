@@ -61,8 +61,8 @@ class ParticipantStateMachine(ContributorStateMachine):
                 self.instance.activity.owner,
                 self.instance.activity.initiative.owner
             ] or
-            (self.instance.team and self.instance.team.owner == user) or
             user.is_staff or
+            user.is_superuser or
             user in self.instance.activity.initiative.activity_managers.all()
         )
 
@@ -84,6 +84,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         [
             ContributorStateMachine.new,
             withdrawn,
+            removed,
             rejected
         ],
         accepted,
@@ -129,15 +130,29 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     remove = Transition(
         [
+            new,
             accepted,
             succeeded
         ],
-        rejected,
+        removed,
         name=_('Remove'),
         passed_label=_('removed'),
         description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_participant,
+    )
+
+    auto_remove = Transition(
+        [
+            new,
+            accepted,
+            succeeded,
+        ],
+        removed,
+        name=_('Auto remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person because a parent object was removed."),
+        automatic=True,
     )
 
     withdraw = Transition(
@@ -200,6 +215,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
+            ParticipantStateMachine.removed
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
@@ -254,6 +270,19 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         permission=ParticipantStateMachine.can_accept_participant,
     )
 
+    auto_remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            ParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded
+        ],
+        ParticipantStateMachine.removed,
+        name=_('Auto remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person as a participant because a parent object has been removed."),
+        automatic=True,
+    )
+
     readd = Transition(
         [
             ParticipantStateMachine.removed,
@@ -295,6 +324,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
+            ParticipantStateMachine.removed,
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
@@ -329,6 +359,20 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
         description=_("Remove this person as a participant of this activity."),
         automatic=False,
         permission=ParticipantStateMachine.can_accept_participant,
+    )
+
+    auto_remove = Transition(
+        [
+            ParticipantStateMachine.new,
+            RegistrationParticipantStateMachine.accepted,
+            ParticipantStateMachine.succeeded,
+            scheduled,
+        ],
+        ParticipantStateMachine.removed,
+        name=_("Auto remove"),
+        passed_label=_("removed"),
+        description=_("Remove this person as a participant because a parent object got removed."),
+        automatic=True,
     )
 
     withdraw = Transition(
@@ -444,16 +488,6 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
         hide_from_admin=True,
         permission=RegistrationParticipantStateMachine.is_user,
         description=_("Participant joins the team slot."),
-    )
-
-    remove = Transition(
-        [ScheduleParticipantStateMachine.new, ScheduleParticipantStateMachine.accepted],
-        ScheduleParticipantStateMachine.removed,
-        name=_("Remove"),
-        automatic=False,
-        permission=RegistrationParticipantStateMachine.can_accept_participant,
-        description=_("Remove this participant from the team slot."),
-        passed_label=_("removed"),
     )
 
 

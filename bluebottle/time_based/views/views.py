@@ -529,7 +529,11 @@ class DateParticipantExportView(ExportView):
     def write_data(self, workbook):
         activity = self.get_object()
         bold = workbook.add_format({'bold': True})
-        for slot in activity.active_slots.filter(start__gt=now()).order_by('start'):
+        if activity.status == 'succeeded':
+            slots = activity.slots.order_by('start')
+        else:
+            slots = activity.active_slots.filter(start__gt=now()).order_by('start')
+        for slot in slots:
             title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
             title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
             worksheet = workbook.add_worksheet(title)

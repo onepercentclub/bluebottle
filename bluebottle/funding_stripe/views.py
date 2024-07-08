@@ -1,3 +1,4 @@
+import json
 from builtins import str
 
 from django.http import HttpResponse
@@ -38,6 +39,47 @@ class StripeSourcePaymentList(PaymentList):
     )
 
     permission_classes = (PaymentPermission, )
+
+
+class AccountSession(View):
+    def post(self, request):
+        stripe = get_stripe()
+        try:
+            account = stripe.Account.create(
+                type='custom',
+                country='NL',
+                capabilities={
+                    'card_payments': {'requested': True},
+                    'transfers': {'requested': True},
+                },
+            )
+            account_session = stripe.AccountSession.create(
+                account=account.id,
+                components={
+                    "account_onboarding": {
+                        "enabled": True,
+                        "features": {
+                            "external_account_collection": True
+                        },
+
+                    },
+                    "payments": {
+                        "enabled": True,
+                        "features": {
+                            "refund_management": True,
+                            "dispute_management": True,
+                            "capture_payments": True
+                        }
+                    },
+                },
+            )
+            print('Account created: ', account.id)
+            print('Account session created: ', account_session.client_secret)
+            return HttpResponse(json.dumps({'client_secret': account_session.client_secret}), status=200)
+
+        except Exception as e:
+            print('An error occurred when calling the Stripe API to create an account session: ', e)
+            return HttpResponse(json.dumps({'error': str(e)}), status=500)
 
 
 class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):

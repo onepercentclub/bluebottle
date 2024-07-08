@@ -554,6 +554,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             ParticipantStateMachine.initiate,
             effects=[
+                CreateSchedulePreparationTimeContributionEffect,
                 CreateScheduleContributionEffect,
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
@@ -792,8 +793,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.schedule,
             effects=[
                 NotificationEffect(UserScheduledNotification),
-                CreateSchedulePreparationTimeContributionEffect,
-                CreateScheduleContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',
                     ContributionStateMachine.reset,

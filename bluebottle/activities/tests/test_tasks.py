@@ -19,17 +19,16 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import DateParticipant
+from bluebottle.time_based.models import DateParticipant, ScheduleParticipant
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     ScheduleActivityFactory,
-    ScheduleParticipantFactory,
     SkillFactory,
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
+    SlotParticipantFactory, ScheduleParticipantFactory,
 )
 
 
@@ -361,6 +360,9 @@ class ContributorDataRetentionTest(BluebottleTestCase):
                 SlotParticipantFactory.create(
                     slot=activity.slots.get(), participant=contributor
                 )
+            if isinstance(contributor, ScheduleParticipant):
+                contributor.slot.start = date
+                contributor.slot.save()
             contributor.contributions.update(status='succeeded')
 
     def setUp(self):
@@ -392,8 +394,10 @@ class ContributorDataRetentionTest(BluebottleTestCase):
 
     def test_data_retention_dont_delete_without_settings(self):
         self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
         self.task()
         self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
@@ -401,7 +405,7 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         member_settings.retention_anonymize = 6
         member_settings.save()
         self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 12)
         self.task()
         self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
         self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
@@ -409,4 +413,4 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.assertEqual(self.activity1.deleted_successful_contributors, 1)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 12)

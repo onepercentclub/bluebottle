@@ -108,6 +108,15 @@ class ContributionPermission(ResourcePermission):
         ] or user in obj.contributor.activity.initiative.activity_managers.all()
 
 
+class IsAdminPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return user.is_staff or user.is_superuser
+
+    def has_object_action_permission(self, action, user, obj):
+        return user.is_staff or user.is_superuser
+
+
 class DeleteActivityPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
         if (

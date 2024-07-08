@@ -7,7 +7,6 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
-from bluebottle.follow.models import Follow
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger,

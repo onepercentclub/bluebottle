@@ -6,7 +6,7 @@ from django.db import migrations
 
 def migrate_schedule_wallposts(apps, schema_editor):
     ContentType = apps.get_model("contenttypes", "ContentType")
-    ScheduleActivity = apps.get_model("time_based", "PeriodicActivity")
+    ScheduleActivity = apps.get_model("time_based", "ScheduleActivity")
     PeriodActivity = apps.get_model("time_based", "PeriodActivity")
 
     MediaWallpost = apps.get_model("wallposts", "MediaWallpost")

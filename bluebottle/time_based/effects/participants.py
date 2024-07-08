@@ -164,6 +164,4 @@ class CreateScheduleSlotEffect(Effect):
         )
         self.instance.save()
 
-    conditions = [
-        without_slot
-    ]
+    conditions = [without_slot]

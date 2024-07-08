@@ -1126,14 +1126,26 @@ class SlotParticipantTriggerTestCase(BluebottleTestCase):
         slot_participant2.states.withdraw(save=True)
         self.assertStatus(slot_participant2, 'withdrawn')
 
+        self.assertFalse(
+            self.participant.activity.followers.filter(
+                user=self.participant.user
+            ).exists()
+        )
+
         slot_participant1.states.reapply(save=True)
 
         self.assertStatus(self.participant, 'accepted')
         self.assertStatus(slot_participant1, 'registered')
 
+        self.assertTrue(
+            self.participant.activity.followers.filter(
+                user=self.participant.user
+            ).exists()
+        )
+
         slot_participant2.states.reapply(save=True)
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant2, 'registered')
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(slot_participant2, "registered")
 
     def test_remove_from_all_slots(self):
         slot_participant1 = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)
@@ -1147,14 +1159,26 @@ class SlotParticipantTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.participant, 'accepted')
         self.assertStatus(slot_participant2, 'removed')
 
+        self.assertFalse(
+            self.participant.activity.followers.filter(
+                user=self.participant.user
+            ).exists()
+        )
+
         slot_participant1.states.accept(save=True)
 
         self.assertStatus(self.participant, 'accepted')
         self.assertStatus(slot_participant1, 'registered')
 
+        self.assertTrue(
+            self.participant.activity.followers.filter(
+                user=self.participant.user
+            ).exists()
+        )
+
         slot_participant2.states.accept(save=True)
-        self.assertStatus(self.participant, 'accepted')
-        self.assertStatus(slot_participant2, 'registered')
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(slot_participant2, "registered")
 
     def test_fill_slot(self):
         SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)

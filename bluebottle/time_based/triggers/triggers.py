@@ -7,6 +7,7 @@ from bluebottle.activities.messages import (
 )
 from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
+from bluebottle.follow.models import Follow
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     ModelChangedTrigger,
@@ -18,8 +19,13 @@ from bluebottle.fsm.triggers import (
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     RescheduleSlotDurationsEffect,
-    ActiveTimeContributionsTransitionEffect, CreateSlotTimeContributionEffect, CreatePreparationTimeContributionEffect,
-    LockFilledSlotsEffect, UnlockUnfilledSlotsEffect, CheckPreparationTimeContributionEffect,
+    ActiveTimeContributionsTransitionEffect,
+    CreateSlotTimeContributionEffect,
+    CreatePreparationTimeContributionEffect,
+    LockFilledSlotsEffect,
+    UnlockUnfilledSlotsEffect,
+    CheckPreparationTimeContributionEffect,
+    SlotParticipantUnFollowActivityEffect,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -1007,7 +1013,8 @@ class SlotParticipantTriggers(TriggerManager):
                     conditions=[participant_slot_will_be_not_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
-            ]
+                SlotParticipantUnFollowActivityEffect,
+            ],
         ),
 
         TransitionTrigger(
@@ -1025,7 +1032,8 @@ class SlotParticipantTriggers(TriggerManager):
                     conditions=[participant_slot_will_be_full]
                 ),
                 NotificationEffect(ParticipantChangedNotification),
-            ]
+                FollowActivityEffect,
+            ],
         ),
 
         TransitionTrigger(
@@ -1044,7 +1052,8 @@ class SlotParticipantTriggers(TriggerManager):
                 NotificationEffect(
                     ManagerSlotParticipantWithdrewNotification,
                 ),
-            ]
+                SlotParticipantUnFollowActivityEffect,
+            ],
         ),
 
         TransitionTrigger(
@@ -1069,8 +1078,8 @@ class SlotParticipantTriggers(TriggerManager):
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[applicant_is_accepted]
-                )
-
-            ]
+                ),
+                FollowActivityEffect,
+            ],
         ),
     ]

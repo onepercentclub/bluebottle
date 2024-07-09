@@ -69,5 +69,6 @@ class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView)
             OneOf(ActivityOwnerPermission, IsAdminPermission),
         ]
     }
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamScheduleSlot.objects.all()
     serializer_class = TeamScheduleSlotSerializer

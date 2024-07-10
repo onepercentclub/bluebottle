@@ -58,12 +58,13 @@ class CreateSchedulePreparationTimeContributionEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
+        start = self.instance.slot.start if self.instance.slot and self.instance.slot.start else now()
         if activity.preparation:
             contribution = TimeContribution(
                 contributor=self.instance,
                 contribution_type=ContributionTypeChoices.preparation,
                 value=activity.preparation,
-                start=self.instance.slot.start,
+                start=start,
             )
             contribution.save()
 

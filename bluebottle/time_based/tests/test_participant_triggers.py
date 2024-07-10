@@ -16,7 +16,6 @@ from bluebottle.time_based.tests.factories import (
     DeadlineRegistrationFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
-    ScheduleSlotFactory,
     ScheduleRegistrationFactory,
     ScheduleActivityFactory,
     TeamFactory,
@@ -27,6 +26,7 @@ from bluebottle.time_based.tests.factories import (
 class ParticipantTriggerTestCase:
     expected_status = "succeeded"
     expected_contribution_status = "succeeded"
+    expected_preparation_status = "succeeded"
 
     def setUp(self):
         super().setUp()
@@ -68,7 +68,7 @@ class ParticipantTriggerTestCase:
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.value, self.activity.preparation)
         self.assertEqual(
-            preparation_contribution.status, self.expected_contribution_status
+            preparation_contribution.status, self.expected_preparation_status
         )
 
     def test_withdraw(self):
@@ -302,7 +302,7 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = ScheduleActivityFactory
-    expected_status = "scheduled"
+    expected_status = "accepted"
     expected_contribution_status = "new"
 
     def register(self):
@@ -313,17 +313,44 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
             as_user=user
         )
         self.participant = self.registration.participants.first()
-        self.participant.slot = ScheduleSlotFactory.create(
-            activity=self.activity, duration=self.activity.duration
-        )
         self.participant.save()
 
     def test_initial(self):
         super().test_initial()
-
         self.registration.refresh_from_db()
-
         self.assertEqual(self.registration.status, "accepted")
+
+    def test_schedule(self):
+        self.register()
+        slot = self.participant.slot
+        slot.start = now() + timedelta(days=1)
+        slot.save()
+        self.participant.refresh_from_db()
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "new")
+        preparation = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation.status, "succeeded")
+
+        self.assertEqual(self.participant.status, "scheduled")
+
+    def test_schedule_passed(self):
+        self.register()
+        slot = self.participant.slot
+        slot.start = now() - timedelta(days=4)
+        slot.save()
+
+        self.participant.refresh_from_db()
+        self.assertEqual(self.participant.status, "succeeded")
+
+        contribution = self.participant.contributions.get(
+            timecontribution__contribution_type="period"
+        )
+        self.assertEqual(contribution.status, "succeeded")
+        preparation = self.participant.preparation_contributions.first()
+        self.assertEqual(preparation.status, "succeeded")
 
 
 class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):

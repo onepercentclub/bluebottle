@@ -26,6 +26,8 @@ from bluebottle.time_based.notifications.registrations import (
     UserJoinedNotification,
     ManagerTeamRegistrationCreatedNotification,
     ManagerTeamRegistrationCreatedReviewNotification,
+    ManagerRegistrationStoppedNotification,
+    ManagerRegistrationRestartedNotification,
     TeamAppliedNotification,
     TeamJoinedNotification,
     UserRegistrationAcceptedNotification,

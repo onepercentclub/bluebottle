@@ -126,6 +126,12 @@ class RegistrationTriggerTestCase:
             ),
         )
 
+    def test_open_after_remove(self):
+        self.test_fill_accept()
+        self.registration.participants.first().states.remove(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
 
 class DeadlineRegistrationTriggerTestCase(
     RegistrationTriggerTestCase, BluebottleTestCase

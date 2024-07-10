@@ -42,7 +42,6 @@ from bluebottle.time_based.states import (
     ScheduleActivityStateMachine,
 )
 from bluebottle.time_based.states.participants import (
-    PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
     TeamScheduleParticipantStateMachine,

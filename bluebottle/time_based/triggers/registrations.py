@@ -314,34 +314,6 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             ],
         ),
         TransitionTrigger(
-            PeriodicRegistrationStateMachine.withdraw,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    PeriodicParticipantStateMachine.withdraw,
-                ),
-                RelatedTransitionEffect(
-                    "activity",
-                    PeriodicActivityStateMachine.unlock,
-                    conditions=[activity_spots_left],
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            PeriodicRegistrationStateMachine.reapply,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    PeriodicParticipantStateMachine.reapply,
-                ),
-                RelatedTransitionEffect(
-                    "activity",
-                    PeriodicActivityStateMachine.lock,
-                    conditions=[activity_no_spots_left],
-                ),
-            ],
-        ),
-        TransitionTrigger(
             PeriodicRegistrationStateMachine.start,
             effects=[NotificationEffect(UserRegistrationRestartedNotification)],
         ),

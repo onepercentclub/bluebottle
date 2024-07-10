@@ -17,7 +17,7 @@ from bluebottle.time_based.effects.slots import (
     CreateTeamSlotParticipantsEffect
 )
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
-from bluebottle.time_based.notifications.teams import UserTeamMemberChangedNotification
+from bluebottle.time_based.notifications.teams import UserTeamDetailsChangedNotification
 from bluebottle.time_based.states import (
     ScheduleSlotStateMachine,
     PeriodicParticipantStateMachine,
@@ -184,7 +184,7 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
         TransitionTrigger(
             ScheduleSlotStateMachine.schedule,
             effects=[
-                NotificationEffect(UserTeamMemberChangedNotification),
+                NotificationEffect(UserTeamDetailsChangedNotification),
                 RelatedTransitionEffect("participants", TeamScheduleParticipantStateMachine.schedule),
                 RelatedTransitionEffect("team", TeamStateMachine.schedule),
                 RelatedTransitionEffect(
@@ -204,7 +204,10 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
                 ),
                 TransitionEffect(
                     TeamScheduleSlotStateMachine.finish, conditions=[slot_is_finished]
-                )
+                ),
+                NotificationEffect(
+                    UserTeamDetailsChangedNotification, conditions=[slot_is_scheduled]
+                ),
             ],
         ),
 

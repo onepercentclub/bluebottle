@@ -209,7 +209,7 @@ class UserTeamMemberScheduledNotification(UserTeamNotification):
         return context
 
 
-class UserTeamMemberChangedNotification(TransitionMessage):
+class UserTeamDetailsChangedNotification(TransitionMessage):
     """
     The date/time for your team has been changed
     """

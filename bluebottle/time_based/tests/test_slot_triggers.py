@@ -16,6 +16,8 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleParticipantFactory,
     ScheduleSlotFactory,
+    TeamScheduleRegistrationFactory,
+    TeamMemberFactory,
 )
 
 
@@ -165,3 +167,75 @@ class ScheduleSlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus("scheduled")
         self.assertStatus("scheduled", self.participant)
         self.assertStatus("new", self.participant.contributions.get())
+
+
+class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=["scheduleactivity"]
+        )
+        self.admin_user = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory()
+
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = ScheduleActivityFactory.create(
+            initiative=self.initiative,
+            registration_deadline=None,
+            review=False,
+            team_activity="teams",
+        )
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+        self.registration = TeamScheduleRegistrationFactory.create(
+            activity=self.activity
+        )
+        self.slot = self.registration.team.slots.first()
+
+        self.members = TeamMemberFactory.create_batch(3, team=self.registration.team)
+
+        mail.outbox = []
+
+    def assertStatus(self, status, obj=None):
+        if not obj:
+            obj = self.slot
+
+        obj.refresh_from_db()
+
+        self.assertEqual(obj.status, status)
+
+    def test_initial_future(self):
+        self.assertStatus("new")
+        self.assertStatus("accepted", self.registration.team)
+
+    def test_change_start_finish(self):
+        self.slot.start = now() - timedelta(days=2)
+        self.slot.save()
+
+        self.assertStatus("finished")
+        self.assertStatus("succeeded", self.registration.team)
+
+        self.assertEqual(len(mail.outbox), 4)
+        for message in mail.outbox:
+            self.assertTrue(
+                message.recipients()[0]
+                in [
+                    member.user.email
+                    for member in self.registration.team.team_members.all()
+                ]
+            )
+            self.assertTrue(
+                message.subject,
+                f'The date or location for your team has been changed for the activity "{self.activity.title}."',
+            )
+
+    def test_change_start_reopen(self):
+        self.test_change_start_finish()
+
+        self.slot.start = now() + timedelta(days=2)
+        self.slot.save()
+
+        self.assertStatus("scheduled")
+        self.assertStatus("scheduled", self.registration.team)

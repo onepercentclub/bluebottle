@@ -137,7 +137,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         ActivityStateMachine.open,
         description=_("Your activity will be open to contributions."),
         automatic=False,
-        name=_("APublish"),
+        name=_("Publish"),
         passed_label=_("published"),
         permission=ActivityStateMachine.is_owner,
         conditions=[

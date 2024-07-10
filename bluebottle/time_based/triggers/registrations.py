@@ -111,9 +111,6 @@ class RegistrationTriggers(TriggerManager):
                     'participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
-                NotificationEffect(
-                    UserRegistrationAcceptedNotification,
-                ),
                 FollowActivityEffect,
             ],
         ),
@@ -138,9 +135,6 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.reject,
             effects=[
-                NotificationEffect(
-                    UserRegistrationRejectedNotification,
-                ),
                 RelatedTransitionEffect(
                     'participants',
                     RegistrationParticipantStateMachine.reject,
@@ -204,6 +198,14 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
@@ -305,6 +307,9 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -379,6 +384,9 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
+                ),
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),

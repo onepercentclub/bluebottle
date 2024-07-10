@@ -228,6 +228,13 @@ class PeriodicRegistrationTriggerTestCase(
             f'Your contribution to the activity "{self.activity.title}" has been stopped',
         )
 
+    def test_unfill_stop(self):
+        self.test_fill()
+        self.registration.states.stop(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
     def test_start(self):
         self.test_initial()
         self.registration.states.stop(save=True)
@@ -238,6 +245,14 @@ class PeriodicRegistrationTriggerTestCase(
             mail.outbox[0].subject,
             f'Your contribution to the activity "{self.activity.title}" has been restarted',
         )
+
+    def test_fill_start(self):
+        self.test_fill()
+        self.registration.states.stop(save=True)
+        self.registration.states.start(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
 
 
 class ScheduleRegistationTriggerTestCase(

@@ -34,6 +34,8 @@ from bluebottle.time_based.notifications.registrations import (
     UserTeamRegistrationRejectedNotification,
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
+    ManagerRegistrationStoppedNotification,
+    ManagerRegistrationRestartedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -314,11 +316,27 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.start,
-            effects=[NotificationEffect(UserRegistrationRestartedNotification)],
+            effects=[
+                NotificationEffect(UserRegistrationRestartedNotification),
+                NotificationEffect(ManagerRegistrationRestartedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.lock,
+                    conditions=[activity_no_spots_left],
+                ),
+            ],
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.stop,
-            effects=[NotificationEffect(UserRegistrationStoppedNotification)],
+            effects=[
+                NotificationEffect(UserRegistrationStoppedNotification),
+                NotificationEffect(ManagerRegistrationStoppedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
         ),
     ]
 

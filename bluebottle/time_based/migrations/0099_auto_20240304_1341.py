@@ -63,7 +63,11 @@ def migrate_deadline_participants(apps, schema_editor):
                 registration=registration,
                 user=participant.user,
                 activity=activity,
-                status=participant.status,
+                status=(
+                    "succeeded"
+                    if participant.status == "accepted"
+                    else participant.status
+                ),
                 polymorphic_ctype=deadline_participant_ctype,
             )
             participant.contributions.update(contributor=deadline_participant)

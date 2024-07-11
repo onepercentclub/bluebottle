@@ -665,6 +665,18 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
+
+    def team_registration_warning(self, obj):
+        return admin_info_box(
+            _("You can't change between teams/individuals anymore because there are already registrations.")
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if obj and obj.registrations.count():
+            fields += ['team_activity', 'team_registration_warning']
+        return fields
+
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
@@ -687,6 +699,12 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     ]
 
     registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
+
+    def get_registration_fields(self, request, obj):
+        fields = self.registration_fields
+        if obj and obj.team_activity == 'teams':
+            fields = ('team_registration_warning',) + fields
+        return fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

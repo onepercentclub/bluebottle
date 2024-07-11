@@ -26,6 +26,8 @@ from bluebottle.time_based.notifications.registrations import (
     UserJoinedNotification,
     ManagerTeamRegistrationCreatedNotification,
     ManagerTeamRegistrationCreatedReviewNotification,
+    ManagerRegistrationStoppedNotification,
+    ManagerRegistrationRestartedNotification,
     TeamAppliedNotification,
     TeamJoinedNotification,
     UserRegistrationAcceptedNotification,
@@ -314,11 +316,17 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.start,
-            effects=[NotificationEffect(UserRegistrationRestartedNotification)],
+            effects=[
+                NotificationEffect(UserRegistrationRestartedNotification),
+                NotificationEffect(ManagerRegistrationRestartedNotification),
+            ],
         ),
         TransitionTrigger(
             PeriodicRegistrationStateMachine.stop,
-            effects=[NotificationEffect(UserRegistrationStoppedNotification)],
+            effects=[
+                NotificationEffect(UserRegistrationStoppedNotification),
+                NotificationEffect(ManagerRegistrationStoppedNotification),
+            ],
         ),
     ]
 

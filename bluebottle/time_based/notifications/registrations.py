@@ -37,6 +37,18 @@ class ManagerRegistrationCreatedNotification(ManagerRegistrationNotification):
     template = 'messages/registrations/manager_registration_created'
 
 
+class ManagerRegistrationStoppedNotification(ManagerRegistrationNotification):
+    subject = pgettext("email", 'A participant for your activity "{title}" has stopped')
+    template = "messages/registrations/manager_registration_stopped"
+
+
+class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
+    subject = pgettext(
+        "email", 'A participant for your activity "{title}" has restarted'
+    )
+    template = "messages/registrations/manager_registration_restarted"
+
+
 class UserRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',

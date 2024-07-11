@@ -75,7 +75,7 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new, accepted],
+        [new],
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),
@@ -95,30 +95,6 @@ class ScheduleRegistrationStateMachine(RegistrationStateMachine):
         """is the participant"""
         return user == self.instance.user
 
-    withdrawn = State(
-        _('Withdrawn'),
-        'withdrawn',
-        _("This person has withdrawn from the activity. Contributions are not counted.")
-    )
-
-    withdraw = Transition(
-        [RegistrationStateMachine.accepted, RegistrationStateMachine.new],
-        withdrawn,
-        name=_('Withdraw'),
-        description=_("Withdraw from this activity."),
-        automatic=False,
-        permission=is_user,
-    )
-
-    reapply = Transition(
-        [withdrawn],
-        RegistrationStateMachine.new,
-        name=_('Reapply'),
-        description=_("Reapply for this activity."),
-        automatic=False,
-        permission=is_user,
-    )
-
 
 @register(TeamScheduleRegistration)
 class TeamScheduleRegistrationStateMachine(ScheduleRegistrationStateMachine):
@@ -135,34 +111,10 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
     def is_user_or_manager(self, user):
         return self.is_user(user) or self.can_accept_registration(user)
 
-    withdrawn = State(
-        _('Withdrawn'),
-        'withdrawn',
-        _("This person has withdrawn from the activity. Contributions are not counted.")
-    )
-
     stopped = State(
         _('Stopped'),
         'stopped',
         _("This person stopped contributing to this activity.")
-    )
-
-    withdraw = Transition(
-        [RegistrationStateMachine.accepted],
-        withdrawn,
-        name=_('Withdraw'),
-        description=_("Withdraw from this activity."),
-        automatic=False,
-        permission=is_user,
-    )
-
-    reapply = Transition(
-        [withdrawn],
-        RegistrationStateMachine.accepted,
-        name=_('Reapply'),
-        description=_("Reapply for this activity."),
-        automatic=False,
-        permission=is_user,
     )
 
     stop = Transition(

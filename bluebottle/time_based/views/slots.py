@@ -2,6 +2,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission,
     ActivityStatusPermission,
     DeleteActivityPermission,
+    IsAdminPermission
 )
 from bluebottle.time_based.models import (
     ScheduleSlot, TeamScheduleSlot,
@@ -25,8 +26,7 @@ class ScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-            DeleteActivityPermission,
+            OneOf(ResourcePermission, ActivityOwnerPermission, IsAdminPermission),
         ]
     }
 
@@ -39,9 +39,11 @@ class ScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            OneOf(ActivityOwnerPermission),
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
+            DeleteActivityPermission,
         ]
     }
+    permission_classes = [TenantConditionalOpenClose]
     queryset = ScheduleSlot.objects.all()
     serializer_class = ScheduleSlotSerializer
 
@@ -50,7 +52,7 @@ class TeamScheduleSlotListView(JsonApiViewMixin, CreateAPIView):
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            ActivityOwnerPermission,
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
             DeleteActivityPermission,
         ]
     }
@@ -64,8 +66,9 @@ class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView)
     related_permission_classes = {
         "activity": [
             ActivityStatusPermission,
-            ActivityOwnerPermission,
+            OneOf(ActivityOwnerPermission, IsAdminPermission),
         ]
     }
+    permission_classes = [TenantConditionalOpenClose]
     queryset = TeamScheduleSlot.objects.all()
     serializer_class = TeamScheduleSlotSerializer

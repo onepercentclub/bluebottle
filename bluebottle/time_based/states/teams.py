@@ -59,7 +59,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     schedule = Transition(
-        [new, accepted],
+        [new, accepted, succeeded],
         scheduled,
         name=_("Schedule"),
         passed_label=_("scheduled"),
@@ -88,7 +88,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     withdraw = Transition(
-        [new, accepted, scheduled],
+        [scheduled, accepted],
         withdrawn,
         name=_("Withdraw"),
         passed_label=_("withdrawn"),

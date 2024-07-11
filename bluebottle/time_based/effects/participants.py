@@ -56,22 +56,33 @@ class CreateScheduleContributionEffect(Effect):
                 timecontribution__contribution_type="period"
             )
         except ObjectDoesNotExist:
-            if self.instance.slot:
+            slot = self.instance.slot
+            if slot and slot.start and slot.end:
                 contribution = TimeContribution(
                     contributor=self.instance,
                     contribution_type=ContributionTypeChoices.period,
-                    value=self.instance.slot.duration,
-                    start=self.instance.slot.start,
-                    end=self.instance.slot.end,
+                    value=slot.duration,
+                    start=slot.start,
+                    end=slot.end,
                     status=(
                         "succeeded"
-                        if self.instance.slot.end and self.instance.slot.end < now()
+                        if slot.end < now()
                         else "new"
                     ),
                 )
 
-                contribution.execute_triggers(**self.options)
-                contribution.save()
+            else:
+                contribution = TimeContribution(
+                    contributor=self.instance,
+                    contribution_type=ContributionTypeChoices.period,
+                    value=self.instance.activity.duration,
+                    start=now(),
+                    end=now() + self.instance.activity.duration,
+                    status="new",
+                )
+
+            contribution.execute_triggers(**self.options)
+            contribution.save()
 
     def __str__(self):
         return _('Create contribution')
@@ -164,6 +175,4 @@ class CreateScheduleSlotEffect(Effect):
         )
         self.instance.save()
 
-    conditions = [
-        without_slot
-    ]
+    conditions = [without_slot]

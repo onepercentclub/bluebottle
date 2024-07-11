@@ -19,15 +19,16 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import DateParticipant
+from bluebottle.time_based.models import DateParticipant, ScheduleParticipant
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
+    ScheduleActivityFactory,
     SkillFactory,
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
+    SlotParticipantFactory, ScheduleParticipantFactory,
 )
 
 
@@ -359,6 +360,9 @@ class ContributorDataRetentionTest(BluebottleTestCase):
                 SlotParticipantFactory.create(
                     slot=activity.slots.get(), participant=contributor
                 )
+            if isinstance(contributor, ScheduleParticipant):
+                contributor.slot.start = date
+                contributor.slot.save()
             contributor.contributions.update(status='succeeded')
 
     def setUp(self):
@@ -371,30 +375,42 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         DateActivitySlotFactory.create(activity=self.activity1, start=now() - relativedelta(months=1))
         self.activity2 = DeadlineActivityFactory.create()
         self.activity3 = DeedFactory.create()
+        self.activity4 = ScheduleActivityFactory.create(team_activity="teams")
 
-        self.create_contributors(DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8])
-        self.create_contributors(DeadlineParticipantFactory, self.activity2, [months_ago_12, months_ago_2])
-        self.create_contributors(DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2])
+        self.create_contributors(
+            DateParticipantFactory, self.activity1, [months_ago_12, months_ago_8]
+        )
+        self.create_contributors(
+            DeadlineParticipantFactory, self.activity2, [months_ago_12, months_ago_2]
+        )
+        self.create_contributors(
+            DeedParticipantFactory, self.activity3, [months_ago_8, months_ago_2]
+        )
+        self.create_contributors(
+            ScheduleParticipantFactory, self.activity4, [months_ago_12, months_ago_8]
+        )
 
         self.task = data_retention_contribution_task
 
     def test_data_retention_dont_delete_without_settings(self):
-        self.assertEqual(Contributor.objects.count(), 9)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 9)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
-        self.assertEqual(Contributor.objects.count(), 9)
-        self.assertEqual(Contribution.objects.count(), 9)
+        self.assertEqual(Contributor.objects.count(), 12)
+        self.assertEqual(Contribution.objects.count(), 12)
         self.task()
-        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 5)
-        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
+        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
         self.activity1.refresh_from_db()
         self.assertEqual(self.activity1.deleted_successful_contributors, 1)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 9)
+        self.assertEqual(Contribution.objects.count(), 12)

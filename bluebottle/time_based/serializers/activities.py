@@ -243,7 +243,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "unscheduled": ["accepted"],
             "failed": ["rejected", "withdrawn", "removed", "cancelled"],
-            "active": ["accepted", "scheduled", "succeeded"],
+            "active": ["scheduled", "succeeded"],
         },
     )
 

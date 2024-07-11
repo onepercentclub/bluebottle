@@ -3,8 +3,6 @@
 
 from django.db import migrations
 
-from bluebottle.time_based.models import PeriodActivity
-
 
 def migrate_periodic_wallposts(apps, schema_editor):
     ContentType = apps.get_model("contenttypes", "ContentType")

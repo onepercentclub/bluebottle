@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
 
+from bluebottle.follow.models import unfollow
 from bluebottle.fsm.effects import Effect
 from bluebottle.time_based.models import (
     ContributionTypeChoices,
@@ -57,12 +58,13 @@ class CreateSchedulePreparationTimeContributionEffect(Effect):
 
     def post_save(self, **kwargs):
         activity = self.instance.activity
+        start = self.instance.slot.start if self.instance.slot and self.instance.slot.start else now()
         if activity.preparation:
             contribution = TimeContribution(
                 contributor=self.instance,
                 contribution_type=ContributionTypeChoices.preparation,
                 value=activity.preparation,
-                start=self.instance.slot.start,
+                start=start,
             )
             contribution.save()
 
@@ -399,3 +401,35 @@ class CheckPreparationTimeContributionEffect(Effect):
 
     def __str__(self):
         return _('Check preparation time contribution for {participant}').format(participant=self.instance.user)
+
+
+class SlotParticipantUnFollowActivityEffect(Effect):
+    "Unfollow the activity"
+
+    template = "admin/unfollow_effect.html"
+
+    def post_save(self, **kwargs):
+        if self.instance.user:
+            unfollow(self.instance.user, self.instance.activity)
+
+    def __repr__(self):
+        return "<Effect: Unfollow {} by {}>".format(
+            self.instance.activity, self.instance.user
+        )
+
+    def __str__(self):
+        user = self.instance.user
+        if not self.instance.user.id:
+            user = self.instance.user.full_name
+        return _("Unfollow {activity} by {user}").format(
+            activity=self.instance.activity, user=user
+        )
+
+    @property
+    def is_valid(self):
+        return (
+            self.instance.participant.slot_participants.filter(
+                status__in=("registered", "succeeded")
+            ).count()
+            == 1
+        )

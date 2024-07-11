@@ -34,6 +34,8 @@ from bluebottle.time_based.notifications.registrations import (
     UserTeamRegistrationRejectedNotification,
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
+    ManagerRegistrationStoppedNotification,
+    ManagerRegistrationRestartedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -42,7 +44,6 @@ from bluebottle.time_based.states import (
     ScheduleActivityStateMachine,
 )
 from bluebottle.time_based.states.participants import (
-    PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
     TeamScheduleParticipantStateMachine,
@@ -112,9 +113,6 @@ class RegistrationTriggers(TriggerManager):
                     'participants',
                     RegistrationParticipantStateMachine.accept,
                 ),
-                NotificationEffect(
-                    UserRegistrationAcceptedNotification,
-                ),
                 FollowActivityEffect,
             ],
         ),
@@ -139,9 +137,6 @@ class RegistrationTriggers(TriggerManager):
         TransitionTrigger(
             RegistrationStateMachine.reject,
             effects=[
-                NotificationEffect(
-                    UserRegistrationRejectedNotification,
-                ),
                 RelatedTransitionEffect(
                     'participants',
                     RegistrationParticipantStateMachine.reject,
@@ -205,6 +200,14 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
@@ -306,29 +309,16 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
-            ],
-        ),
-        TransitionTrigger(
-            PeriodicRegistrationStateMachine.withdraw,
-            effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    PeriodicParticipantStateMachine.withdraw,
-                ),
-                RelatedTransitionEffect(
-                    "activity",
-                    PeriodicActivityStateMachine.unlock,
-                    conditions=[activity_spots_left],
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),
         TransitionTrigger(
-            PeriodicRegistrationStateMachine.reapply,
+            PeriodicRegistrationStateMachine.start,
             effects=[
-                RelatedTransitionEffect(
-                    'participants',
-                    PeriodicParticipantStateMachine.reapply,
-                ),
+                NotificationEffect(UserRegistrationRestartedNotification),
+                NotificationEffect(ManagerRegistrationRestartedNotification),
                 RelatedTransitionEffect(
                     "activity",
                     PeriodicActivityStateMachine.lock,
@@ -337,12 +327,16 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             ],
         ),
         TransitionTrigger(
-            PeriodicRegistrationStateMachine.start,
-            effects=[NotificationEffect(UserRegistrationRestartedNotification)],
-        ),
-        TransitionTrigger(
             PeriodicRegistrationStateMachine.stop,
-            effects=[NotificationEffect(UserRegistrationStoppedNotification)],
+            effects=[
+                NotificationEffect(UserRegistrationStoppedNotification),
+                NotificationEffect(ManagerRegistrationStoppedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+            ],
         ),
     ]
 
@@ -408,6 +402,9 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.reject,
+                ),
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),

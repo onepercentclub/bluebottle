@@ -1,0 +1,8 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with participant=obj.user.full_name context 'email' %}
+    <p>{{ user }} have stopped your contributions to "{{ title }}".</p>
+    {% endblocktrans %}
+{% endblock %}

@@ -193,7 +193,12 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
             ],
         ),
         ModelChangedTrigger(
-            ["start", "end", "location", "is_online"],
+            [
+                "start",
+                "duration",
+                "location_id",
+                "is_online"
+            ],
             effects=[
                 TransitionEffect(
                     TeamScheduleSlotStateMachine.schedule,

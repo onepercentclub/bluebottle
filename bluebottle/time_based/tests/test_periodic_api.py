@@ -143,12 +143,16 @@ class PeriodicRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
         self.perform_create(user=self.activity.owner)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertResourceStatus(self.registration, "stopped")
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
             f'Your contribution to the activity "{self.activity.title}" has been stopped',
         )
         self.assertTrue("We don't need you anymore." in mail.outbox[0].body)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A participant for your activity "{self.activity.title}" has stopped',
+        )
 
     def test_restart_by_manager(self):
         self.perform_create(user=self.activity.owner)
@@ -161,12 +165,16 @@ class PeriodicRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
         self.defaults["message"] = "Good to have you back!"
         self.perform_create(user=self.activity.owner)
         self.assertResourceStatus(self.registration, "accepted")
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
             f'Your contribution to the activity "{self.activity.title}" has been restarted',
         )
         self.assertTrue("Good to have you back!" in mail.outbox[0].body)
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A participant for your activity "{self.activity.title}" has restarted',
+        )
 
     def test_stop_no_mail(self):
         self.perform_create(user=self.activity.owner)
@@ -186,10 +194,14 @@ class PeriodicRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransit
         self.perform_create(user=self.registration.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertResourceStatus(self.registration, "stopped")
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(
             mail.outbox[0].subject,
             f'Your contribution to the activity "{self.activity.title}" has been stopped',
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'A participant for your activity "{self.activity.title}" has stopped',
         )
 
 

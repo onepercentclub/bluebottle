@@ -324,7 +324,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             ]
         ),
         TransitionTrigger(
-            ParticipantStateMachine.restore,
+            DeadlineParticipantStateMachine.restore,
             effects=[
                 FollowActivityEffect,
                 TransitionEffect(
@@ -341,7 +341,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             ],
         ),
         TransitionTrigger(
-            ParticipantStateMachine.remove,
+            DeadlineParticipantStateMachine.remove,
             effects=[
                 RelatedTransitionEffect(
                     'activity',

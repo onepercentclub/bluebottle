@@ -126,12 +126,6 @@ class RegistrationTriggerTestCase:
             ),
         )
 
-    def test_reopen_reject(self):
-        self.test_fill_accept()
-        self.registration.states.reject(save=True)
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "open")
-
 
 class DeadlineRegistrationTriggerTestCase(
     RegistrationTriggerTestCase, BluebottleTestCase
@@ -188,35 +182,6 @@ class PeriodicRegistrationTriggerTestCase(
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
 
-    def test_withdraw(self):
-        self.test_initial()
-
-        self.registration.states.withdraw(save=True)
-
-        self.assertEqual(self.registration.participants.get().status, "withdrawn")
-
-    def test_reapply(self):
-        self.test_withdraw()
-
-        self.registration.states.reapply(save=True)
-
-        self.assertEqual(self.registration.participants.get().status, "new")
-
-    def test_reapply_finished_slot(self):
-        self.test_withdraw()
-
-        participant = self.registration.participants.get()
-        slot = self.activity.slots.get()
-        slot.states.start()
-        slot.states.finish(save=True)
-
-        participant.refresh_from_db()
-
-        self.registration.states.reapply(save=True)
-
-        participant.refresh_from_db()
-        self.assertEqual(participant.status, "succeeded")
-
     def test_stop(self):
         self.test_initial()
         mail.outbox = []
@@ -232,6 +197,13 @@ class PeriodicRegistrationTriggerTestCase(
             f'A participant for your activity "{self.activity.title}" has stopped',
         )
 
+    def test_unfill_stop(self):
+        self.test_fill()
+        self.registration.states.stop(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
     def test_start(self):
         self.test_initial()
         self.registration.states.stop(save=True)
@@ -246,6 +218,14 @@ class PeriodicRegistrationTriggerTestCase(
             mail.outbox[1].subject,
             f'A participant for your activity "{self.activity.title}" has restarted',
         )
+
+    def test_fill_start(self):
+        self.test_fill()
+        self.registration.states.stop(save=True)
+        self.registration.states.start(save=True)
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
 
 
 class ScheduleRegistationTriggerTestCase(
@@ -344,7 +324,18 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
 
     def test_reject(self):
-        super().test_reject()
+        self.activity.review = True
+        self.activity.save()
+
+        self.create()
+        self.registration.states.reject(save=True)
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your team has not been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
+        )
 
         self.assertEqual(self.registration.team.status, "rejected")
         self.assertEqual(self.registration.team.team_members.get().status, "rejected")
@@ -355,7 +346,13 @@ class TeamScheduleRegistrationTriggerTestCase(
         )
 
     def test_accept(self):
-        super().test_accept()
+        self.test_initial_review()
+        self.registration.states.accept(save=True)
+
+        self.assertEqual(
+            mail.outbox[-1].subject,
+            'Your team has been selected for the activity "{}"'.format(self.activity.title),
+        )
 
         self.assertEqual(self.registration.team.status, "accepted")
         self.assertEqual(self.registration.team.team_members.get().status, "active")

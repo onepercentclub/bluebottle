@@ -184,7 +184,6 @@ class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
         TransitionTrigger(
             ScheduleSlotStateMachine.schedule,
             effects=[
-                NotificationEffect(UserTeamDetailsChangedNotification),
                 RelatedTransitionEffect("participants", TeamScheduleParticipantStateMachine.schedule),
                 RelatedTransitionEffect("team", TeamStateMachine.schedule),
                 RelatedTransitionEffect(

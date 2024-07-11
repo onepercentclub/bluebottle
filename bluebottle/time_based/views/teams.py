@@ -1,5 +1,6 @@
 from django.db.models import Sum, Q
 
+from bluebottle.activities.permissions import IsAdminPermission, RelatedActivityOwnerPermission
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
@@ -89,7 +90,14 @@ class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
 
 class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedActivityOwnerPermission,
+            IsAdminPermission
+        ),
+    )
     queryset = Team.objects.prefetch_related("activity", "user")
     serializer_class = TeamSerializer
 

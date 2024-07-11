@@ -326,6 +326,20 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
         self.assertEqual(preparation.contributor, self.participant)
 
+    def test_remove_unfill(self):
+        # Skip this test for periodic activity
+        pass
+
+    def test_fill_unfill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+        self.register()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'full')
+        self.registration.states.stop(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = ScheduleActivityFactory

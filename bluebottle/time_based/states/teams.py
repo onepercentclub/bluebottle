@@ -127,9 +127,7 @@ class TeamStateMachine(ModelStateMachine):
     )
 
     restore = Transition(
-        [
-            cancelled, rejected
-        ],
+        cancelled,
         new,
         name=_('Restore'),
         automatic=True,

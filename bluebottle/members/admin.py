@@ -24,7 +24,6 @@ from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from permissions_widget.forms import PermissionSelectMultipleField
-from polymorphic.models import PolymorphicTypeInvalid
 from rest_framework.authtoken.models import Token
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -395,19 +394,16 @@ class MemberMessagesInline(TabularInlinePaginated):
     fields = readonly_fields
 
     def related(self, obj):
+        url = f"admin:{obj.content_type.app_label}_{obj.content_type.model}_change"
+        if not obj.content_object:
+            return format_html('{}<br><i>{}</i>', obj.content_type, _('Deleted'))
         try:
-            url = f"admin:{obj.content_type.app_label}_{obj.content_type.model}_change"
-            if not obj.content_object:
-                return format_html('{}<br><i>{}</i>', obj.content_type, _('Deleted'))
-            try:
-                return format_html(
-                    u"<a href='{}'>{}</a>",
-                    str(reverse(url, args=(obj.object_id,))), obj.content_object or obj.content_type or 'Related object'
-                )
-            except NoReverseMatch:
-                return obj.content_object or 'Related object'
-        except PolymorphicTypeInvalid:
-            return obj.content_type, obj.content_type_id
+            return format_html(
+                u"<a href='{}'>{}</a>",
+                str(reverse(url, args=(obj.object_id,))), obj.content_object or obj.content_type or 'Related object'
+            )
+        except NoReverseMatch:
+            return obj.content_object or 'Related object'
 
 
 class MemberAdmin(UserAdmin):

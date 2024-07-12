@@ -38,8 +38,7 @@ from bluebottle.time_based.models import (
     ScheduleActivity,
     TimeContribution,
     DeadlineParticipant,
-    PeriodicActivity, ScheduleParticipant, TeamScheduleParticipant,
-)
+    PeriodicActivity, ScheduleParticipant, TeamScheduleParticipant, )
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline

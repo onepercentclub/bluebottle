@@ -13,6 +13,8 @@ def migrate_periodic_activities(apps, schema_editor):
     PeriodActivity = apps.get_model("time_based", "PeriodActivity")
     PeriodicActivity = apps.get_model("time_based", "PeriodicActivity")
     periodic_activity_ctype = ContentType.objects.get_for_model(PeriodicActivity)
+    period_activity_ctype = ContentType.objects.get_for_model(PeriodActivity)
+    Message = apps.get_model("notifications", "Message")
 
     activities = PeriodActivity.objects.exclude(duration_period="overall").exclude(
         team_activity="teams"
@@ -33,6 +35,10 @@ def migrate_periodic_activities(apps, schema_editor):
             period=activity.duration_period,
         )
         periodic_activity.save_base(raw=True)
+        Message.objects.filter(
+            object_id=activity.pk,
+            content_type=period_activity_ctype
+        ).update(content_type=periodic_activity_ctype)
 
     PeriodicActivity.objects.update(polymorphic_ctype=periodic_activity_ctype)
 

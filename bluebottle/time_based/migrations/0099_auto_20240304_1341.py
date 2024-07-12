@@ -9,6 +9,8 @@ def migrate_deadline_activities(apps, schema_editor):
     PeriodActivity = apps.get_model("time_based", "PeriodActivity")
     DeadlineActivity = apps.get_model("time_based", "DeadlineActivity")
     deadline_activity_ctype = ContentType.objects.get_for_model(DeadlineActivity)
+    period_activity_ctype = ContentType.objects.get_for_model(PeriodActivity)
+    Message = apps.get_model("notifications", "Message")
 
     activities = PeriodActivity.objects.filter(
         duration_period="overall", team_activity="individuals"
@@ -28,6 +30,10 @@ def migrate_deadline_activities(apps, schema_editor):
             duration=activity.duration,
         )
         deadline_activity.save_base(raw=True)
+        Message.objects.filter(
+            object_id=activity.pk,
+            content_type=period_activity_ctype
+        ).update(content_type=deadline_activity_ctype)
 
     DeadlineActivity.objects.update(polymorphic_ctype=deadline_activity_ctype)
 

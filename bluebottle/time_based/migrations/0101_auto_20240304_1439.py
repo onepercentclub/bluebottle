@@ -102,6 +102,7 @@ def migrate_periodic_participants(apps, schema_editor):
                         status=registration_status_map.get(
                             participant.status, "accepted"
                         ),
+                        answer=participant.motivation,
                         polymorphic_ctype=periodic_registration_ctype,
                     )
 

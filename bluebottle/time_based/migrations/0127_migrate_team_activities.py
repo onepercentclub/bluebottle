@@ -129,13 +129,20 @@ def migrate_team_participants(apps, schema_editor):
                 "open": "scheduled",
             }
             try:
+                is_online = legacy_team.slot.is_online
+                if is_online is None:
+                    if legacy_team.slot.location:
+                        is_online = False
+                    else:
+                        is_online = True
+
                 slot = TeamScheduleSlot.objects.create(
                     start=legacy_team.slot.start,
                     duration=legacy_team.slot.duration,
                     status=team_slot_status_map.get(
                         legacy_team.slot.status, legacy_team.slot.status
                     ),
-                    is_online=legacy_team.slot.is_online,
+                    is_online=is_online,
                     online_meeting_url=legacy_team.slot.online_meeting_url,
                     location=legacy_team.slot.location,
                     location_hint=legacy_team.slot.location_hint,

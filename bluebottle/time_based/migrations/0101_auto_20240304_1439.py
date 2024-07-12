@@ -96,13 +96,14 @@ def migrate_periodic_participants(apps, schema_editor):
                 registration = None
 
                 if participant.user:
+                    period_participant = PeriodParticipant.objects.get(pk=participant.pk)
                     registration, _created = PeriodicRegistration.objects.get_or_create(
                         user=participant.user,
                         activity=activity,
                         status=registration_status_map.get(
                             participant.status, "accepted"
                         ),
-                        answer=participant.motivation,
+                        answer=period_participant.motivation,
                         polymorphic_ctype=periodic_registration_ctype,
                     )
 

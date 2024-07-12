@@ -31,7 +31,7 @@ from bluebottle.time_based.models import (
     DateParticipant,
     ScheduleParticipant,
     DeadlineParticipant,
-    PeriodicParticipant,
+    PeriodicParticipant, TeamScheduleParticipant,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
@@ -153,6 +153,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
                 DateParticipant,
                 PeriodicParticipant,
                 ScheduleParticipant,
+                TeamScheduleParticipant,
                 DeedParticipant,
                 DeadlineParticipant,
                 CollectContributor,

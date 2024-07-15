@@ -1668,7 +1668,6 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
-
     ordering = ('-created',)
 
     def type(self, obj):
@@ -1681,9 +1680,9 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
         "user",
         "document",
         "created",
+        "activity"
     ]
-    raw_id_fields = ["user", "activity", "document"]
-    fields = readonly_fields + ["activity", "answer", "status", "states"]
+    fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 
     formfield_overrides = {PrivateDocumentModelChoiceField: {"widget": DocumentWidget}}

@@ -38,8 +38,7 @@ from bluebottle.time_based.models import (
     ScheduleActivity,
     TimeContribution,
     DeadlineParticipant,
-    PeriodicActivity, ScheduleParticipant, TeamScheduleParticipant,
-)
+    PeriodicActivity, ScheduleParticipant, TeamScheduleParticipant, )
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
 from bluebottle.wallposts.admin import WallpostInline
@@ -127,16 +126,22 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
-    raw_id_fields = ('user', 'activity')
 
     date_hierarchy = 'contributor_date'
 
     readonly_fields = [
+        'user', 'activity',
         'transition_date', 'contributor_date',
         'created', 'updated', 'team'
     ]
 
-    fields = ['activity', 'user', 'states', 'status'] + readonly_fields
+    fields = [
+        'activity', 'user',
+        'states', 'status',
+        'transition_date', 'contributor_date',
+        'created', 'updated', 'team'
+    ]
+
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):

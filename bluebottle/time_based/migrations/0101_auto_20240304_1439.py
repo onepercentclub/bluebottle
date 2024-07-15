@@ -102,6 +102,7 @@ def migrate_periodic_participants(apps, schema_editor):
                         status=registration_status_map.get(
                             participant.status, "accepted"
                         ),
+                        created=participant.created,
                         polymorphic_ctype=periodic_registration_ctype,
                     )
 
@@ -116,6 +117,7 @@ def migrate_periodic_participants(apps, schema_editor):
 
                     if not slot:
                         slot = PeriodicSlot.objects.create(
+                            created=contribution.created,
                             start=contribution.start,
                             end=contribution.end,
                             activity=activity,
@@ -127,6 +129,7 @@ def migrate_periodic_participants(apps, schema_editor):
 
                     periodic_participant = PeriodicParticipant.objects.create(
                         slot=slot,
+                        created=contribution.created,
                         registration=registration,
                         user=participant.user,
                         activity=activity,

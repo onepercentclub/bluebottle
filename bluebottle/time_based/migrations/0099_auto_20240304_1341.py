@@ -57,12 +57,14 @@ def migrate_deadline_participants(apps, schema_editor):
                     activity=activity,
                     polymorphic_ctype=deadline_registration_ctype,
                     status="new" if participant.status == "new" else "accepted",
+                    created=participant.created,
                 )
 
             deadline_participant = DeadlineParticipant.objects.create(
                 registration=registration,
                 user=participant.user,
                 activity=activity,
+                created=participant.created,
                 status=(
                     "succeeded"
                     if participant.status == "accepted"

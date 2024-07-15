@@ -702,7 +702,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def get_registration_fields(self, request, obj):
         fields = self.registration_fields
-        if obj and obj.team_activity == 'teams':
+        if obj and obj.registrations.count():
             fields = ('team_registration_warning',) + fields
         return fields
 

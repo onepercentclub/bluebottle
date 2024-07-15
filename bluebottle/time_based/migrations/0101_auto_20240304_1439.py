@@ -126,7 +126,6 @@ def migrate_periodic_participants(apps, schema_editor):
 
                     if not slot:
                         slot = PeriodicSlot.objects.create(
-                            created=contribution.created,
                             start=contribution.start,
                             end=contribution.end,
                             activity=activity,

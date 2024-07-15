@@ -451,6 +451,8 @@ class ContributorSerializer(PolymorphicModelSerializer):
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
         PeriodicParticipantSerializer,
+        ScheduleParticipantSerializer,
+        TeamScheduleParticipantSerializer
     ]
 
     included_serializers = {
@@ -486,6 +488,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'contributions': 'bluebottle.activities.serializers.MoneySerializer',
         'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }

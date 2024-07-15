@@ -24,6 +24,26 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
             return is_owner
 
 
+class RelatedActivityOwnerPermission(ResourceOwnerPermission):
+    def has_object_action_permission(self, action, user, obj):
+        activity = obj.activity
+        try:
+            owner = activity.owner
+        except Activity.owner.RelatedObjectDoesNotExist:
+            owner = None
+
+        is_owner = (
+            user
+            in [
+                owner,
+                activity.initiative.owner,
+            ]
+            or user in activity.initiative.activity_managers.all()
+        )
+
+        return is_owner
+
+
 class ActivityTypePermission(ResourcePermission):
     def has_permission(self, request, view):
         (settings, _) = InitiativePlatformSettings.objects.get_or_create()

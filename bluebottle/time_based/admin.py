@@ -665,6 +665,20 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
+
+    def team_registration_warning(self, obj):
+        return admin_info_box(
+            _(
+                "You can't change between teams/individuals anymore because there are already registrations."
+            )
+        )
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = super().get_readonly_fields(request, obj)
+        if obj and obj.registrations.count():
+            fields += ["team_activity", "team_registration_warning"]
+        return fields
+
     form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
@@ -687,6 +701,12 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     ]
 
     registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
+
+    def get_registration_fields(self, request, obj):
+        fields = self.registration_fields
+        if obj and obj.registrations.count():
+            fields = ("team_registration_warning",) + fields
+        return fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
@@ -1650,7 +1670,6 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_display = ['created', 'user', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
-
     ordering = ('-created',)
 
     def type(self, obj):
@@ -1659,13 +1678,8 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = [
-        "user",
-        "document",
-        "created",
-    ]
-    raw_id_fields = ["user", "activity", "document"]
-    fields = readonly_fields + ["activity", "answer", "status", "states"]
+    readonly_fields = ["user", "document", "created", "activity"]
+    fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 
     formfield_overrides = {PrivateDocumentModelChoiceField: {"widget": DocumentWidget}}

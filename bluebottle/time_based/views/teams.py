@@ -1,6 +1,12 @@
 from django.db.models import Sum, Q
 
+from bluebottle.activities.models import Activity
+from bluebottle.activities.permissions import (
+    IsAdminPermission,
+    RelatedActivityOwnerPermission,
+)
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team
 from bluebottle.time_based.models import TeamMember
 from bluebottle.time_based.permissions import InviteCodePermission, TeamMemberPermission
@@ -75,6 +81,30 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     queryset = Team.objects.prefetch_related("activity", "registration")
     serializer_class = TeamSerializer
 
+    def get_serializer_context(self, **kwargs):
+        context = super().get_serializer_context(**kwargs)
+        context["display_member_names"] = (
+            MemberPlatformSettings.objects.get().display_member_names
+        )
+
+        activity = Activity.objects.get(pk=self.kwargs["activity_id"])
+        context["owners"] = [activity.owner] + list(
+            activity.initiative.activity_managers.all()
+        )
+
+        if (
+            self.request.user
+            and self.request.user.is_authenticated
+            and (
+                self.request.user in context["owners"]
+                or self.request.user.is_staff
+                or self.request.user.is_superuser
+            )
+        ):
+            context["display_member_names"] = "full_name"
+
+        return context
+
 
 class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
     permission_classes = [IsAuthenticatedOrOpenPermission]
@@ -89,7 +119,14 @@ class RelatedTeamMembers(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
 
 class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)
+    permission_classes = (
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            RelatedActivityOwnerPermission,
+            IsAdminPermission,
+        ),
+    )
     queryset = Team.objects.prefetch_related("activity", "user")
     serializer_class = TeamSerializer
 

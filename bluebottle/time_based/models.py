@@ -1197,9 +1197,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
 
     activity = models.ForeignKey(
-        TimeBasedActivity,
-        related_name='registrations',
-        on_delete=models.CASCADE
+        Activity, related_name="registrations", on_delete=models.CASCADE
     )
 
     user = models.ForeignKey(
@@ -1503,14 +1501,14 @@ class Team(TriggerMixin, models.Model):
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
         permissions = (
-            ("api_read_team", "Can view on a team through the API"),
-            ("api_add_team", "Can add on a team through the API"),
-            ("api_change_team", "Can change on a team through the API"),
-            ("api_delete_team", "Can delete on a team through the API"),
-            ("api_read_own_team", "Can view own on a team through the API"),
-            ("api_add_own_team", "Can add own on a team through the API"),
-            ("api_change_own_team", "Can change own on a team through the API"),
-            ("api_delete_own_team", "Can delete own on a team through the API"),
+            ("api_read_team", "Can view a team through the API"),
+            ("api_add_team", "Can add a team through the API"),
+            ("api_change_team", "Can change a team through the API"),
+            ("api_delete_team", "Can delete a team through the API"),
+            ("api_read_own_team", "Can view own team through the API"),
+            ("api_add_own_team", "Can add own team through the API"),
+            ("api_change_own_team", "Can change own team through the API"),
+            ("api_delete_own_team", "Can delete own team through the API"),
         )
 
     class JSONAPIMeta(object):

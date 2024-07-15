@@ -97,6 +97,32 @@ class ParticipantTriggerTestCase:
         preparation_contribution = self.participant.preparation_contributions.first()
         self.assertEqual(preparation_contribution.status, "failed")
 
+    def test_fill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.test_initial()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+    def test_withdraw_unfill(self):
+        self.activity.capacity = 1
+
+        self.test_withdraw()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+    def test_remove_unfill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.test_remove()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
     def test_reapply(self):
         self.test_withdraw()
         self.participant.states.reapply(save=True)
@@ -118,6 +144,7 @@ class ParticipantTriggerTestCase:
 
     def test_remove(self):
         self.test_initial()
+
         mail.outbox = []
         self.participant.states.remove(save=True)
         self.assertEqual(self.participant.status, "removed")
@@ -299,6 +326,20 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
         self.assertEqual(preparation.contributor, self.participant)
 
+    def test_remove_unfill(self):
+        # Skip this test for periodic activity
+        pass
+
+    def test_fill_unfill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+        self.register()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+        self.registration.states.stop(save=True)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = ScheduleActivityFactory
@@ -319,6 +360,33 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         super().test_initial()
         self.registration.refresh_from_db()
         self.assertEqual(self.registration.status, "accepted")
+
+    def test_fill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.test_initial()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "full")
+
+    def test_withdraw_unfill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.test_withdraw()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
+
+    def test_remove_unfill(self):
+        self.activity.capacity = 1
+        self.activity.save()
+
+        self.test_remove()
+
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, "open")
 
     def test_schedule(self):
         self.register()

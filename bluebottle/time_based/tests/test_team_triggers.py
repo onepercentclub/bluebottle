@@ -9,6 +9,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     TeamFactory,
     TeamMemberFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 
@@ -118,22 +119,23 @@ class TeamTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.team.team_members.get().status, "active")
 
     def test_reject(self):
-        self.team.registration.states.reject(save=True)
-        self.assertEqual(self.team.status, "rejected")
+        registration = TeamScheduleRegistrationFactory.create()
+        team = registration.team
+        registration.states.reject(save=True)
 
-        self.assertEqual(self.team.registration.status, "rejected")
-
-        self.assertEqual(self.team.team_members.get().status, "rejected")
+        self.assertEqual(team.status, "rejected")
+        self.assertEqual(team.registration.status, "rejected")
+        self.assertEqual(team.team_members.get().status, "rejected")
 
     def test_reaccept(self):
-        self.team.registration.states.reject(save=True)
-        self.team.registration.states.accept(save=True)
+        registration = TeamScheduleRegistrationFactory.create()
+        team = registration.team
+        registration.states.reject(save=True)
+        registration.states.accept(save=True)
 
-        self.assertEqual(self.team.status, "accepted")
-
-        self.assertEqual(self.team.registration.status, "accepted")
-
-        self.assertEqual(self.team.team_members.get().status, "active")
+        self.assertEqual(team.status, "accepted")
+        self.assertEqual(registration.status, "accepted")
+        self.assertEqual(team.team_members.get().status, "active")
 
 
 class TeamMemberTriggerTestCase(BluebottleTestCase):

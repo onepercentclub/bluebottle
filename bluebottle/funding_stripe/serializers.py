@@ -47,6 +47,9 @@ class StripePaymentSerializer(PaymentSerializer):
 class ConnectAccountSerializer(serializers.ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
     owner = ResourceRelatedField(read_only=True)
+    token = serializers.CharField(read_only=True, allow_blank=True)
+    account = serializers.DictField(read_only=True)
+
     external_accounts = ResourceRelatedField(read_only=True, many=True)
 
     included_serializers = {
@@ -58,7 +61,11 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         model = StripePayoutAccount
 
         fields = (
-            'id', 'account_id', 'country', 'current_status', 'owner', 'external_accounts'
+            'id', 'token', 'country', 'document_type',
+            'verified', 'owner', 'disabled', 'account',
+            'external_accounts', 'required', 'errors',
+            'required_fields', 'status',
+            'country'
         )
         meta_fields = ('current_status',)
 

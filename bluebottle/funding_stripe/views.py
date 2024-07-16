@@ -138,10 +138,26 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        obj = serializer.save(owner=self.request.user)
 
-    def get_queryset(self):
-        return self.queryset.order_by('-created').filter(owner=self.request.user)
+        stripe = get_stripe()
+        account = stripe.Account.create(
+            country=obj.country,
+            type='custom',
+            settings=obj.account_settings,
+            business_type='individual',
+            capabilities={"transfers": {"requested": True}, "card_payments": {"requested": True}},
+            business_profile={
+                'url': 'https://goodup.com',
+                'mcc': '8398'
+            },
+            metadata=obj.metadata,
+            tos_acceptance={
+                "service_agreement": "full"
+            }
+        )
+        obj.account_id = account.id
+        obj.save()
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

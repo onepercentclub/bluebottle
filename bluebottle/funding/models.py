@@ -710,6 +710,13 @@ class FundingPlatformSettings(BasePlatformSettings):
         _('Allow guests to donate rewards'), default=True
     )
 
+    @property
+    def stripe_publishable_key(self):
+        from bluebottle.funding_stripe.utils import get_stripe_settings
+        settings = get_stripe_settings()
+        if settings:
+            return settings['publishable_key']
+
     class Meta(object):
         verbose_name_plural = _('funding settings')
         verbose_name = _('funding settings')

@@ -219,7 +219,7 @@ class Segment(models.Model):
         if contrast.passes_AA(contrast_with_white, large=True):
             return 'white'
         else:
-            return 'grey'
+            return "text"
 
     def __str__(self):
         return self.name

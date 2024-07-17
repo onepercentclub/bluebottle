@@ -48,10 +48,20 @@ from bluebottle.time_based.states import (
 )
 
 
+def activity_is_expired(effect):
+    """Activity is expired"""
+    return effect.instance.activity.status == "expired"
+
+
+def activity_will_be_expired(effect):
+    """Activity is expired"""
+    return (
+        effect.instance.activity.status == "succeeded"
+        and effect.instance.activity.active_participants.count() == 1
+    )
+
+
 class RegistrationParticipantTriggers(ContributorTriggers):
-    def activity_is_expired(effect):
-        """Activity is expired"""
-        return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -88,6 +98,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -109,6 +124,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -132,6 +152,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -240,7 +265,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[
                         activity_no_spots_left
                     ]
-                )
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    RegistrationActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                ),
             ]
         ),
         TransitionTrigger(

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.core import mail
 from django.utils.timezone import now
@@ -299,6 +299,24 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
                 self.activity.title
             ),
         )
+
+    def test_initial_succeed_activity(self):
+        self.activity.deadline = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        self.create(as_user=self.admin_user)
+
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.contributions.first().status, "succeeded")
+        self.assertEqual(self.participant.activity.status, "succeeded")
+
+    def test_expire(self):
+        self.test_initial_succeed_activity()
+
+        self.participant.states.withdraw(save=True)
+        self.assertEqual(self.participant.status, "withdrawn")
+        self.assertEqual(self.participant.contributions.first().status, "failed")
+        self.assertEqual(self.participant.activity.status, "expired")
 
 
 class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):

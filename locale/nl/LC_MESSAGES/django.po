@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-02-28 16:37+0100\n"
-"PO-Revision-Date: 2024-02-28 17:48\n"
+"PO-Revision-Date: 2024-07-18 13:16\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -1420,7 +1420,7 @@ msgstr "Contacteer teamcaptain %(team_captain_name)s om te bepalen wanner en waa
 #: bluebottle/activities/templates/mails/messages/team_applied.html:13
 msgctxt "email"
 msgid "Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members."
-msgstr "Voeg deze informatie toe aan het team via de ongeplande teamlijst op de activiteitspagina zodat deze zichtbaar is voor de teamleden."
+msgstr "Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:15
 #: bluebottle/activities/templates/mails/messages/team_applied.html:16
@@ -4156,7 +4156,7 @@ msgstr "Uitbetaling is goedgekeurd en verstuurd naar de uitbetalingsapplicatie."
 
 #: bluebottle/funding/states.py:421
 msgid "scheduled"
-msgstr "gepland"
+msgstr "ingeroosterd"
 
 #: bluebottle/funding/states.py:423
 msgid "Payout has been received by the payout app."

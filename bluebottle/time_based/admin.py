@@ -454,7 +454,12 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
-    fields = ('activity', 'user', 'registration_info', 'status', 'states', 'created', 'invite_code')
+    fields = (
+        'activity',
+        'user',
+        'name', 'description', 'registration_info',
+        'status', 'states', 'created', 'invite_code'
+    )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 

@@ -47,7 +47,6 @@ class TeamList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
                 queryset = queryset.filter(user=self.request.user)
             else:
                 queryset = queryset.none()
-
         return queryset
 
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission),)

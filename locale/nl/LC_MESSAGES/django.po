@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-15 14:54+0200\n"
-"PO-Revision-Date: 2024-07-18 11:11\n"
+"PO-Revision-Date: 2024-07-18 13:16\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -1390,7 +1390,7 @@ msgstr "Contacteer teamcaptain %(team_captain_name)s om te bepalen wanner en waa
 #: bluebottle/activities/templates/mails/messages/team_applied.html:13
 msgctxt "email"
 msgid "Add this information to the team via the unscheduled team list on the activity page so it is visible for the team members."
-msgstr "Voeg deze informatie toe aan het team via de ongeplande teamlijst op de activiteitspagina zodat deze zichtbaar is voor de teamleden."
+msgstr "Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd."
 
 #: bluebottle/activities/templates/mails/messages/team_added.html:15
 #: bluebottle/activities/templates/mails/messages/team_applied.html:16
@@ -4128,7 +4128,7 @@ msgstr "Uitbetaling is goedgekeurd en verstuurd naar de uitbetalingsapplicatie."
 
 #: bluebottle/funding/states.py:421 bluebottle/time_based/states/teams.py:65
 msgid "scheduled"
-msgstr "gepland"
+msgstr "ingeroosterd"
 
 #: bluebottle/funding/states.py:423
 msgid "Payout has been received by the payout app."
@@ -5648,7 +5648,7 @@ msgstr "Activiteit binnen een deadline"
 
 #: bluebottle/initiatives/models.py:276
 msgid "Scheduled activity"
-msgstr "Ingeplande activiteit"
+msgstr "Ingeroosterde activiteit"
 
 #: bluebottle/initiatives/models.py:277
 msgid "Periodic Activity"
@@ -6069,7 +6069,7 @@ msgstr "Activiteit op een datum"
 
 #: bluebottle/members/admin.py:714 bluebottle/time_based/models.py:937
 msgid "Recurring activity"
-msgstr "Herhalende activiteit"
+msgstr "Periodieke activiteit"
 
 #: bluebottle/members/admin.py:718 bluebottle/time_based/models.py:810
 msgid "Flexible activity"
@@ -6077,11 +6077,11 @@ msgstr "Flexibele activiteit"
 
 #: bluebottle/members/admin.py:722 bluebottle/time_based/models.py:885
 msgid "Schedule activity"
-msgstr "Inplan activiteit"
+msgstr "Rooster activiteit"
 
 #: bluebottle/members/admin.py:726
 msgid "Team schedule activity"
-msgstr "Team inplan activiteit"
+msgstr "Team rooster activiteit"
 
 #: bluebottle/members/admin.py:739
 msgid "Funding donations"
@@ -7388,7 +7388,7 @@ msgstr "Tijdsblokken"
 #: bluebottle/time_based/admin.py:315
 #: bluebottle/time_based/states/participants.py:418
 msgid "unscheduled"
-msgstr "niet ingepland"
+msgstr "niet ingeroosterd"
 
 #: bluebottle/time_based/admin.py:320 bluebottle/time_based/admin.py:321
 msgid "Team participants"
@@ -7635,24 +7635,24 @@ msgstr "Controleer de voorbereidingstijd bijdrage van {participant}"
 
 #: bluebottle/time_based/effects/participants.py:92
 msgid "Create registration for this participant"
-msgstr ""
+msgstr "Registratie aanmaken voor deze deelnemer"
 
 #: bluebottle/time_based/effects/participants.py:146
 #: bluebottle/time_based/effects/participants.py:156
 msgid "Delete related registration"
-msgstr ""
+msgstr "Verwijder gerelateerde registratie"
 
 #: bluebottle/time_based/effects/participants.py:160
 msgid "Create slot for this participant"
-msgstr ""
+msgstr "Maak een tijdsblok aan voor deze deelnemer"
 
 #: bluebottle/time_based/effects/registrations.py:8
 msgid "Create participant for this registration"
-msgstr ""
+msgstr "Maak een deelnemer aan voor deze registratie"
 
 #: bluebottle/time_based/effects/registrations.py:23
 msgid "Create participant for this team member"
-msgstr ""
+msgstr "Maak een deelnemer aan voor dit teamlid"
 
 #: bluebottle/time_based/effects/registrations.py:40
 msgid "Create initial periodic participant for this registration"
@@ -7724,7 +7724,7 @@ msgstr "Je evenement \"{title}\" vindt over een aantal dagen plaats!"
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" will take place tomorrow!"
-msgstr ""
+msgstr "De activiteit \"{title}\" vindt morgen plaats!"
 
 #: bluebottle/time_based/messages.py:182
 #, python-brace-format
@@ -7760,7 +7760,7 @@ msgstr "Je bent toegevoegd aan de activiteit \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "email"
 msgid "Your team was added to the activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Je team is toegevoegd aan de activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:388
 #, python-brace-format
@@ -7883,7 +7883,7 @@ msgstr "Een deelnemer is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Een team is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:916
 #: bluebottle/time_based/notifications/participants.py:28
@@ -7916,23 +7916,23 @@ msgstr "vaardigheid"
 
 #: bluebottle/time_based/models.py:59
 msgid "Upload documents"
-msgstr ""
+msgstr "Document uploaden"
 
 #: bluebottle/time_based/models.py:60
 msgid "Allow participants to upload documents that support their application."
-msgstr ""
+msgstr "Sta deelnemers toe om een document te uploaden ter ondersteuning van hun aanmelding."
 
 #: bluebottle/time_based/models.py:66
 msgid "Ask a single question on the platform."
-msgstr ""
+msgstr "Stel één enkele vraag op het platform."
 
 #: bluebottle/time_based/models.py:67
 msgid "Direct the participants to a questionnaire on an external website like Microsoft forms."
-msgstr ""
+msgstr "Stuur de deelnemers door naar een vragenlijst op een externe website zoals Microsoft forms."
 
 #: bluebottle/time_based/models.py:71
 msgid "Ask a question"
-msgstr ""
+msgstr "Stel een vraag"
 
 #: bluebottle/time_based/models.py:72
 msgid "Do you want to ask any questions to your participants when they join your activity?"
@@ -7944,31 +7944,31 @@ msgstr "Deelnemers beoordelen"
 
 #: bluebottle/time_based/models.py:80
 msgid "Activity manager accepts or rejects participants or teams."
-msgstr ""
+msgstr "De manager van de activiteit accepteert of weigert deelnemers of teams."
 
 #: bluebottle/time_based/models.py:84
 msgid "Question label"
-msgstr ""
+msgstr "Vraag"
 
 #: bluebottle/time_based/models.py:85
 msgid "This is the question that participants will answer."
-msgstr ""
+msgstr "Dit is de vraag die de deelnemers moeten beantwoorden."
 
 #: bluebottle/time_based/models.py:91
 msgid "Question description"
-msgstr ""
+msgstr "Beschrijving van de vraag"
 
 #: bluebottle/time_based/models.py:92
 msgid "Give some more context to help the participant answer the question."
-msgstr ""
+msgstr "Geef wat meer context om de deelnemer te helpen de vraag te beantwoorden."
 
 #: bluebottle/time_based/models.py:96
 msgid "External website link"
-msgstr ""
+msgstr "Externe website link"
 
 #: bluebottle/time_based/models.py:97
 msgid "Direct participants to a questionnaire created from an external website like Microsoft forms."
-msgstr ""
+msgstr "Stuur de deelnemers door naar een vragenlijst gemaakt via een externe website zoals Microsoft forms."
 
 #: bluebottle/time_based/models.py:103
 msgid "Preparation time"
@@ -8123,7 +8123,7 @@ msgstr ""
 
 #: bluebottle/time_based/models.py:886
 msgid "Schedule activities"
-msgstr ""
+msgstr "Inplan activiteiten"
 
 #: bluebottle/time_based/models.py:909
 msgid "per hour"
@@ -8210,7 +8210,7 @@ msgstr "Vaardigheden"
 #: bluebottle/time_based/models.py:1224
 #, python-brace-format
 msgid "Candidate {name} for {activity}"
-msgstr ""
+msgstr "Kandidaat {name} voor {activity}"
 
 #: bluebottle/time_based/models.py:1225
 #, python-brace-format
@@ -8235,11 +8235,11 @@ msgstr "Kandidaten voor flexibele activiteiten"
 
 #: bluebottle/time_based/models.py:1283
 msgid "Candidate for schedule activities"
-msgstr ""
+msgstr "Kandidaat voor rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1284
 msgid "Candidates for schedule activities"
-msgstr ""
+msgstr "Kandidaten voor rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1325
 msgid "Candidate for recurring activities"
@@ -8269,11 +8269,11 @@ msgstr ""
 
 #: bluebottle/time_based/models.py:1436
 msgid "Team for schedule activities"
-msgstr ""
+msgstr "Team voor rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1437
 msgid "Teams for schedule activities"
-msgstr ""
+msgstr "Teams voor rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1490
 msgid "Team captain"
@@ -8294,11 +8294,11 @@ msgstr ""
 
 #: bluebottle/time_based/models.py:1610
 msgid "Participant to schedule activities"
-msgstr ""
+msgstr "Deelnemer aan rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1611
 msgid "Participants to schedule activities"
-msgstr ""
+msgstr "Deelnemers aan rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1673
 msgid "Team member participation"
@@ -8333,7 +8333,7 @@ msgstr "Deelnemers aan periodieke activiteiten"
 #, python-brace-format
 msgctxt "email"
 msgid "You have been scheduled for the activity \"{title}\""
-msgstr ""
+msgstr "Je bent ingeroosterd voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/notifications/registrations.py:31
 #, python-brace-format
@@ -8467,7 +8467,7 @@ msgstr ""
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been scheduled for the activity \"{title}\""
-msgstr ""
+msgstr "Je team is ingeroosterd voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/notifications/teams.py:121
 #| msgid ""
@@ -8517,7 +8517,7 @@ msgstr ""
 #, python-brace-format
 msgctxt "email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
-msgstr ""
+msgstr "De datum of locatie van je team voor de activiteit \"{title}\" is gewijzigd"
 
 #: bluebottle/time_based/periodic_tasks.py:48
 msgid "Lock an activity when the registration date has passed."
@@ -8750,7 +8750,7 @@ msgstr ""
 #: bluebottle/time_based/states/slots.py:15
 #: bluebottle/time_based/states/teams.py:10
 msgid "Unscheduled"
-msgstr "Niet ingepland"
+msgstr "Niet ingeroosterd"
 
 #: bluebottle/time_based/states/participants.py:319
 msgid "This person takes part in the activity, but needs to be assigned a slot."
@@ -8761,7 +8761,7 @@ msgstr ""
 #: bluebottle/time_based/states/slots.py:17
 #: bluebottle/time_based/states/teams.py:14
 msgid "Scheduled"
-msgstr "Ingepland"
+msgstr "Ingeroosterd"
 
 #: bluebottle/time_based/states/participants.py:321
 msgid "This person is assigned a slot."
@@ -8773,15 +8773,15 @@ msgstr ""
 
 #: bluebottle/time_based/states/participants.py:405
 msgid "Schedule this participant the Activity."
-msgstr "Plan deze deelnemer in voor de activiteit."
+msgstr "Rooster deze deelnemer in voor de activiteit."
 
 #: bluebottle/time_based/states/participants.py:416
 msgid "Unschedule"
-msgstr "Uitplannen"
+msgstr "Rooster uit"
 
 #: bluebottle/time_based/states/participants.py:417
 msgid "Unschedule this participant."
-msgstr "Plan deze deelnemer uit."
+msgstr "Rooster deze deelnemer uit."
 
 #: bluebottle/time_based/states/participants.py:431
 msgid "Succeed this participant for the Activity."
@@ -8789,7 +8789,7 @@ msgstr ""
 
 #: bluebottle/time_based/states/participants.py:440
 msgid "Reset participant to scheduled"
-msgstr "Gebruiker resetten naar ingepland"
+msgstr "Deelnemer resetten naar ingeroosterd"
 
 #: bluebottle/time_based/states/participants.py:465
 msgid "Member signs up for team"
@@ -8878,11 +8878,11 @@ msgstr ""
 
 #: bluebottle/time_based/states/slots.py:15
 msgid "The slot is not scheduled yet."
-msgstr "Het tijdsblok is nog niet ingepland."
+msgstr "Het tijdsblok is nog niet ingeroosterd."
 
 #: bluebottle/time_based/states/slots.py:17
 msgid "The slot is scheduled for a future date."
-msgstr ""
+msgstr "Het tijdsblok staat ingeroosterd voor een toekomstige datum."
 
 #: bluebottle/time_based/states/slots.py:21
 msgid "Running"
@@ -9160,7 +9160,7 @@ msgstr ""
 
 #: bluebottle/time_based/states/teams.py:14
 msgid "This team has been scheduled."
-msgstr ""
+msgstr "Dit team is ingeroosterd."
 
 #: bluebottle/time_based/states/teams.py:15
 msgid "This team was successful."
@@ -9448,14 +9448,15 @@ msgstr ""
 
 #: bluebottle/time_based/templates/admin/create_schedule_slot.html:2
 msgid "Create a slot for this participant"
-msgstr ""
+msgstr "Maak een tijdsblok aan voor deze deelnemer"
 
 #: bluebottle/time_based/templates/admin/create_schedule_slot.html:5
 #: bluebottle/time_based/templates/admin/create_team_slot.html:5
 #, python-format
 msgid "\n"
 "    Create a slot for %(instance)s, without a date and time.\n"
-msgstr ""
+msgstr "\n"
+"    Maak een tijdsblok aan voor %(instance)s, zonder datum en tijd.\n"
 
 #: bluebottle/time_based/templates/admin/create_slot_participants_for_participant.html:2
 #: bluebottle/time_based/templates/admin/create_slot_participants_for_slot.html:2
@@ -9641,13 +9642,15 @@ msgstr ""
 
 #: bluebottle/time_based/templates/admin/time_based/periodic/reschedule_schedule_slot.html:2
 msgid "Adjust related contributions"
-msgstr ""
+msgstr "Pas gerelateerde bijdragen aan"
 
 #: bluebottle/time_based/templates/admin/time_based/periodic/reschedule_schedule_slot.html:5
 msgid "\n"
 "    The time of this slot have changed.\n"
 "    The time for all related contributions will be changed too.\n"
-msgstr ""
+msgstr "\n"
+"    De tijd van dit slot is gewijzigd.\n"
+"    De tijd voor alle gerelateerde bijdragen zal ook gewijzigd worden.\n"
 
 #: bluebottle/time_based/templates/admin/time_based/registration_info.html:3
 #: bluebottle/time_based/templates/admin/time_based/team_registration_info.html:3
@@ -10078,14 +10081,18 @@ msgctxt "email"
 msgid "\n"
 "    <p>You have been scheduled for the activity \"%(title)s\".</p>\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    <p>Je bent ingepland voor de activiteit \"%(title)s\".</p>\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/participants/user_participant_scheduled.html:9
 msgctxt "email"
 msgid "\n"
 "    <b>Participation details:</b>\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    <b>Details:</b>\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/participants/user_participant_withdrew.html:4
 #, python-format
@@ -10168,7 +10175,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"      <ol>\n"
+"        <li>Neem contact op met de teamleider {team captain name} om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"        <li>Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"      </ol>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:24
 msgctxt "email"
@@ -10198,7 +10210,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab of the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"<ol>\n"
+"  <li>Ga naar je activiteit om de aanmelding te accepteren of af te wijzen.</li>\n"
+"  <li>Als je de aanmelding accepteert, neem dan contact op met de teamleider {full name} om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"  <li>Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"</ol>    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:25
 msgctxt "email"
@@ -10249,7 +10266,13 @@ msgid "\n"
 "            <li>You can start inviting team members after you have been accepted, or wait until the details have been set.</li>\n"
 "          </ol>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"          <ol>\n"
+"            <li>De manager van de activiteit zal je aanmelding beoordelen en je team accepteren of afwijzen.</li>\n"
+"            <li>Wanneer je wordt geaccepteerd, dan zal de manager contact met je opnemen om een specifieke datum, tijd en locatie te bespreken waarop je team aan de activiteit gaat deelnemen.</li>\n"
+"            <li>Je kunt teamleden direct uitnodigen nadat je bent geaccepteerd, of wachten totdat de details zijn vastgesteld.</li>\n"
+"          </ol>\n"
+"        "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/team_applied.html:30
 msgctxt "email"
@@ -10536,21 +10559,27 @@ msgctxt "email"
 msgid "\n"
 "    Your team has been scheduled for the activity \"%(title)s\".\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    Je team is ingepland voor de activiteit \"%(title)s\".\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_scheduled.html:12
 msgctxt "email"
 msgid "\n"
 "      <b>Scheduled info:</b>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"      <b>Info:</b>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_scheduled.html:18
 msgctxt "email"
 msgid "\n"
 "    Invite your team members if you haven’t done so already!\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    Nodig je teamleden uit als je dit nog niet gedaan hebt!\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_withdrew.html:4
 #, python-format
@@ -10580,7 +10609,10 @@ msgctxt "email"
 msgid "\n"
 "    <p>Your team has been scheduled for the activity \"%(title)s\".</p>\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    <p>Je team is ingepland voor de activiteit \"%(title)s\".</p>\n"
+"  \n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_teammember_scheduled.html:9
 #: bluebottle/time_based/templates/mails/messages/teams/user_teamslot_changed.html:9
@@ -10588,7 +10620,9 @@ msgctxt "email"
 msgid "\n"
 "    <b>Scheduled details:</b>\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    <b>Details:</b>\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_teammember_withdrew.html:4
 #, python-format, python-brace-format

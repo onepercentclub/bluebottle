@@ -102,3 +102,32 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
     }
+
+
+class PeriodicSlotSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    current_status = CurrentStatusField(source="states.current_state")
+
+    class Meta:
+        model = ScheduleSlot
+        fields = (
+            "id",
+            "activity",
+            "start",
+            "duration",
+            "end",
+        )
+        meta_fields = (
+            "status",
+            "current_status",
+        )
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/periodic-slots"
+        included_resources = ["location", "location.country", "activity"]
+
+    included_serializers = {
+        "location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "location.country": "bluebottle.geo.serializers.CountrySerializer",
+        "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+    }

@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import Sum, Q, F
+from django.db.models import Sum, Q, F, Min
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
@@ -165,6 +165,12 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             .annotate(
                 total_duration=Sum(
                     "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
+            )
+            .annotate(
+                start=Min(
+                    "contributions__timecontribution__start",
                     filter=Q(contributions__status__in=["succeeded", "new"]),
                 )
             )

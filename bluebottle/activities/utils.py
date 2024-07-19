@@ -438,7 +438,6 @@ class BaseContributorSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
     class Meta(object):

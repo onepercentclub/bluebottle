@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-15 14:54+0200\n"
-"PO-Revision-Date: 2024-07-18 15:38\n"
+"PO-Revision-Date: 2024-07-19 07:51\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -7656,35 +7656,35 @@ msgstr "Maak een deelnemer aan voor dit teamlid"
 
 #: bluebottle/time_based/effects/registrations.py:40
 msgid "Create initial periodic participant for this registration"
-msgstr ""
+msgstr "Maak eerste periodieke gebruiker voor deze registratie"
 
 #: bluebottle/time_based/effects/registrations.py:60
 msgid "Create team for this registration"
-msgstr ""
+msgstr "Maak een team aan voor deze registratie"
 
 #: bluebottle/time_based/effects/slots.py:7
 msgid "Create participants for this team slot"
-msgstr ""
+msgstr "Maak deelnemers aan dit team slot aan"
 
 #: bluebottle/time_based/effects/teams.py:8
 msgid "Create registration for this team"
-msgstr ""
+msgstr "Registratie aanmaken voor dit team"
 
 #: bluebottle/time_based/effects/teams.py:34
 msgid "Create team member for the team captain"
-msgstr ""
+msgstr "Maak teamlid aan voor de teamkapitein"
 
 #: bluebottle/time_based/effects/teams.py:52
 msgid "Create slot for this team"
-msgstr ""
+msgstr "Maak een slot aan voor dit team"
 
 #: bluebottle/time_based/effects/teams.py:81
 msgid "Create participants for this team member"
-msgstr ""
+msgstr "Maak deelnemers aan voor dit team"
 
 #: bluebottle/time_based/effects/teams.py:96
 msgid "Delete participants for this team member"
-msgstr ""
+msgstr "Verwijder deelnemers voor dit teamlid"
 
 #: bluebottle/time_based/messages.py:77
 #, python-brace-format
@@ -8302,11 +8302,11 @@ msgstr "Deelnemers aan rooster activiteiten"
 
 #: bluebottle/time_based/models.py:1673
 msgid "Team member participation"
-msgstr ""
+msgstr "Deelname teamlid"
 
 #: bluebottle/time_based/models.py:1674
 msgid "Team member participations"
-msgstr ""
+msgstr "Deelname van teamleden"
 
 #: bluebottle/time_based/models.py:1832
 #, python-brace-format
@@ -8323,7 +8323,7 @@ msgstr "Hoeveel tijd wordt verwacht dat het team bijdraagt."
 
 #: bluebottle/time_based/models.py:1889
 msgid "Participant to ecurring activities"
-msgstr ""
+msgstr "Deelnemer aan ecurring activiteiten"
 
 #: bluebottle/time_based/models.py:1890
 msgid "Participants to recurring activities"
@@ -8541,7 +8541,7 @@ msgstr "Beëindig een activiteit als de eindtijd voorbij is."
 
 #: bluebottle/time_based/periodic_tasks.py:140
 msgid "Send a reminder 24 hours before the activity slot."
-msgstr ""
+msgstr "Stuur een herinnering 24 uur voor het activiteitslot."
 
 #: bluebottle/time_based/periodic_tasks.py:160
 msgid "Finish an activity when deadline has passed."
@@ -8549,20 +8549,20 @@ msgstr "Beëindig een activiteit wanneer de deadline is verstreken."
 
 #: bluebottle/time_based/periodic_tasks.py:175
 msgid "Start a slot when the start date passed"
-msgstr ""
+msgstr "Start een slot wanneer de startdatum is doorgegeven"
 
 #: bluebottle/time_based/periodic_tasks.py:190
 msgid "Finish a slot when the end date passed"
-msgstr ""
+msgstr "Voltooi een slot wanneer de einddatum is verstreken"
 
 #: bluebottle/time_based/periodic_tasks.py:207
 #: bluebottle/time_based/periodic_tasks.py:224
 msgid "Start a new slot when the current one is finished"
-msgstr ""
+msgstr "Start een nieuwe plek wanneer de huidige is voltooid"
 
 #: bluebottle/time_based/serializers/registrations.py:73
 msgid "Registration for this user already exists on this activity."
-msgstr ""
+msgstr "Registratie voor deze gebruiker bestaat al op deze activiteit."
 
 #: bluebottle/time_based/serializers/registrations.py:105
 #: bluebottle/utils/fields.py:213
@@ -8571,7 +8571,7 @@ msgstr "Dit veld is verplicht"
 
 #: bluebottle/time_based/states/participants.py:19
 msgid "This participant is new and will waiting for the registration to be accepted."
-msgstr ""
+msgstr "Deze gebruiker is nieuw en wacht tot de registratie is geaccepteerd."
 
 #: bluebottle/time_based/states/participants.py:24
 msgid "This person takes part in the activity."
@@ -8579,7 +8579,7 @@ msgstr "De deelnemer doet mee aan de activiteit."
 
 #: bluebottle/time_based/states/participants.py:29
 msgid "This person's contribution is rejected and the spent hours are reset to zero."
-msgstr ""
+msgstr "De bijdrage van deze persoon is afgewezen en de bestede uren worden gereset naar nul."
 
 #: bluebottle/time_based/states/participants.py:34
 msgid "This person's contribution is removed and the spent hours are reset to zero."
@@ -8589,7 +8589,7 @@ msgstr "De bijdrage van deze persoon is verwijderd en de gemaakte uren zijn teru
 #: bluebottle/time_based/states/teams.py:12
 #: bluebottle/time_based/states/teams.py:153
 msgid "Withdrawn"
-msgstr ""
+msgstr "Ingetrokken"
 
 #: bluebottle/time_based/states/participants.py:39
 #: bluebottle/time_based/states/states.py:287
@@ -8602,7 +8602,7 @@ msgstr "De activiteit is geannuleerd. De bijdrage van deze persoon is verwijderd
 
 #: bluebottle/time_based/states/participants.py:50
 msgid "This person hast successfully contributed."
-msgstr ""
+msgstr "Deze persoon heeft succesvol bijgedragen."
 
 #: bluebottle/time_based/states/participants.py:80
 msgid "User applied to join the task."
@@ -8822,35 +8822,35 @@ msgstr "Deze persoon is geaccepteerd om deel te nemen aan de activiteit."
 
 #: bluebottle/time_based/states/registrations.py:25
 msgid "This person is not selected for the activity."
-msgstr ""
+msgstr "Deze persoon is niet geselecteerd voor de activiteit."
 
 #: bluebottle/time_based/states/registrations.py:45
 msgid "The registration was created."
-msgstr ""
+msgstr "De registratie is aangemaakt."
 
 #: bluebottle/time_based/states/registrations.py:53
 msgid "Automatically accept this person as a participant to the activity."
-msgstr ""
+msgstr "Accepteer deze persoon automatisch als deelnemer aan de activiteit."
 
 #: bluebottle/time_based/states/registrations.py:62
 msgid "Automatically add this person as a participant to the activity."
-msgstr ""
+msgstr "Voeg deze persoon automatisch toe aan de activiteit."
 
 #: bluebottle/time_based/states/registrations.py:63
 msgid "added"
-msgstr ""
+msgstr "toegevoegd"
 
 #: bluebottle/time_based/states/registrations.py:71
 msgid "Accept this person as a participant of this activity."
-msgstr ""
+msgstr "Accepteer deze persoon als deelnemer aan deze activiteit."
 
 #: bluebottle/time_based/states/registrations.py:115
 msgid "Stopped"
-msgstr ""
+msgstr "Gestopt"
 
 #: bluebottle/time_based/states/registrations.py:117
 msgid "This person stopped contributing to this activity."
-msgstr ""
+msgstr "Deze persoon heeft niet meer bijgedragen aan deze activiteit."
 
 #: bluebottle/time_based/states/registrations.py:123
 msgid "Stop"
@@ -8858,23 +8858,23 @@ msgstr "Stop"
 
 #: bluebottle/time_based/states/registrations.py:125
 msgid "This person will no longer actively participate in your activity and their contribution hours will stop being counted. The hours that have already been counted will be retained. You can resume their participation anytime."
-msgstr ""
+msgstr "Deze persoon zal niet langer actief deelnemen aan je activiteit en hun bijdragenuren zullen niet langer worden geteld. De uren die al geteld zijn zullen behouden blijven. U kunt hun deelname op elk gewenst moment hervatten."
 
 #: bluebottle/time_based/states/registrations.py:130
 msgid "This person will no longer actively participate."
-msgstr ""
+msgstr "Deze persoon zal niet langer actief deelnemen."
 
 #: bluebottle/time_based/states/registrations.py:138
 msgid "Resume"
-msgstr ""
+msgstr "Hervatten"
 
 #: bluebottle/time_based/states/registrations.py:140
 msgid "This person will start actively participating in the activity and their contribution hours will be counted. You can stop their participation at any time, and their contribution hours will stop being counted."
-msgstr ""
+msgstr "Deze persoon zal actief deelnemen aan de activiteit en hun bijdragenuren worden meegeteld. U kunt hun deelname op elk moment stopzetten en hun bijdragen zullen niet meer meegeteld worden."
 
 #: bluebottle/time_based/states/registrations.py:144
 msgid "Resume this persons participation in your activity."
-msgstr ""
+msgstr "Hervat deze deelname van personen aan uw activiteit."
 
 #: bluebottle/time_based/states/slots.py:15
 msgid "The slot is not scheduled yet."
@@ -8886,23 +8886,23 @@ msgstr "Het tijdsblok staat ingeroosterd voor een toekomstige datum."
 
 #: bluebottle/time_based/states/slots.py:21
 msgid "Running"
-msgstr ""
+msgstr "Lopend"
 
 #: bluebottle/time_based/states/slots.py:23
 msgid "The slot running."
-msgstr ""
+msgstr "Het slot loopt."
 
 #: bluebottle/time_based/states/slots.py:27
 msgid "Finished"
-msgstr ""
+msgstr "Beëindigd"
 
 #: bluebottle/time_based/states/slots.py:29
 msgid "The slot is finished"
-msgstr ""
+msgstr "Het slot is voltooid"
 
 #: bluebottle/time_based/states/slots.py:35
 msgid "The slot is cancelled"
-msgstr ""
+msgstr "Het slot is geannuleerd"
 
 #: bluebottle/time_based/states/slots.py:53
 #: bluebottle/time_based/states/slots.py:188
@@ -8911,15 +8911,15 @@ msgstr "Tijdsblok aangemaakt."
 
 #: bluebottle/time_based/states/slots.py:62
 msgid "The slot now has a date and location."
-msgstr ""
+msgstr "Het slot heeft nu een datum en locatie."
 
 #: bluebottle/time_based/states/slots.py:70
 msgid "The slot no longer has a date and location."
-msgstr ""
+msgstr "Het slot heeft niet langer een datum en locatie."
 
 #: bluebottle/time_based/states/slots.py:79
 msgid "The slot has started."
-msgstr ""
+msgstr "De sleuf is begonnen."
 
 #: bluebottle/time_based/states/slots.py:87
 #: bluebottle/time_based/states/slots.py:265
@@ -8928,23 +8928,23 @@ msgstr "Afronden"
 
 #: bluebottle/time_based/states/slots.py:88
 msgid "The slot has finished."
-msgstr ""
+msgstr "Het slot is geëindigd."
 
 #: bluebottle/time_based/states/slots.py:98
 msgid "The slot was cancelled."
-msgstr ""
+msgstr "Het slot is geannuleerd."
 
 #: bluebottle/time_based/states/slots.py:105
 msgid "Auto cancel"
-msgstr ""
+msgstr "Automatisch annuleren"
 
 #: bluebottle/time_based/states/slots.py:106
 msgid "The slot was cancelled because a parent object was cancelled"
-msgstr ""
+msgstr "Het slot werd geannuleerd omdat een bovenliggend object was geannuleerd"
 
 #: bluebottle/time_based/states/slots.py:115
 msgid "The slot was restored."
-msgstr ""
+msgstr "Het slot werd hersteld."
 
 #: bluebottle/time_based/states/slots.py:140
 msgid "The slot is incomplete."
@@ -9220,15 +9220,15 @@ msgstr "Neem opnieuw deel met je team, nadat het was afgemeld."
 
 #: bluebottle/time_based/states/teams.py:125
 msgid "This team will no longer participate in this activity and any hours spent will not be counted."
-msgstr ""
+msgstr "Dit team zal niet langer deelnemen aan deze activiteit en alle uren die eraan besteed zijn zullen niet worden meegeteld."
 
 #: bluebottle/time_based/states/teams.py:135
 msgid "Add this previously cancelled team back to the activity."
-msgstr ""
+msgstr "Voeg dit eerder geannuleerde team toe aan de activiteit."
 
 #: bluebottle/time_based/states/teams.py:144
 msgid "The team has finished their contribution."
-msgstr ""
+msgstr "Het team heeft zijn bijdrage beëindigd."
 
 #: bluebottle/time_based/states/teams.py:151
 msgid "Active"
@@ -9236,59 +9236,59 @@ msgstr "Actief"
 
 #: bluebottle/time_based/states/teams.py:151
 msgid "This team member is active."
-msgstr ""
+msgstr "Dit teamlid is actief."
 
 #: bluebottle/time_based/states/teams.py:152
 msgid "This team member is removed."
-msgstr ""
+msgstr "Dit teamlid is verwijderd."
 
 #: bluebottle/time_based/states/teams.py:153
 msgid "This team member is withdrawn."
-msgstr ""
+msgstr "Dit teamlid is teruggetrokken."
 
 #: bluebottle/time_based/states/teams.py:154
 msgid "This team member is cancelled."
-msgstr ""
+msgstr "Dit teamlid is geannuleerd."
 
 #: bluebottle/time_based/states/teams.py:155
 msgid "This team member is rejected."
-msgstr ""
+msgstr "Dit teamlid is afgewezen."
 
 #: bluebottle/time_based/states/teams.py:174
 msgid "The team member joined."
-msgstr ""
+msgstr "Het teamlid is aangesloten."
 
 #: bluebottle/time_based/states/teams.py:185
 msgid "Remove this member from the team."
-msgstr ""
+msgstr "Verwijder dit lid uit het team."
 
 #: bluebottle/time_based/states/teams.py:194
 msgid "Remove this member because the team has been removed."
-msgstr ""
+msgstr "Verwijder dit lid omdat het team is verwijderd."
 
 #: bluebottle/time_based/states/teams.py:207
 msgid "Re-add member to team."
-msgstr ""
+msgstr "Gebruiker aan team opnieuw toevoegen."
 
 #: bluebottle/time_based/states/teams.py:217
 msgid "Withdraw from this team."
-msgstr ""
+msgstr "Terugtrekken uit dit team."
 
 #: bluebottle/time_based/states/teams.py:224
 msgid "Re-apply"
-msgstr ""
+msgstr "Opnieuw toepassen"
 
 #: bluebottle/time_based/states/teams.py:225
 msgid "re-applied"
-msgstr ""
+msgstr "opnieuw toegepast"
 
 #: bluebottle/time_based/states/teams.py:228
 msgid "Re-apply to team."
-msgstr ""
+msgstr "Solliciteer opnieuw voor team."
 
 #: bluebottle/time_based/states/teams.py:237
 msgid "Reject user from this team."
-msgstr ""
+msgstr "Gebruiker afwijzen van dit team."
 
 #: bluebottle/time_based/states/teams.py:243
 msgid "accept"
@@ -9296,19 +9296,19 @@ msgstr "accepteren"
 
 #: bluebottle/time_based/states/teams.py:245
 msgid "Accept user to team."
-msgstr ""
+msgstr "Accepteer gebruiker in team."
 
 #: bluebottle/time_based/states/teams.py:255
 msgid "Cancel this team member, because the team is cancelled."
-msgstr ""
+msgstr "Annuleer dit teamlid, omdat het team is geannuleerd."
 
 #: bluebottle/time_based/states/teams.py:264
 msgid "Restore this team member, because the team is restored."
-msgstr ""
+msgstr "Herstel dit teamlid, omdat het team is hersteld."
 
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:2
 msgid "Check preparation time contribution"
-msgstr ""
+msgstr "Voorbereiding tijdbijdrage controleren"
 
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:5
 msgid "\n"
@@ -9363,22 +9363,24 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/create_captain_team_member.html:2
 msgid "Add captain as team member"
-msgstr ""
+msgstr "Voeg kapitein toe als teamlid"
 
 #: bluebottle/time_based/templates/admin/create_captain_team_member.html:5
 msgid "\n"
 "    Add the team captain as a team member.\n"
-msgstr ""
+msgstr "\n"
+"    Voeg de teamkapitein toe als teamlid.\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_participant.html:2
 msgid "Create a participant"
-msgstr ""
+msgstr "Maak een gebruiker aan"
 
 #: bluebottle/time_based/templates/admin/create_deadline_participant.html:5
 #, python-format
 msgid "\n"
 "    Create a participant for \"%(instance.activity)s\"\n"
-msgstr ""
+msgstr "\n"
+"    Maak een gebruiker aan voor \"%(instance.activity)s\"\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_participant.html:14
 #: bluebottle/time_based/templates/admin/create_deadline_time_contribution.html:14
@@ -9392,13 +9394,14 @@ msgstr "\n"
 #: bluebottle/time_based/templates/admin/create_deadline_registration.html:2
 #: bluebottle/time_based/templates/admin/create_team_registration.html:2
 msgid "Create a registration"
-msgstr ""
+msgstr "Maak een registratie"
 
 #: bluebottle/time_based/templates/admin/create_deadline_registration.html:5
 #, python-format
 msgid "\n"
 "    Create a registration for \"%(instance.activity)s\"\n"
-msgstr ""
+msgstr "\n"
+"    Maak een registratie aan voor \"%(instance.activity)s\"\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_time_contribution.html:2
 #: bluebottle/time_based/templates/admin/create_period_time_contribution.html:2
@@ -9416,7 +9419,7 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/create_participant.html:2
 msgid "Create participant"
-msgstr ""
+msgstr "Gebruiker aanmaken"
 
 #: bluebottle/time_based/templates/admin/create_participant.html:5
 #: bluebottle/time_based/templates/admin/create_slot_time_contribution.html:5
@@ -9439,12 +9442,13 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/create_registration.html:2
 msgid "Create registration"
-msgstr ""
+msgstr "Registratie aanmaken"
 
 #: bluebottle/time_based/templates/admin/create_registration.html:5
 msgid "\n"
 "    Create a registration for the participant\n"
-msgstr ""
+msgstr "\n"
+"    Maak een registratie aan voor de gebruiker\n"
 
 #: bluebottle/time_based/templates/admin/create_schedule_slot.html:2
 msgid "Create a slot for this participant"
@@ -9489,33 +9493,36 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/create_team_member_slot_participants.html:2
 msgid "Create slot participation for the team member"
-msgstr ""
+msgstr "Deelname aan slot maken voor het teamlid"
 
 #: bluebottle/time_based/templates/admin/create_team_member_slot_participants.html:5
 #, python-format
 msgid "\n"
 "    Create slot participants for the new team member for all slots of %(team)s.\n"
-msgstr ""
+msgstr "\n"
+"    Maak deelnemers aan een vakje aan voor het nieuwe teamlid voor alle vakjes van %(team)s.\n"
 
 #: bluebottle/time_based/templates/admin/create_team_registration.html:5
 #, python-format
 msgid "\n"
 "    Create a registration for %(instance)s.\n"
-msgstr ""
+msgstr "\n"
+"    Maak een registratie voor %(instance)s.\n"
 
 #: bluebottle/time_based/templates/admin/create_team_slot.html:2
 msgid "Create a slot for this team"
-msgstr ""
+msgstr "Maak een slot aan voor dit team"
 
 #: bluebottle/time_based/templates/admin/create_team_slot_participants.html:2
 msgid "Create participants for the team slot"
-msgstr ""
+msgstr "Maak deelnemers aan het team slot aan"
 
 #: bluebottle/time_based/templates/admin/create_team_slot_participants.html:5
 #, python-format
 msgid "\n"
 "    Create a slot participants for the new slot for all team members of %(team)s.\n"
-msgstr ""
+msgstr "\n"
+"    Maak deelnemers aan een slot aan voor het nieuwe slot voor alle teamleden van %(team)s.\n"
 
 #: bluebottle/time_based/templates/admin/delete_preparation_time_contribution.html:2
 msgid "Delete the preparation time contribution"
@@ -9540,12 +9547,13 @@ msgstr "\n"
 
 #: bluebottle/time_based/templates/admin/delete_team_member_slot_participants.html:2
 msgid "Delete slot participation for the team member"
-msgstr ""
+msgstr "Deelname aan account verwijderen voor het teamlid"
 
 #: bluebottle/time_based/templates/admin/delete_team_member_slot_participants.html:5
 msgid "\n"
 "    Delete slot participants for the team member that will be deleted.\n"
-msgstr ""
+msgstr "\n"
+"    Verwijder deelnemers aan het vak voor het teamlid die zullen worden verwijderd.\n"
 
 #: bluebottle/time_based/templates/admin/lock_activity_slots.html:2
 msgid "Lock activity slots"
@@ -9632,14 +9640,16 @@ msgstr "Dupliceer"
 
 #: bluebottle/time_based/templates/admin/time_based/periodic/create_first_slot.html:2
 msgid "Create first periodic slot"
-msgstr ""
+msgstr "Maak eerste periodieke sleuf"
 
 #: bluebottle/time_based/templates/admin/time_based/periodic/create_first_slot.html:5
 #, python-format
 msgid "\n"
 "    Create the first periodic slot for %(instance)s.\n"
 "    Subsequent slots will be created automatically.\n"
-msgstr ""
+msgstr "\n"
+"    Maak het eerste periodieke slot voor %(instance)s.\n"
+"    Opvolgende vakjes worden automatisch gecreëerd.\n"
 
 #: bluebottle/time_based/templates/admin/time_based/periodic/reschedule_schedule_slot.html:2
 msgid "Adjust related contributions"
@@ -9656,7 +9666,7 @@ msgstr "\n"
 #: bluebottle/time_based/templates/admin/time_based/registration_info.html:3
 #: bluebottle/time_based/templates/admin/time_based/team_registration_info.html:3
 msgid "Review pending"
-msgstr ""
+msgstr "Controleer wachtend"
 
 #: bluebottle/time_based/templates/admin/time_based/registration_info.html:6
 msgid "\n"

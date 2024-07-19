@@ -30,6 +30,6 @@ def run(*args):
                 cert = x509.load_pem_x509_certificate(bytes(cert_string), default_backend())
                 print('Their cert', client.name, cert.not_valid_after)
             except (AttributeError, KeyError) as e:
-                pass
+                print(e)
             except Exception as e:
                 print(e)

@@ -31,7 +31,8 @@ from bluebottle.time_based.models import (
     DateParticipant,
     ScheduleParticipant,
     DeadlineParticipant,
-    PeriodicParticipant, TeamScheduleParticipant,
+    PeriodicParticipant,
+    TeamScheduleParticipant,
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (

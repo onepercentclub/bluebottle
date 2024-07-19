@@ -1197,9 +1197,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
 
     activity = models.ForeignKey(
-        Activity,
-        related_name='registrations',
-        on_delete=models.CASCADE
+        Activity, related_name="registrations", on_delete=models.CASCADE
     )
 
     user = models.ForeignKey(

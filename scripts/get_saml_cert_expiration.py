@@ -15,7 +15,20 @@ def run(*args):
                 )
 
                 cert = x509.load_pem_x509_certificate(bytes(cert_string), default_backend())
-                print(client.name, cert.not_valid_after)
+                print('Our cert', client.name, cert.not_valid_after)
+            except (AttributeError, KeyError) as e:
+                print(client.name, e)
+                pass
+            except Exception as e:
+                print(e)
+
+            try:
+                cert_string = '-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----'.format(
+                    properties.TOKEN_AUTH['idp']['x509cert']
+                )
+
+                cert = x509.load_pem_x509_certificate(bytes(cert_string), default_backend())
+                print('Their cert', client.name, cert.not_valid_after)
             except (AttributeError, KeyError):
                 pass
             except Exception as e:

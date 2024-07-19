@@ -105,20 +105,8 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
 
 
 class PeriodicSlotSerializer(ModelSerializer):
-    is_online = serializers.BooleanField(required=False, allow_null=True)
     status = FSMField(read_only=True)
-    location = ResourceRelatedField(
-        queryset=Geolocation.objects, required=False, allow_null=True
-    )
     current_status = CurrentStatusField(source="states.current_state")
-    timezone = serializers.SerializerMethodField()
-
-    def get_timezone(self, instance):
-        return (
-            instance.location.timezone
-            if not instance.is_online and instance.location
-            else None
-        )
 
     class Meta:
         model = ScheduleSlot
@@ -128,12 +116,6 @@ class PeriodicSlotSerializer(ModelSerializer):
             "start",
             "duration",
             "end",
-            "is_online",
-            "timezone",
-            "location_hint",
-            "online_meeting_url",
-            "location",
-            "links",
         )
         meta_fields = (
             "status",

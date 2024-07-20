@@ -1527,11 +1527,17 @@ class Team(TriggerMixin, models.Model):
         resource_name = 'teams/teams'
 
     def __str__(self):
-        return str(self.name)
+        if self.name:
+            str(self.name)
+        return self.long_name
 
     @property
     def short_name(self):
         return _('Team {name}').format(name=self.user.first_name)
+
+    @property
+    def long_name(self):
+        return _('Team {name}').format(name=self.user.full_name)
 
     def delete(self, using=None, keep_parents=False):
         self.registration.delete()

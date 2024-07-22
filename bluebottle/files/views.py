@@ -51,10 +51,22 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
         uploaded_file = self.request.FILES['file']
         mime_type = mime.from_buffer(uploaded_file.read())
         if not mime_type == uploaded_file.content_type:
-            raise ValidationError(f'Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}')
+            raise ValidationError(
+                [
+                    {
+                        "title": f"Mime-type does not match Content-Type: {mime_type} / {uploaded_file.content_type}"
+                    }
+                ]
+            )
 
         if mime_type not in self.allowed_mime_types:
-            raise ValidationError('Mime-type is not allowed for this endpoint')
+            raise ValidationError(
+                [
+                    {
+                        "title": f"Files with the mime-type {mime_type} is not allowed to be uploaded here"
+                    }
+                ]
+            )
 
         serializer.save(owner=self.request.user)
 

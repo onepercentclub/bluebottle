@@ -26,8 +26,20 @@ def register(model_cls):
 
 @python_2_unicode_compatible
 class BaseTransition(object):
-    def __init__(self, sources, target, name='', description='', description_front_end='',
-                 passed_label=None, automatic=True, conditions=None, effects=None, **options):
+    def __init__(
+        self,
+        sources,
+        target,
+        name="",
+        description="",
+        description_front_end="",
+        short_description=None,
+        passed_label=None,
+        automatic=True,
+        conditions=None,
+        effects=None,
+        **options
+    ):
         self.name = name
 
         if not isinstance(sources, (list, tuple)):
@@ -39,7 +51,9 @@ class BaseTransition(object):
         self.conditions = conditions or []
         self.effects = effects or []
         self.description = description
+        self.short_description = short_description
         self.description_front_end = description_front_end or description
+
         self.passed_label = passed_label
 
         assert not (

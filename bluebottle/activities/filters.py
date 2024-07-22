@@ -262,6 +262,7 @@ class ActivitySearch(Search):
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
         'office': UntranslatedModelFacet('office', Location),
+        'date': ActivityDateRangeFacet(),
     }
 
     possible_facets = {
@@ -269,7 +270,6 @@ class ActivitySearch(Search):
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
-        'date': ActivityDateRangeFacet(),
     }
 
     def sort(self, search):

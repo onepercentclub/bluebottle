@@ -65,7 +65,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     activity_managers = models.ManyToManyField(
         'members.Member',
         blank=True,
-        null=True,
         verbose_name=_('co-initiators'),
         help_text=_('Co-initiators can create and edit activities for '
                     'this initiative, but cannot edit the initiative itself.'),
@@ -270,18 +269,21 @@ def get_search_filters(filters):
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
-        ('funding', _('Funding')),
-        ('periodactivity', _('Activity during a period')),
-        ('dateactivity', _('Activity on a specific date')),
-        ('deed', _('Deed')),
-        ('collect', _('Collect activity')),
+        ("funding", _("Funding")),
+        ("periodactivity", _("Activity during a period")),
+        ("dateactivity", _("Activity on a specific date")),
+        ("deadlineactivity", _("Activity within a deadline")),
+        ("scheduleactivity", _("Scheduled activity")),
+        ("periodicactivity", _("Periodic Activity")),
+        ("deed", _("Deed")),
+        ("collect", _("Collect activity")),
     )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
 
-    activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
+    activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
         help_text=_("Enable team activities where teams sign-up instead of individuals.")

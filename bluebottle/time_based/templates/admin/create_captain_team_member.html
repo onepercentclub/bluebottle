@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Add captain as team member" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Add the team captain as a team member.
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

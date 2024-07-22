@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
+import logging
 from builtins import object
 from builtins import str
-from operator import attrgetter
 from functools import partial
-import logging
+from operator import attrgetter
 
 import icalendar
 from celery import shared_task
-
-from django.db import connection
-
-from django.core.cache import cache
 from django.contrib.admin.options import get_content_type_for_model
+from django.core.cache import cache
+from django.db import connection
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.timezone import now
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.clients import properties
-
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text
-
 
 logger = logging.getLogger(__name__)
 

@@ -18,9 +18,14 @@ from bluebottle.segments.serializers import SegmentDetailSerializer, SegmentPubl
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.time_based.tests.factories import PeriodActivityFactory, \
-    PeriodParticipantFactory, DateActivityFactory, \
-    DateActivitySlotFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateActivitySlotFactory,
+    DateParticipantFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
+    SlotParticipantFactory,
+)
 
 
 class SegmentTypeListAPITestCase(BluebottleTestCase):
@@ -214,7 +219,7 @@ class SegmentDetailAPITestCase(APITestCase):
     def test_get_stats(self):
         initiative = InitiativeFactory.create(status='approved')
 
-        period_activity = PeriodActivityFactory.create(
+        period_activity = DeadlineActivityFactory.create(
             initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
@@ -222,7 +227,7 @@ class SegmentDetailAPITestCase(APITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
         period_activity.segments.set([self.model])
-        PeriodParticipantFactory.create_batch(3, activity=period_activity)
+        DeadlineParticipantFactory.create_batch(3, activity=period_activity)
 
         date_activity = DateActivityFactory.create(
             initiative=initiative,
@@ -230,11 +235,14 @@ class SegmentDetailAPITestCase(APITestCase):
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
         )
         date_activity.segments.set([self.model])
-        DateActivitySlotFactory.create(
+        slot = DateActivitySlotFactory.create(
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        DateParticipantFactory.create_batch(3, activity=date_activity)
+
+        participants = DateParticipantFactory.create_batch(3, activity=date_activity)
+        for participant in participants:
+            SlotParticipantFactory.create(slot=slot, participant=participant)
 
         funding = FundingFactory.create(
             initiative=initiative,
@@ -270,14 +278,14 @@ class SegmentDetailAPITestCase(APITestCase):
         collect_activity.save()
         CollectContributorFactory.create_batch(3, activity=collect_activity)
 
-        unrelated_activity = PeriodActivityFactory.create(
+        unrelated_activity = DeadlineActivityFactory.create(
             initiative=initiative,
             status='open',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() + datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
-        PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
+        DeadlineParticipantFactory.create_batch(3, activity=unrelated_activity)
 
         response = self.client.get(
             self.url,
@@ -288,12 +296,12 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertEqual(response.json()['data']['meta']['activities-count'], 4)
         self.assertEqual(response.json()['data']['meta']['initiatives-count'], 1)
 
-        stats = response.json()['data']['meta']['stats']
-        self.assertEqual(stats['hours'], 66.0)
-        self.assertEqual(stats['activities'], 5)
-        self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
-        self.assertEqual(stats['contributors'], 18)
-        self.assertEqual(stats['effort'], 3)
+        stats = response.json()["data"]["meta"]["stats"]
+        self.assertEqual(stats["hours"], 18.0)
+        self.assertEqual(stats["activities"], 5)
+        self.assertEqual(stats["amount"], {"amount": 75.0, "currency": "EUR"})
+        self.assertEqual(stats["contributors"], 18)
+        self.assertEqual(stats["effort"], 3)
 
         self.assertEqual(
             stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized

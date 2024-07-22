@@ -2,8 +2,8 @@ from rest_framework import permissions
 
 from bluebottle.activities.models import Activity
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import ResourcePermission, ResourceOwnerPermission, BasePermission
 
 
 class ActivityOwnerPermission(ResourceOwnerPermission):
@@ -22,6 +22,26 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
             return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
         else:
             return is_owner
+
+
+class RelatedActivityOwnerPermission(ResourceOwnerPermission):
+    def has_object_action_permission(self, action, user, obj):
+        activity = obj.activity
+        try:
+            owner = activity.owner
+        except Activity.owner.RelatedObjectDoesNotExist:
+            owner = None
+
+        is_owner = (
+            user
+            in [
+                owner,
+                activity.initiative.owner,
+            ]
+            or user in activity.initiative.activity_managers.all()
+        )
+
+        return is_owner
 
 
 class ActivityTypePermission(ResourcePermission):
@@ -93,7 +113,7 @@ class ContributorPermission(ResourcePermission):
             return user.has_perms(perms) and user in [
                 obj.activity.owner,
                 obj.activity.initiative.owner,
-            ] or user in obj.activity.initiative.activity_managers.all() or (obj.team and obj.team.owner == user)
+            ] or user in obj.activity.initiative.activity_managers.all()
 
 
 class ContributionPermission(ResourcePermission):
@@ -106,6 +126,15 @@ class ContributionPermission(ResourcePermission):
             obj.contributor.activity.owner,
             obj.contributor.activity.initiative.owner,
         ] or user in obj.contributor.activity.initiative.activity_managers.all()
+
+
+class IsAdminPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return user.is_staff or user.is_superuser
+
+    def has_object_action_permission(self, action, user, obj):
+        return user.is_staff or user.is_superuser
 
 
 class DeleteActivityPermission(ResourcePermission):

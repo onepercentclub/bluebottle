@@ -29,7 +29,20 @@ class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
 class PeriodActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
-        return self.instance.start or self.instance.deadline
+        return self.instance.deadline
+
+
+class PeriodActivityStartDeadlineValidator(Validator):
+    field = 'deadline'
+    code = 'deadline'
+    message = _('Deadline should be after start date')
+
+    def is_valid(self):
+        return (
+            not self.instance.deadline or
+            not self.instance.start or
+            self.instance.deadline > self.instance.start
+        )
 
 
 class CompletedSlotsValidator(Validator):

@@ -385,6 +385,13 @@ class APITestCase(BluebottleTestCase):
         """
         self.assertEqual(self.response.status_code, status)
 
+    def assertResourceStatus(self, resource, status):
+        """
+        Assert that the status a resource as expected
+        """
+        resource.refresh_from_db()
+        self.assertEqual(resource.status, status)
+
     def assertTotal(self, count):
         """
         Assert that total the number of found objects is the same as expected
@@ -523,7 +530,7 @@ class APITestCase(BluebottleTestCase):
             self.assertTrue(attr in data['attributes'])
 
         if value:
-            self.assertEqual(getattr(self.model, attr.replace('-', '_')), value)
+            self.assertEqual(data['attributes'][attr], value)
 
     def assertNoAttribute(self, attr):
         """
@@ -788,9 +795,12 @@ class NotificationTestCase(BluebottleTestCase):
         )
 
     def assertRecipients(self, recipients):
-        if list(recipients) != list(self.message.get_recipients()):
+        sorting = lambda user: user.id
+        actual = list(self.message.get_recipients()).sort(key=sorting)
+        expected = list(recipients).sort(key=sorting)
+        if actual != expected:
             self.fail("Recipients did not match: '{}' != '{}'".format(
-                list(recipients), list(self.message.get_recipients()))
+                actual, expected)
             )
 
     def assertSubject(self, subject):

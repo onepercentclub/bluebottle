@@ -1,17 +1,12 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.contrib.postgres.aggregates import BoolOr
-from django.db.models import ExpressionWrapper, BooleanField, Case, When, Value, Count
-from django.db.models import Sum, Q, F
-from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.db.models import Sum, Q, F, Min
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor, Team, Invite
+from bluebottle.activities.models import Activity, Contributor, Invite
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivityLocation,
@@ -22,10 +17,9 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
     ContributorListSerializer,
-    TeamTransitionSerializer,
     ActivityImageSerializer,
 )
-from bluebottle.activities.utils import TeamSerializer, InviteSerializer
+from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
 from bluebottle.deeds.models import DeedParticipant
@@ -33,19 +27,23 @@ from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.time_based.serializers import TeamMemberSerializer
+from bluebottle.time_based.models import (
+    DateParticipant,
+    ScheduleParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+    TeamScheduleParticipant,
+)
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, ExportView, JsonApiElasticSearchPagination
+    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination
 )
 
 
-@method_decorator(cache_page(60 * 60), name='dispatch')
 class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityLocationSerializer
     pagination_class = None
@@ -54,9 +52,6 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         TenantConditionalOpenClose,
     )
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Activity.objects.filter(status__in=("succeeded", "open", "full", "running"))
@@ -152,26 +147,33 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
     def get_queryset(self):
-        return Contributor.objects.prefetch_related(
-            'user', 'activity', 'contributions'
-        ).instance_of(
-            Donor,
-            DateParticipant,
-            PeriodParticipant,
-            DeedParticipant,
-            CollectContributor,
-        ).filter(
-            user=self.request.user
-        ).exclude(
-            status__in=['rejected', 'failed']
-        ).exclude(
-            donor__status__in=['new']
-        ).order_by(
-            '-created'
-        ).annotate(
-            total_duration=Sum(
-                'contributions__timecontribution__value',
-                filter=Q(contributions__status__in=['succeeded', 'new'])
+        return (
+            Contributor.objects.prefetch_related("user", "activity", "contributions")
+            .instance_of(
+                Donor,
+                DateParticipant,
+                PeriodicParticipant,
+                ScheduleParticipant,
+                TeamScheduleParticipant,
+                DeedParticipant,
+                DeadlineParticipant,
+                CollectContributor,
+            )
+            .filter(user=self.request.user)
+            .exclude(status__in=["rejected", "failed"])
+            .exclude(donor__status__in=["new"])
+            .order_by("-created")
+            .annotate(
+                total_duration=Sum(
+                    "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
+            )
+            .annotate(
+                start=Min(
+                    "contributions__timecontribution__start",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
             )
         )
 
@@ -228,131 +230,11 @@ class ActivityTransitionList(TransitionList):
     queryset = Activity.objects.all()
 
 
-class TeamList(JsonApiViewMixin, ListAPIView):
-    queryset = Team.objects.all()
-    serializer_class = TeamSerializer
-
-    permission_classes = [OneOf(ResourcePermission, ActivityOwnerPermission), ]
-
-    def get_queryset(self, *args, **kwargs):
-        queryset = super(TeamList, self).get_queryset(*args, **kwargs)
-
-        activity_id = self.request.query_params.get('filter[activity_id]')
-        if activity_id:
-            queryset = queryset.filter(
-                activity_id=activity_id
-            )
-
-        has_slot = self.request.query_params.get('filter[has_slot]')
-        start = self.request.query_params.get('filter[start]')
-        status = self.request.query_params.get('filter[status]')
-        if status:
-            queryset = queryset.filter(status=status)
-        elif has_slot == 'false':
-            queryset = queryset.filter(slot__start__isnull=True).exclude(
-                status__in=['new', 'withdrawn', 'cancelled']
-            )
-        elif start == 'future':
-            queryset = queryset.filter(
-                slot__start__gt=timezone.now()
-            )
-        elif start == 'passed':
-            queryset = queryset.filter(
-                slot__start__lt=timezone.now()
-            ).exclude(
-                slot__start__isnull=True
-            )
-
-        if self.request.user.is_authenticated:
-            queryset = queryset.filter(
-                Q(activity__initiative__activity_managers=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(owner=self.request.user) |
-                Q(status='open')
-            ).annotate(
-                has_members=Count('members')
-            ).annotate(
-                current_user=Case(
-                    When(
-                        has_members=0,
-                        then=Value(False)
-                    ),
-                    default=BoolOr(
-                        ExpressionWrapper(
-                            Q(members__user=self.request.user),
-                            output_field=BooleanField()
-                        )
-                    )
-                )
-            ).distinct().order_by('-current_user')
-            if has_slot == 'false':
-                queryset = queryset.order_by('-current_user', 'id')
-            elif start == 'future':
-                queryset = queryset.order_by('-current_user', 'slot__start')
-            elif start == 'passed':
-                queryset = queryset.order_by('-current_user', '-slot__start')
-
-        else:
-            queryset = self.queryset.filter(
-                status='open'
-            ).order_by('-id')
-
-        return queryset
-
-
-class TeamTransitionList(TransitionList):
-    serializer_class = TeamTransitionSerializer
-    queryset = Team.objects.all()
-
-
-class TeamMembersList(JsonApiViewMixin, ListAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-    queryset = PeriodParticipant.objects
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(team__owner=self.request.user) |
-                Q(team__activity__owner=self.request.user) |
-                Q(team__activity__initiative__activity_managers=self.request.user) |
-                Q(status='accepted')
-            ).order_by('-id')
-        else:
-            queryset = self.queryset.filter(
-                status='accepted'
-            ).order_by('-id')
-
-        return queryset.filter(
-            team_id=self.kwargs['team_id']
-        ).distinct('user_id', 'id').order_by('-id', 'user_id')
-
-    serializer_class = TeamMemberSerializer
-
-
 class InviteDetailView(JsonApiViewMixin, RetrieveAPIView):
     permission_classes = [TenantConditionalOpenClose]
     queryset = Invite.objects.all()
 
     serializer_class = InviteSerializer
-
-
-class TeamMembersExportView(ExportView):
-    fields = (
-        ('user__email', 'Email'),
-        ('user__full_name', 'Name'),
-        ('created', 'Registration Date'),
-        ('status', 'Status'),
-        ('is_team_captain', 'Team Captain'),
-    )
-
-    filename = 'team participants'
-    model = Team
-
-    def get_instances(self):
-        return self.get_object().members.all()
 
 
 class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
@@ -385,19 +267,26 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
                 queryset = self.queryset
             else:
                 queryset = self.queryset.filter(
-                    Q(user=self.request.user) |
-                    Q(activity__owner=self.request.user) |
-                    Q(activity__initiative__activity_manager=self.request.user) |
-                    Q(status__in=('accepted', 'succeeded',))
-                ).order_by('-id')
+                    Q(user=self.request.user)
+                    | Q(activity__owner=self.request.user)
+                    | Q(activity__initiative__activity_manager=self.request.user)
+                    | Q(status__in=("accepted", "succeeded", "scheduled"))
+                ).order_by("-id")
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
-            ).order_by('-id')
+                status__in=("accepted", "succeeded", "scheduled")
+            ).order_by("-id")
 
         status = self.request.query_params.get('filter[status]')
         if status:
-            queryset = queryset.filter(status=status)
+            queryset = queryset.filter(status__in=status.split(","))
+
+        my = self.request.query_params.get("filter[my]")
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         return queryset.filter(
             activity_id=self.kwargs['activity_id']

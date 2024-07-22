@@ -245,11 +245,13 @@ class ActivityDocument(Document):
 
     def prepare_activity_type(self, instance):
         mapping = {
-            'dateactivity': 'time',
-            'periodactivity': 'time',
-            'funding': 'funding',
-            'collectactivity': 'collect',
-            'deed': 'deed'
+            "dateactivity": "time",
+            "deadlineactivity": "time",
+            "periodicactivity": "time",
+            "scheduleactivity": "time",
+            "funding": "funding",
+            "collectactivity": "collect",
+            "deed": "deed",
         }
         return mapping[str(instance.__class__.__name__.lower())]
 

@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.db import connection
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.forms import BaseInlineFormSet
 from django.forms.widgets import Select
 from django.http import HttpResponse
@@ -49,8 +49,18 @@ from bluebottle.members.models import (
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin, admin_info_box
+from bluebottle.time_based.models import (
+    DateParticipant,
+    PeriodicParticipant,
+    DeadlineParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+)
+from bluebottle.utils.admin import (
+    export_as_csv_action,
+    BasePlatformSettingsAdmin,
+    admin_info_box,
+)
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
@@ -520,13 +530,27 @@ class MemberAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
-            'date_joined', 'last_login',
-            'updated', 'deleted', 'login_as_link',
-            'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "deadline_activities",
+            "periodic_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "date_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "kyc",
+            "hours_spent",
+            "hours_planned",
+            "all_contributions",
+            "data_retention_info",
         ]
 
         user_groups = request.user.groups.all()
@@ -546,15 +570,18 @@ class MemberAdmin(UserAdmin):
 
     def get_impact_fields(self, obj):
         fields = [
-            'all_contributions',
-            'hours_spent',
-            'hours_planned',
-            'initiatives',
-            'date_activities',
-            'period_activities',
-            'funding',
-            'deeds',
-            'collect',
+            "all_contributions",
+            "hours_spent",
+            "hours_planned",
+            "initiatives",
+            "date_activities",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "funding",
+            "deeds",
+            "collect",
         ]
         member_settings = MemberPlatformSettings.load()
         if member_settings.retention_delete or member_settings.retention_anonymize:
@@ -659,39 +686,53 @@ class MemberAdmin(UserAdmin):
         return _('None')
     initiatives.short_description = _('Initiatives')
 
-    def date_activities(self, obj):
-        participants = []
-        participant_url = reverse('admin:time_based_dateparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
-            if DateParticipant.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
+    def get_stats(self, obj, contributor_model):
+        applicants = []
+        applicant_url = reverse(
+            f"admin:{contributor_model._meta.app_label}_{contributor_model._meta.model_name}_changelist"
+        )
+        stats = (
+            contributor_model.objects.filter(user=obj)
+            .values("status")
+            .annotate(count=Count("status"))
+        )
+        for stat in stats:
+            link = applicant_url + "?user_id={}&status={}".format(
+                obj.id, stat["status"]
+            )
+            applicants.append(
+                format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    DateParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
+                    stat["count"],
+                    stat["status"],
+                )
+            )
+        if len(applicants):
+            return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
+        return format_html("<i>{}</i>", _("None"))
 
-        if len(participants):
-            return format_html('<ul>{}</ul>', format_html('<br/>'.join(participants)))
-        return _('None')
+    def date_activities(self, obj):
+        return self.get_stats(obj, DateParticipant)
     date_activities.short_description = _('Activity on a date')
 
-    def period_activities(self, obj):
-        applicants = []
-        applicant_url = reverse('admin:time_based_periodparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
-            if PeriodParticipant.objects.filter(status=status, user=obj).count():
-                link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
-                applicants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    PeriodParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        if len(applicants):
-            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
-    period_activities.short_description = _('Activity over a period')
+    def periodic_activities(self, obj):
+        return self.get_stats(obj, PeriodicParticipant)
+    periodic_activities.short_description = _("Recurring activity")
+
+    def deadline_activities(self, obj):
+        return self.get_stats(obj, DeadlineParticipant)
+    periodic_activities.short_description = _("Flexible activity")
+
+    def schedule_activities(self, obj):
+        return self.get_stats(obj, ScheduleParticipant)
+
+    schedule_activities.short_description = _("Schedule activity")
+
+    def team_schedule_activities(self, obj):
+        return self.get_stats(obj, TeamScheduleParticipant)
+
+    team_schedule_activities.short_description = _("Team schedule activity")
 
     def funding(self, obj):
         donations = []
@@ -707,33 +748,11 @@ class MemberAdmin(UserAdmin):
     funding.short_description = _('Funding donations')
 
     def deeds(self, obj):
-        participants = []
-        participant_url = reverse('admin:deeds_deedparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
-            if DeedParticipant.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    DeedParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        return format_html('<br/>'.join(participants)) or _('None')
+        return self.get_stats(obj, DeedParticipant)
     deeds.short_description = _('Deed participation')
 
     def collect(self, obj):
-        participants = []
-        participant_url = reverse('admin:collect_collectcontributor_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
-            if CollectContributor.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    CollectContributor.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        return format_html('<br/>'.join(participants)) or _('None')
+        return self.get_stats(obj, CollectContributor)
     collect.short_description = _('Collect contributor')
 
     def following(self, obj):

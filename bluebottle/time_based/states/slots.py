@@ -72,7 +72,7 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     start = Transition(
-        new,
+        [new, scheduled],
         running,
         name=_('Start'),
         description=_(

@@ -23,16 +23,21 @@ from bluebottle.time_based.tasks import (
     date_activity_tasks,
     periodic_activity_tasks,
     periodic_slot_tasks,
+    schedule_activity_tasks,
     schedule_slot_tasks,
+    team_schedule_slot_tasks,
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory, DateActivitySlotFactory,
     PeriodicActivityFactory,
     PeriodicRegistrationFactory,
+    ScheduleActivityFactory,
     ScheduleParticipantFactory,
     ScheduleSlotFactory,
-    SlotParticipantFactory
+    SlotParticipantFactory,
+    TeamFactory,
+    TeamMemberFactory,
 )
 
 
@@ -595,6 +600,7 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
             review=False,
             start=date.today() + timedelta(days=5),
             deadline=date.today() + timedelta(days=40),
+            registration_deadline=None,
             period="weeks"
         )
         self.activity.states.publish(save=True)
@@ -619,6 +625,7 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
             self.activity.refresh_from_db()
 
     @property
+
     def before(self):
         return self.activity.start - timedelta(days=1)
 
@@ -642,7 +649,8 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
     def test_started(self):
         self.run_task(self.started)
         self.assertEqual(self.activity.slots.count(), 1)
-        self.assertEqual(self.activity.slots.first().status, 'running')
+        self.assertEqual(self.activity.slots.first().status, "running")
+        self.assertEqual(self.activity.status, "open")
 
     def test_next_slot(self):
         self.participant = PeriodicRegistrationFactory.create(activity=self.activity)
@@ -652,8 +660,13 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
 
         self.assertEqual(self.activity.slots.count(), 2)
 
-        self.assertEqual(self.activity.slots.order_by('start').first().status, 'finished')
-        self.assertEqual(self.activity.slots.order_by('-start').first().status, 'running')
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(
+            self.activity.slots.order_by("start").first().status, "finished"
+        )
+        self.assertEqual(
+            self.activity.slots.order_by("-start").first().status, "running"
+        )
 
     def test_succeed(self):
         user = BlueBottleUserFactory.create()
@@ -723,3 +736,119 @@ class ScheduleSlotTestCase(BluebottleTestCase):
         self.run_task(self.finished)
         self.assertEqual(self.slot.status, "finished")
         self.assertEqual(self.participant.status, "succeeded")
+
+
+class TeamScheduleSlotTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(TeamScheduleSlotTestCase, self).setUp()
+        self.initiative = InitiativeFactory.create(status="approved")
+
+        self.activity = ScheduleActivityFactory.create(
+            initiative=self.initiative, team_activity="teams"
+        )
+        self.activity.states.publish(save=True)
+
+        self.team = TeamFactory.create(activity=self.activity)
+        self.slot = self.team.slots.first()
+
+        self.slot.start = now() + timedelta(days=5)
+        self.slot.duration = timedelta(hours=5)
+        self.slot.save()
+
+        self.team_member = TeamMemberFactory.create(team=self.team)
+        self.participant = self.team_member.participants.first()
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, "now", return_value=when):
+            team_schedule_slot_tasks()
+
+        with LocalTenant(connection.tenant, clear_tenant=True):
+            self.slot.refresh_from_db()
+            self.participant.refresh_from_db()
+
+    @property
+    def before(self):
+        return self.slot.start - timedelta(days=1)
+
+    @property
+    def started(self):
+        return self.slot.start + timedelta(hours=1)
+
+    @property
+    def finished(self):
+        return self.slot.end + timedelta(hours=1)
+
+    def test_before(self):
+        self.run_task(self.before)
+        self.assertEqual(self.slot.status, "scheduled")
+        self.assertEqual(self.participant.status, "scheduled")
+
+    def test_during(self):
+        self.run_task(self.started)
+        self.assertEqual(self.slot.status, "running")
+        self.assertEqual(self.participant.status, "scheduled")
+
+    def test_after(self):
+        self.run_task(self.finished)
+        self.assertEqual(self.slot.status, "finished")
+        self.assertEqual(self.participant.status, "succeeded")
+
+
+class ScheduleActivityTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ScheduleActivityTestCase, self).setUp()
+        self.initiative = InitiativeFactory.create(status="approved")
+        self.deadline = now() + timedelta(days=4)
+
+        self.activity = ScheduleActivityFactory.create(
+            initiative=self.initiative,
+            team_activity="teams",
+            registration_deadline=None,
+            review=False,
+            deadline=self.deadline.date(),
+        )
+        self.activity.states.publish(save=True)
+
+        self.team = TeamFactory.create(activity=self.activity)
+
+        self.slot = self.team.slots.first()
+        self.slot.start = now() + timedelta(days=5)
+        self.slot.duration = timedelta(hours=5)
+        self.slot.save()
+
+        self.team_member = TeamMemberFactory.create(team=self.team)
+        self.participant = self.team_member.participants.first()
+
+    def run_task(self, when):
+        with mock.patch.object(timezone, "now", return_value=when):
+            with mock.patch("bluebottle.time_based.periodic_tasks.date") as mock_date:
+                mock_date.today.return_value = when.date()
+                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                schedule_activity_tasks()
+
+        with LocalTenant(connection.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+            self.team.refresh_from_db()
+            self.team_member.refresh_from_db()
+            self.participant.refresh_from_db()
+
+    @property
+    def before(self):
+        return self.deadline - timedelta(days=4)
+
+    @property
+    def finished(self):
+        return self.deadline + timedelta(days=1)
+
+    def test_before(self):
+        self.run_task(self.before)
+        self.assertEqual(self.activity.status, "open")
+        self.assertEqual(self.participant.status, "scheduled")
+        self.assertEqual(self.participant.contributions.get().status, "new")
+
+    def test_after(self):
+        self.run_task(self.finished)
+        self.assertEqual(self.activity.status, "succeeded")
+        self.assertEqual(self.participant.status, "scheduled")
+        self.assertEqual(self.participant.contributions.get().status, "succeeded")

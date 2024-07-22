@@ -668,13 +668,15 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
     def team_registration_warning(self, obj):
         return admin_info_box(
-            _("You can't change between teams/individuals anymore because there are already registrations.")
+            _(
+                "You can't change between teams/individuals anymore because there are already registrations."
+            )
         )
 
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj and obj.registrations.count():
-            fields += ['team_activity', 'team_registration_warning']
+            fields += ["team_activity", "team_registration_warning"]
         return fields
 
     form = TimeBasedActivityAdminForm
@@ -703,7 +705,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_registration_fields(self, request, obj):
         fields = self.registration_fields
         if obj and obj.registrations.count():
-            fields = ('team_registration_warning',) + fields
+            fields = ("team_registration_warning",) + fields
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -1676,12 +1678,7 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = [
-        "user",
-        "document",
-        "created",
-        "activity"
-    ]
+    readonly_fields = ["user", "document", "created", "activity"]
     fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 

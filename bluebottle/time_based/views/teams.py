@@ -1,7 +1,10 @@
 from django.db.models import Sum, Q
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.permissions import IsAdminPermission, RelatedActivityOwnerPermission
+from bluebottle.activities.permissions import (
+    IsAdminPermission,
+    RelatedActivityOwnerPermission,
+)
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.time_based.models import Team
@@ -80,17 +83,25 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
+        context["display_member_names"] = (
+            MemberPlatformSettings.objects.get().display_member_names
+        )
 
-        activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-        context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+        activity = Activity.objects.get(pk=self.kwargs["activity_id"])
+        context["owners"] = [activity.owner] + list(
+            activity.initiative.activity_managers.all()
+        )
 
-        if self.request.user and self.request.user.is_authenticated and (
-            self.request.user in context['owners'] or
-            self.request.user.is_staff or
-            self.request.user.is_superuser
+        if (
+            self.request.user
+            and self.request.user.is_authenticated
+            and (
+                self.request.user in context["owners"]
+                or self.request.user.is_staff
+                or self.request.user.is_superuser
+            )
         ):
-            context['display_member_names'] = 'full_name'
+            context["display_member_names"] = "full_name"
 
         return context
 
@@ -113,7 +124,7 @@ class TeamDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
             ResourcePermission,
             ResourceOwnerPermission,
             RelatedActivityOwnerPermission,
-            IsAdminPermission
+            IsAdminPermission,
         ),
     )
     queryset = Team.objects.prefetch_related("activity", "user")

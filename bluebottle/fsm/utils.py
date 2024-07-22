@@ -173,7 +173,9 @@ def setup_instance(model):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
         instance.participant = DateParticipant(activity=activity)
-        instance.participant.user = Member(first_name='[first name]', last_name='[last name]')
+        instance.participant.user = Member(
+            first_name="[first name]", last_name="[last name]"
+        )
 
     if isinstance(instance, Team):
         instance.activity = DateActivity(title="[activity title]")

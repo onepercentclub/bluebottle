@@ -202,7 +202,7 @@ class PeriodicRegistrationTriggerTestCase(
         self.registration.states.stop(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
     def test_start(self):
         self.test_initial()
@@ -225,7 +225,7 @@ class PeriodicRegistrationTriggerTestCase(
         self.registration.states.start(save=True)
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(self.activity.status, "full")
 
 
 class ScheduleRegistationTriggerTestCase(
@@ -351,7 +351,9 @@ class TeamScheduleRegistrationTriggerTestCase(
 
         self.assertEqual(
             mail.outbox[-1].subject,
-            'Your team has been selected for the activity "{}"'.format(self.activity.title),
+            'Your team has been selected for the activity "{}"'.format(
+                self.activity.title
+            ),
         )
 
         self.assertEqual(self.registration.team.status, "accepted")

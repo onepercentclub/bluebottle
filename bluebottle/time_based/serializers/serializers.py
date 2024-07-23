@@ -74,7 +74,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'my_contributor.user',
             'my_contributor.contributions',
             'my_contributor.document',
-            'my_contributor.invite',
         ]
 
     included_serializers = dict(
@@ -83,7 +82,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
-            'my_contributor.invite': 'bluebottle.activities.utils.InviteSerializer',
         }
     )
 
@@ -680,7 +678,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
-            'invite',
         )
 
         validators = [
@@ -694,7 +691,6 @@ class ParticipantSerializer(BaseContributorSerializer):
         resource_name = 'contributors/time-based/participants'
         included_resources = [
             'user',
-            'invite',
             'document',
         ]
 

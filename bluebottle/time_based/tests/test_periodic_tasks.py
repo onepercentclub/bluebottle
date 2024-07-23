@@ -625,7 +625,6 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
             self.activity.refresh_from_db()
 
     @property
-
     def before(self):
         return self.activity.start - timedelta(days=1)
 

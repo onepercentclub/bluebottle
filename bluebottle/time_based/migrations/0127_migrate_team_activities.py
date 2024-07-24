@@ -16,8 +16,7 @@ def migrate_team_activities(apps, schema_editor):
     Message = apps.get_model("notifications", "Message")
 
     activities = PeriodActivity.objects.filter(
-        team_activity="teams",
-        duration_period="overall"
+        team_activity="teams", duration_period="overall"
     )
 
     for activity in activities:
@@ -34,10 +33,8 @@ def migrate_team_activities(apps, schema_editor):
         )
         schedule_activity.save_base(raw=True)
         Message.objects.filter(
-            object_id=activity.pk,
-            content_type=period_activity_ctype
+            object_id=activity.pk, content_type=period_activity_ctype
         ).update(content_type=schedule_activity_ctype)
-        print(schedule_activity.pk)
 
     ScheduleActivity.objects.update(polymorphic_ctype=schedule_activity_ctype)
 
@@ -98,6 +95,7 @@ def migrate_team_participants(apps, schema_editor):
                 user=legacy_team.owner,
                 polymorphic_ctype=team_schedule_registration_ctype,
                 activity=activity,
+                created=legacy_team.created,
             )
 
             def get_team_status(legacy_team):
@@ -124,6 +122,7 @@ def migrate_team_participants(apps, schema_editor):
                 return status
 
             team = Team.objects.create(
+                created=legacy_team.created,
                 user=legacy_team.owner,
                 status=get_team_status(legacy_team),
                 activity=activity,
@@ -143,6 +142,7 @@ def migrate_team_participants(apps, schema_editor):
                         is_online = True
 
                 slot = TeamScheduleSlot.objects.create(
+                    created=legacy_team.slot.created,
                     start=legacy_team.slot.start,
                     duration=legacy_team.slot.duration,
                     status=team_slot_status_map.get(
@@ -161,6 +161,7 @@ def migrate_team_participants(apps, schema_editor):
                 contribution = member.contributions.get()
 
                 slot = TeamScheduleSlot.objects.create(
+                    created=contribution.created,
                     start=contribution.start,
                     duration=contribution.timecontribution.value,
                     status="finished" if contribution.start < now() else "scheduled",
@@ -191,6 +192,7 @@ def migrate_team_participants(apps, schema_editor):
 
             for member in legacy_team.members.all():
                 team_member = TeamMember.objects.create(
+                    created=member.created,
                     user=member.user,
                     status=get_team_member_status(member, team),
                     team=team,
@@ -198,6 +200,7 @@ def migrate_team_participants(apps, schema_editor):
                 )
 
                 participant = TeamScheduleParticipant.objects.create(
+                    created=member.created,
                     user=member.user,
                     status=get_team_participant_status(team_member),
                     team_member=team_member,

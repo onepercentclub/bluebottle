@@ -32,10 +32,14 @@ class RelatedActivityOwnerPermission(ResourceOwnerPermission):
         except Activity.owner.RelatedObjectDoesNotExist:
             owner = None
 
-        is_owner = user in [
-            owner,
-            activity.initiative.owner,
-        ] or user in activity.initiative.activity_managers.all()
+        is_owner = (
+            user
+            in [
+                owner,
+                activity.initiative.owner,
+            ]
+            or user in activity.initiative.activity_managers.all()
+        )
 
         return is_owner
 

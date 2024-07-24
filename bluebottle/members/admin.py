@@ -53,7 +53,8 @@ from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
     DeadlineParticipant,
-    ScheduleParticipant, TeamScheduleParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
 )
 from bluebottle.utils.admin import (
     export_as_csv_action,
@@ -690,20 +691,26 @@ class MemberAdmin(UserAdmin):
         applicant_url = reverse(
             f"admin:{contributor_model._meta.app_label}_{contributor_model._meta.model_name}_changelist"
         )
-        stats = contributor_model.objects.filter(user=obj).values('status').annotate(count=Count('status'))
+        stats = (
+            contributor_model.objects.filter(user=obj)
+            .values("status")
+            .annotate(count=Count("status"))
+        )
         for stat in stats:
-            link = applicant_url + "?user_id={}&status={}".format(obj.id, stat['status'])
+            link = applicant_url + "?user_id={}&status={}".format(
+                obj.id, stat["status"]
+            )
             applicants.append(
                 format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    stat['count'],
-                    stat['status'],
+                    stat["count"],
+                    stat["status"],
                 )
             )
         if len(applicants):
             return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
-        return format_html('<i>{}</i>', _('None'))
+        return format_html("<i>{}</i>", _("None"))
 
     def date_activities(self, obj):
         return self.get_stats(obj, DateParticipant)
@@ -719,10 +726,12 @@ class MemberAdmin(UserAdmin):
 
     def schedule_activities(self, obj):
         return self.get_stats(obj, ScheduleParticipant)
+
     schedule_activities.short_description = _("Schedule activity")
 
     def team_schedule_activities(self, obj):
         return self.get_stats(obj, TeamScheduleParticipant)
+
     team_schedule_activities.short_description = _("Team schedule activity")
 
     def funding(self, obj):

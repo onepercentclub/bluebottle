@@ -104,7 +104,7 @@ class ParticipantTriggerTestCase:
         self.test_initial()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(self.activity.status, "full")
 
     def test_withdraw_unfill(self):
         self.activity.capacity = 1
@@ -112,7 +112,7 @@ class ParticipantTriggerTestCase:
         self.test_withdraw()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
     def test_remove_unfill(self):
         self.activity.capacity = 1
@@ -121,7 +121,7 @@ class ParticipantTriggerTestCase:
         self.test_remove()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
     def test_reapply(self):
         self.test_withdraw()
@@ -353,10 +353,10 @@ class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.activity.save()
         self.register()
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(self.activity.status, "full")
         self.registration.states.stop(save=True)
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
 
 class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
@@ -392,7 +392,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.test_initial()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'full')
+        self.assertEqual(self.activity.status, "full")
 
     def test_withdraw_unfill(self):
         self.activity.capacity = 1
@@ -401,7 +401,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.test_withdraw()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
     def test_remove_unfill(self):
         self.activity.capacity = 1
@@ -410,7 +410,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.test_remove()
 
         self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, 'open')
+        self.assertEqual(self.activity.status, "open")
 
     def test_schedule(self):
         self.register()

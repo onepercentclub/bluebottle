@@ -36,8 +36,7 @@ def migrate_periodic_activities(apps, schema_editor):
         )
         periodic_activity.save_base(raw=True)
         Message.objects.filter(
-            object_id=activity.pk,
-            content_type=period_activity_ctype
+            object_id=activity.pk, content_type=period_activity_ctype
         ).update(content_type=periodic_activity_ctype)
 
     PeriodicActivity.objects.update(polymorphic_ctype=periodic_activity_ctype)
@@ -102,13 +101,16 @@ def migrate_periodic_participants(apps, schema_editor):
                 registration = None
 
                 if participant.user:
-                    period_participant = PeriodParticipant.objects.get(pk=participant.pk)
+                    period_participant = PeriodParticipant.objects.get(
+                        pk=participant.pk
+                    )
                     registration, _created = PeriodicRegistration.objects.get_or_create(
                         user=participant.user,
                         activity=activity,
                         status=registration_status_map.get(
                             participant.status, "accepted"
                         ),
+                        created=participant.created,
                         answer=period_participant.motivation,
                         polymorphic_ctype=periodic_registration_ctype,
                     )
@@ -135,6 +137,7 @@ def migrate_periodic_participants(apps, schema_editor):
 
                     periodic_participant = PeriodicParticipant.objects.create(
                         slot=slot,
+                        created=contribution.created,
                         registration=registration,
                         user=participant.user,
                         activity=activity,

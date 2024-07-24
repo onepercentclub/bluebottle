@@ -48,10 +48,20 @@ from bluebottle.time_based.states import (
 )
 
 
+def activity_is_expired(effect):
+    """Activity is expired"""
+    return effect.instance.activity.status == "expired"
+
+
+def activity_will_be_expired(effect):
+    """Activity is expired"""
+    return (
+        effect.instance.activity.status == "succeeded"
+        and effect.instance.activity.active_participants.count() == 1
+    )
+
+
 class RegistrationParticipantTriggers(ContributorTriggers):
-    def activity_is_expired(effect):
-        """Activity is expired"""
-        return effect.instance.activity.status == "expired"
 
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
@@ -88,6 +98,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -109,6 +124,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -132,6 +152,11 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DeadlineActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -240,7 +265,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                     conditions=[
                         activity_no_spots_left
                     ]
-                )
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    RegistrationActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                ),
             ]
         ),
         TransitionTrigger(
@@ -628,6 +658,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     "contributions",
                     ContributionStateMachine.succeed,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    RegistrationActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -728,6 +763,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -742,6 +782,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     "activity",
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -758,6 +803,11 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -772,7 +822,12 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                     "activity",
                     ScheduleActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
-                )
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -786,7 +841,12 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
-                )
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -885,6 +945,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.succeed,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    RegistrationActivityStateMachine.succeed,
+                    conditions=[activity_is_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -934,6 +999,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -943,6 +1013,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),
@@ -954,6 +1029,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     "contributions",
                     ContributionStateMachine.fail,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
+                ),
             ],
         ),
         TransitionTrigger(
@@ -963,6 +1043,11 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    ScheduleActivityStateMachine.expire,
+                    conditions=[activity_will_be_expired],
                 ),
             ],
         ),

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 
 from django.core import mail
 from django.utils.timezone import now
@@ -300,6 +300,24 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
             ),
         )
 
+    def test_initial_succeed_activity(self):
+        self.activity.deadline = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        self.create(as_user=self.admin_user)
+
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.contributions.first().status, "succeeded")
+        self.assertEqual(self.participant.activity.status, "succeeded")
+
+    def test_expire(self):
+        self.test_initial_succeed_activity()
+
+        self.participant.states.withdraw(save=True)
+        self.assertEqual(self.participant.status, "withdrawn")
+        self.assertEqual(self.participant.contributions.first().status, "failed")
+        self.assertEqual(self.participant.activity.status, "expired")
+
 
 class PeriodicParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestCase):
     activity_factory = PeriodicActivityFactory
@@ -356,6 +374,12 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         self.participant = self.registration.participants.first()
         self.participant.save()
 
+    def schedule(self, when):
+        slot = self.participant.slot
+        slot.start = when
+        slot.save()
+        self.participant.refresh_from_db()
+
     def test_initial(self):
         super().test_initial()
         self.registration.refresh_from_db()
@@ -390,11 +414,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
     def test_schedule(self):
         self.register()
-        slot = self.participant.slot
-        slot.start = now() + timedelta(days=1)
-        slot.save()
-        self.participant.refresh_from_db()
-
+        self.schedule(now() + timedelta(days=1))
         contribution = self.participant.contributions.get(
             timecontribution__contribution_type="period"
         )
@@ -406,9 +426,7 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
     def test_schedule_passed(self):
         self.register()
-        slot = self.participant.slot
-        slot.start = now() - timedelta(days=4)
-        slot.save()
+        self.schedule(now() - timedelta(days=4))
 
         self.participant.refresh_from_db()
         self.assertEqual(self.participant.status, "succeeded")
@@ -420,35 +438,65 @@ class ScheduleParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
         preparation = self.participant.preparation_contributions.first()
         self.assertEqual(preparation.status, "succeeded")
 
+    def test_initial_succeed_activity(self):
+        self.activity.deadline = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, "expired")
+
+        self.register()
+        self.schedule(now() - timedelta(days=2))
+
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.contributions.first().status, "succeeded")
+        self.assertEqual(self.participant.activity.status, "succeeded")
+
+    def test_expire(self):
+        self.test_initial_succeed_activity()
+
+        self.participant.states.remove(save=True)
+
+        self.assertEqual(self.participant.status, "removed")
+        self.assertEqual(self.participant.contributions.first().status, "failed")
+        self.assertEqual(self.participant.activity.status, "expired")
+
 
 class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
     def setUp(self):
         self.captain = BlueBottleUserFactory.create()
         initiative = InitiativeFactory.create()
-        activity = ScheduleActivityFactory.create(
+        self.activity = ScheduleActivityFactory.create(
             team_activity=True, initiative=initiative
         )
         initiative.states.submit()
         initiative.states.approve(save=True)
-        activity.states.publish(save=True)
+        self.activity.states.publish(save=True)
 
-        self.team = TeamFactory.create(activity=activity, user=self.captain)
+    def create(self):
+        self.team = TeamFactory.create(activity=self.activity, user=self.captain)
         self.team_member = TeamMemberFactory.create(team=self.team)
         self.participant = self.team_member.participants.get()
 
+    def schedule(self, when):
+        slot = self.team.slots.get()
+
+        slot.start = when
+        slot.duration = timedelta(hours=2)
+        slot.is_online = True
+
+        slot.save()
+
+        self.participant.refresh_from_db()
+
     def test_initiate(self):
+        self.create()
         self.assertEqual(self.participant.status, "accepted")
 
         self.assertEqual(self.participant.contributions.get().status, "new")
 
     def test_schedule(self):
-        slot = self.team.slots.get()
-
-        slot.start = now()
-        slot.duration = timedelta(hours=2)
-        slot.is_online = True
-
-        slot.save()
+        self.create()
+        self.schedule(now())
 
         self.participant.refresh_from_db()
         self.assertEqual(self.participant.status, "scheduled")
@@ -456,18 +504,33 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
         self.assertEqual(self.participant.contributions.get().status, "new")
 
     def test_succeed(self):
-        slot = self.team.slots.get()
-
-        slot.start = now()
-        slot.duration = timedelta(hours=2)
-        slot.is_online = True
-
-        slot.save()
-
-        slot.start = now() - timedelta(days=2)
-        slot.save()
+        self.create()
+        self.schedule(now())
+        self.schedule(now() - timedelta(days=2))
 
         self.participant.refresh_from_db()
         self.assertEqual(self.participant.status, "succeeded")
 
         self.assertEqual(self.participant.contributions.get().status, "succeeded")
+
+    def test_initial_succeed_activity(self):
+        self.activity.deadline = date.today() - timedelta(days=4)
+        self.activity.save()
+
+        self.assertEqual(self.activity.status, "expired")
+
+        self.create()
+        self.schedule(now() - timedelta(days=2))
+
+        self.assertEqual(self.participant.status, "succeeded")
+        self.assertEqual(self.participant.contributions.first().status, "succeeded")
+        self.assertEqual(self.participant.activity.status, "succeeded")
+
+    def test_expire(self):
+        self.test_initial_succeed_activity()
+
+        self.team_member.states.remove(save=True)
+        self.participant.states.remove(save=True)
+        self.assertEqual(self.participant.status, "removed")
+        self.assertEqual(self.participant.contributions.first().status, "failed")
+        self.assertEqual(self.participant.activity.status, "expired")

@@ -17,8 +17,11 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
-    HasSlotValidator, PeriodActivityStartDeadlineValidator
+    PeriodActivityRegistrationDeadlineValidator,
+    CompletedSlotsValidator,
+    HasSlotValidator,
+    PeriodActivityStartDeadlineValidator,
+    RegistrationLinkValidator,
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, to_text
@@ -751,8 +754,6 @@ class RegistrationActivity(TimeBasedActivity):
         default=''
     )
 
-    validators = [PeriodActivityRegistrationDeadlineValidator]
-
     @property
     def activity_date(self):
         return self.deadline or self.start
@@ -785,7 +786,8 @@ class RegistrationActivity(TimeBasedActivity):
 
     validators = [
         PeriodActivityRegistrationDeadlineValidator,
-        PeriodActivityStartDeadlineValidator
+        PeriodActivityStartDeadlineValidator,
+        RegistrationLinkValidator,
     ]
 
     class Meta:

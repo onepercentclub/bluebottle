@@ -14,6 +14,8 @@ from bluebottle.time_based.models import (
     TimeContribution,
     DateActivitySlot,
     ScheduleSlot,
+    TeamScheduleSlot,
+    ScheduleActivity,
 )
 
 logger = logging.getLogger('bluebottle')
@@ -82,6 +84,18 @@ def periodic_activity_tasks():
 
 
 @periodic_task(
+    run_every=(crontab(minute="*/15")),
+    name="schedule_activity_tasks",
+    ignore_result=True,
+)
+def schedule_activity_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in ScheduleActivity.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
     run_every=(crontab(minute='*/15')),
     name="periodic_slot_tasks",
     ignore_result=True
@@ -100,4 +114,16 @@ def schedule_slot_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in ScheduleSlot.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(minute="*/15")),
+    name="team_schedule_slot_tasks",
+    ignore_result=True,
+)
+def team_schedule_slot_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in TeamScheduleSlot.get_periodic_tasks():
                 task.execute()

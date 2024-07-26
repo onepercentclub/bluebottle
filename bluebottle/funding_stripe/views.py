@@ -1,6 +1,7 @@
 import json
 from builtins import str
 
+from django.db import connection
 from django.http import HttpResponse
 from django.views.generic import View
 from moneyed import Money
@@ -38,7 +39,7 @@ class StripeSourcePaymentList(PaymentList):
         JSONWebTokenAuthentication, DonorAuthentication,
     )
 
-    permission_classes = (PaymentPermission, )
+    permission_classes = (PaymentPermission,)
 
 
 class AccountSession(View):
@@ -48,6 +49,17 @@ class AccountSession(View):
             account = stripe.Account.create(
                 type='custom',
                 country='NL',
+                email=request.user.email,
+                business_type='individual',
+                business_profile={
+                    'url': 'https://goodup.com',
+                    'mcc': '8398'
+                },
+                metadata={
+                    "tenant_name": connection.tenant.client_name,
+                    "tenant_domain": connection.tenant.domain_url,
+                    "member_id": request.user.pk,
+                },
                 capabilities={
                     'card_payments': {'requested': True},
                     'transfers': {'requested': True},
@@ -90,7 +102,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         JSONWebTokenAuthentication, DonorAuthentication,
     )
 
-    permission_classes = (PaymentPermission, )
+    permission_classes = (PaymentPermission,)
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -124,7 +136,7 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         'external_accounts': ['external_accounts'],
     }
 
-    permission_classes = (IsAuthenticated, IsOwner, )
+    permission_classes = (IsAuthenticated, IsOwner,)
 
     def perform_create(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -138,7 +150,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
-    permission_classes = (IsAuthenticated, IsOwner, )
+    permission_classes = (IsAuthenticated, IsOwner,)
 
     prefetch_for_includes = {
         'owner': ['owner'],

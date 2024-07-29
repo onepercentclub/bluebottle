@@ -1,5 +1,8 @@
 from builtins import object
+from datetime import datetime
 
+import pytz
+from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -162,12 +165,25 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         resource_name = 'payout-accounts/external-accounts'
 
 
+class DeadlineField(serializers.DateTimeField):
+    def to_internal_value(self, value):
+        try:
+            parsed_date = parse(value).date()
+            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
+            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
+            return aware_datetime
+        except (ValueError, TypeError):
+            self.fail('invalid', format='date')
+
+
 class FundingListSerializer(BaseActivityListSerializer):
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
+    deadline = DeadlineField()
 
     class Meta(BaseActivityListSerializer.Meta):
         model = Funding
@@ -238,6 +254,7 @@ class FundingSerializer(BaseActivitySerializer):
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
     psp = serializers.SerializerMethodField()
+    deadline = DeadlineField()
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:

@@ -499,6 +499,30 @@ class StripePayoutAccount(PayoutAccount):
             return requirements.pending_verification
         return []
 
+    @property
+    def client_secret(self):
+        stripe = get_stripe()
+        return stripe.AccountSession.create(
+            account=self.account_id,
+            components={
+                "account_onboarding": {
+                    "enabled": True,
+                    "features": {
+                        "external_account_collection": True
+                    },
+
+                },
+                "payments": {
+                    "enabled": True,
+                    "features": {
+                        "refund_management": True,
+                        "dispute_management": True,
+                        "capture_payments": True
+                    }
+                },
+            },
+        )
+
     def check_status(self):
         if self.account:
             del self.account
@@ -552,6 +576,7 @@ class StripePayoutAccount(PayoutAccount):
                 account_id=external['id']
             )
             external_account.account = external
+            external_account.status = 'verified'
             external_account.connect_account = self
             external_account.save()
         self.save()
@@ -718,6 +743,7 @@ class ExternalAccount(BankAccount):
             if not hasattr(self, '_account'):
                 self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
 
+            print(self._account)
             return self._account
 
     def create(self, token):
@@ -751,7 +777,7 @@ class ExternalAccount(BankAccount):
 
     class Meta(object):
         verbose_name = _('Stripe external account')
-        verbose_name_plural = _('Stripe exterrnal account')
+        verbose_name_plural = _('Stripe external account')
 
     def __str__(self):
         return "Stripe external account {}".format(self.account_id)

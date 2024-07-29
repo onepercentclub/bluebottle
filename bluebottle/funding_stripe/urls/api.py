@@ -6,7 +6,7 @@ from bluebottle.funding_stripe.views import (
     ConnectWebHookView,
     ExternalAccountList, ExternalAccountDetails,
     StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
-    AccountSession
+    ConnectAccountSession
 )
 
 urlpatterns = [
@@ -18,6 +18,10 @@ urlpatterns = [
     url(r'^/payout-account/(?P<pk>[\d]+)$',
         ConnectAccountDetails.as_view(),
         name='connect-account-details'),
+    url(r'^/payout-account/(?P<pk>[\d]+)/session$',
+        ConnectAccountSession.as_view(),
+        name='stripe-account-session'),
+
     url(r'^/external-account$',
         ExternalAccountList.as_view(),
         name='stripe-external-account-list'),
@@ -41,11 +45,6 @@ urlpatterns = [
     url(r'^/source-payments$',
         StripeSourcePaymentList.as_view(),
         name='stripe-source-payment-list'),
-
-    # Payments
-    url(r'^/account-session/',
-        AccountSession.as_view(),
-        name='stripe-account-session'),
 
     # Webhooks
     url(r'^/intent-webhook$',

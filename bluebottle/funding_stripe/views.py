@@ -22,12 +22,12 @@ from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
     StripeSourcePaymentSerializer, PaymentIntentSerializer,
     ConnectAccountSerializer,
-    StripePaymentSerializer
+    StripePaymentSerializer, ConnectAccountSessionSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView, RetrieveAPIView,
+    RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView, RetrieveAPIView, ListCreateAPIView,
 )
 
 
@@ -127,7 +127,7 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
-class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
 
@@ -139,11 +139,10 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     permission_classes = (IsAuthenticated, IsOwner,)
 
     def perform_create(self, serializer):
-        token = serializer.validated_data.pop('token')
         serializer.save(owner=self.request.user)
-        if token:
-            serializer.instance.update(token)
-            serializer.instance.check_status()
+
+    def get_queryset(self):
+        return self.queryset.order_by('-created').filter(owner=self.request.user)
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -176,7 +175,46 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
         serializer.instance.check_status()
 
 
-class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class ConnectAccountSession(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+    queryset = StripePayoutAccount.objects.all()
+    serializer_class = ConnectAccountSessionSerializer
+
+    # permission_classes = (IsAuthenticated, IsOwner,)
+
+    def get(self, request, *args, **kwargs):
+        payout_account = self.get_object()
+        stripe = get_stripe()
+
+        try:
+            account_session = stripe.AccountSession.create(
+                account=payout_account.account_id,
+                components={
+                    "account_onboarding": {
+                        "enabled": True,
+                        "features": {
+                            "external_account_collection": True
+                        },
+
+                    },
+                    "payments": {
+                        "enabled": True,
+                        "features": {
+                            "refund_management": True,
+                            "dispute_management": True,
+                            "capture_payments": True
+                        }
+                    },
+                },
+            )
+            print('Account session created: ', account_session.client_secret)
+            return HttpResponse(json.dumps({'client_secret': account_session.client_secret}), status=200)
+
+        except Exception as e:
+            print('An error occurred when calling the Stripe API to create an account session: ', e)
+            return HttpResponse(json.dumps({'error': str(e)}), status=500)
+
+
+class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     permission_classes = []
 
     queryset = ExternalAccount.objects.all()
@@ -194,6 +232,9 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         token = serializer.validated_data.pop('token')
         serializer.save()
         serializer.instance.create(token)
+
+    def get_queryset(self):
+        return self.queryset.order_by('-created').filter(connect_account__owner=self.request.user)
 
 
 class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

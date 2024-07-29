@@ -676,7 +676,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj and obj.registrations.count():
-            fields += ["team_activity", "team_registration_warning"]
+            fields = fields + ("team_activity", "team_registration_warning")
         return fields
 
     form = TimeBasedActivityAdminForm

@@ -176,7 +176,7 @@ class TimeBasedActivity(Activity):
     @property
     def active_durations(self):
         return self.durations.filter(
-            contributor__status__in=('new', 'accepted')
+            contributor__status__in=("new", "accepted", "scheduled")
         )
 
     @property
@@ -777,7 +777,7 @@ class RegistrationActivity(TimeBasedActivity):
     @property
     def active_participants(self):
         return self.participants.filter(
-            status__in=["new", "accepted", "succeeded", "participating"]
+            status__in=["new", "accepted", "succeeded", "participating", "scheduled"]
         )
 
     @property

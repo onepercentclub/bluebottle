@@ -23,7 +23,8 @@ class CountedHyperlinkedRelatedField(HyperlinkedRelatedField):
     def get_links(self, obj, id):
         links = super().get_links(obj, id)
         return {
-            "related": {
+            "related": links["related"],
+            "members": {
                 "href": links["related"],
                 "meta": {"count": getattr(obj, self.parent.source).count()},
             }

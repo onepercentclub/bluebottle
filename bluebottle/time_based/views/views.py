@@ -37,6 +37,7 @@ from bluebottle.time_based.serializers import (
     SlotParticipantSerializer,
     SlotParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer,
 )
+from bluebottle.time_based.views.mixins import BaseSlotIcalView
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (

@@ -52,18 +52,22 @@ class PeriodicSlotTriggers(TriggerManager):
 
 
 def slot_is_finished(effect):
+    """The slot is finished"""
     return effect.instance.end and effect.instance.end < now()
 
 
 def slot_is_not_finished(effect):
+    """The slot is not finished"""
     return effect.instance.end and effect.instance.end > now()
 
 
 def slot_is_scheduled(effect):
+    """The slot is scheduled"""
     return effect.instance.end
 
 
 def slot_has_no_end(effect):
+    """The slot has no end"""
     return not effect.instance.end
 
 
@@ -154,6 +158,7 @@ class ScheduleSlotTriggers(TriggerManager):
 
 
 def slot_is_complete(effect):
+    """The slot has all the required field set"""
     return (
         effect.instance.start
         and effect.instance.duration
@@ -162,6 +167,7 @@ def slot_is_complete(effect):
 
 
 def slot_is_incomplete(effect):
+    """The slot does not have all the required field set"""
     return not slot_is_complete(effect)
 
 

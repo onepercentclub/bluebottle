@@ -39,6 +39,7 @@ def make_table(source, layout='default'):
 
 def generate_html(documentation):
     html = ""
+    html += f"<h1>{documentation['title']}</h1>"
     html += "<h2>States</h2>"
     html += "<em>All states this instance can be in.</em>"
     html += make_table(documentation['states'])
@@ -75,11 +76,6 @@ def run(*args):
     tenant = Client.objects.get(schema_name=settings.CONFLUENCE['tenant'])
     with LocalTenant(tenant):
         for model in models:
-            url = "{}/wiki/rest/api/content/{}".format(api['domain'], model['page_id'])
-            response = requests.get(url, auth=(api['user'], api['key']))
-            data = response.json()
-            version = data['version']['number'] + 1
-
             documentation = document_model(import_string(model['model']))
             html = generate_html(documentation)
             messages = document_notifications(import_string(model['model']))
@@ -87,24 +83,5 @@ def run(*args):
                 html += "<h2>Automated messages</h2>"
                 html += "<em>On some triggers automated e-mails are send.</em>"
                 html += generate_notification_html(messages)
-            data = {
-                "id": model['page_id'],
-                "type": "page",
-                "status": "current",
-                "title": model['title'],
-                "version": {
-                    "number": version
-                },
-                "body": {
-                    "storage": {
-                        "value": html.encode('ascii', 'ignore'),
-                        "representation": "storage"
-                    }
-                }
-            }
-            url += '?expand=body.storage'
-            response = requests.put(url, json=data, auth=(api['user'], api['key']))
-            if response.status_code == 200:
-                print("[OK] {}".format(model['title']))
-            else:
-                print("[ERROR] {}".format(model['title']))
+
+            print(html)

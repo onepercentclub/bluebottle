@@ -104,15 +104,18 @@ class BaseTransitionEffect(Effect):
         return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
 
     def to_html(self):
-        if self.conditions:
-            return _('{transition} {object} if {conditions}').format(
-                transition=self.transition.name,
-                object=str(self.instance),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
-            )
-        return _('{transition} {object}').format(
-            transition=self.transition.name,
-            object=str(self.instance)
+        try:
+            if self.conditions:
+                return _("{transition} {object} if {conditions}").format(
+                    transition=self.transition.name,
+                    object=str(self.instance),
+                    conditions=" and ".join([c.__doc__ for c in self.conditions]),
+                )
+        except Exception as e:
+            print(self.__class__, e)
+            __import__("ipdb").set_trace()
+        return _("{transition} {object}").format(
+            transition=self.transition.name, object=str(self.instance)
         )
 
 

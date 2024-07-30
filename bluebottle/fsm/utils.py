@@ -233,10 +233,11 @@ def setup_instance(model):
 
 def document_model(model):
     documentation = {
-        'states': [],
-        'transitions': [],
-        'triggers': [],
-        'periodic_tasks': []
+        "title": model._meta.verbose_name,
+        "states": [],
+        "transitions": [],
+        "triggers": [],
+        "periodic_tasks": [],
     }
 
     instance = setup_instance(model)

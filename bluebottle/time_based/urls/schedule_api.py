@@ -27,6 +27,10 @@ from bluebottle.time_based.views import (
     TeamScheduleParticipantTransitionList,
     TeamSlotScheduleRelatedParticipantList
 )
+from bluebottle.time_based.views.slots import (
+    ScheduleSlotSlotIcalView,
+    TeamScheduleSlotSlotIcalView,
+)
 
 urlpatterns = [
     url(r'^$',
@@ -92,13 +96,25 @@ urlpatterns = [
     url(
         r"^/slots/(?P<pk>\d+)$",
         ScheduleSlotDetailView.as_view(),
-        name="schedule-slot-detail"),
+        name="schedule-slot-detail",
+    ),
+    url(
+        r"^/slots/ical/(?P<pk>\d+)$",
+        ScheduleSlotSlotIcalView.as_view(),
+        name="schedule-slot-ical",
+    ),
 
     url(r"/team-slots$", TeamScheduleSlotListView.as_view(), name="team-schedule-slot-list"),
     url(
         r"^/team-slots/(?P<pk>\d+)$",
         TeamScheduleSlotDetailView.as_view(),
-        name="team-schedule-slot-detail"),
+        name="team-schedule-slot-detail",
+    ),
+    url(
+        r"^/team-slots/ical/(?P<pk>\d+)$",
+        TeamScheduleSlotSlotIcalView.as_view(),
+        name="team-schedule-slot-ical",
+    ),
 
     url(r'^/team-slots/(?P<slot_id>\d+)/team-participants$',
         TeamSlotScheduleRelatedParticipantList.as_view(),

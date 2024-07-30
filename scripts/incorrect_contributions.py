@@ -4,8 +4,7 @@ from django.db.models import Q
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
-    DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant, DeadlineRegistration,
-    DeadlineActivity,
+    DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
     PeriodicActivity
 )
@@ -14,10 +13,7 @@ from bluebottle.time_based.models import (
 def run(*args):
     fix = 'fix' in args
     total_errors = False
-    #for client in Client.objects.filter(schema_name='mars'):
     for client in Client.objects.all():
-        print(client.schema_name)
-         
         with (LocalTenant(client)):
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',
@@ -31,8 +27,8 @@ def run(*args):
                 status='succeeded',
                 contributor__periodicparticipant__isnull=False
             ).exclude(
-                Q(contributor__periodicparticipant__registration__status__in=('accepted', 'new' )) |
-                Q(contributor__status__in=('succeeded', 'new', 'accepted' )) |
+                Q(contributor__periodicparticipant__registration__status__in=('accepted', 'new')) |
+                Q(contributor__status__in=('succeeded', 'new', 'accepted')) |
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_deadline_contributions = TimeContribution.objects.filter(
@@ -40,8 +36,8 @@ def run(*args):
                 contributor__deadlineparticipant__isnull=False,
                 contributor__user__isnull=False
             ).exclude(
-                Q(contributor__deadlineparticipant__registration__status__in=('accepted', 'new' )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted' )) &
+                Q(contributor__deadlineparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
 
@@ -50,8 +46,8 @@ def run(*args):
                 contributor__scheduleparticipant__isnull=False,
                 contributor__activity__team_activity='individuals'
             ).exclude(
-                Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new' )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted' )) &
+                Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_team_schedule_contributions = TimeContribution.objects.filter(
@@ -60,13 +56,13 @@ def run(*args):
                 contributor__activity__team_activity='teams'
             ).exclude(
                 Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled' )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted' )) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_contributions = (
-                succeeded_date_contributions | 
-                succeeded_periodic_contributions | 
+                succeeded_date_contributions |
+                succeeded_periodic_contributions |
                 succeeded_schedule_contributions |
                 succeeded_deadline_contributions |
                 succeeded_team_schedule_contributions
@@ -115,14 +111,14 @@ def run(*args):
                 contributor__scheduleparticipant__registration__status__in=('accepted', 'stopped'),
                 contributor__activity__status__in=('open', 'succeeded', 'full',),
                 contributor__teamscheduleparticipant__team_member__status__in=('active', ),
-                contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled'), 
+                contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled'),
             )
 
             failed_contributions = (
-                failed_date_contributions | 
-                failed_deadline_contributions | 
-                failed_periodic_contributions | 
-                failed_schedule_contributions | 
+                failed_date_contributions |
+                failed_deadline_contributions |
+                failed_periodic_contributions |
+                failed_schedule_contributions |
                 failed_schedule_team_contributions
             )
 
@@ -171,14 +167,14 @@ def run(*args):
                 contributor__scheduleparticipant__registration__status__in=('new', ),
                 contributor__activity__status__in=('open', 'succeeded', 'full',),
                 contributor__teamscheduleparticipant__team_member__status__in=('active', ),
-                contributor__teamscheduleparticipant__team_member__team__status__in=('new', 'succeeded', 'scheduled') 
+                contributor__teamscheduleparticipant__team_member__team__status__in=('new', 'succeeded', 'scheduled')
             )
 
             failed_contributions_new = (
-                failed_date_contributions_new | 
-                failed_deadline_contributions_new | 
-                failed_periodic_contributions_new | 
-                failed_schedule_contributions_new | 
+                failed_date_contributions_new |
+                failed_deadline_contributions_new |
+                failed_periodic_contributions_new |
+                failed_schedule_contributions_new |
                 failed_schedule_team_contributions_new
             )
             errors = (
@@ -205,33 +201,32 @@ def run(*args):
                             participant.save()
 
                     for activity in DeadlineActivity.objects.filter(
-                        contributors__deadlineparticipant__status__in=('succeeded', ), 
+                        contributors__deadlineparticipant__status__in=('succeeded', ),
                         status__in=('expired', 'draft', 'submitted', 'needs_work')
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in ScheduleActivity.objects.filter(
-                        contributors__scheduleparticipant__status__in=('succeeded', ), 
+                        contributors__scheduleparticipant__status__in=('succeeded', ),
                         status__in=('expired', 'draft', 'submitted', 'needs_work')
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in ScheduleActivity.objects.filter(
-                        contributors__teamscheduleparticipant__status__in=('succeeded', ), 
+                        contributors__teamscheduleparticipant__status__in=('succeeded', ),
                         status__in=('expired', 'draft', 'submitted', 'needs_work')
                     ):
                         activity.status = 'succeeded'
                         activity.save()
 
                     for activity in PeriodicActivity.objects.filter(
-                        contributors__periodicparticipant__status__in=('succeeded', ), 
+                        contributors__periodicparticipant__status__in=('succeeded', ),
                         status__in=('expired', 'draft', 'submitted', 'needs_work')
                     ):
                         activity.status = 'succeeded'
                         activity.save()
-
 
                     succeeded_contributions.update(status='failed')
                     failed_contributions.update(status='succeeded')

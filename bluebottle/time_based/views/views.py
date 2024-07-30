@@ -439,46 +439,6 @@ class DateActivityIcalView(PrivateFileView):
         return response
 
 
-class BaseSlotIcalView(PrivateFileView):
-
-    max_age = 30 * 60  # half an hour
-
-    def get(self, *args, **kwargs):
-        instance = self.get_object()
-        calendar = icalendar.Calendar()
-
-        slot = icalendar.Event()
-        slot.add('summary', instance.activity.title)
-
-        details = instance.activity.details
-        if instance.is_online and instance.online_meeting_url:
-            details += _('\nJoin: {url}').format(url=instance.online_meeting_url)
-
-        slot.add('description', details)
-        slot.add('url', instance.activity.get_absolute_url())
-        slot.add('dtstart', instance.start.astimezone(utc))
-        slot.add('dtend', (instance.start + instance.duration).astimezone(utc))
-        slot['uid'] = instance.uid
-
-        organizer = icalendar.vCalAddress('MAILTO:{}'.format(instance.activity.owner.email))
-        organizer.params['cn'] = icalendar.vText(instance.activity.owner.full_name)
-
-        slot['organizer'] = organizer
-        if instance.location:
-            slot['location'] = icalendar.vText(instance.location.formatted_address)
-
-            if instance.location_hint:
-                slot['location'] = f'{slot["location"]} ({instance.location_hint})'
-        calendar.add_component(slot)
-
-        response = HttpResponse(calendar.to_ical(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename="%s.ics"' % (
-            instance.activity.slug
-        )
-
-        return response
-
-
 class ActivitySlotIcalView(BaseSlotIcalView):
     queryset = DateActivitySlot.objects.exclude(
         status__in=['cancelled', 'deleted', 'rejected'],

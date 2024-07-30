@@ -3,6 +3,7 @@ import icalendar
 from django.db.models import Q
 from django.http import HttpResponse
 from django.utils.timezone import utc
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
 

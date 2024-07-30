@@ -25,7 +25,7 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator, \
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, TargetValidator, \
     DeadlineMaxValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -151,7 +151,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, BudgetLineValidator, TargetValidator]
+    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, TargetValidator]
 
     auto_approve = False
 

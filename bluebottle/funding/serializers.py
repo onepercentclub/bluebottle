@@ -23,6 +23,7 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.files.serializers import PrivateDocumentSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
@@ -343,9 +344,8 @@ class FundingSerializer(BaseActivitySerializer):
         return methods
 
 
-class FundingTransitionSerializer(ModelSerializer):
+class FundingTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
-    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }

@@ -23,10 +23,12 @@ class ScheduleSlotSerializer(ModelSerializer):
     timezone = serializers.SerializerMethodField()
     links = serializers.SerializerMethodField()
 
+    ical_view_name = "schedule-slot-ical"
+
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                "ical": reverse_signed("slot-ical", args=(instance.pk,)),
+                "ical": reverse_signed(self.ical_view_name, args=(instance.pk,)),
                 "google": instance.google_calendar_link,
             }
         else:
@@ -88,6 +90,7 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
             "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
     )
+    ical_view_name = "team-schedule-slot-ical"
 
     class Meta(ScheduleSlotSerializer.Meta):
         model = TeamScheduleSlot
@@ -100,5 +103,34 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
     included_serializers = {
         "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+    }
+
+
+class PeriodicSlotSerializer(ModelSerializer):
+    status = FSMField(read_only=True)
+    current_status = CurrentStatusField(source="states.current_state")
+
+    class Meta:
+        model = ScheduleSlot
+        fields = (
+            "id",
+            "activity",
+            "start",
+            "duration",
+            "end",
+        )
+        meta_fields = (
+            "status",
+            "current_status",
+        )
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/periodic-slots"
+        included_resources = ["location", "location.country", "activity"]
+
+    included_serializers = {
+        "location": "bluebottle.geo.serializers.GeolocationSerializer",
+        "location.country": "bluebottle.geo.serializers.CountrySerializer",
         "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
     }

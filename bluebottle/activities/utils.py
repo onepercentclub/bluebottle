@@ -416,8 +416,17 @@ class BaseContributorListSerializer(ModelSerializer):
 
     class Meta(object):
         model = Contributor
-        fields = ('user', 'activity', 'status', 'created', 'updated', 'accepted_invite', 'invite')
-        meta_fields = ('created', 'updated',)
+        fields = (
+            "user",
+            "activity",
+            "status",
+            "created",
+            "updated",
+        )
+        meta_fields = (
+            "created",
+            "updated",
+        )
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -438,7 +447,6 @@ class BaseContributorSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
     class Meta(object):
@@ -455,7 +463,6 @@ class BaseContributorSerializer(ModelSerializer):
         included_resources = [
             'user',
             'activity',
-            'invite',
         ]
         resource_name = 'contributors'
 

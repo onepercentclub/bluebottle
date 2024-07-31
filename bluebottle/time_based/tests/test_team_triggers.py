@@ -8,7 +8,8 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     TeamFactory,
-    TeamMemberFactory, TeamScheduleRegistrationFactory,
+    TeamMemberFactory,
+    TeamScheduleRegistrationFactory,
 )
 
 

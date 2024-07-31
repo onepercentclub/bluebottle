@@ -249,12 +249,6 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         'members.Member', verbose_name=_('user'),
         null=True, blank=True, on_delete=models.SET_NULL
     )
-    invite = models.OneToOneField(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
-    )
-    accepted_invite = models.ForeignKey(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
-    )
 
     @property
     def status_label(self):

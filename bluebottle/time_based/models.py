@@ -17,8 +17,11 @@ from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
-    PeriodActivityRegistrationDeadlineValidator, CompletedSlotsValidator,
-    HasSlotValidator, PeriodActivityStartDeadlineValidator
+    PeriodActivityRegistrationDeadlineValidator,
+    CompletedSlotsValidator,
+    HasSlotValidator,
+    PeriodActivityStartDeadlineValidator,
+    RegistrationLinkValidator,
 )
 from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, to_text
@@ -173,7 +176,7 @@ class TimeBasedActivity(Activity):
     @property
     def active_durations(self):
         return self.durations.filter(
-            contributor__status__in=('new', 'accepted')
+            contributor__status__in=("new", "accepted", "scheduled")
         )
 
     @property
@@ -751,8 +754,6 @@ class RegistrationActivity(TimeBasedActivity):
         default=''
     )
 
-    validators = [PeriodActivityRegistrationDeadlineValidator]
-
     @property
     def activity_date(self):
         return self.deadline or self.start
@@ -776,7 +777,7 @@ class RegistrationActivity(TimeBasedActivity):
     @property
     def active_participants(self):
         return self.participants.filter(
-            status__in=["new", "accepted", "succeeded", "participating"]
+            status__in=["new", "accepted", "succeeded", "participating", "scheduled"]
         )
 
     @property
@@ -785,7 +786,8 @@ class RegistrationActivity(TimeBasedActivity):
 
     validators = [
         PeriodActivityRegistrationDeadlineValidator,
-        PeriodActivityStartDeadlineValidator
+        PeriodActivityStartDeadlineValidator,
+        RegistrationLinkValidator,
     ]
 
     class Meta:
@@ -906,7 +908,6 @@ class ScheduleActivity(RegistrationActivity):
 
 
 class PeriodChoices(DjangoChoices):
-    hours = ChoiceItem('hours', label=_("per hour"))  # TODO remove this after testing
     days = ChoiceItem('days', label=_("per day"))
     weeks = ChoiceItem('weeks', label=_("per week"))
     months = ChoiceItem('months', label=_("per month"))
@@ -1197,9 +1198,7 @@ class Registration(TriggerMixin, PolymorphicModel):
     document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
 
     activity = models.ForeignKey(
-        TimeBasedActivity,
-        related_name='registrations',
-        on_delete=models.CASCADE
+        Activity, related_name="registrations", on_delete=models.CASCADE
     )
 
     user = models.ForeignKey(
@@ -1503,14 +1502,14 @@ class Team(TriggerMixin, models.Model):
         verbose_name = _("Team")
         verbose_name_plural = _("Teams")
         permissions = (
-            ("api_read_team", "Can view on a team through the API"),
-            ("api_add_team", "Can add on a team through the API"),
-            ("api_change_team", "Can change on a team through the API"),
-            ("api_delete_team", "Can delete on a team through the API"),
-            ("api_read_own_team", "Can view own on a team through the API"),
-            ("api_add_own_team", "Can add own on a team through the API"),
-            ("api_change_own_team", "Can change own on a team through the API"),
-            ("api_delete_own_team", "Can delete own on a team through the API"),
+            ("api_read_team", "Can view a team through the API"),
+            ("api_add_team", "Can add a team through the API"),
+            ("api_change_team", "Can change a team through the API"),
+            ("api_delete_team", "Can delete a team through the API"),
+            ("api_read_own_team", "Can view own team through the API"),
+            ("api_add_own_team", "Can add own team through the API"),
+            ("api_change_own_team", "Can change own team through the API"),
+            ("api_delete_own_team", "Can delete own team through the API"),
         )
 
     class JSONAPIMeta(object):

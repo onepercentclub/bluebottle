@@ -13,9 +13,11 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     PeriodicSlot,
+    ScheduleActivity,
     TimeContribution,
     DateActivitySlot,
     ScheduleSlot,
+    TeamScheduleSlot,
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine,
@@ -143,8 +145,7 @@ class DateActivitySlotReminderTask(ModelPeriodicTask):
 class ActivityFinishedTask(ModelPeriodicTask):
     def get_queryset(self):
         return self.model.objects.filter(
-            deadline__lt=date.today(),
-            status__in=['open', 'full']
+            deadline__lte=date.today(), status__in=["open", "full"]
         )
 
     effects = [
@@ -192,13 +193,8 @@ class PeriodicSlotFinishedTask(ModelPeriodicTask):
 
 class ScheduleSlotStartedTask(ModelPeriodicTask):
     def get_queryset(self):
-        end_time = ExpressionWrapper(
-            F("start") + F("duration"), output_field=fields.DateTimeField()
-        )
-        return (
-            ScheduleSlot.objects.filter(status="new")
-            .annotate(end_time=end_time)
-            .filter(end_time__gte=timezone.now(), start__lte=timezone.now())
+        return self.model.objects.filter(status__in=["new", "scheduled"]).filter(
+            start__lte=timezone.now()
         )
 
     effects = [TransitionEffect(ScheduleSlotStateMachine.start)]
@@ -213,7 +209,7 @@ class ScheduleSlotFinishedTask(ModelPeriodicTask):
             F("start") + F("duration"), output_field=fields.DateTimeField()
         )
         return (
-            ScheduleSlot.objects.filter(status__in=["new", "running"])
+            self.model.objects.filter(status__in=["scheduled", "running"])
             .annotate(end_time=end_time)
             .filter(end_time__lte=timezone.now())
         )
@@ -229,6 +225,7 @@ DateActivity.periodic_tasks = [
     DateActivityFinishedTask,
 ]
 
+
 DateActivitySlot.periodic_tasks = [
     DateActivitySlotReminderTask,
     SlotStartedTask,
@@ -237,7 +234,19 @@ DateActivitySlot.periodic_tasks = [
 
 TimeContribution.periodic_tasks = [TimeContributionFinishedTask]
 
-DeadlineActivity.periodic_tasks = [ActivityFinishedTask]
-PeriodicActivity.periodic_tasks = [ActivityFinishedTask]
+DeadlineActivity.periodic_tasks = [
+    ActivityFinishedTask,
+    TimeBasedActivityRegistrationDeadlinePassedTask,
+]
+PeriodicActivity.periodic_tasks = [
+    ActivityFinishedTask,
+    TimeBasedActivityRegistrationDeadlinePassedTask,
+]
+ScheduleActivity.periodic_tasks = [
+    ActivityFinishedTask,
+    TimeBasedActivityRegistrationDeadlinePassedTask,
+]
+
 PeriodicSlot.periodic_tasks = [PeriodicSlotStartedTask, PeriodicSlotFinishedTask]
 ScheduleSlot.periodic_tasks = [ScheduleSlotStartedTask, ScheduleSlotFinishedTask]
+TeamScheduleSlot.periodic_tasks = [ScheduleSlotStartedTask, ScheduleSlotFinishedTask]

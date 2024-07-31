@@ -22,7 +22,7 @@ urlpatterns = [
         name="related-team-members",
     ),
     url(
-        r"^/(?P<team_id>\d+)/export$",
+        r"^/(?P<pk>\d+)/export$",
         TeamMemberExportView.as_view(),
         name="team-members-export",
     ),

@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("activities", "0074_alter_contributor_team"),
+        ("time_based", "0127_migrate_team_activities"),
     ]
 
     operations = [

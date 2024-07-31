@@ -71,8 +71,7 @@ urlpatterns = [
         name='team-schedule-registration-detail'),
     url(r'^/team-registrations/transitions$',
         TeamScheduleRegistrationTransitionList.as_view(),
-        name="team-schedule-registration-transitions",
-    ),
+        name="team-schedule-registration-transitions"),
     url(
         r"^/team-registrations/(?P<pk>\d+)/document$",
         TeamScheduleRegistrationDocumentDetail.as_view(),

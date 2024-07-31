@@ -168,6 +168,8 @@ class BankAccountSerializer(PolymorphicModelSerializer):
 
 class DeadlineField(serializers.DateTimeField):
     def to_internal_value(self, value):
+        if not value:
+            return None
         try:
             parsed_date = parse(value).date()
             naive_datetime = datetime.combine(parsed_date, datetime.min.time())
@@ -184,7 +186,7 @@ class FundingListSerializer(BaseActivityListSerializer):
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
-    deadline = DeadlineField()
+    deadline = DeadlineField(required=False, allow_null=True)
 
     class Meta(BaseActivityListSerializer.Meta):
         model = Funding
@@ -255,7 +257,7 @@ class FundingSerializer(BaseActivitySerializer):
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
     psp = serializers.SerializerMethodField()
-    deadline = DeadlineField()
+    deadline = DeadlineField(allow_null=True, required=False)
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:

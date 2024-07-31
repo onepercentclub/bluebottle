@@ -742,8 +742,6 @@ class ExternalAccount(BankAccount):
 
             if not hasattr(self, '_account'):
                 self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
-
-            print(self._account)
             return self._account
 
     def create(self, token):

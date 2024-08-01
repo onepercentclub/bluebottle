@@ -23,7 +23,8 @@ def run(*args):
                         if team.status == 'succeeded':
                             team.status = 'new'
 
-                            team.save(run_triggers=False)
+                            if fix:
+                                team.save(run_triggers=False)
 
                         slot.start = None
                         slot.status = team.status

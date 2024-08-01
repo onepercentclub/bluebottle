@@ -39,17 +39,18 @@ def run(*args):
                             participant = member.participants.get()
                             contribution = member.participants.get().contributions.get()
 
-                            if team.status == 'new':
+                            if team.status == 'new' and participant.status in ('succeeded', 'new'):
                                 participant.status = 'new'
                                 if fix:
                                     contribution.save(run_triggers=False)
 
-                                if team.activity.status != 'succeeded':
+                                if team.activity.status != 'succeeded' and contribution.status== 'succeeded':
                                     contribution.status = 'new' 
                                     if fix:
                                         contribution.save(run_triggers=False)
 
                             print(
+                                delta,
                                 team.activity.status,
                                 team.status, 
                                 slot.status, 

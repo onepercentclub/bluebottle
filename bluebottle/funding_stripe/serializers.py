@@ -24,10 +24,11 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
 
     class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
         resource_name = 'payments/stripe-payment-intents'
-        included_resources = ['donation']
+        included_resources = ['donation', 'donation.activity']
 
     included_serializers = {
         'donation': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation.activity': 'bluebottle.funding.serializers.FundingSerializer',
     }
 
 

@@ -433,6 +433,7 @@ class DonorSerializer(BaseContributorSerializer):
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
+    updates = ResourceRelatedField(read_only=True, many=True)
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
@@ -445,6 +446,7 @@ class DonorSerializer(BaseContributorSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'updates': 'bluebottle.updates.serializers.UpdateSerializer',
         'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
     }
 
@@ -457,7 +459,7 @@ class DonorSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = Donor
         fields = BaseContributorSerializer.Meta.fields + (
-            'amount', 'name', 'reward', 'anonymous', 'payment_methods',
+            'amount', 'name', 'reward', 'anonymous', 'payment_methods', 'updates'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):

@@ -1,4 +1,7 @@
 from future import standard_library
+
+from ..updates.models import Update
+
 standard_library.install_aliases()
 import urllib.parse
 
@@ -282,8 +285,8 @@ admin.site.register(Reaction, ReactionAdmin)
 
 class DonorWallpostInline(admin.TabularInline):
 
-    model = Wallpost
-    readonly_fields = ('wallpost', 'donation', 'author', 'content_type', 'text')
+    model = Update
+    readonly_fields = ('created', 'author', 'text')
     fields = readonly_fields
     extra = 0
 
@@ -291,7 +294,7 @@ class DonorWallpostInline(admin.TabularInline):
         return obj.systemwallpost.text
 
     def wallpost(self, obj):
-        url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
+        url = reverse('admin:updates_update_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
 

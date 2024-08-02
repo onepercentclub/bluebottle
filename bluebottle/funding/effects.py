@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
+from bluebottle.updates.models import Update
 from bluebottle.wallposts.models import SystemWallpost
 
 
@@ -130,21 +131,18 @@ class RefundPaymentAtPSPEffect(Effect):
 @python_2_unicode_compatible
 class GenerateDonorWallpostEffect(Effect):
     conditions = []
-    title = _('Create wallpost')
+    title = _('Create wall update')
     template = 'admin/generate_donation_wallpost_effect.html'
 
     def post_save(self, **kwargs):
-        SystemWallpost.objects.get_or_create(
+        Update.objects.get_or_create(
             author=self.instance.user,
-            donation=self.instance,
-            defaults={
-                'content_object': self.instance.activity,
-                'related_object': self.instance
-            }
+            contribution=self.instance,
+            activity=self.instance.activity,
         )
 
     def __str__(self):
-        return _('Generate wallpost for donation')
+        return _('Generate wall update for donation')
 
 
 @python_2_unicode_compatible

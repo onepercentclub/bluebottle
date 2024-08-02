@@ -1,10 +1,8 @@
 from datetime import timedelta
-from django.db.models import Count
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.time_based.models import Team, TeamSlot
-from bluebottle.activities.models import Team as LegacyTeam
+from bluebottle.time_based.models import Team
 
 
 def run(*args):
@@ -18,8 +16,6 @@ def run(*args):
                     delta = slot.start - slot.created
 
                     if delta < timedelta(minutes=1) and delta > timedelta(minutes=-1):
-
-
                         if team.status == 'succeeded':
                             team.status = 'new'
 
@@ -44,20 +40,20 @@ def run(*args):
                                 if fix:
                                     contribution.save(run_triggers=False)
 
-                                if team.activity.status != 'succeeded' and contribution.status== 'succeeded':
-                                    contribution.status = 'new' 
+                                if team.activity.status != 'succeeded' and contribution.status == 'succeeded':
+                                    contribution.status = 'new'
                                     if fix:
                                         contribution.save(run_triggers=False)
 
                             print(
                                 delta,
                                 team.activity.status,
-                                team.status, 
-                                slot.status, 
-                                member.status, 
+                                team.status,
+                                slot.status,
+                                member.status,
                                 participant.status,
                                 contribution.status
-                            ) 
+                            )
 
     if not fix:
         print("☝️ Add '--script-args=fix' to the command to actually fix the statuses.")

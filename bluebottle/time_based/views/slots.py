@@ -10,6 +10,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     ScheduleSlotSerializer, TeamScheduleSlotSerializer
 )
+from bluebottle.time_based.views.mixins import BaseSlotIcalView
 from bluebottle.utils.permissions import (
     OneOf,
     ResourcePermission,
@@ -72,3 +73,17 @@ class TeamScheduleSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView)
     permission_classes = [TenantConditionalOpenClose]
     queryset = TeamScheduleSlot.objects.all()
     serializer_class = TeamScheduleSlotSerializer
+
+
+class ScheduleSlotSlotIcalView(BaseSlotIcalView):
+    queryset = ScheduleSlot.objects.exclude(
+        status__in=["cancelled", "deleted", "rejected"],
+        activity__status__in=["cancelled", "deleted", "rejected"],
+    )
+
+
+class TeamScheduleSlotSlotIcalView(BaseSlotIcalView):
+    queryset = TeamScheduleSlot.objects.exclude(
+        status__in=["cancelled", "deleted", "rejected"],
+        activity__status__in=["cancelled", "deleted", "rejected"],
+    )

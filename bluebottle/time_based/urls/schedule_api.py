@@ -21,11 +21,16 @@ from bluebottle.time_based.views import (
     TeamScheduleRegistrationDetail,
     TeamScheduleRelatedRegistrationList,
     TeamScheduleRegistrationTransitionList,
+    TeamScheduleRegistrationDocumentDetail,
 
     TeamScheduleParticipantDetail,
     TeamScheduleRelatedParticipantList,
     TeamScheduleParticipantTransitionList,
     TeamSlotScheduleRelatedParticipantList
+)
+from bluebottle.time_based.views.slots import (
+    ScheduleSlotSlotIcalView,
+    TeamScheduleSlotSlotIcalView,
 )
 
 urlpatterns = [
@@ -66,9 +71,14 @@ urlpatterns = [
         name='team-schedule-registration-detail'),
     url(r'^/team-registrations/transitions$',
         TeamScheduleRegistrationTransitionList.as_view(),
-        name='team-schedule-registration-transitions'),
-
-    url(r'^/(?P<activity_id>\d+)/participants$',
+        name="team-schedule-registration-transitions"),
+    url(
+        r"^/team-registrations/(?P<pk>\d+)/document$",
+        TeamScheduleRegistrationDocumentDetail.as_view(),
+        name="team-schedule-registration-document",
+    ),
+    url(
+        r"^/(?P<activity_id>\d+)/participants$",
         ScheduleRelatedParticipantList.as_view(),
         name='schedule-participants'),
     url(r'^/participants/transitions$',
@@ -92,13 +102,25 @@ urlpatterns = [
     url(
         r"^/slots/(?P<pk>\d+)$",
         ScheduleSlotDetailView.as_view(),
-        name="schedule-slot-detail"),
+        name="schedule-slot-detail",
+    ),
+    url(
+        r"^/slots/ical/(?P<pk>\d+)$",
+        ScheduleSlotSlotIcalView.as_view(),
+        name="schedule-slot-ical",
+    ),
 
     url(r"/team-slots$", TeamScheduleSlotListView.as_view(), name="team-schedule-slot-list"),
     url(
         r"^/team-slots/(?P<pk>\d+)$",
         TeamScheduleSlotDetailView.as_view(),
-        name="team-schedule-slot-detail"),
+        name="team-schedule-slot-detail",
+    ),
+    url(
+        r"^/team-slots/ical/(?P<pk>\d+)$",
+        TeamScheduleSlotSlotIcalView.as_view(),
+        name="team-schedule-slot-ical",
+    ),
 
     url(r'^/team-slots/(?P<slot_id>\d+)/team-participants$',
         TeamSlotScheduleRelatedParticipantList.as_view(),

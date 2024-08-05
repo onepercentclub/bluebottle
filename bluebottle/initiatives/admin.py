@@ -117,6 +117,12 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'theme',
     )
 
+    def get_queryset(self, request):
+        queryset = super(InitiativeAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activities__office_location__subregion=request.user.region_manager)
+        return queryset
+
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
 

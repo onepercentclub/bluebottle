@@ -415,6 +415,12 @@ class MemberAdmin(UserAdmin):
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
 
+    def get_queryset(self, request):
+        queryset = super(MemberAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(location__subregion=request.user.region_manager)
+        return queryset
+
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
@@ -472,6 +478,7 @@ class MemberAdmin(UserAdmin):
                         'is_staff',
                         'is_superuser',
                         'groups',
+                        'region_manager',
                         'is_co_financer',
                         'can_pledge',
                         'verified',

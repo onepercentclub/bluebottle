@@ -10,7 +10,7 @@ from rest_framework_json_api.relations import (
 )
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
 from bluebottle.updates.models import Update, UpdateImage
@@ -35,9 +35,17 @@ class UpdateSerializer(serializers.ModelSerializer):
     parent = ResourceRelatedField(
         queryset=Update.objects.all(),
         validators=[no_nested_replies_validator],
-        required=False
+        required=False,
+        allow_null=True
     )
     replies = ResourceRelatedField(many=True, read_only=True)
+    author = ResourceRelatedField(
+        read_only=True
+    )
+    contribution = PolymorphicResourceRelatedField(
+        read_only=True,
+        polymorphic_serializer=ContributorSerializer
+    )
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
@@ -65,7 +73,8 @@ class UpdateSerializer(serializers.ModelSerializer):
             'notify',
             'video_url',
             'pinned',
-            'permissions'
+            'permissions',
+            'contribution'
         )
         meta_fields = (
             'permissions',
@@ -75,13 +84,14 @@ class UpdateSerializer(serializers.ModelSerializer):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image', 'replies', 'images'
+            'author', 'image', 'replies', 'images', 'contribution'
         ]
 
     included_serializers = {
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',
+        'contribution': 'bluebottle.activities.serializers.ContributorSerializer'
     }
 
 

@@ -25,7 +25,7 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator, \
+from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, TargetValidator, \
     DeadlineMaxValidator
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -55,6 +55,7 @@ class PaymentCurrency(models.Model):
 class PaymentProvider(PolymorphicModel):
 
     title = 'Payment Service Provider'
+    provider = 'default'
 
     public_settings = {}
     private_settings = {}
@@ -150,7 +151,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, BudgetLineValidator, TargetValidator]
+    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, TargetValidator]
 
     auto_approve = False
 
@@ -218,6 +219,10 @@ class Funding(Activity):
     @property
     def donations(self):
         return self.contributors.instance_of(Donor)
+
+    @property
+    def succeeded_contributor_count(self):
+        return self.donations.filter(status='succeeded').count()
 
     @property
     def genuine_amount_donated(self):
@@ -486,6 +491,11 @@ class Donor(Contributor):
         return self.created
 
     @property
+    def available_payment_methods(self):
+        payment_methods = self.activity.bank_account.payment_methods
+        return payment_methods
+
+    @property
     def payment_method(self):
         if not self.payment:
             return None
@@ -636,6 +646,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+    provider = 'default'
 
     connect_account = models.ForeignKey(
         'funding.PayoutAccount',

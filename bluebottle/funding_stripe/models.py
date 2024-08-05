@@ -28,6 +28,9 @@ class PaymentIntent(models.Model):
     intent_id = models.CharField(max_length=30)
     client_secret = models.CharField(max_length=100)
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    created = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if not self.pk:
@@ -44,7 +47,10 @@ class PaymentIntent(models.Model):
                 },
                 statement_descriptor=statement_descriptor,
                 statement_descriptor_suffix=statement_descriptor[:18],
-                metadata=self.metadata
+                metadata=self.metadata,
+                automatic_payment_methods={
+                    'enabled': True,
+                },
             )
             provider = StripePaymentProvider.objects.get()
             if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES or provider.stripe_secret:
@@ -75,6 +81,17 @@ class PaymentIntent(models.Model):
 
     class JSONAPIMeta(object):
         resource_name = 'payments/stripe-payment-intents'
+
+    def get_payment(self):
+        try:
+            return self.payment
+        except StripePayment.DoesNotExist:
+            try:
+                self.donation.payment.payment_intent = self
+                self.donation.payment.save()
+                return self.payment
+            except Donor.payment.RelatedObjectDoesNotExist:
+                return StripePayment.objects.create(payment_intent=self, donation=self.donation)
 
     def __str__(self):
         return self.intent_id
@@ -110,6 +127,7 @@ class StripePayment(Payment):
             self.donation.save()
             if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
+        return intent
 
 
 class StripeSourcePayment(Payment):
@@ -348,6 +366,7 @@ class StripePayoutAccount(PayoutAccount):
 
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = models.JSONField(null=True, default=list)
+    provider = 'stripe'
 
     @property
     def country_spec(self):
@@ -481,6 +500,30 @@ class StripePayoutAccount(PayoutAccount):
             return requirements.pending_verification
         return []
 
+    @property
+    def client_secret(self):
+        stripe = get_stripe()
+        return stripe.AccountSession.create(
+            account=self.account_id,
+            components={
+                "account_onboarding": {
+                    "enabled": True,
+                    "features": {
+                        "external_account_collection": True
+                    },
+
+                },
+                "payments": {
+                    "enabled": True,
+                    "features": {
+                        "refund_management": True,
+                        "dispute_management": True,
+                        "capture_payments": True
+                    }
+                },
+            },
+        )
+
     def check_status(self):
         if self.account:
             del self.account
@@ -534,6 +577,7 @@ class StripePayoutAccount(PayoutAccount):
                 account_id=external['id']
             )
             external_account.account = external
+            external_account.status = 'verified'
             external_account.connect_account = self
             external_account.save()
         self.save()
@@ -699,7 +743,6 @@ class ExternalAccount(BankAccount):
 
             if not hasattr(self, '_account'):
                 self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
-
             return self._account
 
     def create(self, token):
@@ -733,7 +776,7 @@ class ExternalAccount(BankAccount):
 
     class Meta(object):
         verbose_name = _('Stripe external account')
-        verbose_name_plural = _('Stripe exterrnal account')
+        verbose_name_plural = _('Stripe external account')
 
     def __str__(self):
         return "Stripe external account {}".format(self.account_id)

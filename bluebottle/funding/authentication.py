@@ -8,3 +8,11 @@ class DonorAuthentication(BaseAuthentication):
         auth = get_authorization_header(request).split()
         if len(auth) == 2 and auth[0].lower().decode() == 'donation':
             return AnonymousUser(), auth[1].decode()
+
+
+class ClientSecretAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+        client_secret = request.data.get('client_secret', None)
+        if client_secret:
+            return AnonymousUser(), client_secret

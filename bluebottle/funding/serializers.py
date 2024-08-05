@@ -1,5 +1,8 @@
 from builtins import object
+from datetime import datetime
 
+import pytz
+from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -20,6 +23,7 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.files.serializers import PrivateDocumentSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
@@ -45,8 +49,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
-    MoneySerializer, ResourcePermissionField, NoCommitMixin,
-)
+    MoneySerializer, ResourcePermissionField, )
 
 
 class FundingCurrencyValidator(object):
@@ -163,12 +166,27 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         resource_name = 'payout-accounts/external-accounts'
 
 
+class DeadlineField(serializers.DateTimeField):
+    def to_internal_value(self, value):
+        if not value:
+            return None
+        try:
+            parsed_date = parse(value).date()
+            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
+            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
+            return aware_datetime
+        except (ValueError, TypeError):
+            self.fail('invalid', format='date')
+
+
 class FundingListSerializer(BaseActivityListSerializer):
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
+    deadline = DeadlineField(required=False, allow_null=True)
 
     class Meta(BaseActivityListSerializer.Meta):
         model = Funding
@@ -203,7 +221,7 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
-class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
+class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -237,6 +255,13 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     )
 
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
+
+    psp = serializers.SerializerMethodField()
+    deadline = DeadlineField(allow_null=True, required=False)
+
+    def get_psp(self, obj):
+        if obj.bank_account and obj.bank_account.connect_account:
+            return obj.bank_account.provider
 
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
@@ -273,6 +298,7 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
             'budget_lines',
             'bank_account',
             'supporters_export_url',
+            'psp'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -320,9 +346,8 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         return methods
 
 
-class FundingTransitionSerializer(ModelSerializer):
+class FundingTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
-    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }
@@ -405,6 +430,10 @@ class DonorListSerializer(BaseContributorListSerializer):
 
 class DonorSerializer(BaseContributorSerializer):
     amount = MoneySerializer()
+    payment_methods = SerializerMethodResourceRelatedField(
+        read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
+    )
+    updates = ResourceRelatedField(read_only=True, many=True)
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
@@ -417,6 +446,8 @@ class DonorSerializer(BaseContributorSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'updates': 'bluebottle.updates.serializers.UpdateSerializer',
+        'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
     }
 
     validators = [
@@ -427,7 +458,9 @@ class DonorSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         model = Donor
-        fields = BaseContributorSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseContributorSerializer.Meta.fields + (
+            'amount', 'name', 'reward', 'anonymous', 'payment_methods', 'updates'
+        )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/donations'
@@ -435,7 +468,32 @@ class DonorSerializer(BaseContributorSerializer):
             'user',
             'activity',
             'reward',
+            'payment_methods',
+            'payment_intent'
         ]
+
+    def get_payment_methods(self, obj):
+        if not obj.activity.bank_account:
+            return []
+
+        methods = [
+            method for method in obj.activity.bank_account.payment_methods
+            if str(obj.amount.currency) in method.currencies
+        ]
+
+        request = self.context['request']
+
+        if request.user.is_authenticated and request.user.can_pledge:
+            methods.append(
+                PaymentMethod(
+                    provider='pledge',
+                    code='pledge',
+                    name=_('Pledge'),
+                    currencies=[str(obj.amount.currency)]
+                )
+            )
+
+        return methods
 
     def get_fields(self):
         """

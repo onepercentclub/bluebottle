@@ -4,7 +4,6 @@ from builtins import str
 from django.dispatch import Signal
 from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
-from stripe.six import python_2_unicode_compatible
 
 
 class TransitionNotPossible(Exception):
@@ -24,7 +23,6 @@ def register(model_cls):
     return _register
 
 
-@python_2_unicode_compatible
 class BaseTransition(object):
     def __init__(
         self,
@@ -154,7 +152,6 @@ class Transition(BaseTransition):
         )
 
 
-@python_2_unicode_compatible
 class State(object):
     transition_class = Transition
 

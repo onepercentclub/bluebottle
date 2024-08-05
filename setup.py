@@ -120,7 +120,7 @@ install_requires = [
     'social-auth-app-django==4.0.0',
     'sorl-thumbnail==12.6.3',
     'staticmaps-signature==0.2.0',
-    'stripe==2.33.0',
+    'stripe==10.2.0',
     'surlex==0.2.0',
     'tablib==0.14.0',
     'timezonefinder==3.4.2',

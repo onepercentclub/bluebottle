@@ -30,6 +30,7 @@ class StripePaymentAdmin(PaymentChildAdmin):
 class StripePaymentIntentAdmin(admin.ModelAdmin):
     model = PaymentIntent
     raw_id_fields = ['donation']
+    list_display = ['intent_id', 'created', 'donation']
 
 
 @admin.register(StripeSourcePayment)
@@ -66,7 +67,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     ]
     search_fields = ['account_id']
     fields = ['created', 'owner', 'status', 'account_id', 'country', 'account_details', 'funding']
-    list_display = ['id', 'account_id', 'status']
+    list_display = ['id', 'account_id', 'owner', 'status']
 
     def get_fields(self, request, obj=None):
         fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)

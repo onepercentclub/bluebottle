@@ -98,9 +98,8 @@ class FundingStateMachine(ActivityStateMachine):
             'in the back office and appear in your reporting.'
         ),
         automatic=False,
-        conditions=[
-            no_donations
-        ],
+        permission=ActivityStateMachine.is_owner,
+        conditions=[no_donations],
     )
 
     request_changes = Transition(

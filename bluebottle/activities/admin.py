@@ -65,6 +65,12 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
 
+    def get_queryset(self, request):
+        queryset = super(ContributorAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
+        return queryset
+
     ordering = ('-created',)
 
     def type(self, obj):
@@ -129,6 +135,12 @@ class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModel
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
+
+    def get_queryset(self, request):
+        queryset = super(ContributorChildAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
+        return queryset
 
     date_hierarchy = 'contributor_date'
 
@@ -217,6 +229,12 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     )
     date_hierarchy = 'start'
 
+    def get_queryset(self, request):
+        queryset = super(ContributionAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(contributor__activity__office_location__subregion=request.user.region_manager)
+        return queryset
+
     ordering = ('-start',)
 
     def lookup_allowed(self, lookup, value):
@@ -249,6 +267,12 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
+
+    def get_queryset(self, request):
+        queryset = super(ContributionChildAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(contributor__activity__office_location__subregion=request.user.region_manager)
+        return queryset
 
     fields = [
         'contributor',
@@ -351,6 +375,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
+
+    def get_queryset(self, request):
+        queryset = super(ActivityChildAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(office_location__subregion=request.user.region_manager)
+        return queryset
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
@@ -646,6 +676,12 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
+
+    def get_queryset(self, request):
+        queryset = super(ActivityAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(office_location__subregion=request.user.region_manager)
+        return queryset
 
     def lookup_allowed(self, key, value):
         if key in [

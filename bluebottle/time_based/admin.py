@@ -344,6 +344,12 @@ class TeamMemberAdmin(StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
+    def get_queryset(self, request):
+        queryset = super(TeamMemberAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(team__activity__office_location__subregion=request.user.region_manager)
+        return queryset
+
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -457,6 +463,12 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     fields = ('activity', 'user', 'registration_info', 'status', 'states', 'created', 'invite_code')
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
+
+    def get_queryset(self, request):
+        queryset = super(TeamAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
+        return queryset
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -748,6 +760,12 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
+    def get_queryset(self, request):
+        queryset = super(PeriodicSlotAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
+        return queryset
+
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
@@ -774,6 +792,12 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    def get_queryset(self, request):
+        queryset = super(ScheduleSlotAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
+        return queryset
 
     formfield_overrides = {
         models.DurationField: {

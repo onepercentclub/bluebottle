@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.authentication import DonorAuthentication, ClientSecretAuthentication
 from bluebottle.funding.models import Donor
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
@@ -99,7 +99,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     serializer_class = PaymentIntentSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        JSONWebTokenAuthentication, ClientSecretAuthentication,
     )
 
     permission_classes = (PaymentPermission,)
@@ -109,9 +109,7 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
     queryset = PaymentIntent.objects.all()
     serializer_class = PaymentIntentSerializer
 
-    authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
-    )
+    permission_classes = []
 
     lookup_field = 'intent_id'
 
@@ -119,6 +117,7 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
         obj = super().get_object()
         payment = obj.get_payment()
         payment.update()
+        obj.refresh_from_db()
         return obj
 
 

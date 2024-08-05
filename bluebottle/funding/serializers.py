@@ -272,8 +272,8 @@ class FundingSerializer(BaseActivitySerializer):
             self.instance.initiative.owner,
         ] and user not in self.instance.initiative.activity_managers.all():
             del fields['bank_account']
-            # del fields['required']
-            # del fields['errors']
+            del fields['required']
+            del fields['errors']
         return fields
 
     def get_co_financers(self, instance):

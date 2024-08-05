@@ -136,7 +136,7 @@ class GenerateDonorWallpostEffect(Effect):
 
     def post_save(self, **kwargs):
         Update.objects.get_or_create(
-            author=self.instance.user,
+            author=self.instance.user if not self.instance.is_anonymous else None,
             contribution=self.instance,
             activity=self.instance.activity,
         )

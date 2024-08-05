@@ -286,14 +286,14 @@ admin.site.register(Reaction, ReactionAdmin)
 class DonorWallpostInline(admin.TabularInline):
 
     model = Update
-    readonly_fields = ('created', 'author', 'text')
+    readonly_fields = ('edit', 'author', 'text')
     fields = readonly_fields
     extra = 0
 
     def text(self, obj):
         return obj.systemwallpost.text
 
-    def wallpost(self, obj):
+    def edit(self, obj):
         url = reverse('admin:updates_update_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 

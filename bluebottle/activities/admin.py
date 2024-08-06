@@ -30,7 +30,7 @@ from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.models import Message
-from bluebottle.offices.admin import OfficeManagerAdminMixin
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -50,7 +50,7 @@ from bluebottle.wallposts.models import Wallpost
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
+class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contributor
     child_models = (
         Donor,
@@ -128,7 +128,7 @@ class BaseContributorInline(TabularInlinePaginated):
 
 class ContributorChildAdmin(
     PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    OfficeManagerAdminMixin, StateMachineAdmin
+    RegionManagerAdminMixin, StateMachineAdmin
 ):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
@@ -211,7 +211,7 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
+class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -255,7 +255,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, St
         return '-'
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
+class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
@@ -356,7 +356,7 @@ class TeamInline(admin.TabularInline):
     slot_link.short_description = _('Time slot')
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (FollowAdminInline, WallpostInline, )
@@ -646,7 +646,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, OfficeManagerAdminMixin, St
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     child_models = (
         Funding,

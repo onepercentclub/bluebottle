@@ -1,4 +1,5 @@
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from bluebottle.activities.admin import ActivityAdmin
@@ -6,11 +7,13 @@ from bluebottle.activities.models import Activity
 from bluebottle.geo.admin import LocationAdmin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory, LocationFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DeadlineActivityFactory
 
 
 class MockRequest(object):
@@ -171,3 +174,56 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:index')
         page = self.app.get(url)
         self.assertTrue('Office group' in page.text)
+
+
+class RegionManagerAdminTest(BluebottleAdminTestCase):
+    """
+    Test Offices in admin
+    """
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.subregion = OfficeSubRegionFactory.create()
+        self.office = LocationFactory.create(subregion=self.subregion)
+        self.region_manager = BlueBottleUserFactory.create(
+            is_staff=True,
+            region_manager=self.subregion
+        )
+        region_manager_group = Group.objects.get(name='Region Manager')
+        region_manager_group.user_set.add(self.region_manager)
+        self.app.set_user(self.region_manager)
+
+    def test_menu(self):
+        url = reverse('admin:index')
+        page = self.app.get(url)
+        self.assertFalse('Offices' in page.text)
+        self.assertFalse('Groups' in page.text)
+        self.assertFalse('Settings' in page.text)
+
+    def test_activity_list(self):
+        DeadlineActivityFactory.create()
+        DeadlineActivityFactory.create(office_location=self.office)
+        url = reverse('admin:activities_activity_changelist')
+        page = self.app.get(url)
+        self.assertTrue('1 Activity' in page.text)
+
+    def test_initiative_list(self):
+        owner = BlueBottleUserFactory.create(location=self.office)
+
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(owner=owner)
+        )
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(),
+            office_location=self.office
+        )
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create()
+        )
+
+        url = reverse('admin:initiatives_initiative_changelist')
+        page = self.app.get(url)
+        self.assertTrue('2 Initiatives' in page.text)

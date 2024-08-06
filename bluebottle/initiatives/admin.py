@@ -121,8 +121,6 @@ class InitiativeAdmin(
         'theme',
     )
 
-    office_subregion_path = 'activities__office_location__subregion'
-
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']
 

@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
+from bluebottle.members.models import Member
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 
 
@@ -98,14 +99,16 @@ class OfficeRegionAdmin(admin.ModelAdmin):
     fields = ('name', 'description', 'subregions_link', 'offices', 'activities')
 
 
-class OfficeManagerAdminMixin:
+class RegionManagerAdminMixin:
 
     office_subregion_path = 'office_location__subregion'
 
     def get_queryset(self, request):
-        queryset = super(OfficeManagerAdminMixin, self).get_queryset(request)
-        if self.model == Initiative:
-            # Filter initiatives by office location subregion, either by owner or connected activities
+        queryset = super(RegionManagerAdminMixin, self).get_queryset(request)
+        if self.model == Member and request.user.is_superuser:
+            return queryset
+        elif self.model == Initiative:
+            # Filter initiatives by office subregion, either by owner or connected activities
             region_manager_filter = Q(activities__office_location__subregion=request.user.region_manager)
             owner_region_filter = Q(owner__location__subregion=request.user.region_manager)
             queryset = queryset.filter(region_manager_filter | owner_region_filter).distinct()

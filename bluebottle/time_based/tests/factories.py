@@ -6,6 +6,7 @@ from django.utils.timezone import now
 
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
@@ -62,6 +63,8 @@ class TimeBasedFactory(factory.DjangoModelFactory):
 
     expertise = factory.SubFactory(SkillFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
+
+    office_location = factory.SubFactory(LocationFactory)
 
 
 class DateActivitySlotFactory(factory.DjangoModelFactory):

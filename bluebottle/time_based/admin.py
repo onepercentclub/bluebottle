@@ -34,7 +34,7 @@ from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMac
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.offices.admin import OfficeManagerAdminMixin
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -335,7 +335,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
+class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -453,7 +453,7 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
 
 
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, OfficeManagerAdminMixin, StateMachineAdmin):
+class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
@@ -744,7 +744,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
 
 @admin.register(PeriodicSlot)
-class PeriodicSlotAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
+class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
@@ -766,7 +766,7 @@ class PeriodicSlotAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
 
 
 @admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
+class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     list_display = ("start", "duration", "activity", "participant")
     raw_id_fields = ('activity', "location")

@@ -724,20 +724,21 @@ class RegistrationActivity(TimeBasedActivity):
 
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
+        help_text=_('You can enter a specific address, city or wider region.'),
         null=True, blank=True, on_delete=models.SET_NULL
     )
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     start = models.DateField(
         _('Start date'),
-        help_text=_('Start of the period during which participants/teams can take part in your activity.'),
+        help_text=_('When does the period start during which participants can take part in your activity?'),
         null=True,
         blank=True
     )
 
     deadline = models.DateField(
         _('End date'),
-        help_text=_('End of the period during which participants/teams can take part in your activity.'),
+        help_text=_('When does the period end?'),
         null=True,
         blank=True
     )

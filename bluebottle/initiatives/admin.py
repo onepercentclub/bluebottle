@@ -17,6 +17,7 @@ from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
+from bluebottle.offices.admin import OfficeManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -102,7 +103,10 @@ class ActivityManagersInline(admin.TabularInline):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
+class InitiativeAdmin(
+    PolymorphicInlineSupportMixin, NotificationAdminMixin,
+    OfficeManagerAdminMixin, StateMachineAdmin
+):
     form = InitiativeAdminForm
 
     prepopulated_fields = {"slug": ("title",)}
@@ -117,11 +121,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         'theme',
     )
 
-    def get_queryset(self, request):
-        queryset = super(InitiativeAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activities__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'activities__office_location__subregion'
 
     date_hierarchy = 'created'
     list_display = ['__str__', 'created', 'owner', 'state_name']

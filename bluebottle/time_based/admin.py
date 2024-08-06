@@ -34,6 +34,7 @@ from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMac
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.offices.admin import OfficeManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -334,7 +335,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(StateMachineAdmin):
+class TeamMemberAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -344,11 +345,7 @@ class TeamMemberAdmin(StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
-    def get_queryset(self, request):
-        queryset = super(TeamMemberAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(team__activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'team__activity__office_location__subregion'
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -456,7 +453,7 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
 
 
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
+class TeamAdmin(PolymorphicInlineSupportMixin, OfficeManagerAdminMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
@@ -464,11 +461,7 @@ class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
-    def get_queryset(self, request):
-        queryset = super(TeamAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -751,7 +744,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
 
 @admin.register(PeriodicSlot)
-class PeriodicSlotAdmin(StateMachineAdmin):
+class PeriodicSlotAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
@@ -760,11 +753,7 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
-    def get_queryset(self, request):
-        queryset = super(PeriodicSlotAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = "activity__office_location__subregion"
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -777,7 +766,7 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
 
 @admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(StateMachineAdmin):
+class ScheduleSlotAdmin(OfficeManagerAdminMixin, StateMachineAdmin):
 
     list_display = ("start", "duration", "activity", "participant")
     raw_id_fields = ('activity', "location")
@@ -793,11 +782,7 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         "online_meeting_url"
     )
 
-    def get_queryset(self, request):
-        queryset = super(ScheduleSlotAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'activity__office_location__subregion'
 
     formfield_overrides = {
         models.DurationField: {

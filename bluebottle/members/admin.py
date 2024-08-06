@@ -64,6 +64,7 @@ from bluebottle.utils.admin import (
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
+from ..offices.admin import OfficeManagerAdminMixin
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -407,7 +408,7 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(UserAdmin):
+class MemberAdmin(OfficeManagerAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location')
     date_hierarchy = 'date_joined'
 
@@ -415,11 +416,7 @@ class MemberAdmin(UserAdmin):
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
 
-    def get_queryset(self, request):
-        queryset = super(MemberAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'location__subregion'
 
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)

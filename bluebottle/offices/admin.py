@@ -1,10 +1,12 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import Activity
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 
 
@@ -102,7 +104,12 @@ class OfficeManagerAdminMixin:
 
     def get_queryset(self, request):
         queryset = super(OfficeManagerAdminMixin, self).get_queryset(request)
-        if request.user.region_manager:
+        if self.model == Initiative:
+            # Filter initiatives by office location subregion, either by owner or connected activities
+            region_manager_filter = Q(activities__office_location__subregion=request.user.region_manager)
+            owner_region_filter = Q(owner__location__subregion=request.user.region_manager)
+            queryset = queryset.filter(region_manager_filter | owner_region_filter).distinct()
+        elif request.user.region_manager:
             region_manager_filter = {self.office_subregion_path: request.user.region_manager}
-            queryset = queryset.filter(**region_manager_filter)
+            queryset = queryset.filter(**region_manager_filter).distinct()
         return queryset

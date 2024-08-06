@@ -730,14 +730,14 @@ class RegistrationActivity(TimeBasedActivity):
 
     start = models.DateField(
         _('Start date'),
-        help_text=_('The first moment participants can start.'),
+        help_text=_('Start of the period during which participants/teams can take part in your activity.'),
         null=True,
         blank=True
     )
 
     deadline = models.DateField(
         _('End date'),
-        help_text=_('Participants can contribute until this date.'),
+        help_text=_('End of the period during which participants/teams can take part in your activity.'),
         null=True,
         blank=True
     )

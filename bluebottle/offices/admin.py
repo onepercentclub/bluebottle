@@ -94,3 +94,15 @@ class OfficeRegionAdmin(admin.ModelAdmin):
         )
 
     fields = ('name', 'description', 'subregions_link', 'offices', 'activities')
+
+
+class OfficeManagerAdminMixin:
+
+    office_subregion_path = 'office_location__subregion'
+
+    def get_queryset(self, request):
+        queryset = super(OfficeManagerAdminMixin, self).get_queryset(request)
+        if request.user.region_manager:
+            region_manager_filter = {self.office_subregion_path: request.user.region_manager}
+            queryset = queryset.filter(**region_manager_filter)
+        return queryset

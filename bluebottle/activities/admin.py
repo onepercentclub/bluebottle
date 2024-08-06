@@ -30,6 +30,7 @@ from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.models import Message
+from bluebottle.offices.admin import OfficeManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -49,7 +50,7 @@ from bluebottle.wallposts.models import Wallpost
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ContributorAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
     base_model = Contributor
     child_models = (
         Donor,
@@ -65,11 +66,7 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
 
-    def get_queryset(self, request):
-        queryset = super(ContributorAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'activity__office_location__subregion'
 
     ordering = ('-created',)
 
@@ -129,18 +126,17 @@ class BaseContributorInline(TabularInlinePaginated):
         return obj.states.current_state.name
 
 
-class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+class ContributorChildAdmin(
+    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
+    OfficeManagerAdminMixin, StateMachineAdmin
+):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
 
-    def get_queryset(self, request):
-        queryset = super(ContributorChildAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'activity__office_location__subregion'
 
     date_hierarchy = 'contributor_date'
 
@@ -215,7 +211,7 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ContributionAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -229,11 +225,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     )
     date_hierarchy = 'start'
 
-    def get_queryset(self, request):
-        queryset = super(ContributionAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(contributor__activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     ordering = ('-start',)
 
@@ -263,16 +255,12 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return '-'
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+class ContributionChildAdmin(PolymorphicChildModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
 
-    def get_queryset(self, request):
-        queryset = super(ContributionChildAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(contributor__activity__office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     fields = [
         'contributor',
@@ -368,7 +356,7 @@ class TeamInline(admin.TabularInline):
     slot_link.short_description = _('Time slot')
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (FollowAdminInline, WallpostInline, )
@@ -376,11 +364,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
     skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
 
-    def get_queryset(self, request):
-        queryset = super(ActivityChildAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'office_location__subregion'
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
@@ -662,7 +646,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, OfficeManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     child_models = (
         Funding,
@@ -677,11 +661,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
-    def get_queryset(self, request):
-        queryset = super(ActivityAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(office_location__subregion=request.user.region_manager)
-        return queryset
+    office_subregion_path = 'office_location__subregion'
 
     def lookup_allowed(self, key, value):
         if key in [

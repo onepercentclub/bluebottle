@@ -879,6 +879,15 @@ class ScheduleActivity(RegistrationActivity):
         blank=True,
     )
 
+    location = models.ForeignKey(
+        Geolocation, verbose_name=_('location'),
+        help_text=_(
+            'If the activity takes place in multiple locations then add the region. '
+            'You will be able to add specific locations to individual participants when they are scheduled.'
+        ),
+        null=True, blank=True, on_delete=models.SET_NULL
+    )
+
     @property
     def accepted_participants(self):
         return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])

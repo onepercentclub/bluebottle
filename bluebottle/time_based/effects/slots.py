@@ -26,7 +26,5 @@ class SetContributionsStartEffect(Effect):
 
     def post_save(self, **kwargs):
         if not self.instance.start:
-            deadline = self.instance.activity.deadline
-            start = deadline if deadline and deadline < now() else now()
-            for participant in self.instance.participants():
-                participant.contributions.update(start=start)
+            for participant in self.instance.participants.all():
+                participant.contributions.update(start=now())

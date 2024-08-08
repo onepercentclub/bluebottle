@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-08-08 13:03+0200\n"
-"PO-Revision-Date: 2024-08-08 13:22\n"
+"PO-Revision-Date: 2024-08-08 14:21\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -525,7 +525,7 @@ msgstr "video"
 
 #: bluebottle/activities/models.py:102
 msgid "Make your activity come alive with a video. You can paste the link to YouTube or Vimeo here."
-msgstr ""
+msgstr "Breng je activiteit tot leven met een video. Plaats hier de link naar YouTube of Vimeo."
 
 #: bluebottle/activities/models.py:108
 msgid "Redirect step link"
@@ -8108,15 +8108,15 @@ msgstr "Tijdsslot voor {}"
 
 #: bluebottle/time_based/models.py:727
 msgid "You can enter a specific address, city or wider region."
-msgstr ""
+msgstr "Je kunt een specifiek adres, een stad of een regio invoeren."
 
 #: bluebottle/time_based/models.py:734
 msgid "When does the period start during which participants can take part in your activity?"
-msgstr ""
+msgstr "Wanneer begint de periode waarin deelnemers kunnen meedoen aan je activiteit?"
 
 #: bluebottle/time_based/models.py:741
 msgid "When does the period end?"
-msgstr ""
+msgstr "Wanneer eindigt de periode?"
 
 #: bluebottle/time_based/models.py:814
 msgid "Flexible activities"
@@ -8124,11 +8124,11 @@ msgstr "Flexibele activiteiten"
 
 #: bluebottle/time_based/models.py:860
 msgid "Start of the period during which participants/teams can take part in your activity."
-msgstr ""
+msgstr "Begin van de periode waarin deelnemers/teams aan je activiteit mee kunnen doen."
 
 #: bluebottle/time_based/models.py:867
 msgid "End of the period during which participants/teams can take part in your activity."
-msgstr ""
+msgstr "End of the period."
 
 #: bluebottle/time_based/models.py:875
 msgid "How much time a participant is expected to contribute. This will be an estimate since the exact hours will be based on the start/end time set for each participant or team."
@@ -8136,7 +8136,7 @@ msgstr "Hoeveel tijd een deelnemer wordt verwacht bij te dragen. Dit is een scha
 
 #: bluebottle/time_based/models.py:886
 msgid "If the activity takes place in multiple locations then add the region. You will be able to add specific locations to individual participants when they are scheduled."
-msgstr ""
+msgstr "Als de activiteit op meerdere locaties plaatsvindt, voeg dan de regio toe. Je kunt specifieke locaties aan individuele deelnemers toevoegen wanneer ze worden ingeroosterd."
 
 #: bluebottle/time_based/models.py:898
 msgid "Schedule activities"
@@ -9326,7 +9326,9 @@ msgstr "Voorbereiding tijdbijdrage controleren"
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:5
 msgid "\n"
 "    Check if we should change the status of the preparation time\n"
-msgstr ""
+msgstr "\n"
+"    Controleer of we de status van de voorbereidingstijd\n"
+" moeten veranderen\n"
 
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:10
 #: bluebottle/time_based/templates/admin/create_captain_team_member.html:10
@@ -10631,7 +10633,7 @@ msgstr "\n"
 #| "    "
 msgctxt "email"
 msgid "%(name)s's team has been added to your activity \"%(title)s\"."
-msgstr ""
+msgstr "Team %(name)s is toegevoegd aan je activiteit \"%(title)s\"."
 
 #: bluebottle/time_based/templates/mails/messages/teams/manager_team_removed.html:6
 #, python-format
@@ -10756,7 +10758,7 @@ msgstr "De registratie deadline moet voor de start- of eindtijd zijn"
 
 #: bluebottle/time_based/validators.py:26
 msgid "Please use an full url starting with http:// or https://"
-msgstr ""
+msgstr "Gebruik een URL die begint met http:// of https://"
 
 #: bluebottle/time_based/validators.py:50
 msgid "Deadline should be after start date"

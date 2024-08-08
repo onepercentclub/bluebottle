@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-07-15 14:54+0200\n"
-"PO-Revision-Date: 2024-07-19 07:51\n"
+"PO-Revision-Date: 2024-08-08 14:21\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -9313,7 +9313,9 @@ msgstr "Voorbereiding tijdbijdrage controleren"
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:5
 msgid "\n"
 "    Check if we should change the status of the preparation time\n"
-msgstr ""
+msgstr "\n"
+"    Controleer of we de status van de voorbereidingstijd\n"
+" moeten veranderen\n"
 
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:10
 #: bluebottle/time_based/templates/admin/create_captain_team_member.html:10

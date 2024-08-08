@@ -205,23 +205,36 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
 
     def test_activity_list(self):
         DeadlineActivityFactory.create()
+        DeadlineActivityFactory.create(
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory.create()
+            )
+        )
+        DeadlineActivityFactory.create(
+            office_location=LocationFactory.create(
+                subregion=self.subregion
+            )
+        )
         DeadlineActivityFactory.create(office_location=self.office)
         url = reverse('admin:activities_activity_changelist')
         page = self.app.get(url)
-        self.assertTrue('1 Activity' in page.text)
+
+        self.assertTrue('2 Activities' in page.text, page.text)
 
     def test_initiative_list(self):
         owner = BlueBottleUserFactory.create(location=self.office)
 
         DeadlineActivityFactory.create(
-            initiative=InitiativeFactory.create(owner=owner)
+            initiative=InitiativeFactory.create(owner=owner),
+            office_location=LocationFactory.create()
         )
         DeadlineActivityFactory.create(
             initiative=InitiativeFactory.create(),
             office_location=self.office
         )
         DeadlineActivityFactory.create(
-            initiative=InitiativeFactory.create()
+            initiative=InitiativeFactory.create(),
+            office_location=LocationFactory.create()
         )
 
         url = reverse('admin:initiatives_initiative_changelist')

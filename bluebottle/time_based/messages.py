@@ -892,7 +892,7 @@ class ManagerTeamAddedOwnerNotification(TransitionMessage):
     """
 
     subject = pgettext("email", 'A team has been added to your activity "{title}" 🎉')
-    template = "messages/team_added_owner"
+    template = "messages/teams/manager_team_added"
     context = {"title": "activity.title", "participant_name": "user.full_name"}
 
     @property

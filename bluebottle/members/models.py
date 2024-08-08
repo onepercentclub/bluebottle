@@ -266,7 +266,15 @@ class Member(BlueBottleBaseUser):
     )
 
     place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-    region_manager = models.ForeignKey(OfficeSubRegion, null=True, blank=True, on_delete=models.SET_NULL)
+    region_manager = models.ForeignKey(
+        OfficeSubRegion,
+        help_text=_(
+            "Select a region to filter the user's view to only see data relevant to that region. "
+            "Leave empty for full access to all data."
+        ),
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')

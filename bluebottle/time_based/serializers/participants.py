@@ -18,12 +18,15 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ParticipantSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
-    start = serializers.DateTimeField(read_only=True)
+    start = serializers.SerializerMethodField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
     status = serializers.SerializerMethodField()
 
     def get_status(self, obj):
         return obj.status
+
+    def get_start(self, obj):
+        return obj.start
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
@@ -72,6 +75,11 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
+
+    def get_start(self, obj):
+        if obj.slot:
+            return obj.slot.start
+        return None
 
     def get_status(self, obj):
         if obj.registration:
@@ -139,6 +147,11 @@ class PeriodicParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('periodic-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=PeriodicRegistration.objects.all())
     slot = ResourceRelatedField(read_only=True)
+
+    def get_start(self, obj):
+        if obj.slot:
+            return obj.slot.start
+        return None
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodicParticipant

@@ -91,7 +91,7 @@ install_requires = [
     'importlib_resources==5.12.0',
     'influxdb==4.1.1',
     'lipisha==0.3.0',
-    'lxml==4.6.3',
+    'lxml==5.2.2',
     'micawber==0.5.2',
     'mixpanel==4.3.2',
     'munch==2.5.0',
@@ -129,6 +129,7 @@ install_requires = [
     'wheel==0.29.0',
     'xlrd==1.2.0',
     'xlsxwriter==0.9.8',
+    'xmlsec==1.3.14',
 
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',

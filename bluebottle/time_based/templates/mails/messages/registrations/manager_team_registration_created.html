@@ -1,0 +1,31 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+  <p>
+    {% blocktrans context 'email' %}
+      {{ team_name }} has joined your activity "{{ title }}"!
+    {% endblocktrans %}
+  </p>
+  <p>
+    <b>
+      {% blocktrans context 'email' %}
+        Next steps:
+      {% endblocktrans %}
+    </b>
+    {% blocktrans context 'email' %}
+      <ol>
+        <li>Contact the team captain {team captain name} to discuss a specific date, time and location for when they can take part in your activity.</li>
+        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>
+      </ol>
+    {% endblocktrans %}
+  </p>
+  <p>
+      {% blocktrans context 'email' %}
+        Team captain contact details:
+      {% endblocktrans %}
+      <br />
+      <a href="mailto:{{captain_email}}">{{captain_email}}</a>
+  </p>
+
+{% endblock %}

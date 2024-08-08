@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from django.contrib.admin.options import get_content_type_for_model
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone
@@ -21,11 +20,14 @@ def get_slot_info(slot):
     else:
         tz = get_current_timezone()
 
+    if not slot.end:
+        return
+
     start = slot.start.astimezone(tz)
     end = slot.end.astimezone(tz)
 
     return {
-        'title': slot.title or str(slot),
+        'title': getattr(slot, 'title', ''),
         'is_online': slot.is_online,
         'online_meeting_url': slot.online_meeting_url,
         'location': slot.location.formatted_address if slot.location else '',
@@ -44,7 +46,7 @@ class TimeBasedInfoMixin(object):
         if isinstance(self.obj, (DateParticipant, PeriodParticipant)):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
-            participant = self.obj.activity.participants.get(user=recipient)
+            participant = self.obj.activity.participants.filter(user=recipient).first()
         elif isinstance(self.obj, SlotParticipant):
             participant = self.obj.participant
         else:
@@ -55,7 +57,8 @@ class TimeBasedInfoMixin(object):
             for slot_participant in participant.slot_participants.filter(
                     status='registered'
             ):
-                slots.append(get_slot_info(slot_participant.slot))
+                if slot_participant.slot and slot_participant.slot.start:
+                    slots.append(get_slot_info(slot_participant.slot))
 
             context.update({'slots': slots})
 
@@ -344,6 +347,31 @@ class ParticipantAddedNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []
+
+
+class TeamAddedNotification(TransitionMessage):
+    """
+    A team was added manually (through back-office)
+    """
+
+    subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
+    template = "messages/team_added"
+    context = {
+        "title": "activity.title",
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext("email", "View activity")
 
     def get_recipients(self):
         """participant"""
@@ -807,7 +835,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     Slot participant registered for a time slot for an activity
     """
     subject = pgettext('email', 'You\'ve registered for a time slot for the activity "{title}"')
-    template = 'messages/participant/slot_participant_registered'
+    template = 'messages/participants/slot_participant_registered'
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',
@@ -849,6 +877,29 @@ class ManagerParticipantAddedOwnerNotification(TransitionMessage):
         return self.obj.activity.get_absolute_url()
 
     action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        if self.obj.user:
+            return [self.obj.activity.owner]
+        else:
+            return []
+
+
+class ManagerTeamAddedOwnerNotification(TransitionMessage):
+    """
+    A team added notify owner
+    """
+
+    subject = pgettext("email", 'A team has been added to your activity "{title}" 🎉')
+    template = "messages/teams/manager_team_added"
+    context = {"title": "activity.title", "participant_name": "user.full_name"}
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext("email", "Open your activity")
 
     def get_recipients(self):
         """activity owner"""

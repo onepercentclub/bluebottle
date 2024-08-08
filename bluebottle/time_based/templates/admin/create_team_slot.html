@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Create a slot for this team" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Create a slot for {{ instance }}, without a date and time.
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

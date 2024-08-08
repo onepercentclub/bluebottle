@@ -105,7 +105,8 @@ class DeedSerializer(BaseActivitySerializer):
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/deeds'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
-            'my_contributor', 'my_contributor.user', 'my_contributor.invite'
+            "my_contributor",
+            "my_contributor.user",
         ]
 
     included_serializers = dict(
@@ -113,7 +114,6 @@ class DeedSerializer(BaseActivitySerializer):
         **{
             'my_contributor': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
-            'my_contributor.invite': 'bluebottle.activities.utils.InviteSerializer',
         }
     )
 
@@ -163,14 +163,15 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
-            'user', 'activity', 'activity.goals', 'invite'
+            "user",
+            "activity",
+            "activity.goals",
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity': 'bluebottle.deeds.serializers.DeedSerializer',
         'activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
-        'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
 

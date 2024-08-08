@@ -1,20 +1,18 @@
 from builtins import str
+
 from django.http import HttpResponse
 from django.views.generic import View
-
 from moneyed import Money
-
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-
 from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.models import Donor
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
-from bluebottle.funding.models import Donor
 from bluebottle.funding_stripe.models import (
     StripePayment, StripePayoutAccount, ExternalAccount
 )
@@ -24,7 +22,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     StripePaymentSerializer
 )
-from bluebottle.funding_stripe.utils import stripe
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView,
@@ -91,6 +89,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
         if token:
+            stripe = get_stripe()
             try:
                 serializer.instance.update(token)
             except stripe.error.InvalidRequestError as e:
@@ -148,7 +147,7 @@ class IntentWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
-
+        stripe = get_stripe()
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_intents
@@ -162,11 +161,18 @@ class IntentWebHookView(View):
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.succeeded.value:
                     payment.states.succeed()
-                    transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
-                    # Fix this if we're going to support currencies that don't hae smaller units, like yen.
-                    payment.donation.payout_amount = Money(
-                        transfer.amount / 100.0, transfer.currency
-                    )
+                    try:
+                        # Check if it's an old webhook call or a new one
+                        transfer = stripe.Transfer.retrieve(event.data.object.charges.data[0].transfer)
+                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
+                        payment.donation.payout_amount = Money(
+                            transfer.amount / 100.0, transfer.currency
+                        )
+                    except AttributeError:
+                        # Fix this if we're going to support currencies that don't have smaller units, like yen.
+                        payment.donation.payout_amount = Money(
+                            event.data.object.amount / 100.0, event.data.object.currency
+                        )
                     payment.donation.save()
                     payment.save()
 
@@ -211,6 +217,7 @@ class SourceWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        stripe = get_stripe()
 
         try:
             event = stripe.Webhook.construct_event(
@@ -302,6 +309,7 @@ class ConnectWebHookView(View):
 
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        stripe = get_stripe()
 
         try:
             event = stripe.Webhook.construct_event(

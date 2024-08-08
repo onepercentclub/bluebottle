@@ -9,12 +9,10 @@ from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
-from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField, ResourceRelatedField
-)
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
-from bluebottle.activities.models import Contributor, Activity, Team
+from bluebottle.activities.models import Contributor, Activity
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
     CollectContributorListSerializer
 from bluebottle.deeds.serializers import (
@@ -31,11 +29,16 @@ from bluebottle.funding.serializers import (
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
-    PeriodActivityListSerializer,
-
+    DeadlineActivitySerializer,
+    PeriodicActivitySerializer,
     DateActivitySerializer,
-    PeriodActivitySerializer, DateParticipantSerializer, PeriodParticipantSerializer,
-    DateParticipantListSerializer, PeriodParticipantListSerializer,
+    DateParticipantSerializer,
+    DateParticipantListSerializer,
+    DeadlineParticipantSerializer,
+    PeriodicParticipantSerializer,
+    ScheduleActivitySerializer,
+    TeamScheduleParticipantSerializer,
+    ScheduleParticipantSerializer,
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
@@ -158,7 +161,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_contribution_duration(self, obj):
         if hasattr(obj, 'contribution_duration'):
-            if len(obj.contribution_duration) == 0:
+            if len(obj.contribution_duration) == 0 or obj.contribution_duration[0].period == 0:
                 return {}
             elif len(obj.contribution_duration) == 1:
                 return {
@@ -331,7 +334,8 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeedListSerializer,
         CollectActivityListSerializer,
         DateActivityListSerializer,
-        PeriodActivityListSerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     included_serializers = {
@@ -375,7 +379,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeedSerializer,
         CollectActivitySerializer,
         DateActivitySerializer,
-        PeriodActivitySerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
     ]
 
     included_serializers = {
@@ -429,7 +435,8 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TinyFundingSerializer,
         DateActivityListSerializer,
-        PeriodActivityListSerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
     ]
 
     class Meta(object):
@@ -444,7 +451,10 @@ class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantSerializer,
-        PeriodParticipantSerializer
+        DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
+        ScheduleParticipantSerializer,
+        TeamScheduleParticipantSerializer
     ]
 
     included_serializers = {
@@ -469,14 +479,18 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantListSerializer,
-        PeriodParticipantListSerializer,
+        DeadlineParticipantSerializer,
+        PeriodicParticipantSerializer,
         DeedParticipantListSerializer,
-        CollectContributorListSerializer
+        CollectContributorListSerializer,
+        ScheduleParticipantSerializer,
+        TeamScheduleParticipantSerializer,
     ]
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'contributions': 'bluebottle.activities.serializers.MoneySerializer',
         'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }
@@ -540,16 +554,3 @@ class RelatedActivityImageContentSerializer(ImageSerializer):
     }
     content_view_name = 'related-activity-image-content'
     relationship = 'relatedimage_set'
-
-
-class TeamTransitionSerializer(TransitionSerializer):
-    resource = ResourceRelatedField(queryset=Team.objects.all())
-    field = 'states'
-
-    included_serializers = {
-        'resource': 'bluebottle.activities.utils.TeamSerializer',
-    }
-
-    class JSONAPIMeta(object):
-        included_resources = ['resource']
-        resource_name = 'activities/team-transitions'

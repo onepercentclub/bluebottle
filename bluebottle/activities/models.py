@@ -99,9 +99,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         null=True,
         default='',
         help_text=_(
-            "Do you have a video pitch or a short movie that "
-            "explains your activity? Cool! We can't wait to see it! "
-            "You can paste the link to YouTube or Vimeo video here"
+            "Make your activity come alive with a video. "
+            "You can paste the link to YouTube or Vimeo here."
         )
     )
 
@@ -242,18 +241,12 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     team = models.ForeignKey(
-        'activities.Team', verbose_name=_('team'),
+        'activities.Team', verbose_name=_('Old team'),
         null=True, blank=True, related_name='members', on_delete=models.SET_NULL
     )
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'),
         null=True, blank=True, on_delete=models.SET_NULL
-    )
-    invite = models.OneToOneField(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
-    )
-    accepted_invite = models.ForeignKey(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
     )
 
     @property
@@ -353,7 +346,7 @@ class Team(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)
 
     activity = models.ForeignKey(
-        Activity, related_name='teams', on_delete=NON_POLYMORPHIC_CASCADE
+        Activity, related_name='old_teams', on_delete=NON_POLYMORPHIC_CASCADE
     )
 
     created = models.DateTimeField(default=timezone.now)

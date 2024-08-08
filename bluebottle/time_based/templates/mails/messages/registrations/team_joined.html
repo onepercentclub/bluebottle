@@ -1,0 +1,35 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+  <p>
+    {% blocktrans context 'email' %}
+      You have registered your team for <b>{{ title }}!</b>
+    {% endblocktrans %}
+  </p>
+
+  <p>
+    <b>
+      {% blocktrans context 'email' %}
+        Next steps:
+      {% endblocktrans %}
+    </b>
+    {% blocktrans context 'email' %}
+      <ol>
+        <li>The activity manager will be in contact to discuss a specific date, time and location for when your team can take part in the activity. </li>
+        <li>You can start inviting team members, or wait until the details have been set.</li>
+      </ol>
+    {% endblocktrans %}
+  </p>
+{% endblock %}
+
+
+{% block end_message %}
+  <p>
+    <i>
+      {% blocktrans context 'email' %}
+        If you are unable to participate, please withdraw your team via the activity page so that others can take your place.
+      {% endblocktrans %}
+    </i>
+  </p>
+{% endblock %}

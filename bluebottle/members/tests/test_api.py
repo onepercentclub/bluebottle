@@ -1154,7 +1154,6 @@ class UserAPITestCase(BluebottleTestCase):
 
     def test_get_current_user_hours_spent(self):
         activity = DateActivityFactory.create(
-            slot_selection='free',
             initiative=InitiativeFactory.create(status="approved")
         )
         activity.states.publish(save=True)

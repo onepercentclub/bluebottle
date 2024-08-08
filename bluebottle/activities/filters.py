@@ -262,6 +262,7 @@ class ActivitySearch(Search):
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
         'office': UntranslatedModelFacet('office', Location),
+        'date': ActivityDateRangeFacet(),
     }
 
     possible_facets = {
@@ -269,7 +270,6 @@ class ActivitySearch(Search):
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
-        'date': ActivityDateRangeFacet(),
     }
 
     def sort(self, search):
@@ -356,6 +356,8 @@ class ActivitySearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
+        # Always add category as a filter, so that category pages show activities
+        settings.search_filters_activities.get_or_create(type='category')
         result = super().__new__(cls, settings.search_filters_activities.all())
 
         for segment_type in SegmentType.objects.all():

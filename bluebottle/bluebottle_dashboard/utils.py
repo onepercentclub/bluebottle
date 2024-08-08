@@ -3,8 +3,8 @@ from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
 from jet.utils import get_menu_items as jet_get_menu_items
-from bluebottle.analytics.models import AnalyticsPlatformSettings
 
+from bluebottle.analytics.models import AnalyticsPlatformSettings
 from bluebottle.looker.models import LookerEmbed
 from bluebottle.segments.models import SegmentType
 
@@ -35,6 +35,7 @@ def get_menu_items(context):
     Iterate over menu items and remove some based on feature flags
     """
     groups = jet_get_menu_items(context)
+    is_region_manager = context['user'].groups.filter(name='Region Manager').exists()
     for group in groups:
         properties = get_jet_item(group['label'])
         if 'enabled' in properties and properties['enabled']:
@@ -48,6 +49,9 @@ def get_menu_items(context):
                 prop = get_feature_flag(properties['enabled'])
                 if not prop:
                     item["hide"] = True
+        if group["app_label"] != "looker" and is_region_manager:
+            group["hide"] = True
+
         if group["app_label"] == "looker":
             (analytics_settings, _) = AnalyticsPlatformSettings.objects.get_or_create()
 

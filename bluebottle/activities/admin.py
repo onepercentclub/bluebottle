@@ -466,11 +466,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
         settings = InitiativePlatformSettings.objects.get()
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['office_location']
-            if settings.enable_office_regions:
+            filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
+            if settings.enable_office_regions and not request.user.region_manager:
                 filters = filters + [
                     'office_location__subregion',
-                    'office_location__subregion__region']
+                    'office_location__subregion__region'
+                ]
 
         if settings.team_activities:
             filters = filters + ['team_activity']
@@ -679,8 +680,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
 
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['office_location']
-            if settings.enable_office_regions:
+            filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
+            if settings.enable_office_regions and not request.user.region_manager:
                 filters = filters + [
                     'office_location__subregion',
                     'office_location__subregion__region'

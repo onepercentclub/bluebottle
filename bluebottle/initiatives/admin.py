@@ -17,6 +17,7 @@ from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
 from bluebottle.wallposts.admin import WallpostInline
 
@@ -102,7 +103,10 @@ class ActivityManagersInline(admin.TabularInline):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
+class InitiativeAdmin(
+    PolymorphicInlineSupportMixin, NotificationAdminMixin,
+    RegionManagerAdminMixin, StateMachineAdmin
+):
     form = InitiativeAdminForm
 
     prepopulated_fields = {"slug": ("title",)}

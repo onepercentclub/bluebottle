@@ -17,6 +17,7 @@ class BlueBottleUserFactory(factory.DjangoModelFactory):
     is_active = True
     is_staff = False
     is_superuser = False
+    region_manager = None
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):

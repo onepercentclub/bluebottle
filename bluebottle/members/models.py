@@ -17,6 +17,7 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType
 from ..time_based.models import TimeContribution
 
@@ -265,6 +266,15 @@ class Member(BlueBottleBaseUser):
     )
 
     place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+    region_manager = models.ForeignKey(
+        OfficeSubRegion,
+        help_text=_(
+            "Select a region to filter the user's view to only see data relevant to that region. "
+            "Leave empty for full access to all data."
+        ),
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')

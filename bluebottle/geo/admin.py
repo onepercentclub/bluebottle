@@ -3,7 +3,6 @@ from django.contrib import admin
 from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
-
 from django.utils.translation import gettext_lazy as _
 from mapwidgets import GooglePointFieldWidget
 from parler.admin import TranslatableAdmin
@@ -70,6 +69,12 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": GooglePointFieldWidget},
     }
+
+    def get_queryset(self, request):
+        queryset = super(LocationAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(subregion=request.user.region_manager)
+        return queryset
 
     def lookup_allowed(self, key, value):
         if key in ('subregion__region__id__exact',):

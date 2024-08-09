@@ -107,12 +107,18 @@ class RegionManagerAdminMixin:
         queryset = super(RegionManagerAdminMixin, self).get_queryset(request)
         if self.model == Member and request.user.is_superuser:
             return queryset
-        elif self.model == Initiative:
-            # Filter initiatives by office subregion, either by owner or connected activities
-            region_manager_filter = Q(activities__office_location__subregion=request.user.region_manager)
-            owner_region_filter = Q(owner__location__subregion=request.user.region_manager)
-            queryset = queryset.filter(region_manager_filter | owner_region_filter).distinct()
         elif request.user.region_manager:
-            region_manager_filter = {self.office_subregion_path: request.user.region_manager}
-            queryset = queryset.filter(**region_manager_filter).distinct()
+            if self.model == Initiative:
+                # Filter initiatives by office subregion, either by owner or connected activities
+                region_manager_filter = Q(activities__office_location__subregion=request.user.region_manager)
+                owner_region_filter = Q(owner__location__subregion=request.user.region_manager)
+                queryset = queryset.filter(region_manager_filter | owner_region_filter).distinct()
+            elif issubclass(self.model, Activity):
+                # Filter activities by office subregion or by owner location
+                region_manager_filter = Q(office_location__subregion=request.user.region_manager)
+                owner_region_filter = Q(owner__location__subregion=request.user.region_manager)
+                queryset = queryset.filter(region_manager_filter | owner_region_filter).distinct()
+            else:
+                region_manager_filter = {self.office_subregion_path: request.user.region_manager}
+                queryset = queryset.filter(**region_manager_filter).distinct()
         return queryset

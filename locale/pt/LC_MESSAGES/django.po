@@ -9764,7 +9764,7 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "Please view your team from the activity page to see the changes.\n"
-msgstr "U\n"
+msgstr "\n"
 "Por favor, consulte sua equipe na página de atividades para visualizar as mudanças.\n"
 
 #: bluebottle/time_based/templates/mails/messages/deadline_changed.html:5
@@ -9886,7 +9886,7 @@ msgctxt "email"
 msgid "\n"
 "    You can always stop your contributions anytime and resume them at a later date.\n"
 "  "
-msgstr "U\n"
+msgstr "\n"
 "    Você sempre pode interromper suas contribuições a qualquer momento e retomá-las em uma data posterior.\n"
 "  "
 

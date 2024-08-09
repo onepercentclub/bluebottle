@@ -724,20 +724,21 @@ class RegistrationActivity(TimeBasedActivity):
 
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
+        help_text=_('You can enter a specific address, city or wider region.'),
         null=True, blank=True, on_delete=models.SET_NULL
     )
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
     start = models.DateField(
         _('Start date'),
-        help_text=_('The first moment participants can start.'),
+        help_text=_('When does the period start during which participants can take part in your activity?'),
         null=True,
         blank=True
     )
 
     deadline = models.DateField(
         _('End date'),
-        help_text=_('Participants can contribute until this date.'),
+        help_text=_('When does the period end?'),
         null=True,
         blank=True
     )
@@ -856,14 +857,14 @@ class ScheduleActivity(RegistrationActivity):
 
     start = models.DateField(
         _('Start date'),
-        help_text=_('The start of the period in which the teams/participants can take part in your activity.'),
+        help_text=_('Start of the period during which participants/teams can take part in your activity.'),
         null=True,
         blank=True
     )
 
     deadline = models.DateField(
         _('End date'),
-        help_text=_('The end of the period in which the teams/participants can take part in your activity.'),
+        help_text=_('End of the period during which participants/teams can take part in your activity.'),
         null=True,
         blank=True
     )
@@ -877,6 +878,15 @@ class ScheduleActivity(RegistrationActivity):
         ),
         null=True,
         blank=True,
+    )
+
+    location = models.ForeignKey(
+        Geolocation, verbose_name=_('location'),
+        help_text=_(
+            'If the activity takes place in multiple locations then add the region. '
+            'You will be able to add specific locations to individual participants when they are scheduled.'
+        ),
+        null=True, blank=True, on_delete=models.SET_NULL
     )
 
     @property
@@ -1491,6 +1501,17 @@ class Team(TriggerMixin, models.Model):
         on_delete=models.CASCADE
     )
 
+    name = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    description = models.TextField(
+        null=True,
+        blank=True
+    )
+
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
 
@@ -1516,19 +1537,17 @@ class Team(TriggerMixin, models.Model):
         resource_name = 'teams/teams'
 
     def __str__(self):
-        return self.name
-
-    @property
-    def name(self):
-        return _('Team {name}').format(name=self.user.full_name)
-
-    @property
-    def short_name(self):
-        return _('Team {name}').format(name=self.user.first_name)
+        return str(self.name)
 
     def delete(self, using=None, keep_parents=False):
         self.registration.delete()
         return super().delete(using, keep_parents)
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = _("Team {name}").format(name=self.user.full_name)
+
+        super().save(*args, **kwargs)
 
 
 class TeamMember(TriggerMixin, models.Model):

@@ -893,6 +893,12 @@ class ScheduleActivity(RegistrationActivity):
     def accepted_participants(self):
         return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
 
+    @property
+    def unscheduled_slots(self):
+        if self.team_activity == 'teams':
+            return self.team_slots.filter(status='new')
+        return self.slots.filter(status='new')
+
     class Meta:
         verbose_name = _("Schedule activity")
         verbose_name_plural = _("Schedule activities")

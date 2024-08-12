@@ -1,3 +1,4 @@
+from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Group
 from django.urls import reverse
@@ -34,7 +35,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.africa = OfficeRegionFactory.create(name='Africa')
         self.europe = OfficeRegionFactory.create(name='Europe')
         self.bulgaria = OfficeSubRegionFactory.create(name='Bulgaria', region=self.europe)
-        OfficeSubRegionFactory.create_batch(6, region=self.europe)
+        self.subregions = OfficeSubRegionFactory.create_batch(6, region=self.europe)
         self.ghana = OfficeSubRegionFactory.create(name='Ghana', region=self.africa)
         OfficeSubRegionFactory.create_batch(3, region=self.africa)
         self.location1 = Location.objects.create(
@@ -105,19 +106,33 @@ class OfficeAdminTest(BluebottleAdminTestCase):
 
     def test_office_filters(self):
         request = MockRequest()
+        request.user = BlueBottleUserFactory.create()
         filters = self.activity_admin.get_list_filter(request)
-        self.assertTrue('office_location' in filters)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
         self.assertFalse('office_location__subregion_exact_id' in filters)
         self.assertFalse('office_location__subregion__region_exact_id' in filters)
 
     def test_office_filters_regions_enabled(self):
         request = MockRequest()
+        request.user = BlueBottleUserFactory.create()
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
         self.assertTrue('office_location__subregion' in filters)
         self.assertTrue('office_location__subregion__region' in filters)
+
+    def test_office_filters_region_manager(self):
+        request = MockRequest()
+        request.user = BlueBottleUserFactory.create(region_manager=self.subregions[0])
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
+        self.assertFalse('office_location__subregion_exact_id' in filters)
+        self.assertFalse('office_location__subregion__region_exact_id' in filters)
 
     def test_office_admin(self):
         self.client.force_login(self.superuser)

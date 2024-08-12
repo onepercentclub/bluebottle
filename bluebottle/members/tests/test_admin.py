@@ -43,6 +43,7 @@ class MockUser(object):
         self.perms = perms or []
         self.is_superuser = is_superuser
         self.is_staff = is_staff
+        self.region_manager = None
         if groups:
             self.groups = groups
         else:

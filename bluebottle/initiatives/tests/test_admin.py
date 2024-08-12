@@ -67,7 +67,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(
             str(messages[0]),
-            'Initiative with ID “123456789” doesn’t exist. '
+            'Initiative with ID “123456789” can’t be found. '
             'Perhaps you don’t have permission to view it or maybe it was deleted?'
         )
 

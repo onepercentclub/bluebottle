@@ -8,7 +8,7 @@ from bluebottle.wallposts.models import Wallpost
 
 
 class RecentWallposts(DashboardModule):
-    title = _('Recent wallposts')
+    title = _('Recent funding wallposts')
     title_url = "{}".format(reverse('admin:wallposts_wallpost_changelist'))
     template = 'dashboard/recent_wallposts.html'
     limit = 5

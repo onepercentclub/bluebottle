@@ -345,8 +345,6 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
-    office_subregion_path = 'team__activity__office_location__subregion'
-
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -465,8 +463,6 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
     )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -758,8 +754,6 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
-    office_subregion_path = "activity__office_location__subregion"
-
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
@@ -786,8 +780,6 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     formfield_overrides = {
         models.DurationField: {

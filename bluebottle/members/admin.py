@@ -418,8 +418,6 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
 
-    office_subregion_path = 'location__subregion'
-
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)

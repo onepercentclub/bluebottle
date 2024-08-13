@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+
 from bluebottle.updates.models import Update, UpdateImage
 
 
@@ -24,6 +24,7 @@ class UpdateAdmin(admin.ModelAdmin):
     fields = ['activity', 'created', 'author', 'parent', 'notify', 'video_url', 'message', 'pinned']
 
     list_display = ['created', 'activity', 'message']
+    list_filter = (('activity__polymorphic_ctype', admin.RelatedOnlyFieldListFilter),)
 
 
 class UpdateInline(TabularInlinePaginated):

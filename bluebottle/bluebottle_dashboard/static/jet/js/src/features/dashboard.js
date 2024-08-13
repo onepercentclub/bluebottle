@@ -186,7 +186,6 @@ Dashboard.prototype = {
       var $item = $(this);
       var $link = $item.find(".dashboard-item-remove");
       var moduleId = $item.data("module-id");
-
       $link.on("click", function(e) {
         e.preventDefault();
 
@@ -205,20 +204,24 @@ Dashboard.prototype = {
           });
         };
 
-        buttons[t("Delete")] = function() {
+
+        if (window.confirm("Are you sure you want to remove this widget?") ){
           deleteModule();
-          $(this).dialog("close");
-        };
+        }
 
-        buttons[t("Cancel")] = function() {
-          $(this).dialog("close");
-        };
-
-        $dashboard.find("#module-remove-dialog").dialog({
-          resizable: false,
-          modal: true,
-          buttons: buttons
-        });
+        // buttons[t("Delete")] = function() {
+        //   deleteModule();
+        //   $(this).dialog("close");
+        // };
+        //
+        // buttons[t("Cancel")] = function() {
+        //   $(this).dialog("close");
+        // };
+        // $dashboard.find("#module-remove-dialog").dialog({
+        //   resizable: false,
+        //   modal: true,
+        //   buttons: buttons
+        // });
       });
     });
   },

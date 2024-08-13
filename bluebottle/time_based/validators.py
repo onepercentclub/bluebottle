@@ -1,3 +1,4 @@
+import re
 from django.db.models import Min
 from django.utils.translation import gettext_lazy as _
 
@@ -16,6 +17,17 @@ class RegistrationDeadlineValidator(Validator):
                 self.maxDate and
                 self.instance.registration_deadline < self.maxDate
             )
+        )
+
+
+class RegistrationLinkValidator(Validator):
+    field = "review_link"
+    code = "review-link"
+    message = _("Please use an full url starting with http:// or https://")
+
+    def is_valid(self):
+        return not self.instance.review_link or re.match(
+            "^http[s]?://", self.instance.review_link
         )
 
 

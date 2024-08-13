@@ -23,10 +23,12 @@ class ScheduleSlotSerializer(ModelSerializer):
     timezone = serializers.SerializerMethodField()
     links = serializers.SerializerMethodField()
 
+    ical_view_name = "schedule-slot-ical"
+
     def get_links(self, instance):
         if instance.start and instance.duration:
             return {
-                "ical": reverse_signed("slot-ical", args=(instance.pk,)),
+                "ical": reverse_signed(self.ical_view_name, args=(instance.pk,)),
                 "google": instance.google_calendar_link,
             }
         else:
@@ -88,6 +90,7 @@ class TeamScheduleSlotSerializer(ScheduleSlotSerializer):
             "failed": ["rejected", "withdrawn", "removed", "cancelled"],
         },
     )
+    ical_view_name = "team-schedule-slot-ical"
 
     class Meta(ScheduleSlotSerializer.Meta):
         model = TeamScheduleSlot

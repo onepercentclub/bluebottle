@@ -30,6 +30,7 @@ from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.models import Message
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -49,7 +50,7 @@ from bluebottle.wallposts.models import Wallpost
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contributor
     child_models = (
         Donor,
@@ -64,6 +65,8 @@ class ContributorAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
+
+    office_subregion_path = 'activity__office_location__subregion'
 
     ordering = ('-created',)
 
@@ -123,12 +126,17 @@ class BaseContributorInline(TabularInlinePaginated):
         return obj.states.current_state.name
 
 
-class ContributorChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
+class ContributorChildAdmin(
+    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin, StateMachineAdmin
+):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
     list_filter = [StateMachineFilter, ]
     ordering = ('-created',)
     show_in_index = True
+
+    office_subregion_path = 'activity__office_location__subregion'
 
     date_hierarchy = 'contributor_date'
 
@@ -203,7 +211,7 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -216,6 +224,8 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         StateMachineFilter
     )
     date_hierarchy = 'start'
+
+    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     ordering = ('-start',)
 
@@ -245,10 +255,12 @@ class ContributionAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
         return '-'
 
 
-class ContributionChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
+
+    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     fields = [
         'contributor',
@@ -344,13 +356,15 @@ class TeamInline(admin.TabularInline):
     slot_link.short_description = _('Time slot')
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (FollowAdminInline, WallpostInline, )
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
+
+    office_subregion_path = 'office_location__subregion'
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
@@ -452,11 +466,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         settings = InitiativePlatformSettings.objects.get()
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['office_location']
-            if settings.enable_office_regions:
+            filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
+            if settings.enable_office_regions and not request.user.region_manager:
                 filters = filters + [
                     'office_location__subregion',
-                    'office_location__subregion__region']
+                    'office_location__subregion__region'
+                ]
 
         if settings.team_activities:
             filters = filters + ['team_activity']
@@ -632,7 +647,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     child_models = (
         Funding,
@@ -647,6 +662,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
+    office_subregion_path = 'office_location__subregion'
+
     def lookup_allowed(self, key, value):
         if key in [
             'goals__type__id__exact',
@@ -660,11 +677,10 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
     def get_list_filter(self, request):
         settings = InitiativePlatformSettings.objects.get()
         filters = list(self.list_filter)
-
         from bluebottle.geo.models import Location
         if Location.objects.count():
-            filters = filters + ['office_location']
-            if settings.enable_office_regions:
+            filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
+            if settings.enable_office_regions and not request.user.region_manager:
                 filters = filters + [
                     'office_location__subregion',
                     'office_location__subregion__region'
@@ -672,7 +688,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
         if settings.team_activities:
             filters = filters + ['team_activity']
-
         return filters
 
     list_display = ['__str__', 'created', 'type', 'state_name',

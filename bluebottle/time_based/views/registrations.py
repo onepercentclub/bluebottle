@@ -3,8 +3,12 @@ from rest_framework import filters
 from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.time_based.models import DeadlineRegistration, PeriodicRegistration, ScheduleRegistration, \
-    TeamScheduleRegistration
+from bluebottle.time_based.models import (
+    DeadlineRegistration,
+    PeriodicRegistration,
+    ScheduleRegistration,
+    TeamScheduleRegistration,
+)
 from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
     DeadlineRegistrationTransitionSerializer,
@@ -190,6 +194,10 @@ class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
 
 class ScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
     queryset = ScheduleRegistration.objects
+
+
+class TeamScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = TeamScheduleRegistration.objects
 
 
 class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):

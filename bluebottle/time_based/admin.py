@@ -34,6 +34,7 @@ from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMac
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -334,7 +335,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(StateMachineAdmin):
+class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -343,6 +344,8 @@ class TeamMemberAdmin(StateMachineAdmin):
     raw_id_fields = ('user', 'team')
 
     superadmin_fields = ['force_status']
+
+    office_subregion_path = 'team__activity__office_location__subregion'
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -450,13 +453,20 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
 
 
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
+class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
-    fields = ('activity', 'user', 'registration_info', 'status', 'states', 'created', 'invite_code')
+    fields = (
+        'activity',
+        'user',
+        'name', 'description', 'registration_info',
+        'status', 'states', 'created', 'invite_code'
+    )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
+
+    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -676,7 +686,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj and obj.registrations.count():
-            fields += ["team_activity", "team_registration_warning"]
+            fields = tuple(fields) + ("team_activity", "team_registration_warning")
         return fields
 
     form = TimeBasedActivityAdminForm
@@ -739,7 +749,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
 
 @admin.register(PeriodicSlot)
-class PeriodicSlotAdmin(StateMachineAdmin):
+class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
@@ -747,6 +757,8 @@ class PeriodicSlotAdmin(StateMachineAdmin):
     fields = readonly_fields + ("start", "end", "duration")
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+
+    office_subregion_path = "activity__office_location__subregion"
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -759,7 +771,7 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
 
 @admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(StateMachineAdmin):
+class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     list_display = ("start", "duration", "activity", "participant")
     raw_id_fields = ('activity', "location")
@@ -774,6 +786,8 @@ class ScheduleSlotAdmin(StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
+
+    office_subregion_path = 'activity__office_location__subregion'
 
     formfield_overrides = {
         models.DurationField: {

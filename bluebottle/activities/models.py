@@ -99,9 +99,8 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         null=True,
         default='',
         help_text=_(
-            "Do you have a video pitch or a short movie that "
-            "explains your activity? Cool! We can't wait to see it! "
-            "You can paste the link to YouTube or Vimeo video here"
+            "Make your activity come alive with a video. "
+            "You can paste the link to YouTube or Vimeo here."
         )
     )
 
@@ -248,12 +247,6 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     user = models.ForeignKey(
         'members.Member', verbose_name=_('user'),
         null=True, blank=True, on_delete=models.SET_NULL
-    )
-    invite = models.OneToOneField(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="contributor"
-    )
-    accepted_invite = models.ForeignKey(
-        'activities.Invite', null=True, on_delete=models.SET_NULL, related_name="accepted_contributors"
     )
 
     @property

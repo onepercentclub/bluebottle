@@ -1,3 +1,4 @@
+import icalendar
 from datetime import date, timedelta
 from io import BytesIO
 
@@ -228,6 +229,34 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.user)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_ical_download(self):
+        start = (date.today() + timedelta(days=10)).strftime("%Y-%m-%d %H:00:00")
+        self.perform_update(
+            {"start": start, "duration": "4:0:0", "is_online": True}, user=self.admin
+        )
+
+        ical_response = self.client.get(
+            self.response.json()["data"]["attributes"]["links"]["ical"],
+        )
+
+        calendar = icalendar.Calendar.from_ical(ical_response.content)
+
+        for ical_event in calendar.walk("vevent"):
+            self.assertAlmostEqual(
+                ical_event["dtstart"].dt, self.model.start, delta=timedelta(seconds=10)
+            )
+            self.assertAlmostEqual(
+                ical_event["dtend"].dt,
+                self.model.start + self.model.duration,
+                delta=timedelta(seconds=10),
+            )
+
+            self.assertEqual(str(ical_event["summary"]), self.activity.title)
+            self.assertEqual(ical_event["url"], self.activity.get_absolute_url())
+            self.assertEqual(
+                ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
+            )
 
 
 class ScheduleActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):

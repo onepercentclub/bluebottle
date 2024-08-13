@@ -356,6 +356,8 @@ class ActivitySearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
+        # Always add category as a filter, so that category pages show activities
+        settings.search_filters_activities.get_or_create(type='category')
         result = super().__new__(cls, settings.search_filters_activities.all())
 
         for segment_type in SegmentType.objects.all():

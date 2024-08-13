@@ -266,6 +266,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     def date(self):
         return self.activity.contributor_date
 
+    @property
+    def start(self):
+        return self.contributions.first().start
+
     class Meta(object):
         ordering = ('-created',)
         verbose_name = _('Contribution')

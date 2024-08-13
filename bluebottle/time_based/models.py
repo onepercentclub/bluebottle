@@ -1430,10 +1430,6 @@ class DeadlineParticipant(Participant, Contributor):
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-participants'
 
-    @property
-    def start(self):
-        return self.contributions.first().start
-
 
 class TeamScheduleRegistration(Registration):
 

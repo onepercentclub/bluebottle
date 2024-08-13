@@ -268,7 +268,9 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
 
     @property
     def start(self):
-        return self.contributions.first().start
+        if self.contributions.first():
+            return self.contributions.first().start
+        return None
 
     class Meta(object):
         ordering = ('-created',)

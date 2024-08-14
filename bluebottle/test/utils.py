@@ -167,6 +167,12 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
         cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
 
+    def assertHasMail(self, subject):
+        for email in mail.outbox:
+            if subject in email.subject:
+                return
+        self.fail('No email with subject "{}" found'.format(subject))
+
 
 class APITestCase(BluebottleTestCase):
     """

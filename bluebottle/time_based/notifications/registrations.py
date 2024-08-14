@@ -130,6 +130,13 @@ class UserRegistrationRestartedNotification(UserRegistrationNotification):
         return context
 
 
+class UserReminderNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Update your participation!'
+    )
+    template = "messages/registrations/user_reminder"
+
+
 class UserAppliedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have applied to the activity "{title}"')
     template = 'messages/registrations/user_applied'

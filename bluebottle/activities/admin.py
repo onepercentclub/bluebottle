@@ -667,7 +667,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
     def get_list_filter(self, request):
         settings = InitiativePlatformSettings.objects.get()
         filters = list(self.list_filter)
-
         from bluebottle.geo.models import Location
         if Location.objects.count():
             filters = filters + [('office_location', admin.RelatedOnlyFieldListFilter)]
@@ -679,7 +678,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
 
         if settings.team_activities:
             filters = filters + ['team_activity']
-
         return filters
 
     list_display = ['__str__', 'created', 'type', 'state_name',

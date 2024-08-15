@@ -49,6 +49,13 @@ class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
     template = "messages/registrations/manager_registration_restarted"
 
 
+class ManagerReminderNotification(ManagerRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Keep your participant list up-to-date!'
+    )
+    template = "messages/registrations/manager_reminder"
+
+
 class UserRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',

@@ -693,7 +693,7 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
         registration.states.accept(save=True)
 
         mail.outbox = []
-        for n in range(1, 7):
+        for n in range(1, 6):
             month = self.activity.start + timedelta(days=n * 31)
             self.run_task(month)
             if n == 1:
@@ -705,25 +705,27 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
                 self.assertEqual(self.activity.slots.count(), 3)
                 self.assertEqual(len(mail.outbox), 1)
                 self.assertEqual(mail.outbox[0].subject, '⏰ Reminder: Update your participation!')
+            if n == 3:
+                self.assertEqual(registration.participants.count(), 4)
+                self.assertEqual(self.activity.slots.count(), 4)
+                self.assertEqual(len(mail.outbox), 3)
+                self.assertEqual(mail.outbox[0].subject, '⏰ Reminder: Update your participation!')
+                self.assertHasMail('⏰ Reminder: Keep your participant list up-to-date!')
             if n == 4:
                 self.assertEqual(registration.participants.count(), 5)
                 self.assertEqual(self.activity.slots.count(), 5)
-                self.assertEqual(len(mail.outbox), 3)
+                self.assertEqual(len(mail.outbox), 5)
                 registration.states.stop(save=True)
+                self.assertHasMail('Your contribution to the activity "A nice time" has been stopped')
+                self.assertHasMail('A participant for your activity "A nice time" has stopped')
             if n == 5:
                 self.assertEqual(registration.participants.count(), 5)
                 self.assertEqual(self.activity.slots.count(), 6)
-                self.assertEqual(len(mail.outbox), 5)
-                self.assertHasMail(
-                    'Your contribution to the activity "A nice time" has been stopped'
-                )
-                self.assertHasMail(
-                    'A participant for your activity "A nice time" has stopped'
-                )
-            if n == 7:
+                self.assertEqual(len(mail.outbox), 7)
+            if n == 6:
                 self.assertEqual(registration.participants.count(), 5)
-                self.assertEqual(self.activity.slots.count(), 8)
-                self.assertEqual(len(mail.outbox), 5)
+                self.assertEqual(self.activity.slots.count(), 7)
+                self.assertEqual(len(mail.outbox), 7)
 
     def test_reminder_weekly_email(self):
         self.activity.deadline = date.today() + timedelta(weeks=10)
@@ -738,36 +740,34 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
             if n == 2:
                 self.assertEqual(registration.participants.count(), 3)
                 self.assertEqual(self.activity.slots.count(), 3)
-                self.assertEqual(len(mail.outbox), 0)
+                self.assertEqual(len(mail.outbox), 1)
+                self.assertHasMail('⏰ Reminder: Update your participation!')
             if n == 3:
                 self.assertEqual(registration.participants.count(), 4)
                 self.assertEqual(self.activity.slots.count(), 4)
-                self.assertEqual(len(mail.outbox), 1)
-                self.assertEqual(mail.outbox[0].subject, '⏰ Reminder: Update your participation!')
+                self.assertEqual(len(mail.outbox), 3)
+                self.assertHasMail('⏰ Reminder: Keep your participant list up-to-date!')
             if n == 4:
                 self.assertEqual(registration.participants.count(), 5)
                 self.assertEqual(self.activity.slots.count(), 5)
-                self.assertEqual(len(mail.outbox), 2)
-                self.assertEqual(mail.outbox[1].subject, '⏰ Reminder: Update your participation!')
-                registration.states.stop(save=True)
+                self.assertEqual(len(mail.outbox), 5)
             if n == 5:
-                self.assertEqual(registration.participants.count(), 5)
+                self.assertEqual(registration.participants.count(), 6)
                 self.assertEqual(self.activity.slots.count(), 6)
-                self.assertEqual(len(mail.outbox), 4)
-                self.assertEqual(mail.outbox[0].subject, '⏰ Reminder: Update your participation!')
-                self.assertEqual(mail.outbox[1].subject, '⏰ Reminder: Update your participation!')
-                self.assertEqual(
-                    mail.outbox[2].subject,
-                    'Your contribution to the activity "A nice time" has been stopped'
-                )
-                self.assertEqual(
-                    mail.outbox[3].subject,
-                    'A participant for your activity "A nice time" has stopped'
-                )
+                self.assertEqual(len(mail.outbox), 7)
+                self.assertHasMail('⏰ Reminder: Keep your participant list up-to-date!')
+
+                registration.states.stop(save=True)
+                self.assertHasMail('Your contribution to the activity "A nice time" has been stopped')
+                self.assertHasMail('A participant for your activity "A nice time" has stopped')
             if n == 6:
-                self.assertEqual(registration.participants.count(), 5)
+                self.assertEqual(registration.participants.count(), 6)
                 self.assertEqual(self.activity.slots.count(), 7)
-                self.assertEqual(len(mail.outbox), 4)
+                self.assertEqual(len(mail.outbox), 9)
+            if n == 7:
+                self.assertEqual(registration.participants.count(), 6)
+                self.assertEqual(self.activity.slots.count(), 8)
+                self.assertEqual(len(mail.outbox), 9)
 
     def test_reminder_daily_email(self):
         activity = PeriodicActivityFactory.create(
@@ -795,26 +795,27 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
             if n == 4:
                 self.assertEqual(activity.slots.count(), 5)
                 self.assertEqual(registration.participants.count(), 5)
-                self.assertEqual(len(mail.outbox), 0)
+                self.assertEqual(len(mail.outbox), 2)
+                self.assertHasMail('⏰ Reminder: Update your participation!')
+                self.assertHasMail('⏰ Reminder: Keep your participant list up-to-date!')
             if n == 5:
                 self.assertEqual(activity.slots.count(), 6)
                 self.assertEqual(registration.participants.count(), 6)
-                self.assertEqual(len(mail.outbox), 1)
-                self.assertHasMail('⏰ Reminder: Update your participation!')
-            elif n == 6:
                 self.assertEqual(len(mail.outbox), 2)
+            elif n == 7:
+                self.assertEqual(len(mail.outbox), 4)
             elif n == 10:
                 self.assertEqual(len(mail.outbox), 6)
             elif n == 13:
-                self.assertEqual(len(mail.outbox), 9)
+                self.assertEqual(len(mail.outbox), 8)
                 registration.states.stop(save=True)
-                self.assertEqual(len(mail.outbox), 11)
+                self.assertEqual(len(mail.outbox), 10)
                 self.assertHasMail('Your contribution to the activity "A nice time" has been stopped')
                 self.assertHasMail('A participant for your activity "A nice time" has stopped')
             elif n == 16:
-                self.assertEqual(len(mail.outbox), 11)
+                self.assertEqual(len(mail.outbox), 10)
             elif n == 20:
-                self.assertEqual(len(mail.outbox), 11)
+                self.assertEqual(len(mail.outbox), 10)
 
 
 class ScheduleSlotTestCase(BluebottleTestCase):

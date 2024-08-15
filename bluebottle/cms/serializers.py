@@ -1,8 +1,9 @@
 from builtins import object
 from builtins import str
 
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.urls import reverse
+from django_tools.middlewares.ThreadLocal import get_current_user
 from fluent_contents.models import ContentItem, Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -621,9 +622,15 @@ class SlidesBlockSerializer(BaseBlockSerializer):
     )
 
     def get_slides(self, obj):
-        return Slide.objects.published().filter(
-            language=obj.language_code
-        )
+        user = get_current_user()
+        if user and isinstance(user, Member) and user.location and user.location.subregion:
+            return Slide.objects.published().filter(
+                language=obj.language_code
+            ).filter(Q(sub_region__isnull=True) | Q(sub_region=user.location.subregion))
+        else:
+            return Slide.objects.published().filter(
+                language=obj.language_code
+            ).filter(Q(sub_region__isnull=True))
 
     class Meta(object):
         model = SlidesContent

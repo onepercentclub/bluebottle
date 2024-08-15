@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Slide
+from ..offices.models import OfficeSubRegion
 
 
 class SlideAdmin(admin.ModelAdmin):
@@ -20,6 +21,12 @@ class SlideAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def get_fieldsets(self, request, obj=None):
+        fields = super(SlideAdmin, self).get_fieldsets(request, obj)
+        if OfficeSubRegion.objects.count() > 0 and 'sub_region' not in fields[0][1]['fields']:
+            fields[0][1]['fields'] += ('sub_region',)
+        return fields
 
     fieldsets = (
         (None, {

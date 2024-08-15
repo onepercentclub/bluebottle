@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-08-15 09:10+0200\n"
-"PO-Revision-Date: 2024-08-15 07:14\n"
+"PO-Revision-Date: 2024-08-15 09:58\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -6354,7 +6354,7 @@ msgstr "externe SCIM id"
 
 #: bluebottle/members/models.py:272
 msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
-msgstr ""
+msgstr "Kies een regio om alleen gegevens uit die regio te zien. Laat het veld leeg voor toegang tot alle gegevens."
 
 #: bluebottle/members/models.py:280
 msgid "When the user updated their matching preferences."
@@ -10944,7 +10944,7 @@ msgstr "vertalingsinstellingen"
 #: bluebottle/utils/monkey_patch_object_not_found.py:17
 #, python-format
 msgid "%(name)s with ID “%(key)s” can’t be found. Perhaps you don’t have permission to view it or maybe it was deleted?"
-msgstr ""
+msgstr "%(name)s met ID \"%(key)s\" kan niet worden gevonden. Mogelijk heb je geen toestemming om het te bekijken of is het verwijderd?"
 
 #: bluebottle/utils/serializers.py:34
 #, python-format

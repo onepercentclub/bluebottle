@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from future.utils import python_2_unicode_compatible
@@ -348,7 +349,19 @@ class ShareResultsContent(TitledContent):
 
 @python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
+
+    class MapTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
     type = 'projects-map'
+    map_type = models.CharField(
+        _("Map type"),
+        max_length=100,
+        choices=MapTypeChoices.choices,
+        default=MapTypeChoices.all,
+        help_text=_('The map will show all projects or only projects from the user\'s office group')
+    )
 
     class Meta:
         verbose_name = _('Activities Map')

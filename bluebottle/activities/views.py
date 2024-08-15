@@ -48,13 +48,18 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityLocationSerializer
     pagination_class = None
     model = Activity
-
+    queryset = Activity.objects.all()
     permission_classes = (
-        TenantConditionalOpenClose,
+        # TenantConditionalOpenClose,
     )
 
     def get_queryset(self):
-        queryset = Activity.objects.filter(status__in=("succeeded", "open", "full", "running"))
+        queryset = super().get_queryset()
+        params = self.request.query_params
+        if 'office_location__subregion' in params:
+            queryset = queryset.filter(office_location__subregion__id=params['office_location__subregion'])
+
+        queryset = queryset.filter(status__in=("succeeded", "open", "full", "running"))
 
         collects = [
             activity for activity
@@ -64,11 +69,27 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
             ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
-        periods = [
+        periodics = [
             activity for activity
             in queryset.annotate(
-                position=F('timebasedactivity__periodactivity__location__position'),
-                location_id=F('timebasedactivity__periodactivity__location__pk')
+                position=F('timebasedactivity__periodicactivity__location__position'),
+                location_id=F('timebasedactivity__periodicactivity__location__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        deadlines = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__deadlineactivity__location__position'),
+                location_id=F('timebasedactivity__deadlineactivity__location__pk')
+            ).exclude(position=Point(0, 0)).filter(position__isnull=False)
+        ]
+
+        schedules = [
+            activity for activity
+            in queryset.annotate(
+                position=F('timebasedactivity__scheduleactivity__location__position'),
+                location_id=F('timebasedactivity__scheduleactivity__location__pk')
             ).exclude(position=Point(0, 0)).filter(position__isnull=False)
         ]
 
@@ -94,8 +115,9 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
                 created=model.created,
                 position=model.position,
                 activity=model,
-            ) for model in collects + dates + periods + fundings
+            ) for model in collects + dates + periodics + schedules + deadlines + fundings
         ))
+
         return sorted(locations, key=lambda location: location.created, reverse=True)
 
 

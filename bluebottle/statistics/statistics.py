@@ -3,11 +3,11 @@ from builtins import object
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Count
 from django.db.models.aggregates import Sum
-from memoize import memoize
 from moneyed.classes import Money
 
-from bluebottle.activities.models import Contributor, Activity, EffortContribution
+from bluebottle.activities.models import Contributor, EffortContribution, Contribution
 from bluebottle.clients import properties
+from bluebottle.collect.models import CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding_pledge.models import PledgePayment
@@ -24,7 +24,8 @@ from bluebottle.utils.exchange_rates import convert
 
 
 class Statistics(object):
-    def __init__(self, start=None, end=None):
+    def __init__(self, start=None, end=None, subregion=None):
+        self.subregion = subregion
         self.start = start
         self.end = end
 
@@ -42,36 +43,28 @@ class Statistics(object):
 
         return Q(**filter_args)
 
+    def filter_activities(self, model, date_field, statuses):
+        activities = model.objects.filter(
+            self.date_filter(date_field),
+            status__in=statuses
+        )
+        if self.subregion:
+            activities = activities.filter(
+                office_location__subregion=self.subregion
+            )
+        return activities
+
     @property
-    @memoize(timeout=timeout)
     def people_involved(self):
         """
         The (unique) total number of people that donated, fundraised, campaigned, or was a
         task owner or  member.
         """
-        contributor_ids = Contributor.objects.filter(
-            self.date_filter('contributions__start'),
-            user_id__isnull=False,
-            status__in=('new', 'accepted', 'active', 'succeeded')
-        ).order_by(
-            'user__id'
-        ).distinct('user').values_list('user_id', flat=True)
-
-        initiative_owner_ids = Initiative.objects.filter(
-            self.date_filter('created'),
-            status='approved'
-        ).order_by(
-            'owner__id'
-        ).distinct('owner').values_list('owner_id', flat=True)
-
-        activity_owner_ids = Activity.objects.filter(
-            self.date_filter('created'),
-            status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
-        ).order_by(
-            'owner__id'
-        ).distinct('owner').values_list('owner_id', flat=True)
-
-        people_count = len(set(contributor_ids) | set(initiative_owner_ids) | set(activity_owner_ids))
+        people_count = Contribution.objects.filter(
+            status='succeeded',
+            start__gte=self.start,
+            start__lte=self.end
+        ).distinct('user').count()
 
         # Add anonymous donations
         people_count += len(Contributor.objects.filter(
@@ -80,7 +73,7 @@ class Statistics(object):
             status='succeeded'
         ))
 
-        # Add donations on behalve of another person
+        # Add donations on behalf of another person
         people_count += len(Donor.objects.filter(
             self.date_filter('contributor_date'),
             user_id__isnull=False,
@@ -91,40 +84,31 @@ class Statistics(object):
         return people_count
 
     @property
-    @memoize(timeout=timeout)
     def time_activities_succeeded(self):
         """ Total number of succeeded tasks """
-        date_activities = DateActivity.objects.filter(
-            self.date_filter('slots__start'),
-            status='succeeded'
-        )
 
-        period_activities = PeriodicActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
+        activity_filters = [
+            (DateActivity, 'slots__start'),
+            (PeriodicActivity, 'deadline'),
+            (DeadlineActivity, 'deadline'),
+            (ScheduleActivity, 'deadline'),
+        ]
+
+        return sum(
+            len(self.filter_activities(model, date_field, ['succeeded']))
+            for model, date_field in activity_filters
         )
-        schedule_activities = ScheduleActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
-        deadline_activities = DeadlineActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
-        return len(date_activities) + len(period_activities) + len(schedule_activities) + len(deadline_activities)
 
     @property
-    @memoize(timeout=timeout)
     def fundings_succeeded(self):
         """ Total number of succeeded tasks """
         tasks = Funding.objects.filter(
-            self.date_filter('transition_date'),
+            self.date_filter('deadline'),
             status='succeeded'
         )
         return len(tasks)
 
     @property
-    @memoize(timeout=timeout)
     def deeds_succeeded(self):
         """ Total number of succeeded tasks """
         return len(Deed.objects.filter(
@@ -133,31 +117,10 @@ class Statistics(object):
         ))
 
     @property
-    @memoize(timeout=timeout)
     def time_activities_online(self):
         """ Total number of online tasks """
 
-        date_activities = DateActivity.objects.filter(
-            self.date_filter('slots__start'),
-            status__in=('open', 'full', 'running')
-        )
-
-        period_activities = PeriodicActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running')
-        )
-        deadline_activities = DeadlineActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running')
-        )
-        schedule_activities = ScheduleActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running')
-        )
-        return len(date_activities) + len(period_activities) + len(deadline_activities) + len(schedule_activities)
-
     @property
-    @memoize(timeout=timeout)
     def deeds_online(self):
         """ Total number of online tasks """
 
@@ -167,7 +130,6 @@ class Statistics(object):
         ))
 
     @property
-    @memoize(timeout=timeout)
     def fundings_online(self):
         """ Total number of succeeded tasks """
         fundings = Funding.objects.filter(
@@ -177,89 +139,41 @@ class Statistics(object):
         return len(fundings)
 
     @property
-    @memoize(timeout=timeout)
     def activities_succeeded(self):
         """ Total number of succeeded tasks """
-        date_activities = DateActivity.objects.filter(
-            self.date_filter('slots__start'),
-            status='succeeded'
-        )
 
-        periodic_activities = PeriodicActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
-        deadline_activities = DeadlineActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
-        schedule_activities = ScheduleActivity.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
+        activity_filters = [
+            (DateActivity, 'slots__start'),
+            (PeriodicActivity, 'deadline'),
+            (DeadlineActivity, 'deadline'),
+            (ScheduleActivity, 'deadline'),
+        ]
 
-        funding_activities = Funding.objects.filter(
-            self.date_filter('deadline'),
-            status='succeeded'
-        )
-
-        deed_activities = Deed.objects.filter(
-            self.date_filter('end'),
-            status='succeeded'
-        )
-        return (
-            len(date_activities) +
-            len(funding_activities) +
-            len(periodic_activities) +
-            len(deadline_activities) +
-            len(schedule_activities) +
-            len(deed_activities)
+        return sum(
+            len(self.filter_activities(model, date_field, ['succeeded']))
+            for model, date_field in activity_filters
         )
 
     @property
-    @memoize(timeout=timeout)
     def activities_online(self):
-        """ Total number of activities that have been in campaign mode"""
-        date_activities = DateActivity.objects.filter(
-            self.date_filter('slots__start'),
-            status__in=('open', 'full', 'running',)
-        )
+        """Total number of activities that have been in campaign mode"""
 
-        periodic_activities = PeriodicActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running',)
-        )
+        activity_filters = [
+            (DateActivity, 'slots__start'),
+            (PeriodicActivity, 'start'),
+            (DeadlineActivity, 'start'),
+            (ScheduleActivity, 'start'),
+            (CollectActivity, 'start'),
+            (Funding, 'start'),
+            (Deed, 'start'),
+        ]
 
-        deadline_activities = DeadlineActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running',)
-        )
-
-        schedule_activities = ScheduleActivity.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running',)
-        )
-
-        funding_activities = Funding.objects.filter(
-            self.date_filter('deadline'),
-            status__in=('open', 'full', 'running',)
-        )
-
-        deed_activities = Deed.objects.filter(
-            self.date_filter('end'),
-            status__in=('open', 'running',)
-        )
-        return (
-            len(date_activities) +
-            len(funding_activities) +
-            len(periodic_activities) +
-            len(deadline_activities) +
-            len(schedule_activities) +
-            len(deed_activities)
+        return sum(
+            len(self.filter_activities(model, date_field, ['open', 'full', 'running']))
+            for model, date_field in activity_filters
         )
 
     @property
-    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all activities"""
         donations = Donor.objects.filter(
@@ -276,40 +190,53 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=timeout)
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         contributions = TimeContribution.objects.filter(
             self.date_filter('start'),
             status='succeeded'
-        ).aggregate(time_spent=Sum('value'))
+        )
+        if self.subregion:
+            contributions = contributions.filter(
+                contributor__user__location__subregion=self.subregion
+            )
+
+        contributions = contributions.aggregate(time_spent=Sum('value'))
         if contributions['time_spent']:
             return contributions['time_spent'].total_seconds() / 3600
         return 0
 
     @property
-    @memoize(timeout=timeout)
     def deeds_done(self):
         """ Total amount of time spent on realized tasks """
-        return len(EffortContribution.objects.filter(
+        efforts = EffortContribution.objects.filter(
             self.date_filter('start'),
             contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant),
             status='succeeded'
-        ))
+        )
+        if self.subregion:
+            efforts = efforts.filter(
+                contributor__user__location__subregion=self.subregion
+            )
+        return efforts.count()
 
     @property
-    @memoize(timeout=timeout)
     def activity_participants(self):
         """ Total number of realized task members """
         contributions = TimeContribution.objects.filter(
             self.date_filter('start'),
             status='succeeded'
-        ).aggregate(count=Count('contributor__user', distinct=True))
+        )
 
+        if self.subregion:
+            contributions = contributions.filter(
+                contributor__user__location__subregion=self.subregion
+            )
+
+        contributions = contributions.aggregate(count=Count('contributor__user', distinct=True))
         return contributions['count'] or 0
 
     @property
-    @memoize(timeout=timeout)
     def donations(self):
         """ Total number of realized task members """
         donations = Donor.objects.filter(
@@ -320,7 +247,6 @@ class Statistics(object):
         return len(donations)
 
     @property
-    @memoize(timeout=timeout)
     def amount_matched(self):
         """ Total amount matched on realized (done and incomplete) activities """
         totals = Funding.objects.filter(
@@ -337,22 +263,21 @@ class Statistics(object):
             return Money(0, properties.DEFAULT_CURRENCY)
 
     @property
-    @memoize(timeout=timeout)
     def participants(self):
         """ Total numbers of participants (members that started a initiative, or where a realized task member) """
-        initiative_owner_count = len(
-            Initiative.objects.filter(
-                self.date_filter('created'),
-                status='approved'
-            ).order_by(
-                'owner__id'
-            ).distinct('owner').values_list('owner_id', flat=True)
-        )
+        initiative_owners = Initiative.objects.filter(
+            self.date_filter('created'),
+            status='approved'
+        ).distinct('owner')
 
-        return initiative_owner_count + self.activity_participants
+        if self.subregion:
+            initiative_owners = initiative_owners.filter(
+                owner__location__subregion=self.subregion
+            )
+
+        return initiative_owners.count() + self.activity_participants
 
     @property
-    @memoize(timeout=timeout)
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = PledgePayment.objects.filter(
@@ -372,13 +297,14 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=timeout)
     def members(self):
         """ Total amount of members."""
         members = Member.objects.filter(
             self.date_filter('date_joined'),
             is_active=True
         )
+        if self.subregion:
+            members = members.filter(location__subregion=self.subregion)
         return len(members)
 
     def __repr__(self):

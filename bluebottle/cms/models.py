@@ -260,6 +260,18 @@ class HomepageStatisticsContent(TitledContent):
     preview_template = 'admin/cms/preview/homepage-statistics.html'
     year = models.IntegerField(blank=True, null=True)
 
+    class StatTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
+    stat_type = models.CharField(
+        _("Stat type"),
+        max_length=100,
+        choices=StatTypeChoices.choices,
+        default=StatTypeChoices.all,
+        help_text=_('Stats will show all data or only activities from the user\'s office group')
+    )
+
     class Meta:
         verbose_name = _('Statistics')
 
@@ -350,17 +362,18 @@ class ShareResultsContent(TitledContent):
 @python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
 
+    type = 'projects-map'
+
     class MapTypeChoices(DjangoChoices):
         all = ChoiceItem('all', label=_("Global"))
         office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
 
-    type = 'projects-map'
     map_type = models.CharField(
         _("Map type"),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,
-        help_text=_('The map will show all projects or only projects from the user\'s office group')
+        help_text=_('The map will show all activities or only from the user\'s office group')
     )
 
     class Meta:

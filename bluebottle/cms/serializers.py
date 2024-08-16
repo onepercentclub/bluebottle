@@ -680,8 +680,16 @@ class StatsLinkSerializer(CustomHyperlinkRelatedSerializer):
     def get_links(self, *args, **kwargs):
         url = reverse('statistics')
         obj = args[0]
+
+        url = url + '?'
+
+        if obj.stat_type == 'office_subregion':
+            user = get_current_user()
+            if user and user.location and user.location.subregion:
+                url += f'office_location__subregion={user.location.subregion.pk}'
+
         if obj.year:
-            url += f'?year={obj.year}'
+            url += f'&year={obj.year}'
         return {
             'related': url
         }
@@ -695,7 +703,7 @@ class StatsBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats', 'stat_type')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/stats'

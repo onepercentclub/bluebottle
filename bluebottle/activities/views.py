@@ -50,7 +50,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
     model = Activity
     queryset = Activity.objects.all()
     permission_classes = (
-        # TenantConditionalOpenClose,
+        TenantConditionalOpenClose,
     )
 
     def get_queryset(self):

@@ -43,11 +43,15 @@ class Statistics(object):
 
         return Q(**filter_args)
 
-    def filter_activities(self, model, date_field, statuses):
-        activities = model.objects.filter(
-            self.date_filter(date_field),
+    def filter_activities(self, model, date_field=None, statuses=None):
+        activities = model.objects
+        activities = activities.filter(
             status__in=statuses
         )
+        if date_field:
+            activities = activities.filter(
+                self.date_filter(date_field)
+            )
         if self.subregion:
             activities = activities.filter(
                 office_location__subregion=self.subregion
@@ -120,6 +124,18 @@ class Statistics(object):
     def time_activities_online(self):
         """ Total number of online tasks """
 
+        activity_filters = [
+            (DateActivity, None),
+            (PeriodicActivity, None),
+            (DeadlineActivity, None),
+            (ScheduleActivity, None),
+        ]
+
+        return sum(
+            len(self.filter_activities(model, date_field, ['open', 'full', 'running']))
+            for model, date_field in activity_filters
+        )
+
     @property
     def deeds_online(self):
         """ Total number of online tasks """
@@ -147,6 +163,9 @@ class Statistics(object):
             (PeriodicActivity, 'deadline'),
             (DeadlineActivity, 'deadline'),
             (ScheduleActivity, 'deadline'),
+            (CollectActivity, 'start'),
+            (Funding, 'start'),
+            (Deed, 'start'),
         ]
 
         return sum(
@@ -159,13 +178,13 @@ class Statistics(object):
         """Total number of activities that have been in campaign mode"""
 
         activity_filters = [
-            (DateActivity, 'slots__start'),
-            (PeriodicActivity, 'start'),
-            (DeadlineActivity, 'start'),
-            (ScheduleActivity, 'start'),
-            (CollectActivity, 'start'),
-            (Funding, 'start'),
-            (Deed, 'start'),
+            (DateActivity, None),
+            (PeriodicActivity, None),
+            (DeadlineActivity, None),
+            (ScheduleActivity, None),
+            (CollectActivity, None),
+            (Funding, None),
+            (Deed, None),
         ]
 
         return sum(

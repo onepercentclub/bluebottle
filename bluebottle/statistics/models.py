@@ -57,8 +57,6 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
         null=True, blank=True, max_length=20
     )
 
-    timeout = 3600
-
     def get_value(self, start=None, end=None, subregion=None):
         return self.value
 

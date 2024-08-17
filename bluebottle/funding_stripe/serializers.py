@@ -1,5 +1,6 @@
 from builtins import object
 
+from django.urls import reverse
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
@@ -47,10 +48,12 @@ class StripePaymentSerializer(PaymentSerializer):
 class ConnectAccountSerializer(serializers.ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
     owner = ResourceRelatedField(read_only=True)
-    token = serializers.CharField(read_only=True, allow_blank=True)
     account = serializers.DictField(read_only=True)
-
     external_accounts = ResourceRelatedField(read_only=True, many=True)
+    session_link = serializers.SerializerMethodField()
+
+    def get_session_link(self, obj):
+        return reverse('stripe-account-session', kwargs={'pk': obj.id})
 
     included_serializers = {
         'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
@@ -61,11 +64,9 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         model = StripePayoutAccount
 
         fields = (
-            'id', 'token', 'country', 'document_type',
+            'id', 'account_id', 'country', 'document_type',
             'verified', 'owner', 'disabled', 'account',
-            'external_accounts', 'required', 'errors',
-            'required_fields', 'status',
-            'country'
+            'external_accounts', 'country', 'current_status', 'business_type', 'session_link'
         )
         meta_fields = ('current_status',)
 
@@ -74,24 +75,21 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         included_resources = ['external_accounts', 'owner']
 
 
-class ConnectAccountSessionSerializer(serializers.ModelSerializer):
-    client_secret = serializers.CharField(read_only=True, required=False, allow_blank=True)
+class ConnectAccountSessionSerializer(ConnectAccountSerializer):
+    client_secret = serializers.SerializerMethodField()
 
-    included_serializers = {
-        'account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
-    }
+    def get_client_secret(self, obj):
+        return obj.get_client_secret()
 
     class Meta(object):
         model = StripePayoutAccount
 
         fields = (
-            'client_secret',
+            'id', 'account_id', 'client_secret'
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'payout-accounts/stripe/sessions'
-
-        included_resources = ['account', ]
+        resource_name = 'payout-accounts/stripe-sessions'
 
 
 class StripeSourcePaymentSerializer(PaymentSerializer):

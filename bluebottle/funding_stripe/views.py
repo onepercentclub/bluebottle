@@ -145,7 +145,7 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
             country=obj.country,
             type='custom',
             settings=obj.account_settings,
-            business_type='individual',
+            business_type=obj.business_type,
             capabilities={"transfers": {"requested": True}, "card_payments": {"requested": True}},
             business_profile={
                 'url': 'https://goodup.com',
@@ -190,43 +190,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
         serializer.instance.check_status()
 
 
-class ConnectAccountSession(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
-    queryset = StripePayoutAccount.objects.all()
+class ConnectAccountSession(ConnectAccountDetails):
     serializer_class = ConnectAccountSessionSerializer
-
-    # permission_classes = (IsAuthenticated, IsOwner,)
-
-    def get(self, request, *args, **kwargs):
-        payout_account = self.get_object()
-        stripe = get_stripe()
-
-        try:
-            account_session = stripe.AccountSession.create(
-                account=payout_account.account_id,
-                components={
-                    "account_onboarding": {
-                        "enabled": True,
-                        "features": {
-                            "external_account_collection": True
-                        },
-
-                    },
-                    "payments": {
-                        "enabled": True,
-                        "features": {
-                            "refund_management": True,
-                            "dispute_management": True,
-                            "capture_payments": True
-                        }
-                    },
-                },
-            )
-            print('Account session created: ', account_session.client_secret)
-            return HttpResponse(json.dumps({'client_secret': account_session.client_secret}), status=200)
-
-        except Exception as e:
-            print('An error occurred when calling the Stripe API to create an account session: ', e)
-            return HttpResponse(json.dumps({'error': str(e)}), status=500)
 
 
 class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

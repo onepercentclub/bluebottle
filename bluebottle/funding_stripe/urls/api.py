@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^/payout-account/(?P<pk>[\d]+)$',
         ConnectAccountDetails.as_view(),
         name='connect-account-details'),
-    url(r'^/payout-account/(?P<pk>[\d]+)/session$',
+    url(r'^/payout-account-session/(?P<pk>[\d]+)$',
         ConnectAccountSession.as_view(),
         name='stripe-account-session'),
 

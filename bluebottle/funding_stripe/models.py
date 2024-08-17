@@ -363,6 +363,7 @@ class StripePayoutAccount(PayoutAccount):
 
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
+    business_type = models.CharField(max_length=100, blank=True)
 
     document_type = models.CharField(max_length=20, blank=True)
     eventually_due = models.JSONField(null=True, default=list)
@@ -523,6 +524,30 @@ class StripePayoutAccount(PayoutAccount):
                 },
             },
         )
+
+    def get_client_secret(self):
+        stripe = get_stripe()
+        account_session = stripe.AccountSession.create(
+            account=self.account_id,
+            components={
+                "account_onboarding": {
+                    "enabled": True,
+                    "features": {
+                        "external_account_collection": True
+                    },
+
+                },
+                "payments": {
+                    "enabled": True,
+                    "features": {
+                        "refund_management": True,
+                        "dispute_management": True,
+                        "capture_payments": True
+                    }
+                },
+            },
+        )
+        return account_session.client_secret
 
     def check_status(self):
         if self.account:

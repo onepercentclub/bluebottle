@@ -208,20 +208,6 @@ Dashboard.prototype = {
         if (window.confirm("Are you sure you want to remove this widget?") ){
           deleteModule();
         }
-
-        // buttons[t("Delete")] = function() {
-        //   deleteModule();
-        //   $(this).dialog("close");
-        // };
-        //
-        // buttons[t("Cancel")] = function() {
-        //   $(this).dialog("close");
-        // };
-        // $dashboard.find("#module-remove-dialog").dialog({
-        //   resizable: false,
-        //   modal: true,
-        //   buttons: buttons
-        // });
       });
     });
   },

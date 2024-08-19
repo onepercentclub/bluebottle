@@ -105,7 +105,7 @@ class OfficeRegionAdmin(admin.ModelAdmin):
 def region_manager_filter(queryset, user):
 
     model = queryset.model
-    if model == Member and user.is_superuser:
+    if user.is_superuser:
         return queryset
     elif user.region_manager:
         if model == Initiative:

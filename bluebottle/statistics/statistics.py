@@ -5,7 +5,7 @@ from django.db.models import Q, Count
 from django.db.models.aggregates import Sum
 from moneyed.classes import Money
 
-from bluebottle.activities.models import Contributor, EffortContribution, Contribution
+from bluebottle.activities.models import Contributor, EffortContribution, Activity
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -60,11 +60,29 @@ class Statistics(object):
         The (unique) total number of people that donated, fundraised, campaigned, or was a
         task owner or  member.
         """
-        people_count = Contribution.objects.filter(
-            status='succeeded',
-            start__gte=self.start,
-            start__lte=self.end
-        ).distinct('user').count()
+        contributor_ids = Contributor.objects.filter(
+            self.date_filter('contributions__start'),
+            user_id__isnull=False,
+            status__in=('new', 'accepted', 'active', 'succeeded')
+        ).order_by(
+            'user__id'
+        ).distinct('user').values_list('user_id', flat=True)
+
+        initiative_owner_ids = Initiative.objects.filter(
+            self.date_filter('created'),
+            status='approved'
+        ).order_by(
+            'owner__id'
+        ).distinct('owner').values_list('owner_id', flat=True)
+
+        activity_owner_ids = Activity.objects.filter(
+            self.date_filter('created'),
+            status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
+        ).order_by(
+            'owner__id'
+        ).distinct('owner').values_list('owner_id', flat=True)
+
+        people_count = len(set(contributor_ids) | set(initiative_owner_ids) | set(activity_owner_ids))
 
         # Add anonymous donations
         people_count += len(Contributor.objects.filter(

@@ -75,7 +75,7 @@ class Statistics(object):
             'owner__id'
         ).distinct('owner').values_list('owner_id', flat=True)
 
-        activity_owner_ids = Activity.objects.filter(
+        activity_owner_ids = Activity .objects.filter(
             self.date_filter('created'),
             status__in=['open', 'full', 'running', 'succeeded', 'partially_funded']
         ).order_by(
@@ -165,6 +165,9 @@ class Statistics(object):
             (PeriodicActivity, 'deadline'),
             (DeadlineActivity, 'deadline'),
             (ScheduleActivity, 'deadline'),
+            (CollectActivity, 'end'),
+            (Funding, 'deadline'),
+            (Deed, 'end'),
         ]
 
         return sum(

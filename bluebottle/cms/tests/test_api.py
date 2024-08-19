@@ -520,7 +520,10 @@ class HomeTestCase(APITestCase):
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
-        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list')
+        self.assertEqual(
+            stats_block['relationships']['stats']['links']['related'],
+            '/api/statistics/list?'
+        )
 
     def test_stats_with_year(self):
         block = HomepageStatisticsContent.objects.create_for_placeholder(self.placeholder)
@@ -538,7 +541,10 @@ class HomeTestCase(APITestCase):
         )
 
         stats_block = get_include(response, 'pages/blocks/stats')
-        self.assertEqual(stats_block['relationships']['stats']['links']['related'], '/api/statistics/list?year=2023')
+        self.assertEqual(
+            stats_block['relationships']['stats']['links']['related'],
+            '/api/statistics/list?&year=2023'
+        )
 
     def test_steps(self):
         block = StepsContent.objects.create_for_placeholder(self.placeholder)

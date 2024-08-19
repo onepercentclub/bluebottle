@@ -109,27 +109,31 @@ def region_manager_filter(queryset, user):
         return queryset
     elif user.region_manager:
         if model == Initiative:
-            # Filter initiatives by office subregion, either by owner or connected activities
             subregion_filter = Q(activities__office_location__subregion=user.region_manager)
             owner_filter = Q(owner__location__subregion=user.region_manager)
-            queryset = queryset.filter(subregion_filter | owner_filter).distinct()
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif issubclass(model, Activity):
-            # Filter activities by office subregion or by owner location
             subregion_filter = Q(office_location__subregion=user.region_manager)
             owner_filter = Q(owner__location__subregion=user.region_manager)
-            queryset = queryset.filter(subregion_filter | owner_filter).distinct()
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == Member:
+            subregion_filter = Q(location__subregion=user.region_manager)
+            self_filter = Q(id=user.id)
             queryset = queryset.filter(
-                location__subregion=user.region_manager
+                subregion_filter | self_filter
             ).distinct()
         elif issubclass(model, Contribution):
             subregion_filter = Q(contributor__activity__office_location__subregion=user.region_manager)
             owner_filter = Q(contributor__activity__owner__location__subregion=user.region_manager)
-            queryset = queryset.filter(subregion_filter | owner_filter).distinct()
+            self_filter = Q(contributor__activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == TeamMember:
             subregion_filter = Q(team__activity__office_location__subregion=user.region_manager)
             owner_filter = Q(team__activity__owner__location__subregion=user.region_manager)
-            queryset = queryset.filter(subregion_filter | owner_filter).distinct()
+            self_filter = Q(team__activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif (
             issubclass(model, Contributor)
             or issubclass(model, Slot)
@@ -137,7 +141,8 @@ def region_manager_filter(queryset, user):
         ):
             subregion_filter = Q(activity__office_location__subregion=user.region_manager)
             owner_filter = Q(activity__owner__location__subregion=user.region_manager)
-            queryset = queryset.filter(subregion_filter | owner_filter).distinct()
+            self_filter = Q(activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         else:
             raise NotImplementedError(f'No region manager filter implemented for {model}')
     return queryset

@@ -72,20 +72,27 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripes'
-        included_resources = ['external_accounts', 'owner']
+        included_resources = [
+            'external_accounts',
+            'owner'
+        ]
 
 
 class ConnectAccountSessionSerializer(ConnectAccountSerializer):
     client_secret = serializers.SerializerMethodField()
+    account_link = serializers.SerializerMethodField()
 
     def get_client_secret(self, obj):
         return obj.get_client_secret()
+
+    def get_account_link(self, obj):
+        return obj.get_account_link()
 
     class Meta(object):
         model = StripePayoutAccount
 
         fields = (
-            'id', 'account_id', 'client_secret'
+            'id', 'account_id', 'client_secret', 'account_link',
         )
 
     class JSONAPIMeta(object):
@@ -107,6 +114,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
     connect_account = ResourceRelatedField(queryset=StripePayoutAccount.objects.all())
     token = serializers.CharField(write_only=True)
 
+    account_name = serializers.CharField(read_only=True, source='connect_account.name')
     account_holder_name = serializers.CharField(read_only=True, source='account.account_holder_name')
     country = serializers.CharField(read_only=True, source='account.country')
     last4 = serializers.CharField(read_only=True, source='account.last4')
@@ -130,12 +138,13 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
             'last4',
             'currency',
             'routing_number',
-            'bank_name'
+            'bank_name',
+            'account_name'
         )
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/stripe-external-accounts'
-        included_resources = ['connect-account']
+        included_resources = ['connect_account']
 
 
 class PayoutStripeBankSerializer(serializers.ModelSerializer):

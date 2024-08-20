@@ -137,6 +137,9 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
 
     permission_classes = (IsAuthenticated, IsOwner,)
 
+    def get_queryset(self, *args, **kwargs):
+        return self.queryset.filter(owner=self.request.user)
+
     def perform_create(self, serializer):
         obj = serializer.save(owner=self.request.user)
 

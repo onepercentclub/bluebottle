@@ -21,6 +21,7 @@ from bluebottle.funding.models import (
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.models import ValidatorError
+from ..utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible
@@ -503,27 +504,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def client_secret(self):
-        stripe = get_stripe()
-        return stripe.AccountSession.create(
-            account=self.account_id,
-            components={
-                "account_onboarding": {
-                    "enabled": True,
-                    "features": {
-                        "external_account_collection": True
-                    },
-
-                },
-                "payments": {
-                    "enabled": True,
-                    "features": {
-                        "refund_management": True,
-                        "dispute_management": True,
-                        "capture_payments": True
-                    }
-                },
-            },
-        )
+        return self.get_client_secret()
 
     def get_client_secret(self):
         stripe = get_stripe()
@@ -535,19 +516,25 @@ class StripePayoutAccount(PayoutAccount):
                     "features": {
                         "external_account_collection": True
                     },
-
-                },
-                "payments": {
-                    "enabled": True,
-                    "features": {
-                        "refund_management": True,
-                        "dispute_management": True,
-                        "capture_payments": True
-                    }
                 },
             },
         )
         return account_session.client_secret
+
+    def get_account_link(self):
+        stripe = get_stripe()
+        url = get_current_host() + '/' + get_current_language() + '/payout-accounts/overview'
+        account_link = stripe.AccountLink.create(
+            account=self.account_id,
+            refresh_url=url,
+            return_url=url,
+            type="account_onboarding",
+            collection_options={
+                "fields": "eventually_due",
+                "future_requirements": "include",
+            }
+        )
+        return account_link.url
 
     def check_status(self):
         if self.account:
@@ -643,6 +630,16 @@ class StripePayoutAccount(PayoutAccount):
         if not hasattr(self, '_account'):
             self._account = self.retrieve_account()
         return self._account
+
+    @cached_property
+    def name(self):
+        if self.account.business_profile.name:
+            return self.account.business_profile.name
+
+        if self.account.individual.first_name:
+            return f"{self.account.individual.first_name} {self.account.individual.last_name}"
+
+        return self.owner.full_name
 
     def save(self, *args, **kwargs):
         if self.account_id and not self.country == self.account.country:

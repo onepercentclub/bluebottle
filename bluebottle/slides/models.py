@@ -32,7 +32,7 @@ class Slide(PublishableModel):
         verbose_name=_("Office group"),
         help_text=_(
             "Select a region to make the slide only visible to visitors from the "
-            "same region or leave empty to make the slide visible for everyone."
+            "same region or select 'Global' to make the slide visible for everyone."
         )
     )
     language = models.CharField(

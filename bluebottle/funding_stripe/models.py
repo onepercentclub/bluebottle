@@ -523,7 +523,7 @@ class StripePayoutAccount(PayoutAccount):
 
     def get_account_link(self):
         stripe = get_stripe()
-        url = get_current_host() + '/' + get_current_language() + '/payout-accounts/overview'
+        url = get_current_host() + '/' + get_current_language() + '/payout-account/overview'
         account_link = stripe.AccountLink.create(
             account=self.account_id,
             refresh_url=url,

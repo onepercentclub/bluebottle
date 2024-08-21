@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-15 09:10+0200\n"
-"PO-Revision-Date: 2024-08-15 07:14\n"
+"POT-Creation-Date: 2024-08-21 12:19+0200\n"
+"PO-Revision-Date: 2024-08-21 10:22\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt\n"
@@ -10157,6 +10157,7 @@ msgstr "\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:6
+#: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:6
 #| msgid ""
 #| "\n"
 #| "        Hello %(receiver_name)s\n"
@@ -10164,7 +10165,7 @@ msgstr "\n"
 #| "    "
 msgctxt "email"
 msgid "\n"
-"      %(team_name)s has joined your activity \"%(title)s\"!\n"
+"      %(applicant_name)s has registered their team for your activity \"%(title)s\"!\n"
 "    "
 msgstr ""
 
@@ -10185,19 +10186,15 @@ msgstr "\n"
 "      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:16
+#, python-format
 msgctxt "email"
 msgid "\n"
 "      <ol>\n"
-"        <li>Contact the team captain {team captain name} to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
+"        <li>Contact the team captain %(applicant_name)s to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr "\n"
-"      <ol>\n"
-"        <li>Entre em contato com o capitão da equipe {team captain name} para discutir uma data específica, tempo e localização para quando eles podem participar da sua atividade.</li>\n"
-"        <li>Adicione esta informação à equipe através da aba 'Desprogramado' na lista de equipes na página de atividades. O capitão da equipe e os membros da equipe serão notificados quando a informação for adicionada.</li>\n"
-"      </ol>\n"
-"    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:24
 msgctxt "email"
@@ -10208,24 +10205,13 @@ msgstr "\n"
 "        Detalhes de contato do capitão:\n"
 "      "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:6
-#| msgid ""
-#| "\n"
-#| "        Hello %(receiver_name)s\n"
-#| "        <br><br>\n"
-#| "    "
-msgctxt "email"
-msgid "\n"
-"      %(team_name)s has applied to your activity \"%(title)s\"!\n"
-"    "
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:16
+#, python-format
 msgctxt "email"
 msgid "\n"
 "      <ol>\n"
 "        <li>Go to your activity to review the application and accept or reject them.</li>\n"
-"        <li>If accepted then contact the team captain {full name} to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
+"        <li>If accepted then contact the team captain %(applicant_name)s to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab of the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
@@ -11086,6 +11072,28 @@ msgstr "\n\n"
 "        %(author_name)s acabou de postar um comentário no seu <i>%(task_title)s</i>\n"
 "        post de parede.\n"
 "    "
+
+#: tenants/action-against-corona/settings.py:30
+#: tenants/boost-your-business/settings.py:32 tenants/mars/settings.py:31
+msgid "English"
+msgstr ""
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "\n"
+#~| "        Hello %(receiver_name)s\n"
+#~| "        <br><br>\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "      %(team_name)s has joined your activity \"%(title)s\"!\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "    "
 
 #, fuzzy
 #~| msgid ""

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-15 09:10+0200\n"
-"PO-Revision-Date: 2024-08-15 07:14\n"
+"POT-Creation-Date: 2024-08-21 12:19+0200\n"
+"PO-Revision-Date: 2024-08-21 10:22\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -10147,6 +10147,7 @@ msgstr "\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:6
+#: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:6
 #| msgid ""
 #| "\n"
 #| "        Hello %(receiver_name)s\n"
@@ -10154,7 +10155,7 @@ msgstr "\n"
 #| "    "
 msgctxt "email"
 msgid "\n"
-"      %(team_name)s has joined your activity \"%(title)s\"!\n"
+"      %(applicant_name)s has registered their team for your activity \"%(title)s\"!\n"
 "    "
 msgstr ""
 
@@ -10175,10 +10176,11 @@ msgstr "\n"
 "      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:16
+#, python-format
 msgctxt "email"
 msgid "\n"
 "      <ol>\n"
-"        <li>Contact the team captain {team captain name} to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
+"        <li>Contact the team captain %(applicant_name)s to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
@@ -10191,34 +10193,17 @@ msgid "\n"
 "      "
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:6
-#| msgid ""
-#| "\n"
-#| "        Hello %(receiver_name)s\n"
-#| "        <br><br>\n"
-#| "    "
-msgctxt "email"
-msgid "\n"
-"      %(team_name)s has applied to your activity \"%(title)s\"!\n"
-"    "
-msgstr ""
-
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:16
+#, python-format
 msgctxt "email"
 msgid "\n"
 "      <ol>\n"
 "        <li>Go to your activity to review the application and accept or reject them.</li>\n"
-"        <li>If accepted then contact the team captain {full name} to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
+"        <li>If accepted then contact the team captain %(applicant_name)s to discuss a specific date, time and location for when they can take part in your activity.</li>\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab of the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr "\n"
-"      <ol>\n"
-"        <li>Accédez à votre activité pour examiner la demande et les accepter ou les rejeter.</li>\n"
-"        <li>Si accepté alors contactez le capitaine de l'équipe {full name} pour discuter d'une date précise, heure et lieu pour la date à laquelle ils peuvent participer à votre activité.</li>\n"
-"        <li>Ajoutez ces informations à l’équipe via l’onglet « Déplanifié » de la liste des équipes sur la page d’activité. Le capitaine de l'équipe et les membres de l'équipe seront avertis lorsque l'information sera ajoutée.</li>\n"
-"      </ol>\n"
-"    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:25
 msgctxt "email"
@@ -11069,6 +11054,28 @@ msgstr "\n\n"
 "        %(author_name)s vient de poster un commentaire sur votre wallpost <i>%(task_title)s</i>\n"
 "        .\n"
 "    "
+
+#: tenants/action-against-corona/settings.py:30
+#: tenants/boost-your-business/settings.py:32 tenants/mars/settings.py:31
+msgid "English"
+msgstr ""
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "\n"
+#~| "        Hello %(receiver_name)s\n"
+#~| "        <br><br>\n"
+#~| "    "
+#~ msgctxt "email"
+#~ msgid ""
+#~ "\n"
+#~ "      %(team_name)s has joined your activity \"%(title)s\"!\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "        Hello %(receiver_name)s\n"
+#~ "        <br><br>\n"
+#~ "    "
 
 #, fuzzy
 #~| msgid ""

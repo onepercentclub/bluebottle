@@ -467,6 +467,7 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
     inlines = [TeamMemberAdminInline]
 
     list_filter = [StateMachineFilter]
+    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)

@@ -101,7 +101,7 @@ def get_matching_activities(user):
             Term(is_online=True)
         )
 
-    if user.search_distance and user.place:
+    if user.search_distance and user.search_distance != "0km" and user.place:
         position = {
             'lat': float(user.place.position[1]),
             'lon': float(user.place.position[0]),
@@ -140,16 +140,14 @@ def recommend():
             settings = InitiativePlatformSettings.objects.get()
             if settings.enable_matching_emails:
                 for user in Member.objects.filter(subscribed=True):
-                    activities = get_matching_activities(user)
+                    try:
+                        activities = get_matching_activities(user)
 
-                    if activities:
-                        notification = MatchingActivitiesNotification(user)
-                        try:
-                            notification.compose_and_send(
-                                activities=activities
-                            )
-                        except Exception as e:
-                            logger.error(e)
+                        if activities:
+                            notification = MatchingActivitiesNotification(user)
+                            notification.compose_and_send(activities=activities)
+                    except Exception as e:
+                        logger.error(e)
 
 
 @periodic_task(

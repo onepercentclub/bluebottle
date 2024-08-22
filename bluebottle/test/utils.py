@@ -161,6 +161,10 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
         included = response.json()['included']
         return [include for include in included if include['type'] == type]
 
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        return self.assertEqual(obj.status, status)
+
     @classmethod
     def setUpClass(cls):
         super(BluebottleTestCase, cls).setUpClass()

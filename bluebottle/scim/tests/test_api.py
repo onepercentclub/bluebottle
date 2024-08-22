@@ -1233,7 +1233,17 @@ class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCa
 
         data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['totalResults'], 2)
+        self.assertEqual(
+            data["totalResults"],
+            len(
+                Group.objects.exclude(
+                    name__in=(
+                        "Anonymous",
+                        "Authenticated",
+                    )
+                )
+            ),
+        )
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
         self.assertEqual(

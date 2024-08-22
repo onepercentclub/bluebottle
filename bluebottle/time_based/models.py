@@ -1507,6 +1507,17 @@ class Team(TriggerMixin, models.Model):
         on_delete=models.CASCADE
     )
 
+    name = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    description = models.TextField(
+        null=True,
+        blank=True
+    )
+
     status = models.CharField(max_length=40)
     created = models.DateTimeField(default=timezone.now)
 
@@ -1532,19 +1543,17 @@ class Team(TriggerMixin, models.Model):
         resource_name = 'teams/teams'
 
     def __str__(self):
-        return self.name
-
-    @property
-    def name(self):
-        return _('Team {name}').format(name=self.user.full_name)
-
-    @property
-    def short_name(self):
-        return _('Team {name}').format(name=self.user.first_name)
+        return str(self.name)
 
     def delete(self, using=None, keep_parents=False):
         self.registration.delete()
         return super().delete(using, keep_parents)
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = _("Team {name}").format(name=self.user.full_name)
+
+        super().save(*args, **kwargs)
 
 
 class TeamMember(TriggerMixin, models.Model):

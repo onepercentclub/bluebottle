@@ -710,7 +710,7 @@ class MemberProfileSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'about_me', 'required',
             'birthdate', 'segments', 'phone_number',
-            'location', 'place', 'themes', 'skills',
+            'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
             'subscribed', 'matching_options_set'
         )

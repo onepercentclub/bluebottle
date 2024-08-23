@@ -5503,7 +5503,7 @@ msgid "Offices"
 msgstr "Kantoren"
 
 #: bluebottle/initiatives/admin.py:264
-msgid "Options"
+msgid "elementOptions"
 msgstr "Opties"
 
 #: bluebottle/initiatives/dashboard.py:11

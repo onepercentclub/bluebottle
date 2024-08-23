@@ -5516,7 +5516,7 @@ msgid "Offices"
 msgstr "Büros"
 
 #: bluebottle/initiatives/admin.py:264
-msgid "Options"
+msgid "elementOptions"
 msgstr "Optionen"
 
 #: bluebottle/initiatives/dashboard.py:11

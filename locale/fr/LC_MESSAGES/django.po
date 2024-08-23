@@ -5498,8 +5498,8 @@ msgid "Offices"
 msgstr "Bureaux"
 
 #: bluebottle/initiatives/admin.py:264
-msgid "Options"
-msgstr "Options"
+msgid "elementOptions"
+msgstr "elementOptions"
 
 #: bluebottle/initiatives/dashboard.py:11
 msgid "Recently submitted initiatives"

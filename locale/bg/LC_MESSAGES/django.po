@@ -5302,7 +5302,7 @@ msgid "Offices"
 msgstr ""
 
 #: bluebottle/initiatives/admin.py:264
-msgid "Options"
+msgid "elementOptions"
 msgstr ""
 
 #: bluebottle/initiatives/dashboard.py:11

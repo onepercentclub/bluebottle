@@ -227,10 +227,10 @@ class FundingSerializer(BaseActivitySerializer):
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
     rewards = ResourceRelatedField(
-        queryset=Reward.objects.all(), many=True, required=False
+        many=True, read_only=True
     )
     budget_lines = ResourceRelatedField(
-        queryset=BudgetLine.objects.all(), many=True, required=False
+        many=True, read_only=True
     )
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
@@ -402,6 +402,7 @@ class DonorMemberValidator(object):
 
 class DonorListSerializer(BaseContributorListSerializer):
     amount = MoneySerializer()
+    payout_amount = MoneySerializer()
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
@@ -417,7 +418,7 @@ class DonorListSerializer(BaseContributorListSerializer):
 
     class Meta(BaseContributorListSerializer.Meta):
         model = Donor
-        fields = BaseContributorListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseContributorListSerializer.Meta.fields + ('amount', 'payout_amount', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributorListSerializer.JSONAPIMeta):
@@ -430,6 +431,8 @@ class DonorListSerializer(BaseContributorListSerializer):
 
 class DonorSerializer(BaseContributorSerializer):
     amount = MoneySerializer()
+    payout_amount = MoneySerializer(read_only=True)
+
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
@@ -459,7 +462,7 @@ class DonorSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = Donor
         fields = BaseContributorSerializer.Meta.fields + (
-            'amount', 'name', 'reward', 'anonymous', 'payment_methods', 'updates'
+            'amount', 'payout_amount', 'name', 'reward', 'anonymous', 'payment_methods', 'updates'
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):

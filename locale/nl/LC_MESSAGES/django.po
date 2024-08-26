@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-08-21 12:19+0200\n"
-"PO-Revision-Date: 2024-08-21 10:22\n"
+"PO-Revision-Date: 2024-08-26 08:05\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -10204,7 +10204,8 @@ msgctxt "email"
 msgid "\n"
 "      %(applicant_name)s has registered their team for your activity \"%(title)s\"!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"%(applicant_name)s heeft zich geregistreerd met een team voor je activiteit \"%(title)s\"!    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:12
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:12
@@ -10231,7 +10232,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"      <ol>\n"
+"        <li>Neem contact op met de teamleider %(applicant_name)s om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"        <li>Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"      </ol>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:24
 msgctxt "email"
@@ -10252,7 +10258,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab of the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"<ol>\n"
+"  <li>Ga naar je activiteit om de aanmelding te accepteren of af te wijzen.</li>\n"
+"  <li>Als je de aanmelding accepteert, neem dan contact op met de teamleider %(applicant_name)s om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"  <li>Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"</ol>    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:25
 msgctxt "email"
@@ -11164,7 +11175,7 @@ msgstr "\n\n"
 #: tenants/action-against-corona/settings.py:30
 #: tenants/boost-your-business/settings.py:32 tenants/mars/settings.py:31
 msgid "English"
-msgstr ""
+msgstr "Engels"
 
 #, fuzzy, python-format
 #~| msgid ""

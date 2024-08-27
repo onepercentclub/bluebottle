@@ -121,6 +121,7 @@ class CurrentMemberSerializer(MemberSerializer):
     )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
+    can_pledge = serializers.BooleanField(read_only=True)
 
     def get_has_initiatives(self, obj):
         return obj.is_initiator
@@ -133,6 +134,7 @@ class CurrentMemberSerializer(MemberSerializer):
             'segments',
             'has_initiatives',
             'profile',
+            'can_pledge'
         )
         meta_fields = ('permissions', )
 

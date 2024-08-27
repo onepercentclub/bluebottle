@@ -10251,8 +10251,8 @@ msgctxt "email"
 msgid "\n"
 "        Team captain contact details:\n"
 "      "
-msgstr "Kontaktdaten \n"
-"        Team-Kapitän\n"
+msgstr "\n"
+"        Kontaktdaten Team-Kapitän:\n"
 "      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:16
@@ -10272,8 +10272,8 @@ msgctxt "email"
 msgid "\n"
 "      Team captain contact details:\n"
 "    "
-msgstr "Kontaktdaten \n"
-"      Team-Kapitän\n"
+msgstr "\n"
+"      Kontaktdaten Team-Kapitän:\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/team_accepted.html:5

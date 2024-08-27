@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 import urllib.parse
 
@@ -187,7 +188,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     base_model = Wallpost
     list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address', 'pinned')
-    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
+    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter))
     ordering = ('-created',)
     search_fields = (
         'textwallpost__text', 'mediawallpost__text',

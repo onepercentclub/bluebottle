@@ -248,6 +248,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
+
+        if request.user.region_manager and not request.user.is_superuser:
+            read_only_fields += ("region_manager",)
+
         return read_only_fields
 
     def segment_types(self, obj):
@@ -417,8 +421,6 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
-
-    office_subregion_path = 'location__subregion'
 
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)

@@ -20,14 +20,20 @@ class BaseStatisticSerializer(ModelSerializer):
 
     def get_value(self, obj):
         params = self.context['request'].query_params
+        start = None
+        end = None
+        subregion = None
+
         if 'year' in params:
             year = int(params['year'])
             settings = MemberPlatformSettings.load()
             start = datetime.datetime(year, 1, 1, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
             end = datetime.datetime(year, 12, 31, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
-            value = obj.get_value(start, end)
-        else:
-            value = obj.get_value()
+
+        if 'office_location__subregion' in params:
+            subregion = params['office_location__subregion']
+
+        value = obj.get_value(start, end, subregion)
 
         try:
             return {

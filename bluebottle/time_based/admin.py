@@ -30,6 +30,7 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
+from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -55,6 +56,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -66,7 +68,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
+    inlines = (FollowAdminInline, UpdateInline, MessageAdminInline,)
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -345,8 +347,6 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     superadmin_fields = ['force_status']
 
-    office_subregion_path = 'team__activity__office_location__subregion'
-
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
         fieldsets = (
@@ -465,8 +465,6 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
     )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -758,8 +756,6 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
-    office_subregion_path = "activity__office_location__subregion"
-
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
@@ -786,8 +782,6 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     formfield_overrides = {
         models.DurationField: {

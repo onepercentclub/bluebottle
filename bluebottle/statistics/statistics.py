@@ -185,7 +185,7 @@ class Statistics(object):
             (DeadlineActivity, 'start'),
             (ScheduleActivity, 'start'),
             (CollectActivity, 'start'),
-            (Funding, 'start'),
+            (Funding, 'started'),
             (Deed, 'start'),
         ]
 

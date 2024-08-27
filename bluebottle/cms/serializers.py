@@ -184,6 +184,7 @@ class QuotesContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
+
     def __repr__(self):
         if 'start_date' in self.context and 'end_date' in self.context:
             start = self.context['start_date'].strftime(
@@ -558,6 +559,15 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
+
+    subregion = serializers.SerializerMethodField()
+
+    def get_subregion(self, obj):
+        if obj.map_type == 'office_subregion':
+            user = get_current_user()
+            if user and not user.is_anonymous and user.location and user.location.subregion:
+                return user.location.subregion.name
+
     activities = CustomHyperlinkRelatedSerializer(
         link="/api/activities/locations"
     )
@@ -574,7 +584,9 @@ class ProjectsMapBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = ProjectsMapContent
-        fields = BaseBlockSerializer.Meta.fields + ('activities', 'activities_url', 'map_type', 'activities_url')
+        fields = BaseBlockSerializer.Meta.fields + (
+            'activities', 'activities_url', 'map_type', 'activities_url', 'subregion'
+        )
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'
@@ -700,10 +712,17 @@ class StatsBlockSerializer(BaseBlockSerializer):
     sub_title = serializers.CharField()
     year = serializers.IntegerField()
     stats = StatsLinkSerializer()
+    subregion = serializers.SerializerMethodField()
+
+    def get_subregion(self, obj):
+        if obj.stat_type == 'office_subregion':
+            user = get_current_user()
+            if user and not user.is_anonymous and user.location and user.location.subregion:
+                return user.location.subregion.name
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats', 'stat_type')
+        fields = ('id', 'type', 'title', 'sub_title', 'year', 'stats', 'stat_type', 'subregion')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/stats'

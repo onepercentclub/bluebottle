@@ -222,8 +222,11 @@ class MemberPlatformSettings(BasePlatformSettings):
     @property
     def fiscal_year_start(self):
         offset = self.fiscal_month_offset
-        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
-        return (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+        month_start = (datetime(now().year, 1, 1) + relativedelta(months=offset)).month
+        fiscal_year =  (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, minute=0, second=0)
+        if now().month < month_start:
+            return fiscal_year - relativedelta(years=1)
+        return fiscal_year
 
     @property
     def fiscal_year_end(self):

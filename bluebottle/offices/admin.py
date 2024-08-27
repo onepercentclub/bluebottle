@@ -1,11 +1,17 @@
 from django.contrib import admin
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activities.models import Activity
+from bluebottle.activities.models import Activity, Contributor, Contribution
+from bluebottle.funding.models import Payout
 from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import Initiative
+from bluebottle.members.models import Member
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
+from bluebottle.time_based.models import TeamMember, Slot, Team
+from bluebottle.updates.models import Update
 
 
 class OfficeInline(admin.TabularInline):
@@ -94,3 +100,57 @@ class OfficeRegionAdmin(admin.ModelAdmin):
         )
 
     fields = ('name', 'description', 'subregions_link', 'offices', 'activities')
+
+
+def region_manager_filter(queryset, user):
+
+    model = queryset.model
+    if user.is_superuser:
+        return queryset
+    elif user.region_manager:
+        if model == Initiative:
+            subregion_filter = Q(activities__office_location__subregion=user.region_manager)
+            owner_filter = Q(owner__location__subregion=user.region_manager)
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        elif issubclass(model, Activity):
+            subregion_filter = Q(office_location__subregion=user.region_manager)
+            owner_filter = Q(owner__location__subregion=user.region_manager)
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        elif model == Member:
+            subregion_filter = Q(location__subregion=user.region_manager)
+            self_filter = Q(id=user.id)
+            queryset = queryset.filter(
+                subregion_filter | self_filter
+            ).distinct()
+        elif issubclass(model, Contribution):
+            subregion_filter = Q(contributor__activity__office_location__subregion=user.region_manager)
+            owner_filter = Q(contributor__activity__owner__location__subregion=user.region_manager)
+            self_filter = Q(contributor__activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        elif model == TeamMember:
+            subregion_filter = Q(team__activity__office_location__subregion=user.region_manager)
+            owner_filter = Q(team__activity__owner__location__subregion=user.region_manager)
+            self_filter = Q(team__activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        elif (
+            issubclass(model, Contributor)
+            or issubclass(model, Slot)
+            or model in [Team, Update, Payout]
+        ):
+            subregion_filter = Q(activity__office_location__subregion=user.region_manager)
+            owner_filter = Q(activity__owner__location__subregion=user.region_manager)
+            self_filter = Q(activity__owner=user)
+            queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
+        else:
+            raise NotImplementedError(f'No region manager filter implemented for {model}')
+    return queryset
+
+
+class RegionManagerAdminMixin:
+
+    def get_queryset(self, request):
+        queryset = super(RegionManagerAdminMixin, self).get_queryset(request)
+        queryset = region_manager_filter(queryset, request.user)
+        return queryset

@@ -127,4 +127,8 @@ def run(*args):
         if response.status_code == 200:
             print("[OK]")
         else:
+            text_file = open("email_documentation.html", "w")
+            text_file.write(html)
+            text_file.close()
+            print("You can find html out put in email_documentation.html")
             print("[ERROR]")

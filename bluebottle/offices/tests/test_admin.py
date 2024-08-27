@@ -1,4 +1,6 @@
+from django.contrib import admin
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from bluebottle.activities.admin import ActivityAdmin
@@ -6,11 +8,13 @@ from bluebottle.activities.models import Activity
 from bluebottle.geo.admin import LocationAdmin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.admin import OfficeSubRegionAdmin, OfficeRegionAdmin
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
-from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
+from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory, LocationFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DeadlineActivityFactory
 
 
 class MockRequest(object):
@@ -31,7 +35,7 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         self.africa = OfficeRegionFactory.create(name='Africa')
         self.europe = OfficeRegionFactory.create(name='Europe')
         self.bulgaria = OfficeSubRegionFactory.create(name='Bulgaria', region=self.europe)
-        OfficeSubRegionFactory.create_batch(6, region=self.europe)
+        self.subregions = OfficeSubRegionFactory.create_batch(6, region=self.europe)
         self.ghana = OfficeSubRegionFactory.create(name='Ghana', region=self.africa)
         OfficeSubRegionFactory.create_batch(3, region=self.africa)
         self.location1 = Location.objects.create(
@@ -102,19 +106,33 @@ class OfficeAdminTest(BluebottleAdminTestCase):
 
     def test_office_filters(self):
         request = MockRequest()
+        request.user = BlueBottleUserFactory.create()
         filters = self.activity_admin.get_list_filter(request)
-        self.assertTrue('office_location' in filters)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
         self.assertFalse('office_location__subregion_exact_id' in filters)
         self.assertFalse('office_location__subregion__region_exact_id' in filters)
 
     def test_office_filters_regions_enabled(self):
         request = MockRequest()
+        request.user = BlueBottleUserFactory.create()
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
         filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
         self.assertTrue('office_location__subregion' in filters)
         self.assertTrue('office_location__subregion__region' in filters)
+
+    def test_office_filters_region_manager(self):
+        request = MockRequest()
+        request.user = BlueBottleUserFactory.create(region_manager=self.subregions[0])
+        initiative_settings = InitiativePlatformSettings.objects.get()
+        initiative_settings.enable_office_regions = True
+        initiative_settings.save()
+        filters = self.activity_admin.get_list_filter(request)
+        self.assertTrue(('office_location', admin.RelatedOnlyFieldListFilter) in filters)
+        self.assertFalse('office_location__subregion_exact_id' in filters)
+        self.assertFalse('office_location__subregion__region_exact_id' in filters)
 
     def test_office_admin(self):
         self.client.force_login(self.superuser)
@@ -171,3 +189,69 @@ class OfficeAdminTest(BluebottleAdminTestCase):
         url = reverse('admin:index')
         page = self.app.get(url)
         self.assertTrue('Office group' in page.text)
+
+
+class RegionManagerAdminTest(BluebottleAdminTestCase):
+    """
+    Test Offices in admin
+    """
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
+
+    def setUp(self):
+        super().setUp()
+        self.subregion = OfficeSubRegionFactory.create()
+        self.office = LocationFactory.create(subregion=self.subregion)
+        self.region_manager = BlueBottleUserFactory.create(
+            is_staff=True,
+            region_manager=self.subregion
+        )
+        region_manager_group = Group.objects.get(name='Region Manager')
+        region_manager_group.user_set.add(self.region_manager)
+        self.app.set_user(self.region_manager)
+
+    def test_menu(self):
+        url = reverse('admin:index')
+        page = self.app.get(url)
+        self.assertFalse('Offices' in page.text)
+        self.assertFalse('Groups' in page.text)
+        self.assertFalse('Settings' in page.text)
+
+    def test_activity_list(self):
+        DeadlineActivityFactory.create()
+        DeadlineActivityFactory.create(
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory.create()
+            )
+        )
+        DeadlineActivityFactory.create(
+            office_location=LocationFactory.create(
+                subregion=self.subregion
+            )
+        )
+        DeadlineActivityFactory.create(office_location=self.office)
+        url = reverse('admin:activities_activity_changelist')
+        page = self.app.get(url)
+
+        self.assertTrue('2 Activities' in page.text, page.text)
+
+    def test_initiative_list(self):
+        owner = BlueBottleUserFactory.create(location=self.office)
+
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(owner=owner),
+            office_location=LocationFactory.create()
+        )
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(),
+            office_location=self.office
+        )
+        DeadlineActivityFactory.create(
+            initiative=InitiativeFactory.create(),
+            office_location=LocationFactory.create()
+        )
+
+        url = reverse('admin:initiatives_initiative_changelist')
+        page = self.app.get(url)
+        self.assertTrue('2 Initiatives' in page.text)

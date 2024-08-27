@@ -1847,7 +1847,11 @@ class ActivityLocationAPITestCase(APITestCase):
         DeadlineActivityFactory.create(status='succeeded')
 
         date_activity = DateActivityFactory.create(status="succeeded")
-        date_activity.slots.add(DateActivitySlotFactory.create(activity=date_activity))
+        slot = date_activity.slots.first()
+        date_activity.slots.add(DateActivitySlotFactory.create(
+            activity=date_activity,
+            location_id=slot.location_id
+        ))
 
         self.url = reverse('activity-location-list')
 

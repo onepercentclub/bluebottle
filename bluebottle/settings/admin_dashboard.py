@@ -215,6 +215,10 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "wallposts.reaction",
                 "permissions": ["wallposts.change_wallpost"],
             },
+            {
+                "name": "updates.update",
+                "permissions": ["updates.change_update"],
+            },
         ],
     },
     {

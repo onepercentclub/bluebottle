@@ -64,6 +64,8 @@ from bluebottle.utils.admin import (
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
+from ..offices.admin import RegionManagerAdminMixin
+from ..offices.models import OfficeSubRegion
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -228,13 +230,15 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             else:
                 description = _('Members are required to fill out the fields listed '
                                 'below when contributing to an activity.')
-            fieldsets += ((
-                _('Required fields'),
-                {
-                    'description': description,
-                    'fields': required_fields
-                }
-            ), )
+            fieldsets += (
+                (
+                    _('Required fields'),
+                    {
+                        'description': description,
+                        'fields': required_fields
+                    }
+                ),
+            )
 
         return fieldsets
 
@@ -244,6 +248,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
+
+        if request.user.region_manager and not request.user.is_superuser:
+            read_only_fields += ("region_manager",)
+
         return read_only_fields
 
     def segment_types(self, obj):
@@ -366,7 +374,6 @@ class LimitModelFormset(BaseInlineFormSet):
 
 
 class UserActivityInline(admin.TabularInline):
-
     readonly_fields = ['created', 'user', 'path']
     extra = 0
     model = UserActivity
@@ -407,7 +414,7 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(UserAdmin):
+class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location')
     date_hierarchy = 'date_joined'
 
@@ -419,17 +426,36 @@ class MemberAdmin(UserAdmin):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
 
+    permission_fields = [
+        'is_active',
+        'is_staff',
+        'is_superuser',
+        'groups',
+        'is_co_financer',
+        'can_pledge',
+        'verified',
+        'kyc'
+    ]
+
+    def get_permission_fields(self, request, obj=None):
+        fields = self.permission_fields.copy()
+        if OfficeSubRegion.objects.count():
+            fields.insert(4, 'region_manager')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         if not obj:
-            fieldsets = ((
-                None, {
-                    'classes': ('wide', ),
-                    'fields': [
-                        'first_name', 'last_name', 'email', 'is_active',
-                        'is_staff', 'groups'
-                    ]
-                }
-            ), )
+            fieldsets = (
+                (
+                    None, {
+                        'classes': ('wide',),
+                        'fields': [
+                            'first_name', 'last_name', 'email', 'is_active',
+                            'is_staff', 'groups'
+                        ]
+                    }
+                ),
+            )
         else:
             fieldsets = [
                 [
@@ -457,26 +483,17 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        [
-                            'picture',
-                            'about_me',
-                            'campaign_notifications',
-                        ]
+                            [
+                                'picture',
+                                'about_me',
+                                'campaign_notifications',
+                            ]
 
                     }
                 ],
                 [
                     _('Permissions'),
-                    {'fields': [
-                        'is_active',
-                        'is_staff',
-                        'is_superuser',
-                        'groups',
-                        'is_co_financer',
-                        'can_pledge',
-                        'verified',
-                        'kyc'
-                    ]}
+                    {'fields': self.get_permission_fields(request, obj)}
                 ],
                 [
                     _('Engagement'),
@@ -489,11 +506,11 @@ class MemberAdmin(UserAdmin):
                     _('Search'),
                     {
                         'fields':
-                        [
-                            'matching_options_set',
-                            'search_distance', 'any_search_distance', 'exclude_online',
-                            'place', 'favourite_themes', 'skills', 'subscribed',
-                        ]
+                            [
+                                'matching_options_set',
+                                'search_distance', 'any_search_distance', 'exclude_online',
+                                'place', 'favourite_themes', 'skills', 'subscribed',
+                            ]
                     }
                 ],
             ]
@@ -598,15 +615,18 @@ class MemberAdmin(UserAdmin):
 
     def hours_spent(self, obj):
         return obj.hours_spent
+
     hours_spent.short_description = _("Hours spent this year")
 
     def hours_planned(self, obj):
         return obj.hours_planned
+
     hours_planned.short_description = _("Hours planned this year")
 
     def all_contributions(self, obj):
         url = reverse('admin:activities_contribution_changelist') + f'?contributor__user_id={obj.id}'
         return format_html('<a href={}>{}</a>', url, _("Show all contributions"))
+
     all_contributions.short_description = _("All contributions")
 
     export_fields = (
@@ -684,6 +704,7 @@ class MemberAdmin(UserAdmin):
         if len(initiatives):
             return format_html('<ul>{}</ul>', format_html('<br/>'.join(initiatives)))
         return _('None')
+
     initiatives.short_description = _('Initiatives')
 
     def get_stats(self, obj, contributor_model):
@@ -714,14 +735,17 @@ class MemberAdmin(UserAdmin):
 
     def date_activities(self, obj):
         return self.get_stats(obj, DateParticipant)
+
     date_activities.short_description = _('Activity on a date')
 
     def periodic_activities(self, obj):
         return self.get_stats(obj, PeriodicParticipant)
+
     periodic_activities.short_description = _("Recurring activity")
 
     def deadline_activities(self, obj):
         return self.get_stats(obj, DeadlineParticipant)
+
     periodic_activities.short_description = _("Flexible activity")
 
     def schedule_activities(self, obj):
@@ -745,20 +769,24 @@ class MemberAdmin(UserAdmin):
                 Donor.objects.filter(status='succeeded', user=obj).count(),
             ))
         return format_html('<br/>'.join(donations)) or _('None')
+
     funding.short_description = _('Funding donations')
 
     def deeds(self, obj):
         return self.get_stats(obj, DeedParticipant)
+
     deeds.short_description = _('Deed participation')
 
     def collect(self, obj):
         return self.get_stats(obj, CollectContributor)
+
     collect.short_description = _('Collect contributor')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')
         follow_count = Follow.objects.filter(user=obj).count()
         return format_html('<a href="{}?user_id={}">{} objects</a>', url, obj.id, follow_count)
+
     following.short_description = _('Following')
 
     def reset_password(self, obj):
@@ -787,6 +815,7 @@ class MemberAdmin(UserAdmin):
             obj.funding_payout_account.count(),
             _("accounts")
         )
+
     kyc.short_description = _("KYC accounts")
 
     def get_inline_instances(self, request, obj=None):
@@ -841,7 +870,7 @@ class MemberAdmin(UserAdmin):
         )
         message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
         self.message_user(request, message)
-        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
     @confirmation_form(
         SendWelcomeMailConfirmationForm,
@@ -857,7 +886,7 @@ class MemberAdmin(UserAdmin):
         message = _('User {name} will receive an welcome email.').format(name=user.full_name)
         self.message_user(request, message)
 
-        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
     @confirmation_form(
         LoginAsConfirmationForm,
@@ -877,6 +906,7 @@ class MemberAdmin(UserAdmin):
             u"<a target='_blank' href='{}'>{}</a>",
             url, _('Login as user')
         )
+
     login_as_link.short_description = _('Login as')
 
     def has_delete_permission(self, request, obj=None):

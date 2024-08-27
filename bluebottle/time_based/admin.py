@@ -30,10 +30,12 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
+from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -54,6 +56,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -65,7 +68,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
+    inlines = (FollowAdminInline, UpdateInline, MessageAdminInline,)
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -334,7 +337,7 @@ class TeamScheduleRegistrationAdminInline(BaseContributorInline):
 
 
 @admin.register(TeamMember)
-class TeamMemberAdmin(StateMachineAdmin):
+class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
@@ -450,11 +453,16 @@ class TeamScheduleSlotAdminInline(BaseSlotAdminInline):
 
 
 @admin.register(Team)
-class TeamAdmin(PolymorphicInlineSupportMixin, StateMachineAdmin):
+class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMachineAdmin):
     model = Team
     list_display = ('user', 'created', 'activity')
     readonly_fields = ('activity', 'created', 'invite_code', 'registration_info')
-    fields = ('activity', 'user', 'registration_info', 'status', 'states', 'created', 'invite_code')
+    fields = (
+        'activity',
+        'user',
+        'name', 'description', 'registration_info',
+        'status', 'states', 'created', 'invite_code'
+    )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
 
@@ -739,7 +747,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
 
 
 @admin.register(PeriodicSlot)
-class PeriodicSlotAdmin(StateMachineAdmin):
+class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     list_display = ("start", "duration", "activity", "participant_count")
     inlines = (PeriodicParticipantAdminInline,)
 
@@ -759,7 +767,7 @@ class PeriodicSlotAdmin(StateMachineAdmin):
 
 
 @admin.register(ScheduleSlot)
-class ScheduleSlotAdmin(StateMachineAdmin):
+class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     list_display = ("start", "duration", "activity", "participant")
     raw_id_fields = ('activity', "location")

@@ -69,6 +69,11 @@ class Update(TriggerMixin, models.Model):
     class JSONAPIMeta():
         resource_name = 'updates'
 
+    def __str__(self):
+        if self.author:
+            return f'{self.author} - {self.created.strftime("%x %X")}'
+        return _('Anonymous - {time}').format(time=self.created.strftime("%x %X"))
+
 
 class UpdateImage(models.Model):
     image = ImageField()

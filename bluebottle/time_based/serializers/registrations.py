@@ -172,9 +172,9 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
     included_serializers = dict(
         RegistrationSerializer.included_serializers,
         **{
-            'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.ScheduleRegistrationDocumentSerializer',
-            'team': 'bluebottle.time_based.serializers.teams.TeamSerializer',
+            "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+            "document": "bluebottle.time_based.serializers.TeamScheduleRegistrationDocumentSerializer",
+            "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
             "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
             'team.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer'
         }
@@ -268,6 +268,11 @@ class DeadlineRegistrationDocumentSerializer(PrivateDocumentSerializer):
 class ScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'schedule-registration-document'
     relationship = 'registration_set'
+
+
+class TeamScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = "team-schedule-registration-document"
+    relationship = "registration_set"
 
 
 class PeriodicRegistrationDocumentSerializer(PrivateDocumentSerializer):

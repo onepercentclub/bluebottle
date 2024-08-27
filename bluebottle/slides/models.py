@@ -25,6 +25,16 @@ class Slide(PublishableModel):
         draft = ChoiceItem('draft', label=_("Draft"))
 
     slug = models.SlugField(_("Slug"))
+    sub_region = models.ForeignKey(
+        'offices.OfficeSubRegion',
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        verbose_name=_("Office group"),
+        help_text=_(
+            "Select a region to make the slide only visible to visitors from the "
+            "same region or select 'Global' to make the slide visible for everyone."
+        )
+    )
     language = models.CharField(
         _("language"), max_length=7,
         choices=lazy(get_language_choices, list)())

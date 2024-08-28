@@ -1,11 +1,28 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
-from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
-from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected, LivePayoutAccountRejected
+from bluebottle.fsm.triggers import (
+    TransitionTrigger,
+    ModelChangedTrigger,
+    register,
+    TriggerManager,
+)
+from bluebottle.funding.messages import (
+    PayoutAccountVerified,
+    PayoutAccountRejected,
+    LivePayoutAccountRejected,
+)
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.models import StripeSourcePayment, StripePayoutAccount, ExternalAccount
-from bluebottle.funding_stripe.states import StripeSourcePaymentStateMachine, StripeBankAccountStateMachine
+from bluebottle.funding_stripe.models import (
+    StripeSourcePayment,
+    StripePayoutAccount,
+    ExternalAccount,
+)
+from bluebottle.funding_stripe.states import (
+    StripePayoutAccountStateMachine,
+    StripeSourcePaymentStateMachine,
+    StripeBankAccountStateMachine,
+)
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -52,6 +69,14 @@ def has_live_campaign(effect):
 
 @register(StripePayoutAccount)
 class StripePayoutAccountTriggers(TriggerManager):
+    def account_verified(self):
+        """the connect account is verified"""
+        return self.instance.verified
+
+    def complete(self):
+        """The connect account is verified"""
+        return self.instance.payments_enabled and self.instance.payouts_enabled
+
     triggers = [
         TransitionTrigger(
             PayoutAccountStateMachine.verify,
@@ -80,19 +105,30 @@ class StripePayoutAccountTriggers(TriggerManager):
                 )
             ]
         ),
+        ModelChangedTrigger(
+            ["verified", "payouts_enabled", "payments_enabled"],
+            effects=[
+                TransitionEffect(
+                    StripePayoutAccountStateMachine.verify,
+                    conditions=[complete, account_verified],
+                )
+            ],
+        ),
     ]
 
 
-def account_verified(effect):
-    """connected payout account is verified"""
-    return (
-        effect.instance.connect_account and
-        effect.instance.connect_account.status == PayoutAccountStateMachine.verified.value
-    )
 
 
 @register(ExternalAccount)
 class StripeBankAccountTriggers(TriggerManager):
+    def account_verified(effect):
+        """connected payout account is verified"""
+        return (
+            effect.instance.connect_account
+            and effect.instance.connect_account.status
+            == PayoutAccountStateMachine.verified.value
+        )
+
     triggers = [
         TransitionTrigger(
             StripeBankAccountStateMachine.initiate,

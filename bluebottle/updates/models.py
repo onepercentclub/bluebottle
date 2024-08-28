@@ -59,9 +59,6 @@ class Update(TriggerMixin, models.Model):
 
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.created.strftime('%x %X')
-
     class Meta:
         verbose_name = _('Update')
         ordering = ('created',)

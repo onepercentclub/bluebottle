@@ -1,6 +1,5 @@
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, register, TriggerManager
-from bluebottle.funding.effects import SubmitConnectedActivitiesEffect
 from bluebottle.funding.messages import PayoutAccountVerified, PayoutAccountRejected, LivePayoutAccountRejected
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
@@ -95,12 +94,6 @@ def account_verified(effect):
 @register(ExternalAccount)
 class StripeBankAccountTriggers(TriggerManager):
     triggers = [
-        TransitionTrigger(
-            StripeBankAccountStateMachine.verify,
-            effects=[
-                SubmitConnectedActivitiesEffect
-            ]
-        ),
         TransitionTrigger(
             StripeBankAccountStateMachine.initiate,
             effects=[

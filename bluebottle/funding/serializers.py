@@ -4,9 +4,13 @@ from datetime import datetime
 import pytz
 from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
+
+
 from rest_framework_json_api.relations import (
+    HyperlinkedRelatedField,
     PolymorphicResourceRelatedField
 )
 from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
@@ -39,6 +43,7 @@ from bluebottle.funding_lipisha.serializers import (
 from bluebottle.funding_pledge.serializers import (
     PledgeBankAccountSerializer, PayoutPledgeBankAccountSerializer
 )
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.serializers import (
     ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
 )
@@ -221,6 +226,20 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
+class PKHyperlinkRelatedSerializer(HyperlinkedRelatedField):
+
+    def __init__(self, url_name, model, **kwargs):
+        self.url_name = url_name
+        self.model = model
+
+        super(PKHyperlinkRelatedSerializer, self).__init__(
+            source="parent", read_only=True, **kwargs
+        )
+
+    def get_links(self, obj, field_name):
+        return {"related": reverse(self.url_name, args=(getattr(obj, field_name),))}
+
+
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -236,6 +255,10 @@ class FundingSerializer(BaseActivitySerializer):
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+
+    connect_account = PKHyperlinkRelatedSerializer(
+        url_name="connect-account-detail", model=StripePayoutAccount, many=False
+    )
 
     bank_account = PolymorphicResourceRelatedField(
         BankAccountSerializer,
@@ -263,6 +286,9 @@ class FundingSerializer(BaseActivitySerializer):
         if obj.bank_account and obj.bank_account.connect_account:
             return obj.bank_account.provider
 
+    def get_connect_account(self, obj):
+        __import__("ipdb").set_trace()
+
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
@@ -283,22 +309,22 @@ class FundingSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'country',
-            'deadline',
-            'duration',
-            'target',
-            'amount_donated',
-            'amount_matching',
-            'amount_raised',
-            'account_info',
-            'co_financers',
-
-            'rewards',
-            'payment_methods',
-            'budget_lines',
-            'bank_account',
-            'supporters_export_url',
-            'psp'
+            "country",
+            "deadline",
+            "duration",
+            "target",
+            "amount_donated",
+            "amount_matching",
+            "amount_raised",
+            "account_info",
+            "co_financers",
+            "rewards",
+            "payment_methods",
+            "budget_lines",
+            "bank_account",
+            "connect_account",
+            "supporters_export_url",
+            "psp",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

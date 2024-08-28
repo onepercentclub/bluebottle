@@ -67,6 +67,30 @@ class FundingStateMachine(ActivityStateMachine):
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
+    def kyc_is_valid(self):
+        return (
+            self.instance.payout_account
+            and self.instance.payout_account.status == "verified"
+        )
+
+    submit = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.submitted,
+        description=_("Submit the activity for approval."),
+        automatic=False,
+        name=_("Submit"),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted,
+            kyc_is_valid,
+        ],
+    )
+
     approve = Transition(
         [
             ActivityStateMachine.needs_work,

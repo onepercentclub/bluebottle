@@ -7,26 +7,25 @@ from bluebottle.funding.models import PaymentProvider
 
 
 def get_currency_settings():
-    result = {}
+    result = []
     for provider in PaymentProvider.objects.all():
         for cur in provider.paymentcurrency_set.all():
-            if cur.code not in result:
-                result[cur.code] = {
-                    'provider': provider.name,
-                    'providerName': provider.title,
-                    'code': cur.code,
-                    'name': get_currency_name(cur.code),
-                    'symbol': get_currency_symbol(cur.code).replace('US$', '$').replace('NGN', '₦'),
-                    'defaultAmounts': [
-                        cur.default1,
-                        cur.default2,
-                        cur.default3,
-                        cur.default4,
-                    ],
-                    'minAmount': cur.min_amount,
-                    'maxAmount': cur.max_amount
-                }
-    return list(result.values())
+            result.append({
+                'provider': provider.name,
+                'providerName': provider.title,
+                'code': cur.code,
+                'name': get_currency_name(cur.code),
+                'symbol': get_currency_symbol(cur.code).replace('US$', '$').replace('NGN', '₦'),
+                'defaultAmounts': [
+                    cur.default1,
+                    cur.default2,
+                    cur.default3,
+                    cur.default4,
+                ],
+                'minAmount': cur.min_amount,
+                'maxAmount': cur.max_amount
+            })
+    return result
 
 
 def calculate_total(queryset, target='EUR'):

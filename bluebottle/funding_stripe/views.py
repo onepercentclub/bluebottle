@@ -441,7 +441,6 @@ class ConnectWebHookView(View):
         try:
             if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
-
                 print(event.data.object.individual.verification.status)
                 print(event.data.object.individual.requirements.eventually_due)
                 print(event.data.object.requirements.eventually_due)

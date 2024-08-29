@@ -38,7 +38,7 @@ urlpatterns = [
         StripePaymentIntentList.as_view(),
         name='stripe-payment-intent-list'),
 
-    url(r'^/payment-intents/(?P<intent_id>[\w_]+)$',
+    url(r'^/payment-intents/(?P<pk>[\d]+)$',
         StripePaymentIntentDetail.as_view(),
         name='stripe-payment-intent-detail'),
 

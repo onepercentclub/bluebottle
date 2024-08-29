@@ -111,8 +111,6 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
 
     permission_classes = []
 
-    lookup_field = 'intent_id'
-
     def get_object(self):
         obj = super().get_object()
         payment = obj.get_payment()

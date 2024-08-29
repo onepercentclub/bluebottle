@@ -1,13 +1,15 @@
 import json
 import re
 from builtins import object
-from operator import attrgetter
 
 from django.conf import settings
-from django.db import ProgrammingError
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
+
+from django_tools.middlewares.ThreadLocal import get_current_request
+
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -15,13 +17,13 @@ from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.models import ValidatorError
-from ..utils.utils import get_current_host, get_current_language
+
+from bluebottle.utils.utils import get_client_ip, get_current_host, get_current_language
 
 
 @python_2_unicode_compatible
@@ -361,165 +363,16 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 
 
 class StripePayoutAccount(PayoutAccount):
-
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
     business_type = models.CharField(max_length=100, blank=True)
 
-    document_type = models.CharField(max_length=20, blank=True)
-    eventually_due = models.JSONField(null=True, default=list)
+    verified = models.BooleanField(default=False)
+
+    payments_enabled = models.BooleanField(default=False)
+    payouts_enabled = models.BooleanField(default=False)
+
     provider = 'stripe'
-
-    @property
-    def country_spec(self):
-        return get_specs(self.country).verification_fields.individual
-
-    @property
-    def document_spec(self):
-        for spec in DOCUMENT_SPEC:
-            if spec['id'] == self.country:
-                return spec
-        for spec in DOCUMENT_SPEC:
-            if spec['id'] == 'DEFAULT':
-                return spec
-
-    @property
-    def errors(self):
-        for error in super(StripePayoutAccount, self).errors:
-            yield error
-
-        if self.account_id and self.account and hasattr(self.account.requirements, 'errors'):
-            for error in self.account.requirements.errors:
-                if error['requirement'] == 'individual.verification.document':
-                    requirement = 'individual.verification.document.front'
-                else:
-                    requirement = error['requirement']
-
-                yield ValidatorError(
-                    requirement, error['code'], error['reason']
-                )
-
-    @property
-    def required_fields(self):
-        fields = ['country', ]
-
-        if self.account_id:
-            fields += [
-                field for field in self.eventually_due if
-                field not in [
-                    'external_account', 'tos_acceptance.date',
-                    'tos_acceptance.ip', 'business_profile.url', 'business_profile.mcc',
-                ]
-            ]
-            if 'individual.verification.additional_document' not in fields:
-                fields.append('individual.verification.additional_document')
-
-            if 'individual.verification.document' in fields:
-                fields.remove('individual.verification.document')
-
-            if 'document_type' not in fields:
-                fields.append('document_type')
-
-            if 'individual.verification.document.front' not in fields:
-                fields.append('individual.verification.document.front')
-
-            if self.document_type in self.document_spec['document_types_requiring_back']:
-                fields.append('individual.verification.document.back')
-
-            dob_fields = [field for field in fields if '.dob' in field]
-            if dob_fields:
-                fields.append('individual.dob')
-                for field in dob_fields:
-                    fields.remove(field)
-
-        return fields
-
-    @property
-    def required(self):
-        for field in self.required_fields:
-            if field.startswith('individual'):
-                if field == 'individual.dob':
-                    try:
-                        if not self.account.individual.dob.year:
-                            yield 'individual.dob'
-                    except AttributeError:
-                        yield 'individual.dob'
-                elif field == 'individual.verification.additional_document':
-                    try:
-                        if attrgetter(
-                            'individual.verification.additional_document.front'
-                        )(self.account) in (None, ''):
-                            yield field
-                    except AttributeError:
-                        yield field
-
-                else:
-                    try:
-                        if attrgetter(field)(self.account) in (None, ''):
-                            yield field
-                    except AttributeError:
-                        yield field
-            else:
-                try:
-                    value = attrgetter(field)(self)
-                    if value in (None, ''):
-                        yield field
-                except AttributeError:
-                    yield field
-        if self.account and not self.account.external_accounts.total_count > 0:
-            yield 'external_account'
-
-    @property
-    def missing_fields(self):
-        account_details = getattr(self.account, 'individual', None)
-        if account_details:
-            requirements = account_details.requirements
-            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
-            if getattr(self.account.requirements, 'disabled_reason', None):
-                missing += [self.account.requirements.disabled_reason]
-            if getattr(account_details.verification, 'document', None) and \
-                    account_details.verification.document.details:
-                missing += [account_details.verification.document.details]
-            return missing
-        account_details = self.account
-        if account_details.requirements:
-            requirements = account_details.requirements
-            missing = requirements.currently_due + requirements.eventually_due + requirements.past_due
-            if getattr(self.account.requirements, 'disabled_reason', None):
-                missing += [self.account.requirements.disabled_reason]
-            return missing
-        return []
-
-    @property
-    def pending_fields(self):
-        account_details = getattr(self.account, 'individual', None)
-        if account_details:
-            requirements = account_details.requirements
-            return requirements.pending_verification
-        account_details = self.account
-        if getattr(self.account, 'requirements', None):
-            requirements = account_details.requirements
-            return requirements.pending_verification
-        return []
-
-    @property
-    def client_secret(self):
-        return self.get_client_secret()
-
-    def get_client_secret(self):
-        stripe = get_stripe()
-        account_session = stripe.AccountSession.create(
-            account=self.account_id,
-            components={
-                "account_onboarding": {
-                    "enabled": True,
-                    "features": {
-                        "external_account_collection": True
-                    },
-                },
-            },
-        )
-        return account_session.client_secret
 
     def get_account_link(self):
         stripe = get_stripe()
@@ -536,65 +389,12 @@ class StripePayoutAccount(PayoutAccount):
         )
         return account_link.url
 
-    def check_status(self):
-        if self.account:
-            del self.account
+    def update(self, data):
+        self.verified = data.individual.verification.status == "verified"
+        self.payments_enabled = data.charges_enabled
+        self.payouts_enabled = data.payouts_enabled
 
-        individual_details = getattr(self.account, 'individual', None)
-
-        if individual_details:
-            if (
-                getattr(individual_details.verification, 'document', None) and
-                individual_details.verification.document.details
-            ):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif len(self.missing_fields) == 0 and len(self.pending_fields) == 0:
-                if self.status != self.states.verified.value:
-                    self.states.verify()
-            elif len(self.missing_fields):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif len(self.pending_fields):
-                if self.status != self.states.pending.value:
-                    # Submit to transition to pending
-                    self.states.submit()
-            else:
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-        else:
-            if len(self.missing_fields):
-                if self.status != self.states.incomplete.value:
-                    self.states.set_incomplete()
-            elif getattr(self.account.requirements, 'disabled_reason', None):
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-            elif len(self.missing_fields) == 0:
-                if self.status != self.states.verified.value:
-                    self.states.verify()
-            elif len(self.pending_fields):
-                if self.status != self.states.pending.value:
-                    # Submit to transition to pending
-                    self.states.submit()
-            else:
-                if self.status != self.states.rejected.value:
-                    self.states.reject()
-
-        externals = self.account['external_accounts']['data']
-        for external in externals:
-            external_account, _created = ExternalAccount.objects.get_or_create(
-                account_id=external['id']
-            )
-            external_account.account = external
-            external_account.status = 'verified'
-            external_account.connect_account = self
-            external_account.save()
         self.save()
-
-        self.update_live_campaigns()
 
     def update_live_campaigns(self):
         from bluebottle.funding.models import Funding
@@ -646,31 +446,34 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id = None
 
         if not self.account_id:
-            if len(self.owner.activities.all()):
-                url = self.owner.activities.first().get_absolute_url()
+            if Funding.objects.filter(owner=self.owner).count():
+                url = (
+                    Funding.objects.filter(owner=self.owner).first().get_absolute_url()
+                )
             else:
                 url = 'https://{}'.format(connection.tenant.domain_url)
 
             if 'localhost' in url:
                 url = re.sub('localhost', 't.goodup.com', url)
 
-            capabilities = ['transfers']
-
-            if self.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-                capabilities.append('card_payments')
-
             stripe = get_stripe()
             self._account = stripe.Account.create(
                 country=self.country,
                 type='custom',
                 settings=self.account_settings,
-                business_type='individual',
-                requested_capabilities=capabilities,
-                business_profile={
-                    'url': url,
-                    'mcc': '8398'
+                business_type="individual",
+                capabilities={
+                    "transfers": {"requested": True},
+                    "card_payments": {"requested": True},
                 },
-                metadata=self.metadata
+                business_profile={"url": url, "mcc": "8398"},
+                individual={"email": self.owner.email},
+                metadata=self.metadata,
+                tos_acceptance={
+                    "service_agreement": "full",
+                    "date": now(),
+                    "ip": get_client_ip(get_current_request()),
+                },
             )
             self.account_id = self._account.id
 
@@ -678,38 +481,14 @@ class StripePayoutAccount(PayoutAccount):
             self.eventually_due = self.account.requirements.eventually_due
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
-    def update(self, token):
-        stripe = get_stripe()
-        self._account = stripe.Account.modify(
-            self.account_id,
-            account_token=token
-        )
+    def check_status(self):
+        if self.account:
+            del self.account
 
-    @property
-    def verified(self):
-        return self.status == 'verified'
-
-    @property
-    def complete(self):
-        return (
-            'individual' in self.account and
-            self.account.individual.verification.status == 'verified' and
-            not self.account.individual.requirements.eventually_due
-        )
-
-    @property
-    def payments_enabled(self):
-        if 'charges_enabled' in self.account:
-            return self.account.charges_enabled
-        return True
-
-    @property
-    def rejected(self):
-        return self.account.individual.verification.status == 'unverified'
-
-    @property
-    def disabled(self):
-        return self.account.requirements.disabled
+        individual_details = getattr(self.account, 'individual', None)
+        if individual_details.verification.status == 'verified':
+            self.states.verify()
+            self.save()
 
     @property
     def account_settings(self):
@@ -766,17 +545,6 @@ class ExternalAccount(BankAccount):
             if not hasattr(self, '_account'):
                 self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
             return self._account
-
-    def create(self, token):
-        if self.account_id:
-            raise ProgrammingError('Stripe Account is already created')
-        stripe = get_stripe()
-        self._account = stripe.Account.create_external_account(
-            self.connect_account.account_id,
-            external_account=token
-        )
-        self.account_id = self._account.id
-        self.save()
 
     @property
     def verified(self):

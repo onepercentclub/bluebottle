@@ -43,6 +43,6 @@ urlpatterns = [
         name='plain-payout-account-detail'),
     url(r'^/payout-accounts/plain/(?P<pk>\d+)/document$',
         PlainPayoutAccountDocumentDetail.as_view(),
-        name='kyc-document')
-
+        name="kyc-document",
+    ),
 ]

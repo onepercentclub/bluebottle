@@ -6,23 +6,29 @@ from bluebottle.funding_stripe.views import (
     ConnectWebHookView,
     ExternalAccountList, ExternalAccountDetails,
     StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
-    ConnectAccountSession
+    ConnectAccountSession,
+    CountrySpecList,
+    CountrySpecDetail,
 )
 
 urlpatterns = [
 
     # Payout accounts
-    url(r'^/payout-account$',
-        ConnectAccountList.as_view(),
-        name='connect-account-list'),
-    url(r'^/payout-account/(?P<pk>[\d]+)$',
+    url(
+        r"^/payout-account$", ConnectAccountList.as_view(), name="connect-account-list"
+    ),
+    url(
+        r"^/(?P<activity_pk>[\d]+)/payout-account$",
         ConnectAccountDetails.as_view(),
-        name='connect-account-details'),
-    url(r'^/payout-account-session/(?P<pk>[\d]+)$',
+        name="connect-account-detail",
+    ),
+    url(
+        r"^/payout-account-session/$",
         ConnectAccountSession.as_view(),
-        name='stripe-account-session'),
-
-    url(r'^/external-account$',
+        name="connect-account-session",
+    ),
+    url(
+        r"^/external-account$",
         ExternalAccountList.as_view(),
         name='stripe-external-account-list'),
     url(r'^/external-account/(?P<pk>[\d]+)$',
@@ -38,7 +44,7 @@ urlpatterns = [
         StripePaymentIntentList.as_view(),
         name='stripe-payment-intent-list'),
 
-    url(r'^/payment-intents/(?P<intent_id>[\w_]+)$',
+    url(r'^/payment-intents/(?P<pk>[\d]+)$',
         StripePaymentIntentDetail.as_view(),
         name='stripe-payment-intent-detail'),
 
@@ -55,5 +61,12 @@ urlpatterns = [
         name='stripe-source-webhook'),
     url(r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
-        name='stripe-connect-webhook'),
+        name="stripe-connect-webhook",
+    ),
+    url(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
+    url(
+        r"^/country-specs/(?P<pk>[\w]+)$",
+        CountrySpecDetail.as_view(),
+        name="country-specs-detail",
+    ),
 ]

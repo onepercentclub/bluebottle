@@ -1,17 +1,27 @@
-import json
 from builtins import str
+from django.core.exceptions import ObjectDoesNotExist
 
-from django.db import connection
 from django.http import HttpResponse
+from django.urls.exceptions import Http404
+from django.utils.timezone import now
+from django.utils.decorators import method_decorator
 from django.views.generic import View
+
 from moneyed import Money
 from rest_framework import serializers
+from rest_framework import status
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from stripe import InvalidRequestError
 
-from bluebottle.funding.authentication import DonorAuthentication, ClientSecretAuthentication
-from bluebottle.funding.models import Donor
+from bluebottle.funding.authentication import (
+    DonorAuthentication,
+    ClientSecretAuthentication,
+)
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
@@ -20,15 +30,26 @@ from bluebottle.funding_stripe.models import (
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
-    StripeSourcePaymentSerializer, PaymentIntentSerializer,
+    StripeSourcePaymentSerializer,
+    PaymentIntentSerializer,
     ConnectAccountSerializer,
-    StripePaymentSerializer, ConnectAccountSessionSerializer
+    StripePaymentSerializer,
+    ConnectAccountSessionSerializer,
+    CountrySpecSerializer,
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView, RetrieveAPIView, ListCreateAPIView,
+    ListAPIView,
+    RetrieveUpdateAPIView,
+    JsonApiViewMixin,
+    CreateAPIView,
+    RetrieveAPIView,
+    ListCreateAPIView,
 )
+from bluebottle.utils.utils import get_client_ip
+
+from django.views.decorators.cache import cache_page
 
 
 class StripeSourcePaymentList(PaymentList):
@@ -40,58 +61,6 @@ class StripeSourcePaymentList(PaymentList):
     )
 
     permission_classes = (PaymentPermission,)
-
-
-class AccountSession(View):
-    def post(self, request):
-        stripe = get_stripe()
-        try:
-            account = stripe.Account.create(
-                type='custom',
-                country='NL',
-                email=request.user.email,
-                business_type='individual',
-                business_profile={
-                    'url': 'https://goodup.com',
-                    'mcc': '8398'
-                },
-                metadata={
-                    "tenant_name": connection.tenant.client_name,
-                    "tenant_domain": connection.tenant.domain_url,
-                    "member_id": request.user.pk,
-                },
-                capabilities={
-                    'card_payments': {'requested': True},
-                    'transfers': {'requested': True},
-                },
-            )
-            account_session = stripe.AccountSession.create(
-                account=account.id,
-                components={
-                    "account_onboarding": {
-                        "enabled": True,
-                        "features": {
-                            "external_account_collection": True
-                        },
-
-                    },
-                    "payments": {
-                        "enabled": True,
-                        "features": {
-                            "refund_management": True,
-                            "dispute_management": True,
-                            "capture_payments": True
-                        }
-                    },
-                },
-            )
-            print('Account created: ', account.id)
-            print('Account session created: ', account_session.client_secret)
-            return HttpResponse(json.dumps({'client_secret': account_session.client_secret}), status=200)
-
-        except Exception as e:
-            print('An error occurred when calling the Stripe API to create an account session: ', e)
-            return HttpResponse(json.dumps({'error': str(e)}), status=500)
 
 
 class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
@@ -110,8 +79,6 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
     serializer_class = PaymentIntentSerializer
 
     permission_classes = []
-
-    lookup_field = 'intent_id'
 
     def get_object(self):
         obj = super().get_object()
@@ -141,7 +108,7 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        obj = serializer.save(owner=self.request.user)
+        obj = serializer.save(owner=self.request.user, business_type="individual")
 
         stripe = get_stripe()
         account = stripe.Account.create(
@@ -149,15 +116,18 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
             type='custom',
             settings=obj.account_settings,
             business_type=obj.business_type,
-            capabilities={"transfers": {"requested": True}, "card_payments": {"requested": True}},
-            business_profile={
-                'url': 'https://goodup.com',
-                'mcc': '8398'
+            capabilities={
+                "transfers": {"requested": True},
+                "card_payments": {"requested": True},
             },
+            business_profile={"url": "https://goodup.com", "mcc": "8398"},
+            individual={"email": self.request.user.email},
             metadata=obj.metadata,
             tos_acceptance={
-                "service_agreement": "full"
-            }
+                "service_agreement": "full",
+                "date": now(),
+                "ip": get_client_ip(self.request),
+            },
         )
         obj.account_id = account.id
         obj.save()
@@ -170,9 +140,24 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     permission_classes = (IsAuthenticated, IsOwner,)
 
     prefetch_for_includes = {
-        'owner': ['owner'],
-        'external_accounts': ['external_accounts'],
+        "owner": ["owner"],
+        "external_accounts": ["external_accounts"],
     }
+
+    def get_object(self):
+        activity = get_object_or_404(
+            Funding.objects.all(), pk=self.kwargs["activity_pk"]
+        )
+
+        try:
+            obj = activity.payout_account
+            if not obj:
+                raise Http404
+
+            self.check_object_permissions(self.request, obj)
+            return obj
+        except ObjectDoesNotExist:
+            raise Http404
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -193,7 +178,36 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
         serializer.instance.check_status()
 
 
-class ConnectAccountSession(ConnectAccountDetails):
+class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
+
+    def create(self, request):
+        stripe = get_stripe()
+        account = get_object_or_404(
+            StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
+        )
+
+        # TODO check permissions on account
+        account_session = stripe.AccountSession.create(
+            account=account.account_id,
+            components={
+                "account_onboarding": {
+                    "enabled": True,
+                    "features": {"external_account_collection": False},
+                },
+                "account_management": {
+                    "enabled": True,
+                    "features": {"external_account_collection": False},
+                },
+            },
+        )
+        account_session.pk = account_session.client_secret
+        serializer = self.get_serializer(instance=account_session)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
     serializer_class = ConnectAccountSessionSerializer
 
 
@@ -207,20 +221,29 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
         'connect_account': ['connect_account'],
     }
 
-    related_permission_classes = {
-        'connect_account': [IsOwner]
-    }
-
-    def perform_create(self, serializer):
-        token = serializer.validated_data.pop('token')
-        serializer.save()
-        serializer.instance.create(token)
+    related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        return self.queryset.order_by('-created').filter(connect_account__owner=self.request.user)
+        return self.queryset.order_by("-created").filter(
+            connect_account__owner=self.request.user
+        )
+
+    def perform_create(self, serializer):
+        if hasattr(serializer.Meta, "model"):
+            validated_data = dict(
+                (key, value)
+                for key, value in serializer.validated_data.items()
+                if key != "token"
+            )
+            self.check_object_permissions(
+                self.request, serializer.Meta.model(**validated_data)
+            )
+        serializer.save()
 
 
-class ExternalAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class ExternalAccountDetails(
+    JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView
+):
     queryset = ExternalAccount.objects.all()
     serializer_class = BankAccountSerializer
 
@@ -416,20 +439,57 @@ class ConnectWebHookView(View):
             return HttpResponse('Signature failed to verify', status=400)
 
         try:
-            if event.type == 'account.updated':
+            if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
-                # Bust cached account
-                if account.account:
-                    del account.account
-                account.check_status()
-                account.save()
 
-                return HttpResponse('Updated payment')
+                print(event.data.object.individual.verification.status)
+                print(event.data.object.individual.requirements.eventually_due)
+                print(event.data.object.requirements.eventually_due)
+                account.update(event.data.object)
+
+                return HttpResponse("Updated connect account")
             else:
-                return HttpResponse('Skipped event {}'.format(event.type))
+                return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)
+
+
+class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
+    serializer_class = CountrySpecSerializer
+
+    @method_decorator(cache_page(60 * 60 * 24))
+    def list(self, request, *args, **kwargs):
+        stripe = get_stripe()
+        specs = stripe.CountrySpec.list(limit=100)
+        serializer = self.get_serializer(specs.data, many=True)
+
+        for spec in specs.data:
+            spec.pk = spec.id
+
+        return Response(serializer.data)
+
+
+class CountrySpecDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    serializer_class = CountrySpecSerializer
+
+    def get_object(self):
+        stripe = get_stripe()
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        assert lookup_url_kwarg in self.kwargs, (
+            "Expected view %s to be called with a URL keyword argument "
+            'named "%s". Fix your URL conf, or set the `.lookup_field` '
+            "attribute on the view correctly."
+            % (self.__class__.__name__, lookup_url_kwarg)
+        )
+        try:
+            spec = stripe.CountrySpec.retrieve(self.kwargs[lookup_url_kwarg])
+        except InvalidRequestError:
+            raise Http404
+
+        spec.pk = spec.id
+        return spec

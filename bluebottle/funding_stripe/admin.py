@@ -65,6 +65,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         "payments_enabled",
         "payouts_enabled",
         "funding",
+        "stripe_link"
     ]
     search_fields = ["account_id"]
     fields = ["created", "owner", "status", "account_id", "country", "funding"]

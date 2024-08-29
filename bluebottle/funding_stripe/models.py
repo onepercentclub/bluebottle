@@ -481,6 +481,15 @@ class StripePayoutAccount(PayoutAccount):
             self.eventually_due = self.account.requirements.eventually_due
         super(StripePayoutAccount, self).save(*args, **kwargs)
 
+    def check_status(self):
+        if self.account:
+            del self.account
+
+        individual_details = getattr(self.account, 'individual', None)
+        if individual_details.verification.status == 'verified':
+            self.states.verify()
+            self.save()
+
     @property
     def account_settings(self):
         statement_descriptor = connection.tenant.name[:22]

@@ -391,6 +391,7 @@ class StripePayoutAccount(PayoutAccount):
 
     def update(self, data):
         self.verified = data.individual.verification.status == "verified"
+        self.states.verify()
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 

@@ -274,17 +274,6 @@ class BankAccountTriggers(TriggerManager):
                 )
             ]
         ),
-        TransitionTrigger(
-            BankAccountStateMachine.verify,
-            effects=[
-                SubmitConnectedActivitiesEffect,
-                RelatedTransitionEffect(
-                    'connect_account',
-                    PlainPayoutAccountStateMachine.verify,
-                    description='Verify connected KYC account'
-                )
-            ]
-        ),
     ]
 
 

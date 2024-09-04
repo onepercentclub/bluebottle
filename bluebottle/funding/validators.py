@@ -72,3 +72,14 @@ class TargetValidator(Validator):
         if self.instance.target.amount <= 0:
             return False
         return True
+
+
+class BudgetValidator(Validator):
+    code = 'budget'
+    message = _("Budget doesn't match the crowdfunding target")
+    field = 'budget'
+
+    def is_valid(self):
+        if self.instance.target.amount != self.instance.total_budget['amount']:
+            return False
+        return True

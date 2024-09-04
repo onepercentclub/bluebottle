@@ -28,7 +28,7 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import (
     DeadlineValidator,
     TargetValidator,
-    DeadlineMaxValidator,
+    DeadlineMaxValidator, BudgetValidator,
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -154,7 +154,7 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [DeadlineValidator, DeadlineMaxValidator, TargetValidator]
+    validators = [DeadlineValidator, DeadlineMaxValidator, TargetValidator, BudgetValidator]
 
     auto_approve = False
 
@@ -214,6 +214,12 @@ class Funding(Activity):
                 currency
             )
             self.save()
+
+    @property
+    def total_budget(self):
+        budget_lines = self.budget_lines.all()
+        total_amount = sum(line.amount.amount for line in budget_lines)
+        return {'currency': self.target.currency, 'amount': total_amount}
 
     @property
     def activity_date(self):

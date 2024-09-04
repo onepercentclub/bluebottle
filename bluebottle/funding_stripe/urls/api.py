@@ -61,8 +61,7 @@ urlpatterns = [
         name='stripe-source-webhook'),
     url(r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
-        name="stripe-connect-webhook",
-    ),
+        name="stripe-connect-webhook"),
     url(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
     url(
         r"^/country-specs/(?P<pk>[\w]+)$",

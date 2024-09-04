@@ -167,8 +167,10 @@ class FundingStateMachineTests(BluebottleTestCase):
             duration=7
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = PlainPayoutAccountFactory.create(status="verified")
+        bank_account = BankAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         self.funding.bank_account = bank_account
         self.funding.save()
 

@@ -9,7 +9,11 @@ from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonorFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentFactory
+from bluebottle.funding_stripe.tests.factories import (
+    ExternalAccountFactory,
+    StripePaymentFactory,
+    StripePayoutAccountFactory,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -24,8 +28,10 @@ class FundingTriggerTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = PlainPayoutAccountFactory.create(status="verified")
+        bank_account = BankAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)
 
@@ -75,7 +81,10 @@ class DonorTriggerTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        bank_account = ExternalAccountFactory.create(status='verified')
+        bank_account = ExternalAccountFactory.create(
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(status="verified"),
+        )
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)
         self.funding.states.approve(save=True)

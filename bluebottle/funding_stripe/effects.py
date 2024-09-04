@@ -18,4 +18,4 @@ class PutActivitiesOnHoldEffect(Effect):
             funding.states.put_on_hold(save=True)
 
     def __str__(self):
-        return _("Put activities on hold when payments are disabled by stripe")
+        return "Put activities on hold when payments are disabled by stripe"

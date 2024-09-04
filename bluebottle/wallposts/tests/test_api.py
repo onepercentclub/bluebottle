@@ -5,7 +5,7 @@ from djmoney.money import Money
 from rest_framework import status
 
 from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory
-from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

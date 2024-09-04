@@ -10,7 +10,6 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
-from bluebottle.wallposts.models import SystemWallpost
 
 
 @python_2_unicode_compatible

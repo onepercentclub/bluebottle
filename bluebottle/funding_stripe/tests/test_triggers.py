@@ -40,7 +40,7 @@ class PayoutAccountTriggersTestCase(TriggerTestCase):
         self.funding.status = 'open'
         self.funding.save()
 
-        self.model.states.reject()
+        self.model.states.disable_payments()
 
         with self.execute():
             self.assertNotificationEffect(PayoutAccountRejected)

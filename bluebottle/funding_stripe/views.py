@@ -1,6 +1,7 @@
 from builtins import str
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 
+from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.timezone import now
@@ -108,29 +109,63 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        obj = serializer.save(owner=self.request.user, business_type="individual")
+        business_type = "individual"
 
         stripe = get_stripe()
+
+        if Funding.objects.filter(owner=self.request.user).count():
+            url = (
+                Funding.objects.filter(owner=self.request.user)
+                .first()
+                .get_absolute_url()
+            )
+        else:
+            url = "https://{}".format(connection.tenant.domain_url)
+
         account = stripe.Account.create(
-            country=obj.country,
-            type='custom',
-            settings=obj.account_settings,
-            business_type=obj.business_type,
+            country=serializer.validated_data["country"],
+            type="custom",
+            settings=self.account_settings,
+            business_type=business_type,
             capabilities={
                 "transfers": {"requested": True},
                 "card_payments": {"requested": True},
             },
-            business_profile={"url": "https://goodup.com", "mcc": "8398"},
+            business_profile={"url": url, "mcc": "8398"},
             individual={"email": self.request.user.email},
-            metadata=obj.metadata,
+            metadata=self.metadata,
             tos_acceptance={
                 "service_agreement": "full",
                 "date": now(),
                 "ip": get_client_ip(self.request),
             },
         )
-        obj.account_id = account.id
-        obj.save()
+
+        serializer.save(
+            owner=self.request.user, business_type=business_type, account_id=account.id
+        )
+
+    @property
+    def account_settings(self):
+        statement_descriptor = connection.tenant.name[:22]
+        while len(statement_descriptor) < 5:
+            statement_descriptor += "-"
+        return {
+            "payouts": {
+                "schedule": {"interval": "manual"},
+                "statement_descriptor": statement_descriptor,
+            },
+            "payments": {"statement_descriptor": statement_descriptor},
+            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
+        }
+
+    @property
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "member_id": self.request.user.pk,
+        }
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -149,6 +184,9 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
             Funding.objects.all(), pk=self.kwargs["activity_pk"]
         )
 
+        if activity.owner != self.request.user:
+            raise PermissionDenied
+
         try:
             obj = activity.payout_account
             if not obj:
@@ -156,7 +194,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
 
             self.check_object_permissions(self.request, obj)
             return obj
-        except ObjectDoesNotExist:
+        except AttributeError:
             raise Http404
 
     def perform_update(self, serializer):
@@ -212,7 +250,7 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
 
 
 class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     queryset = ExternalAccount.objects.all()
     serializer_class = BankAccountSerializer
@@ -441,9 +479,6 @@ class ConnectWebHookView(View):
         try:
             if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
-                print(event.data.object.individual.verification.status)
-                print(event.data.object.individual.requirements.eventually_due)
-                print(event.data.object.requirements.eventually_due)
                 account.update(event.data.object)
 
                 return HttpResponse("Updated connect account")

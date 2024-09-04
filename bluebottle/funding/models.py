@@ -253,7 +253,10 @@ class Funding(Activity):
 
     @property
     def payout_account(self):
-        return self.owner.funding_payout_account.first()
+        if self.bank_account:
+            return self.bank_account.connect_account
+        else:
+            return self.owner.funding_payout_account.first()
 
     @property
     def stats(self):

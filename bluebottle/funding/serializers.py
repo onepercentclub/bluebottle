@@ -110,7 +110,9 @@ class BudgetLineSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     amount = MoneySerializer()
 
-    validators = [FundingCurrencyValidator()]
+    validators = [
+        FundingCurrencyValidator(),
+    ]
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',

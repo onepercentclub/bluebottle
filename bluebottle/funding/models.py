@@ -219,7 +219,7 @@ class Funding(Activity):
     def total_budget(self):
         budget_lines = self.budget_lines.all()
         total_amount = sum(line.amount.amount for line in budget_lines)
-        return {'currency': self.target.currency, 'amount': total_amount}
+        return Money(currency=self.target.currency, amount=total_amount)
 
     @property
     def activity_date(self):

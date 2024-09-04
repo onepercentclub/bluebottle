@@ -80,6 +80,6 @@ class BudgetValidator(Validator):
     field = 'budget'
 
     def is_valid(self):
-        if self.instance.target.amount != self.instance.total_budget['amount']:
+        if self.instance.target.amount != self.instance.total_budget.amount:
             return False
         return True

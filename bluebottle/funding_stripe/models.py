@@ -1,14 +1,10 @@
 import json
-import re
 from builtins import object
 
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
-
-from django_tools.middlewares.ThreadLocal import get_current_request
 
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
@@ -17,13 +13,13 @@ from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 
-from bluebottle.utils.utils import get_client_ip, get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible

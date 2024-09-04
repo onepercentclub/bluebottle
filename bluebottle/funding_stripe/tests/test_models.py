@@ -1,8 +1,6 @@
 import munch
 import mock
 import stripe
-from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
-from django.db import ProgrammingError, connection
 from django.test.utils import override_settings
 
 from bluebottle.funding_stripe.models import (
@@ -35,9 +33,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
                         "first_name": "Jhon",
                         "last_name": "Example",
                         "email": "jhon@example.com",
-                        "verification": {
-                            "status": "verified",
-                        },
                         "requirements": munch.munchify(
                             {
                                 "eventually_due": [
@@ -90,7 +85,6 @@ class ConnectAccountTestCase(BluebottleTestCase):
             self.assertEqual(self.check.account.id, self.connect_account.id)
 
             retrieve.assert_called_once_with(self.check.account_id)
-
 
 
 class StripeExternalAccountTestCase(BluebottleTestCase):

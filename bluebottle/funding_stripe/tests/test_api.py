@@ -426,7 +426,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             "stripe.Account.create", return_value=connect_account
         ) as create_account, mock.patch(
             "stripe.Account.modify", return_value=connect_account
-        ) as modify_account, mock.patch(
+        ), mock.patch(
             "stripe.Account.retrieve", return_value=connect_account
         ):
             response = self.client.post(

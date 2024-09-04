@@ -13,7 +13,7 @@ from bluebottle.funding.models import Donor
 from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory, BudgetLineFactory
 )
-from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
+from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.models import StripeSourcePayment
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentIntentFactory,
@@ -925,7 +925,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.funding.status, "on_hold")
 
         self.assertEqual(len(mail.outbox), 3)
-
 
         self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
         self.assertEqual(mail.outbox[1].subject, 'Live campaign identity verification failed!')

@@ -171,8 +171,6 @@ class StripePayoutAccountTriggers(TriggerManager):
     ]
 
 
-
-
 @register(ExternalAccount)
 class StripeBankAccountTriggers(TriggerManager):
     def account_verified(effect):

@@ -109,7 +109,7 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
 
-        with patch("stripe.Refund.create") as refund_mock:
+        with patch("stripe.Refund.create"):
             payment.states.request_refund(save=True)
             self.assertEqual(payment.status, "refund_requested")
 

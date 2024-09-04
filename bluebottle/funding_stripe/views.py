@@ -125,7 +125,6 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         if "localhost" in connection.tenant.domain_url:
             url = "https://goodup.com"
 
-        __import__("ipdb").set_trace()
         account = stripe.Account.create(
             country=serializer.validated_data["country"],
             type="custom",

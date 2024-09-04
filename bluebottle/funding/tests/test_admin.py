@@ -24,7 +24,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        bank_account = BankAccountFactory.create(status='verified')
+        bank_account = BankAccountFactory.create(
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(status="verified"),
+        )
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,

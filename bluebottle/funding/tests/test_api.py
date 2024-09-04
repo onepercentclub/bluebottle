@@ -15,8 +15,11 @@ from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding
 from bluebottle.funding.tests.factories import (
-    FundingFactory, RewardFactory, DonorFactory,
-    BudgetLineFactory
+    FundingFactory,
+    PlainPayoutAccountFactory,
+    RewardFactory,
+    DonorFactory,
+    BudgetLineFactory,
 )
 from bluebottle.funding_flutterwave.tests.factories import (
     FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
@@ -393,8 +396,9 @@ class FundingDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(status="verified"),
         )
         self.funding.save()
         self.funding.states.submit()
@@ -710,7 +714,10 @@ class FundingTestCase(BluebottleTestCase):
         settings.activity_types.append('funding')
         settings.save()
 
-        self.bank_account = PledgeBankAccountFactory.create(status='verified')
+        self.bank_account = PledgeBankAccountFactory.create(
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
+        )
 
         self.create_url = reverse('funding-list')
 
@@ -788,8 +795,9 @@ class FundingTestCase(BluebottleTestCase):
 
         funding = Funding.objects.last()
         funding.bank_account = self.bank_account
-        BudgetLineFactory.create_batch(2, activity=funding)
         funding.save()
+
+        BudgetLineFactory.create_batch(2, activity=funding)
 
         response = self.client.get(update_url, data, user=self.user)
         data = response.json()
@@ -1476,8 +1484,9 @@ class PayoutDetailTestCase(BluebottleTestCase):
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(status="verified"),
         )
         self.funding.save()
 
@@ -1565,9 +1574,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
         self.funding.bank_account = VitepayBankAccountFactory.create(
-            account_name='Test Tester',
-            mobile_number='12345',
-            status='verified'
+            account_name="Test Tester",
+            mobile_number="12345",
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1609,7 +1619,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
         self.funding.bank_account = LipishaBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1650,7 +1661,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_flutterwave_payout(self):
         FlutterwavePaymentProviderFactory.create()
         self.funding.bank_account = FlutterwaveBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
 
         self.funding.states.submit()
@@ -1692,7 +1704,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_pledge_payout(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
 
         self.funding.states.submit()
@@ -1734,7 +1747,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_put(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         BudgetLineFactory.create(activity=self.funding)
 
@@ -1871,12 +1885,14 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         response = self.client.get('/api/config', user=self.user)
         self.assertEqual(response.status_code, 200)
         data = response.json()
+
         self.assertEquals(
             data['platform']['funding'],
             {
-                'anonymous_donations': True,
-                'allow_anonymous_rewards': True
-            }
+                "allow_anonymous_rewards": True,
+                "anonymous_donations": True,
+                "stripe_publishable_key": "test-pub-key",
+            },
         )
 
 

@@ -150,9 +150,9 @@ class RemoveDonorWallpostEffect(Effect):
     template = 'admin/remove_donation_wallpost_effect.html'
 
     def post_save(self, **kwargs):
-        SystemWallpost.objects.filter(
+        Update.objects.filter(
             author=self.instance.user,
-            donation=self.instance,
+            contribution=self.instance,
         ).all().delete()
 
     def __str__(self):

@@ -13,7 +13,6 @@ from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, Stri
     ExternalAccountFactory, StripeSourcePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.wallposts.models import Wallpost
 
 
 class FundingStateMachineTests(BluebottleTestCase):
@@ -375,12 +374,6 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation.states.succeed(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
 
-    def test_succeed_generate_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        donation.states.succeed(save=True)
-        wallpost = Wallpost.objects.last()
-        self.assertEqual(wallpost.donation, donation)
-
     def test_succeed_mail_supporter(self):
         mail.outbox = []
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
@@ -412,13 +405,6 @@ class DonationStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
         donation.states.fail(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
-
-    def test_fail_remove_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        donation.states.succeed(save=True)
-        self.assertEqual(Wallpost.objects.count(), 1)
-        donation.states.fail(save=True)
-        self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund(self):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
@@ -456,13 +442,6 @@ class DonationStateMachineTests(BluebottleTestCase):
             payment.states.request_refund(save=True)
             refund.asssert_called_once()
         self.assertEqual(payment.status, 'refund_requested')
-
-    def test_refund_remove_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        self.assertEqual(Wallpost.objects.count(), 1)
-        donation.payment.states.refund(save=True)
-        self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund_update_amounts(self):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))

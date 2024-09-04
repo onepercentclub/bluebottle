@@ -126,11 +126,9 @@ class DonorTriggerTests(BluebottleTestCase):
         payment_intent.charges = charges
 
         with mock.patch(
-            'stripe.PaymentIntent.retrieve', return_value=payment_intent
-        ), mock.patch(
-            'stripe.Charge.refund', return_value=payment_intent
-        ):
-            self.assertEqual(self.funding.status, 'partially_funded')
+            "stripe.PaymentIntent.retrieve", return_value=payment_intent
+        ), mock.patch("stripe.Refund.create"):
+            self.assertEqual(self.funding.status, "partially_funded")
             self.funding.states.refund(save=True)
             self.donor.refresh_from_db()
             self.payment.states.refund(save=True)

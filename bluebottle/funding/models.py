@@ -29,6 +29,7 @@ from bluebottle.funding.validators import (
     DeadlineValidator,
     TargetValidator,
     DeadlineMaxValidator,
+    BudgetLineValidator,
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -154,7 +155,12 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [DeadlineValidator, DeadlineMaxValidator, TargetValidator]
+    validators = [
+        DeadlineValidator,
+        DeadlineMaxValidator,
+        TargetValidator,
+        BudgetLineValidator,
+    ]
 
     auto_approve = False
 

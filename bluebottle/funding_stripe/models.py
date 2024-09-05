@@ -1,14 +1,10 @@
 import json
-import re
 from builtins import object
 
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
-
-from django_tools.middlewares.ThreadLocal import get_current_request
 
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
@@ -17,13 +13,13 @@ from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 
-from bluebottle.utils.utils import get_client_ip, get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible
@@ -106,11 +102,12 @@ class StripePayment(Payment):
     provider = 'stripe'
 
     def refund(self):
+        stripe = get_stripe()
+
         intent = self.payment_intent.intent
         charge = intent.charges.data[0]
-        charge.refund(
-            reverse_transfer=True,
-        )
+
+        stripe.Refund.create(charge=charge, reverse_transfer=True)
 
     def update(self):
         stripe = get_stripe()
@@ -153,10 +150,7 @@ class StripeSourcePayment(Payment):
 
     def refund(self):
         stripe = get_stripe()
-        charge = stripe.Charge.retrieve(self.charge_token)
-        charge.refund(
-            reverse_transfer=True,
-        )
+        stripe.Refund.create(self.charge_token, reverse_transfer=True)
 
     def do_charge(self):
         stripe = get_stripe()
@@ -390,31 +384,15 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data):
-        self.verified = data.individual.verification.status == "verified"
-        self.states.verify()
+        try:
+            self.verified = data.individual.verification.status == "verified"
+        except AttributeError:
+            pass
+
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 
         self.save()
-
-    def update_live_campaigns(self):
-        from bluebottle.funding.models import Funding
-        if self.payments_enabled:
-            campaigns = Funding.objects.filter(
-                bank_account__connect_account=self,
-                status='on_hold'
-            ).all()
-            for campaign in campaigns:
-                campaign.states.approve()
-                campaign.save()
-        else:
-            campaigns = Funding.objects.filter(
-                bank_account__connect_account=self,
-                status='open'
-            ).all()
-            for campaign in campaigns:
-                campaign.states.put_on_hold()
-                campaign.save()
 
     def retrieve_account(self):
         try:
@@ -442,82 +420,11 @@ class StripePayoutAccount(PayoutAccount):
 
         return self.owner.full_name
 
-    def save(self, *args, **kwargs):
-        if self.account_id and not self.country == self.account.country:
-            self.account_id = None
-
-        if not self.account_id:
-            if Funding.objects.filter(owner=self.owner).count():
-                url = (
-                    Funding.objects.filter(owner=self.owner).first().get_absolute_url()
-                )
-            else:
-                url = 'https://{}'.format(connection.tenant.domain_url)
-
-            if 'localhost' in url:
-                url = re.sub('localhost', 't.goodup.com', url)
-
-            stripe = get_stripe()
-            self._account = stripe.Account.create(
-                country=self.country,
-                type='custom',
-                settings=self.account_settings,
-                business_type="individual",
-                capabilities={
-                    "transfers": {"requested": True},
-                    "card_payments": {"requested": True},
-                },
-                business_profile={"url": url, "mcc": "8398"},
-                individual={"email": self.owner.email},
-                metadata=self.metadata,
-                tos_acceptance={
-                    "service_agreement": "full",
-                    "date": now(),
-                    "ip": get_client_ip(get_current_request()),
-                },
-            )
-            self.account_id = self._account.id
-
-        if self.account_id:
-            self.eventually_due = self.account.requirements.eventually_due
-        super(StripePayoutAccount, self).save(*args, **kwargs)
-
     def check_status(self):
         if self.account:
             del self.account
 
-        individual_details = getattr(self.account, 'individual', None)
-        if individual_details.verification.status == 'verified':
-            self.states.verify()
-            self.save()
-
-    @property
-    def account_settings(self):
-        statement_descriptor = connection.tenant.name[:22]
-        while len(statement_descriptor) < 5:
-            statement_descriptor += '-'
-        return {
-            'payouts': {
-                'schedule': {
-                    'interval': 'manual'
-                },
-                'statement_descriptor': statement_descriptor
-            },
-            'payments': {
-                'statement_descriptor': statement_descriptor
-            },
-            'card_payments': {
-                'statement_descriptor_prefix': statement_descriptor[:10]
-            }
-        }
-
-    @property
-    def metadata(self):
-        return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.owner.pk,
-        }
+        self.update(self.account)
 
     class Meta(object):
         verbose_name = _('stripe payout account')

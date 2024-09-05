@@ -286,9 +286,6 @@ class FundingSerializer(BaseActivitySerializer):
         if obj.bank_account and obj.bank_account.connect_account:
             return obj.bank_account.provider
 
-    def get_connect_account(self, obj):
-        __import__("ipdb").set_trace()
-
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 

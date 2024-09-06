@@ -46,9 +46,9 @@ class StripeSourcePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         self.payment.states.succeed(save=True)
         self.assertEqual(self.payment.status, 'succeeded')
 
-        with patch('bluebottle.funding_stripe.models.StripeSourcePayment.refund') as refund:
+        with patch("stripe.Refund.create") as refund_mock:
             self.payment.states.request_refund(save=True)
-            refund.assert_called_once()
+            refund_mock.assert_called_once()
 
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'refund_requested')
@@ -108,8 +108,10 @@ class StripePaymentStateMachineTests(BaseStripePaymentStateMachineTests):
         payment = StripePaymentFactory.create(donation=donation)
         payment.states.succeed(save=True)
         self.assertEqual(payment.status, 'succeeded')
-        payment.states.request_refund(save=True)
-        self.assertEqual(payment.status, 'refund_requested')
+
+        with patch("stripe.Refund.create"):
+            payment.states.request_refund(save=True)
+            self.assertEqual(payment.status, "refund_requested")
 
 
 class StripePayoutAccountStateMachineTests(BluebottleTestCase):
@@ -163,29 +165,6 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
     def test_verify(self):
         self.account.states.verify(save=True)
         self.assertEqual(self.account.status, 'verified')
-
-    def test_verify_submit_activities(self):
-        initiative = InitiativeFactory.create()
-        initiative.states.submit()
-        initiative.states.approve(save=True)
-        complete_funding = FundingFactory.create(
-            bank_account=self.bank_account,
-            initiative=initiative,
-            target=Money(1000, 'EUR')
-        )
-        BudgetLineFactory.create(activity=complete_funding)
-
-        incomplete_funding = FundingFactory.create(
-            bank_account=self.bank_account,
-            initiative=initiative,
-            target=Money(1000, 'EUR')
-        )
-        self.account.states.verify(save=True)
-        self.assertEqual(self.account.status, 'verified')
-        incomplete_funding.refresh_from_db()
-        self.assertEqual(incomplete_funding.status, 'draft')
-        complete_funding.refresh_from_db()
-        self.assertEqual(complete_funding.status, 'submitted')
 
     def test_accept_mail(self):
         self.account.states.verify(save=True)

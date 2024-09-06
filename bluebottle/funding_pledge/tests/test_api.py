@@ -52,8 +52,8 @@ class PaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], 'succeeded')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'succeeded')
+        self.assertEqual(data["data"]["attributes"]["status"], "succeeded")
+        self.assertEqual(data["included"][1]["attributes"]["status"], "succeeded")
         # Check that donation mails are send
         self.assertEqual(len(mail.outbox), 2)
 

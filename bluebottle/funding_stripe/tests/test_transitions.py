@@ -46,8 +46,8 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
 
         payment_intent.charges = charges
 
-        with mock.patch('stripe.PaymentIntent.retrieve', return_value=payment_intent):
-            with mock.patch('stripe.Charge.refund') as refund_mock:
+        with mock.patch("stripe.PaymentIntent.retrieve", return_value=payment_intent):
+            with mock.patch("stripe.Refund.create") as refund_mock:
                 self.payment.states.request_refund(save=True)
 
         self.assertTrue(refund_mock.called_once)

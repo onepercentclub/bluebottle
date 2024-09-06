@@ -85,12 +85,57 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 
 @register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
-    pass
+    payments_disabled = State(
+        _("payments disabled"),
+        "payments_disabled",
+        _("Payments are disabled for payout account."),
+    )
+    payouts_disabled = State(
+        _("payouts disabled"),
+        "payouts_disabled",
+        _("Payouts are disabled for payout account."),
+    )
+
+    disable_payouts = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.verified,
+            PayoutAccountStateMachine.rejected,
+        ],
+        payouts_disabled,
+        name=_("Disable payout account"),
+        description=_("Payout account has been disabled"),
+    )
+
+    disable_payments = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.verified,
+            PayoutAccountStateMachine.rejected,
+            payouts_disabled,
+        ],
+        payments_disabled,
+        name=_("Disable payout account"),
+        description=_("Payout account has been disabled"),
+    )
+
+    verify = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.pending,
+            payments_disabled,
+            payouts_disabled,
+        ],
+        PayoutAccountStateMachine.verified,
+        name=_("Verify"),
+        description=_("Verify that the bank account is complete."),
+        automatic=False,
+    )
 
 
 @register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):
-
     def account_verified(self):
         """the related connect account is verified"""
         return self.instance.connect_account and self.instance.connect_account.status == 'verified'

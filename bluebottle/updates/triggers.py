@@ -20,6 +20,10 @@ def has_parent(effect):
     return effect.instance.parent is not None
 
 
+def has_no_contribution(effect):
+    return effect.instance.contribution is None
+
+
 @register(Update)
 class UpdateTriggers(TriggerManager):
     triggers = [
@@ -31,7 +35,7 @@ class UpdateTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     OwnerNotification,
-                    conditions=[author_is_not_owner]
+                    conditions=[author_is_not_owner, has_no_contribution],
                 ),
                 NotificationEffect(
                     ParentNotification,

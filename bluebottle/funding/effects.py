@@ -10,7 +10,6 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
-from bluebottle.wallposts.models import SystemWallpost
 
 
 @python_2_unicode_compatible
@@ -150,9 +149,9 @@ class RemoveDonorWallpostEffect(Effect):
     template = 'admin/remove_donation_wallpost_effect.html'
 
     def post_save(self, **kwargs):
-        SystemWallpost.objects.filter(
+        Update.objects.filter(
             author=self.instance.user,
-            donation=self.instance,
+            contribution=self.instance,
         ).all().delete()
 
     def __str__(self):

@@ -27,7 +27,6 @@ from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import (
     DeadlineValidator,
-    KYCReadyValidator,
     TargetValidator,
     DeadlineMaxValidator,
     BudgetLineValidator,

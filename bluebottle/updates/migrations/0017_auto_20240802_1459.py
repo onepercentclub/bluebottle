@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('activities', '0075_auto_20240723_1030'),
-        ('updates', '0016_merge_0015_merge_20240707_1006_0015_team_wallposts'),
+        ('updates', '0015_team_wallposts'),
     ]
 
     operations = [

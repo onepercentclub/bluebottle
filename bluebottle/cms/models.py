@@ -326,6 +326,7 @@ class DonateButtonContent(TitledContent):
     type = 'donate'
 
     funding = models.ForeignKey('funding.Funding', on_delete=models.CASCADE)
+    button_text = models.CharField(max_length=80, null=True, blank=True)
 
     class Meta:
         verbose_name = _('Donate button')

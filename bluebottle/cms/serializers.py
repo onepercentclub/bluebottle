@@ -214,7 +214,7 @@ class DonateButtonContentSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = ActivitiesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'funding')
+        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
         included_resources = ['funding']
 
     class JSONAPIMeta:
@@ -665,7 +665,7 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = DonateButtonContent
-        fields = ('id', 'type', 'title', 'sub_title', 'funding')
+        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
         included_resources = ['funding']
 
     class JSONAPIMeta:

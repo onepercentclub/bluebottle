@@ -192,15 +192,23 @@ class FSMField(serializers.CharField):
 
 
 class ValidationErrorsField(serializers.ReadOnlyField):
+    def __init__(self, ignore=None, *args, **kwargs):
+        self.ignore = ignore or []
+        super().__init__(*args, **kwargs)
+
     def to_representation(self, value):
         return [
             {
-                'title': str(error),
-                'code': error.code,
-                'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(error.field).replace('.', '/'))
-                }
-            } for error in value
+                "title": str(error),
+                "code": error.code,
+                "source": {
+                    "pointer": "/data/attributes/{}".format(
+                        inflection.dasherize(error.field).replace(".", "/")
+                    )
+                },
+            }
+            for error in value
+            if error.code not in self.ignore
         ]
 
 

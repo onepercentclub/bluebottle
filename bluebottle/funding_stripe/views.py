@@ -1,6 +1,7 @@
 from builtins import str
 from django.core.exceptions import PermissionDenied
 
+from django.db.models import ObjectDoesNotExist
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
@@ -39,6 +40,7 @@ from bluebottle.funding_stripe.serializers import (
     CountrySpecSerializer,
 )
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView,
@@ -145,7 +147,10 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         )
 
         serializer.save(
-            owner=self.request.user, business_type=business_type, account_id=account.id
+            owner=self.request.user,
+            business_type=business_type,
+            account_id=account.id,
+            requirements=account.individual.requirements.eventually_due,
         )
 
     @property
@@ -181,24 +186,6 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
         "owner": ["owner"],
         "external_accounts": ["external_accounts"],
     }
-
-    def get_object(self):
-        activity = get_object_or_404(
-            Funding.objects.all(), pk=self.kwargs["activity_pk"]
-        )
-
-        if activity.owner != self.request.user:
-            raise PermissionDenied
-
-        try:
-            obj = activity.payout_account
-            if not obj:
-                raise Http404
-
-            self.check_object_permissions(self.request, obj)
-            return obj
-        except AttributeError:
-            raise Http404
 
     def perform_update(self, serializer):
         token = serializer.validated_data.pop('token')
@@ -481,8 +468,11 @@ class ConnectWebHookView(View):
 
         try:
             if event.type == "account.updated":
+                print(event.data.object)
                 account = self.get_account(event.data.object.id)
                 account.update(event.data.object)
+
+                print(f"Account status: {account.status}")
 
                 return HttpResponse("Updated connect account")
             else:

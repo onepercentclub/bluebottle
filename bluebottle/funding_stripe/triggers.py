@@ -7,7 +7,7 @@ from bluebottle.fsm.triggers import (
 )
 from bluebottle.funding.messages import (
     PayoutAccountVerified,
-    PayoutAccountRejected,
+    PayoutAccountMarkedIncomplete,
     LivePayoutAccountRejected,
 )
 from bluebottle.funding.models import Funding
@@ -79,19 +79,24 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def account_not_verified(self):
         """the connect account is not verified"""
-        return not self.instance.verified
 
-    def payments_disabled(self):
-        """the payments are disabled"""
-        return not self.instance.payments_enabled
+        return not account_verified()
 
-    def payouts_disabled(self):
-        """the payouts are disabled"""
-        return not self.instance.payouts_enabled
-
-    def complete(self):
+    def is_complete(self):
         """The connect account is verified"""
-        return self.instance.payments_enabled and self.instance.payouts_enabled
+        return self.instance.requirements == []
+
+    def has_new_requirements(self):
+        """The connect account is verified"""
+        initial_requirements = self.instance._initial_values["requirements"]
+
+        return len(
+            [
+                requirement
+                for requirement in self.instance.requirements
+                if requirement not in initial_requirements
+            ]
+        )
 
     triggers = [
         TransitionTrigger(
@@ -105,67 +110,34 @@ class StripePayoutAccountTriggers(TriggerManager):
             ]
         ),
         TransitionTrigger(
-            StripePayoutAccountStateMachine.reject,
+            StripePayoutAccountStateMachine.set_incomplete,
             effects=[
-                NotificationEffect(PayoutAccountRejected),
-            ],
-        ),
-        TransitionTrigger(
-            StripePayoutAccountStateMachine.disable_payments,
-            effects=[
-                NotificationEffect(PayoutAccountRejected),
-                PutActivitiesOnHoldEffect,
                 NotificationEffect(
-                    LivePayoutAccountRejected, conditions=[has_live_campaign]
-                ),
-                RelatedTransitionEffect(
-                    "external_accounts", StripeBankAccountStateMachine.reject
-                ),
-            ],
-        ),
-        TransitionTrigger(
-            StripePayoutAccountStateMachine.disable_payouts,
-            effects=[
-                NotificationEffect(PayoutAccountRejected),
-                RelatedTransitionEffect(
-                    "external_accounts", StripeBankAccountStateMachine.reject
+                    PayoutAccountMarkedIncomplete,
+                    conditions=[has_new_requirements],
                 ),
             ],
         ),
         ModelChangedTrigger(
-            ["verified", "payouts_enabled", "payments_enabled"],
+            ["verified", "requirements"],
             effects=[
                 TransitionEffect(
                     StripePayoutAccountStateMachine.verify,
-                    conditions=[complete, account_verified],
+                    conditions=[is_complete, account_verified],
                 ),
             ],
         ),
         ModelChangedTrigger(
-            ["payouts_enabled"],
+            ["requirements"],
             effects=[
                 TransitionEffect(
-                    StripePayoutAccountStateMachine.disable_payouts,
-                    conditions=[payouts_disabled],
+                    StripePayoutAccountStateMachine.set_incomplete,
+                    conditions=[has_new_requirements],
                 ),
-            ],
-        ),
-        ModelChangedTrigger(
-            ["payments_enabled"],
-            effects=[
                 TransitionEffect(
-                    StripePayoutAccountStateMachine.disable_payments,
-                    conditions=[payments_disabled],
+                    StripePayoutAccountStateMachine.submit,
+                    conditions=[is_complete],
                 ),
-            ],
-        ),
-        ModelChangedTrigger(
-            ["verified"],
-            effects=[
-                TransitionEffect(
-                    StripePayoutAccountStateMachine.reject,
-                    conditions=[account_not_verified],
-                )
             ],
         ),
     ]

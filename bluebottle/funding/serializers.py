@@ -226,20 +226,6 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
-class PKHyperlinkRelatedSerializer(HyperlinkedRelatedField):
-
-    def __init__(self, url_name, model, **kwargs):
-        self.url_name = url_name
-        self.model = model
-
-        super(PKHyperlinkRelatedSerializer, self).__init__(
-            source="parent", read_only=True, **kwargs
-        )
-
-    def get_links(self, obj, field_name):
-        return {"related": reverse(self.url_name, args=(getattr(obj, field_name),))}
-
-
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -256,8 +242,10 @@ class FundingSerializer(BaseActivitySerializer):
     )
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
 
-    connect_account = PKHyperlinkRelatedSerializer(
-        url_name="connect-account-detail", model=StripePayoutAccount, many=False
+    payout_account = ResourceRelatedField(
+        model=StripePayoutAccount,
+        many=False,
+        read_only=True,
     )
 
     bank_account = PolymorphicResourceRelatedField(
@@ -319,7 +307,7 @@ class FundingSerializer(BaseActivitySerializer):
             "payment_methods",
             "budget_lines",
             "bank_account",
-            "connect_account",
+            "payout_account",
             "supporters_export_url",
             "psp",
         )

@@ -18,7 +18,7 @@ urlpatterns = [
         r"^/payout-account$", ConnectAccountList.as_view(), name="connect-account-list"
     ),
     url(
-        r"^/(?P<activity_pk>[\d]+)/payout-account$",
+        r"^/payout-account/(?P<pk>[\d]+)$",
         ConnectAccountDetails.as_view(),
         name="connect-account-detail",
     ),

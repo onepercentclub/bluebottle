@@ -6,6 +6,8 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
+from django_better_admin_arrayfield.models.fields import ArrayField
+
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -366,6 +368,8 @@ class StripePayoutAccount(PayoutAccount):
     payments_enabled = models.BooleanField(default=False)
     payouts_enabled = models.BooleanField(default=False)
 
+    requirements = ArrayField(models.CharField(max_length=60), default=list)
+
     provider = 'stripe'
 
     def get_account_link(self):
@@ -384,6 +388,8 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data):
+        self.requirements = data.individual.requirements.eventually_due
+
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:

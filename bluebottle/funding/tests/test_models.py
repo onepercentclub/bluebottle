@@ -98,13 +98,13 @@ class FundingTestCase(BluebottleTestCase):
         funding = FundingFactory.create(target=Money(100, 'EUR'))
         errors = list(funding.errors)
 
-        self.assertEqual(len(errors), 1)
+        self.assertEqual(len(errors), 2)
         self.assertEqual(errors[0].message, "Please specify a budget")
 
         BudgetLineFactory.create_batch(5, activity=funding, amount=Money(20, 'EUR'))
 
         errors = list(funding.errors)
-        self.assertEqual(len(errors), 0)
+        self.assertEqual(len(errors), 1)
 
     def test_reward_currency_change(self):
         funding = FundingFactory.create(target=Money(100, 'EUR'))
@@ -123,7 +123,7 @@ class FundingTestCase(BluebottleTestCase):
         )
 
         errors = list(funding.errors)
-        self.assertEqual(len(errors), 2)
+        self.assertEqual(len(errors), 3)
 
         self.assertEqual(errors[0].message, "Make sure the deadline is in the future.")
 
@@ -136,7 +136,7 @@ class FundingTestCase(BluebottleTestCase):
         )
 
         errors = list(funding.errors)
-        self.assertEqual(len(errors), 1)
+        self.assertEqual(len(errors), 2)
 
     def test_deadline_in_past_succeeded(self):
         funding = FundingFactory.create(
@@ -146,9 +146,7 @@ class FundingTestCase(BluebottleTestCase):
         errors = [error.message for error in list(funding.errors)]
         self.assertEqual(
             errors,
-            [
-                u'Please specify a budget'
-            ]
+            ["Please specify a budget", "Make sure your payout account is verified"],
         )
 
 

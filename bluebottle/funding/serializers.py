@@ -400,7 +400,8 @@ def reward_amount_matches(data):
     """
     if data.get('reward') and data['reward'].amount > data['amount']:
         raise ValidationError(
-            _('The amount must be higher or equal to the amount of the reward.')
+            {'amount': _('The amount must be higher or equal to the amount of the reward.')}
+
         )
 
 

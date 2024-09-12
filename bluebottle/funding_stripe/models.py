@@ -368,7 +368,7 @@ class StripePayoutAccount(PayoutAccount):
     payments_enabled = models.BooleanField(default=False)
     payouts_enabled = models.BooleanField(default=False)
 
-    requirements = ArrayField(models.CharField(max_length=60), default=[])
+    requirements = ArrayField(models.CharField(max_length=60), default=list)
 
     provider = 'stripe'
 

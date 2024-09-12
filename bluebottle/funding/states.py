@@ -67,6 +67,12 @@ class FundingStateMachine(ActivityStateMachine):
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
+    def kyc_is_valid(self):
+        return (
+            self.instance.payout_account
+            and self.instance.payout_account.status == "verified"
+        )
+
     submit = Transition(
         [
             ActivityStateMachine.draft,
@@ -81,6 +87,7 @@ class FundingStateMachine(ActivityStateMachine):
             ActivityStateMachine.is_complete,
             ActivityStateMachine.is_valid,
             ActivityStateMachine.initiative_is_submitted,
+            kyc_is_valid,
         ],
     )
 

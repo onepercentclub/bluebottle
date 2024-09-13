@@ -1,4 +1,5 @@
 from builtins import str
+from django.contrib.auth.hashers import is_password_usable
 from django.core.exceptions import PermissionDenied
 
 from django.db.models import ObjectDoesNotExist
@@ -111,69 +112,9 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        business_type = "individual"
-
-        stripe = get_stripe()
-
-        if Funding.objects.filter(owner=self.request.user).count():
-            url = (
-                Funding.objects.filter(owner=self.request.user)
-                .first()
-                .get_absolute_url()
-            )
-        else:
-            url = "https://{}".format(connection.tenant.domain_url)
-
-        if "localhost" in connection.tenant.domain_url:
-            url = "https://goodup.com"
-
-        account = stripe.Account.create(
-            country=serializer.validated_data["country"],
-            type="custom",
-            settings=self.account_settings,
-            business_type=business_type,
-            capabilities={
-                "transfers": {"requested": True},
-                "card_payments": {"requested": True},
-            },
-            business_profile={"url": url, "mcc": "8398"},
-            individual={"email": self.request.user.email},
-            metadata=self.metadata,
-            tos_acceptance={
-                "service_agreement": "full",
-                "date": now(),
-                "ip": get_client_ip(self.request),
-            },
-        )
-
         serializer.save(
             owner=self.request.user,
-            business_type=business_type,
-            account_id=account.id,
-            requirements=account.individual.requirements.eventually_due,
         )
-
-    @property
-    def account_settings(self):
-        statement_descriptor = connection.tenant.name[:22]
-        while len(statement_descriptor) < 5:
-            statement_descriptor += "-"
-        return {
-            "payouts": {
-                "schedule": {"interval": "manual"},
-                "statement_descriptor": statement_descriptor,
-            },
-            "payments": {"statement_descriptor": statement_descriptor},
-            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
-        }
-
-    @property
-    def metadata(self):
-        return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.request.user.pk,
-        }
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -188,22 +129,12 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     }
 
     def perform_update(self, serializer):
-        token = serializer.validated_data.pop('token')
-        if token:
-            stripe = get_stripe()
-            try:
-                serializer.instance.update(token)
-            except stripe.error.InvalidRequestError as e:
-                try:
-                    field = e.param.replace('[', '/').replace(']', '')
-                    raise serializers.ValidationError(
-                        {field: [e.message]}
-                    )
-                except AttributeError:
-                    raise serializers.ValidationError(str(e))
+        if serializer.instance.country != serializer.validated_data["country"]:
+            if serializer.instance.status == "verified":
+                raise ValidationError("Cannot change country of verified account")
+            serializer.instance.account_id = None
 
-        serializer.save()
-        serializer.instance.check_status()
+        return super().perform_update(serializer)
 
 
 class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):

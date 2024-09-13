@@ -5,8 +5,11 @@ from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 from django_better_admin_arrayfield.models.fields import ArrayField
+from bluebottle.utils.utils import get_client_ip
+from django_tools.middlewares.ThreadLocal import get_current_request
 
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
@@ -15,13 +18,13 @@ from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PaymentMethod,
     PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host, get_current_language, get_client_ip
 
 
 @python_2_unicode_compatible
@@ -371,6 +374,67 @@ class StripePayoutAccount(PayoutAccount):
     requirements = ArrayField(models.CharField(max_length=60), default=list)
 
     provider = 'stripe'
+
+    @property
+    def account_settings(self):
+        statement_descriptor = connection.tenant.name[:22]
+        while len(statement_descriptor) < 5:
+            statement_descriptor += "-"
+        return {
+            "payouts": {
+                "schedule": {"interval": "manual"},
+                "statement_descriptor": statement_descriptor,
+            },
+            "payments": {"statement_descriptor": statement_descriptor},
+            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
+        }
+
+    @property
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "member_id": self.owner.pk,
+        }
+
+    def save(self, *args, **kwargs):
+        if (not self.account_id) and self.country:
+            stripe = get_stripe()
+
+            if Funding.objects.filter(owner=self.owner).count():
+                url = (
+                    Funding.objects.filter(owner=self.owner).first().get_absolute_url()
+                )
+            else:
+                url = "https://{}".format(connection.tenant.domain_url)
+
+            if "localhost" in url:
+                url = "https://goodup.com"
+
+            account = stripe.Account.create(
+                country=self.country,
+                type="custom",
+                settings=self.account_settings,
+                business_type="individual",
+                capabilities={
+                    "transfers": {"requested": True},
+                    "card_payments": {"requested": True},
+                },
+                business_profile={"url": url, "mcc": "8398"},
+                individual={"email": self.owner.email},
+                metadata=self.metadata,
+                tos_acceptance={
+                    "service_agreement": "full",
+                    "date": now(),
+                    "ip": get_client_ip(get_current_request()),
+                },
+            )
+
+            self.business_type = account.business_type
+            self.account_id = account.id
+            self.requirements = account.individual.requirements.eventually_due
+
+        super().save(*args, **kwargs)
 
     def get_account_link(self):
         stripe = get_stripe()

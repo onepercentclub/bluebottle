@@ -131,7 +131,7 @@ class CurrentMemberSerializer(MemberSerializer):
     )
 
     def get_payout_account(self, obj):
-        return obj.funding_payout_account.first()
+        return StripePayoutAccount.objects.filter(owner=obj).first()
 
     def get_has_initiatives(self, obj):
         return obj.is_initiator

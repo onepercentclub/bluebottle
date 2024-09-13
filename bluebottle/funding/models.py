@@ -264,10 +264,11 @@ class Funding(Activity):
 
     @property
     def payout_account(self):
+        from bluebottle.funding_stripe.models import StripePayoutAccount
         if self.bank_account:
             return self.bank_account.connect_account
         else:
-            return self.owner.funding_payout_account.first()
+            return self.owner.funding_payout_account.get_for_model(StripePayoutAccount).first()
 
     @property
     def stats(self):

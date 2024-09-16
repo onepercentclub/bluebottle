@@ -26,8 +26,12 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             owner=self.user,
             organization=None
         )
-        payout_account = StripePayoutAccountFactory.create(status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
 
     def test_default_status(self):
         self.assertEqual(

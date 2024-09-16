@@ -734,4 +734,10 @@ class PayoutAdmin(StateMachineAdmin):
 
 @admin.register(FundingPlatformSettings)
 class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    pass
+
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs['widgets'] = {
+            'matching_name': forms.TextInput(attrs={'placeholder':   connection.tenant.name})
+        }
+        return super().get_form(request, obj, **kwargs)
+

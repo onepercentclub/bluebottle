@@ -3,14 +3,12 @@ from datetime import datetime
 
 import pytz
 from dateutil.parser import parse
+from django.conf import settings
+from django.db import connection
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
-
-
 from rest_framework_json_api.relations import (
-    HyperlinkedRelatedField,
     PolymorphicResourceRelatedField
 )
 from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
@@ -55,6 +53,7 @@ from bluebottle.members.models import Member
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, ResourcePermissionField, )
+from tenants.ey import settings
 
 
 class FundingCurrencyValidator(object):
@@ -698,11 +697,17 @@ class PayoutSerializer(serializers.ModelSerializer):
 
 
 class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
+    matching_name = serializers.SerializerMethodField()
+
+    def get_matching_name(self, obj):
+        return obj.matching_name or connection.tenant.name
+
     class Meta(object):
         model = FundingPlatformSettings
 
         fields = (
             'allow_anonymous_rewards',
             'anonymous_donations',
-            'stripe_publishable_key'
+            'stripe_publishable_key',
+            'matching_name'
         )

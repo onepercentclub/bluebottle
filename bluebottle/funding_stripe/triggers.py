@@ -80,7 +80,7 @@ class StripePayoutAccountTriggers(TriggerManager):
     def account_not_verified(self):
         """the connect account is not verified"""
 
-        return not account_verified()
+        return not self.account_verified()
 
     def is_complete(self):
         """The connect account is verified"""

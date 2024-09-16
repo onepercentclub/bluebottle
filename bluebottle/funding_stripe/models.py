@@ -451,12 +451,13 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data):
-        self.requirements = data.individual.requirements.eventually_due
+        if data.individual:
+            self.requirements = data.individual.requirements.eventually_due
 
-        try:
-            self.verified = data.individual.verification.status == "verified"
-        except AttributeError:
-            pass
+            try:
+                self.verified = data.individual.verification.status == "verified"
+            except AttributeError:
+                pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

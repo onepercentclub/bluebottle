@@ -390,11 +390,8 @@ class ConnectWebHookView(View):
 
         try:
             if event.type == "account.updated":
-                print(event.data.object)
                 account = self.get_account(event.data.object.id)
                 account.update(event.data.object)
-
-                print(f"Account status: {account.status}")
 
                 return HttpResponse("Updated connect account")
             else:

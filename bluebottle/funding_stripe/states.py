@@ -97,6 +97,7 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
         automatic=True,
     )
 
+
 @register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):
     def account_verified(self):

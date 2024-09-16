@@ -60,8 +60,6 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
     ]
 
 
-
-
 @register(StripePayoutAccount)
 class StripePayoutAccountTriggers(TriggerManager):
     def has_live_campaign(effect):
@@ -89,7 +87,7 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def payments_are_disabled(self):
         """The connect account is verified"""
-        return self.instance.payments_enabled == False
+        return not self.instance.payments_enabled
 
     def has_new_requirements(self):
         """The connect account is verified"""
@@ -119,11 +117,10 @@ class StripePayoutAccountTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     PayoutAccountMarkedIncomplete,
-                    conditions=[has_new_requirements],
                 ),
                 NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
-                    conditions=[has_new_requirements, has_live_campaign],
+                    conditions=[has_live_campaign],
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,

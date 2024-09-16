@@ -29,7 +29,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         payout_account = StripePayoutAccountFactory.create(
-            status="verified", payouts_enabled=True, payments_enabled=True
+            account_id="test-account-id",
+            status="verified",
+            payouts_enabled=True,
+            payments_enabled=True,
         )
         bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding = FundingFactory.create(
@@ -79,7 +82,9 @@ class FundingTestCase(BluebottleAdminTestCase):
             deadline=None,
             bank_account=BankAccountFactory.create(
                 status="verified",
-                connect_account=StripePayoutAccountFactory.create(status="verified"),
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id", status="verified"
+                ),
             ),
         )
 
@@ -270,7 +275,9 @@ class FundingTestCase(BluebottleAdminTestCase):
             deadline=now() + timedelta(weeks=2),
             bank_account=BankAccountFactory.create(
                 status="verified",
-                connect_account=StripePayoutAccountFactory.create(status="verified"),
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id", status="verified"
+                ),
             ),
         )
         BudgetLineFactory.create(activity=new_funding)

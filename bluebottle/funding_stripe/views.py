@@ -123,6 +123,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
         if serializer.instance.country != serializer.validated_data["country"]:
             if serializer.instance.status == "verified":
                 raise ValidationError("Cannot change country of verified account")
+
+            serializer.instance.external_accounts.all().delete()
             serializer.instance.account_id = None
 
         return super().perform_update(serializer)
@@ -379,7 +381,6 @@ class ConnectWebHookView(View):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
         stripe = get_stripe()
-
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_connect

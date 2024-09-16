@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 
 from django_better_admin_arrayfield.models.fields import ArrayField
-from bluebottle.utils.utils import get_client_ip
 from django_tools.middlewares.ThreadLocal import get_current_request
 
 from djmoney.money import Money

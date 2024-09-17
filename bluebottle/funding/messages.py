@@ -179,7 +179,7 @@ class PayoutAccountMarkedIncomplete(TransitionMessage):
         return [self.obj.owner]
 
 
-class LivePayoutAccountRejected(TransitionMessage):
+class LivePayoutAccountMarkedIncomplete(TransitionMessage):
     subject = _(u'Live campaign identity verification failed!')
     template = 'messages/live_payout_account_rejected'
 

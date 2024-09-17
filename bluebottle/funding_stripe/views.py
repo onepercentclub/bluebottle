@@ -1,14 +1,12 @@
 from builtins import str
-from django.core.exceptions import PermissionDenied
 
-from django.db.models import ObjectDoesNotExist
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.utils.timezone import now
 from django.utils.decorators import method_decorator
+from django.utils.timezone import now
+from django.views.decorators.cache import cache_page
 from django.views.generic import View
-
 from moneyed import Money
 from rest_framework import serializers
 from rest_framework import status
@@ -40,8 +38,8 @@ from bluebottle.funding_stripe.serializers import (
     CountrySpecSerializer,
 )
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -50,9 +48,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from bluebottle.utils.utils import get_client_ip
-
-from django.views.decorators.cache import cache_page
 
 
 class StripeSourcePaymentList(PaymentList):

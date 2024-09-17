@@ -12,7 +12,6 @@ from bluebottle.funding.views import (
     PayoutDetails
 )
 
-
 urlpatterns = [
     url(r'^/donations$', DonationList.as_view(), name='funding-donation-list'),
     url(r'^/donations/(?P<pk>[\d]+)$', DonationDetail.as_view(), name='funding-donation-detail'),

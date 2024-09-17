@@ -10,7 +10,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
-from bluebottle.funding.authentication import DonorAuthentication, ClientSecretAuthentication
+from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
@@ -266,9 +266,7 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     queryset = Donor.objects.all()
     serializer_class = DonorSerializer
 
-    authentication_classes = (
-         ClientSecretAuthentication, JSONWebTokenAuthentication
-    )
+    authentication_classes = (ClientSecretAuthentication, JSONWebTokenAuthentication)
 
     permission_classes = (
         DonorOwnerOrSucceededPermission,

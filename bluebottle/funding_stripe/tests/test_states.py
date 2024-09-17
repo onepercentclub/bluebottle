@@ -19,11 +19,13 @@ class BaseStripePaymentStateMachineTests(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            target=Money(1000, 'EUR')
+            initiative=self.initiative, target=Money(1000, "EUR")
         )
+
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(status='verified', connect_account=payout_account)
         self.funding.bank_account = self.bank_account
         self.funding.save()

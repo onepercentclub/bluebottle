@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
 from django.views.generic import View
-
 from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -36,6 +35,7 @@ from bluebottle.funding_stripe.serializers import (
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,

@@ -24,7 +24,6 @@ from bluebottle.funding_stripe.states import (
     StripeBankAccountStateMachine,
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect
 
 
 @register(StripeSourcePayment)

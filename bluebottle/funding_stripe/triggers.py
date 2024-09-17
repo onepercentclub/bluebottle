@@ -74,7 +74,11 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def account_verified(self):
         """the connect account is verified"""
-        return self.instance.verified
+        return (
+            self.instance.verified
+            and self.instance.payments_enabled
+            and self.instance.payouts_enabled
+        )
 
     def account_not_verified(self):
         """the connect account is not verified"""

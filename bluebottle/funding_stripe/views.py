@@ -1,14 +1,10 @@
-from builtins import str
-
-from django.db import connection
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
-from django.utils.timezone import now
 from django.views.decorators.cache import cache_page
 from django.views.generic import View
 from moneyed import Money
-from rest_framework import serializers
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -21,7 +17,7 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
@@ -39,7 +35,6 @@ from bluebottle.funding_stripe.serializers import (
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -106,69 +101,9 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        business_type = "individual"
-
-        stripe = get_stripe()
-
-        if Funding.objects.filter(owner=self.request.user).count():
-            url = (
-                Funding.objects.filter(owner=self.request.user)
-                .first()
-                .get_absolute_url()
-            )
-        else:
-            url = "https://{}".format(connection.tenant.domain_url)
-
-        if "localhost" in connection.tenant.domain_url:
-            url = "https://goodup.com"
-
-        account = stripe.Account.create(
-            country=serializer.validated_data["country"],
-            type="custom",
-            settings=self.account_settings,
-            business_type=business_type,
-            capabilities={
-                "transfers": {"requested": True},
-                "card_payments": {"requested": True},
-            },
-            business_profile={"url": url, "mcc": "8398"},
-            individual={"email": self.request.user.email},
-            metadata=self.metadata,
-            tos_acceptance={
-                "service_agreement": "full",
-                "date": now(),
-                "ip": get_client_ip(self.request),
-            },
-        )
-
         serializer.save(
             owner=self.request.user,
-            business_type=business_type,
-            account_id=account.id,
-            requirements=account.individual.requirements.eventually_due,
         )
-
-    @property
-    def account_settings(self):
-        statement_descriptor = connection.tenant.name[:22]
-        while len(statement_descriptor) < 5:
-            statement_descriptor += "-"
-        return {
-            "payouts": {
-                "schedule": {"interval": "manual"},
-                "statement_descriptor": statement_descriptor,
-            },
-            "payments": {"statement_descriptor": statement_descriptor},
-            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
-        }
-
-    @property
-    def metadata(self):
-        return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.request.user.pk,
-        }
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -183,22 +118,14 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     }
 
     def perform_update(self, serializer):
-        token = serializer.validated_data.pop('token')
-        if token:
-            stripe = get_stripe()
-            try:
-                serializer.instance.update(token)
-            except stripe.error.InvalidRequestError as e:
-                try:
-                    field = e.param.replace('[', '/').replace(']', '')
-                    raise serializers.ValidationError(
-                        {field: [e.message]}
-                    )
-                except AttributeError:
-                    raise serializers.ValidationError(str(e))
+        if serializer.instance.country != serializer.validated_data["country"]:
+            if serializer.instance.status == "verified":
+                raise ValidationError("Cannot change country of verified account")
 
-        serializer.save()
-        serializer.instance.check_status()
+            serializer.instance.external_accounts.all().delete()
+            serializer.instance.account_id = None
+
+        return super().perform_update(serializer)
 
 
 class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
@@ -452,7 +379,6 @@ class ConnectWebHookView(View):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
         stripe = get_stripe()
-
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_connect
@@ -463,11 +389,8 @@ class ConnectWebHookView(View):
 
         try:
             if event.type == "account.updated":
-                print(event.data.object)
                 account = self.get_account(event.data.object.id)
                 account.update(event.data.object)
-
-                print(f"Account status: {account.status}")
 
                 return HttpResponse("Updated connect account")
             else:

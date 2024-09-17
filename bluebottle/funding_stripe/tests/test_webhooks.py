@@ -43,7 +43,11 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.bank_account = ExternalAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=StripePayoutAccountFactory.create(
+                status="verified", account_id="test-account-id"
+            )
+        )
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonorFactory.create(activity=self.funding)
         self.intent = StripePaymentIntentFactory.create(donation=self.donation)
@@ -826,37 +830,42 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         })
 
         self.connect_account = stripe.Account(self.payout_account.account_id)
-        self.connect_account.update(munch.munchify({
-            'country': 'NL',
-            'charges_enabled': True,
-            'payouts_enabled': True,
-            'requirements': {
-                'disabled': False,
-                'eventually_due': [],
-                'currently_due': [],
-                'past_due': [],
-                'pending_verification': [],
-                'disabled_reason': ''
-            },
-            'individual': {
-                'verification': {
-                    'status': 'verified',
-                    'document': {
-                        "back": None,
-                        "details": None,
-                        "details_code": None,
-                        "front": "file_12345"
-                    }
-                },
-                'requirements': {
-                    'eventually_due': [],
-                    'currently_due': [],
-                    'past_due': [],
-                    'pending_verification': [],
-                },
-            },
-            'external_accounts': external_accounts
-        }))
+        self.connect_account.update(
+            munch.munchify(
+                {
+                    "country": "NL",
+                    "charges_enabled": True,
+                    "payouts_enabled": True,
+                    "bussiness_type": "individual",
+                    "requirements": {
+                        "disabled": False,
+                        "eventually_due": [],
+                        "currently_due": [],
+                        "past_due": [],
+                        "pending_verification": [],
+                        "disabled_reason": "",
+                    },
+                    "individual": {
+                        "verification": {
+                            "status": "verified",
+                            "document": {
+                                "back": None,
+                                "details": None,
+                                "details_code": None,
+                                "front": "file_12345",
+                            },
+                        },
+                        "requirements": {
+                            "eventually_due": [],
+                            "currently_due": [],
+                            "past_due": [],
+                            "pending_verification": [],
+                        },
+                    },
+                    "external_accounts": external_accounts,
+                }
+            )
+        )
 
     def execute_hook(self):
         mail.outbox = []
@@ -906,38 +915,52 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.verify()
         # Missing fields
         self.connect_account.payouts_enabled = False
+        self.connect_account.individual.requirements = {
+            "eventually_due": ["document.front"]
+        }
 
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "payouts_disabled")
+        self.assertEqual(self.payout_account.status, "incomplete")
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
+        self.assertEqual(
+            mail.outbox[0].subject, "We need more information to verify your account"
+        )
 
     def test_incomplete_open(self):
         self.verify()
         self.approve()
 
-        self.connect_account.charges_enabled = False
+        self.connect_account.individual.requirements = {
+            "eventually_due": ["document.front"]
+        }
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "payments_disabled")
-
-        self.assertEqual(self.funding.status, "on_hold")
+        self.assertEqual(self.payout_account.status, "incomplete")
 
         self.assertEqual(len(mail.outbox), 3)
 
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
-        self.assertEqual(mail.outbox[1].subject, 'Live campaign identity verification failed!')
-        self.assertEqual(mail.outbox[2].subject, 'Live campaign identity verification failed!')
+        self.assertEqual(
+            mail.outbox[0].subject, "We need more information to verify your account"
+        )
+        self.assertEqual(
+            mail.outbox[1].subject, "Live campaign identity verification failed!"
+        )
+        self.assertEqual(
+            mail.outbox[2].subject, "Live campaign identity verification failed!"
+        )
 
     def test_incomplete_open_charges_disabled(self):
         self.verify()
         self.approve()
 
         self.connect_account.charges_enabled = False
+        self.connect_account.individual.requirements = {
+            "eventually_due": ["document.front"]
+        }
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "payments_disabled")
+        self.assertEqual(self.payout_account.status, "disabled")
         self.assertEqual(self.funding.status, "on_hold")
 
     def test_document_rejected(self):
@@ -946,18 +969,19 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             "this passport smells fishy"
         )
         self.connect_account.individual.verification.status = "unverified"
+        self.connect_account.individual.requirements = {
+            "eventually_due": ["document.front"]
+        }
 
         self.execute_hook()
 
-        self.assertEqual(self.payout_account.status, "rejected")
+        self.assertEqual(self.payout_account.status, "incomplete")
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, u'Your identity verification could not be verified!'
+            message.subject, "We need more information to verify your account"
         )
-        self.assertTrue(
-            '/initiatives/activities/funding/kyc' in message.body
-        )
+        self.assertTrue("/activities/stripe/kyc" in message.body)
 
     def test_no_individual(self):
         self.connect_account.individual = None

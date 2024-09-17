@@ -389,8 +389,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(
             initiative=self.initiative,
             owner=self.user,
-            target=Money(5000, 'EUR'),
-            deadline=now() + timedelta(days=15)
+            target=Money(5000, "EUR"),
+            deadline=now() + timedelta(days=15),
         )
 
         BudgetLineFactory.create(activity=self.funding)
@@ -398,20 +398,22 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id="some-external-account-id",
             status="verified",
-            connect_account=StripePayoutAccountFactory.create(status="verified"),
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
         )
         self.funding.save()
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
+        self.funding_url = reverse("funding-detail", args=(self.funding.pk,))
         self.data = {
-            'data': {
-                'id': self.funding.pk,
-                'type': 'activities/fundings',
-                'attributes': {
-                    'title': 'New title',
-                }
+            "data": {
+                "id": self.funding.pk,
+                "type": "activities/fundings",
+                "attributes": {
+                    "title": "New title",
+                },
             }
         }
 
@@ -537,27 +539,28 @@ class FundingDetailTestCase(BluebottleTestCase):
         DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
         response = self.client.get(self.funding_url, user=self.funding.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()['data']
-        export_url = data['attributes']['supporters-export-url']['url']
+        data = response.json()["data"]
+        export_url = data["attributes"]["supporters-export-url"]["url"]
         export_response = self.client.get(export_url)
-        self.assertEqual(
-            export_response.status_code, 200
-        )
+        self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
         self.funding.save()
 
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -567,27 +570,32 @@ class FundingDetailTestCase(BluebottleTestCase):
             ):
                 response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        bank_account = response.json()['data']['relationships']['bank-account']['data']
-        self.assertEqual(
-            bank_account['id'], str(self.funding.bank_account.pk)
-        )
+        bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
+        self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
 
     def test_other_user(self):
-        DonorFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
-        DonorFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+        DonorFactory.create_batch(
+            5, amount=Money(200, "EUR"), activity=self.funding, status="succeeded"
+        )
+        DonorFactory.create_batch(
+            2, amount=Money(100, "EUR"), activity=self.funding, status="new"
+        )
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
         self.funding.save()
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -624,23 +632,23 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
         response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            len(response.json()['data']['meta']['transitions']),
-            0
-        )
+        self.assertEqual(len(response.json()["data"]["meta"]["transitions"]), 0)
 
     def test_update_bank_account(self):
         external_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -1367,16 +1375,18 @@ class PayoutAccountTestCase(BluebottleTestCase):
         cur.default3 = 5000
         cur.default4 = 10000
         cur.save()
-        self.stripe_account = StripePayoutAccountFactory.create()
-        self.stripe_bank = ExternalAccountFactory.create(connect_account=self.stripe_account, status='verified')
+        self.stripe_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id"
+        )
+        self.stripe_bank = ExternalAccountFactory.create(
+            connect_account=self.stripe_account, status="verified"
+        )
 
         self.funding = FundingFactory.create(
-            bank_account=self.stripe_bank,
-            target=Money(5000, 'EUR'),
-            status='open'
+            bank_account=self.stripe_bank, target=Money(5000, "EUR"), status="open"
         )
-        self.funding_url = reverse('funding-detail', args=(self.funding.id,))
-        self.connect_account = stripe.Account('some-connect-id')
+        self.funding_url = reverse("funding-detail", args=(self.funding.id,))
+        self.connect_account = stripe.Account("some-connect-id")
 
         self.connect_account.update({
             'country': 'NL',
@@ -1490,18 +1500,21 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
     def get_payout_url(self, payout):
-        return reverse('payout-details', args=(payout.pk,))
+        return reverse("payout-details", args=(payout.pk,))
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id="some-external-account-id",
             status="verified",
-            connect_account=StripePayoutAccountFactory.create(status="verified"),
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
         )
         self.funding.save()
 
         with mock.patch(
-                'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+            "bluebottle.funding_stripe.models.ExternalAccount.verified",
+            new_callable=mock.PropertyMock,
         ) as verified:
             verified.return_value = True
             self.funding.states.submit()
@@ -1852,18 +1865,20 @@ class FundingAPITestCase(APITestCase):
 
     def setUp(self):
         super().setUp()
-        owner = BlueBottleUserFactory.create(
-            is_co_financer=True
+        owner = BlueBottleUserFactory.create(is_co_financer=True)
+        self.initiative = InitiativeFactory.create(status="approved")
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
         )
-        self.initiative = InitiativeFactory.create(status='approved')
-        payout_account = StripePayoutAccountFactory.create(status='verified')
-        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        bank_account = ExternalAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         self.activity = FundingFactory.create(
             owner=owner,
             initiative=self.initiative,
-            target=Money(500, 'EUR'),
+            target=Money(500, "EUR"),
             deadline=now() + timedelta(weeks=2),
-            bank_account=bank_account
+            bank_account=bank_account,
         )
         BudgetLineFactory.create(activity=self.activity)
         self.activity.bank_account.reviewed = True

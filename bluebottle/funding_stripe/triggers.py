@@ -8,6 +8,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.messages import (
     PayoutAccountVerified,
     PayoutAccountMarkedIncomplete,
+    LivePayoutAccountMarkedIncomplete,
 )
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
@@ -58,19 +59,18 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
     ]
 
 
-def has_live_campaign(effect):
-    """has connected funding activity that is open"""
-    live_statuses = ["open", "on_hold"]
-
-    return (
-        Funding.objects.filter(bank_account__connect_account=effect.instance)
-        .filter(status__in=live_statuses)
-        .exists()
-    )
-
-
 @register(StripePayoutAccount)
 class StripePayoutAccountTriggers(TriggerManager):
+    def has_live_campaign(effect):
+        """has connected funding activity that is open"""
+        live_statuses = ["open", "on_hold"]
+
+        return (
+            Funding.objects.filter(bank_account__connect_account=effect.instance)
+            .filter(status__in=live_statuses)
+            .exists()
+        )
+
     def account_verified(self):
         """the connect account is verified"""
         return self.instance.verified
@@ -83,6 +83,10 @@ class StripePayoutAccountTriggers(TriggerManager):
     def is_complete(self):
         """The connect account is verified"""
         return self.instance.requirements == []
+
+    def payments_are_disabled(self):
+        """The connect account is verified"""
+        return not self.instance.payments_enabled
 
     def has_new_requirements(self):
         """The connect account is verified"""
@@ -112,9 +116,20 @@ class StripePayoutAccountTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     PayoutAccountMarkedIncomplete,
-                    conditions=[has_new_requirements],
+                ),
+                NotificationEffect(
+                    LivePayoutAccountMarkedIncomplete,
+                    conditions=[has_live_campaign],
+                ),
+                TransitionEffect(
+                    StripePayoutAccountStateMachine.disable,
+                    conditions=[payments_are_disabled],
                 ),
             ],
+        ),
+        TransitionTrigger(
+            StripePayoutAccountStateMachine.disable,
+            effects=[PutActivitiesOnHoldEffect],
         ),
         ModelChangedTrigger(
             ["verified", "requirements"],

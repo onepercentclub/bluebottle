@@ -265,6 +265,7 @@ class FundingSerializer(BaseActivitySerializer):
 
     psp = serializers.SerializerMethodField()
     deadline = DeadlineField(allow_null=True, required=False)
+    errors = ValidationErrorsField(ignore=["kyc"])
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:

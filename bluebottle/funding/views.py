@@ -267,7 +267,7 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     serializer_class = DonorSerializer
 
     authentication_classes = (
-         ClientSecretAuthentication,
+         JSONWebTokenAuthentication, DonorAuthentication, ClientSecretAuthentication,
     )
 
     permission_classes = (

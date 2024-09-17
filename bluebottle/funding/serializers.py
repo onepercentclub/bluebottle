@@ -4,13 +4,11 @@ from datetime import datetime
 import pytz
 from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 
 
 from rest_framework_json_api.relations import (
-    HyperlinkedRelatedField,
     PolymorphicResourceRelatedField
 )
 from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
@@ -269,6 +267,7 @@ class FundingSerializer(BaseActivitySerializer):
 
     psp = serializers.SerializerMethodField()
     deadline = DeadlineField(allow_null=True, required=False)
+    errors = ValidationErrorsField(ignore=["kyc"])
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:

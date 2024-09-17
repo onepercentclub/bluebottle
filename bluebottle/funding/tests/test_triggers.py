@@ -83,7 +83,9 @@ class DonorTriggerTests(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
         bank_account = ExternalAccountFactory.create(
             status="verified",
-            connect_account=StripePayoutAccountFactory.create(status="verified"),
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
         )
         self.funding.bank_account = bank_account
         self.funding.states.submit(save=True)

@@ -1,5 +1,13 @@
 from django.core import mail
+from bluebottle.deeds.tests.factories import DeedFactory
 
+from bluebottle.deeds.states import DeedStateMachine
+from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding_stripe.tests.factories import (
+    ExternalAccountFactory,
+    StripePayoutAccountFactory,
+)
 from bluebottle.initiatives.messages import InitiativeSubmittedStaffMessage
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -45,3 +53,33 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         self.model.states.submit()
         with self.execute():
             self.assertNotificationEffect(InitiativeSubmittedStaffMessage)
+
+    def test_auto_submit_activity(self):
+        self.create()
+        activity = DeedFactory.create(initiative=self.model)
+
+        self.model.states.submit()
+        with self.execute():
+            self.assertTransitionEffect(DeedStateMachine.auto_submit, activity)
+
+    def test_auto_submit_funding_activity(self):
+        self.create()
+        activity = FundingFactory.create(initiative=self.model)
+
+        self.model.states.submit()
+        with self.execute():
+            self.assertNoTransitionEffect(FundingStateMachine.auto_submit, activity)
+
+    def test_auto_submit_funding_activity_complete(self):
+        self.create()
+        activity = FundingFactory.create(
+            initiative=self.model,
+            bank_account=ExternalAccountFactory.create(
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(status="verified"),
+            ),
+        )
+
+        self.model.states.submit()
+        with self.execute():
+            self.assertNoTransitionEffect(FundingStateMachine.auto_submit, activity)

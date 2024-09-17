@@ -17,7 +17,12 @@ class KYCReadyValidator(Validator):
     field = 'kyc'
 
     def is_valid(self):
-        return self.instance.bank_account and self.instance.bank_account.status == 'verified'
+        return (
+            self.instance.payout_account
+            and self.instance.payout_account.status == "verified"
+            and self.instance.bank_account
+            and self.instance.bank_account.status == "verified"
+        )
 
 
 class DeadlineValidator(Validator):

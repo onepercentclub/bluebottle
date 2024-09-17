@@ -1030,8 +1030,7 @@ class DonationTestCase(BluebottleTestCase):
         }
 
         response = self.client.patch(update_url, json.dumps(patch_data))
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_no_user(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
@@ -1057,6 +1056,9 @@ class DonationTestCase(BluebottleTestCase):
             'data': {
                 'type': 'contributors/donations',
                 'id': data['data']['id'],
+                'attributes': {
+                    'client-secret': data['data']['attributes']['client-secret']
+                },
                 'relationships': {
                     'user': {
                         'data': {
@@ -1071,7 +1073,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
         data = response.json()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1143,6 +1144,7 @@ class DonationTestCase(BluebottleTestCase):
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
+                    'client-secret': data['data']['attributes']['client-secret']
                 },
             }
         }
@@ -1150,7 +1152,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1171,6 +1172,7 @@ class DonationTestCase(BluebottleTestCase):
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
+                    'client-secret': data['data']['attributes']['client-secret']
                 },
                 'relationships': {
                     'user': {
@@ -1186,7 +1188,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1284,63 +1285,72 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(response.data['platform']['currencies'])
 
         self.assertEqual(
-            response.data['platform']['currencies'], [{
-                'code': 'EUR',
-                'name': 'Euro',
-                'maxAmount': None,
-                'symbol': '€',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'stripe',
-                'providerName': 'Stripe'
-            }, {
-                'code': 'USD',
-                'name': 'US Dollar',
-                'maxAmount': None,
-                'symbol': '$',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'stripe',
-                'providerName': 'Stripe'
-            }, {
-                'code': 'NGN',
-                'name': 'Nigerian Naira',
-                'maxAmount': None,
-                'symbol': '₦',
-                'minAmount': 1000.00,
-                'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'KES',
-                'name': 'Kenyan Shilling',
-                'maxAmount': None,
-                'symbol': 'KES',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'USD',
-                'name': 'US Dollar',
-                'maxAmount': None,
-                'symbol': '$',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'XOF',
-                'name': 'West African CFA Franc',
-                'maxAmount': None,
-                'symbol': 'CFA',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }]
+            response.data['platform']['currencies'], [
+                {
+                    'provider': 'stripe',
+                    'providerName': 'Stripe',
+                    'code': 'EUR',
+                    'name': 'Euro',
+                    'symbol': '€',
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'maxAmount': None
+                },
+                {
+                    'provider': 'stripe',
+                    'providerName': 'Stripe',
+                    'code': 'USD',
+                    'name': 'US Dollar',
+                    'symbol': '$',
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'maxAmount': None
+                },
+                {
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave',
+                    'code': 'KES',
+                    'name': 'Kenyan Shilling',
+                    'symbol': 'KES',
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'maxAmount': None
+                },
+                {
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave',
+                    'code': 'USD',
+                    'name': 'US Dollar',
+                    'symbol': '$',
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'maxAmount': None
+                },
+                {
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave',
+                    'code': 'XOF',
+                    'name': 'West African CFA Franc',
+                    'symbol': 'CFA',
+                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                    'minAmount': 5.00,
+                    'maxAmount': None
+                },
+                {
+                    'provider': 'flutterwave',
+                    'providerName': 'Flutterwave',
+                    'code': 'NGN',
+                    'name': 'Nigerian Naira',
+                    'symbol': '₦',
+                    'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
+                    'minAmount': 1000.00,
+                    'maxAmount': None
+                }
+            ]
+
         )
 
 

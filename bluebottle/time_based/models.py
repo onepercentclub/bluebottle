@@ -941,6 +941,10 @@ class PeriodicActivity(RegistrationActivity):
     url_pattern = "{}/{}/activities/details/periodic/{}/{}"
 
     @property
+    def active_registrations(self):
+        return self.registrations.filter(status__in=["new", "accepted"])
+
+    @property
     def required_fields(self):
         return super().required_fields + ["duration", "period"]
 

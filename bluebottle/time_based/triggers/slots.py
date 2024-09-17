@@ -17,6 +17,7 @@ from bluebottle.time_based.effects.slots import (
     CreateTeamSlotParticipantsEffect
 )
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
+from bluebottle.time_based.notifications.registrations import ManagerReminderNotification
 from bluebottle.time_based.notifications.teams import UserTeamDetailsChangedNotification
 from bluebottle.time_based.states import (
     ScheduleSlotStateMachine,
@@ -31,11 +32,46 @@ from bluebottle.time_based.states import (
 
 @register(PeriodicSlot)
 class PeriodicSlotTriggers(TriggerManager):
+
+    def has_participants(effect):
+        return effect.instance.activity.active_registrations.count() > 0
+
+    def send_daily_reminder(effect):
+        """Is daily recurring, at 5 iterations send every 3 days"""
+        period = effect.instance.activity.period
+        count = effect.instance.activity.slots.exclude(id=effect.instance.id).count()
+        return period == 'days' and count >= 4 and (count - 4) % 3 == 0
+
+    def send_weekly_reminder(effect):
+        """Is weekly recurring, at 3 iterations send every week"""
+        period = effect.instance.activity.period
+        count = effect.instance.activity.slots.exclude(id=effect.instance.id).count()
+        return period == "weeks" and count > 2
+
+    def send_monthly_reminder(effect):
+        """Is monthly recurring, at 3 iterations send every month"""
+        period = effect.instance.activity.period
+        count = effect.instance.activity.slots.exclude(id=effect.instance.id).count()
+        return period == "months" and count > 2
+
     triggers = [
         TransitionTrigger(
             PeriodicSlotStateMachine.initiate,
             effects=[
                 CreatePeriodicParticipantsEffect,
+                NotificationEffect(
+                    ManagerReminderNotification,
+                    conditions=[has_participants, send_daily_reminder],
+                ),
+                NotificationEffect(
+                    ManagerReminderNotification,
+                    conditions=[has_participants, send_weekly_reminder],
+                ),
+                NotificationEffect(
+                    ManagerReminderNotification,
+                    conditions=[has_participants, send_monthly_reminder],
+                ),
+
             ]
         ),
         TransitionTrigger(

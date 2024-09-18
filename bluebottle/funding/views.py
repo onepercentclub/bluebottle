@@ -266,7 +266,10 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     queryset = Donor.objects.all()
     serializer_class = DonorSerializer
 
-    authentication_classes = (ClientSecretAuthentication, JSONWebTokenAuthentication)
+    authentication_classes = (
+        ClientSecretAuthentication,
+        JSONWebTokenAuthentication
+    )
 
     permission_classes = (
         DonorOwnerOrSucceededPermission,

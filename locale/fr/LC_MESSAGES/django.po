@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-18 12:36+0200\n"
-"PO-Revision-Date: 2024-09-18 10:46\n"
+"PO-Revision-Date: 2024-09-18 15:58\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -2454,19 +2454,19 @@ msgstr "Statistiques de la plateforme"
 
 #: bluebottle/cms/models.py:264 bluebottle/cms/models.py:368
 msgid "Global"
-msgstr ""
+msgstr "Globale"
 
 #: bluebottle/cms/models.py:265 bluebottle/cms/models.py:369
 msgid "Office group (based on user office)"
-msgstr ""
+msgstr "Groupe de bureau (basé sur le bureau d'utilisateur)"
 
 #: bluebottle/cms/models.py:268
 msgid "Stat type"
-msgstr ""
+msgstr "Type de statistiques"
 
 #: bluebottle/cms/models.py:272
 msgid "Stats will show all data or only activities from the user's office group"
-msgstr ""
+msgstr "Les statistiques afficheront toutes les données ou seulement les activités du groupe de bureau de l'utilisateur"
 
 #: bluebottle/cms/models.py:290
 msgid "Highlighted"
@@ -2511,11 +2511,11 @@ msgstr "Partager les résultats"
 
 #: bluebottle/cms/models.py:372
 msgid "Map type"
-msgstr ""
+msgstr "Type de carte"
 
 #: bluebottle/cms/models.py:376
 msgid "The map will show all activities or only from the user's office group"
-msgstr ""
+msgstr "La carte montrera toutes les activités ou seulement du groupe de bureau de l'utilisateur"
 
 #: bluebottle/cms/models.py:380
 msgid "Activities Map"
@@ -3630,11 +3630,11 @@ msgstr "Demander un remboursement sur PSP"
 
 #: bluebottle/funding/effects.py:131
 msgid "Create wall update"
-msgstr ""
+msgstr "Créer une mise à jour du mur"
 
 #: bluebottle/funding/effects.py:142
 msgid "Generate wall update for donation"
-msgstr ""
+msgstr "Générer une mise à jour du mur pour le don"
 
 #: bluebottle/funding/effects.py:148
 msgid "Delete wallpost"
@@ -3764,7 +3764,7 @@ msgstr "Votre vérification d'identité n'a pas pu être vérifiée !"
 
 #: bluebottle/funding/messages.py:174
 msgid "We need more information to verify your account"
-msgstr ""
+msgstr "Nous avons besoin de plus d'informations pour vérifier votre compte"
 
 #: bluebottle/funding/messages.py:183
 msgid "Live campaign identity verification failed!"
@@ -3776,7 +3776,7 @@ msgstr "Votre identité a été vérifiée"
 
 #: bluebottle/funding/messages.py:211
 msgid "We need more information before your account can be verified"
-msgstr ""
+msgstr "Nous avons besoin de plus d'informations avant de pouvoir vérifier votre compte"
 
 #: bluebottle/funding/models.py:55
 msgid "Payment currency"
@@ -4815,7 +4815,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:25
 msgctxt "email"
 msgid "Provide additional data"
-msgstr ""
+msgstr "Fournir des données supplémentaires"
 
 #: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:7
 #, python-format
@@ -5069,7 +5069,7 @@ msgstr "Stripe link"
 
 #: bluebottle/funding_stripe/effects.py:9
 msgid "Put activities on hold"
-msgstr ""
+msgstr "Mettre les activités en attente"
 
 #: bluebottle/funding_stripe/models.py:239
 msgid "Stripe publishable key"
@@ -7213,7 +7213,7 @@ msgstr "Gérer les rapports"
 
 #: bluebottle/slides/admin.py:16
 msgid "Global (all regions)"
-msgstr ""
+msgstr "Global (toutes les régions)"
 
 #: bluebottle/slides/admin.py:44
 msgid "Contents"
@@ -7221,7 +7221,7 @@ msgstr "Contenus"
 
 #: bluebottle/slides/models.py:34
 msgid "Select a region to make the slide only visible to visitors from the same region or select 'Global' to make the slide visible for everyone."
-msgstr ""
+msgstr "Sélectionnez une région pour rendre la diapositive visible uniquement aux visiteurs de la même région ou sélectionnez « Global» pour rendre la diapositive visible pour tout le monde."
 
 #: bluebottle/slides/models.py:42
 msgid "Tab text"
@@ -10723,7 +10723,7 @@ msgstr "a une vidéo"
 
 #: bluebottle/updates/dashboard.py:12
 msgid "Recent wall updates"
-msgstr ""
+msgstr "Mises à jour récentes du mur"
 
 #: bluebottle/updates/messages.py:18
 #, python-brace-format
@@ -10753,7 +10753,7 @@ msgstr "Répondre à"
 
 #: bluebottle/updates/models.py:40
 msgid "Related contribution"
-msgstr ""
+msgstr "Contribution connexe"
 
 #: bluebottle/updates/models.py:46
 msgid "message"
@@ -10774,7 +10774,7 @@ msgstr "Mise à jour"
 #: bluebottle/updates/models.py:72
 #, python-brace-format
 msgid "Anonymous - {time}"
-msgstr ""
+msgstr "Anonyme - {time}"
 
 #: bluebottle/updates/serializers.py:68
 msgid "At least one of 'message', 'images', or 'video_url' must be set."

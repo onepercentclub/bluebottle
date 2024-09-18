@@ -5,7 +5,7 @@ from django.db import migrations
 def set_default_amounts(apps, schema_editor):
     PledgePaymentProvider = apps.get_model('funding_pledge', 'PledgePaymentProvider')
     provider = PledgePaymentProvider.objects.first()
-    if provider.paymentcurrency_set.count() == 0:
+    if provider and provider.paymentcurrency_set.count() == 0:
         print('Setting default values for pledge.')
         provider.paymentcurrency_set.create(
             code='EUR',

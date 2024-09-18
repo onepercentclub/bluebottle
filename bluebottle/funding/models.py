@@ -30,6 +30,7 @@ from bluebottle.funding.validators import (
     TargetValidator,
     DeadlineMaxValidator,
     BudgetLineValidator,
+    KYCReadyValidator,
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -160,6 +161,7 @@ class Funding(Activity):
         DeadlineMaxValidator,
         TargetValidator,
         BudgetLineValidator,
+        KYCReadyValidator,
     ]
 
     auto_approve = False
@@ -174,7 +176,12 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + ["title", "description", "target"]
+        fields = super().required_fields + [
+            "title",
+            "description",
+            "target",
+            "bank_account",
+        ]
 
         if not self.duration:
             fields.append('deadline')

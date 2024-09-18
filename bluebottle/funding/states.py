@@ -646,7 +646,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     set_incomplete = Transition(
-        [new, pending, rejected, verified],
+        [pending, verified],
         incomplete,
         name=_('Set incomplete'),
         description=_(

@@ -3,6 +3,7 @@ import os
 
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -13,6 +14,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -48,6 +50,14 @@ class UpdateSerializer(serializers.ModelSerializer):
     )
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        anonymous = FundingPlatformSettings.load().anonymous_donations
+        current_user = get_current_user()
+        if anonymous and data['author'] != current_user:
+            data['author'] = None
+        return data
 
     def validate(self, value):
         if self.partial:

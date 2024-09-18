@@ -85,52 +85,16 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 
 @register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
-    payments_disabled = State(
-        _("payments disabled"),
-        "payments_disabled",
-        _("Payments are disabled for payout account."),
-    )
-    payouts_disabled = State(
-        _("payouts disabled"),
-        "payouts_disabled",
-        _("Payouts are disabled for payout account."),
-    )
+    disabled = State(_("disabled"), "disabled")
 
-    disable_payouts = Transition(
+    disable = Transition(
         [
-            PayoutAccountStateMachine.new,
-            PayoutAccountStateMachine.verified,
-            PayoutAccountStateMachine.rejected,
-        ],
-        payouts_disabled,
-        name=_("Disable payout account"),
-        description=_("Payout account has been disabled"),
-    )
-
-    disable_payments = Transition(
-        [
-            PayoutAccountStateMachine.new,
-            PayoutAccountStateMachine.verified,
-            PayoutAccountStateMachine.rejected,
-            payouts_disabled,
-        ],
-        payments_disabled,
-        name=_("Disable payout account"),
-        description=_("Payout account has been disabled"),
-    )
-
-    verify = Transition(
-        [
-            PayoutAccountStateMachine.new,
             PayoutAccountStateMachine.incomplete,
-            PayoutAccountStateMachine.pending,
-            payments_disabled,
-            payouts_disabled,
+            PayoutAccountStateMachine.verified,
         ],
-        PayoutAccountStateMachine.verified,
-        name=_("Verify"),
-        description=_("Verify that the bank account is complete."),
-        automatic=False,
+        disabled,
+        name=_("Disable"),
+        automatic=True,
     )
 
 

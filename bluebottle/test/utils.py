@@ -60,6 +60,8 @@ def css_dict(style):
 
 class InitProjectDataMixin(object):
     def init_projects(self):
+        from django.core import management
+
         """
         Set up some basic models needed for project creation.
         """

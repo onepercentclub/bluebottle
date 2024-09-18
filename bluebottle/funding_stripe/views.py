@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
-
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import View
 from moneyed import Money
 from rest_framework import status
@@ -35,7 +35,6 @@ from bluebottle.funding_stripe.serializers import (
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView,
     RetrieveUpdateAPIView,
@@ -44,7 +43,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from django.views.decorators.cache import cache_page
 
 
 class StripeSourcePaymentList(PaymentList):

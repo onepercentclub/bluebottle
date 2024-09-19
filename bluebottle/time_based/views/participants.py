@@ -1,5 +1,7 @@
 from django.db.models import Sum, Q
 
+from rest_framework import filters
+
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
@@ -138,6 +140,18 @@ class ScheduleRelatedParticipantList(RelatedContributorListView):
         'user', 'activity'
     )
     serializer_class = ScheduleParticipantSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        sort = self.request.GET.get("sort")
+        if sort == "start":
+            queryset = queryset.order_by("slots__start")
+        if sort == "-start":
+            queryset = queryset.order_by("-slots__start")
+
+        return queryset
+
 
 
 class TeamScheduleRelatedParticipantList(RelatedContributorListView):

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-18 12:36+0200\n"
-"PO-Revision-Date: 2024-09-18 10:46\n"
+"PO-Revision-Date: 2024-09-19 08:27\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -2473,19 +2473,19 @@ msgstr "Plattformstatistik"
 
 #: bluebottle/cms/models.py:264 bluebottle/cms/models.py:368
 msgid "Global"
-msgstr ""
+msgstr "Globale"
 
 #: bluebottle/cms/models.py:265 bluebottle/cms/models.py:369
 msgid "Office group (based on user office)"
-msgstr ""
+msgstr "Office-Gruppe (basierend auf Benutzer-Büro)"
 
 #: bluebottle/cms/models.py:268
 msgid "Stat type"
-msgstr ""
+msgstr "Stat-Typ"
 
 #: bluebottle/cms/models.py:272
 msgid "Stats will show all data or only activities from the user's office group"
-msgstr ""
+msgstr "Statistiken zeigen alle Daten oder nur Aktivitäten der Bürogruppe des Benutzers an"
 
 #: bluebottle/cms/models.py:290
 msgid "Highlighted"
@@ -2530,11 +2530,11 @@ msgstr "Ergebnisse teilen"
 
 #: bluebottle/cms/models.py:372
 msgid "Map type"
-msgstr ""
+msgstr "Kartentyp"
 
 #: bluebottle/cms/models.py:376
 msgid "The map will show all activities or only from the user's office group"
-msgstr ""
+msgstr "Die Karte zeigt alle Aktivitäten oder nur aus der Bürogruppe des Benutzers"
 
 #: bluebottle/cms/models.py:380
 msgid "Activities Map"
@@ -3648,11 +3648,11 @@ msgstr "Erstattung bei PSP anfordern"
 
 #: bluebottle/funding/effects.py:131
 msgid "Create wall update"
-msgstr ""
+msgstr "Wand-Update erstellen"
 
 #: bluebottle/funding/effects.py:142
 msgid "Generate wall update for donation"
-msgstr ""
+msgstr "Wall-Update für Spende generieren"
 
 #: bluebottle/funding/effects.py:148
 msgid "Delete wallpost"
@@ -3782,7 +3782,7 @@ msgstr "Ihre Identitätsüberprüfung konnte nicht verifiziert werden!"
 
 #: bluebottle/funding/messages.py:174
 msgid "We need more information to verify your account"
-msgstr ""
+msgstr "Wir benötigen weitere Informationen, um dein Konto zu verifizieren"
 
 #: bluebottle/funding/messages.py:183
 msgid "Live campaign identity verification failed!"
@@ -3794,7 +3794,7 @@ msgstr "Ihre Identität wurde verifiziert"
 
 #: bluebottle/funding/messages.py:211
 msgid "We need more information before your account can be verified"
-msgstr ""
+msgstr "Wir benötigen weitere Informationen, um Ihr Konto zu verifizieren"
 
 #: bluebottle/funding/models.py:55
 msgid "Payment currency"
@@ -4816,7 +4816,12 @@ msgid "\n"
 "            <br/><br/>\n"
 "            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Hallo %(recipient_name)s,<br/>\n"
+"            <br/>\n"
+"            Wir benötigen zusätzliche Informationen, um Ihr Konto zu verifizieren. <br/>\n"
+"            <br/><br/>\n"
+"            Wenn Sie bereit sind, können Sie Ihre Identitätsüberprüfung erneut einreichen und wir sorgen dafür, dass sie überprüft wird.        "
 
 #: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:16
 #: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:17
@@ -4833,7 +4838,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:25
 msgctxt "email"
 msgid "Provide additional data"
-msgstr ""
+msgstr "Zusätzliche Daten angeben"
 
 #: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:7
 #, python-format
@@ -5087,7 +5092,7 @@ msgstr "Stripe link"
 
 #: bluebottle/funding_stripe/effects.py:9
 msgid "Put activities on hold"
-msgstr ""
+msgstr "Aktivitäten aufhalten"
 
 #: bluebottle/funding_stripe/models.py:239
 msgid "Stripe publishable key"
@@ -7241,7 +7246,7 @@ msgstr "Berichte verwalten"
 
 #: bluebottle/slides/admin.py:16
 msgid "Global (all regions)"
-msgstr ""
+msgstr "Global (alle Regionen)"
 
 #: bluebottle/slides/admin.py:44
 msgid "Contents"
@@ -7249,7 +7254,7 @@ msgstr "Inhalt"
 
 #: bluebottle/slides/models.py:34
 msgid "Select a region to make the slide only visible to visitors from the same region or select 'Global' to make the slide visible for everyone."
-msgstr ""
+msgstr "Wählen Sie eine Region aus, um die Folie nur für Besucher aus der gleichen Region sichtbar zu machen, oder wählen Sie 'Global', um die Folie für alle sichtbar zu machen."
 
 #: bluebottle/slides/models.py:42
 msgid "Tab text"
@@ -10848,7 +10853,7 @@ msgstr "hat Video"
 
 #: bluebottle/updates/dashboard.py:12
 msgid "Recent wall updates"
-msgstr ""
+msgstr "Neueste Wandupdates"
 
 #: bluebottle/updates/messages.py:18
 #, python-brace-format
@@ -10878,7 +10883,7 @@ msgstr "Antwort an"
 
 #: bluebottle/updates/models.py:40
 msgid "Related contribution"
-msgstr ""
+msgstr "Zugehöriger Beitrag"
 
 #: bluebottle/updates/models.py:46
 msgid "message"
@@ -10899,7 +10904,7 @@ msgstr "Aktualisieren"
 #: bluebottle/updates/models.py:72
 #, python-brace-format
 msgid "Anonymous - {time}"
-msgstr ""
+msgstr "Anonym - {time}"
 
 #: bluebottle/updates/serializers.py:68
 msgid "At least one of 'message', 'images', or 'video_url' must be set."

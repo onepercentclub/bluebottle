@@ -1,7 +1,5 @@
 from django.db.models import Sum, Q
 
-from rest_framework import filters
-
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
@@ -151,7 +149,6 @@ class ScheduleRelatedParticipantList(RelatedContributorListView):
             queryset = queryset.order_by("-slots__start")
 
         return queryset
-
 
 
 class TeamScheduleRelatedParticipantList(RelatedContributorListView):

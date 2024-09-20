@@ -43,6 +43,9 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class StripeSourcePaymentList(PaymentList):
@@ -385,7 +388,9 @@ class ConnectWebHookView(View):
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            return HttpResponse('Signature failed to verify', status=400)
+            error = "Signature failed to verify"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
         try:
             if event.type == "account.updated":
@@ -397,7 +402,9 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
+            error = "Payout not found"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

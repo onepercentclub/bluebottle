@@ -99,7 +99,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
-    serializer_class = FundingListSerializer
+    serializer_class = FundingSerializer
 
     permission_classes = (
         ActivityTypePermission,

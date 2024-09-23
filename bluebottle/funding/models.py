@@ -304,7 +304,7 @@ class Reward(models.Model):
     """
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
-    description = models.CharField(_('Description'), max_length=500)
+    description = models.CharField(_('Description'), max_length=500, null=True, blank=True)
     activity = models.ForeignKey(
         'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
     )

@@ -13,6 +13,7 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
+from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
@@ -24,7 +25,6 @@ from bluebottle.funding_stripe.states import (
     StripeBankAccountStateMachine,
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect
 
 
 @register(StripeSourcePayment)
@@ -74,7 +74,11 @@ class StripePayoutAccountTriggers(TriggerManager):
 
     def account_verified(self):
         """the connect account is verified"""
-        return self.instance.verified
+        return (
+            self.instance.verified
+            and self.instance.payments_enabled
+            and self.instance.payouts_enabled
+        )
 
     def account_not_verified(self):
         """the connect account is not verified"""

@@ -6,8 +6,6 @@ from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
-
-
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField
 )
@@ -85,7 +83,7 @@ class RewardSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     count = IntegerField(read_only=True)
     amount = MoneySerializer(min_amount=5.00)
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     validators = [FundingCurrencyValidator()]
 
     included_serializers = {

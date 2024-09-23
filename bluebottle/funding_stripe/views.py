@@ -1,10 +1,9 @@
 from django.core.exceptions import ValidationError
-
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import View
-
 from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -44,7 +43,9 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from django.views.decorators.cache import cache_page
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class StripeSourcePaymentList(PaymentList):
@@ -387,7 +388,9 @@ class ConnectWebHookView(View):
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            return HttpResponse('Signature failed to verify', status=400)
+            error = "Signature failed to verify"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
         try:
             if event.type == "account.updated":
@@ -399,7 +402,9 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
+            error = "Payout not found"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

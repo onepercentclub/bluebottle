@@ -83,7 +83,7 @@ class RewardSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     count = IntegerField(read_only=True)
     amount = MoneySerializer(min_amount=5.00)
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     validators = [FundingCurrencyValidator()]
 
     included_serializers = {

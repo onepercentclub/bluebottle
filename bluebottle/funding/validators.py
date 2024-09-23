@@ -59,11 +59,14 @@ class DeadlineMaxValidator(Validator):
 
 class BudgetLineValidator(Validator):
     code = 'budgetlines'
-    message = _('Please specify a budget')
+    message = _('The total budget should match the target amount.')
     field = 'budgetlines'
 
     def is_valid(self):
-        return len(self.instance.budget_lines.all()) > 0
+        total_budget_lines_amount = sum(
+            line.amount.amount for line in self.instance.budget_lines.all()
+        )
+        return total_budget_lines_amount == self.instance.target.amount
 
 
 class TargetValidator(Validator):

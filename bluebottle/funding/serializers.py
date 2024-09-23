@@ -267,6 +267,16 @@ class FundingSerializer(BaseActivitySerializer):
     deadline = DeadlineField(allow_null=True, required=False)
     errors = ValidationErrorsField(ignore=["kyc"])
 
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ("draft", "needs_work", "submitted"):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
+
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:
             return obj.bank_account.provider

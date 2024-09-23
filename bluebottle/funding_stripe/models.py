@@ -274,10 +274,6 @@ class StripePaymentProvider(PaymentProvider):
     def public_settings(self):
         return {
             'publishable_key': self.stripe_publishable_key or settings.STRIPE['publishable_key'],
-            'credit-card': self.credit_card,
-            'ideal': self.ideal,
-            'bancontact': self.bancontact,
-            'direct-debit': self.direct_debit
         }
 
     @property

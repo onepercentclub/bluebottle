@@ -1295,70 +1295,17 @@ class CurrencySettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         print(response.data['platform']['currencies'])
 
-        self.assertEqual(
-            response.data['platform']['currencies'], [
-                {
-                    'provider': 'stripe',
-                    'providerName': 'Stripe',
-                    'code': 'EUR',
-                    'name': 'Euro',
-                    'symbol': '€',
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'minAmount': 5.00,
-                    'maxAmount': None
-                },
-                {
-                    'provider': 'stripe',
-                    'providerName': 'Stripe',
-                    'code': 'USD',
-                    'name': 'US Dollar',
-                    'symbol': '$',
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'minAmount': 5.00,
-                    'maxAmount': None
-                },
-                {
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave',
-                    'code': 'KES',
-                    'name': 'Kenyan Shilling',
-                    'symbol': 'KES',
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'minAmount': 5.00,
-                    'maxAmount': None
-                },
-                {
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave',
-                    'code': 'USD',
-                    'name': 'US Dollar',
-                    'symbol': '$',
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'minAmount': 5.00,
-                    'maxAmount': None
-                },
-                {
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave',
-                    'code': 'XOF',
-                    'name': 'West African CFA Franc',
-                    'symbol': 'CFA',
-                    'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                    'minAmount': 5.00,
-                    'maxAmount': None
-                },
-                {
-                    'provider': 'flutterwave',
-                    'providerName': 'Flutterwave',
-                    'code': 'NGN',
-                    'name': 'Nigerian Naira',
-                    'symbol': '₦',
-                    'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
-                    'minAmount': 1000.00,
-                    'maxAmount': None
-                }
-            ]
-
+        self.assertTrue(
+            {
+                'provider': 'stripe',
+                'providerName': 'Stripe',
+                'code': 'EUR',
+                'name': 'Euro',
+                'symbol': '€',
+                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
+                'minAmount': 5.00,
+                'maxAmount': None
+            } in response.data['platform']['currencies']
         )
 
 

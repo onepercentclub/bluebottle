@@ -139,6 +139,17 @@ class ScheduleRelatedParticipantList(RelatedContributorListView):
     )
     serializer_class = ScheduleParticipantSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        sort = self.request.GET.get("sort")
+        if sort == "start":
+            queryset = queryset.order_by("slots__start")
+        if sort == "-start":
+            queryset = queryset.order_by("-slots__start")
+
+        return queryset
+
 
 class TeamScheduleRelatedParticipantList(RelatedContributorListView):
     queryset = TeamScheduleParticipant.objects.prefetch_related(

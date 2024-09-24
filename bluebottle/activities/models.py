@@ -211,11 +211,11 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         language = get_current_language()
         type = self.get_real_instance().__class__.__name__.lower()
         if type != "collectactivity":
-            return f"{domain}/{language}/activities/details/deed/{self.id}/{self.slug}"
-        else:
             return (
                 f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
             )
+        else:
+            return f"{domain}/{language}/initiatives/activities/details/collectactivity/{self.id}/{self.slug}"
 
     @property
     def organizer(self):

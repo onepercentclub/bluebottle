@@ -20,8 +20,7 @@ from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSuccee
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
     PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember

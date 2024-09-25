@@ -89,6 +89,10 @@ class StripePayoutAccountTriggers(TriggerManager):
         """The connect account is verified"""
         return self.instance.requirements == []
 
+    def is_not_complete_or_verified(self):
+        """The connect account is verified"""
+        return (not self.instance.requirements == []) or (not self.instance.verified)
+
     def payments_are_disabled(self):
         """The connect account is verified"""
         return not self.instance.payments_enabled
@@ -142,6 +146,10 @@ class StripePayoutAccountTriggers(TriggerManager):
                 TransitionEffect(
                     StripePayoutAccountStateMachine.verify,
                     conditions=[is_complete, account_verified],
+                ),
+                TransitionEffect(
+                    StripePayoutAccountStateMachine.set_incomplete,
+                    conditions=[is_not_complete_or_verified],
                 ),
             ],
         ),

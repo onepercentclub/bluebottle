@@ -13,20 +13,20 @@ def update_payout_accounts(apps, schema_editor):
         stripe = get_stripe()
         stripe_account = stripe.Account.retrieve(account.account_id)
 
-        if stripe_account.individual:
-            account.requirements = stripe_account.individual.requirements.eventually_due
+        account.requirements = stripe_account.requirements.eventually_due
 
-            try:
-                account.verified = (
-                    stripe_account.individual.verification.status == "verified"
-                )
-            except AttributeError:
-                pass
+        try:
+            account.verified = (
+                stripe_account.individual.verification.status == "verified"
+            )
+        except AttributeError:
+            pass
 
         account.payments_enabled = stripe_account.charges_enabled
         account.payouts_enabled = stripe_account.payouts_enabled
 
         account.execute_triggers(send_messages=False)
+
         account.save()
 
 

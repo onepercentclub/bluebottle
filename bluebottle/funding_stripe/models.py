@@ -371,6 +371,7 @@ class StripePayoutAccount(PayoutAccount):
     payouts_enabled = models.BooleanField(default=False)
 
     requirements = ArrayField(models.CharField(max_length=60), default=list)
+    tos_accepted = models.BooleanField(default=False)
 
     provider = 'stripe'
 
@@ -422,11 +423,6 @@ class StripePayoutAccount(PayoutAccount):
                 business_profile={"url": url, "mcc": "8398"},
                 individual={"email": self.owner.email},
                 metadata=self.metadata,
-                tos_acceptance={
-                    "service_agreement": "full",
-                    "date": now(),
-                    "ip": get_client_ip(get_current_request()),
-                },
             )
 
             self.business_type = account.business_type

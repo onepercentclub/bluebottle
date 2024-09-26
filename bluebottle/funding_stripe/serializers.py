@@ -71,6 +71,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
             "country",
             "current_status",
             "business_type",
+            "tos_accepted",
         )
         meta_fields = ('current_status',)
 

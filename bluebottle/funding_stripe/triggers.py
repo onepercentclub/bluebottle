@@ -13,7 +13,7 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect
+from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptTosEffect
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
@@ -164,6 +164,12 @@ class StripePayoutAccountTriggers(TriggerManager):
                     StripePayoutAccountStateMachine.submit,
                     conditions=[is_complete],
                 ),
+            ],
+        ),
+        ModelChangedTrigger(
+            ["tos_accepted"],
+            effects=[
+                AcceptTosEffect,
             ],
         ),
     ]

@@ -7,6 +7,8 @@ from bluebottle.funding_stripe.models import StripePayoutAccount
 
 
 def update_payout_accounts(apps, schema_editor):
+    StripePayoutAccount = apps.get_model("funding_stripe", "StripePayoutAccount")
+
     for account in StripePayoutAccount.objects.filter(
         external_accounts__funding__status="open"
     ):

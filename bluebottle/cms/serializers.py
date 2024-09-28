@@ -794,6 +794,28 @@ class TextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/plain-text'
 
 
+class RichTextBlockSerializer(BaseBlockSerializer):
+    text = SafeField()
+
+    class Meta(BaseBlockSerializer.Meta):
+        model = TextItem
+        fields = ('id', 'text', 'type', 'language_code',)
+
+    class JSONAPIMeta:
+        resource_name = 'TextItem'
+
+
+class PictureBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = PictureItem
+        fields = ('id', 'type', 'image')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image'
+
+
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
     text = SafeField()
@@ -844,8 +866,10 @@ class BlockSerializer(PolymorphicModelSerializer):
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
+        RichTextBlockSerializer,
         ImageTextBlockSerializer,
-        ImageBlockSerializer
+        ImageBlockSerializer,
+        PictureBlockSerializer
     ]
 
     def get_slides(self, obj):
@@ -927,15 +951,41 @@ class OldPageSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
-    blocks = OldBlockSerializer(source='body.contentitems.all', many=True)
+    blocks = PolymorphicSerializerMethodResourceRelatedField(
+        BlockSerializer,
+        read_only=True,
+        many=True,
+        model=ContentItem
+    )
+
+    def get_blocks(self, obj):
+        return obj.content.contentitems.all().translated()
 
     class Meta(object):
         model = Page
-        fields = ('title', 'id', 'blocks', 'language', 'full_page', 'show_title')
+        fields = ('id', 'blocks', 'title', 'show_title')
 
     class JSONAPIMeta(object):
         resource_name = 'pages'
+        included_resources = [
+            'blocks',
+            'blocks.steps',
+            'blocks.links',
+            'blocks.slides',
+            'blocks.quotes',
+            'blocks.logos',
+            'blocks.categories',
+        ]
+
+    included_serializers = {
+        'blocks': 'bluebottle.cms.serializers.BlockSerializer',
+        'steps': 'bluebottle.cms.serializers.StepSerializer',
+        'links': 'bluebottle.cms.serializers.LinkSerializer',
+        'slides': 'bluebottle.cms.serializers.SlideSerializer',
+        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
+    }
 
 
 class NewsItemSerializer(serializers.ModelSerializer):

@@ -94,7 +94,7 @@ class BaseTokenAuthentication():
                     ).extra(
                         where=['%s ILIKE ANY (alternate_names)'],
                         params=[val, ]
-                    ).get()
+                    ).first()
                     segment_list[segment_type.id].append(segment)
                 except Segment.DoesNotExist:
                     segment = Segment.objects.filter(slug=slugify(val)).first()

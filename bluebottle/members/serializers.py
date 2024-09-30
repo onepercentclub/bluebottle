@@ -716,7 +716,7 @@ class MemberProfileSerializer(ModelSerializer):
             'birthdate', 'segments', 'phone_number',
             'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
-            'subscribed', 'matching_options_set'
+            'subscribed', 'matching_options_set', 'receive_reminder_emails', 'campaign_notifications'
         )
 
     class JSONAPIMeta():

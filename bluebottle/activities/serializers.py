@@ -488,7 +488,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'contributions': 'bluebottle.activities.serializers.MoneySerializer',
         'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',

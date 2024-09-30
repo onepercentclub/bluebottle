@@ -421,7 +421,7 @@ class DonorListSerializer(BaseContributorListSerializer):
     )
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.TinyFundingSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

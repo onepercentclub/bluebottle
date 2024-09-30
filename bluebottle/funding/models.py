@@ -32,6 +32,7 @@ from bluebottle.funding.validators import (
     BudgetLineValidator,
     KYCReadyValidator,
 )
+
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -266,8 +267,12 @@ class Funding(Activity):
 
     @property
     def payout_account(self):
+
         if self.bank_account:
-            return self.bank_account.connect_account
+            from bluebottle.funding_stripe.models import StripePayoutAccount
+            account = self.bank_account.connect_account
+            if isinstance(account, StripePayoutAccount):
+                return account
         else:
             return self.owner.funding_payout_account.first()
 

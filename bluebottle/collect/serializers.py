@@ -21,6 +21,9 @@ from bluebottle.utils.utils import reverse_signed
 class CollectActivitySerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
     links = serializers.SerializerMethodField()
+    target = serializers.FloatField()
+    realized = serializers.FloatField()
+
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,

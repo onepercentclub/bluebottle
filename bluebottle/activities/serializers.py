@@ -510,6 +510,32 @@ class ContributorListSerializer(PolymorphicModelSerializer):
         )
 
 
+class ContributionListSerializer(ModelSerializer):
+
+    contributor = PolymorphicResourceRelatedField(ContributorListSerializer, queryset=Contributor.objects.all())
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributions'
+        included_resources = [
+            'contributor',
+            'contributor.activity',
+            'slots',
+            'slots.slot',
+        ]
+
+    class Meta(object):
+        model = Contributor
+        fields = ('id', 'type', 'contributor')
+        meta_fields = (
+            'created', 'updated',
+        )
+
+    included_serializers = {
+        'contributor.activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'contributor': 'bluebottle.activities.serializers.ContributorListSerializer',
+    }
+
+
 class ActivityTransitionSerializer(TransitionSerializer):
     resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     field = 'states'

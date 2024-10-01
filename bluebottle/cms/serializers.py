@@ -67,6 +67,7 @@ class ImageTextItemSerializer(ItemSerializer):
     class Meta(object):
         model = ImageTextItem
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type',)
+        resource_name = 'pages/blocks/image-text'
 
 
 class ImageTextRoundItemSerializer(ItemSerializer):
@@ -821,6 +822,20 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
     text = SafeField()
 
     class Meta(object):
+        model = ImageTextItem
+        fields = (
+            'id', 'text', 'image', 'ratio', 'align', 'type',
+        )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
+
+
+class TextImageBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+    text = SafeField()
+
+    class Meta(object):
         model = ImagePlainTextItem
         fields = (
             'id', 'text', 'image', 'video_url', 'ratio', 'align', 'type', 'title', 'sub_title',
@@ -828,7 +843,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
         )
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/plain-text-image'
+        resource_name = 'pages/blocks/image-text'
 
 
 class ImageBlockSerializer(BaseBlockSerializer):
@@ -868,6 +883,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         TextBlockSerializer,
         RichTextBlockSerializer,
         ImageTextBlockSerializer,
+        TextImageBlockSerializer,
         ImageBlockSerializer,
         PictureBlockSerializer
     ]

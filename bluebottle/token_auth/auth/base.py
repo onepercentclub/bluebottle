@@ -98,7 +98,9 @@ class BaseTokenAuthentication():
                     if segment:
                         segment_list[segment_type.id].append(segment)
                     else:
-                        segment = Segment.objects.filter(slug=slugify(val)).first()
+                        segment = Segment.objects.filter(
+                            segment_type__slug=type_slug,
+                        ).filter(slug=slugify(val)).first()
                         if segment:
                             segment_list[segment_type.id].append(segment)
                         elif MemberPlatformSettings.load().create_segments:

@@ -95,18 +95,19 @@ class BaseTokenAuthentication():
                         where=['%s ILIKE ANY (alternate_names)'],
                         params=[val, ]
                     ).first()
-                    segment_list[segment_type.id].append(segment)
-                except Segment.DoesNotExist:
-                    segment = Segment.objects.filter(slug=slugify(val)).first()
                     if segment:
                         segment_list[segment_type.id].append(segment)
-                    elif MemberPlatformSettings.load().create_segments:
-                        segment = Segment.objects.create(
-                            segment_type=segment_type,
-                            name=val,
-                            alternate_names=[val]
-                        )
-                        segment_list[segment_type.id].append(segment)
+                    else:
+                        segment = Segment.objects.filter(slug=slugify(val)).first()
+                        if segment:
+                            segment_list[segment_type.id].append(segment)
+                        elif MemberPlatformSettings.load().create_segments:
+                            segment = Segment.objects.create(
+                                segment_type=segment_type,
+                                name=val,
+                                alternate_names=[val]
+                            )
+                            segment_list[segment_type.id].append(segment)
                 except IntegrityError:
                     pass
         return segment_list

@@ -162,7 +162,7 @@ class FundingCancelledMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
-    subject = _(u'Your identity verification could not be verified!')
+    subject = _(u'Action required for your crowdfunding campaign')
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
@@ -171,7 +171,7 @@ class PayoutAccountRejected(TransitionMessage):
 
 
 class PayoutAccountMarkedIncomplete(TransitionMessage):
-    subject = _("We need more information to verify your account")
+    subject = _("Action required for your crowdfunding campaign")
     template = "messages/payout_account_marked_incomplete"
 
     def get_recipients(self):
@@ -180,7 +180,7 @@ class PayoutAccountMarkedIncomplete(TransitionMessage):
 
 
 class LivePayoutAccountMarkedIncomplete(TransitionMessage):
-    subject = _(u'Live campaign identity verification failed!')
+    subject = _(u'Payout account rejected')
     template = 'messages/live_payout_account_rejected'
 
     context = {
@@ -213,5 +213,4 @@ class NewRequirementsMessage(TransitionMessage):
 
     def get_recipients(self):
         """the activity organizer"""
-        print(f"sending to {self.obj.owner.email}!!!!!!!!!!!!!!!!!!!!!")
         return [self.obj.owner]

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="stripepayoutaccount",
             name="tos_accepted",
-            field=models.BooleanField(default=False),
+            field=models.BooleanField(default=True),
         ),
         migrations.AlterField(
             model_name="stripepayoutaccount",

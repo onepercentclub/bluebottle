@@ -924,7 +924,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payout_account.status, "incomplete")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
     def test_incomplete_open(self):
@@ -941,13 +941,13 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 3)
 
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
         self.assertEqual(
-            mail.outbox[1].subject, "Live campaign identity verification failed!"
+            mail.outbox[1].subject, "Payout account rejected"
         )
         self.assertEqual(
-            mail.outbox[2].subject, "Live campaign identity verification failed!"
+            mail.outbox[2].subject, "Payout account rejected"
         )
 
     def test_incomplete_open_charges_disabled(self):
@@ -979,7 +979,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, "We need more information to verify your account"
+            message.subject, "Action required for your crowdfunding campaign"
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
 

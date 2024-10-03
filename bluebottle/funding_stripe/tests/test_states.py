@@ -206,7 +206,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
     def test_verify(self):
@@ -233,7 +233,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.account.status, "incomplete")
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
 

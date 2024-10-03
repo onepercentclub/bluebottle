@@ -1,13 +1,10 @@
-
-from calendar import different_locale
-from django.db.models import Count
 from parler.utils.conf import ImproperlyConfigured
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-
-from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.utils import get_stripe
+
 
 def run(*args):
     for tenant in Client.objects.all():
@@ -43,4 +40,4 @@ def run(*args):
 
                     account.save()
             except ImproperlyConfigured:
-                    pass
+                pass

@@ -4,10 +4,8 @@ from builtins import object
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
-from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from django_tools.middlewares.ThreadLocal import get_current_request
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -19,7 +17,7 @@ from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host, get_current_language, get_client_ip
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible

@@ -12,6 +12,11 @@ def run(*args):
         with LocalTenant(tenant):
             accounts = StripePayoutAccount.objects.all().order_by('-created')
 
+            if 'live' in args:
+                accounts = accounts.filter(
+                    external_accounts__funding__status="open"
+                )
+
             print(tenant.client_name, len(accounts))
 
             try:

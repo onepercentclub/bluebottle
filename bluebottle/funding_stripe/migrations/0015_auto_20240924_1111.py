@@ -27,8 +27,6 @@ def update_payout_accounts(apps, schema_editor):
         account.payments_enabled = stripe_account.charges_enabled
         account.payouts_enabled = stripe_account.payouts_enabled
 
-        account.execute_triggers(send_messages=False)
-
         account.save()
 
 

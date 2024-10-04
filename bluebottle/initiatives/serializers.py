@@ -162,10 +162,11 @@ class CurrentMemberSerializer(MemberSerializer):
 
 class InitiativeImageSerializer(ImageSerializer):
     sizes = {
-        'preview': '300x168',
-        'small': '320x180',
-        'large': '600x337',
-        'cover': '960x540'
+        "email": "200x200",
+        "preview": "300x168",
+        "small": "320x180",
+        "large": "600x337",
+        "cover": "960x540",
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'

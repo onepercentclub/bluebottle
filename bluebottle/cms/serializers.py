@@ -606,13 +606,13 @@ class ActivitySearchRelatedSerializer(HyperlinkedRelatedField):
         elif activity_type == 'matching':
             link += '&filter[matching]=1'
         elif activity_type == 'deed':
-            link += '&filter[type]=deed&filter[status]=open'
+            link += '&filter[activity-type]=deed&filter[status]=open'
         elif activity_type == 'funding':
-            link += '&filter[type]=funding&filter[status]=open'
+            link += '&filter[activity-type]=funding&filter[status]=open'
         elif activity_type == 'collect':
-            link += '&filter[type]=collect&filter[status]=open'
+            link += '&filter[activity-type]=collect&filter[status]=open'
         elif activity_type == 'time_based':
-            link += '&filter[type]=time_based&filter[status]=open'
+            link += '&filter[activity-type]=time&filter[status]=open'
         return {
             'related': link
         }

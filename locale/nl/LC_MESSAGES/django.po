@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-04 11:45+0200\n"
-"PO-Revision-Date: 2024-10-04 11:32\n"
+"PO-Revision-Date: 2024-10-04 12:27\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -2473,7 +2473,7 @@ msgstr "Wereldwijd"
 
 #: bluebottle/cms/models.py:265 bluebottle/cms/models.py:369
 msgid "Office group (based on user office)"
-msgstr "Kantoorgroep (gebaseerd op het kantoor van de gebruiker)"
+msgstr "Kantoorgroep (gebaseerd op het kantoor van de bezoeker)"
 
 #: bluebottle/cms/models.py:268
 msgid "Stat type"
@@ -2481,7 +2481,7 @@ msgstr "Statistiektype"
 
 #: bluebottle/cms/models.py:272
 msgid "Stats will show all data or only activities from the user's office group"
-msgstr "Statistieken tonen alle data of alleen van de activiteiten uit de kantoorgroep van de gebruiker"
+msgstr "Statistieken tonen alle data of alleen van de activiteiten uit de kantoorgroep van de bezoeker"
 
 #: bluebottle/cms/models.py:290
 msgid "Highlighted"
@@ -2530,7 +2530,7 @@ msgstr "Kaart type"
 
 #: bluebottle/cms/models.py:376
 msgid "The map will show all activities or only from the user's office group"
-msgstr ""
+msgstr "De kaart toont alle activiteiten of alleen uit de kantoorgroep van de bezoeker"
 
 #: bluebottle/cms/models.py:380
 msgid "Activities Map"
@@ -3520,7 +3520,7 @@ msgstr "Informatie"
 
 #: bluebottle/funding/admin.py:191
 msgid "Date & amount"
-msgstr ""
+msgstr "Datum & bedrag"
 
 #: bluebottle/funding/admin.py:232
 #, no-python-format
@@ -3653,11 +3653,11 @@ msgstr "Verzoek om restitutie bij de PSP"
 
 #: bluebottle/funding/effects.py:131
 msgid "Create wall update"
-msgstr ""
+msgstr "Wall update aanmaken"
 
 #: bluebottle/funding/effects.py:142
 msgid "Generate wall update for donation"
-msgstr ""
+msgstr "Genereer wall update voor donatie"
 
 #: bluebottle/funding/effects.py:148
 msgid "Delete wallpost"
@@ -3795,7 +3795,7 @@ msgstr "Je identiteit is geverifieerd"
 
 #: bluebottle/funding/messages.py:211
 msgid "We need more information before your account can be verified"
-msgstr ""
+msgstr "We hebben meer informatie nodig voordat je account kan worden gecontroleerd"
 
 #: bluebottle/funding/models.py:55
 msgid "Payment currency"
@@ -5082,7 +5082,7 @@ msgstr "Stripe link"
 
 #: bluebottle/funding_stripe/effects.py:9
 msgid "Put activities on hold"
-msgstr ""
+msgstr "Activiteiten op pauze zetten"
 
 #: bluebottle/funding_stripe/models.py:235
 msgid "Stripe publishable key"
@@ -7220,7 +7220,7 @@ msgstr "Rapportage beheren"
 
 #: bluebottle/slides/admin.py:16
 msgid "Global (all regions)"
-msgstr ""
+msgstr "Wereldwijd (alle regio's)"
 
 #: bluebottle/slides/admin.py:44
 msgid "Contents"
@@ -7228,7 +7228,7 @@ msgstr "Inhoud"
 
 #: bluebottle/slides/models.py:34
 msgid "Select a region to make the slide only visible to visitors from the same region or select 'Global' to make the slide visible for everyone."
-msgstr ""
+msgstr "Selecteer een regio om de slide alleen zichtbaar te maken voor bezoekers uit dezelfde regio of selecteer 'Globaal' om de slide zichtbaar te maken voor iedereen."
 
 #: bluebottle/slides/models.py:42
 msgid "Tab text"
@@ -10823,7 +10823,7 @@ msgstr "heeft video"
 
 #: bluebottle/updates/dashboard.py:12
 msgid "Recent wall updates"
-msgstr ""
+msgstr "Recente wall-updates"
 
 #: bluebottle/updates/messages.py:18
 #, python-brace-format
@@ -10853,7 +10853,7 @@ msgstr "Reageer op"
 
 #: bluebottle/updates/models.py:40
 msgid "Related contribution"
-msgstr ""
+msgstr "Gerelateerde bijdrage"
 
 #: bluebottle/updates/models.py:46
 msgid "message"
@@ -10874,7 +10874,7 @@ msgstr "Update"
 #: bluebottle/updates/models.py:72
 #, python-brace-format
 msgid "Anonymous - {time}"
-msgstr ""
+msgstr "Anoniem - {time}"
 
 #: bluebottle/updates/serializers.py:68
 msgid "At least one of 'message', 'images', or 'video_url' must be set."

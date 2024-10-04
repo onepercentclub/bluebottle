@@ -4,10 +4,8 @@ from builtins import object
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
-from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from django_tools.middlewares.ThreadLocal import get_current_request
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -19,7 +17,7 @@ from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host, get_current_language, get_client_ip
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible
@@ -318,6 +316,7 @@ class StripePayoutAccount(PayoutAccount):
     payouts_enabled = models.BooleanField(default=False)
 
     requirements = ArrayField(models.CharField(max_length=60), default=list)
+    tos_accepted = models.BooleanField(default=False)
 
     provider = 'stripe'
 
@@ -369,11 +368,6 @@ class StripePayoutAccount(PayoutAccount):
                 business_profile={"url": url, "mcc": "8398"},
                 individual={"email": self.owner.email},
                 metadata=self.metadata,
-                tos_acceptance={
-                    "service_agreement": "full",
-                    "date": now(),
-                    "ip": get_client_ip(get_current_request()),
-                },
             )
 
             self.business_type = account.business_type
@@ -398,13 +392,12 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data):
-        if data.individual:
-            self.requirements = data.individual.requirements.eventually_due
+        self.requirements = data.requirements.eventually_due
 
-            try:
-                self.verified = data.individual.verification.status == "verified"
-            except AttributeError:
-                pass
+        try:
+            self.verified = data.individual.verification.status == "verified"
+        except AttributeError:
+            pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

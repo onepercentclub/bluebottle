@@ -915,8 +915,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.verify()
         # Missing fields
         self.connect_account.payouts_enabled = False
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
 
         self.execute_hook()
@@ -931,8 +931,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.verify()
         self.approve()
 
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
         self.execute_hook()
 
@@ -943,11 +943,12 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(
             mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
+
         self.assertEqual(
-            mail.outbox[1].subject, "Payout account rejected"
+            mail.outbox[1].subject, "Live campaign identity verification failed!"
         )
         self.assertEqual(
-            mail.outbox[2].subject, "Payout account rejected"
+            mail.outbox[2].subject, "Live campaign identity verification failed!"
         )
 
     def test_incomplete_open_charges_disabled(self):
@@ -955,8 +956,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.approve()
 
         self.connect_account.charges_enabled = False
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
         self.execute_hook()
 
@@ -969,8 +970,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             "this passport smells fishy"
         )
         self.connect_account.individual.verification.status = "unverified"
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
 
         self.execute_hook()

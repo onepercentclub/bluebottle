@@ -6,7 +6,6 @@ from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.utils import get_stripe
 
 
-
 def run(*args):
     for tenant in Client.objects.all():
         with LocalTenant(tenant):

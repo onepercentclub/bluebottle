@@ -98,8 +98,3 @@ class StripePaymentProviderFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = StripePaymentProvider
-
-    credit_card = True
-    ideal = True
-    bancontact = True
-    direct_debit = True

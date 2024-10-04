@@ -945,10 +945,10 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            mail.outbox[1].subject, "Live campaign identity verification failed!"
+            mail.outbox[1].subject, "Payout account rejected"
         )
         self.assertEqual(
-            mail.outbox[2].subject, "Live campaign identity verification failed!"
+            mail.outbox[2].subject, "Payout account rejected"
         )
 
     def test_incomplete_open_charges_disabled(self):

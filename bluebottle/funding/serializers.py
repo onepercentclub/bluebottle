@@ -48,6 +48,7 @@ from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, ResourcePermissionField, )
@@ -267,6 +268,17 @@ class FundingSerializer(BaseActivitySerializer):
     deadline = DeadlineField(allow_null=True, required=False)
     errors = ValidationErrorsField(ignore=["kyc"])
 
+    donations = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="activity-donation-list",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "succeeded": ["succeeded"],
+            "pending": ["pending", "new"],
+            "failed": ["failed", "refunded", "activity_refunded"],
+        },
+    )
+
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 
@@ -322,6 +334,7 @@ class FundingSerializer(BaseActivitySerializer):
             "payout_account",
             "supporters_export_url",
             "psp",
+            "donations"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

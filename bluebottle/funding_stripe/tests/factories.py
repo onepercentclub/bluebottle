@@ -71,6 +71,13 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
         account = stripe.Account(
             id=account_id,
         )
+        account.business_type = "individual"
+        account.individual = munch.munchify({
+            "email": "test@example.com",
+            "requirements": {
+                "eventually_due": []
+            }
+        })
         account.requirements = munch.munchify({
             'eventually_due': [
                 'individual.first_name', 'individual.last_name'
@@ -91,8 +98,3 @@ class StripePaymentProviderFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = StripePaymentProvider
-
-    credit_card = True
-    ideal = True
-    bancontact = True
-    direct_debit = True

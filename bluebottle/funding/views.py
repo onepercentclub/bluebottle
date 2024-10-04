@@ -10,7 +10,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
-from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
@@ -20,8 +20,7 @@ from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSuccee
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
     PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
@@ -99,7 +98,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
-    serializer_class = FundingListSerializer
+    serializer_class = FundingSerializer
 
     permission_classes = (
         ActivityTypePermission,
@@ -267,7 +266,8 @@ class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView)
     serializer_class = DonorSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        ClientSecretAuthentication,
+        JSONWebTokenAuthentication
     )
 
     permission_classes = (

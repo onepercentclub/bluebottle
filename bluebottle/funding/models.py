@@ -25,8 +25,13 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator, \
-    DeadlineMaxValidator
+from bluebottle.funding.validators import (
+    DeadlineValidator,
+    TargetValidator,
+    DeadlineMaxValidator,
+    BudgetLineValidator,
+    KYCReadyValidator,
+)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -55,6 +60,7 @@ class PaymentCurrency(models.Model):
 class PaymentProvider(PolymorphicModel):
 
     title = 'Payment Service Provider'
+    provider = 'default'
 
     public_settings = {}
     private_settings = {}
@@ -150,7 +156,13 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, BudgetLineValidator, TargetValidator]
+    validators = [
+        DeadlineValidator,
+        DeadlineMaxValidator,
+        TargetValidator,
+        BudgetLineValidator,
+        KYCReadyValidator,
+    ]
 
     auto_approve = False
 
@@ -164,7 +176,12 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + ['title', 'description', 'target', 'bank_account']
+        fields = super().required_fields + [
+            "title",
+            "description",
+            "target",
+            "bank_account",
+        ]
 
         if not self.duration:
             fields.append('deadline')
@@ -220,6 +237,10 @@ class Funding(Activity):
         return self.contributors.instance_of(Donor)
 
     @property
+    def succeeded_contributor_count(self):
+        return self.donations.filter(status='succeeded').count()
+
+    @property
     def genuine_amount_donated(self):
         """
         The sum of all contributors (donations) without pledges converted to the targets currency
@@ -242,6 +263,13 @@ class Funding(Activity):
                 currency
             )
         return total
+
+    @property
+    def payout_account(self):
+        if self.bank_account:
+            return self.bank_account.connect_account
+        else:
+            return self.owner.funding_payout_account.first()
 
     @property
     def stats(self):
@@ -276,7 +304,7 @@ class Reward(models.Model):
     """
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
-    description = models.CharField(_('Description'), max_length=500)
+    description = models.CharField(_('Description'), max_length=500, null=True, blank=True)
     activity = models.ForeignKey(
         'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
     )
@@ -486,6 +514,11 @@ class Donor(Contributor):
         return self.created
 
     @property
+    def available_payment_methods(self):
+        payment_methods = self.activity.bank_account.payment_methods
+        return payment_methods
+
+    @property
     def payment_method(self):
         if not self.payment:
             return None
@@ -636,6 +669,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+    provider = 'default'
 
     connect_account = models.ForeignKey(
         'funding.PayoutAccount',
@@ -698,6 +732,13 @@ class FundingPlatformSettings(BasePlatformSettings):
     allow_anonymous_rewards = models.BooleanField(
         _('Allow guests to donate rewards'), default=True
     )
+
+    @property
+    def stripe_publishable_key(self):
+        from bluebottle.funding_stripe.utils import get_stripe_settings
+        settings = get_stripe_settings()
+        if settings:
+            return settings['publishable_key']
 
     class Meta(object):
         verbose_name_plural = _('funding settings')

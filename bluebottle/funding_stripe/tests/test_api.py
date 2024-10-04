@@ -16,7 +16,7 @@ from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory,
-    StripePaymentProviderFactory
+    StripePaymentProviderFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -35,24 +35,28 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        self.bank_account = ExternalAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=StripePayoutAccountFactory.create(account_id="account-id")
+        )
 
-        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative, bank_account=self.bank_account
+        )
         self.donation = DonorFactory.create(activity=self.funding, user=None)
 
-        self.intent_url = reverse('stripe-payment-intent-list')
+        self.intent_url = reverse("stripe-payment-intent-list")
 
         self.data = {
-            'data': {
-                'type': 'payments/stripe-payment-intents',
-                'relationships': {
-                    'donation': {
-                        'data': {
-                            'type': 'contributors/donations',
-                            'id': self.donation.pk,
+            "data": {
+                "type": "payments/stripe-payment-intents",
+                "relationships": {
+                    "donation": {
+                        "data": {
+                            "type": "contributors/donations",
+                            "id": self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
@@ -60,106 +64,128 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.donation.user = self.user
         self.donation.save()
 
-        payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'client_secret': 'some client secret',
-        })
+        payment_intent = stripe.PaymentIntent("some intent id")
+        payment_intent.update(
+            {
+                "client_secret": "some client secret",
+            }
+        )
 
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent) as create_intent:
-            response = self.client.post(self.intent_url, data=json.dumps(self.data), user=self.user)
+        with mock.patch(
+            "stripe.PaymentIntent.create", return_value=payment_intent
+        ) as create_intent:
+            response = self.client.post(
+                self.intent_url, data=json.dumps(self.data), user=self.user
+            )
             create_intent.assert_called_with(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 metadata={
-                    'tenant_name': u'test',
-                    'activity_id': self.donation.activity.pk,
-                    'activity_title': self.donation.activity.title,
-                    'tenant_domain': u'testserver'
+                    "tenant_name": "test",
+                    "activity_id": self.donation.activity.pk,
+                    "activity_title": self.donation.activity.title,
+                    "tenant_domain": "testserver",
                 },
-                statement_descriptor=u'Test',
-                statement_descriptor_suffix=u'Test',
+                statement_descriptor="Test",
+                statement_descriptor_suffix="Test",
                 transfer_data={
-                    'destination': self.bank_account.connect_account.account_id
-                }
+                    "destination": self.bank_account.connect_account.account_id
+                },
+                automatic_payment_methods={"enabled": True},
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['intent-id'], payment_intent.id)
-        self.assertEqual(data['data']['attributes']['client-secret'], payment_intent.client_secret)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
+        self.assertEqual(
+            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
+        )
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
     def test_create_intent_us(self):
-        self.bank_account.connect_account.account.country = 'US'
-        self.bank_account.connect_account.country = 'US'
+        self.bank_account.connect_account.country = "US"
         self.bank_account.connect_account.save()
 
         self.donation.user = self.user
         self.donation.save()
 
-        payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'client_secret': 'some client secret',
-        })
+        payment_intent = stripe.PaymentIntent("some intent id")
+        payment_intent.update(
+            {
+                "client_secret": "some client secret",
+            }
+        )
 
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent) as create_intent:
-            response = self.client.post(self.intent_url, data=json.dumps(self.data), user=self.user)
+        with mock.patch(
+            "stripe.PaymentIntent.create", return_value=payment_intent
+        ) as create_intent:
+            response = self.client.post(
+                self.intent_url, data=json.dumps(self.data), user=self.user
+            )
             create_intent.assert_called_with(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 metadata={
-                    'tenant_name': u'test',
-                    'activity_id': self.donation.activity.pk,
-                    'activity_title': self.donation.activity.title,
-                    'tenant_domain': u'testserver'
+                    "tenant_name": "test",
+                    "activity_id": self.donation.activity.pk,
+                    "activity_title": self.donation.activity.title,
+                    "tenant_domain": "testserver",
                 },
                 on_behalf_of=self.bank_account.connect_account.account_id,
-                statement_descriptor=u'Test',
-                statement_descriptor_suffix=u'Test',
+                statement_descriptor="Test",
+                statement_descriptor_suffix="Test",
                 transfer_data={
-                    'destination': self.bank_account.connect_account.account_id
-                }
+                    "destination": self.bank_account.connect_account.account_id
+                },
+                automatic_payment_methods={"enabled": True},
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['intent-id'], payment_intent.id)
-        self.assertEqual(data['data']['attributes']['client-secret'], payment_intent.client_secret)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
+        self.assertEqual(
+            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
+        )
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
     def test_create_intent_anonymous(self):
-        payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'client_secret': 'some client secret',
-        })
+        payment_intent = stripe.PaymentIntent("some intent id")
+        payment_intent.update(
+            {
+                "client_secret": self.donation.client_secret,
+            }
+        )
 
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
-            response = self.client.post(
-                self.intent_url,
-                data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
-            )
+        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
+            self.data["data"]["attributes"] = {
+                "client_secret": self.donation.client_secret
+            }
+            response = self.client.post(self.intent_url, data=self.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['intent-id'], payment_intent.id)
-        self.assertEqual(data['data']['attributes']['client-secret'], payment_intent.client_secret)
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
+        self.assertEqual(
+            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
+        )
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
     def test_create_intent_wrong_token(self):
-        payment_intent = stripe.PaymentIntent('some intent id')
-        payment_intent.update({
-            'client_secret': 'some client secret',
-        })
+        payment_intent = stripe.PaymentIntent("some intent id")
+        payment_intent.update(
+            {
+                "client_secret": "some client secret",
+            }
+        )
 
-        with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
+        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
+            self.data["data"]["attributes"] = {"client_secret": "wrong secret"}
             response = self.client.post(
                 self.intent_url,
                 data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donation wrong-token'
             )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -171,7 +197,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         response = self.client.post(
             self.intent_url,
             data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
+            user=BlueBottleUserFactory.create(),
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -196,27 +222,33 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        self.bank_account = ExternalAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=StripePayoutAccountFactory.create(
+                status="verified", account_id="test-account-id"
+            )
+        )
 
-        self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
+        self.funding = FundingFactory.create(
+            initiative=self.initiative, bank_account=self.bank_account
+        )
         self.donation = DonorFactory.create(activity=self.funding, user=None)
 
-        self.payment_url = reverse('stripe-source-payment-list')
+        self.payment_url = reverse("stripe-source-payment-list")
 
         self.data = {
-            'data': {
-                'type': 'payments/stripe-source-payments',
-                'attributes': {
-                    'source-token': 'test-token',
+            "data": {
+                "type": "payments/stripe-source-payments",
+                "attributes": {
+                    "source-token": "test-token",
                 },
-                'relationships': {
-                    'donation': {
-                        'data': {
-                            'type': 'contributors/donations',
-                            'id': self.donation.pk,
+                "relationships": {
+                    "donation": {
+                        "data": {
+                            "type": "contributors/donations",
+                            "id": self.donation.pk,
                         }
                     }
-                }
+                },
             }
         }
 
@@ -224,32 +256,30 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.donation.user = self.user
         self.donation.save()
 
-        with mock.patch(
-            'stripe.Source.modify'
-        ):
-            response = self.client.post(self.payment_url, data=json.dumps(self.data), user=self.user)
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data['data']['attributes']['source-token'], 'test-token')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
-
-    def test_create_payment_anonymous(self):
-        with mock.patch(
-            'stripe.Source.modify'
-        ):
+        with mock.patch("stripe.Source.modify"):
             response = self.client.post(
-                self.payment_url,
-                data=json.dumps(self.data),
-                HTTP_AUTHORIZATION='Donation {}'.format(self.donation.client_secret)
+                self.payment_url, data=json.dumps(self.data), user=self.user
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['source-token'], 'test-token')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
+
+    def test_create_payment_anonymous(self):
+        with mock.patch("stripe.Source.modify"):
+            response = self.client.post(
+                self.payment_url,
+                data=json.dumps(self.data),
+                HTTP_AUTHORIZATION="Donation {}".format(self.donation.client_secret),
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = json.loads(response.content)
+
+        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
     def test_create_intent_other_user(self):
         self.donation.user = self.user
@@ -258,7 +288,7 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         response = self.client.post(
             self.payment_url,
             data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
+            user=BlueBottleUserFactory.create(),
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -277,335 +307,210 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         super(ConnectAccountDetailsTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
-        country = 'NL'
+        country = "NL"
+        self.activity = FundingFactory.create(owner=self.user)
 
-        self.stripe_connect_account = stripe.Account('some-connect-id')
-        self.stripe_connect_account.update({
-            'country': country,
-            'individual': munch.munchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-                'verification': munch.munchify({
-                    'status': 'pending',
-                }),
-                'requirements': munch.munchify({
-                    'eventually_due': ['external_accounts', 'individual.dob.month'],
-                    'currently_due': [],
-                    'past_due': [],
-                })
-            }),
-            'requirements': munch.munchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
-                'disabled': False
-            }),
-            'external_accounts': munch.munchify({
-                'total_count': 0,
-                'data': []
-            })
-        })
+        self.stripe_connect_account = stripe.Account("some-connect-id")
+        self.stripe_connect_account.update(
+            {
+                "country": country,
+                "individual": munch.munchify(
+                    {
+                        "first_name": "Jhon",
+                        "last_name": "Example",
+                        "email": "jhon@example.com",
+                        "verification": munch.munchify(
+                            {
+                                "status": "pending",
+                            }
+                        ),
+                        "requirements": munch.munchify(
+                            {
+                                "eventually_due": [
+                                    "external_accounts",
+                                    "individual.dob.month",
+                                ],
+                                "currently_due": [],
+                                "past_due": [],
+                            }
+                        ),
+                    }
+                ),
+                "requirements": munch.munchify(
+                    {
+                        "eventually_due": ["external_accounts", "individual.dob.month"],
+                        "disabled": False,
+                    }
+                ),
+                "external_accounts": munch.munchify({"total_count": 0, "data": []}),
+            }
+        )
 
         with mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
+            "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ):
             self.connect_account = StripePayoutAccountFactory(
-                owner=self.user,
-                country=country,
-                account_id='some-account-id'
+                owner=self.user, country=country, account_id="some-account-id"
             )
 
-        self.account_list_url = reverse('connect-account-list')
-        self.account_url = reverse('connect-account-details', args=(self.connect_account.id,))
+        self.account_list_url = reverse("connect-account-list")
+        self.account_url = reverse(
+            "connect-account-detail", args=(self.connect_account.pk,)
+        )
 
         self.country_spec = stripe.CountrySpec(country)
-        self.country_spec.update({
-            'verification_fields': munch.munchify({
-                'individual': munch.munchify({
-                    'additional': ['external_accounts'],
-                    'minimum': ['individual.first_name'],
-                })
-            })
-        })
+        self.country_spec.update(
+            {
+                "verification_fields": munch.munchify(
+                    {
+                        "individual": munch.munchify(
+                            {
+                                "additional": ["external_accounts"],
+                                "minimum": ["individual.first_name"],
+                            }
+                        )
+                    }
+                )
+            }
+        )
 
         self.data = {
-            'data': {
-                'type': 'payout-accounts/stripes',
-                'id': self.connect_account.pk,
-                'attributes': {
-                    'token': 'some-account-token',
-                    'country': self.connect_account.country,
-                }
+            "data": {
+                "type": "payout-accounts/stripes",
+                "id": self.connect_account.pk,
+                "attributes": {
+                    "token": "some-account-token",
+                    "country": self.connect_account.country,
+                },
             }
         }
 
     def test_create(self):
         self.connect_account.delete()
         tenant = connection.tenant
-        tenant.name = 'tst'
+        tenant.name = "tst"
         tenant.save()
 
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': self.data['data']['attributes']['country'],
-            'individual': munch.munchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-                'verification': munch.munchify({
-                    'status': 'pending',
-                }),
-                'requirements': munch.munchify({
-                    'eventually_due': ['external_accounts', 'individual.dob.month'],
-                    'currently_due': [],
-                    'past_due': [],
-                })
-            }),
-            'requirements': munch.munchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
-                'disabled': False
-            }),
-            'external_accounts': munch.munchify({
-                'total_count': 0,
-                'data': []
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": self.data["data"]["attributes"]["country"],
+                "business_type": "individual",
+                "individual": munch.munchify(
+                    {
+                        "first_name": "Jhon",
+                        "last_name": "Example",
+                        "email": "jhon@example.com",
+                        "verification": munch.munchify(
+                            {
+                                "status": "pending",
+                            }
+                        ),
+                        "requirements": munch.munchify(
+                            {
+                                "eventually_due": [
+                                    "external_accounts",
+                                    "individual.dob.month",
+                                ],
+                                "currently_due": [],
+                                "past_due": [],
+                            }
+                        ),
+                    }
+                ),
+                "requirements": munch.munchify(
+                    {
+                        "eventually_due": ["external_accounts", "individual.dob.month"],
+                        "disabled": False,
+                    }
+                ),
+                "external_accounts": munch.munchify({"total_count": 0, "data": []}),
+            }
+        )
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
         ), mock.patch(
-            'stripe.Account.create', return_value=connect_account
+            "stripe.Account.create", return_value=connect_account
         ) as create_account, mock.patch(
-            'stripe.Account.modify', return_value=connect_account
-        ) as modify_account, mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
+            "stripe.Account.modify", return_value=connect_account
+        ), mock.patch(
+            "stripe.Account.retrieve", return_value=connect_account
         ):
             response = self.client.post(
                 self.account_list_url, data=json.dumps(self.data), user=self.user
             )
-            create_account.assert_called_with(
-                business_profile={'url': 'https://testserver', 'mcc': '8398'},
-                business_type='individual',
-                country=self.data['data']['attributes']['country'],
-                metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
-                requested_capabilities=['transfers'],
-                settings={
-                    'card_payments': {
-                        'statement_descriptor_prefix': u'tst--'
+            call = create_account.call_args.kwargs
+
+            self.assertEqual(call["country"], "NL")
+            self.assertEqual(call["type"], "custom")
+            self.assertEqual(call["business_type"], "individual")
+            self.assertEqual(
+                call["settings"],
+                {
+                    "card_payments": {"statement_descriptor_prefix": "tst--"},
+                    "payments": {"statement_descriptor": "tst--"},
+                    "payouts": {
+                        "statement_descriptor": "tst--",
+                        "schedule": {"interval": "manual"},
                     },
-                    'payments': {
-                        'statement_descriptor': u'tst--'
-                    },
-                    'payouts': {
-                        'statement_descriptor': u'tst--',
-                        'schedule': {'interval': 'manual'}
-                    }
                 },
-                # business_type='individual',
-                type='custom'
             )
-            modify_account.assert_called_with(
-                'some-connect-id',
-                account_token='some-account-token'
+            self.assertEqual(
+                call["metadata"],
+                {
+                    "tenant_name": "test",
+                    "tenant_domain": "testserver",
+                    "member_id": self.user.pk,
+                },
+            )
+
+            self.assertEqual(
+                call["business_profile"],
+                {"url": self.activity.get_absolute_url(), "mcc": "8398"},
+            )
+            self.assertEqual(call["individual"], {"email": self.user.email})
+            self.assertEqual(call["tos_acceptance"]["service_agreement"], "full")
+            self.assertEqual(
+                call["capabilities"],
+                {
+                    "transfers": {"requested": True},
+                    "card_payments": {"requested": True},
+                },
             )
 
         data = json.loads(response.content)
 
         self.assertEqual(
-            data['data']['attributes']['country'],
-            self.data['data']['attributes']['country']
+            data["data"]["attributes"]["country"],
+            self.data["data"]["attributes"]["country"],
         )
-        self.assertEqual(
-            data['data']['attributes']['disabled'], False
-        )
-        self.assertEqual(
-            data['data']['attributes']['verified'], False
-        )
-        self.assertEqual(
-            data['data']['meta']['required-fields'],
-            [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
-            ]
-        )
-        self.assertEqual(
-            data['data']['attributes']['account']['individual']['first_name'],
-            'Jhon',
-        )
+        self.assertEqual(data["data"]["attributes"]["verified"], False)
+        self.assertEqual(data["data"]["attributes"]["payouts-enabled"], False)
+        self.assertEqual(data["data"]["attributes"]["payments-enabled"], False)
 
         self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'],
-            str(self.user.pk)
+            data["data"]["relationships"]["owner"]["data"]["id"], str(self.user.pk)
         )
-
-    def test_create_us(self):
-        self.connect_account.delete()
-        tenant = connection.tenant
-        tenant.name = 'tst'
-        tenant.save()
-
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': self.data['data']['attributes']['country'],
-            'individual': munch.munchify({
-                'first_name': 'Jhon',
-                'last_name': 'Example',
-                'email': 'jhon@example.com',
-                'verification': munch.munchify({
-                    'status': 'pending',
-                }),
-                'requirements': munch.munchify({
-                    'eventually_due': ['external_accounts', 'individual.dob.month'],
-                    'currently_due': [],
-                    'past_due': [],
-                })
-            }),
-            'requirements': munch.munchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
-                'disabled': False
-            }),
-            'external_accounts': munch.munchify({
-                'total_count': 0,
-                'data': []
-            })
-        })
-
-        self.data['data']['attributes']['country'] = 'US'
-
-        with mock.patch(
-                'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ), mock.patch(
-            'stripe.Account.create', return_value=connect_account
-        ) as create_account, mock.patch(
-            'stripe.Account.modify', return_value=connect_account
-        ) as modify_account, mock.patch(
-            'stripe.Account.retrieve', return_value=connect_account
-        ):
-            self.client.post(
-                self.account_list_url, data=json.dumps(self.data), user=self.user
-            )
-            create_account.assert_called_with(
-                business_profile={'url': 'https://testserver', 'mcc': '8398'},
-                business_type='individual',
-                country=self.data['data']['attributes']['country'],
-                metadata={'tenant_name': 'test', 'tenant_domain': 'testserver', 'member_id': self.user.pk},
-                requested_capabilities=['transfers', 'card_payments'],
-                settings={
-                    'card_payments': {
-                        'statement_descriptor_prefix': u'tst--'
-                    },
-                    'payments': {
-                        'statement_descriptor': u'tst--'
-                    },
-                    'payouts': {
-                        'statement_descriptor': u'tst--',
-                        'schedule': {'interval': 'manual'}
-                    }
-                },
-                # business_type='individual',
-                type='custom'
-            )
-            modify_account.assert_called_with(
-                'some-connect-id',
-                account_token='some-account-token'
-            )
 
     def test_create_no_user(self):
+
         self.connect_account.delete()
-        response = self.client.post(
-            self.account_url,
-            data=json.dumps(self.data)
-        )
+        response = self.client.post(self.account_url, data=json.dumps(self.data))
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get(self):
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ), mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
-        ) as retrieve:
-            response = self.client.get(
-                self.account_url, user=self.user
-            )
-            retrieve.assert_called_with(self.connect_account.account_id)
+        response = self.client.get(self.account_url, user=self.user)
 
         data = json.loads(response.content)
 
         self.assertEqual(
-            data['data']['attributes']['country'],
-            self.connect_account.country
+            data["data"]["attributes"]["country"], self.connect_account.country
         )
-        self.assertEqual(
-            data['data']['attributes']['disabled'], False
-        )
-        self.assertEqual(
-            data['data']['attributes']['verified'], False
-        )
-        self.assertEqual(
-            data['data']['meta']['required-fields'],
-            [
-                u'country',
-                u'external_accounts',
-                u'individual.verification.additional_document',
-                u'document_type',
-                u'individual.verification.document.front',
-                u'individual.dob'
-            ]
-        )
-        self.assertEqual(
-            data['data']['attributes']['account']['individual']['first_name'],
-            'Jhon',
-        )
+        self.assertEqual(data["data"]["attributes"]["verified"], False)
 
         self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'],
-            str(self.user.pk)
-        )
-
-    def test_get_verification_error(self):
-        error = {
-            "reason": (
-                "The date of birth (DOB) on the document does not match "
-                "the DOB on the account. Please upload a document with a "
-                "DOB that matches the DOB on the account. You can also "
-                "update the DOB on the account."
-            ),
-            "code": "verification_document_dob_mismatch",
-            "requirement": "individual.verification.document"
-        }
-        self.stripe_connect_account.update({
-            'requirements': munch.munchify({
-                'eventually_due': ['external_accounts', 'individual.dob.month'],
-                'errors': [error],
-                'disabled': False
-            }),
-        })
-
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ), mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
-        ) as retrieve:
-            response = self.client.get(
-                self.account_url, user=self.user
-            )
-            retrieve.assert_called_with(self.connect_account.account_id)
-
-        data = json.loads(response.content)
-        self.assertEqual(
-            data['data']['meta']['errors'][0]['source']['pointer'],
-            '/data/attributes/individual/verification/document/front'
-        )
-        self.assertEqual(
-            data['data']['meta']['errors'][0]['title'],
-            error['reason']
-        )
-        self.assertEqual(
-            data['data']['meta']['errors'][0]['code'],
-            error['code']
+            data["data"]["relationships"]["owner"]["data"]["id"], str(self.user.pk)
         )
 
     def test_get_no_user(self):
@@ -617,64 +522,21 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
     def test_get_wrong_user(self):
         response = self.client.get(
-            self.account_url,
-            user=BlueBottleUserFactory.create()
+            self.account_url, user=BlueBottleUserFactory.create()
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_patch(self):
-        with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ), mock.patch(
-            'stripe.Account.modify', return_value=self.stripe_connect_account
-        ) as modify_account:
-            response = self.client.patch(
-                self.account_url,
-                data=json.dumps(self.data),
-                user=self.user
-            )
-            modify_account.assert_called_with('some-account-id', account_token='some-account-token')
-
-        data = json.loads(response.content)
-
-        self.assertEqual(
-            data['data']['attributes']['country'],
-            self.connect_account.country
-        )
-        self.assertEqual(
-            data['data']['attributes']['disabled'], False
-        )
-
-    def test_patch_wrong_user(self):
-        response = self.client.patch(
-            self.account_url,
-            data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create()
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_patch_no_user(self):
-        response = self.client.patch(
-            self.account_url,
-            data=json.dumps(self.data),
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_bank_accounts_no_user(self):
-        response = self.client.get(
-            self.account_list_url
-        )
+        response = self.client.get(self.account_list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_bank_accounts_other_user(self):
         response = self.client.get(
-            self.account_list_url,
-            user=BlueBottleUserFactory.create()
+            self.account_list_url, user=BlueBottleUserFactory.create()
         )
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()["data"]), 0)
 
 
 class ExternalAccountsTestCase(BluebottleTestCase):
@@ -682,137 +544,140 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         super(ExternalAccountsTestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
-        account_id = 'some-account-id'
-        country = 'NU'
+        account_id = "some-account-id"
+        country = "NU"
+        self.activity = FundingFactory.create(owner=self.user)
 
-        self.connect_external_account = stripe.BankAccount('some-bank-token')
-        self.connect_external_account.update(munch.munchify({
-            'object': 'bank_account',
-            'account_holder_name': 'Jane Austen',
-            'account_holder_type': 'individual',
-            'bank_name': 'STRIPE TEST BANK',
-            'country': 'US',
-            'currency': 'usd',
-            'fingerprint': '1JWtPxqbdX5Gamtc',
-            'last4': '6789',
-            'metadata': {
-                'order_id': '6735'
-            },
-            'routing_number': '110000000',
-            'status': 'new',
-            'account': 'acct_1032D82eZvKYlo2C'
-        }))
+        self.connect_external_account = stripe.BankAccount("some-bank-token")
+        self.connect_external_account.update(
+            munch.munchify(
+                {
+                    "object": "bank_account",
+                    "account_holder_name": "Jane Austen",
+                    "account_holder_type": "individual",
+                    "bank_name": "STRIPE TEST BANK",
+                    "country": "US",
+                    "currency": "usd",
+                    "fingerprint": "1JWtPxqbdX5Gamtc",
+                    "last4": "6789",
+                    "metadata": {"order_id": "6735"},
+                    "routing_number": "110000000",
+                    "status": "new",
+                    "account": "acct_1032D82eZvKYlo2C",
+                }
+            )
+        )
 
         external_accounts = stripe.ListObject()
         external_accounts.data = [self.connect_external_account]
-        external_accounts.update({
-            'total_count': 1,
-        })
-
-        self.stripe_connect_account = stripe.Account(account_id)
-        self.stripe_connect_account.update({
-            'country': country,
-            'external_accounts': external_accounts,
-            'requirements': munch.munchify({
-                'eventually_due': ['document_type']
-            })
-        })
-
-        self.country_spec = stripe.CountrySpec(country)
-        self.country_spec.update({
-            'verification_fields': munch.munchify({
-                'individual': munch.munchify({
-                    'additional': ['individual.verification.document'],
-                    'minimum': ['individual.first_name'],
-                })
-            })
-        })
-
-        with mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
-        ):
-            self.connect_account = StripePayoutAccountFactory.create(owner=self.user, account_id=account_id)
-        self.external_account = ExternalAccountFactory.create(
-            connect_account=self.connect_account,
-            account_id='some-external-account-id'
+        external_accounts.update(
+            {
+                "total_count": 1,
+            }
         )
 
-        self.url = reverse('connect-account-details', args=(self.connect_account.id, ))
-        self.external_account_url = reverse('stripe-external-account-list')
+        self.stripe_connect_account = stripe.Account(account_id)
+        self.stripe_connect_account.update(
+            {
+                "country": country,
+                "external_accounts": external_accounts,
+                "requirements": munch.munchify({"eventually_due": ["document_type"]}),
+            }
+        )
+
+        self.country_spec = stripe.CountrySpec(country)
+        self.country_spec.update(
+            {
+                "verification_fields": munch.munchify(
+                    {
+                        "individual": munch.munchify(
+                            {
+                                "additional": ["individual.verification.document"],
+                                "minimum": ["individual.first_name"],
+                            }
+                        )
+                    }
+                )
+            }
+        )
+
+        with mock.patch(
+            "stripe.Account.retrieve", return_value=self.stripe_connect_account
+        ):
+            self.connect_account = StripePayoutAccountFactory.create(
+                owner=self.activity.owner, account_id=account_id
+            )
+        self.external_account = ExternalAccountFactory.create(
+            connect_account=self.connect_account, account_id="some-external-account-id"
+        )
+
+        self.url = reverse("connect-account-detail", args=(self.connect_account.pk,))
+        self.external_account_url = reverse("stripe-external-account-list")
         self.external_account_detail_url = reverse(
-            'stripe-external-account-details',
-            args=(self.external_account.pk, )
+            "stripe-external-account-details", args=(self.external_account.pk,)
         )
 
     def test_get_accounts_no_user(self):
-        response = self.client.get(
-            self.external_account_url
-        )
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        response = self.client.get(self.external_account_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_accounts_other_user(self):
         response = self.client.get(
-            self.external_account_url,
-            user=BlueBottleUserFactory.create()
+            self.external_account_url, user=BlueBottleUserFactory.create()
         )
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(len(response.json()["data"]), 0)
 
     def test_get(self):
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
-        ), mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
+            "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ) as retrieve, mock.patch(
-            'stripe.ListObject.retrieve', return_value=self.connect_external_account
+            "stripe.ListObject.retrieve", return_value=self.connect_external_account
         ) as retrieve:
-            response = self.client.get(
-                self.url, user=self.user
-            )
+            response = self.client.get(self.url, user=self.user)
             retrieve.assert_called_with(self.external_account.account_id)
             self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-        external_account = data['included'][1]['attributes']
+        external_account = data["included"][1]["attributes"]
 
         self.assertEqual(
-            external_account['currency'], self.connect_external_account.currency
+            external_account["currency"], self.connect_external_account.currency
         )
         self.assertEqual(
-            external_account['country'], self.connect_external_account.country
+            external_account["country"], self.connect_external_account.country
         )
         self.assertEqual(
-            external_account['routing-number'], self.connect_external_account.routing_number
+            external_account["routing-number"],
+            self.connect_external_account.routing_number,
         )
         self.assertEqual(
-            external_account['account-holder-name'], self.connect_external_account.account_holder_name
+            external_account["account-holder-name"],
+            self.connect_external_account.account_holder_name,
         )
-        self.assertEqual(
-            external_account['last4'], self.connect_external_account.last4
-        )
+        self.assertEqual(external_account["last4"], self.connect_external_account.last4)
 
     def test_create(self):
         data = {
-            'data': {
-                'type': 'payout-accounts/stripe-external-accounts',
-                'attributes': {
-                    'token': self.connect_external_account.id
-                },
-                'relationships': {
-                    'connect_account': {
-                        'data': {
-                            'type': 'payout-accounts/stripes',
-                            'id': self.connect_account.pk
+            "data": {
+                "type": "payout-accounts/stripe-external-accounts",
+                "attributes": {"token": self.connect_external_account.id},
+                "relationships": {
+                    "connect_account": {
+                        "data": {
+                            "type": "payout-accounts/stripes",
+                            "id": self.connect_account.pk,
                         },
                     }
-                }
+                },
             }
         }
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
         ), mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
+            "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ), mock.patch(
-            'stripe.Account.create_external_account', return_value=self.connect_external_account
+            "stripe.Account.create_external_account",
+            return_value=self.connect_external_account,
         ):
             response = self.client.post(
                 self.external_account_url, data=json.dumps(data), user=self.user
@@ -820,52 +685,50 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, 201)
 
         data = json.loads(response.content)
-        external_account = data['data']['attributes']
+        external_account = data["data"]["attributes"]
 
         self.assertEqual(
-            external_account['currency'], self.connect_external_account.currency
+            external_account["currency"], self.connect_external_account.currency
         )
         self.assertEqual(
-            external_account['country'], self.connect_external_account.country
+            external_account["country"], self.connect_external_account.country
         )
         self.assertEqual(
-            external_account['routing-number'], self.connect_external_account.routing_number
+            external_account["routing-number"],
+            self.connect_external_account.routing_number,
         )
         self.assertEqual(
-            external_account['account-holder-name'], self.connect_external_account.account_holder_name
+            external_account["account-holder-name"],
+            self.connect_external_account.account_holder_name,
         )
-        self.assertEqual(
-            external_account['last4'], self.connect_external_account.last4
-        )
+        self.assertEqual(external_account["last4"], self.connect_external_account.last4)
         with mock.patch(
-            'stripe.CountrySpec.retrieve', return_value=self.country_spec
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
         ), mock.patch(
-            'stripe.Account.retrieve', return_value=self.stripe_connect_account
+            "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ), mock.patch(
-            'stripe.ListObject.retrieve', return_value=self.connect_external_account
+            "stripe.ListObject.retrieve", return_value=self.connect_external_account
         ):
-            response = self.client.get(
-                self.url, user=self.user
-            )
+            response = self.client.get(self.url, user=self.user)
 
         data = json.loads(response.content)
-        external_account = data['included'][1]['attributes']
+        external_account = data["included"][1]["attributes"]
 
         self.assertEqual(
-            external_account['currency'], self.connect_external_account.currency
+            external_account["currency"], self.connect_external_account.currency
         )
         self.assertEqual(
-            external_account['country'], self.connect_external_account.country
+            external_account["country"], self.connect_external_account.country
         )
         self.assertEqual(
-            external_account['routing-number'], self.connect_external_account.routing_number
+            external_account["routing-number"],
+            self.connect_external_account.routing_number,
         )
         self.assertEqual(
-            external_account['account-holder-name'], self.connect_external_account.account_holder_name
+            external_account["account-holder-name"],
+            self.connect_external_account.account_holder_name,
         )
-        self.assertEqual(
-            external_account['last4'], self.connect_external_account.last4
-        )
+        self.assertEqual(external_account["last4"], self.connect_external_account.last4)
 
     def test_get_external_account_detail(self):
         response = self.client.get(

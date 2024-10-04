@@ -5,18 +5,30 @@ from bluebottle.funding_stripe.views import (
     IntentWebHookView, SourceWebHookView,
     ConnectWebHookView,
     ExternalAccountList, ExternalAccountDetails,
-    StripePaymentList, ConnectAccountDetails, ConnectAccountList)
+    StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
+    ConnectAccountSession,
+    CountrySpecList,
+    CountrySpecDetail,
+)
 
 urlpatterns = [
 
     # Payout accounts
-    url(r'^/payout-account$',
-        ConnectAccountList.as_view(),
-        name='connect-account-list'),
-    url(r'^/payout-account/(?P<pk>[\d]+)$',
+    url(
+        r"^/payout-account$", ConnectAccountList.as_view(), name="connect-account-list"
+    ),
+    url(
+        r"^/payout-account/(?P<pk>[\d]+)$",
         ConnectAccountDetails.as_view(),
-        name='connect-account-details'),
-    url(r'^/external-account$',
+        name="connect-account-detail",
+    ),
+    url(
+        r"^/payout-account-session/$",
+        ConnectAccountSession.as_view(),
+        name="connect-account-session",
+    ),
+    url(
+        r"^/external-account$",
         ExternalAccountList.as_view(),
         name='stripe-external-account-list'),
     url(r'^/external-account/(?P<pk>[\d]+)$',
@@ -27,9 +39,15 @@ urlpatterns = [
     url(r'^/payments$',
         StripePaymentList.as_view(),
         name='stripe-payment-list'),
+
     url(r'^/payment-intents$',
         StripePaymentIntentList.as_view(),
         name='stripe-payment-intent-list'),
+
+    url(r'^/payment-intents/(?P<pk>[\d]+)$',
+        StripePaymentIntentDetail.as_view(),
+        name='stripe-payment-intent-detail'),
+
     url(r'^/source-payments$',
         StripeSourcePaymentList.as_view(),
         name='stripe-source-payment-list'),
@@ -43,5 +61,11 @@ urlpatterns = [
         name='stripe-source-webhook'),
     url(r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
-        name='stripe-connect-webhook'),
+        name="stripe-connect-webhook"),
+    url(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
+    url(
+        r"^/country-specs/(?P<pk>[\w]+)$",
+        CountrySpecDetail.as_view(),
+        name="country-specs-detail",
+    ),
 ]

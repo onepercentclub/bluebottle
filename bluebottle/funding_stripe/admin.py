@@ -13,7 +13,6 @@ from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmi
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
-from bluebottle.funding_stripe.utils import get_stripe
 
 
 @admin.register(StripePayment)
@@ -30,6 +29,7 @@ class StripePaymentAdmin(PaymentChildAdmin):
 class StripePaymentIntentAdmin(admin.ModelAdmin):
     model = PaymentIntent
     raw_id_fields = ['donation']
+    list_display = ['intent_id', 'created', 'donation']
 
 
 @admin.register(StripeSourcePayment)
@@ -61,12 +61,16 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
     readonly_fields = PayoutAccountChildAdmin.readonly_fields + [
-        'reviewed', 'account_details', 'stripe_link',
-        'eventually_due', 'funding'
+        "verified",
+        "payments_enabled",
+        "payouts_enabled",
+        "funding",
+        "stripe_link",
+
     ]
-    search_fields = ['account_id']
-    fields = ['created', 'owner', 'status', 'account_id', 'country', 'account_details', 'funding']
-    list_display = ['id', 'account_id', 'status']
+    search_fields = ["account_id"]
+    fields = ["created", "owner", "status", "business_type", "account_id", "country", "funding"]
+    list_display = ["id", "account_id", "owner", "status"]
 
     def get_fields(self, request, obj=None):
         fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
@@ -75,24 +79,6 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         return fields
 
     def save_model(self, request, obj, form, change):
-        if obj.account_id == 'new':
-            stripe = get_stripe()
-            account = stripe.Account.create(
-                country=obj.country,
-                type='custom',
-                settings=obj.account_settings,
-                business_type='individual',
-                capabilities={"transfers": {"requested": True}, "card_payments": {"requested": True}},
-                business_profile={
-                    'url': 'https://goodup.com',
-                    'mcc': '8398'
-                },
-                metadata=obj.metadata,
-                tos_acceptance={
-                    "service_agreement": "full"
-                }
-            )
-            obj.account_id = account.id
         if 'ba_' in obj.account_id:
             obj.account_id = ''
             self.message_user(

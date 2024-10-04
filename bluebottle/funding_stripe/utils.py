@@ -7,7 +7,7 @@ def get_stripe_settings():
     from bluebottle.funding_stripe.models import StripePaymentProvider
     provider = StripePaymentProvider.objects.first()
     if not provider:
-        raise ImproperlyConfigured('Stripe not enabled for this tenant')
+        return
     return provider.public_settings
 
 

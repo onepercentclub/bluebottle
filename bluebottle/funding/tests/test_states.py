@@ -13,7 +13,6 @@ from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, Stri
     ExternalAccountFactory, StripeSourcePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.wallposts.models import Wallpost
 
 
 class FundingStateMachineTests(BluebottleTestCase):
@@ -26,7 +25,9 @@ class FundingStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.save()
@@ -168,8 +169,10 @@ class FundingStateMachineTests(BluebottleTestCase):
             duration=7
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = PlainPayoutAccountFactory.create(status="verified")
+        bank_account = BankAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         self.funding.bank_account = bank_account
         self.funding.save()
 
@@ -343,7 +346,9 @@ class DonationStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.save()
@@ -374,12 +379,6 @@ class DonationStateMachineTests(BluebottleTestCase):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         donation.states.succeed(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
-
-    def test_succeed_generate_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        donation.states.succeed(save=True)
-        wallpost = Wallpost.objects.last()
-        self.assertEqual(wallpost.donation, donation)
 
     def test_succeed_mail_supporter(self):
         mail.outbox = []
@@ -412,13 +411,6 @@ class DonationStateMachineTests(BluebottleTestCase):
         self.assertEqual(self.funding.amount_raised, Money(750, 'EUR'))
         donation.states.fail(save=True)
         self.assertEqual(self.funding.amount_raised, Money(500, 'EUR'))
-
-    def test_fail_remove_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        donation.states.succeed(save=True)
-        self.assertEqual(Wallpost.objects.count(), 1)
-        donation.states.fail(save=True)
-        self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund(self):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
@@ -456,13 +448,6 @@ class DonationStateMachineTests(BluebottleTestCase):
             payment.states.request_refund(save=True)
             refund.asssert_called_once()
         self.assertEqual(payment.status, 'refund_requested')
-
-    def test_refund_remove_wallpost(self):
-        donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
-        PledgePaymentFactory.create(donation=donation)
-        self.assertEqual(Wallpost.objects.count(), 1)
-        donation.payment.states.refund(save=True)
-        self.assertEqual(Wallpost.objects.count(), 0)
 
     def test_refund_update_amounts(self):
         donation = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
@@ -523,7 +508,9 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = bank_account
         self.funding.states.submit()
@@ -612,7 +599,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):

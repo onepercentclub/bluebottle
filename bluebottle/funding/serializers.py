@@ -1,5 +1,8 @@
 from builtins import object
+from datetime import datetime
 
+import pytz
+from dateutil.parser import parse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -20,6 +23,7 @@ from bluebottle.activities.utils import (
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.files.serializers import PrivateDocumentField
 from bluebottle.files.serializers import PrivateDocumentSerializer
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, PaymentMethod,
     BankAccount, PayoutAccount, PaymentProvider,
@@ -35,6 +39,7 @@ from bluebottle.funding_lipisha.serializers import (
 from bluebottle.funding_pledge.serializers import (
     PledgeBankAccountSerializer, PayoutPledgeBankAccountSerializer
 )
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.serializers import (
     ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
 )
@@ -45,8 +50,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
-    MoneySerializer, ResourcePermissionField, NoCommitMixin,
-)
+    MoneySerializer, ResourcePermissionField, )
 
 
 class FundingCurrencyValidator(object):
@@ -79,7 +83,7 @@ class RewardSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     count = IntegerField(read_only=True)
     amount = MoneySerializer(min_amount=5.00)
-
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     validators = [FundingCurrencyValidator()]
 
     included_serializers = {
@@ -163,12 +167,27 @@ class BankAccountSerializer(PolymorphicModelSerializer):
         resource_name = 'payout-accounts/external-accounts'
 
 
+class DeadlineField(serializers.DateTimeField):
+    def to_internal_value(self, value):
+        if not value:
+            return None
+        try:
+            parsed_date = parse(value).date()
+            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
+            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
+            return aware_datetime
+        except (ValueError, TypeError):
+            self.fail('invalid', format='date')
+
+
 class FundingListSerializer(BaseActivityListSerializer):
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
+    deadline = DeadlineField(required=False, allow_null=True)
 
     class Meta(BaseActivityListSerializer.Meta):
         model = Funding
@@ -203,21 +222,27 @@ class TinyFundingSerializer(BaseTinyActivitySerializer):
         resource_name = 'activities/fundings'
 
 
-class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
+class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
     rewards = ResourceRelatedField(
-        queryset=Reward.objects.all(), many=True, required=False
+        many=True, read_only=True
     )
     budget_lines = ResourceRelatedField(
-        queryset=BudgetLine.objects.all(), many=True, required=False
+        many=True, read_only=True
     )
     payment_methods = SerializerMethodResourceRelatedField(
         read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
     )
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+
+    payout_account = ResourceRelatedField(
+        model=StripePayoutAccount,
+        many=False,
+        read_only=True,
+    )
 
     bank_account = PolymorphicResourceRelatedField(
         BankAccountSerializer,
@@ -238,17 +263,40 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
 
     account_info = serializers.DictField(source='bank_account.public_data', read_only=True)
 
+    psp = serializers.SerializerMethodField()
+    deadline = DeadlineField(allow_null=True, required=False)
+    errors = ValidationErrorsField(ignore=["kyc"])
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ("draft", "needs_work", "submitted"):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
+
+    def get_psp(self, obj):
+        if obj.bank_account and obj.bank_account.connect_account:
+            return obj.bank_account.provider
+
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
-        user = self.context['request'].user
-        if user not in [
-            self.instance.owner,
-            self.instance.initiative.owner,
-        ] and user not in self.instance.initiative.activity_managers.all():
-            del fields['bank_account']
-            del fields['required']
-            del fields['errors']
+        user = self.context["request"].user
+        if (
+            self.instance
+            and user
+            not in [
+                self.instance.owner,
+                self.instance.initiative.owner,
+            ]
+            and user not in self.instance.initiative.activity_managers.all()
+        ):
+            del fields["bank_account"]
+            del fields["required"]
+            del fields["errors"]
         return fields
 
     def get_co_financers(self, instance):
@@ -258,21 +306,22 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'country',
-            'deadline',
-            'duration',
-            'target',
-            'amount_donated',
-            'amount_matching',
-            'amount_raised',
-            'account_info',
-            'co_financers',
-
-            'rewards',
-            'payment_methods',
-            'budget_lines',
-            'bank_account',
-            'supporters_export_url',
+            "country",
+            "deadline",
+            "duration",
+            "target",
+            "amount_donated",
+            "amount_matching",
+            "amount_raised",
+            "account_info",
+            "co_financers",
+            "rewards",
+            "payment_methods",
+            "budget_lines",
+            "bank_account",
+            "payout_account",
+            "supporters_export_url",
+            "psp",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -320,9 +369,8 @@ class FundingSerializer(NoCommitMixin, BaseActivitySerializer):
         return methods
 
 
-class FundingTransitionSerializer(ModelSerializer):
+class FundingTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Funding.objects.all())
-    field = 'transitions'
     included_serializers = {
         'resource': 'bluebottle.funding.serializers.FundingSerializer',
     }
@@ -352,7 +400,8 @@ def reward_amount_matches(data):
     """
     if data.get('reward') and data['reward'].amount > data['amount']:
         raise ValidationError(
-            _('The amount must be higher or equal to the amount of the reward.')
+            {'amount': _('The amount must be higher or equal to the amount of the reward.')}
+
         )
 
 
@@ -377,6 +426,7 @@ class DonorMemberValidator(object):
 
 class DonorListSerializer(BaseContributorListSerializer):
     amount = MoneySerializer()
+    payout_amount = MoneySerializer()
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
@@ -392,7 +442,7 @@ class DonorListSerializer(BaseContributorListSerializer):
 
     class Meta(BaseContributorListSerializer.Meta):
         model = Donor
-        fields = BaseContributorListSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseContributorListSerializer.Meta.fields + ('amount', 'payout_amount', 'name', 'reward', 'anonymous',)
         meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributorListSerializer.JSONAPIMeta):
@@ -405,6 +455,12 @@ class DonorListSerializer(BaseContributorListSerializer):
 
 class DonorSerializer(BaseContributorSerializer):
     amount = MoneySerializer()
+    payout_amount = MoneySerializer(read_only=True)
+
+    payment_methods = SerializerMethodResourceRelatedField(
+        read_only=True, many=True, source='get_payment_methods', model=PaymentMethod
+    )
+    updates = ResourceRelatedField(read_only=True, many=True)
 
     user = ResourceRelatedField(
         queryset=Member.objects.all(),
@@ -417,6 +473,8 @@ class DonorSerializer(BaseContributorSerializer):
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
+        'updates': 'bluebottle.updates.serializers.UpdateSerializer',
+        'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
     }
 
     validators = [
@@ -427,7 +485,9 @@ class DonorSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         model = Donor
-        fields = BaseContributorSerializer.Meta.fields + ('amount', 'name', 'reward', 'anonymous',)
+        fields = BaseContributorSerializer.Meta.fields + (
+            'amount', 'payout_amount', 'name', 'reward', 'anonymous', 'payment_methods', 'updates'
+        )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/donations'
@@ -435,7 +495,32 @@ class DonorSerializer(BaseContributorSerializer):
             'user',
             'activity',
             'reward',
+            'payment_methods',
+            'payment_intent'
         ]
+
+    def get_payment_methods(self, obj):
+        if not obj.activity.bank_account:
+            return []
+
+        methods = [
+            method for method in obj.activity.bank_account.payment_methods
+            if str(obj.amount.currency) in method.currencies
+        ]
+
+        request = self.context['request']
+
+        if request.user.is_authenticated and request.user.can_pledge:
+            methods.append(
+                PaymentMethod(
+                    provider='pledge',
+                    code='pledge',
+                    name=_('Pledge'),
+                    currencies=[str(obj.amount.currency)]
+                )
+            )
+
+        return methods
 
     def get_fields(self):
         """
@@ -631,4 +716,5 @@ class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'allow_anonymous_rewards',
             'anonymous_donations',
+            'stripe_publishable_key'
         )

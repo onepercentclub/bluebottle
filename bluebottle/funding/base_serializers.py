@@ -13,20 +13,20 @@ class PaymentSerializer(ModelSerializer):
 
     transitions = AvailableTransitionsField()
 
-    included_serializers = {
-        'donation': 'bluebottle.funding.serializers.DonorSerializer',
-    }
-
     class Meta(object):
         model = Payment
         fields = ('donation', 'status', )
         meta_fields = ('transitions', 'created', 'updated', )
 
     class JSONAPIMeta(object):
-        included_resources = [
-            'donation',
-        ]
+        included_resources = ['donation', 'donation.activity', 'donation.updates']
         resource_name = 'payments'
+
+    included_serializers = {
+        'donation': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation.updates': 'bluebottle.updates.serializers.UpdateSerializer',
+        'donation.activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
 
 
 class BaseBankAccountSerializer(ModelSerializer):

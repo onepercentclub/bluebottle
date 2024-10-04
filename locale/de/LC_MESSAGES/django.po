@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-01 17:19+0200\n"
-"PO-Revision-Date: 2024-10-01 15:21\n"
+"POT-Creation-Date: 2024-10-04 11:45+0200\n"
+"PO-Revision-Date: 2024-10-04 14:09\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Crowdin-Project: bluebottle\n"
 "X-Crowdin-Project-ID: 457932\n"
 "X-Crowdin-Language: de\n"
-"X-Crowdin-File: /release.funding/locale/en/LC_MESSAGES/django.po\n"
-"X-Crowdin-File-ID: 1968\n"
+"X-Crowdin-File: /master/locale/en/LC_MESSAGES/django.po\n"
+"X-Crowdin-File-ID: 233\n"
 
 #: bluebottle/activities/admin.py:82 bluebottle/activities/admin.py:724
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:241
@@ -220,11 +220,11 @@ msgstr "Mit Ihrem Team"
 msgid "As an individual"
 msgstr "Als Einzelperson"
 
-#: bluebottle/activities/filters.py:261
+#: bluebottle/activities/filters.py:262
 msgid "In-person"
 msgstr "Persönlich"
 
-#: bluebottle/activities/filters.py:261
+#: bluebottle/activities/filters.py:262
 msgid "Online/remote"
 msgstr "Online/Remote"
 
@@ -320,33 +320,33 @@ msgctxt "email"
 msgid "View more activities"
 msgstr "Weitere Aktivitäten anzeigen"
 
-#: bluebottle/activities/messages.py:222
+#: bluebottle/activities/messages.py:224
 msgctxt "email"
 msgid "Multiple locations"
 msgstr "Mehrere Orte"
 
-#: bluebottle/activities/messages.py:225
+#: bluebottle/activities/messages.py:227
 msgctxt "email"
 msgid "Mutliple time slots"
 msgstr "Mehrfache Zeitnischen"
 
-#: bluebottle/activities/messages.py:236
+#: bluebottle/activities/messages.py:238
 msgctxt "email"
 msgid "Starts immediately"
 msgstr "Startet sofort"
 
-#: bluebottle/activities/messages.py:239 bluebottle/activities/messages.py:255
+#: bluebottle/activities/messages.py:241 bluebottle/activities/messages.py:257
 msgctxt "email"
 msgid "runs indefinitely"
 msgstr "läuft unbegrenzt"
 
-#: bluebottle/activities/messages.py:254
+#: bluebottle/activities/messages.py:256
 msgctxt "email"
 msgid "starts immediately"
 msgstr "beginnt sofort"
 
-#: bluebottle/activities/messages.py:289 bluebottle/activities/messages.py:394
-#: bluebottle/activities/messages.py:416 bluebottle/activities/messages.py:438
+#: bluebottle/activities/messages.py:291 bluebottle/activities/messages.py:396
+#: bluebottle/activities/messages.py:418 bluebottle/activities/messages.py:440
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
 #: bluebottle/time_based/messages.py:87 bluebottle/time_based/messages.py:130
@@ -366,88 +366,88 @@ msgctxt "email"
 msgid "View activity"
 msgstr "Aktivität anzeigen"
 
-#: bluebottle/activities/messages.py:297
+#: bluebottle/activities/messages.py:299
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has joined \"{title}\""
 msgstr "Ein neues Team ist beigetreten \"{title}\""
 
-#: bluebottle/activities/messages.py:302
+#: bluebottle/activities/messages.py:304
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to \"{title}\""
 msgstr "Ein neues Team hat sich auf \"{title} \" beworben"
 
-#: bluebottle/activities/messages.py:307
+#: bluebottle/activities/messages.py:309
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been accepted for \"{title}\""
 msgstr "Ihr Team wurde für \"{title} \" akzeptiert"
 
-#: bluebottle/activities/messages.py:322 bluebottle/activities/messages.py:348
-#: bluebottle/activities/messages.py:369
+#: bluebottle/activities/messages.py:324 bluebottle/activities/messages.py:350
+#: bluebottle/activities/messages.py:371
 #, python-brace-format
 msgctxt "email"
 msgid "Team cancellation for '{title}'"
 msgstr "Team Stornierung für '{title}'"
 
-#: bluebottle/activities/messages.py:333
+#: bluebottle/activities/messages.py:335
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been rejected for \"{title}\""
 msgstr "Ihr Team wurde für \"{title} \" abgelehnt"
 
-#: bluebottle/activities/messages.py:357
+#: bluebottle/activities/messages.py:359
 #, python-brace-format
 msgctxt "email"
 msgid "You’re added to a team for '{title}'"
 msgstr "Du wurdest einem Team für '{title} ' hinzugefügt"
 
-#: bluebottle/activities/messages.py:378
+#: bluebottle/activities/messages.py:380
 #: bluebottle/activities/templates/mails/messages/team_reopened.html:6
 msgctxt "email"
 msgid "Your team was accepted again"
 msgstr "Ihr Team wurde erneut akzeptiert"
 
-#: bluebottle/activities/messages.py:387
+#: bluebottle/activities/messages.py:389
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team for \"{title}\""
 msgstr "Jemand ist Ihrem Team beigetreten für \"{title}\""
 
-#: bluebottle/activities/messages.py:409
+#: bluebottle/activities/messages.py:411
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for \"{title}\""
 msgstr "Ein Teilnehmer hat sich aus Ihrem Team zurückgezogen für \"{title}\""
 
-#: bluebottle/activities/messages.py:431
+#: bluebottle/activities/messages.py:433
 #, python-brace-format
 msgctxt "email"
 msgid "Team member removed for ‘{title}’"
 msgstr "Teammitglied wurde für ‘{title} ’ entfernt"
 
-#: bluebottle/activities/messages.py:459
+#: bluebottle/activities/messages.py:461
 msgctxt "email"
 msgid "Find activities"
 msgstr "Aktivitäten finden"
 
-#: bluebottle/activities/messages.py:513
+#: bluebottle/activities/messages.py:515
 msgctxt "email"
 msgid "It’s a new year, let's make some impact!"
 msgstr "Es ist ein neues Jahr, lassen Sie uns etwas bewirken!"
 
-#: bluebottle/activities/messages.py:518
+#: bluebottle/activities/messages.py:520
 msgctxt "email"
 msgid "Haven’t joined an activity yet? Let’s get started!"
 msgstr "Noch keine Aktivität beigetreten? Los geht's!"
 
-#: bluebottle/activities/messages.py:523
+#: bluebottle/activities/messages.py:525
 msgctxt "email"
 msgid "Half way through the year and still plenty of activities to join"
 msgstr "Hälfte des Jahres und noch viele Aktivitäten zum Mitmachen"
 
-#: bluebottle/activities/messages.py:528
+#: bluebottle/activities/messages.py:530
 #, python-brace-format
 msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
@@ -3789,17 +3789,13 @@ msgstr "Deine Kampagne \"{title}\" ist offen für neue Spenden 💸"
 msgid "Your campaign \"{title}\" has been cancelled"
 msgstr "Deine Kampagne \"{title}\" wurde abgebrochen"
 
-#: bluebottle/funding/messages.py:165
-msgid "Your identity verification could not be verified!"
-msgstr "Ihre Identitätsüberprüfung konnte nicht verifiziert werden!"
-
-#: bluebottle/funding/messages.py:174
-msgid "We need more information to verify your account"
-msgstr "Wir benötigen weitere Informationen, um dein Konto zu verifizieren"
+#: bluebottle/funding/messages.py:165 bluebottle/funding/messages.py:174
+msgid "Action required for your crowdfunding campaign"
+msgstr ""
 
 #: bluebottle/funding/messages.py:183
-msgid "Live campaign identity verification failed!"
-msgstr "Identitätsüberprüfung der Live-Kampagne fehlgeschlagen!"
+msgid "Payout account rejected"
+msgstr ""
 
 #: bluebottle/funding/messages.py:202
 msgid "Your identity has been verified"
@@ -3966,19 +3962,19 @@ msgstr "Die Kampagnenfrist ist abgelaufen."
 msgid "Currency does not match any of the activities currencies"
 msgstr "Währung stimmt nicht mit einer der Aktivitäten Währungen überein"
 
-#: bluebottle/funding/serializers.py:347 bluebottle/funding/serializers.py:503
+#: bluebottle/funding/serializers.py:362 bluebottle/funding/serializers.py:518
 msgid "Pledge"
 msgstr "Versprechen"
 
-#: bluebottle/funding/serializers.py:372
+#: bluebottle/funding/serializers.py:387
 msgid "The selected reward is not related to this activity"
 msgstr "Die ausgewählte Belohnung ist nicht mit dieser Aktivität verbunden"
 
-#: bluebottle/funding/serializers.py:388
+#: bluebottle/funding/serializers.py:403
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Der Betrag muss höher oder gleich der Höhe der Belohnung sein."
 
-#: bluebottle/funding/serializers.py:397
+#: bluebottle/funding/serializers.py:412
 msgid "User can only be set, not changed."
 msgstr "Benutzer kann nur gesetzt und nicht geändert werden."
 
@@ -4609,6 +4605,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/funding_partially_funded.html:18
 #: bluebottle/funding/templates/mails/messages/funding_realised_owner.html:32
 #: bluebottle/funding/templates/mails/messages/funding_refunded.html:18
+#: bluebottle/funding/templates/mails/messages/payout_account_verified.html:21
 msgctxt "email"
 msgid "Go to campaign"
 msgstr "Zur Kampagne gehen"
@@ -4763,33 +4760,20 @@ msgstr "\n"
 "            Erwartete das nicht? Wenden Sie sich an Ihren Plattform-Manager, um herauszufinden, warum.\n"
 "        "
 
-#: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:7
+#: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:6
+#, python-format
 msgctxt "email"
 msgid "\n"
-"            Hi platform manager,<br/>\n"
-"            <br/>\n"
-"            A live campaign has a problem with their KYC validation. <br/>\n"
-"            Please check this soonest!\n"
+"            Hi %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            The identity verification for your ongoing crowdfunding campaign was not successful.\n"
+"            <br/><br/>\n"
+"            Identity verification is required for processing the payout of the campaign.\n"
+"            If the verification fails, we cannot process the payout. In that case, all donations will be returned to the supporters.\n"
 "        "
-msgstr "\n"
-"            Hallo Plattform-Manager,<br/>\n"
-"            <br/>\n"
-"            Eine Live-Kampagne hat ein Problem mit ihrer KYC-Validierung. <br/>\n"
-"            Bitte überprüfen Sie dies baldmöglich!\n"
-"        "
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:15
-msgctxt "email"
-msgid "\n"
-"            If you fail to complete your identity verification we won't be able to payout the crowdfunding campaign.\n"
-"            All donations will be returned to your supporters!\n"
-"        "
-msgstr "\n"
-"            Wenn Sie Ihre Identitätsüberprüfung nicht abschließen, können wir die Crowdfunding Kampagne nicht auszahlen.\n"
-"            Alle Spenden werden an deine Unterstützer zurückgeschickt!\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:24
+#: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:19
 msgctxt "email"
 msgid "Check payout account"
 msgstr "Auszahlungskonto prüfen"
@@ -4823,83 +4807,58 @@ msgstr "Organisation"
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            Hi %(recipient_name)s,<br/>\n"
-"            <br/>\n"
-"            We have need addiotional information in order to verify your account. <br/>\n"
+"            Hi %(recipient_name)s,\n"
 "            <br/><br/>\n"
-"            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.\n"
-"        "
-msgstr "\n"
-"Hallo %(recipient_name)s,<br/>\n"
-"            <br/>\n"
-"            Wir benötigen zusätzliche Informationen, um Ihr Konto zu verifizieren. <br/>\n"
+"            You are working on a crowdfunding campaign on %(site_name)s.\n"
 "            <br/><br/>\n"
-"            Wenn Sie bereit sind, können Sie Ihre Identitätsüberprüfung erneut einreichen und wir sorgen dafür, dass sie überprüft wird.        "
-
-#: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:16
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:17
-msgctxt "email"
-msgid "\n"
-"            If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.\n"
-"            All donations will be returned to your supporters!\n"
+"            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.\n"
+"            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
-msgstr "\n"
-"            Wenn Sie Ihre Identitätsüberprüfung nicht abschließen, können wir Ihre Crowdfunding Kampagne nicht auszahlen.\n"
-"            Alle Spenden werden an deine Unterstützer zurückgeschickt!\n"
-"        "
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:25
+#: bluebottle/funding/templates/mails/messages/payout_account_marked_incomplete.html:21
 msgctxt "email"
-msgid "Provide additional data"
-msgstr "Zusätzliche Daten angeben"
+msgid "Provide additional details"
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:7
+#: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:6
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            Hi %(recipient_name)s,<br/>\n"
+"            Hi %(recipient_name)s,\n"
 "            <br/>\n"
-"            We have received some feedback on your identity verification. <br/>\n"
-"            Please check out the comments and make the appropriate changes. \n"
-"            <br/><br/>\n"
-"            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.\n"
-"        "
-msgstr "\n"
-"            Hallo %(recipient_name)s,<br/>\n"
 "            <br/>\n"
-"            Wir haben ein paar Rückmeldungen zu Ihrer Identitätsüberprüfung erhalten. <br/>\n"
-"            Bitte schauen Sie sich die Kommentare an und machen Sie die entsprechenden Änderungen. \n"
-"            <br/><br/>\n"
-"            Wenn Sie bereit sind, Sie können Ihre Identitätsüberprüfung erneut einreichen und wir werden sicherstellen, dass sie überprüft wird.\n"
+"            You are working on a crowdfunding campaign on %(site_name)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Earlier, you submitted information to verify your identity, but unfortunately, this was not successful.\n"
+"            This could be due to various reasons. Please check the link below to make sure your details are correct.\n"
+"            If you still have problems, contact the platform manager at %(contact_email)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Please do this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:26
+#: bluebottle/funding/templates/mails/messages/payout_account_rejected.html:25
 msgctxt "email"
-msgid "Update your data"
-msgstr "Daten aktualisieren"
+msgid "Check your details"
+msgstr ""
 
-#: bluebottle/funding/templates/mails/messages/payout_account_verified.html:7
+#: bluebottle/funding/templates/mails/messages/payout_account_verified.html:6
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            Hi %(recipient_name)s,<br/>\n"
-"           \n"
-"            Good news! Your identity is verified and you're all good to go.\n\n"
-"            If you filled out the entire creation flow, your crowdfunding campaign will be submitted for review. \n"
-"            Didn't complete your campaign yet? Go to %(site_name)s and enter the last details.\n"
+"            Hi %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            You are working on a crowdfunding campaign on %(site_name)s.\n"
+"            <br/><br/>\n"
+"            We have good news! Your identity has been verified, and you can continue with your crowdfunding campaign.\n"
+"            <br/><br/>\n"
+"            If your campaign has already started, you don’t need to do anything else. If it hasn’t started yet,\n"
+"            please check that everything is in order and submit your campaign for approval.\n"
 "        "
-msgstr "\n"
-"            Hallo %(recipient_name)s,<br/>\n"
-"           \n"
-"            Gute Nachrichten! Deine Identität ist verifiziert und du bist gut zu gehen.\n\n"
-"            Wenn Sie den gesamten Erstellungsfluss ausgefüllt haben, Ihre Crowdfunding Kampagne wird zur Überprüfung eingereicht. \n"
-"            Ihre Kampagne noch nicht abgeschlossen? Gehe zu %(site_name)s und gib die letzten Details ein.\n"
-"        "
-
-#: bluebottle/funding/templates/mails/messages/payout_account_verified.html:20
-msgctxt "email"
-msgid "Go to your activity"
-msgstr "Gehe zu deiner Aktivität"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/support_payout_account_rejected.html:7
 #, python-format
@@ -5107,81 +5066,61 @@ msgstr "Stripe link"
 msgid "Put activities on hold"
 msgstr "Aktivitäten aufhalten"
 
-#: bluebottle/funding_stripe/models.py:239
+#: bluebottle/funding_stripe/models.py:235
 msgid "Stripe publishable key"
 msgstr "Streifen publizierbarer Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:240
-#: bluebottle/funding_stripe/models.py:248
+#: bluebottle/funding_stripe/models.py:236
+#: bluebottle/funding_stripe/models.py:244
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Dies wird nur benötigt, wenn Sie ein bestimmtes Stripe-Konto verwenden möchten."
 
-#: bluebottle/funding_stripe/models.py:247
+#: bluebottle/funding_stripe/models.py:243
 msgid "Stripe secret key"
 msgstr "Geheimer Stripe-Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:255
+#: bluebottle/funding_stripe/models.py:251
 msgid "Stripe connect webhook secret"
 msgstr "Webhook Geheimnis für Stripe verbinden"
 
-#: bluebottle/funding_stripe/models.py:256
+#: bluebottle/funding_stripe/models.py:252
 msgid "The secret for connect webhook."
 msgstr "Das Geheimnis zum Verbinden von Webhook."
 
-#: bluebottle/funding_stripe/models.py:263
+#: bluebottle/funding_stripe/models.py:259
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe Zahlungsabsichten Webhook Geheimnis"
 
-#: bluebottle/funding_stripe/models.py:264
+#: bluebottle/funding_stripe/models.py:260
 msgid "The secret for payment intents webhook."
 msgstr "Das Geheimnis für Zahlung beabsichtigt webhook."
 
-#: bluebottle/funding_stripe/models.py:271
+#: bluebottle/funding_stripe/models.py:267
 msgid "Stripe payment sources webhook secret"
 msgstr "Stripe Zahlungsquellen Webhook Secret"
 
-#: bluebottle/funding_stripe/models.py:272
+#: bluebottle/funding_stripe/models.py:268
 msgid "The secret for payment sources webhook."
 msgstr "Das Geheimnis für Zahlungsquellen Webhook."
 
-#: bluebottle/funding_stripe/models.py:279
-#: bluebottle/funding_stripe/models.py:325
-msgid "Credit card"
-msgstr "Kreditkarte"
-
-#: bluebottle/funding_stripe/models.py:286
-#: bluebottle/funding_stripe/models.py:327
-msgid "Bancontact"
-msgstr "Sperrung"
-
-#: bluebottle/funding_stripe/models.py:293
-#: bluebottle/funding_stripe/models.py:326
-msgid "iDEAL"
-msgstr "iDEAL"
-
-#: bluebottle/funding_stripe/models.py:300
-#: bluebottle/funding_stripe/models.py:328
-msgid "Direct debit"
-msgstr "Lastschrift"
-
-#: bluebottle/funding_stripe/models.py:364
+#: bluebottle/funding_stripe/models.py:311
 msgid "Starts with 'acct_...'"
 msgstr "Beginnt mit 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:500
+#: bluebottle/funding_stripe/models.py:447
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:501
+#: bluebottle/funding_stripe/models.py:448
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:512
+#: bluebottle/funding_stripe/models.py:459
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:546
-#: bluebottle/funding_stripe/models.py:547
+#: bluebottle/funding_stripe/models.py:493
+#: bluebottle/funding_stripe/models.py:494
 msgid "Stripe external account"
 msgstr "Externes Konto streifen"
 
@@ -5819,12 +5758,12 @@ msgstr "thema"
 msgid "themes"
 msgstr "themen"
 
-#: bluebottle/initiatives/serializers.py:451
-#: bluebottle/initiatives/serializers.py:468
+#: bluebottle/initiatives/serializers.py:452
+#: bluebottle/initiatives/serializers.py:469
 msgid "Name is required"
 msgstr "Name ist erforderlich"
 
-#: bluebottle/initiatives/serializers.py:469
+#: bluebottle/initiatives/serializers.py:470
 msgid "Email is required"
 msgstr "E-Mail ist erforderlich"
 
@@ -11268,6 +11207,11 @@ msgstr "\n\n"
 "        %(author_name)s hat gerade einen Kommentar zu Ihrem <i>%(task_title)s</i>\n"
 "        Wallpost gepostet.\n"
 "    "
+
+#: tenants/action-against-corona/settings.py:30
+#: tenants/boost-your-business/settings.py:32 tenants/mars/settings.py:31
+msgid "English"
+msgstr ""
 
 #, fuzzy, python-format
 #~| msgid ""

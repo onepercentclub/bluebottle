@@ -130,6 +130,7 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
 
             serializer.instance.external_accounts.all().delete()
             serializer.instance.account_id = None
+            serializer.instance.tos_acceptance = False
 
         return super().perform_update(serializer)
 

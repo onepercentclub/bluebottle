@@ -915,8 +915,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.verify()
         # Missing fields
         self.connect_account.payouts_enabled = False
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
 
         self.execute_hook()
@@ -924,15 +924,15 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payout_account.status, "incomplete")
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
     def test_incomplete_open(self):
         self.verify()
         self.approve()
 
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
         self.execute_hook()
 
@@ -941,8 +941,9 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 3)
 
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
+
         self.assertEqual(
             mail.outbox[1].subject, "Live campaign identity verification failed!"
         )
@@ -955,8 +956,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.approve()
 
         self.connect_account.charges_enabled = False
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
         self.execute_hook()
 
@@ -969,8 +970,8 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             "this passport smells fishy"
         )
         self.connect_account.individual.verification.status = "unverified"
-        self.connect_account.individual.requirements = {
-            "eventually_due": ["document.front"]
+        self.connect_account.requirements = {
+            "eventually_due": ["individual.document.front"]
         }
 
         self.execute_hook()
@@ -979,7 +980,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, "We need more information to verify your account"
+            message.subject, "Action required for your crowdfunding campaign"
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
 

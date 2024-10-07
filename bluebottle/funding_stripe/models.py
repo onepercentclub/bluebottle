@@ -127,6 +127,7 @@ class StripePayment(Payment):
             self.donation.save()
             if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
+
         return intent
 
 

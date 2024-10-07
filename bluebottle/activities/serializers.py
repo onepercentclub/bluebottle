@@ -161,6 +161,8 @@ class ActivityPreviewSerializer(ModelSerializer):
 
     def get_contribution_duration(self, obj):
         if hasattr(obj, 'contribution_duration'):
+            if not obj.contribution_data:
+                return {}
             if len(obj.contribution_duration) == 0 or obj.contribution_duration[0].period == 0:
                 return {}
             elif len(obj.contribution_duration) == 1:

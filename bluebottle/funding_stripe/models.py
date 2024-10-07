@@ -115,6 +115,8 @@ class StripePayment(Payment):
             self.states.fail()
         elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
             self.states.refund()
+        elif intent.status == 'pending' and self.status != self.states.pending.value:
+            self.states.authorize()
         elif intent.status == 'failed' and self.status != self.states.failed.value:
             self.states.fail()
         elif intent.status == 'succeeded':

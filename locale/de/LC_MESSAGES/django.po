@@ -10202,19 +10202,6 @@ msgstr "\n"
 "    <p>{user} haben Ihren Beitrag zu \"%(title)s\" neu gestartet.</p>\n"
 "    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_stopped.html:5
-#| msgid ""
-#| "\n"
-#| "        Hello %(receiver_name)s\n"
-#| "        <br><br>\n"
-#| "    "
-msgctxt "email"
-msgid "\n"
-"    <p>%(user)s have stopped your contributions to \"%(title)s\".</p>\n"
-"    "
-msgstr "\n"
-"    <p>%(user)s haben Ihre Beiträge zu \"%(title)s\" beendet.</p>\n"
-"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:6
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:6
@@ -10261,8 +10248,8 @@ msgctxt "email"
 msgid "\n"
 "        Team captain contact details:\n"
 "      "
-msgstr "Kontaktdaten \n"
-"        Team-Kapitän\n"
+msgstr "\n"
+"       Kontaktdaten  Team-Kapitän:\n"
 "      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:16
@@ -10282,8 +10269,8 @@ msgctxt "email"
 msgid "\n"
 "      Team captain contact details:\n"
 "    "
-msgstr "Kontaktdaten \n"
-"      Team-Kapitän\n"
+msgstr "\n"
+"      Kontaktdaten  Team-Kapitän:\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/team_accepted.html:5

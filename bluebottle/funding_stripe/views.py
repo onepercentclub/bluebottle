@@ -281,19 +281,22 @@ class IntentWebHookView(View):
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
+    def get_payment(self, payment_id):
+        if payment_id.starts_with('pi_'):
+            intent = PaymentIntent.objects.get(intent_id=payment_id)
 
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
             try:
-                intent.donation.payment.payment_intent = intent
-                intent.donation.payment.save()
                 return intent.payment
-            except Donor.payment.RelatedObjectDoesNotExist:
-                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-                return payment
+            except StripePayment.DoesNotExist:
+                try:
+                    intent.donation.payment.payment_intent = intent
+                    intent.donation.payment.save()
+                    return intent.payment
+                except Donor.payment.RelatedObjectDoesNotExist:
+                    payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                    return payment
+        if payment_id.starts_with('py_'):
+            return StripePayment.objects.filter(payment_id=payment_id).first()
 
 
 class SourceWebHookView(View):

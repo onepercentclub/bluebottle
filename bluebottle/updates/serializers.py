@@ -59,6 +59,8 @@ class UpdateSerializer(serializers.ModelSerializer):
             data['author'] = None
         if instance.fake_name:
             data['author'] = None
+        if instance.contribution and instance.contribution.anonymous:
+            data['author'] = None
 
         return data
 

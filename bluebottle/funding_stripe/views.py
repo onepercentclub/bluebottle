@@ -253,6 +253,13 @@ class IntentWebHookView(View):
 
                 return HttpResponse('Updated payment')
 
+            elif event.type == 'charge.pending':
+                payment = self.get_payment(event.data.object.id)
+                if payment.status != payment.states.pending.value:
+                    payment.states.authorize(save=True)
+
+                return HttpResponse('Updated payment')
+
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.failed.value:

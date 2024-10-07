@@ -34,6 +34,15 @@ class Update(TriggerMixin, models.Model):
         null=True
     )
 
+    contribution = models.ForeignKey(
+        'activities.Contributor',
+        related_name='updates',
+        verbose_name=_('Related contribution'),
+        on_delete=models.deletion.CASCADE,
+        blank=True,
+        null=True
+    )
+
     message = models.TextField(_('message'), blank=True, null=True)
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
@@ -43,6 +52,11 @@ class Update(TriggerMixin, models.Model):
     created = models.DateTimeField(_("created"), default=now)
 
     notify = models.BooleanField(_('notify supporters'), default=False)
+
+    @property
+    def fake_name(self):
+        if self.contribution and getattr(self.contribution, 'name', None):
+            return self.contribution.name
 
     def save(self, *args, **kwargs):
         if self.parent and self.parent.parent:
@@ -56,6 +70,11 @@ class Update(TriggerMixin, models.Model):
 
     class JSONAPIMeta():
         resource_name = 'updates'
+
+    def __str__(self):
+        if self.author:
+            return f'{self.author} - {self.created.strftime("%x %X")}'
+        return _('Anonymous - {time}').format(time=self.created.strftime("%x %X"))
 
 
 class UpdateImage(models.Model):

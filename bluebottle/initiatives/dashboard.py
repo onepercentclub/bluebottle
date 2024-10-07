@@ -5,6 +5,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
 from bluebottle.initiatives.models import Initiative
+from bluebottle.offices.admin import region_manager_filter
 
 
 class RecentInitiatives(DashboardModule):
@@ -16,6 +17,8 @@ class RecentInitiatives(DashboardModule):
 
     def init_with_context(self, context):
         initiatives = Initiative.objects.filter(status='submitted').order_by('-created')
+        user = context.request.user
+        initiatives = region_manager_filter(initiatives, user)
         self.children = initiatives[:self.limit]
 
 

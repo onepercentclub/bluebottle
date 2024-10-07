@@ -151,6 +151,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
         super(BaseUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
+    can_pledge = serializers.BooleanField(read_only=True)
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(
@@ -166,7 +167,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     class Meta(object):
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
-                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
+                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous', 'can_pledge')
 
 
 class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -268,6 +269,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    can_pledge = serializers.BooleanField(read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
         read_only=True, source='partner_organization'
@@ -283,11 +285,12 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
-            'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
+            'id_for_ember', 'primary_language',
+            'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization', 'segments', 'required', 'has_initiatives',
-            'hours_spent', 'hours_planned'
+            'hours_spent', 'hours_planned', 'can_pledge'
         )
 
 
@@ -313,6 +316,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
+    can_pledge = serializers.BooleanField(read_only=True)
 
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
@@ -356,7 +360,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed', 'segments'
+            'subscribed', 'segments', 'can_pledge'
         )
 
 
@@ -710,7 +714,7 @@ class MemberProfileSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'about_me', 'required',
             'birthdate', 'segments', 'phone_number',
-            'location', 'place', 'themes', 'skills',
+            'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
             'subscribed', 'matching_options_set'
         )

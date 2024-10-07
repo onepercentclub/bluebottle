@@ -1,0 +1,23 @@
+{% extends "base.mail.html" %}
+{% load djmoney %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            Hi {{ recipient_name }},
+            <br/><br/>
+            You are working on a crowdfunding campaign on {{ site_name }}.
+            <br/><br/>
+            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.
+            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.
+        {% endblocktrans %}
+    </p>
+
+{% endblock content %}
+
+{% block action %}
+    <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
+       {% trans 'Provide additional details' context 'email' %}
+    </a>
+{% endblock %}`

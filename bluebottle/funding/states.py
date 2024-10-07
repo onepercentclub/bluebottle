@@ -67,6 +67,30 @@ class FundingStateMachine(ActivityStateMachine):
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 
+    def kyc_is_valid(self):
+        return (
+            self.instance.payout_account
+            and self.instance.payout_account.status == "verified"
+        )
+
+    submit = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.submitted,
+        description=_("Submit the activity for approval."),
+        automatic=False,
+        name=_("Submit"),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted,
+            kyc_is_valid,
+        ],
+    )
+
     approve = Transition(
         [
             ActivityStateMachine.needs_work,
@@ -98,9 +122,8 @@ class FundingStateMachine(ActivityStateMachine):
             'in the back office and appear in your reporting.'
         ),
         automatic=False,
-        conditions=[
-            no_donations
-        ],
+        permission=ActivityStateMachine.is_owner,
+        conditions=[no_donations],
     )
 
     request_changes = Transition(
@@ -364,7 +387,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         [new],
         pending,
         name=_('Authorise'),
-        description=_("Payment has been authorized."),
+        description=_("Payment has been authorised."),
         automatic=True,
     )
 
@@ -623,7 +646,7 @@ class PayoutAccountStateMachine(ModelStateMachine):
     )
 
     set_incomplete = Transition(
-        [new, pending, rejected, verified],
+        [pending, verified],
         incomplete,
         name=_('Set incomplete'),
         description=_(

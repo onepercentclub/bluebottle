@@ -1,4 +1,7 @@
 from future import standard_library
+
+from ..updates.models import Update
+
 standard_library.install_aliases()
 import urllib.parse
 
@@ -187,7 +190,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     base_model = Wallpost
     list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address', 'pinned')
-    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
+    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter))
     ordering = ('-created',)
     search_fields = (
         'textwallpost__text', 'mediawallpost__text',
@@ -282,16 +285,16 @@ admin.site.register(Reaction, ReactionAdmin)
 
 class DonorWallpostInline(admin.TabularInline):
 
-    model = Wallpost
-    readonly_fields = ('wallpost', 'donation', 'author', 'content_type', 'text')
+    model = Update
+    readonly_fields = ('edit', 'author', 'text')
     fields = readonly_fields
     extra = 0
 
     def text(self, obj):
         return obj.systemwallpost.text
 
-    def wallpost(self, obj):
-        url = reverse('admin:wallposts_wallpost_change', args=(obj.id,))
+    def edit(self, obj):
+        url = reverse('admin:updates_update_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
 

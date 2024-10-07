@@ -233,13 +233,17 @@ class UpdateDetailView(APITestCase):
 
     def test_put_change_author(self):
         self.perform_update({'author': BlueBottleUserFactory.create()}, user=self.user)
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()["data"]["relationships"]["author"]["data"]["id"],
+            str(self.user.pk),
+        )
 
     def test_put_change_activity(self):
         self.perform_update({'author': DeedFactory.create()}, user=self.user)
-
-        self.assertStatus(status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            self.response.json()["data"]["relationships"]["activity"]["data"]["id"],
+            str(self.defaults["activity"].pk),
+        )
 
     def test_delete(self):
         self.perform_delete(user=self.user)

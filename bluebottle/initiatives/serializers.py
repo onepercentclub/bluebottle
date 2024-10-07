@@ -24,6 +24,7 @@ from bluebottle.fsm.serializers import (
     AvailableTransitionsField, TransitionSerializer, CurrentStatusField
 )
 from bluebottle.funding.states import FundingStateMachine
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
@@ -121,18 +122,30 @@ class CurrentMemberSerializer(MemberSerializer):
     )
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
+    can_pledge = serializers.BooleanField(read_only=True)
+
+    payout_account = SerializerMethodResourceRelatedField(
+        model=StripePayoutAccount,
+        many=False,
+        read_only=True,
+    )
+
+    def get_payout_account(self, obj):
+        return StripePayoutAccount.objects.filter(owner=obj).first()
 
     def get_has_initiatives(self, obj):
         return obj.is_initiator
 
     class Meta(MemberSerializer.Meta):
         fields = MemberSerializer.Meta.fields + (
-            'hours_spent',
-            'hours_planned',
-            'has_initiatives',
-            'segments',
-            'has_initiatives',
-            'profile',
+            "hours_spent",
+            "hours_planned",
+            "has_initiatives",
+            "segments",
+            "has_initiatives",
+            "profile",
+            "can_pledge",
+            "payout_account",
         )
         meta_fields = ('permissions', )
 
@@ -149,10 +162,11 @@ class CurrentMemberSerializer(MemberSerializer):
 
 class InitiativeImageSerializer(ImageSerializer):
     sizes = {
-        'preview': '300x168',
-        'small': '320x180',
-        'large': '600x337',
-        'cover': '960x540'
+        "email": "200x200",
+        "preview": "300x168",
+        "small": "320x180",
+        "large": "600x337",
+        "cover": "960x540",
     }
     content_view_name = 'initiative-image'
     relationship = 'initiative_set'

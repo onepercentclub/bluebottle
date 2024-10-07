@@ -24,7 +24,12 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        bank_account = BankAccountFactory.create(status='verified')
+        bank_account = BankAccountFactory.create(
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
+        )
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
@@ -96,7 +101,9 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        account = StripePayoutAccountFactory.create(status='verified')
+        account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         bank_account = ExternalAccountFactory.create(connect_account=account, status='verified')
 
         self.funding = FundingFactory.create(
@@ -158,7 +165,9 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()
-        self.payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))
         self.bank_account_url = reverse('admin:funding_bankaccount_change', args=(self.bank_account.id,))

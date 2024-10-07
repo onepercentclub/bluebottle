@@ -75,6 +75,12 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
             else:
                 queryset = queryset.none()
 
+        sort = self.request.GET.get("sort")
+        if sort == "start":
+            queryset = queryset.order_by("slots__start")
+        if sort == "-start":
+            queryset = queryset.order_by("-slots__start")
+
         return queryset.filter(activity_id=self.kwargs["activity_id"])
 
     queryset = Team.objects.prefetch_related("activity", "registration")

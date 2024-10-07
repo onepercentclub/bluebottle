@@ -42,6 +42,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
+    PeriodicParticipant,
 )
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
@@ -61,12 +62,11 @@ class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, Sta
         DeadlineParticipant,
         ScheduleParticipant,
         TeamScheduleParticipant,
+        PeriodicParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     ordering = ('-created',)
 
@@ -136,12 +136,11 @@ class ContributorChildAdmin(
     ordering = ('-created',)
     show_in_index = True
 
-    office_subregion_path = 'activity__office_location__subregion'
-
     date_hierarchy = 'contributor_date'
 
+    raw_id_fields = ('user',)
+
     readonly_fields = [
-        "user",
         "activity",
         "transition_date",
         "contributor_date",
@@ -225,8 +224,6 @@ class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, St
     )
     date_hierarchy = 'start'
 
-    office_subregion_path = 'contributor__activity__office_location__subregion'
-
     ordering = ('-start',)
 
     def lookup_allowed(self, lookup, value):
@@ -259,8 +256,6 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
-
-    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     fields = [
         'contributor',
@@ -363,8 +358,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
-
-    office_subregion_path = 'office_location__subregion'
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
@@ -661,8 +654,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
-
-    office_subregion_path = 'office_location__subregion'
 
     def lookup_allowed(self, key, value):
         if key in [

@@ -1,0 +1,21 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for update in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right">
+            {{ update.created|date }}<br>
+        </span>
+        <a href="{% url 'admin:updates_update_change' update.id %}" >
+            <b>{{ update.author }}</b>
+        </a>
+        <br>
+        {{ update.activity.title|truncatechars:70 }}
+        <br>
+        <i>{{ update.message|truncatewords:20 }}</i>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

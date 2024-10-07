@@ -455,6 +455,7 @@ class BaseContributorSerializer(ModelSerializer):
             'user',
             'activity',
             'status',
+            'current_status',
         )
         meta_fields = ('transitions', 'created', 'updated', 'current_status')
 

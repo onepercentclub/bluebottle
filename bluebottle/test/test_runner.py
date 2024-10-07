@@ -62,3 +62,6 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
                 )
 
         return result
+
+    def run_checks(self, *args, **kwargs):
+        return

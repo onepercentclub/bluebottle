@@ -9900,7 +9900,7 @@ msgctxt "email"
 msgid "\n"
 "    You can always stop your contributions anytime and resume them at a later date.\n"
 "  "
-msgstr "U\n"
+msgstr "\n"
 "    Você sempre pode interromper suas contribuições a qualquer momento e retomá-las em uma data posterior.\n"
 "  "
 

@@ -251,32 +251,41 @@ class IntentWebHookView(View):
                     payment.donation.save()
                     payment.save()
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to succeeded')
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to failed')
 
-            elif event.type == 'charge.refunded':
+            elif event.type == 'charge.pending':
                 if not event.data.object.payment_intent:
                     return HttpResponse('Not an intent payment')
 
                 payment = self.get_payment(event.data.object.payment_intent)
+                if payment.status != payment.states.pending.value:
+                    payment.states.authorize(save=True)
+
+                return HttpResponse('Updated payment to pending')
+
+            elif event.type == 'charge.refunded':
+                if not event.data.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
+                payment = self.get_payment(event.data.payment_intent)
                 payment.states.refund(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to refunded')
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
-
+    def get_payment(self, payment_id):
+        intent = PaymentIntent.objects.get(intent_id=payment_id)
         try:
             return intent.payment
         except StripePayment.DoesNotExist:

@@ -28,6 +28,7 @@ from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
+from bluebottle.utils.filters import SearchFilterBackend
 from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission, IsActivityManager
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
@@ -259,6 +260,25 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
+
+
+class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
+    queryset = Donor.objects.all()
+    serializer_class = DonorCreateSerializer
+
+    filter_backends = [SearchFilterBackend]
+    filterset_fields = ['status']
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user'],
+        'reward': ['reward'],
+        'fundraiser': ['fundraiser'],
+    }
+
+    def get_queryset(self):
+        activity_id = self.kwargs['activity_id']
+        return Donor.objects.filter(activity_id=activity_id).filter(user=self.request.user).order_by('-created')
 
 
 class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):

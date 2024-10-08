@@ -13,7 +13,7 @@ from bluebottle.funding.effects import (
     GeneratePayoutsEffect, GenerateDonorWallpostEffect,
     RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
-    SubmitConnectedActivitiesEffect, SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
+    SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
     ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
 )
 from bluebottle.funding.messages import (
@@ -271,17 +271,6 @@ class BankAccountTriggers(TriggerManager):
                     'connect_account',
                     PlainPayoutAccountStateMachine.reject,
                     description='Reject connected KYC account'
-                )
-            ]
-        ),
-        TransitionTrigger(
-            BankAccountStateMachine.verify,
-            effects=[
-                SubmitConnectedActivitiesEffect,
-                RelatedTransitionEffect(
-                    'connect_account',
-                    PlainPayoutAccountStateMachine.verify,
-                    description='Verify connected KYC account'
                 )
             ]
         ),

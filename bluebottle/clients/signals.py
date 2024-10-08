@@ -1,13 +1,13 @@
-from django.db import models, connection
+from django.db import connection
 from django_elasticsearch_dsl.registries import registry
 from django_elasticsearch_dsl.signals import CelerySignalProcessor
-from django.core.exceptions import ObjectDoesNotExist
 from celery import shared_task
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 
 from django_elasticsearch_dsl.signals import RealTimeSignalProcessor
+
 
 class TenantCelerySignalProcessor(RealTimeSignalProcessor):
     """Celery signal processor.

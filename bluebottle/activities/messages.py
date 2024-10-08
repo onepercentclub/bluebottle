@@ -199,12 +199,14 @@ class MatchingActivitiesNotification(TransitionMessage):
         from bluebottle.time_based.models import DateActivity
 
         context = {
-            'title': activity.title,
-            'url': activity.get_absolute_url(),
-            'image': (
-                reverse('activity-image', args=(activity.pk, '200x200'))
-                if activity.image else
-                reverse('initiative-image', args=(activity.initiative.pk, '200x200'))
+            "title": activity.title,
+            "url": activity.get_absolute_url(),
+            "image": (
+                reverse("activity-image", args=(activity.pk, "200x200"))
+                if activity.image
+                else reverse(
+                    "initiative-image", args=(activity.initiative.pk, "200x200")
+                )
             ),
             'expertise': activity.expertise.name if activity.expertise else None,
             'theme': activity.initiative.theme.name,

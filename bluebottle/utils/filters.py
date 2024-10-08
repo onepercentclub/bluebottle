@@ -9,6 +9,7 @@ from elasticsearch_dsl.query import (
     Terms, Term, Nested, MultiMatch, Bool, Range, MatchAll
 )
 from rest_framework import filters
+from rest_framework.filters import BaseFilterBackend
 
 from bluebottle.segments.models import Segment
 from bluebottle.utils.utils import get_current_language
@@ -194,3 +195,20 @@ class ElasticSearchFilter(filters.SearchFilter):
         search = request.GET.get('filter[search]')
 
         return self.search_class(search, filter, request.GET.get('sort'), user=request.user)
+
+
+class SearchFilterBackend(BaseFilterBackend):
+    """
+    A custom filter backend that supports filtering using `filter[fieldname]=value`.
+    """
+
+    def filter_queryset(self, request, queryset, view):
+        # Get all query parameters that start with "filter["
+        filter_params = {key[7:-1]: value for key, value in request.GET.items() if
+                         key.startswith('filter[') and key.endswith(']')}
+
+        # Apply the filters dynamically to the queryset
+        if filter_params:
+            queryset = queryset.filter(**filter_params)
+
+        return queryset

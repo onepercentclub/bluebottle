@@ -387,7 +387,7 @@ class BasePaymentStateMachine(ModelStateMachine):
         [new],
         pending,
         name=_('Authorise'),
-        description=_("Payment has been authorized."),
+        description=_("Payment has been authorised."),
         automatic=True,
     )
 

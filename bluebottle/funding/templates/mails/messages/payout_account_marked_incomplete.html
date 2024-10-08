@@ -5,23 +5,19 @@
 {% block content %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},<br/>
-            <br/>
-            We have need addiotional information in order to verify your account. <br/>
+            Hi {{ recipient_name }},
             <br/><br/>
-            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
+            You are working on a crowdfunding campaign on {{ site_name }}.
+            <br/><br/>
+            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.
+            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.
         {% endblocktrans %}
     </p>
-    <p class="important">
-        {% blocktrans context 'email' %}
-            If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.
-            All donations will be returned to your supporters!
-        {% endblocktrans %}
-    </p>
+
 {% endblock content %}
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
-       {% trans 'Provide additional data' context 'email' %}
+       {% trans 'Provide additional details' context 'email' %}
     </a>
 {% endblock %}`

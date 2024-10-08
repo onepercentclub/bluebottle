@@ -53,6 +53,11 @@ class Update(TriggerMixin, models.Model):
 
     notify = models.BooleanField(_('notify supporters'), default=False)
 
+    @property
+    def fake_name(self):
+        if self.contribution and getattr(self.contribution, 'name', None):
+            return self.contribution.name
+
     def save(self, *args, **kwargs):
         if self.parent and self.parent.parent:
             raise ValidationError('Replies can not be nested')

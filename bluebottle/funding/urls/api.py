@@ -9,13 +9,14 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
-    PayoutDetails
+    PayoutDetails, ActivityDonationList
 )
 
 
 urlpatterns = [
     url(r'^/donations$', DonationList.as_view(), name='funding-donation-list'),
     url(r'^/donations/(?P<pk>[\d]+)$', DonationDetail.as_view(), name='funding-donation-detail'),
+    url(r'^/(?P<activity_id>[\d]+)/donations$', ActivityDonationList.as_view(), name='activity-donation-list'),
 
     url(r'^/rewards$', RewardList.as_view(), name='funding-reward-list'),
     url(r'^/rewards/(?P<pk>[\d]+)$', RewardDetail.as_view(), name='funding-reward-detail'),

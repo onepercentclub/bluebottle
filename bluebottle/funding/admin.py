@@ -42,6 +42,9 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount, StripePayment
 from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment, TelesomBankAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.segments.models import SegmentType
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.utils import reverse_signed
@@ -154,7 +157,21 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
+    detail_fields = ("title", "description", "image", "video_url")
+
+    status_fields = (
+        "initiative",
+        "owner",
+        "slug",
+        "highlight",
+        "created",
+        "updated",
+        "has_deleted_data",
+        "status",
+        "states",
+    )
+
+    campaign_fields = (
         'started',
         'duration',
         'deadline',
@@ -165,6 +182,36 @@ class FundingAdmin(ActivityChildAdmin):
         'donors_link',
         'bank_account',
     )
+
+    def get_fieldsets(self, request, obj=None):
+        settings = InitiativePlatformSettings.objects.get()
+        fieldsets = [
+            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (_("Date & amount"), {"fields": self.campaign_fields}),
+        ]
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                if "office_restriction" not in self.office_fields:
+                    self.office_fields += ("office_restriction",)
+                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+
+        if request.user.is_superuser:
+            fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
+
+        if SegmentType.objects.count():
+            fieldsets.append(
+                (
+                    _("Segments"),
+                    {
+                        "fields": [
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
+                        ]
+                    },
+                )
+            )
+        return fieldsets
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',

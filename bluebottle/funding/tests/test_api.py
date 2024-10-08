@@ -1278,17 +1278,16 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(CurrencySettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
-        stripe = StripePaymentProviderFactory.create()
-        stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
-        flutterwave_provider = FlutterwavePaymentProviderFactory.create()
-
-        cur = flutterwave_provider.paymentcurrency_set.first()
-        cur.min_amount = 1000
-        cur.default1 = 1000
-        cur.default2 = 2000
-        cur.default3 = 5000
-        cur.default4 = 10000
-        cur.save()
+        provider = StripePaymentProviderFactory.create()
+        provider.paymentcurrency_set.create(
+            code='EUR',
+            min_amount=5,
+            max_amount=None,
+            default1=10,
+            default2=20,
+            default3=50,
+            default4=100,
+        )
 
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
@@ -1306,119 +1305,6 @@ class CurrencySettingsTestCase(BluebottleTestCase):
                 'minAmount': 5.00,
                 'maxAmount': None
             } in response.data['platform']['currencies']
-        )
-
-
-class PayoutAccountTestCase(BluebottleTestCase):
-    def setUp(self):
-        super(PayoutAccountTestCase, self).setUp()
-        StripePaymentProvider.objects.all().delete()
-        self.stripe = StripePaymentProviderFactory.create()
-        flutterwave_provider = FlutterwavePaymentProviderFactory.create()
-        cur = flutterwave_provider.paymentcurrency_set.first()
-        cur.min_amount = 1000
-        cur.default1 = 1000
-        cur.default2 = 2000
-        cur.default3 = 5000
-        cur.default4 = 10000
-        cur.save()
-        self.stripe_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id"
-        )
-        self.stripe_bank = ExternalAccountFactory.create(
-            connect_account=self.stripe_account, status="verified"
-        )
-
-        self.funding = FundingFactory.create(
-            bank_account=self.stripe_bank, target=Money(5000, "EUR"), status="open"
-        )
-        self.funding_url = reverse("funding-detail", args=(self.funding.id,))
-        self.connect_account = stripe.Account("some-connect-id")
-
-        self.connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [self.connect_account]
-            })
-        })
-
-    def test_stripe_methods(self):
-        self.stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
-        with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-        ):
-            with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_account
-            ):
-                response = self.client.get(self.funding_url)
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        included = json.loads(response.content)['included']
-
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
-
-        self.assertEqual(
-            payment_methods,
-            [
-                {
-                    u'code': u'bancontact',
-                    u'name': u'Bancontact',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'BE']
-                },
-                {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR', u'USD'],
-                    u'countries': []
-                },
-                {
-                    u'code': u'direct-debit',
-                    u'name': u'Direct debit',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': []
-                },
-                {
-                    u'code': u'ideal',
-                    u'name': u'iDEAL',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'NL']
-                }
-            ]
-        )
-
-    def test_stripe_just_credit_card(self):
-        self.stripe.ideal = False
-        self.stripe.direct_debit = False
-        self.stripe.bancontact = False
-        self.stripe.save()
-
-        with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-        ):
-            with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_account
-            ):
-                response = self.client.get(self.funding_url)
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        included = json.loads(response.content)['included']
-
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
-
-        self.assertEqual(
-            payment_methods,
-            [
-                {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'currencies': [u'USD', u'EUR', u'GBP', u'AUD'],
-                    u'provider': u'stripe',
-                    u'countries': []
-                }
-            ]
         )
 
 

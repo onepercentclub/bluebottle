@@ -138,8 +138,9 @@ class ContributorChildAdmin(
 
     date_hierarchy = 'contributor_date'
 
+    raw_id_fields = ('user',)
+
     readonly_fields = [
-        "user",
         "activity",
         "transition_date",
         "contributor_date",

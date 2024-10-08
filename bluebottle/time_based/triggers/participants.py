@@ -215,6 +215,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             return True
         return effect.instance.activity.capacity > effect.instance.activity.accepted_participants.count() - 1
 
+    def activity_has_started(effect):
+        """ Activity has started """
+        if effect.instance.activity.start:
+            return effect.instance.activity.start < now().date()
+        return True
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -259,6 +265,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 NotificationEffect(ManagerParticipantAddedOwnerNotification),
                 NotificationEffect(ParticipantAddedNotification),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.succeed,
+                    conditions=[
+                        activity_has_started
+                    ]
+                ),
                 RelatedTransitionEffect(
                     'activity',
                     DeadlineActivityStateMachine.lock,

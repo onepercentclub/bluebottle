@@ -43,6 +43,9 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class StripeSourcePaymentList(PaymentList):
@@ -118,12 +121,16 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     }
 
     def perform_update(self, serializer):
-        if serializer.instance.country != serializer.validated_data["country"]:
+        if (
+            "country" in serializer.validated_data
+            and serializer.instance.country != serializer.validated_data["country"]
+        ):
             if serializer.instance.status == "verified":
                 raise ValidationError("Cannot change country of verified account")
 
             serializer.instance.external_accounts.all().delete()
             serializer.instance.account_id = None
+            serializer.instance.tos_acceptance = False
 
         return super().perform_update(serializer)
 
@@ -244,32 +251,41 @@ class IntentWebHookView(View):
                     payment.donation.save()
                     payment.save()
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to succeeded')
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to failed')
 
-            elif event.type == 'charge.refunded':
+            elif event.type == 'charge.pending':
                 if not event.data.object.payment_intent:
                     return HttpResponse('Not an intent payment')
 
                 payment = self.get_payment(event.data.object.payment_intent)
+                if payment.status != payment.states.pending.value:
+                    payment.states.authorize(save=True)
+
+                return HttpResponse('Updated payment to pending')
+
+            elif event.type == 'charge.refunded':
+                if not event.data.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
+                payment = self.get_payment(event.data.payment_intent)
                 payment.states.refund(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to refunded')
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
-
+    def get_payment(self, payment_id):
+        intent = PaymentIntent.objects.get(intent_id=payment_id)
         try:
             return intent.payment
         except StripePayment.DoesNotExist:
@@ -385,7 +401,9 @@ class ConnectWebHookView(View):
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            return HttpResponse('Signature failed to verify', status=400)
+            error = "Signature failed to verify"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
         try:
             if event.type == "account.updated":
@@ -397,7 +415,9 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
+            error = "Payout not found"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

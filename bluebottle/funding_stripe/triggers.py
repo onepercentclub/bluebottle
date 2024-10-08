@@ -13,7 +13,7 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect
+from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptTosEffect
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
@@ -89,6 +89,10 @@ class StripePayoutAccountTriggers(TriggerManager):
         """The connect account is verified"""
         return self.instance.requirements == []
 
+    def is_not_complete(self):
+        """The connect account is verified"""
+        return (not self.instance.requirements == [])
+
     def payments_are_disabled(self):
         """The connect account is verified"""
         return not self.instance.payments_enabled
@@ -143,6 +147,10 @@ class StripePayoutAccountTriggers(TriggerManager):
                     StripePayoutAccountStateMachine.verify,
                     conditions=[is_complete, account_verified],
                 ),
+                TransitionEffect(
+                    StripePayoutAccountStateMachine.set_incomplete,
+                    conditions=[is_not_complete],
+                ),
             ],
         ),
         ModelChangedTrigger(
@@ -156,6 +164,12 @@ class StripePayoutAccountTriggers(TriggerManager):
                     StripePayoutAccountStateMachine.submit,
                     conditions=[is_complete],
                 ),
+            ],
+        ),
+        ModelChangedTrigger(
+            ["tos_accepted"],
+            effects=[
+                AcceptTosEffect,
             ],
         ),
     ]

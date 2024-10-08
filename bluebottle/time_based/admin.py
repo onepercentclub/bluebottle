@@ -341,7 +341,7 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
-    readonly_fields = ('team', 'user', 'created')
+    readonly_fields = ('team', 'created')
     fields = ('team', 'user', 'status', 'states', 'created')
     raw_id_fields = ('user', 'team')
 
@@ -1610,7 +1610,7 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        "user", "activity", "created", "updated",
+        "activity", "created", "updated",
         "registration_info",
         "slot_info",
     ]
@@ -1686,7 +1686,8 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ["user", "document", "created", "activity"]
+    raw_id_fields = ("user",)
+    readonly_fields = ["document", "created", "activity"]
     fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 

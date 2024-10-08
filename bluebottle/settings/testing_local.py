@@ -10,7 +10,6 @@ DATABASES = {
         "PASSWORD": "postgres",
         "DISABLE_SERVER_SIDE_CURSORS": True,  # this prevents issues with connection pooling
         "MIGRATE": False,
-        "TEST": {"MIGRATE": False},
     },
 
 }

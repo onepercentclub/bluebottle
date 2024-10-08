@@ -252,6 +252,7 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': UpcomingFacet(),
         'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
+        'status': TermsFacet(field='status'),
         'matching': MatchingFacet(field='matching'),
         'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),

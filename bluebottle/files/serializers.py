@@ -132,10 +132,11 @@ class ImageField(ResourceRelatedField):
 
 
 IMAGE_SIZES = {
-    'preview': '292x164',
-    'small': '320x180',
-    'large': '600x337',
-    'cover': '1568x882'
+    "email": "200x200",
+    "preview": "292x164",
+    "small": "320x180",
+    "large": "600x337",
+    "cover": "1568x882",
 }
 
 

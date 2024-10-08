@@ -301,7 +301,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
 class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
     add = Transition(
         [ContributorStateMachine.new],
-        ParticipantStateMachine.succeeded,
+        ParticipantStateMachine.accepted,
         name=_("Add"),
         description=_("Add this person as a participant of this activity."),
         automatic=True,

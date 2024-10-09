@@ -17,12 +17,12 @@ from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptT
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
-    ExternalAccount,
+    ExternalAccount, StripePayment,
 )
 from bluebottle.funding_stripe.states import (
     StripePayoutAccountStateMachine,
     StripeSourcePaymentStateMachine,
-    StripeBankAccountStateMachine,
+    StripeBankAccountStateMachine, StripePaymentStateMachine,
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -53,6 +53,32 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.dispute,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.refund)
+            ]
+        ),
+    ]
+
+
+@register(StripePayment)
+class StripePaymentTriggers(BasePaymentTriggers):
+    triggers = BasePaymentTriggers.triggers + [
+
+        TransitionTrigger(
+            StripePaymentStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            StripePaymentStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.fail)
+            ]
+        ),
+
+        TransitionTrigger(
+            StripePaymentStateMachine.dispute,
             effects=[
                 RelatedTransitionEffect('donation', DonorStateMachine.refund)
             ]

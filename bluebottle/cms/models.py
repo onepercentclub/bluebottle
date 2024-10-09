@@ -325,7 +325,13 @@ class ActivitiesContent(TitledContent):
 class DonateButtonContent(TitledContent):
     type = 'donate'
 
-    funding = models.ForeignKey('funding.Funding', on_delete=models.CASCADE)
+    funding = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_('Campaign'),
+        help_text=_('Only open campaigns are shown.'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
     button_text = models.CharField(max_length=80, null=True, blank=True)
 
     class Meta:

@@ -67,7 +67,6 @@ class HomepageStatisticsBlockPlugin(CMSContentPlugin):
 class DonateButtonBlockPlugin(CMSContentPlugin):
     model = DonateButtonContent
     category = _('Homepage')
-    raw_id_fields = ['funding']
 
 
 @plugin_pool.register

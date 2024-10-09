@@ -86,6 +86,7 @@ def migrate_deadline_participants(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ("notifications", "0012_auto_20230629_0854"),
         ("time_based", "0098_merge_20240226_1501"),
     ]
 

@@ -328,7 +328,6 @@ class DonateButtonContent(TitledContent):
     funding = models.ForeignKey(
         'funding.Funding',
         verbose_name=_('Campaign'),
-        help_text=_('Only open campaigns are shown.'),
         on_delete=models.CASCADE,
         limit_choices_to={'status': 'open'}
     )

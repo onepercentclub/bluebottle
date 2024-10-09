@@ -12,9 +12,8 @@ def set_default(apps, schema_editor):
             Language = apps.get_model('utils', 'Language')
             language = Language.objects.get(code=properties.LANGUAGE_CODE)
         except Language.DoesNotExist:
-            try:
-                language = Language.objects.get()
-            except Language.DoesNotExist:
+            language = Language.objects.first()
+            if not language:
                 return
 
         language.default = True

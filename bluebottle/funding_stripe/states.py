@@ -35,6 +35,7 @@ class StripePaymentStateMachine(BasePaymentStateMachine):
 
     succeed = Transition(
         [
+            BasePaymentStateMachine.failed,
             BasePaymentStateMachine.new,
             BasePaymentStateMachine.pending,
             BasePaymentStateMachine.action_needed,

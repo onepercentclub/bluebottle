@@ -63,6 +63,12 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 @register(StripePayment)
 class StripePaymentTriggers(BasePaymentTriggers):
     triggers = BasePaymentTriggers.triggers + [
+        TransitionTrigger(
+            StripePaymentStateMachine.authorize,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
 
         TransitionTrigger(
             StripePaymentStateMachine.succeed,

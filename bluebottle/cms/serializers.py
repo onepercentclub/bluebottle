@@ -22,7 +22,7 @@ from bluebottle.cms.models import (
     ShareResultsContent, ProjectsMapContent, SupporterTotalContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.geo.serializers import OfficeSerializer
@@ -204,6 +204,25 @@ class ActivitiesContentSerializer(serializers.ModelSerializer):
         model = ActivitiesContent
         fields = ('id', 'type', 'title', 'sub_title',
                   'action_text', 'action_link')
+
+
+class DonateButtonContentSerializer(serializers.ModelSerializer):
+
+    funding = ResourceRelatedField(
+        read_only=True
+    )
+
+    class Meta(object):
+        model = ActivitiesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
+        included_resources = ['funding']
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    included_serializers = {
+        'funding': 'bluebottle.funding.serializers.FundingSerializer',
+    }
 
 
 class SlideSerializer(serializers.ModelSerializer):
@@ -492,6 +511,8 @@ class OldBlockSerializer(serializers.Serializer):
             serializer = ImageTextRoundItemSerializer
         elif isinstance(obj, ActivitiesContent):
             serializer = ActivitiesContentSerializer
+        elif isinstance(obj, DonateButtonContent):
+            serializer = DonateButtonContentSerializer
         elif isinstance(obj, ActionItem):
             serializer = ActionSerializer
         elif isinstance(obj, ColumnsItem):
@@ -634,6 +655,25 @@ class ActivitiesBlockSerializer(BaseBlockSerializer):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/activities'
+
+
+class DonateButtonBlockSerializer(BaseBlockSerializer):
+
+    funding = ResourceRelatedField(
+        read_only=True
+    )
+
+    class Meta(object):
+        model = DonateButtonContent
+        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
+        included_resources = ['funding']
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    included_serializers = {
+        'funding': 'bluebottle.funding.serializers.FundingSerializer',
+    }
 
 
 class SlidesBlockSerializer(BaseBlockSerializer):
@@ -837,6 +877,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         SlidesBlockSerializer,
         StepsBlockSerializer,
         ActivitiesBlockSerializer,
+        DonateButtonBlockSerializer,
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
@@ -865,7 +906,7 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides', 'logos', 'categories'
+            'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding'
         ]
 
     included_serializers = {
@@ -873,6 +914,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'funding': 'bluebottle.funding.serializers.FundingSerializer',
 
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
@@ -902,6 +944,8 @@ class HomeSerializer(ModelSerializer):
             'blocks.links',
             'blocks.slides',
             'blocks.quotes',
+            'blocks.funding',
+            'blocks.funding.image',
             'blocks.logos',
             'blocks.categories',
         ]
@@ -912,6 +956,8 @@ class HomeSerializer(ModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'funding': 'bluebottle.funding.serializers.FundingSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }

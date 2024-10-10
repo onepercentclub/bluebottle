@@ -71,7 +71,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
-        'QuotesBlockPlugin'
+        'QuotesBlockPlugin',
+        'DonateButtonBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -318,6 +319,28 @@ class ActivitiesContent(TitledContent):
 
     def __str__(self):
         return str(self.title)
+
+
+@python_2_unicode_compatible
+class DonateButtonContent(TitledContent):
+    type = 'donate'
+
+    funding = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_('Campaign'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
+    button_text = models.CharField(max_length=80, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Donate button')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    def __str__(self):
+        return str(self.funding.title)
 
 
 @python_2_unicode_compatible

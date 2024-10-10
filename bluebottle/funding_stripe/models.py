@@ -407,7 +407,6 @@ class StripePayoutAccount(PayoutAccount):
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True},
                     "bank_transfer_payments": {"requested": True},
-                    "customer_balance": {"requested": True},
                     "ideal_payments": {"requested": True},
                 },
                 business_profile={"url": url, "mcc": "8398"},

@@ -429,6 +429,13 @@ class BasePaymentTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            BasePaymentStateMachine.require_action,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.set_pending)
+            ]
+        ),
+
+        TransitionTrigger(
             BasePaymentStateMachine.fail,
             effects=[
                 RelatedTransitionEffect('donation', DonorStateMachine.fail)

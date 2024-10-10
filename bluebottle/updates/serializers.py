@@ -55,7 +55,7 @@ class UpdateSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         anonymous = FundingPlatformSettings.load().anonymous_donations
         current_user = get_current_user()
-        if anonymous and data['author'] != current_user:
+        if instance.contribution and anonymous and data['author'] != current_user:
             data['author'] = None
         if instance.fake_name:
             data['author'] = None

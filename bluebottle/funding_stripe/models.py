@@ -3,7 +3,7 @@ from builtins import object
 
 from django.conf import settings
 from django.db import models, connection
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, lazy
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from djmoney.money import Money
@@ -11,6 +11,8 @@ from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
+from djchoices import DjangoChoices, ChoiceItem
+
 
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
@@ -296,7 +298,7 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
     stripe = get_stripe()
-    return stripe.CountrySpec.retrieve(country)
+    return stripe.CountrySpec.retrieve(country=country)
 
 
 STRIPE_EUROPEAN_COUNTRY_CODES = [
@@ -308,10 +310,31 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+class BusinessTypeChoices(DjangoChoices):
+    company = ChoiceItem(
+        'company',
+        label=_("Commercial company")
+    )
+    individual = ChoiceItem(
+        'individual',
+        label=_("Individual person")
+    )
+    non_profit = ChoiceItem(
+        'non_profit',
+        label=_("Non-profit organization")
+    )
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
-    business_type = models.CharField(max_length=100, blank=True)
+    business_type = models.CharField(
+        max_length=100,
+        blank=True,
+        choices=BusinessTypeChoices.choices,
+        default=BusinessTypeChoices.individual
+
+    )
 
     verified = models.BooleanField(default=False)
 
@@ -346,9 +369,15 @@ class StripePayoutAccount(PayoutAccount):
         }
 
     def save(self, *args, **kwargs):
-        if (not self.account_id) and self.country:
-            stripe = get_stripe()
+        stripe = get_stripe()
 
+        if self.account_id:
+            account = stripe.Account.modify(
+                self.account_id,
+                business_type=self.business_type
+            )
+            self.update(account)
+        elif self.country:
             if Funding.objects.filter(owner=self.owner).count():
                 url = (
                     Funding.objects.filter(owner=self.owner).first().get_absolute_url()
@@ -363,23 +392,22 @@ class StripePayoutAccount(PayoutAccount):
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type="individual",
+                business_type=self.business_type,
                 capabilities={
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True},
                 },
                 business_profile={"url": url, "mcc": "8398"},
-                individual={"email": self.owner.email},
                 metadata=self.metadata,
             )
 
-            self.business_type = account.business_type
             self.account_id = account.id
-            self.requirements = account.individual.requirements.eventually_due
+            self.update(account)
 
         super().save(*args, **kwargs)
 
-    def get_account_link(self):
+    @property
+    def verification_link(self):
         stripe = get_stripe()
         url = get_current_host() + '/' + get_current_language() + '/payout-account/overview'
         account_link = stripe.AccountLink.create(
@@ -404,8 +432,6 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
-
-        self.save()
 
     def retrieve_account(self):
         try:

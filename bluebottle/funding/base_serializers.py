@@ -6,6 +6,8 @@ from bluebottle.funding.models import Donor, Payment, BankAccount, PayoutAccount
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 
+from bluebottle.bluebottle_drf2.serializers import SorlImageField
+
 
 class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)
@@ -32,6 +34,7 @@ class PaymentSerializer(ModelSerializer):
 class BaseBankAccountSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     connect_account = ResourceRelatedField(queryset=PayoutAccount.objects.all())
+    logo = SorlImageField("x300", upscale=False, crop="center")
 
     class Meta(object):
         model = BankAccount
@@ -39,7 +42,9 @@ class BaseBankAccountSerializer(ModelSerializer):
         fields = (
             'id',
             'connect_account',
-            'status'
+            'status',
+            'description',
+            'logo',
         )
 
     included_serializers = {

@@ -17,7 +17,7 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, FundingPlatformSettings
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
@@ -181,9 +181,15 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        return self.queryset.order_by("-created").filter(
-            connect_account__owner=self.request.user
-        )
+        settings = FundingPlatformSettings.objects.get()
+        if settings.public_accounts:
+            return self.queryset.order_by("-created").filter(
+                connect_account__public=True
+            )
+        else:
+            return self.queryset.order_by("-created").filter(
+                connect_account__owner=self.request.user
+            )
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, "model"):
@@ -409,6 +415,7 @@ class ConnectWebHookView(View):
             if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
                 account.update(event.data.object)
+                account.save()
 
                 return HttpResponse("Updated connect account")
             else:

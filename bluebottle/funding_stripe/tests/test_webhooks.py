@@ -125,8 +125,8 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         donation = Donor.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(payment.status, 'pending')
+        self.assertEqual(donation.status, 'succeeded')
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, 'succeeded')
 

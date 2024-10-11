@@ -599,7 +599,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_reject_mail(self):
         self.account.states.reject(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity verification could not be verified!')
+        self.assertEqual(mail.outbox[0].subject, 'Action required for your crowdfunding campaign')
 
 
 class PayoutStateMachineTests(BluebottleTestCase):

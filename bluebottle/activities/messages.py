@@ -511,6 +511,26 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         return members
 
 
+class PublishActivityReminderNotification(TransitionMessage):
+    subject = pgettext('email', 'Publish your activity "{title}"')
+    template = 'messages/publish_activity_reminder'
+    send_once = True
+
+    context = {
+        'title': 'title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    action_title = pgettext('email', 'Publish your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.owner]
+
+
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "It’s a new year, let's make some impact!")
     template = 'messages/do-good-hours/reminder-q1'

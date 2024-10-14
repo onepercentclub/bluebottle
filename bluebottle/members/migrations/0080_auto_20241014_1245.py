@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='memberplatformsettings',
             name='gtm_code',
-            field=models.CharField(default='"https://goodup.com/cookie-policy"', help_text='Link more information about the platforms cookie policy', max_length=255),
+            field=models.CharField(default='', help_text='Link more information about the platforms cookie policy', max_length=255),
         ),
 
     ]

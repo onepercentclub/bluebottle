@@ -753,7 +753,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             blank=True,
             help_text=_('Slug of the start initiative page')
         ),
-
     )
 
     class Meta:

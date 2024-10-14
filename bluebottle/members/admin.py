@@ -162,8 +162,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Privacy'),
             {
                 'fields': (
-                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
-                    'display_member_names'
+                    'session_only',
+                    'consent_link',
+                    'disable_cookie_consent',
+                    'anonymization_age',
+                    'display_member_names',
+                    'gtm_code',
                 )
             }
         ),

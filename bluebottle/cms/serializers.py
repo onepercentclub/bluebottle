@@ -545,6 +545,9 @@ class HomePageSerializer(serializers.ModelSerializer):
         model = HomePage
         fields = ('id', 'blocks')
 
+    class JSONAPIMeta:
+        resource_name = 'homepages'
+
 
 class BaseBlockSerializer(ModelSerializer):
     type = serializers.SerializerMethodField(read_only=True)
@@ -823,7 +826,7 @@ class LogosBlockSerializer(BaseBlockSerializer):
         ]
 
 
-class TextBlockSerializer(BaseBlockSerializer):
+class PlainTextBlockSerializer(BaseBlockSerializer):
     text = SafeField()
 
     class Meta(object):
@@ -834,29 +837,7 @@ class TextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/plain-text'
 
 
-class RichTextBlockSerializer(BaseBlockSerializer):
-    text = SafeField()
-
-    class Meta(BaseBlockSerializer.Meta):
-        model = TextItem
-        fields = ('id', 'text', 'type', 'language_code',)
-
-    class JSONAPIMeta:
-        resource_name = 'TextItem'
-
-
-class PictureBlockSerializer(BaseBlockSerializer):
-    image = ImageSerializer()
-
-    class Meta(object):
-        model = PictureItem
-        fields = ('id', 'type', 'image')
-
-    class JSONAPIMeta:
-        resource_name = 'pages/blocks/image'
-
-
-class ImageTextBlockSerializer(BaseBlockSerializer):
+class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
     text = SafeField()
 
@@ -882,8 +863,54 @@ class ImageBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/image'
 
 
+class PictureBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = PictureItem
+        fields = ('id', 'align', 'image', 'type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/picture'
+
+
+class TextBlockSerializer(BaseBlockSerializer):
+    class Meta(object):
+        model = TextItem
+        fields = ('id', 'text', 'type', )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/text'
+
+        fields = ('id', 'align', 'image', 'type',)
+
+
+class ImageTextBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = ImageTextItem
+
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image-text'
+
+
+class ColumnBlockSerializer(BaseBlockSerializer):
+
+    class Meta(object):
+        model = ColumnsItem
+
+        fields = ('id', 'text1', 'text2', 'type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/columns'
+
+
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
+        print(instance.__class__)
         return {'id': instance.pk, 'type': self.JSONAPIMeta.resource_name}
 
     class Meta(object):
@@ -894,7 +921,23 @@ class FallbackBlockSerializer(serializers.Serializer):
         resource_name = 'pages/blocks/unknown'
 
 
+class OEmbedBlockSerializer(BaseBlockSerializer):
+    item_type = 'embed'
+
+    class Meta(object):
+        model = OEmbedItem
+        fields = ('id', 'title', 'width', 'height', 'html', 'type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/oembed'
+
+
 class BlockSerializer(PolymorphicModelSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._poly_force_type_resolution = False
+
     polymorphic_serializers = [
         SlidesBlockSerializer,
         StepsBlockSerializer,
@@ -907,10 +950,15 @@ class BlockSerializer(PolymorphicModelSerializer):
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
-        RichTextBlockSerializer,
         ImageTextBlockSerializer,
         ImageBlockSerializer,
-        PictureBlockSerializer
+        PictureBlockSerializer,
+        ImagePlainTextBlockSerializer,
+        ImageBlockSerializer,
+        PlainTextBlockSerializer,
+        TextBlockSerializer,
+        ColumnBlockSerializer,
+        OEmbedBlockSerializer
     ]
 
     def get_slides(self, obj):
@@ -930,7 +978,9 @@ class BlockSerializer(PolymorphicModelSerializer):
 
     class JSONAPIMeta:
         included_resources = [
-            'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding'
+            'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
+            'full_page'
+
         ]
 
     included_serializers = {
@@ -961,7 +1011,7 @@ class HomeSerializer(ModelSerializer):
         fields = ('id', 'blocks')
 
     class JSONAPIMeta(object):
-        resource_name = 'pages'
+        resource_name = 'homepages'
         included_resources = [
             'blocks',
             'blocks.steps',
@@ -997,6 +1047,7 @@ class OldPageSerializer(serializers.ModelSerializer):
 
 
 class PageSerializer(ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
     blocks = PolymorphicSerializerMethodResourceRelatedField(
         BlockSerializer,
         read_only=True,
@@ -1005,7 +1056,7 @@ class PageSerializer(ModelSerializer):
     )
 
     def get_blocks(self, obj):
-        return obj.content.contentitems.all().translated()
+        return obj.content.contentitems.all()
 
     class Meta(object):
         model = Page
@@ -1025,12 +1076,18 @@ class PageSerializer(ModelSerializer):
 
     included_serializers = {
         'blocks': 'bluebottle.cms.serializers.BlockSerializer',
-        'steps': 'bluebottle.cms.serializers.StepSerializer',
-        'links': 'bluebottle.cms.serializers.LinkSerializer',
-        'slides': 'bluebottle.cms.serializers.SlideSerializer',
-        'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
-        'logos': 'bluebottle.cms.serializers.LogoSerializer',
-        'categories': 'bluebottle.categories.serializers.CategorySerializer',
+    }
+
+    included_serializers = {
+        'blocks': 'bluebottle.cms.serializers.BlockSerializer',
+        'blocks.steps': 'bluebottle.cms.serializers.StepSerializer',
+        'blocks.links': 'bluebottle.cms.serializers.LinkSerializer',
+        'blocks.slides': 'bluebottle.cms.serializers.SlideSerializer',
+        'blocks.quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'blocks.funding': 'bluebottle.funding.serializers.FundingSerializer',
+        'blocks.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'blocks.logos': 'bluebottle.cms.serializers.LogoSerializer',
+        'blocks.categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
 
 

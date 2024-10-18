@@ -829,8 +829,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = MemberPlatformSettings
         fields = (
-            'require_consent',
             'consent_link',
+            'disable_cookie_consent',
+            'gtm_code',
             'closed',
             'email_domain',
             'session_only',

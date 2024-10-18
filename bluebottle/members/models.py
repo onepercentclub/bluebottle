@@ -96,13 +96,23 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
-    require_consent = models.BooleanField(
-        default=False, help_text=_('Require users to consent to cookies')
-    )
     consent_link = models.CharField(
         default='"https://goodup.com/cookie-policy"',
         help_text=_('Link more information about the platforms cookie policy'),
         max_length=255
+    )
+
+    disable_cookie_consent = models.BooleanField(
+        default=False,
+        help_text=_(
+            'Handle cookie consent externally using something like cookie bot'
+        )
+    )
+
+    gtm_code = models.CharField(
+        help_text=_('Link more information about the platforms cookie policy'),
+        max_length=255,
+        blank=True
     )
 
     background = models.ImageField(

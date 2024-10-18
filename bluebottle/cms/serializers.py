@@ -1060,7 +1060,7 @@ class PageSerializer(ModelSerializer):
 
     class Meta(object):
         model = Page
-        fields = ('id', 'blocks', 'title', 'show_title')
+        fields = ('id', 'blocks', 'title', 'show_title', 'full_page')
 
     class JSONAPIMeta(object):
         resource_name = 'pages'

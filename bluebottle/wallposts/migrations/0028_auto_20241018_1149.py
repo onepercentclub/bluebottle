@@ -22,8 +22,11 @@ def migrate_initiative_wallposts(apps, schema_editor):
     Initiative = apps.get_model("initiatives", "Initiative")
 
     MediaWallpost = apps.get_model("wallposts", "MediaWallpost")
+    MediaWallpostPhoto = apps.get_model("wallposts", "MediaWallpostPhoto")
     TextWallpost = apps.get_model("wallposts", "TextWallpost")
     Update = apps.get_model("updates", "Update")
+    UpdateImage = apps.get_model("updates", "UpdateImage")
+    Image = apps.get_model("files", "Image")
 
     initiative_ctype = ContentType.objects.get_for_model(Initiative)
 
@@ -45,6 +48,20 @@ def migrate_initiative_wallposts(apps, schema_editor):
                 notify=post.email_followers
             )
             migrate_related_reactions(post, update, Update)
+
+            photos = MediaWallpostPhoto.objects.filter(
+                mediawallpost_id=post.pk, deleted__isnull=True
+            )
+            for photo in photos:
+                if post.author:
+                    try:
+                        image = Image.objects.create(
+                            file=photo.photo, owner=post.author, used=True
+                        )
+                        UpdateImage.objects.create(image=image, update=update)
+                        print(f"created image for update: {update.pk}")
+                    except FileNotFoundError:
+                        pass
 
     text_wallposts = TextWallpost.objects.filter(
         content_type=initiative_ctype, object_id__in=Initiative.objects.all()

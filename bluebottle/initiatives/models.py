@@ -185,9 +185,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             'theme',
         ]
 
-        if self.has_organization:
-            fields.append('organization')
-
         return fields
 
     validators = [UniqueTitleValidator]

@@ -19,11 +19,13 @@ class BaseStripePaymentStateMachineTests(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
         self.funding = FundingFactory.create(
-            initiative=self.initiative,
-            target=Money(1000, 'EUR')
+            initiative=self.initiative, target=Money(1000, "EUR")
         )
+
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(status='verified', connect_account=payout_account)
         self.funding.bank_account = self.bank_account
         self.funding.save()
@@ -182,6 +184,12 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         ]
         self.stripe_account.requirements.eventually_due = requirements
 
+        if enable_payments is not None:
+            self.stripe_account.charges_enabled = enable_payments
+
+        if enable_payouts is not None:
+            self.stripe_account.payouts_enabled = enable_payouts
+
         if verification_status:
             self.stripe_account.individual.verification.status = verification_status
 
@@ -192,7 +200,6 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
 
     def test_pending(self):
         self.simulate_webhook([])
-        self.account.update(self.stripe_account)
 
         self.assertEqual(self.account.status, "pending")
 
@@ -204,7 +211,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
     def test_verify(self):
@@ -231,7 +238,22 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(self.account.status, "incomplete")
         self.assertEqual(
-            mail.outbox[0].subject, "We need more information to verify your account"
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
+        )
+
+    def test_reject_disable_payments(self):
+        self.test_verify()
+        mail.outbox = []
+
+        self.simulate_webhook(
+            ["individual.verification.document"],
+            verification_status="rejected",
+            enable_payments=False
+        )
+
+        self.assertEqual(self.account.status, "disabled")
+        self.assertEqual(
+            mail.outbox[0].subject, "Action required for your crowdfunding campaign"
         )
 
 

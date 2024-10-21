@@ -5,9 +5,7 @@ from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-
 from django_better_admin_arrayfield.models.fields import ArrayField
-
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -15,12 +13,10 @@ from past.utils import old_div
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PaymentMethod,
-    PayoutAccount, BankAccount)
+    Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 
@@ -119,6 +115,8 @@ class StripePayment(Payment):
             self.states.fail()
         elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
             self.states.refund()
+        elif intent.status == 'pending' and self.status != self.states.pending.value:
+            self.states.authorize()
         elif intent.status == 'failed' and self.status != self.states.failed.value:
             self.states.fail()
         elif intent.status == 'succeeded':
@@ -129,6 +127,7 @@ class StripePayment(Payment):
             self.donation.save()
             if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
+
         return intent
 
 
@@ -270,46 +269,12 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('The secret for payment sources webhook.')
     )
 
-    stripe_payment_methods = [
-        PaymentMethod(
-            provider='stripe',
-            code='credit-card',
-            name=_('Credit card'),
-            currencies=['EUR', 'USD', 'GBP', 'AUD'],
-            countries=[]
-        ),
-        PaymentMethod(
-            provider='stripe',
-            code='bancontact',
-            name=_('Bancontact'),
-            currencies=['EUR'],
-            countries=['BE']
-        ),
-        PaymentMethod(
-            provider='stripe',
-            code='ideal',
-            name=_('iDEAL'),
-            currencies=['EUR'],
-            countries=['NL']
-        ),
-        PaymentMethod(
-            provider='stripe',
-            code='direct-debit',
-            name=_('Direct debit'),
-            currencies=['EUR'],
-        )
-    ]
-
     refund_enabled = True
 
     @property
     def public_settings(self):
         return {
             'publishable_key': self.stripe_publishable_key or settings.STRIPE['publishable_key'],
-            'credit-card': self.credit_card,
-            'ideal': self.ideal,
-            'bancontact': self.bancontact,
-            'direct-debit': self.direct_debit
         }
 
     @property
@@ -319,21 +284,6 @@ class StripePaymentProvider(PaymentProvider):
             'webhook_secret': self.stripe_secret or settings.STRIPE['webhook_secret'],
             'webhook_secret_connect': self.stripe_secret or settings.STRIPE['webhook_secret_connect'],
         }
-
-    credit_card = models.BooleanField(_('Credit card'), default=True)
-    ideal = models.BooleanField(_('iDEAL'), default=False)
-    bancontact = models.BooleanField(_('Bancontact'), default=False)
-    direct_debit = models.BooleanField(_('Direct debit'), default=False)
-
-    @property
-    def payment_methods(self):
-        methods = []
-        for code in ['credit-card', 'ideal', 'bancontact', 'direct-debit']:
-            if getattr(self, code.replace('-', '_'), False):
-                for method in self.stripe_payment_methods:
-                    if method.code == code:
-                        methods.append(method)
-        return methods
 
     class Meta(object):
         verbose_name = 'Stripe payment provider'
@@ -369,8 +319,65 @@ class StripePayoutAccount(PayoutAccount):
     payouts_enabled = models.BooleanField(default=False)
 
     requirements = ArrayField(models.CharField(max_length=60), default=list)
+    tos_accepted = models.BooleanField(default=False)
 
     provider = 'stripe'
+
+    @property
+    def account_settings(self):
+        statement_descriptor = connection.tenant.name[:22]
+        while len(statement_descriptor) < 5:
+            statement_descriptor += "-"
+        return {
+            "payouts": {
+                "schedule": {"interval": "manual"},
+                "statement_descriptor": statement_descriptor,
+            },
+            "payments": {"statement_descriptor": statement_descriptor},
+            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
+        }
+
+    @property
+    def metadata(self):
+        return {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "member_id": self.owner.pk,
+        }
+
+    def save(self, *args, **kwargs):
+        if (not self.account_id) and self.country:
+            stripe = get_stripe()
+
+            if Funding.objects.filter(owner=self.owner).count():
+                url = (
+                    Funding.objects.filter(owner=self.owner).first().get_absolute_url()
+                )
+            else:
+                url = "https://{}".format(connection.tenant.domain_url)
+
+            if "localhost" in url:
+                url = "https://goodup.com"
+
+            account = stripe.Account.create(
+                country=self.country,
+                type="custom",
+                settings=self.account_settings,
+                business_type="individual",
+                capabilities={
+                    "transfers": {"requested": True},
+                    "card_payments": {"requested": True},
+                },
+                business_profile={"url": url, "mcc": "8398"},
+                individual={"email": self.owner.email},
+                metadata=self.metadata,
+            )
+
+            self.business_type = account.business_type
+            self.account_id = account.id
+            self.requirements = account.individual.requirements.eventually_due
+
+        super().save(*args, **kwargs)
 
     def get_account_link(self):
         stripe = get_stripe()
@@ -388,7 +395,7 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data):
-        self.requirements = data.individual.requirements.eventually_due
+        self.requirements = data.requirements.eventually_due
 
         try:
             self.verified = data.individual.verification.status == "verified"

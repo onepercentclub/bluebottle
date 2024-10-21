@@ -222,7 +222,11 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        self.bank_account = ExternalAccountFactory.create()
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=StripePayoutAccountFactory.create(
+                status="verified", account_id="test-account-id"
+            )
+        )
 
         self.funding = FundingFactory.create(
             initiative=self.initiative, bank_account=self.bank_account
@@ -350,7 +354,9 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             )
 
         self.account_list_url = reverse("connect-account-list")
-        self.account_url = reverse("connect-account-detail", args=(self.activity.pk,))
+        self.account_url = reverse(
+            "connect-account-detail", args=(self.connect_account.pk,)
+        )
 
         self.country_spec = stripe.CountrySpec(country)
         self.country_spec.update(
@@ -389,6 +395,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         connect_account.update(
             {
                 "country": self.data["data"]["attributes"]["country"],
+                "business_type": "individual",
                 "individual": munch.munchify(
                     {
                         "first_name": "Jhon",
@@ -462,7 +469,6 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 {"url": self.activity.get_absolute_url(), "mcc": "8398"},
             )
             self.assertEqual(call["individual"], {"email": self.user.email})
-            self.assertEqual(call["tos_acceptance"]["service_agreement"], "full")
             self.assertEqual(
                 call["capabilities"],
                 {
@@ -486,6 +492,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         )
 
     def test_create_no_user(self):
+
         self.connect_account.delete()
         response = self.client.post(self.account_url, data=json.dumps(self.data))
 
@@ -603,7 +610,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             connect_account=self.connect_account, account_id="some-external-account-id"
         )
 
-        self.url = reverse("connect-account-detail", args=(self.activity.pk,))
+        self.url = reverse("connect-account-detail", args=(self.connect_account.pk,))
         self.external_account_url = reverse("stripe-external-account-list")
         self.external_account_detail_url = reverse(
             "stripe-external-account-details", args=(self.external_account.pk,)

@@ -50,6 +50,7 @@ from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, ResourcePermissionField, )
@@ -86,7 +87,7 @@ class RewardSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     count = IntegerField(read_only=True)
     amount = MoneySerializer(min_amount=5.00)
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     validators = [FundingCurrencyValidator()]
 
     included_serializers = {
@@ -109,7 +110,9 @@ class BudgetLineSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     amount = MoneySerializer()
 
-    validators = [FundingCurrencyValidator()]
+    validators = [
+        FundingCurrencyValidator(),
+    ]
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
@@ -268,6 +271,28 @@ class FundingSerializer(BaseActivitySerializer):
 
     psp = serializers.SerializerMethodField()
     deadline = DeadlineField(allow_null=True, required=False)
+    errors = ValidationErrorsField(ignore=["kyc"])
+
+    donations = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="activity-donation-list",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "succeeded": ["succeeded"],
+            "pending": ["pending", "new"],
+            "failed": ["failed", "refunded", "activity_refunded"],
+        },
+    )
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ("draft", "needs_work", "submitted"):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:
@@ -276,14 +301,19 @@ class FundingSerializer(BaseActivitySerializer):
     def get_fields(self):
         fields = super(FundingSerializer, self).get_fields()
 
-        user = self.context['request'].user
-        if user not in [
-            self.instance.owner,
-            self.instance.initiative.owner,
-        ] and user not in self.instance.initiative.activity_managers.all():
-            del fields['bank_account']
-            del fields['required']
-            del fields['errors']
+        user = self.context["request"].user
+        if (
+            self.instance
+            and user
+            not in [
+                self.instance.owner,
+                self.instance.initiative.owner,
+            ]
+            and user not in self.instance.initiative.activity_managers.all()
+        ):
+            del fields["bank_account"]
+            del fields["required"]
+            del fields["errors"]
         return fields
 
     def get_co_financers(self, instance):
@@ -309,6 +339,7 @@ class FundingSerializer(BaseActivitySerializer):
             "payout_account",
             "supporters_export_url",
             "psp",
+            "donations"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):

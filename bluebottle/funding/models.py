@@ -30,6 +30,7 @@ from bluebottle.funding.validators import (
     TargetValidator,
     DeadlineMaxValidator,
     BudgetLineValidator,
+    KYCReadyValidator,
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
@@ -160,6 +161,7 @@ class Funding(Activity):
         DeadlineMaxValidator,
         TargetValidator,
         BudgetLineValidator,
+        KYCReadyValidator,
     ]
 
     auto_approve = False
@@ -225,6 +227,12 @@ class Funding(Activity):
                 currency
             )
             self.save()
+
+    @property
+    def total_budget(self):
+        budget_lines = self.budget_lines.all()
+        total_amount = sum(line.amount.amount for line in budget_lines)
+        return Money(currency=self.target.currency, amount=total_amount)
 
     @property
     def activity_date(self):
@@ -302,7 +310,7 @@ class Reward(models.Model):
     """
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
-    description = models.CharField(_('Description'), max_length=500)
+    description = models.CharField(_('Description'), max_length=500, null=True, blank=True)
     activity = models.ForeignKey(
         'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
     )

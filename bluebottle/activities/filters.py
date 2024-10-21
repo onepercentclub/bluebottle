@@ -56,20 +56,28 @@ class OfficeRestrictionFacet(Facet):
         if filter_value == '0' or not user.is_authenticated or not user.location:
             return
         office = user.location
-        return Nested(
-            path='office_restriction',
-            query=Term(
-                office_restriction__restriction='all'
-            ) | (
-                Term(office_restriction__office=office.id) &
-                Term(office_restriction__restriction='office')
-            ) | (
+        query = Term(
+            office_restriction__restriction='all'
+        ) | (
+            Term(office_restriction__office=office.id) &
+            Term(office_restriction__restriction='office')
+        )
+
+        if office.subregion:
+            query = query | (
                 Term(office_restriction__subregion=office.subregion.id) &
                 Term(office_restriction__restriction='office_subregion')
-            ) | (
-                Term(office_restriction__region=office.subregion.region.id) &
-                Term(office_restriction__restriction='office_region')
             )
+
+            if office.subregion.region:
+                query = query | (
+                    Term(office_restriction__region=office.subregion.region.id) &
+                    Term(office_restriction__restriction='office_region')
+                )
+
+        return Nested(
+            path='office_restriction',
+            query=query
         )
 
 
@@ -252,6 +260,7 @@ class ActivitySearch(Search):
         'initiative.id': InitiativeFacet(),
         'upcoming': UpcomingFacet(),
         'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
+        'status': TermsFacet(field='status'),
         'matching': MatchingFacet(field='matching'),
         'highlight': BooleanFacet(field='highlight'),
         'distance': DistanceFacet(),

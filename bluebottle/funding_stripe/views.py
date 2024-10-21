@@ -1,16 +1,10 @@
-from builtins import str
-from django.core.exceptions import PermissionDenied
-
-from django.db.models import ObjectDoesNotExist
-from django.db import connection
+from django.core.exceptions import ValidationError
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.utils.timezone import now
 from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import View
-
 from moneyed import Money
-from rest_framework import serializers
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -23,7 +17,7 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
@@ -40,7 +34,6 @@ from bluebottle.funding_stripe.serializers import (
     CountrySpecSerializer,
 )
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.members.models import Member
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView,
@@ -50,9 +43,9 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-from bluebottle.utils.utils import get_client_ip
+import logging
 
-from django.views.decorators.cache import cache_page
+logger = logging.getLogger(__name__)
 
 
 class StripeSourcePaymentList(PaymentList):
@@ -111,69 +104,9 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        business_type = "individual"
-
-        stripe = get_stripe()
-
-        if Funding.objects.filter(owner=self.request.user).count():
-            url = (
-                Funding.objects.filter(owner=self.request.user)
-                .first()
-                .get_absolute_url()
-            )
-        else:
-            url = "https://{}".format(connection.tenant.domain_url)
-
-        if "localhost" in connection.tenant.domain_url:
-            url = "https://goodup.com"
-
-        account = stripe.Account.create(
-            country=serializer.validated_data["country"],
-            type="custom",
-            settings=self.account_settings,
-            business_type=business_type,
-            capabilities={
-                "transfers": {"requested": True},
-                "card_payments": {"requested": True},
-            },
-            business_profile={"url": url, "mcc": "8398"},
-            individual={"email": self.request.user.email},
-            metadata=self.metadata,
-            tos_acceptance={
-                "service_agreement": "full",
-                "date": now(),
-                "ip": get_client_ip(self.request),
-            },
-        )
-
         serializer.save(
             owner=self.request.user,
-            business_type=business_type,
-            account_id=account.id,
-            requirements=account.individual.requirements.eventually_due,
         )
-
-    @property
-    def account_settings(self):
-        statement_descriptor = connection.tenant.name[:22]
-        while len(statement_descriptor) < 5:
-            statement_descriptor += "-"
-        return {
-            "payouts": {
-                "schedule": {"interval": "manual"},
-                "statement_descriptor": statement_descriptor,
-            },
-            "payments": {"statement_descriptor": statement_descriptor},
-            "card_payments": {"statement_descriptor_prefix": statement_descriptor[:10]},
-        }
-
-    @property
-    def metadata(self):
-        return {
-            "tenant_name": connection.tenant.client_name,
-            "tenant_domain": connection.tenant.domain_url,
-            "member_id": self.request.user.pk,
-        }
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -188,22 +121,18 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     }
 
     def perform_update(self, serializer):
-        token = serializer.validated_data.pop('token')
-        if token:
-            stripe = get_stripe()
-            try:
-                serializer.instance.update(token)
-            except stripe.error.InvalidRequestError as e:
-                try:
-                    field = e.param.replace('[', '/').replace(']', '')
-                    raise serializers.ValidationError(
-                        {field: [e.message]}
-                    )
-                except AttributeError:
-                    raise serializers.ValidationError(str(e))
+        if (
+            "country" in serializer.validated_data
+            and serializer.instance.country != serializer.validated_data["country"]
+        ):
+            if serializer.instance.status == "verified":
+                raise ValidationError("Cannot change country of verified account")
 
-        serializer.save()
-        serializer.instance.check_status()
+            serializer.instance.external_accounts.all().delete()
+            serializer.instance.account_id = None
+            serializer.instance.tos_acceptance = False
+
+        return super().perform_update(serializer)
 
 
 class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
@@ -322,14 +251,24 @@ class IntentWebHookView(View):
                     payment.donation.save()
                     payment.save()
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to succeeded')
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to failed')
+
+            elif event.type == 'charge.pending':
+                if not event.data.object.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
+                payment = self.get_payment(event.data.object.payment_intent)
+                if payment.status != payment.states.pending.value:
+                    payment.states.authorize(save=True)
+
+                return HttpResponse('Updated payment to pending')
 
             elif event.type == 'charge.refunded':
                 if not event.data.object.payment_intent:
@@ -338,16 +277,15 @@ class IntentWebHookView(View):
                 payment = self.get_payment(event.data.object.payment_intent)
                 payment.states.refund(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to refunded')
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
-
+    def get_payment(self, payment_id):
+        intent = PaymentIntent.objects.get(intent_id=payment_id)
         try:
             return intent.payment
         except StripePayment.DoesNotExist:
@@ -457,29 +395,29 @@ class ConnectWebHookView(View):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
         stripe = get_stripe()
-
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_connect
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            return HttpResponse('Signature failed to verify', status=400)
+            error = "Signature failed to verify"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
         try:
             if event.type == "account.updated":
-                print(event.data.object)
                 account = self.get_account(event.data.object.id)
                 account.update(event.data.object)
-
-                print(f"Account status: {account.status}")
 
                 return HttpResponse("Updated connect account")
             else:
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
+            error = "Payout not found"
+            logger.error(error)
+            return HttpResponse(error, status=400)
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)
@@ -492,7 +430,10 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
-        serializer = self.get_serializer(specs.data, many=True)
+        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+        data = specs.data
+        data.extend(specs2.data)
+        serializer = self.get_serializer(data, many=True)
 
         for spec in specs.data:
             spec.pk = spec.id

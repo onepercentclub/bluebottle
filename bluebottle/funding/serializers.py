@@ -3,7 +3,6 @@ from datetime import datetime
 
 import pytz
 from dateutil.parser import parse
-from django.conf import settings
 from django.db import connection
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -54,7 +53,6 @@ from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
     MoneySerializer, ResourcePermissionField, )
-from tenants.ey import settings
 
 
 class FundingCurrencyValidator(object):

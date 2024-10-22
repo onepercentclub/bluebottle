@@ -5,12 +5,14 @@ from fluent_contents.models import ContentItem
 from bluebottle.clients import properties
 from bluebottle.cms.models import HomePage
 from bluebottle.cms.serializers import (
-    HomeSerializer, PageSerializer, BlockSerializer
+    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer,
+    NewsItemSummarySerializer
 )
 from bluebottle.pages.models import Page
+from bluebottle.news.models import NewsItem
 from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermission
 from bluebottle.utils.utils import get_language_from_request
-from bluebottle.utils.views import RetrieveAPIView, JsonApiViewMixin
+from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
 
 
 class HomeDetail(JsonApiViewMixin, RetrieveAPIView):
@@ -27,10 +29,7 @@ class BlockDetail(JsonApiViewMixin, RetrieveAPIView):
     permission_classes = [TenantConditionalOpenClose, ResourcePermission]
 
 
-class PageDetail(JsonApiViewMixin, RetrieveAPIView):
-    serializer_class = PageSerializer
-
-    queryset = Page.objects
+class CMSDetailView(JsonApiViewMixin, RetrieveAPIView):
     lookup_field = 'slug'
 
     def get_object(self, queryset=None):
@@ -49,3 +48,19 @@ class PageDetail(JsonApiViewMixin, RetrieveAPIView):
                 )
             except ObjectDoesNotExist:
                 raise Http404
+
+
+class PageDetail(CMSDetailView):
+    serializer_class = PageSerializer
+
+    queryset = Page.objects
+
+
+class NewsItemDetail(CMSDetailView):
+    queryset = NewsItem.objects
+    serializer_class = NewsItemSerializer
+
+
+class NewsItemList(ListAPIView):
+    queryset = NewsItem.objects.order_by('published_date')
+    serializer_class = NewsItemSummarySerializer

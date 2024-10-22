@@ -663,6 +663,17 @@ class NewsItemSerializer(BaseCMSSerializer):
         resource_name = 'news-item'
 
 
+class NewsItemSummarySerializer(ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+
+    class Meta:
+        model = Page
+        fields = ('id', 'title', )
+
+    class JSONAPIMeta:
+        resource_name = 'news-item'
+
+
 class FaviconsSerializer(serializers.Serializer):
     large = SorlImageField('194x194', source='*')
     small = SorlImageField('32x32', source='*')

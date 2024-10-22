@@ -538,6 +538,16 @@ class ContributionListSerializer(ModelSerializer):
     }
 
 
+class UserStatSerializer(ModelSerializer):
+
+    class JSONAPIMeta(object):
+        resource_name = 'user-stats'
+
+    class Meta(object):
+        model = Contributor
+        fields = ('id', 'type', 'contributor')
+
+
 class ActivityTransitionSerializer(TransitionSerializer):
     resource = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
     field = 'states'

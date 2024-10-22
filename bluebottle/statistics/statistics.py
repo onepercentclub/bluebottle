@@ -24,10 +24,11 @@ from bluebottle.utils.exchange_rates import convert
 
 
 class Statistics(object):
-    def __init__(self, start=None, end=None, subregion=None):
+    def __init__(self, start=None, end=None, subregion=None, user=None):
         self.subregion = subregion
         self.start = start
         self.end = end
+        self.user = user
 
     timeout = 3600
 
@@ -201,6 +202,8 @@ class Statistics(object):
             self.date_filter('created'),
             status='succeeded',
         )
+        if self.user:
+            donations = donations.filter(user=self.user)
         totals = donations.order_by('amount_currency').values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
         if totals:
@@ -217,6 +220,8 @@ class Statistics(object):
             self.date_filter('start'),
             status='succeeded'
         )
+        if self.user:
+            contributions = contributions.filter(contributor__user=self.user)
         if self.subregion:
             contributions = contributions.filter(
                 contributor__user__location__subregion=self.subregion
@@ -235,6 +240,8 @@ class Statistics(object):
             contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant),
             status='succeeded'
         )
+        if self.user:
+            efforts = efforts.filter(contributor__user=self.user)
         if self.subregion:
             efforts = efforts.filter(
                 contributor__user__location__subregion=self.subregion

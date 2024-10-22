@@ -17,8 +17,7 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
     ContributorListSerializer,
-    ActivityImageSerializer, ContributionListSerializer,
-)
+    ActivityImageSerializer, ContributionListSerializer, )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
@@ -32,8 +31,7 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     DeadlineParticipant,
     PeriodicParticipant,
-    TeamScheduleParticipant,
-)
+    TeamScheduleParticipant, )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose

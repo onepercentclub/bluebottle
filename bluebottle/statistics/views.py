@@ -29,6 +29,6 @@ class UserStatisticList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
         return [
             DatabaseStatistic(pk='my1', query='donated_total', name='Donated total', sequence=1),
-            DatabaseStatistic(pk='my2', query='time_spent', name='Time spent', sequence=2),
+            DatabaseStatistic(pk='my2', query='time_spent', name='Hours spent', sequence=2),
             DatabaseStatistic(pk='my3', query='deeds_done', name='Deeds done', sequence=3),
         ]

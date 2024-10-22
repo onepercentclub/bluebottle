@@ -117,6 +117,12 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
         _("This person stopped contributing to this activity.")
     )
 
+    removed = State(
+        _('Removed'),
+        'removed',
+        _("This person was removed from this activity.")
+    )
+
     stop = Transition(
         [RegistrationStateMachine.accepted],
         stopped,
@@ -128,6 +134,20 @@ class PeriodicRegistrationStateMachine(RegistrationStateMachine):
             "anytime."
         ),
         short_description=_("This person will no longer actively participate."),
+        automatic=False,
+        permission=is_user_or_manager,
+    )
+
+    remove = Transition(
+        [RegistrationStateMachine.accepted],
+        removed,
+        name=_('Remove'),
+        description=_(
+            "This person will no longer actively participate in your activity and "
+            "their contribution hours will stop being counted. The hours that have "
+            "already been counted will be failed."
+        ),
+        short_description=_("This person is removed from the activity."),
         automatic=False,
         permission=is_user_or_manager,
     )

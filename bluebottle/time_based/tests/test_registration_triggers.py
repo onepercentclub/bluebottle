@@ -179,8 +179,25 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_accept(self):
         super().test_accept()
+
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertEqual(self.registration.participants.get().status, "new")
+
+    def test_remove(self):
+        self.test_accept()
+
+        mail.outbox = []
+
+        self.registration.states.remove(save=True)
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            f'You have been removed from the activity "{self.activity.title}"'
+        )
+
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertEqual(self.registration.participants.get().status, "removed")
 
     def test_stop(self):
         self.test_initial()

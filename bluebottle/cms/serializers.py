@@ -3,7 +3,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls import reverse
 from django_tools.middlewares.ThreadLocal import get_current_user
-from fluent_contents.models import ContentItem, Placeholder
+from fluent_contents.models import ContentItem
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem

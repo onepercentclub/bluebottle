@@ -19,20 +19,20 @@ from rest_framework import status
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
+    LinksContent, StepsContent, ActivitiesContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.pages.models import DocumentItem, ImageTextItem, ActionItem, ColumnsItem
+from bluebottle.pages.models import DocumentItem, ImageTextItem
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
+    QuoteFactory, SlideFactory
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.pages import PageFactory

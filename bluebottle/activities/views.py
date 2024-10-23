@@ -17,8 +17,7 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
     ContributorListSerializer,
-    ActivityImageSerializer,
-)
+    ActivityImageSerializer, ContributionListSerializer, )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
@@ -32,8 +31,7 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     DeadlineParticipant,
     PeriodicParticipant,
-    TeamScheduleParticipant,
-)
+    TeamScheduleParticipant, )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -204,6 +202,42 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
     pagination_class = None
 
     permission_classes = (IsAuthenticated,)
+
+
+class ContributionList(JsonApiViewMixin, ListAPIView):
+
+    serializer_class = ContributionListSerializer
+
+    def get_queryset(self):
+        return (
+            Contributor.objects.prefetch_related("user", "activity", "contributions")
+            .instance_of(
+                Donor,
+                DateParticipant,
+                PeriodicParticipant,
+                ScheduleParticipant,
+                TeamScheduleParticipant,
+                DeedParticipant,
+                DeadlineParticipant,
+                CollectContributor,
+            )
+            .filter(user=self.request.user)
+            .exclude(status__in=["rejected", "failed"])
+            .exclude(donor__status__in=["new"])
+            .order_by("-created")
+            .annotate(
+                total_duration=Sum(
+                    "contributions__timecontribution__value",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
+            )
+            .annotate(
+                start=Min(
+                    "contributions__timecontribution__start",
+                    filter=Q(contributions__status__in=["succeeded", "new"]),
+                )
+            )
+        )
 
 
 class ActivityImage(ImageContentView):

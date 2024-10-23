@@ -739,6 +739,14 @@ class FundingPlatformSettings(BasePlatformSettings):
         _('Allow guests to donate rewards'), default=True
     )
 
+    matching_name = models.CharField(
+        _('Name to use for match funding'),
+        max_length=60,
+        null=True,
+        blank=True,
+        help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
+    )
+
     @property
     def stripe_publishable_key(self):
         from bluebottle.funding_stripe.utils import get_stripe_settings

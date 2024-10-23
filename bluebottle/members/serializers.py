@@ -784,8 +784,7 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + \
-            PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
 
 
 class PasswordSetSerializer(serializers.Serializer):

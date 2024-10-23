@@ -6,7 +6,7 @@ from bluebottle.clients import properties
 from bluebottle.cms.models import HomePage
 from bluebottle.cms.serializers import (
     HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer,
-    NewsItemSummarySerializer
+    NewsItemPreviewSerializer
 )
 from bluebottle.pages.models import Page
 from bluebottle.news.models import NewsItem
@@ -61,6 +61,6 @@ class NewsItemDetail(CMSDetailView):
     serializer_class = NewsItemSerializer
 
 
-class NewsItemList(ListAPIView):
-    queryset = NewsItem.objects.order_by('published_date')
-    serializer_class = NewsItemSummarySerializer
+class NewsItemList(JsonApiViewMixin, ListAPIView):
+    queryset = NewsItem.objects.published().order_by('-publication_date')
+    serializer_class = NewsItemPreviewSerializer

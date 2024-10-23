@@ -36,7 +36,7 @@ class SlideTestCase(BluebottleTestCase):
             title='Things to do',
             language='en')
         self.slide4 = DraftSlideFactory.create(author=self.user, language='nl')
-        self.homepage_url = reverse('home-page-detail')
+        self.homepage_url = reverse('home-detail')
 
         HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
@@ -44,7 +44,7 @@ class SlideTestCase(BluebottleTestCase):
         SlidesContent.objects.create_for_placeholder(placeholder, language_code='en')
         SlidesContent.objects.create_for_placeholder(placeholder, language_code='nl')
 
-        self.url = reverse('home-page-detail')
+        self.url = reverse('home-detail')
 
     def test_slides_list(self):
         """

@@ -52,18 +52,13 @@ class SlideTestCase(BluebottleTestCase):
         """
         response = self.client.get(self.homepage_url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        slides = response.data['blocks'][0]['slides']
+        slides = [
+            included for included in response.json()['included']
+            if included['type'] == 'pages/blocks/slides/slides'
+        ]
+        __import__('ipdb').set_trace()
         self.assertEqual(len(slides), 1)
-
-    def test_api_slides_list_filtered(self):
-        """
-        Ensure slides can be filtered by language
-        """
-        response = self.client.get(self.homepage_url, HTTP_X_APPLICATION_LANGUAGE='nl')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        slides = response.data['blocks'][0]['slides']
-        self.assertEqual(len(slides), 1)
-        self.assertEqual(slides[0]['title'], self.slide1.title)
+        self.assertEqual(slides[0]['attributes']['title'], self.slide1.title)
 
     def test_slides_list_data(self):
         """
@@ -71,9 +66,14 @@ class SlideTestCase(BluebottleTestCase):
         """
         response = self.client.get(self.homepage_url, HTTP_X_APPLICATION_LANGUAGE='en')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        slides = response.data['blocks'][0]['slides']
+
+        slides = [
+            included for included in response.json()['included']
+            if included['type'] == 'pages/blocks/slides/slides'
+        ]
         self.assertEqual(len(slides), 2)
+
         slide = slides[0]
-        self.assertEqual(slide['title'], self.slide2.title)
-        self.assertTrue(slide['video'].startswith('http://testserver/media/banner_slides/sparks'))
-        self.assertEqual(slide['body'], self.slide2.body)
+        self.assertEqual(slide['attributes']['title'], self.slide2.title)
+        self.assertTrue(slide['attributes']['video'].startswith('http://testserver/media/banner_slides/sparks'))
+        self.assertEqual(slide['attributes']['body'], self.slide2.body)

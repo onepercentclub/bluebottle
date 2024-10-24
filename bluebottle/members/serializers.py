@@ -708,15 +708,18 @@ class MemberProfileSerializer(ModelSerializer):
         many=True,
         queryset=Skill.objects.all(),
     )
+    remote_id = serializers.CharField(read_only=True)
+    avatar = SorlImageField('200x200', source='picture', crop='center')
 
     class Meta():
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'about_me', 'required',
+            'id', 'first_name', 'last_name', 'about_me', 'full_name', 'required',
             'birthdate', 'segments', 'phone_number',
             'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
-            'subscribed', 'matching_options_set'
+            'matching_options_set', 'remote_id', 'avatar',
+            'subscribed', 'receive_reminder_emails', 'campaign_notifications'
         )
 
     class JSONAPIMeta():

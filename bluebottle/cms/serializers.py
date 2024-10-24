@@ -3,7 +3,7 @@ from builtins import object
 from django.db.models import Q
 from django.urls import reverse
 from django_tools.middlewares.ThreadLocal import get_current_user
-from fluent_contents.models import ContentItem, Placeholder
+from fluent_contents.models import ContentItem
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
@@ -16,7 +16,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
 )
 from bluebottle.cms.models import (
-    QuotesContent, Quote,
+    HomePage, QuotesContent, Quote,
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
@@ -452,14 +452,14 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
         fields = ('id', 'text', 'image', 'ratio', 'align', 'type',)
 
     class JSONAPIMeta:
-        resource_name = 'pages/blocks/image-round-text'
+        resource_name = 'pages/blocks/image-rounded-text'
 
 
 class DocumentBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = DocumentItem
 
-        fields = ('id', 'text', 'document',)
+        fields = ('id', 'type', 'text', 'document',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/document'
@@ -469,7 +469,7 @@ class ActionBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ActionItem
 
-        fields = ('id', 'link', 'title',)
+        fields = ('id', 'type', 'link', 'title',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/action'
@@ -479,7 +479,7 @@ class RawHHTMLBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = RawHtmlItem
 
-        fields = ('id', 'html',)
+        fields = ('id', 'type', 'html',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/raw-html'
@@ -547,7 +547,10 @@ class BlockSerializer(PolymorphicModelSerializer):
         PlainTextBlockSerializer,
         TextBlockSerializer,
         ColumnBlockSerializer,
-        OEmbedBlockSerializer
+        OEmbedBlockSerializer,
+        DocumentBlockSerializer,
+        ActionBlockSerializer,
+        RawHHTMLBlockSerializer
     ]
 
     def get_slides(self, obj):
@@ -592,6 +595,8 @@ class BaseCMSSerializer(ModelSerializer):
         model=ContentItem
     )
 
+    content_attribute = 'content'
+
     def get_blocks(self, obj):
         return obj.content.contentitems.all().translated()
 
@@ -624,9 +629,9 @@ class BaseCMSSerializer(ModelSerializer):
     }
 
 
-class HomeSerializer(ModelSerializer):
+class HomeSerializer(BaseCMSSerializer):
     class Meta(BaseCMSSerializer.Meta):
-        model = Placeholder
+        model = HomePage
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'homepages'
@@ -634,19 +639,13 @@ class HomeSerializer(ModelSerializer):
 
 class PageSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    blocks = PolymorphicSerializerMethodResourceRelatedField(
-        BlockSerializer,
-        read_only=True,
-        many=True,
-        model=ContentItem
-    )
 
     def get_blocks(self, obj):
         return obj.content.contentitems.all()
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page')
+        fields = BaseCMSSerializer.Meta.fields + ('title', 'show_title', 'full_page', 'slug')
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'pages'
@@ -654,13 +653,38 @@ class PageSerializer(BaseCMSSerializer):
 
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    main_image = SorlImageField('800x400')
+
+    content_attribute = 'contents'
+
+    def get_blocks(self, obj):
+        return obj.contents.contentitems.all()
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title',)
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'author', 'publication_date', 'slug', 'main_image'
+        )
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'news-item'
+        included_resources = BaseCMSSerializer.JSONAPIMeta.included_resources + ['author', ]
+
+    included_serializers = dict(
+        author='bluebottle.initiatives.serializers.MemberSerializer',
+        **BaseCMSSerializer.included_serializers
+    )
+
+
+class NewsItemPreviewSerializer(ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+
+    class Meta:
+        model = Page
+        fields = ('id', 'title', 'slug', 'publication_date',)
+
+    class JSONAPIMeta:
+        resource_name = 'news-item-preview'
 
 
 class FaviconsSerializer(serializers.Serializer):

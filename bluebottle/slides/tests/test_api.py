@@ -56,7 +56,6 @@ class SlideTestCase(BluebottleTestCase):
             included for included in response.json()['included']
             if included['type'] == 'pages/blocks/slides/slides'
         ]
-        __import__('ipdb').set_trace()
         self.assertEqual(len(slides), 1)
         self.assertEqual(slides[0]['attributes']['title'], self.slide1.title)
 

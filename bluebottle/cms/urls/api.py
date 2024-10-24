@@ -12,5 +12,5 @@ urlpatterns = [
     url(r'^page/(?P<slug>[\w-]+)$', PageDetail.as_view(), name='page-detail'),
 
     url(r'^news/$', NewsItemList.as_view(), name='news-list'),
-    url(r'^news/(?P<slug>[\w-]+)$', NewsItemDetail.as_view(), name='page-detail'),
+    url(r'^news/(?P<slug>[\w-]+)$', NewsItemDetail.as_view(), name='news-detail'),
 ]

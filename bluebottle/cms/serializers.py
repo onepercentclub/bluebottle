@@ -653,6 +653,7 @@ class PageSerializer(BaseCMSSerializer):
 
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    main_image = SorlImageField('800x400')
 
     content_attribute = 'contents'
 
@@ -661,7 +662,9 @@ class NewsItemSerializer(BaseCMSSerializer):
 
     class Meta(BaseCMSSerializer.Meta):
         model = Page
-        fields = BaseCMSSerializer.Meta.fields + ('title', 'author', 'publication_date', 'slug')
+        fields = BaseCMSSerializer.Meta.fields + (
+            'title', 'author', 'publication_date', 'slug', 'main_image'
+        )
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):
         resource_name = 'news-item'

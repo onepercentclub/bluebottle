@@ -442,7 +442,7 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         password = serializer.validated_data.pop('password')
 
         if not self.request.user.check_password(password):
-            raise PermissionDenied('Platform is closed')
+            raise PermissionDenied('Wrong password')
 
         self.request.user.last_logout = now()
         self.request.user.save()

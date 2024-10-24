@@ -105,6 +105,23 @@ class UpcomingFacet(Facet):
             )
 
 
+class DraftFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def add_filter(self, filter_values):
+        if filter_values == ['1']:
+            statuses = ['draft', 'needs_work']
+            return Terms(
+                status=statuses
+            )
+
+
 class BooleanFacet(Facet):
     agg_type = 'terms'
 
@@ -259,6 +276,7 @@ class ActivitySearch(Search):
     facets = {
         'initiative.id': InitiativeFacet(),
         'upcoming': UpcomingFacet(),
+        'draft': DraftFacet(),
         'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
         'status': TermsFacet(field='status'),
         'matching': MatchingFacet(field='matching'),
@@ -308,6 +326,26 @@ class ActivitySearch(Search):
                 search = search.sort(
                     {"is_online": {"order": "desc"}}
                 )
+
+        if self._sort == 'start':
+            # Used for activity tab in initiatives
+            start = now()
+            end = datetime.max
+
+            search = search.sort({
+                "dates.end": {
+                    "order": "asc",
+                    "mode": "min",
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                                Range(**{'dates.end': {'lte': end}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                        )
+                    }
+                }
+            })
+            return search
 
         if self._sort == 'date' or not self._sort:
             if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == '1':

@@ -113,6 +113,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "Don't forget to inform the initiator of the necessary adjustments."),
         conditions=[],
         automatic=False,
+        permission=is_staff,
     )
 
     reject = Transition(

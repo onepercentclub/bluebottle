@@ -430,7 +430,10 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
-        serializer = self.get_serializer(specs.data, many=True)
+        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+        data = specs.data
+        data.extend(specs2.data)
+        serializer = self.get_serializer(data, many=True)
 
         for spec in specs.data:
             spec.pk = spec.id

@@ -16,7 +16,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
@@ -431,18 +431,8 @@ class PasswordProtectedMemberCreateApiView(JsonApiViewMixin, CreateAPIView):
     permission_classes = (IsAuthenticated, )
     queryset = USER_MODEL.objects.all()
 
-    def get_object(self):
-        if isinstance(self.request.user, AnonymousUser):
-            raise NotAuthenticated()
-        return self.request.user
-
     def perform_create(self, serializer):
-        password = serializer.validated_data.pop('password')
-
-        if not self.request.user.check_password(password):
-            raise PermissionDenied('Wrong password')
-
-        user = self.get_object()
+        user = self.request.user
 
         serializer.instance = user
         user.last_logout = now()

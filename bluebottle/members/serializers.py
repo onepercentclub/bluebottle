@@ -764,9 +764,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         resource_name = 'reset-token-confirmations'
 
 
+class ValidatePassword:
+    requires_context = True
+
+    def __call__(self, value, field):
+        if not field.context['request'].user.check_password(value):
+            raise serializers.ValidationError(_('Password does not match'))
+
+
 class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        write_only=True, required=True, max_length=128
+        write_only=True, required=True, max_length=128, validators=[ValidatePassword()]
     )
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 

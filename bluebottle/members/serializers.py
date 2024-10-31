@@ -360,7 +360,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed', 'segments', 'can_pledge'
+            'subscribed', 'segments', 'can_pledge',
         )
 
 
@@ -710,6 +710,7 @@ class MemberProfileSerializer(ModelSerializer):
     )
     remote_id = serializers.CharField(read_only=True)
     avatar = SorlImageField('200x200', source='picture', crop='center')
+    has_usable_password = serializers.BooleanField(read_only=True)
 
     class Meta():
         model = Member
@@ -719,7 +720,8 @@ class MemberProfileSerializer(ModelSerializer):
             'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
-            'subscribed', 'receive_reminder_emails', 'campaign_notifications'
+            'subscribed', 'receive_reminder_emails', 'campaign_notifications',
+            'has_usable_password'
         )
 
     class JSONAPIMeta():
@@ -777,6 +779,14 @@ class EmailSetSerializer(PasswordProtectedMemberSerializer):
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
 
+    class JSONAPIMeta:
+        resource_name = 'profile-email'
+
+    def save(self):
+        user = self.context['request'].user
+        user.email = self.validated_data['email']
+        user.save()
+
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
     new_password = PasswordField(
@@ -788,6 +798,9 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+
+    class JSONAPIMeta:
+        resource_name = 'profile-password'
 
 
 class PasswordSetSerializer(serializers.Serializer):

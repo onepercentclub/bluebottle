@@ -16,7 +16,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
@@ -47,7 +47,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
 from bluebottle.utils.views import (
-    RetrieveAPIView, UpdateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
+    RetrieveAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
 )
 
 USER_MODEL = get_user_model()
@@ -169,7 +169,6 @@ class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
             assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']
             user_properties = list(assertion_mapping.keys())
 
-            # Ensure read-only user properties are not being changed
             for prop in [prop for prop in user_properties if prop in serializer.validated_data]:
                 if getattr(serializer.instance, prop) != serializer.validated_data.get(prop):
                     raise PermissionDenied
@@ -428,33 +427,24 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
         serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])
 
 
-class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
+class PasswordProtectedMemberCreateApiView(JsonApiViewMixin, CreateAPIView):
+    permission_classes = (IsAuthenticated, )
     queryset = USER_MODEL.objects.all()
 
-    permission_classes = (CurrentUserPermission, )
+    def perform_create(self, serializer):
+        user = self.request.user
 
-    def get_object(self):
-        if isinstance(self.request.user, AnonymousUser):
-            raise NotAuthenticated()
-        return self.request.user
+        serializer.instance = user
+        user.last_logout = now()
 
-    def perform_update(self, serializer):
-        password = serializer.validated_data.pop('password')
-
-        if not self.request.user.check_password(password):
-            raise PermissionDenied('Wrong password')
-
-        self.request.user.last_logout = now()
-        self.request.user.save()
-
-        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+        serializer.save()
 
 
-class EmailSetView(PasswordProtectedMemberUpdateApiView):
+class EmailSetView(PasswordProtectedMemberCreateApiView):
     serializer_class = EmailSetSerializer
 
 
-class PasswordSetView(PasswordProtectedMemberUpdateApiView):
+class PasswordSetView(PasswordProtectedMemberCreateApiView):
     serializer_class = PasswordUpdateSerializer
 
 

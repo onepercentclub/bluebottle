@@ -689,14 +689,6 @@ class BankAccount(TriggerMixin, PolymorphicModel):
 
     status = models.CharField(max_length=40)
 
-    logo = models.ImageField(
-        null=True,
-        blank=True,
-        verbose_name=_('Logo'),
-        upload_to="bank_account_logo/"
-    )
-    description = models.TextField(blank=True, verbose_name=_('Description'))
-
     @property
     def parent(self):
         return self.connect_account

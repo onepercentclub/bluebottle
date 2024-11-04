@@ -34,7 +34,6 @@ class PaymentSerializer(ModelSerializer):
 class BaseBankAccountSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     connect_account = ResourceRelatedField(queryset=PayoutAccount.objects.all())
-    logo = SorlImageField("x300", upscale=False, crop="center")
 
     class Meta(object):
         model = BankAccount
@@ -43,8 +42,6 @@ class BaseBankAccountSerializer(ModelSerializer):
             'id',
             'connect_account',
             'status',
-            'description',
-            'logo',
         )
 
     included_serializers = {

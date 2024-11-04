@@ -31,6 +31,7 @@ from bluebottle.time_based.notifications.registrations import (
     UserRegistrationAcceptedNotification,
     UserTeamRegistrationAcceptedNotification,
     UserRegistrationRejectedNotification,
+    UserRegistrationRemovedNotification,
     UserTeamRegistrationRejectedNotification,
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
@@ -44,6 +45,7 @@ from bluebottle.time_based.states import (
     ScheduleActivityStateMachine,
 )
 from bluebottle.time_based.states.participants import (
+    PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
     ScheduleParticipantStateMachine,
     TeamScheduleParticipantStateMachine,
@@ -335,6 +337,23 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     "activity",
                     PeriodicActivityStateMachine.unlock,
                     conditions=[activity_spots_left],
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            PeriodicRegistrationStateMachine.remove,
+            effects=[
+                UnFollowActivityEffect,
+                NotificationEffect(UserRegistrationRemovedNotification),
+                RelatedTransitionEffect(
+                    "activity",
+                    PeriodicActivityStateMachine.unlock,
+                    conditions=[activity_spots_left],
+                ),
+                RelatedTransitionEffect(
+                    "participants",
+                    PeriodicParticipantStateMachine.auto_remove,
                 ),
             ],
         ),

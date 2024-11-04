@@ -129,7 +129,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         default=False
     )
 
-    has_organization = models.BooleanField(null=True, default=None)
+    has_organization = models.BooleanField(null=True, default=False)
 
     organization = models.ForeignKey(
         Organization,
@@ -184,9 +184,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             'has_organization', 'story', 'image',
             'theme',
         ]
-
-        if self.has_organization:
-            fields.append('organization')
 
         return fields
 

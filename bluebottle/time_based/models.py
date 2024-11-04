@@ -98,7 +98,7 @@ class TimeBasedActivity(Activity):
     review_link = models.URLField(
         _('External website link'),
         help_text=_('Direct participants to a questionnaire created from an external website like Microsoft forms.'),
-        max_length=255,
+        max_length=2048,
         null=True, blank=True
     )
 

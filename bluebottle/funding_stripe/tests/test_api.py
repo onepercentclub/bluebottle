@@ -469,7 +469,6 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
                 {"url": self.activity.get_absolute_url(), "mcc": "8398"},
             )
             self.assertEqual(call["individual"], {"email": self.user.email})
-            self.assertEqual(call["tos_acceptance"]["service_agreement"], "full")
             self.assertEqual(
                 call["capabilities"],
                 {

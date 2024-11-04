@@ -330,7 +330,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "new": ["new"],
             "accepted": ["accepted"],
-            "rejected": ["rejected", "stopped"],
+            "rejected": ["rejected", "stopped", "removed"],
         },
     )
 

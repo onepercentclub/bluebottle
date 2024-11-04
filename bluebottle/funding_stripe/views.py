@@ -121,12 +121,16 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
     }
 
     def perform_update(self, serializer):
-        if serializer.instance.country != serializer.validated_data["country"]:
+        if (
+            "country" in serializer.validated_data
+            and serializer.instance.country != serializer.validated_data["country"]
+        ):
             if serializer.instance.status == "verified":
                 raise ValidationError("Cannot change country of verified account")
 
             serializer.instance.external_accounts.all().delete()
             serializer.instance.account_id = None
+            serializer.instance.tos_acceptance = False
 
         return super().perform_update(serializer)
 
@@ -247,14 +251,24 @@ class IntentWebHookView(View):
                     payment.donation.save()
                     payment.save()
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to succeeded')
 
             elif event.type == 'payment_intent.payment_failed':
                 payment = self.get_payment(event.data.object.id)
                 if payment.status != payment.states.failed.value:
                     payment.states.fail(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to failed')
+
+            elif event.type == 'charge.pending':
+                if not event.data.object.payment_intent:
+                    return HttpResponse('Not an intent payment')
+
+                payment = self.get_payment(event.data.object.payment_intent)
+                if payment.status != payment.states.pending.value:
+                    payment.states.authorize(save=True)
+
+                return HttpResponse('Updated payment to pending')
 
             elif event.type == 'charge.refunded':
                 if not event.data.object.payment_intent:
@@ -263,16 +277,15 @@ class IntentWebHookView(View):
                 payment = self.get_payment(event.data.object.payment_intent)
                 payment.states.refund(save=True)
 
-                return HttpResponse('Updated payment')
+                return HttpResponse('Updated payment to refunded')
             else:
                 return HttpResponse('Skipped event {}'.format(event.type))
 
         except StripePayment.DoesNotExist:
             return HttpResponse('Payment not found', status=400)
 
-    def get_payment(self, intent_id):
-        intent = PaymentIntent.objects.get(intent_id=intent_id)
-
+    def get_payment(self, payment_id):
+        intent = PaymentIntent.objects.get(intent_id=payment_id)
         try:
             return intent.payment
         except StripePayment.DoesNotExist:
@@ -417,7 +430,10 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
-        serializer = self.get_serializer(specs.data, many=True)
+        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+        data = specs.data
+        data.extend(specs2.data)
+        serializer = self.get_serializer(data, many=True)
 
         for spec in specs.data:
             spec.pk = spec.id

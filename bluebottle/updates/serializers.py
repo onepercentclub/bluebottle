@@ -55,8 +55,13 @@ class UpdateSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         anonymous = FundingPlatformSettings.load().anonymous_donations
         current_user = get_current_user()
-        if anonymous and data['author'] != current_user:
+        if instance.contribution and anonymous and data['author'] != current_user:
             data['author'] = None
+        if instance.fake_name:
+            data['author'] = None
+        if instance.contribution and instance.contribution.anonymous:
+            data['author'] = None
+
         return data
 
     def validate(self, value):
@@ -84,7 +89,8 @@ class UpdateSerializer(serializers.ModelSerializer):
             'video_url',
             'pinned',
             'permissions',
-            'contribution'
+            'contribution',
+            'fake_name',
         )
         meta_fields = (
             'permissions',

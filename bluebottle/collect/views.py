@@ -12,6 +12,7 @@ from bluebottle.collect.serializers import (
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
+from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
@@ -47,7 +48,7 @@ class CollectActivityListView(JsonApiViewMixin, ListCreateAPIView):
 class CollectActivityDetailView(JsonApiViewMixin, ClosedSegmentActivityViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (
         ActivityStatusPermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission),
+        OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
         DeleteActivityPermission, ActivitySegmentPermission
     )
 

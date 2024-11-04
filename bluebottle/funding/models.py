@@ -689,6 +689,8 @@ class BankAccount(TriggerMixin, PolymorphicModel):
 
     status = models.CharField(max_length=40)
 
+    name = models.TextField(blank=True, verbose_name=_('Name'))
+
     @property
     def parent(self):
         return self.connect_account

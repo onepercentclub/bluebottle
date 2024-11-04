@@ -106,7 +106,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     next_step_link = models.URLField(
         _('Redirect step link'),
-        max_length=100,
+        max_length=2048,
         blank=True,
         null=True,
         default='',

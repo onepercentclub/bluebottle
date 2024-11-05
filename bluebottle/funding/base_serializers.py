@@ -6,8 +6,6 @@ from bluebottle.funding.models import Donor, Payment, BankAccount, PayoutAccount
 from bluebottle.transitions.serializers import AvailableTransitionsField
 from bluebottle.utils.fields import FSMField
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField
-
 
 class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)

@@ -3,7 +3,7 @@ from builtins import object
 
 from django.conf import settings
 from django.db import models, connection
-from django.utils.functional import cached_property, lazy
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from djmoney.money import Money
@@ -19,7 +19,7 @@ from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host
 
 
 @python_2_unicode_compatible
@@ -409,11 +409,11 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def verification_link(self):
         stripe = get_stripe()
-        url = get_current_host() + '/' + get_current_language() + '/payout-account/overview'
+
         account_link = stripe.AccountLink.create(
             account=self.account_id,
-            refresh_url=url,
-            return_url=url,
+            refresh_url=f'{get_current_host()}/activities/stripe/expired',
+            return_url=f'{get_current_host()}/activities/stripe/complete',
             type="account_onboarding",
             collection_options={
                 "fields": "eventually_due",

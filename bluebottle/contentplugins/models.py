@@ -45,3 +45,6 @@ class PictureItem(ContentItem):
 
     def __str__(self):
         return self.image.name if self.image else u'(no image)'
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/image'

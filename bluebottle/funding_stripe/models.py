@@ -475,13 +475,6 @@ class StripePayoutAccount(PayoutAccount):
         return self.owner.full_name
 
     def check_status(self):
-        # stripe = get_stripe()
-        # acc = stripe.Account.modify_capability(
-        #     self.account.id,
-        #     "bank_transfer_payments",
-        #     requested=True
-        # )
-
         if self.account:
             del self.account
         self.update(self.account)

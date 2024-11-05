@@ -33,20 +33,62 @@ class PaymentIntent(models.Model):
 
             statement_descriptor = connection.tenant.name[:22]
 
-            connect_account = self.donation.activity.bank_account.connect_account
             stripe = get_stripe()
-
             user = get_current_user()
             return_url = self.donation.activity.get_absolute_url()
 
-            if user and user.id and (user.is_staff or user.is_superuser):
+            connect_account = self.donation.activity.bank_account.connect_account
+            account_currency = connect_account.account.default_currency
+            donation_currency = self.donation.amount.currency
+            if (
+                user and user.id
+                and (user.is_staff or user.is_superuser)
+                and account_currency == donation_currency.code.lower()
+            ):
+                payment_method_options = {
+                    "customer_balance": {
+                        "funding_type": "bank_transfer",
+                        "bank_transfer": {
+                            "type": "eu_bank_transfer",
+                            "eu_bank_transfer": {"country": "NL"},
+                        },
+                    },
+                }
+                if account_currency == 'usd':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                            "bank_transfer": {
+                                "type": "us_bank_transfer",
+                            },
+                        },
+                    }
+                if account_currency == 'gbp':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                            "bank_transfer": {
+                                "type": "gb_bank_transfer",
+                            },
+                        },
+                    }
+                if account_currency == 'mxn':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                            "bank_transfer": {
+                                "type": "mx_bank_transfer",
+                            },
+                        },
+                    }
+
                 customer = stripe.Customer.create(
                     name=user.full_name,
                     email=user.email,
                 )
                 intent_args = dict(
                     amount=int(self.donation.amount.amount * 100),
-                    currency=self.donation.amount.currency,
+                    currency=donation_currency,
                     customer=customer.id,
                     transfer_data={
                         'destination': connect_account.account_id,
@@ -57,15 +99,7 @@ class PaymentIntent(models.Model):
                     automatic_payment_methods={"enabled": True},
                     return_url=return_url,
                     payment_method_data={"type": "customer_balance"},
-                    payment_method_options={
-                        "customer_balance": {
-                            "funding_type": "bank_transfer",
-                            "bank_transfer": {
-                                "type": "eu_bank_transfer",
-                                "eu_bank_transfer": {"country": "NL"},
-                            },
-                        },
-                    },
+                    payment_method_options=payment_method_options,
                     confirm=True,
                 )
             else:
@@ -87,6 +121,7 @@ class PaymentIntent(models.Model):
             intent = stripe.PaymentIntent.create(
                 **intent_args
             )
+
             self.intent_id = intent.id
             self.client_secret = intent.client_secret
 
@@ -157,8 +192,8 @@ class StripePayment(Payment):
                 transfer.amount / 100.0, transfer.currency
             )
             if (
-                self.donation.amount.currency == transfer.currency
-                and self.donation.amount.amount != transfer.amount / 100.00
+                    self.donation.amount.currency == transfer.currency
+                    and self.donation.amount.amount != transfer.amount / 100.00
             ):
                 self.donation.amount = Money(
                     transfer.amount / 100.0, transfer.currency
@@ -445,7 +480,6 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
-
         self.save()
 
     def retrieve_account(self):

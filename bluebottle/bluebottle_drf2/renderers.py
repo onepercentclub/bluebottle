@@ -130,7 +130,11 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                             serializer,
                             getattr(serializer, "_poly_force_type_resolution", False),
                         )
-                        included_cache[new_item["type"]][new_item["id"]] = new_item
+
+                        try:
+                            included_cache[new_item["type"]][new_item["id"]] = new_item
+                        except TypeError:
+                            pass
 
                         cls.extract_included(
                             serializer_fields,

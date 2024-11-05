@@ -26,7 +26,9 @@ class ParticipantSerializer(BaseContributorSerializer):
         return obj.status
 
     def get_start(self, obj):
-        return obj.start
+        if obj.contributions.exists():
+            return obj.contributions.last().start
+        return None
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (

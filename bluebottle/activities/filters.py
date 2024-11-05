@@ -56,20 +56,28 @@ class OfficeRestrictionFacet(Facet):
         if filter_value == '0' or not user.is_authenticated or not user.location:
             return
         office = user.location
-        return Nested(
-            path='office_restriction',
-            query=Term(
-                office_restriction__restriction='all'
-            ) | (
-                Term(office_restriction__office=office.id) &
-                Term(office_restriction__restriction='office')
-            ) | (
+        query = Term(
+            office_restriction__restriction='all'
+        ) | (
+            Term(office_restriction__office=office.id) &
+            Term(office_restriction__restriction='office')
+        )
+
+        if office.subregion:
+            query = query | (
                 Term(office_restriction__subregion=office.subregion.id) &
                 Term(office_restriction__restriction='office_subregion')
-            ) | (
-                Term(office_restriction__region=office.subregion.region.id) &
-                Term(office_restriction__restriction='office_region')
             )
+
+            if office.subregion.region:
+                query = query | (
+                    Term(office_restriction__region=office.subregion.region.id) &
+                    Term(office_restriction__restriction='office_region')
+                )
+
+        return Nested(
+            path='office_restriction',
+            query=query
         )
 
 
@@ -94,6 +102,23 @@ class UpcomingFacet(Facet):
         if filter_values == ['0']:
             return Terms(
                 status=['succeeded', 'partially_funded']
+            )
+
+
+class DraftFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return []
+
+    def add_filter(self, filter_values):
+        if filter_values == ['1']:
+            statuses = ['draft', 'needs_work']
+            return Terms(
+                status=statuses
             )
 
 
@@ -251,6 +276,7 @@ class ActivitySearch(Search):
     facets = {
         'initiative.id': InitiativeFacet(),
         'upcoming': UpcomingFacet(),
+        'draft': DraftFacet(),
         'activity-type': TermsFacet(field='activity_type', min_doc_count=0),
         'status': TermsFacet(field='status'),
         'matching': MatchingFacet(field='matching'),
@@ -300,6 +326,26 @@ class ActivitySearch(Search):
                 search = search.sort(
                     {"is_online": {"order": "desc"}}
                 )
+
+        if self._sort == 'start':
+            # Used for activity tab in initiatives
+            start = now()
+            end = datetime.max
+
+            search = search.sort({
+                "dates.end": {
+                    "order": "asc",
+                    "mode": "min",
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                                Range(**{'dates.end': {'lte': end}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                        )
+                    }
+                }
+            })
+            return search
 
         if self._sort == 'date' or not self._sort:
             if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == '1':

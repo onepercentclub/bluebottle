@@ -27,6 +27,7 @@ class ImpactGoalSerializer(ModelSerializer):
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer, queryset=Activity.objects.all()
     )
+    impact_type = ResourceRelatedField(source='type', queryset=ImpactType.objects.all())
 
     errors = ValidationErrorsField()
     required = RequiredErrorsField()
@@ -35,7 +36,6 @@ class ImpactGoalSerializer(ModelSerializer):
         'impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
-    impact_type = ResourceRelatedField(source='type', queryset=ImpactType.objects.all())
 
     class Meta(object):
         model = ImpactGoal

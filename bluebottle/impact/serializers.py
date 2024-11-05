@@ -1,6 +1,6 @@
 from builtins import object
 
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField, ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
@@ -32,9 +32,10 @@ class ImpactGoalSerializer(ModelSerializer):
     required = RequiredErrorsField()
 
     included_serializers = {
-        'type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
+        'impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
+    impact_type = ResourceRelatedField(source='type', queryset=ImpactType.objects.all())
 
     class Meta(object):
         model = ImpactGoal
@@ -46,7 +47,7 @@ class ImpactGoalSerializer(ModelSerializer):
             'realized',
             'realized_from_contributions',
             'activity',
-            'type',
+            'impact_type',
             'required',
             'errors',
             'participant_impact',
@@ -55,4 +56,4 @@ class ImpactGoalSerializer(ModelSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/impact-goals'
-        included_resources = ['type', 'activity']
+        included_resources = ['impact_type', 'activity']

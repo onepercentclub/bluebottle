@@ -449,7 +449,7 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = ImageTextRoundItem
 
-        fields = ('id', 'text', 'image', 'align', 'type',)
+        fields = ('id', 'text', 'image', 'type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-rounded-text'

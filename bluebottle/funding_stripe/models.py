@@ -35,15 +35,35 @@ class PaymentIntent(models.Model):
 
             stripe = get_stripe()
             user = get_current_user()
-            return_url = self.donation.activity.get_absolute_url()
-
             connect_account = self.donation.activity.bank_account.connect_account
-            account_currency = connect_account.account.default_currency
-            donation_currency = self.donation.amount.currency
+
+            intent_args = dict(
+                amount=int(self.donation.amount.amount * 100),
+                currency=self.donation.amount.currency,
+                transfer_data={
+                    'destination': connect_account.account_id,
+                },
+                automatic_payment_methods={"enabled": True},
+                statement_descriptor=statement_descriptor,
+                statement_descriptor_suffix=statement_descriptor[:18],
+                metadata=self.metadata,
+            )
+
+            platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
+            donation_currency = self.donation.amount.currency.code.lower()
+
+            if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                intent_args['on_behalf_of'] = connect_account.account_id
+
+            if platform_currency == 'usd' and connect_account.country != 'US':
+                intent_args['on_behalf_of'] = connect_account.account_id
+
             if (
-                user and user.id
+                # Change this is we can do international bank transfers
+                not intent_args['on_behalf_of']
+                and platform_currency == donation_currency
+                and user and user.id
                 and (user.is_staff or user.is_superuser)
-                and account_currency == donation_currency.code.lower()
             ):
                 payment_method_options = {
                     "customer_balance": {
@@ -54,7 +74,7 @@ class PaymentIntent(models.Model):
                         },
                     },
                 }
-                if account_currency == 'usd':
+                if platform_currency == 'usd':
                     payment_method_options = {
                         "customer_balance": {
                             "funding_type": "bank_transfer",
@@ -63,7 +83,7 @@ class PaymentIntent(models.Model):
                             },
                         },
                     }
-                if account_currency == 'gbp':
+                if platform_currency == 'gbp':
                     payment_method_options = {
                         "customer_balance": {
                             "funding_type": "bank_transfer",
@@ -72,13 +92,10 @@ class PaymentIntent(models.Model):
                             },
                         },
                     }
-                if account_currency == 'mxn':
+                if donation_currency == 'mxn':
                     payment_method_options = {
                         "customer_balance": {
                             "funding_type": "bank_transfer",
-                            "bank_transfer": {
-                                "type": "mx_bank_transfer",
-                            },
                         },
                     }
 
@@ -86,37 +103,10 @@ class PaymentIntent(models.Model):
                     name=user.full_name,
                     email=user.email,
                 )
-                intent_args = dict(
-                    amount=int(self.donation.amount.amount * 100),
-                    currency=donation_currency,
-                    customer=customer.id,
-                    transfer_data={
-                        'destination': connect_account.account_id,
-                    },
-                    statement_descriptor=statement_descriptor,
-                    statement_descriptor_suffix=statement_descriptor[:18],
-                    metadata=self.metadata,
-                    automatic_payment_methods={"enabled": True},
-                    return_url=return_url,
-                    payment_method_data={"type": "customer_balance"},
-                    payment_method_options=payment_method_options,
-                    confirm=True,
-                )
-            else:
-                intent_args = dict(
-                    amount=int(self.donation.amount.amount * 100),
-                    currency=self.donation.amount.currency,
-                    transfer_data={
-                        'destination': connect_account.account_id,
-                    },
-                    automatic_payment_methods={"enabled": True},
-                    statement_descriptor=statement_descriptor,
-                    statement_descriptor_suffix=statement_descriptor[:18],
-                    metadata=self.metadata,
-                )
 
-            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-                intent_args['on_behalf_of'] = connect_account.account_id
+                intent_args['customer'] = customer.id
+                intent_args['payment_method_options'] = payment_method_options
+                intent_args['payment_method_data'] = {"type": "customer_balance"}
 
             intent = stripe.PaymentIntent.create(
                 **intent_args
@@ -191,6 +181,7 @@ class StripePayment(Payment):
             self.donation.payout_amount = Money(
                 transfer.amount / 100.0, transfer.currency
             )
+
             if (
                     self.donation.amount.currency == transfer.currency
                     and self.donation.amount.amount != transfer.amount / 100.00
@@ -509,6 +500,17 @@ class StripePayoutAccount(PayoutAccount):
         return self.owner.full_name
 
     def check_status(self):
+        stripe = get_stripe()
+        stripe.Account.modify_capability(
+            self.account.id,
+            "mx_bank_transfer_payments",
+            requested=True
+        )
+        caps = stripe.Account.list_capabilities(
+            self.account.id,
+        )
+        print(caps)
+
         if self.account:
             del self.account
         self.update(self.account)

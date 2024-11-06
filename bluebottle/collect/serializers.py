@@ -71,6 +71,9 @@ class CollectActivitySerializer(BaseActivitySerializer):
             user__isnull=False
         ).count()
 
+    target = serializers.FloatField(allow_null=True)
+    realized = serializers.FloatField(allow_null=True)
+
     class Meta(BaseActivitySerializer.Meta):
         model = CollectActivity
         fields = BaseActivitySerializer.Meta.fields + (

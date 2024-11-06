@@ -7,7 +7,7 @@ from bluebottle.bb_accounts.views import (
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
     PasswordStrengthDetail, MemberSignUp,
-    MemberProfileDetail
+    MemberProfileDetail, AvatarImage
 )
 
 # Public User API:
@@ -52,4 +52,9 @@ urlpatterns = [
         name='user-export'),
     url(r'^password-strength$', PasswordStrengthDetail.as_view(),
         name='password-strength'),
+    url(
+        r'^(?P<pk>\d+)/avatar/(?P<size>\d+x\d+)$',
+        AvatarImage.as_view(),
+        name='avatar-image'
+    ),
 ]

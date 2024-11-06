@@ -151,7 +151,7 @@ class StripeSourcePayment(Payment):
 
     def refund(self):
         stripe = get_stripe()
-        stripe.Refund.create(self.charge_token, reverse_transfer=True)
+        stripe.Refund.create(charge=self.charge_token, reverse_transfer=True)
 
     def do_charge(self):
         stripe = get_stripe()

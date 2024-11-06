@@ -60,7 +60,7 @@ class PaymentIntent(models.Model):
 
             if (
                 # Change this is we can do international bank transfers
-                not intent_args['on_behalf_of']
+                'on_behalf_of' not in intent_args
                 and platform_currency == donation_currency
                 and user and user.id
                 and (user.is_staff or user.is_superuser)

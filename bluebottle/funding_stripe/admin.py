@@ -96,12 +96,13 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'verification_link',
     ]
     search_fields = ["account_id"]
-    fields = [
-        "created", "owner", "status", "business_type",
-        "country", "public", 'payments_enabled', 'payouts_enabled', 'requirements_list',
+    fields = PayoutAccountChildAdmin.fields + [
+        "business_type",
+        "country", 'payments_enabled', 'payouts_enabled', 'requirements_list',
         'verification_link',
         'partner_organization'
     ]
+
     list_display = ["id", "account_id", "owner", "status"]
 
     def get_fields(self, request, obj=None):

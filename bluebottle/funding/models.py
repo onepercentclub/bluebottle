@@ -633,6 +633,14 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
 
     public = models.BooleanField(default=False)
 
+    partner_organization = models.ForeignKey(
+        'organizations.Organization',
+        blank=True, null=True,
+        related_name='payout_accounts',
+        verbose_name=_('Partner organisation'),
+        on_delete=models.SET_NULL
+    )
+
     @property
     def funding(self):
         for account in self.external_accounts.all():
@@ -688,8 +696,6 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     )
 
     status = models.CharField(max_length=40)
-
-    name = models.TextField(blank=True, verbose_name=_('Name'))
 
     @property
     def parent(self):

@@ -32,6 +32,7 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
+    ExternalAccountSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
@@ -172,7 +173,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     permission_classes = [IsAuthenticated]
 
     queryset = ExternalAccount.objects.all()
-    serializer_class = BankAccountSerializer
+    serializer_class = ExternalAccountSerializer
 
     prefetch_for_includes = {
         'connect_account': ['connect_account'],

@@ -71,8 +71,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
             user__isnull=False
         ).count()
 
-    target = serializers.FloatField(allow_null=True)
-    realized = serializers.FloatField(allow_null=True)
+    target = serializers.FloatField(allow_null=True, required=False)
+    realized = serializers.FloatField(allow_null=True, required=False)
 
     class Meta(BaseActivitySerializer.Meta):
         model = CollectActivity
@@ -116,6 +116,9 @@ class CollectActivitySerializer(BaseActivitySerializer):
 class CollectActivityListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
 
+    target = serializers.FloatField(allow_null=True, required=False)
+    realized = serializers.FloatField(allow_null=True, required=False)
+
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
@@ -129,6 +132,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
             'end',
             'location',
             'realized',
+            'target',
             'collect_type',
             'location',
         )

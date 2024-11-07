@@ -103,7 +103,7 @@ class CollectActivity(Activity):
     def get_absolute_url(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/activities/details/collect/{}/{}".format(
+        return u"{}/{}/activities/details/collect/{}/{}".format(
             domain, language,
             self.pk,
             self.slug

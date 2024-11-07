@@ -35,7 +35,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
 
     contributors = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="deadline-participants",
+        related_link_view_name="related-collect-contributors",
         related_link_url_kwarg="activity_id",
         statuses={
             "active": ["succeeded"],

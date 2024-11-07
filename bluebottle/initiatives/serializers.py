@@ -71,7 +71,7 @@ class CategorySerializer(ModelSerializer):
 
 class AvatarImageSerializer(ImageSerializer):
     sizes = {
-        "default": "200x200",
+        "avatar": "200x200",
     }
     content_view_name = 'avatar-image'
     relationship = 'member_set'

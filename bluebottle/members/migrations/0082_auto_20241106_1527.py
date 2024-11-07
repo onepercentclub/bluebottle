@@ -6,7 +6,7 @@ from django.db import migrations
 def migrate_avatar_image(apps, schema_editor):
     Member = apps.get_model('members', 'Member')
     Image = apps.get_model('files', 'Image')
-    for member in Member.objects.filter(picture__isnull=False):
+    for member in Member.objects.exclude(picture=''):
         member.avatar = Image.objects.create(
             file=member.picture, owner=member, used=True
         )

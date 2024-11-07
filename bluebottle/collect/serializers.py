@@ -88,7 +88,6 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'collect_type',
             'target',
             'realized',
-            'enable_impact',
             'links',
             'collect_type'
         )

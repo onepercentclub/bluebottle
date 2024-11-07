@@ -172,7 +172,6 @@ class CollectTriggersTestCase(TriggerTestCase):
 
     def test_set_realized(self):
 
-        self.defaults['enable_impact'] = True
         self.defaults['target'] = 5
 
         self.create()
@@ -219,8 +218,6 @@ class CollectTriggersTestCase(TriggerTestCase):
         self.create()
         goal = ImpactGoalFactory.create(activity=self.model, target=10)
 
-        self.model.enable_impact = True
-
         with self.execute():
             self.assertEffect(UpdateImpactGoalsForActivityEffect)
             self.model.save()
@@ -228,7 +225,6 @@ class CollectTriggersTestCase(TriggerTestCase):
             self.assertEqual(goal.realized_from_contributions, 8)
 
     def test_set_target(self):
-        self.defaults['enable_impact'] = True
         self.defaults['realized'] = 4
 
         self.create()

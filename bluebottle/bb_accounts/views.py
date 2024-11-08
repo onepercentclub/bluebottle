@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from bluebottle.files.views import ImageContentView
 from django.http import Http404
 from django.template import loader
 from django.utils import timezone
@@ -28,7 +29,9 @@ from bluebottle.bb_accounts.permissions import (
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.initiatives.serializers import MemberSerializer, CurrentMemberSerializer
+from bluebottle.initiatives.serializers import (
+    MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
+)
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.models import UserActivity
@@ -93,6 +96,12 @@ class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
             serializer.validated_data['token']
         )
         return serializer.validated_data
+
+
+class AvatarImage(ImageContentView):
+    queryset = USER_MODEL.objects
+    field = 'avatar'
+    allowed_sizes = AvatarImageSerializer.sizes
 
 
 class UserProfileDetail(RetrieveAPIView):

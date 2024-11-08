@@ -172,7 +172,7 @@ class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
 
 
 class ImagePreview(ImageContentView):
-    allowed_sizes = {'preview': '292x164', 'large': '1568x882'}
+    allowed_sizes = {'preview': '292x164', 'large': '1568x882', 'avatar': '200x200'}
 
     queryset = Image.objects.all()
 

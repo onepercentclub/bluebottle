@@ -14,7 +14,8 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
@@ -709,7 +710,7 @@ class MemberProfileSerializer(ModelSerializer):
         queryset=Skill.objects.all(),
     )
     remote_id = serializers.CharField(read_only=True)
-    avatar = SorlImageField('200x200', source='picture', crop='center')
+    avatar = ImageField(required=False, allow_null=True)
     has_usable_password = serializers.BooleanField(read_only=True)
 
     class Meta():
@@ -721,13 +722,13 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password'
+            'has_usable_password', 'avatar'
         )
 
     class JSONAPIMeta():
         resource_name = 'member/profile'
         included_resources = [
-            'location', 'place.country', 'place', 'segments'
+            'location', 'place.country', 'place', 'segments', 'avatar'
         ]
 
     included_serializers = {
@@ -735,6 +736,8 @@ class MemberProfileSerializer(ModelSerializer):
         'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
     def save(self, *args, **kwargs):

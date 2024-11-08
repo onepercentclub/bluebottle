@@ -167,7 +167,6 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
     def update(self):
         if (
             self.target and
-            self.activity.enable_impact and
             self.activity.target and
             self.activity.realized
         ):

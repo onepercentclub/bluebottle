@@ -12,6 +12,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
+from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission
 )
@@ -27,7 +28,7 @@ class DeedListView(JsonApiViewMixin, ListCreateAPIView):
 
     permission_classes = (
         ActivityTypePermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission),
+        OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
     def perform_create(self, serializer):

@@ -249,7 +249,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
-    homepage = PermissionField('home-page-detail')
+    homepage = PermissionField('home-detail')
 
     class Meta(object):
         fields = [
@@ -829,8 +829,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = MemberPlatformSettings
         fields = (
-            'require_consent',
             'consent_link',
+            'disable_cookie_consent',
+            'gtm_code',
             'closed',
             'email_domain',
             'session_only',

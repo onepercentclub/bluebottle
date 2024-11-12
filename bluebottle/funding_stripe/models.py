@@ -6,6 +6,7 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
+from django_tools.middlewares.ThreadLocal import get_current_user
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
@@ -29,32 +30,86 @@ class PaymentIntent(models.Model):
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
 
-    created = models.DateTimeField(auto_now_add=True)
-
     def save(self, *args, **kwargs):
         if not self.pk:
-            # FIXME: First verify that the funding activity has a valid Stripe account connected.
 
             statement_descriptor = connection.tenant.name[:22]
 
+            stripe = get_stripe()
+            user = get_current_user()
             connect_account = self.donation.activity.bank_account.connect_account
+
             intent_args = dict(
                 amount=int(self.donation.amount.amount * 100),
                 currency=self.donation.amount.currency,
                 transfer_data={
                     'destination': connect_account.account_id,
                 },
+                automatic_payment_methods={"enabled": True},
                 statement_descriptor=statement_descriptor,
                 statement_descriptor_suffix=statement_descriptor[:18],
                 metadata=self.metadata,
-                automatic_payment_methods={
-                    'enabled': True,
-                },
             )
-            provider = StripePaymentProvider.objects.get()
-            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES or provider.stripe_secret:
+
+            platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
+            donation_currency = self.donation.amount.currency.code.lower()
+
+            if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                 intent_args['on_behalf_of'] = connect_account.account_id
-            stripe = get_stripe()
+
+            if platform_currency == 'usd' and connect_account.country != 'US':
+                intent_args['on_behalf_of'] = connect_account.account_id
+
+            if (
+                # Change this is we can do international bank transfers
+                'on_behalf_of' not in intent_args
+                and platform_currency == donation_currency
+                and user and user.id
+                and (user.is_staff or user.is_superuser)
+            ):
+                payment_method_options = {
+                    "customer_balance": {
+                        "funding_type": "bank_transfer",
+                        "bank_transfer": {
+                            "type": "eu_bank_transfer",
+                            "eu_bank_transfer": {"country": "NL"},
+                        },
+                    },
+                }
+                if platform_currency == 'usd':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                            "bank_transfer": {
+                                "type": "us_bank_transfer",
+                            },
+                        },
+                    }
+                if platform_currency == 'gbp':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                            "bank_transfer": {
+                                "type": "gb_bank_transfer",
+                            },
+                        },
+                    }
+                if donation_currency == 'mxn':
+                    payment_method_options = {
+                        "customer_balance": {
+                            "funding_type": "bank_transfer",
+                        },
+                    }
+
+                customer = stripe.Customer.create(
+                    name=user.full_name,
+                    email=user.email,
+                )
+
+                intent_args['customer'] = customer.id
+                intent_args['payment_method_options'] = payment_method_options
+                intent_args['payment_method_data'] = {"type": "customer_balance"}
+
             intent = stripe.PaymentIntent.create(
                 **intent_args
             )
@@ -112,20 +167,31 @@ class StripePayment(Payment):
     def update(self):
         stripe = get_stripe()
         intent = self.payment_intent.intent
-        if len(intent.charges) == 0:
+        if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
+            self.states.require_action(save=True)
+        elif len(intent.charges) == 0 and self.status != self.states.action_needed.value:
             # No charge. Do we still need to charge?
-            self.states.fail()
-        elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
-            self.states.refund()
+            self.states.fail(save=True)
+        elif len(intent.charges) > 0 and intent.charges.data[0].refunded and self.status != self.states.refunded.value:
+            self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
-            self.states.authorize()
+            self.states.authorize(save=True)
         elif intent.status == 'failed' and self.status != self.states.failed.value:
-            self.states.fail()
+            self.states.fail(save=True)
         elif intent.status == 'succeeded':
             transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
             self.donation.payout_amount = Money(
                 transfer.amount / 100.0, transfer.currency
             )
+
+            if (
+                    self.donation.amount.currency == transfer.currency
+                    and self.donation.amount.amount != transfer.amount / 100.00
+            ):
+                self.donation.amount = Money(
+                    transfer.amount / 100.0, transfer.currency
+                )
+
             self.donation.save()
             if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
@@ -228,7 +294,6 @@ class StripeSourcePayment(Payment):
 
 
 class StripePaymentProvider(PaymentProvider):
-
     title = 'Stripe'
 
     stripe_publishable_key = models.CharField(
@@ -396,6 +461,8 @@ class StripePayoutAccount(PayoutAccount):
                 capabilities={
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True},
+                    "bank_transfer_payments": {"requested": True},
+                    "ideal_payments": {"requested": True},
                 },
                 business_profile={"url": url, "mcc": "8398"},
                 metadata=self.metadata,
@@ -432,6 +499,7 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
+        self.save()
 
     def retrieve_account(self):
         try:
@@ -462,7 +530,6 @@ class StripePayoutAccount(PayoutAccount):
     def check_status(self):
         if self.account:
             del self.account
-
         self.update(self.account)
 
     class Meta(object):

@@ -96,7 +96,7 @@ class ImpactGoalListAPITestCase(BluebottleTestCase):
                             'id': self.activity.pk
                         },
                     },
-                    'type': {
+                    'impact-type': {
                         'data': {
                             'type': 'activities/impact-types',
                             'id': self.type.pk
@@ -195,7 +195,7 @@ class ImpactGoalDetailsAPITestCase(BluebottleTestCase):
             data['attributes']['target'], self.goal.target
         )
         self.assertEqual(
-            data['relationships']['type']['data']['id'],
+            data['relationships']['impact-type']['data']['id'],
             str(self.goal.type.pk)
         )
         self.assertEqual(

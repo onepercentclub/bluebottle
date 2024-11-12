@@ -255,6 +255,9 @@ class Page(PublishableModel):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return f'/pages/{self.slug}'
+
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')
         s = MLStripper()

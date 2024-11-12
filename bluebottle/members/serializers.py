@@ -28,7 +28,6 @@ from bluebottle.utils.serializers import PermissionField, TruncatedCharField, Ca
 
 BB_USER_MODEL = get_user_model()
 
-
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
@@ -108,6 +107,7 @@ class AuthTokenSerializer(Serializer, AxesJSONWebTokenSerializer):
         self.fields['email'] = serializers.CharField(
             required=True
         )
+
     email = serializers.CharField(required=True)
     password = PasswordField(required=True, validate=False)
     token = serializers.CharField(read_only=True)
@@ -152,6 +152,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
     can_pledge = serializers.BooleanField(read_only=True)
+    can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(
@@ -166,8 +167,12 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
-                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous', 'can_pledge')
+        fields = (
+            'id', 'first_name', 'last_name', 'initials', 'about_me',
+            'avatar', 'full_name', 'short_name',
+            'is_active', 'is_anonymous',
+            'can_pledge', 'can_do_bank_transfer'
+        )
 
 
 class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -217,11 +222,11 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
         if not (
-            user.is_staff or
-            user.is_superuser
+                user.is_staff or
+                user.is_superuser
         ) and (
-            self.hide_last_name and
-            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+                self.hide_last_name and
+                MemberPlatformSettings.objects.get().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -295,7 +300,6 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
 
 
 class OldSegmentSerializer(serializers.ModelSerializer):
-
     type = SegmentTypeSerializer()
 
     class Meta(object):
@@ -477,8 +481,8 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
         if (
-            settings.email_domain and
-            not email.endswith('@{}'.format(settings.email_domain))
+                settings.email_domain and
+                not email.endswith('@{}'.format(settings.email_domain))
         ):
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
@@ -511,7 +515,7 @@ class SignUpTokenConfirmationSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'password', 'token', 'jwt_token', 'first_name', 'last_name', )
+        fields = ('id', 'password', 'token', 'jwt_token', 'first_name', 'last_name',)
 
     def validate_password(self, password):
         return make_password(password)
@@ -597,7 +601,7 @@ class MemberSignUpSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token', )
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'token',)
 
     class JSONAPIMeta:
         resource_name = 'auth/signup'
@@ -772,7 +776,7 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
 
 class EmailSetSerializer(PasswordProtectedMemberSerializer):
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('email',) + PasswordProtectedMemberSerializer.Meta.fields
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
@@ -784,8 +788,7 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + \
-            PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields
 
 
 class PasswordSetSerializer(serializers.Serializer):

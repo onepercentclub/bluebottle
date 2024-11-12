@@ -599,7 +599,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner', 'partner_organization')
     readonly_fields = ['status', 'created']
-    fields = ['owner', 'status', 'created', 'public', 'reviewed', 'partner_organization']
+    fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
 
     def get_fieldsets(self, request, obj=None):

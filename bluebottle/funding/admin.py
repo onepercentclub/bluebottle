@@ -597,9 +597,9 @@ class PayoutAccountFundingLinkMixin(object):
 
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
-    raw_id_fields = ('owner',)
+    raw_id_fields = ('owner', 'partner_organization')
     readonly_fields = ['status', 'created']
-    fields = ['owner', 'status', 'created', 'reviewed']
+    fields = ['owner', 'status', 'created', 'public', 'reviewed', 'partner_organization']
     show_in_index = True
 
     def get_fieldsets(self, request, obj=None):
@@ -781,4 +781,9 @@ class PayoutAdmin(StateMachineAdmin):
 
 @admin.register(FundingPlatformSettings)
 class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    pass
+
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs['widgets'] = {
+            'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
+        }
+        return super().get_form(request, obj, **kwargs)

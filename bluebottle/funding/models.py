@@ -631,6 +631,16 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    public = models.BooleanField(default=False)
+
+    partner_organization = models.ForeignKey(
+        'organizations.Organization',
+        blank=True, null=True,
+        related_name='payout_accounts',
+        verbose_name=_('Partner organisation'),
+        on_delete=models.SET_NULL
+    )
+
     @property
     def funding(self):
         for account in self.external_accounts.all():
@@ -675,6 +685,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
     provider = 'default'
 
     connect_account = models.ForeignKey(
@@ -737,6 +748,18 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
     allow_anonymous_rewards = models.BooleanField(
         _('Allow guests to donate rewards'), default=True
+    )
+
+    public_accounts = models.BooleanField(
+        _('Allow users to select account from list of public accounts'), default=False
+    )
+
+    matching_name = models.CharField(
+        _('Name to use for match funding'),
+        max_length=60,
+        null=True,
+        blank=True,
+        help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
     )
 
     @property

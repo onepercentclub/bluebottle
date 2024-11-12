@@ -752,7 +752,14 @@ class FundingPlatformSettings(BasePlatformSettings):
 
     public_accounts = models.BooleanField(
         _('Allow users to select account from list of public accounts'), default=False
+    )
 
+    matching_name = models.CharField(
+        _('Name to use for match funding'),
+        max_length=60,
+        null=True,
+        blank=True,
+        help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
     )
 
     @property

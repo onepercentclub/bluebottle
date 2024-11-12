@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytz
 from dateutil.parser import parse
+from django.db import connection
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -726,6 +727,11 @@ class PayoutSerializer(serializers.ModelSerializer):
 
 
 class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
+    matching_name = serializers.SerializerMethodField()
+
+    def get_matching_name(self, obj):
+        return obj.matching_name or connection.tenant.name
+
     class Meta(object):
         model = FundingPlatformSettings
 
@@ -734,4 +740,5 @@ class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
             'anonymous_donations',
             'stripe_publishable_key',
             'public_accounts',
+            'matching_name'
         )

@@ -14,7 +14,7 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.files.serializers import ImageSerializer, ImageField
+from bluebottle.files.serializers import ImageField
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
@@ -310,9 +310,9 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
+    email = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail',
                                                lookup_field='pk')
-    picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
 
     full_name = serializers.CharField(source='get_full_name', read_only=True)
@@ -357,7 +357,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
+            'id', 'email', 'url', 'full_name', 'short_name', 'initials',
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
@@ -446,7 +446,7 @@ class UserDataExportSerializer(UserProfileSerializer):
         model = BB_USER_MODEL
         fields = (
             'id', 'email', 'location', 'birthdate',
-            'url', 'full_name', 'short_name', 'initials', 'picture',
+            'url', 'full_name', 'short_name', 'initials',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',
             'date_joined', 'website', 'twitter', 'facebook',
@@ -695,6 +695,7 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class MemberProfileSerializer(ModelSerializer):
+    email = serializers.CharField(read_only=True)
     segments = ResourceRelatedField(
         many=True,
         queryset=Segment.objects.all(),
@@ -787,6 +788,15 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
 
 
 class EmailSetSerializer(PasswordProtectedMemberSerializer):
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueEmailValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
+
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
 

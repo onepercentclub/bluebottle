@@ -290,7 +290,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.last_name = 'Member'
         self.user_name = ''
         self.picture = ''
-        self.avatar = ''
         self.about_me = ''
         self.gender = ''
         self.birthdate = '1000-01-01'
@@ -300,6 +299,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.twitter = ''
         self.skypename = ''
         self.partner_organization = None
+
+        if self.avatar:
+            self.avatar.delete()
 
         self.save()
 

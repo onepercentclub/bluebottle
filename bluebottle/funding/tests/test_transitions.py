@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import mock
-from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory
 from datetime import timedelta, datetime
 
+import mock
 from django.core import mail
 from django.db import connection
 from django.utils import timezone
@@ -15,7 +14,9 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tasks import funding_tasks
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, \
     BudgetLineFactory, BankAccountFactory, PlainPayoutAccountFactory
+from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
+from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -28,13 +29,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(activity_manager=user)
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id",
-            status="verified",
-            payouts_enabled=True,
-            payments_enabled=True,
-        )
-        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        bank_account = generate_mock_bank_account()
         self.funding = FundingFactory.create(
             owner=user,
             initiative=self.initiative,

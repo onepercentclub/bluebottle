@@ -416,7 +416,6 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
-        self.save()
 
     def retrieve_account(self):
         try:

@@ -21,6 +21,7 @@ from bluebottle.funding.tests.factories import (
     DonorFactory,
     BudgetLineFactory,
 )
+from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_flutterwave.tests.factories import (
     FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 )
@@ -395,13 +396,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         BudgetLineFactory.create(activity=self.funding)
 
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id", status="verified"
-            ),
-        )
+        self.funding.bank_account = generate_mock_bank_account()
         self.funding.save()
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -545,13 +540,9 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id"
-            ),
-        )
+
+        self.funding.bank_account = generate_mock_bank_account()
+
         self.funding.save()
 
         connect_account = stripe.Account("some-connect-id")
@@ -581,13 +572,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             2, amount=Money(100, "EUR"), activity=self.funding, status="new"
         )
 
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id"
-            ),
-        )
+        self.funding.bank_account = generate_mock_bank_account()
         self.funding.save()
         connect_account = stripe.Account("some-connect-id")
         connect_account.update(

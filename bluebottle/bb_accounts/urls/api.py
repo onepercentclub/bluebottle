@@ -2,7 +2,7 @@
 from django.conf.urls import url
 from bluebottle.bb_accounts.views import UserActivityDetail, OldUserActivityDetail
 from bluebottle.bb_accounts.views import (
-    ManageProfileDetail, UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
+    UserProfileDetail, CurrentUser, CurrentMemberDetail, UserCreate,
     PasswordReset, PasswordResetConfirm, UserVerification, UserDataExport, EmailSetView,
     PasswordSetView, TokenLogin, Logout, MemberDetail, SignUpToken,
     SignUpTokenConfirmation, CaptchaVerification,
@@ -41,8 +41,6 @@ urlpatterns = [
     url(r'^member/current$', CurrentMemberDetail.as_view(), name='current-member-detail'),
     url(r'^member/profile/(?P<pk>\d+)$', MemberProfileDetail.as_view(), name='member-profile-detail'),
     url(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
-    url(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
-        name='manage-profile'),
     url(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
         name='user-profile-detail'),
     url(r'^tokenlogin$', TokenLogin.as_view(), name='token-login'),

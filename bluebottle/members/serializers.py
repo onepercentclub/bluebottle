@@ -275,6 +275,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     can_pledge = serializers.BooleanField(read_only=True)
+    can_do_bank_transfer = serializers.BooleanField(read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
         read_only=True, source='partner_organization'
@@ -295,7 +296,8 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization', 'segments', 'required', 'has_initiatives',
-            'hours_spent', 'hours_planned', 'can_pledge'
+            'hours_spent', 'hours_planned',
+            'can_pledge', 'can_do_bank_transfer'
         )
 
 
@@ -321,6 +323,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
     can_pledge = serializers.BooleanField(read_only=True)
+    can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
@@ -364,7 +367,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed', 'segments', 'can_pledge'
+            'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
         )
 
 

@@ -123,6 +123,7 @@ class CurrentMemberSerializer(MemberSerializer):
     segments = ResourceRelatedField(many=True, read_only=True)
     has_initiatives = serializers.SerializerMethodField()
     can_pledge = serializers.BooleanField(read_only=True)
+    can_do_bank_transfer = serializers.BooleanField(read_only=True)
 
     payout_account = SerializerMethodResourceRelatedField(
         model=StripePayoutAccount,
@@ -145,6 +146,7 @@ class CurrentMemberSerializer(MemberSerializer):
             "has_initiatives",
             "profile",
             "can_pledge",
+            "can_do_bank_transfer",
             "payout_account",
         )
         meta_fields = ('permissions', )

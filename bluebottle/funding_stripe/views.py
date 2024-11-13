@@ -1,9 +1,13 @@
+import logging
+
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import View
+from django_tools.middlewares.ThreadLocal import get_current_user
 from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -22,7 +26,7 @@ from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripePayoutAccount, ExternalAccount
+    StripePayment, StripePayoutAccount, ExternalAccount, StripePaymentProvider, STRIPE_EUROPEAN_COUNTRY_CODES
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
@@ -32,7 +36,7 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
-    ExternalAccountSerializer
+    ExternalAccountSerializer, BankTransferSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
@@ -44,7 +48,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +73,41 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
 
     permission_classes = (PaymentPermission,)
 
+    def perform_create(self, serializer):
+        payment_intent = serializer.save()
+        statement_descriptor = connection.tenant.name[:22]
+
+        stripe = get_stripe()
+        connect_account = payment_intent.donation.activity.bank_account.connect_account
+
+        intent_args = dict(
+            amount=int(payment_intent.donation.amount.amount * 100),
+            currency=payment_intent.donation.amount.currency,
+            transfer_data={
+                'destination': connect_account.account_id,
+            },
+            automatic_payment_methods={"enabled": True},
+            statement_descriptor=statement_descriptor,
+            statement_descriptor_suffix=statement_descriptor[:18],
+            metadata=payment_intent.metadata,
+        )
+
+        platform_currency = StripePaymentProvider.objects.first().currency
+
+        if platform_currency == 'EUR' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            intent_args['on_behalf_of'] = connect_account.account_id
+
+        if platform_currency == 'USD' and connect_account.country != 'US':
+            intent_args['on_behalf_of'] = connect_account.account_id
+
+        intent = stripe.PaymentIntent.create(
+            **intent_args
+        )
+
+        payment_intent.intent_id = intent.id
+        payment_intent.client_secret = intent.client_secret
+        return payment_intent.save()
+
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     queryset = PaymentIntent.objects.all()
@@ -88,6 +126,112 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
 class StripePaymentList(PaymentList):
     queryset = StripePayment.objects.all()
     serializer_class = StripePaymentSerializer
+
+
+class StripeBankTransferDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = BankTransferSerializer
+
+    permission_classes = []
+
+    def get_object(self):
+        obj = super().get_object()
+        payment = obj.get_payment()
+        payment.update()
+        obj.refresh_from_db()
+        return obj
+
+
+class StripeBankTransferList(PaymentList):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = BankTransferSerializer
+
+    def perform_create(self, serializer):
+
+        payment_intent = serializer.save(intent_id=1)
+
+        account_currency = str(payment_intent.donation.activity.target.currency)
+        currency = str(payment_intent.donation.amount.currency)
+
+        if currency != account_currency:
+            raise ValidationError(f'Bank transfer not supported for currency {currency}')
+
+        stripe = get_stripe()
+
+        connect_account = payment_intent.donation.activity.bank_account.connect_account
+        payment_method_options = {}
+
+        if currency == 'EUR':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "eu_bank_transfer",
+                        "eu_bank_transfer": {"country": "NL"},
+                    },
+                },
+            }
+
+        if currency == 'USD':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "us_bank_transfer",
+                    },
+                },
+            }
+        if currency == 'GBP':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "gb_bank_transfer",
+                    },
+                },
+            }
+        if currency == 'MXN':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "mx_bank_transfer",
+                    },
+                },
+            }
+
+        user = get_current_user()
+        customer = stripe.Customer.create(
+            stripe_account=connect_account.account_id,
+            name=user.full_name,
+            email=user.email,
+        )
+
+        statement_descriptor = connection.tenant.name[:22]
+
+        payment_method = stripe.PaymentMethod.create(
+            type="customer_balance",
+            stripe_account=connect_account.account_id,
+        )
+
+        intent = stripe.PaymentIntent.create(
+            amount=int(payment_intent.donation.amount.amount * 100),
+            currency=payment_intent.donation.amount.currency,
+            statement_descriptor=statement_descriptor,
+            statement_descriptor_suffix=statement_descriptor[:18],
+            metadata=payment_intent.metadata,
+            stripe_account=connect_account.account_id,
+            payment_method=payment_method.id,
+            payment_method_options=payment_method_options,
+            payment_method_types=["customer_balance"],
+            customer=customer.id,
+            confirm=True
+        )
+
+        payment_intent.intent_id = intent.id
+        payment_intent.client_secret = intent.client_secret
+        payment_intent.instructions = intent.next_action
+        return intent
 
 
 class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

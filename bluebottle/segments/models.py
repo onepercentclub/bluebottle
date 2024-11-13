@@ -197,7 +197,6 @@ class Segment(models.Model):
 
     def merge(self, other):
         self.alternate_names += other.alternate_names
-        self.save()
 
         activities_through = self.activities.through
         activities_through.objects.filter(segment_id=other.pk).update(
@@ -208,6 +207,7 @@ class Segment(models.Model):
         users_through.objects.filter(segment_id=other.pk).update(segment_id=self.pk)
 
         other.delete()
+        self.save()
 
     @property
     def text_color(self):

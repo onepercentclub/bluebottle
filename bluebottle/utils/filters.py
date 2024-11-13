@@ -70,10 +70,13 @@ class ModelFacet(Facet):
             (str(model.pk), model)
             for model in self.model.objects.filter(pk__in=ids)
         )
+
         result = [
             ((getattr(models[id], self.attr), id), count, active)
             for (id, count, active) in result
+            if id in models
         ]
+
         return result
 
     def add_filter(self, filter_values):

@@ -36,7 +36,7 @@ from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
-    UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
+    UserCreateSerializer, UserProfileSerializer,
     PasswordResetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
@@ -50,7 +50,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
 from bluebottle.utils.views import (
-    RetrieveAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
+    RetrieveAPIView, JsonApiViewMixin, CreateAPIView, RetrieveUpdateDestroyAPIView
 )
 
 USER_MODEL = get_user_model()
@@ -138,59 +138,6 @@ class UserActivityDetail(JsonApiViewMixin, CreateAPIView):
             serializer.save(user=self.request.user)
 
 
-class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Manage User Details
-    ---
-    PUT:
-        serializer: ManageProfileSerializer
-        omit_serializer: false
-        parameters_strategy: merge
-        parameters:
-            - name: location
-              type: geo.Location
-              paramType: form
-            - name: avatar
-              type: file
-        responseMessages:
-            - code: 401
-              message: Not authenticated
-        consumes:
-            - application/json
-            - multipart/form-data
-        produces:
-            - application/json
-    """
-    documentable = True
-    queryset = USER_MODEL.objects.all()
-    permission_classes = (CurrentUserPermission, )
-    serializer_class = ManageProfileSerializer
-
-    def get_serializer(self, *args, **kwargs):
-        kwargs['partial'] = True
-        return super(ManageProfileDetail, self).get_serializer(
-            *args, **kwargs
-        )
-
-    def perform_update(self, serializer):
-        try:
-            # Read only properties come from the TOKEN_AUTH / SAML settings
-            assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']
-            user_properties = list(assertion_mapping.keys())
-
-            for prop in [prop for prop in user_properties if prop in serializer.validated_data]:
-                if getattr(serializer.instance, prop) != serializer.validated_data.get(prop):
-                    raise PermissionDenied
-
-        except (AttributeError, KeyError):
-            pass
-
-        super(ManageProfileDetail, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        instance.anonymize()
-
-
 class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     """
     Retrieve details about the member
@@ -203,13 +150,16 @@ class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
         return self.request.user
 
 
-class MemberProfileDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class MemberProfileDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve details about the member
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = MemberProfileSerializer
     permission_classes = [IsCurrentUser]
+
+    def perform_destroy(self, instance):
+        instance.anonymize()
 
 
 class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -470,6 +420,7 @@ class TokenLogin(generics.CreateAPIView):
 
         try:
             user = USER_MODEL.objects.get(pk=user_id)
+
         except USER_MODEL.DoesNotExist:
             return response.Response(status=status.HTTP_404_NOT_FOUND)
 

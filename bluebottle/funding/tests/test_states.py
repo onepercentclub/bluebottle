@@ -9,9 +9,9 @@ from mock import patch
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, BankAccountFactory, \
     PlainPayoutAccountFactory, DonorFactory, PayoutFactory
+from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripeSourcePaymentFactory
-from bluebottle.funding_stripe.tests.utils import generate_stripe_payout_account
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -26,7 +26,7 @@ class FundingStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.bank_account = generate_stripe_payout_account()
+        self.bank_account = generate_mock_bank_account()
         self.funding.bank_account = self.bank_account
         self.funding.save()
 
@@ -344,7 +344,7 @@ class DonationStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        bank_account = generate_stripe_payout_account()
+        bank_account = generate_mock_bank_account()
         self.funding.bank_account = bank_account
         self.funding.save()
         self.funding.states.submit()
@@ -503,7 +503,7 @@ class BasePaymentStateMachineTests(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        bank_account = generate_stripe_payout_account()
+        bank_account = generate_mock_bank_account()
         self.funding.bank_account = bank_account
         self.funding.states.submit()
         self.funding.states.approve(save=True)

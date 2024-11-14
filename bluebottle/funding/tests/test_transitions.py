@@ -16,7 +16,6 @@ from bluebottle.funding.tests.factories import FundingFactory, DonorFactory, \
     BudgetLineFactory, BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
@@ -75,12 +74,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             target=Money(500, 'EUR'),
             duration=30,
             deadline=None,
-            bank_account=BankAccountFactory.create(
-                status="verified",
-                connect_account=StripePayoutAccountFactory.create(
-                    account_id="test-account-id", status="verified"
-                ),
-            ),
+            bank_account=generate_mock_bank_account()
         )
 
         self.assertIsNone(funding.started)
@@ -268,12 +262,7 @@ class FundingTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             target=Money(500, 'EUR'),
             deadline=now() + timedelta(weeks=2),
-            bank_account=BankAccountFactory.create(
-                status="verified",
-                connect_account=StripePayoutAccountFactory.create(
-                    account_id="test-account-id", status="verified"
-                ),
-            ),
+            bank_account=generate_mock_bank_account()
         )
         BudgetLineFactory.create(activity=new_funding)
         new_funding.bank_account.reviewed = True

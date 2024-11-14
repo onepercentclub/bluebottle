@@ -13,39 +13,11 @@ from bluebottle.funding.tests.factories import (
     FundingFactory, DonorFactory,
     BudgetLineFactory, RewardFactory
 )
+from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
-    ExternalAccountFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-
-
-def generate_mock_bank_account():
-    connect_account = stripe.StripeObject.construct_from({
-        "id": "some-connect-id",
-        "country": "NL",
-        "requirements": stripe.StripeObject.construct_from({
-            'current_deadline': None,
-            'currently_due': [],
-            'disabled_reason': None,
-            'eventually_due': [],
-            'past_due': [],
-            'pending_verification': []
-        }, stripe.api_key),
-        "charges_enabled": True,
-        "payouts_enabled": True,
-    }, stripe.api_key)
-
-    with mock.patch('stripe.Account.create', return_value=connect_account), \
-            mock.patch('stripe.Account.modify', return_value=connect_account):
-        bank_account = ExternalAccountFactory.create(
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id",
-                status="verified"
-            ),
-        )
-    return bank_account
 
 
 class FundingTestCase(BluebottleAdminTestCase):
@@ -196,8 +168,27 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        response = self.client.get(self.payout_account_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        connect_account = stripe.StripeObject.construct_from({
+            "id": "some-connect-id",
+            "country": "NL",
+            "requirements": stripe.StripeObject.construct_from({
+                'current_deadline': None,
+                'currently_due': [],
+                'disabled_reason': None,
+                'eventually_due': [],
+                'past_due': [],
+                'pending_verification': []
+            }, stripe.api_key),
+            "charges_enabled": True,
+            "payouts_enabled": True,
+        }, stripe.api_key)
+
+        country_spec = []
+
+        with mock.patch('stripe.Account.retrieve', return_value=connect_account):
+            with mock.patch('stripe.CountrySpec.list', return_value=country_spec):
+                response = self.client.get(self.payout_account_url)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_bank_account_admin(self):
         response = self.client.get(self.bank_account_url)

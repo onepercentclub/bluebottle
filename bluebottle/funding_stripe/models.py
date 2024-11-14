@@ -436,13 +436,7 @@ class StripePayoutAccount(PayoutAccount):
     def save(self, *args, **kwargs):
         stripe = get_stripe()
 
-        if self.account_id:
-            account = stripe.Account.modify(
-                self.account_id,
-                business_type=self.business_type
-            )
-            self.update(account)
-        elif self.country:
+        if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():
                 url = (
                     Funding.objects.filter(owner=self.owner).first().get_absolute_url()
@@ -496,6 +490,8 @@ class StripePayoutAccount(PayoutAccount):
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
             pass
+
+        __import__('ipdb').set_trace()
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

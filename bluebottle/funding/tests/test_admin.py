@@ -2,7 +2,6 @@
 from datetime import timedelta
 from unittest import mock
 
-import mock
 import stripe
 from django.urls import reverse
 from django.utils.timezone import now

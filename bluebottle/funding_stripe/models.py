@@ -408,8 +408,6 @@ class StripePayoutAccount(PayoutAccount):
         except AttributeError:
             pass
 
-        __import__('ipdb').set_trace()
-
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 

@@ -4,6 +4,7 @@ from collections import namedtuple
 from datetime import datetime
 
 import dateutil
+from django.apps import apps
 from django.conf import settings
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
@@ -21,7 +22,7 @@ from bluebottle.deeds.serializers import (
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import IMAGE_SIZES
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
     DonorListSerializer, TinyFundingSerializer
@@ -98,9 +99,30 @@ class ActivityPreviewSerializer(ModelSerializer):
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
-    current_status = CurrentStatusField()
+    current_status = serializers.SerializerMethodField()
 
     collect_type = serializers.SerializerMethodField()
+
+    def get_current_status(self, obj):
+        model = None
+
+        for app in ['time_based', 'collect', 'deeds', 'funding']:
+            try:
+                model = apps.get_model(app, obj.type)
+                break
+            except LookupError:
+                pass
+
+        if model:
+            state = getattr(model._state_machines['states'], obj.current_status.value)
+        else:
+            state = obj.current_status
+
+        return {
+            'value': state.value,
+            'name': state.name,
+            'description': state.description
+        }
 
     def get_start(self, obj):
         if hasattr(obj, 'slots') and obj.slots:

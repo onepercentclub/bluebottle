@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 
+import mock
 from django.urls import reverse
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -174,7 +175,8 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        response = self.client.get(self.payout_account_url)
+        with mock.patch('stripe.CountrySpec.list', return_value=[]):
+            response = self.client.get(self.payout_account_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_bank_account_admin(self):

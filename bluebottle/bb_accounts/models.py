@@ -101,6 +101,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
         other = ChoiceItem('other', label=_('Non-binary'))
+        private = ChoiceItem('other', label=_('Non-binary'))
 
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))

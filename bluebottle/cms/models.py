@@ -637,7 +637,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the action colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -658,7 +657,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the description colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -672,7 +670,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     footer_text_color = ColorField(
         _('Footer text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the footer colour is quite light, you could set this to a darker colour for better contrast'
         )

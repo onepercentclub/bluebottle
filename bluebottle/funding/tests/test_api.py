@@ -1751,6 +1751,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
                 "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
                 "matching_name": "Dagobert Duck",
+                'public_accounts': False,
                 "stripe_publishable_key": "test-pub-key",
             },
         )

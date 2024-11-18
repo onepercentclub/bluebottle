@@ -5,6 +5,8 @@ from elasticsearch_dsl.field import DateRange
 
 from bluebottle.activities.models import Activity
 from bluebottle.funding.models import Donor
+from bluebottle.segments.models import Segment
+from bluebottle.geo.models import Location
 from bluebottle.initiatives.documents import deduplicate, get_translated_list
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.utils.documents import MultiTenantIndex
@@ -168,11 +170,17 @@ class ActivityDocument(Document):
             return model.objects.filter(initiative=related_instance)
         if isinstance(related_instance, Theme):
             return model.objects.filter(initiative__theme=related_instance)
+        if isinstance(related_instance, Segment):
+            return model.objects.filter(segments=related_instance)
+        if isinstance(related_instance, Location):
+            return model.objects.filter(office_location=related_instance)
         if isinstance(related_instance, Theme.translations.field.model):
             return model.objects.filter(initiative__theme=related_instance.master)
 
     class Django:
-        related_models = (Initiative, Theme, Theme.translations.field.model)
+        related_models = (
+            Initiative, Theme, Theme.translations.field.model, Segment, Location
+        )
         model = Activity
 
     date_field = None

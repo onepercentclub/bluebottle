@@ -26,7 +26,7 @@ from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
-    StripePayment, StripePayoutAccount, ExternalAccount, StripePaymentProvider, STRIPE_EUROPEAN_COUNTRY_CODES
+    StripePayment, StripePayoutAccount, ExternalAccount
 )
 from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.serializers import (
@@ -72,40 +72,6 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     )
 
     permission_classes = (PaymentPermission,)
-
-    def perform_create(self, serializer):
-        stripe = get_stripe()
-        statement_descriptor = connection.tenant.name[:22]
-
-        payment_intent_data = serializer.validated_data
-        donation = payment_intent_data['donation']
-        connect_account = donation.activity.bank_account.connect_account
-
-        intent_args = dict(
-            amount=int(donation.amount.amount * 100),
-            currency=donation.amount.currency,
-            transfer_data={
-                'destination': connect_account.account_id,
-            },
-            automatic_payment_methods={"enabled": True},
-            statement_descriptor=statement_descriptor,
-            statement_descriptor_suffix=statement_descriptor[:18],
-            metadata=payment_intent_data.get('metadata', {}),
-        )
-
-        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
-
-        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            intent_args['on_behalf_of'] = connect_account.account_id
-        elif platform_currency == 'usd' and connect_account.country != 'US':
-            intent_args['on_behalf_of'] = connect_account.account_id
-
-        intent = stripe.PaymentIntent.create(**intent_args)
-
-        serializer.save(
-            intent_id=intent.id,
-            client_secret=intent.client_secret
-        )
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):

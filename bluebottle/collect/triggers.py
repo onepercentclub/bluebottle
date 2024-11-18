@@ -21,7 +21,6 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
@@ -89,16 +88,6 @@ class CollectActivityTriggers(ActivityTriggers):
                     ]
                 )
             ]
-        ),
-
-        ModelChangedTrigger(
-            'target',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[UpdateImpactGoalsForActivityEffect]
         ),
 
         TransitionTrigger(
@@ -271,15 +260,20 @@ class CollectContributorTriggers(ContributorTriggers):
         TransitionTrigger(
             CollectContributorStateMachine.reapply,
             effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.expire,
-                    conditions=[activity_is_finished]
-                ),
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
                 ),
-
+                RelatedTransitionEffect('contributions', CollectContributionStateMachine.reset),
+                NotificationEffect(ParticipantJoinedNotification)
+            ]
+        ),
+        TransitionTrigger(
+            CollectContributorStateMachine.re_accept,
+            effects=[
+                TransitionEffect(
+                    CollectContributorStateMachine.succeed,
+                ),
+                RelatedTransitionEffect('contributions', CollectContributionStateMachine.reset),
                 NotificationEffect(ParticipantJoinedNotification)
             ]
         ),

@@ -157,7 +157,11 @@ class CollectContributorStateMachine(ContributorStateMachine):
     )
 
     re_accept = Transition(
-        ContributorStateMachine.succeeded,
+        [
+            ContributorStateMachine.succeeded,
+            rejected,
+            ContributorStateMachine.failed
+        ],
         accepted,
         name=_('Re-accept'),
         automatic=True,

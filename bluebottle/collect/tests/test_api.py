@@ -105,7 +105,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
-class CollectActivitysDetailViewAPITestCase(APITestCase):
+class CollectActivityDetailViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 

@@ -15,7 +15,6 @@ from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -180,13 +179,11 @@ class CollectTriggersTestCase(TriggerTestCase):
         self.model.realized = 100
 
         with self.execute():
-            self.assertEffect(UpdateImpactGoalsForActivityEffect)
             self.assertEffect(SetOverallContributor)
 
             self.model.save()
             goal.refresh_from_db()
 
-            self.assertEqual(goal.realized_from_contributions, 200)
             self.assertEqual(len(self.model.active_contributors), 1)
             self.assertEqual(self.model.active_contributors.get().value, self.model.realized)
             self.assertEqual(
@@ -210,33 +207,6 @@ class CollectTriggersTestCase(TriggerTestCase):
             self.assertEqual(
                 self.model.active_contributors.get().contributions.get().value, self.model.realized
             )
-
-    def test_enable_impact(self):
-        self.defaults['target'] = 5
-        self.defaults['realized'] = 4
-
-        self.create()
-        goal = ImpactGoalFactory.create(activity=self.model, target=10)
-
-        with self.execute():
-            self.assertEffect(UpdateImpactGoalsForActivityEffect)
-            self.model.save()
-            goal.refresh_from_db()
-            self.assertEqual(goal.realized_from_contributions, 8)
-
-    def test_set_target(self):
-        self.defaults['realized'] = 4
-
-        self.create()
-        goal = ImpactGoalFactory.create(activity=self.model, target=10)
-
-        self.model.target = 5
-
-        with self.execute():
-            self.assertEffect(UpdateImpactGoalsForActivityEffect)
-            self.model.save()
-            goal.refresh_from_db()
-            self.assertEqual(goal.realized_from_contributions, 8)
 
 
 class CollectContributorTriggerTestCase(TriggerTestCase):

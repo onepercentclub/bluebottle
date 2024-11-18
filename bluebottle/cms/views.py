@@ -47,6 +47,9 @@ class CMSDetailView(JsonApiViewMixin, RetrieveAPIView):
                     slug=self.kwargs['slug']
                 )
             except ObjectDoesNotExist:
+                page = queryset.filter(slug=self.kwargs['slug']).first()
+                if page:
+                    return page
                 raise Http404
 
 

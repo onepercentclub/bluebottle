@@ -653,7 +653,7 @@ class PageSerializer(BaseCMSSerializer):
 
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    main_image = SorlImageField('800x400')
+    main_image = SorlImageField('1920')
 
     content_attribute = 'contents'
 

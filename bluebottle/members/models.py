@@ -14,6 +14,7 @@ from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
+from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -302,6 +303,8 @@ class Member(BlueBottleBaseUser):
         blank=True,
         through='members.UserSegment'
     )
+
+    avatar = ImageField(blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)

@@ -83,6 +83,8 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
                 'individual.first_name', 'individual.last_name'
             ]
         })
+        account.charges_enabled = True
+        account.payouts_enabled = True
         with mock.patch('stripe.Account.create', return_value=account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 

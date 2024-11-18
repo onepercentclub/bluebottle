@@ -74,39 +74,38 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
     permission_classes = (PaymentPermission,)
 
     def perform_create(self, serializer):
-        payment_intent = serializer.save()
+        stripe = get_stripe()
         statement_descriptor = connection.tenant.name[:22]
 
-        stripe = get_stripe()
-        connect_account = payment_intent.donation.activity.bank_account.connect_account
+        payment_intent_data = serializer.validated_data
+        donation = payment_intent_data['donation']
+        connect_account = donation.activity.bank_account.connect_account
 
         intent_args = dict(
-            amount=int(payment_intent.donation.amount.amount * 100),
-            currency=payment_intent.donation.amount.currency,
+            amount=int(donation.amount.amount * 100),
+            currency=donation.amount.currency,
             transfer_data={
                 'destination': connect_account.account_id,
             },
             automatic_payment_methods={"enabled": True},
             statement_descriptor=statement_descriptor,
             statement_descriptor_suffix=statement_descriptor[:18],
-            metadata=payment_intent.metadata,
+            metadata=payment_intent_data.get('metadata', {}),
         )
 
-        platform_currency = StripePaymentProvider.objects.first().currency
+        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
 
-        if platform_currency == 'EUR' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+            intent_args['on_behalf_of'] = connect_account.account_id
+        elif platform_currency == 'usd' and connect_account.country != 'US':
             intent_args['on_behalf_of'] = connect_account.account_id
 
-        if platform_currency == 'USD' and connect_account.country != 'US':
-            intent_args['on_behalf_of'] = connect_account.account_id
+        intent = stripe.PaymentIntent.create(**intent_args)
 
-        intent = stripe.PaymentIntent.create(
-            **intent_args
+        serializer.save(
+            intent_id=intent.id,
+            client_secret=intent.client_secret
         )
-
-        payment_intent.intent_id = intent.id
-        payment_intent.client_secret = intent.client_secret
-        return payment_intent.save()
 
 
 class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -147,20 +146,22 @@ class StripeBankTransferList(PaymentList):
     serializer_class = BankTransferSerializer
 
     def perform_create(self, serializer):
+        # Get data from serializer without saving
+        payment_intent_data = serializer.validated_data
+        donation = payment_intent_data['donation']
+        account_currency = str(donation.activity.target.currency)
+        currency = str(donation.amount.currency)
 
-        payment_intent = serializer.save(intent_id=1)
-
-        account_currency = str(payment_intent.donation.activity.target.currency)
-        currency = str(payment_intent.donation.amount.currency)
-
+        # Validate the currency compatibility
         if currency != account_currency:
             raise ValidationError(f'Bank transfer not supported for currency {currency}')
 
+        # Prepare Stripe and other necessary objects
         stripe = get_stripe()
-
-        connect_account = payment_intent.donation.activity.bank_account.connect_account
+        connect_account = donation.activity.bank_account.connect_account
         payment_method_options = {}
 
+        # Set up payment method options based on currency
         if currency == 'EUR':
             payment_method_options = {
                 "customer_balance": {
@@ -171,8 +172,7 @@ class StripeBankTransferList(PaymentList):
                     },
                 },
             }
-
-        if currency == 'USD':
+        elif currency == 'USD':
             payment_method_options = {
                 "customer_balance": {
                     "funding_type": "bank_transfer",
@@ -181,7 +181,7 @@ class StripeBankTransferList(PaymentList):
                     },
                 },
             }
-        if currency == 'GBP':
+        elif currency == 'GBP':
             payment_method_options = {
                 "customer_balance": {
                     "funding_type": "bank_transfer",
@@ -190,7 +190,7 @@ class StripeBankTransferList(PaymentList):
                     },
                 },
             }
-        if currency == 'MXN':
+        elif currency == 'MXN':
             payment_method_options = {
                 "customer_balance": {
                     "funding_type": "bank_transfer",
@@ -200,6 +200,7 @@ class StripeBankTransferList(PaymentList):
                 },
             }
 
+        # Create the customer in Stripe
         user = get_current_user()
         customer = stripe.Customer.create(
             stripe_account=connect_account.account_id,
@@ -207,19 +208,27 @@ class StripeBankTransferList(PaymentList):
             email=user.email,
         )
 
-        statement_descriptor = connection.tenant.name[:22]
-
+        # Create the payment method in Stripe
         payment_method = stripe.PaymentMethod.create(
             type="customer_balance",
             stripe_account=connect_account.account_id,
         )
 
+        # Define statement descriptor
+        statement_descriptor = connection.tenant.name[:22]
+
+        # Create the PaymentIntent in Stripe
         intent = stripe.PaymentIntent.create(
-            amount=int(payment_intent.donation.amount.amount * 100),
-            currency=payment_intent.donation.amount.currency,
+            amount=int(donation.amount.amount * 100),
+            currency=currency,
             statement_descriptor=statement_descriptor,
             statement_descriptor_suffix=statement_descriptor[:18],
-            metadata=payment_intent.metadata,
+            metadata={
+                "tenant_name": connection.tenant.client_name,
+                "tenant_domain": connection.tenant.domain_url,
+                "activity_id": donation.activity.pk,
+                "activity_title": donation.activity.title,
+            },
             stripe_account=connect_account.account_id,
             payment_method=payment_method.id,
             payment_method_options=payment_method_options,
@@ -228,10 +237,11 @@ class StripeBankTransferList(PaymentList):
             confirm=True
         )
 
-        payment_intent.intent_id = intent.id
-        payment_intent.client_secret = intent.client_secret
-        payment_intent.instructions = intent.next_action
-        return intent
+        serializer.save(
+            intent_id=intent.id,
+            client_secret=intent.client_secret,
+            instructions=intent.next_action
+        )
 
 
 class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
@@ -265,8 +275,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
 
     def perform_update(self, serializer):
         if (
-            "country" in serializer.validated_data
-            and serializer.instance.country != serializer.validated_data["country"]
+                "country" in serializer.validated_data
+                and serializer.instance.country != serializer.validated_data["country"]
         ):
             if serializer.instance.status == "verified":
                 raise ValidationError("Cannot change country of verified account")

@@ -1,5 +1,6 @@
-import mock
 from datetime import timedelta
+
+import mock
 from django.core import mail
 from django.db import connection
 from django.utils import timezone
@@ -9,8 +10,8 @@ from djmoney.money import Money
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.funding.tasks import funding_tasks, donor_tasks
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory, DonorFactory
+from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory
 )
@@ -30,10 +31,7 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", status="verified"
-        )
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        self.bank_account = generate_mock_bank_account()
         self.funding.bank_account = self.bank_account
         self.funding.save()
         self.funding.states.submit()

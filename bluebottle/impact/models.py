@@ -137,6 +137,7 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
         if self.participant_impact:
             return self.activity.succeeded_contributor_count * self.participant_impact
         return self.realized_from_contributions
+
     realized_from_contributions = models.FloatField(
         _('realized from contributions'),
         blank=True,

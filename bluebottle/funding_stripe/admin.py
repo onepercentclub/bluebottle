@@ -99,6 +99,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     fields = [
         "business_type",
         "country",
+        "owner",
     ] + readonly_fields
 
     list_display = ["id", "account_id", "owner", "status"]

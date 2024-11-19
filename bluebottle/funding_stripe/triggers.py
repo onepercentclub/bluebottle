@@ -208,7 +208,7 @@ class StripePayoutAccountTriggers(TriggerManager):
         ),
 
         ModelChangedTrigger(
-            ["bussiness_type"],
+            ["business_type"],
             effects=[
                 UpdateBussinessTypeEffect
             ],

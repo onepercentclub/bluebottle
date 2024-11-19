@@ -869,7 +869,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                     "country": "NL",
                     "charges_enabled": True,
                     "payouts_enabled": True,
-                    "bussiness_type": "individual",
+                    "business_type": "individual",
                     "requirements": {
                         "disabled": False,
                         "eventually_due": [],

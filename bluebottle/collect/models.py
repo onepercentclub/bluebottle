@@ -135,8 +135,12 @@ class CollectActivity(Activity):
         return u'{}?{}'.format(url, urlencode(params))
 
     @property
+    def participants(self):
+        return self.contributors.instance_of(CollectContributor)
+
+    @property
     def active_contributors(self):
-        return self.contributors.instance_of(CollectContributor).filter(
+        return self.participants.filter(
             status='succeeded'
         )
 

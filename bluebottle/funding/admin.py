@@ -627,7 +627,6 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
-        PlainPayoutAccount
     ]
 
 

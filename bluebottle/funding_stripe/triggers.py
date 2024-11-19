@@ -13,7 +13,9 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptTosEffect
+from bluebottle.funding_stripe.effects import (
+    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBussinessTypeEffect
+)
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
@@ -202,6 +204,13 @@ class StripePayoutAccountTriggers(TriggerManager):
             ["tos_accepted"],
             effects=[
                 AcceptTosEffect,
+            ],
+        ),
+
+        ModelChangedTrigger(
+            ["business_type"],
+            effects=[
+                UpdateBussinessTypeEffect
             ],
         ),
     ]

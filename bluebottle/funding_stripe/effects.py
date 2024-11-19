@@ -40,3 +40,23 @@ class PutActivitiesOnHoldEffect(Effect):
 
     def __str__(self):
         return "Put activities on hold when payments are disabled by stripe"
+
+
+class UpdateBussinessTypeEffect(Effect):
+    conditions = []
+    title = _("Update bussiness type at stripe")
+
+    def post_save(self, **kwargs):
+        stripe = get_stripe()
+        funding = self.instance
+
+        if funding.account_id:
+            account = stripe.Account.modify(
+                funding.account_id,
+                business_type=funding.business_type
+            )
+            funding.update(account)
+            self.save()
+
+    def __str__(self):
+        return "Update bussiness type at stripe. This might result in addiontional verfication requirements"

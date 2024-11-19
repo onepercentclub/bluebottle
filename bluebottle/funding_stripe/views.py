@@ -417,6 +417,21 @@ class ConnectWebHookView(View):
                 account.save()
 
                 return HttpResponse("Updated connect account")
+
+            if event.type == 'account.external_account.created':
+                connect_account = self.get_account(event.data.object.account)
+                ExternalAccount.objects.get_or_create(
+                    connect_account=connect_account,
+                    account_id=event.data.object.id,
+                    defaults={'status': "new"}
+                )
+                return HttpResponse("External account created")
+            if event.type == 'account.external_account.deleted':
+                account = ExternalAccount.objects.get(
+                    account_id=event.data.object.id
+                )
+                account.delete()
+                return HttpResponse("External account deleted")
             else:
                 return HttpResponse("Skipped event {}".format(event.type))
 

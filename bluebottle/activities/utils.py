@@ -199,6 +199,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
@@ -275,6 +276,7 @@ class BaseActivitySerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+            'owner.avatar',
             'image',
             'initiative',
             'goals',
@@ -447,6 +449,7 @@ class BaseContributorSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
     class Meta(object):
@@ -462,6 +465,7 @@ class BaseContributorSerializer(ModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'user',
+            'user.avatar',
             'activity',
         ]
         resource_name = 'contributors'

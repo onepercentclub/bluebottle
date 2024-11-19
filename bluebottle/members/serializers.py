@@ -737,7 +737,6 @@ class MemberProfileSerializer(ModelSerializer):
         'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
-        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 

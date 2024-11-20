@@ -70,7 +70,7 @@ class CollectActivity(Activity):
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
-    enable_impact = models.BooleanField(default=False)
+    #enable_impact = models.BooleanField(default=False)
 
     auto_approve = True
 

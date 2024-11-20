@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.4 (Ubuntu 16.4-0ubuntu0.24.04.1)
--- Dumped by pg_dump version 16.4 (Ubuntu 16.4-0ubuntu0.24.04.1)
+-- Dumped from database version 13.3
+-- Dumped by pg_dump version 13.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -17,16 +17,18 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: test; Type: SCHEMA; Schema: -;
+-- Name: test; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA test;
 
+
 --
--- Name: test2; Type: SCHEMA; Schema: -;
+-- Name: test2; Type: SCHEMA; Schema: -; Owner: -
 --
 
 CREATE SCHEMA test2;
+
 
 --
 -- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
@@ -36,7 +38,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION pg_trgm; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION pg_trgm IS 'text similarity measurement and index searching based on trigrams';
@@ -50,7 +52,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
@@ -64,14 +66,14 @@ CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner:
+-- Name: EXTENSION unaccent; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
 
 
 --
--- Name: refresh_union_table(text, text); Type: FUNCTION; Schema: public;
+-- Name: refresh_union_table(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.refresh_union_table(my_table text, my_view text) RETURNS void
@@ -84,7 +86,7 @@ CREATE FUNCTION public.refresh_union_table(my_table text, my_view text) RETURNS 
           column_names TEXT := '';
         BEGIN
           FOR col IN SELECT DISTINCT column_name FROM information_schema.columns
-            WHERE table_name = my_table AND table_schema in (select schema_name from public.clients_client)
+            WHERE table_name = my_table
             AND column_name NOT IN ('column_name', 'password', 'tenant', 'place')
           LOOP
           column_names := column_names || format(', %I', col);
@@ -100,7 +102,7 @@ CREATE FUNCTION public.refresh_union_table(my_table text, my_view text) RETURNS 
 
 
 --
--- Name: refresh_union_view(text); Type: FUNCTION; Schema: public;
+-- Name: refresh_union_view(text); Type: FUNCTION; Schema: public; Owner: -
 --
 
 CREATE FUNCTION public.refresh_union_view(table_name text) RETURNS void
@@ -121,13 +123,12 @@ CREATE FUNCTION public.refresh_union_view(table_name text) RETURNS void
         $$;
 
 
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: celery_taskmeta; Type: TABLE; Schema: public;
+-- Name: celery_taskmeta; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.celery_taskmeta (
@@ -142,9 +143,8 @@ CREATE TABLE public.celery_taskmeta (
 );
 
 
-
 --
--- Name: celery_taskmeta_id_seq; Type: SEQUENCE; Schema: public;
+-- Name: celery_taskmeta_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.celery_taskmeta_id_seq
@@ -156,16 +156,15 @@ CREATE SEQUENCE public.celery_taskmeta_id_seq
     CACHE 1;
 
 
-
 --
--- Name: celery_taskmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public;
+-- Name: celery_taskmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.celery_taskmeta_id_seq OWNED BY public.celery_taskmeta.id;
 
 
 --
--- Name: celery_tasksetmeta; Type: TABLE; Schema: public;
+-- Name: celery_tasksetmeta; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.celery_tasksetmeta (
@@ -177,9 +176,8 @@ CREATE TABLE public.celery_tasksetmeta (
 );
 
 
-
 --
--- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE; Schema: public;
+-- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.celery_tasksetmeta_id_seq
@@ -191,16 +189,15 @@ CREATE SEQUENCE public.celery_tasksetmeta_id_seq
     CACHE 1;
 
 
-
 --
--- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public;
+-- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.celery_tasksetmeta_id_seq OWNED BY public.celery_tasksetmeta.id;
 
 
 --
--- Name: clients_client; Type: TABLE; Schema: public;
+-- Name: clients_client; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.clients_client (
@@ -214,9 +211,8 @@ CREATE TABLE public.clients_client (
 );
 
 
-
 --
--- Name: clients_client_id_seq; Type: SEQUENCE; Schema: public;
+-- Name: clients_client_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.clients_client_id_seq
@@ -228,16 +224,15 @@ CREATE SEQUENCE public.clients_client_id_seq
     CACHE 1;
 
 
-
 --
--- Name: clients_client_id_seq; Type: SEQUENCE OWNED BY; Schema: public;
+-- Name: clients_client_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.clients_client_id_seq OWNED BY public.clients_client.id;
 
 
 --
--- Name: django_migrations; Type: TABLE; Schema: public;
+-- Name: django_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.django_migrations (
@@ -248,9 +243,8 @@ CREATE TABLE public.django_migrations (
 );
 
 
-
 --
--- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public;
+-- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.django_migrations_id_seq
@@ -262,16 +256,15 @@ CREATE SEQUENCE public.django_migrations_id_seq
     CACHE 1;
 
 
-
 --
--- Name: django_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public;
+-- Name: django_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.django_migrations_id_seq OWNED BY public.django_migrations.id;
 
 
 --
--- Name: django_session; Type: TABLE; Schema: public;
+-- Name: django_session; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.django_session (
@@ -281,9 +274,8 @@ CREATE TABLE public.django_session (
 );
 
 
-
 --
--- Name: django_summernote_attachment; Type: TABLE; Schema: public;
+-- Name: django_summernote_attachment; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.django_summernote_attachment (
@@ -294,9 +286,8 @@ CREATE TABLE public.django_summernote_attachment (
 );
 
 
-
 --
--- Name: django_summernote_attachment_id_seq; Type: SEQUENCE; Schema: public;
+-- Name: django_summernote_attachment_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.django_summernote_attachment_id_seq
@@ -308,16 +299,15 @@ CREATE SEQUENCE public.django_summernote_attachment_id_seq
     CACHE 1;
 
 
-
 --
--- Name: django_summernote_attachment_id_seq; Type: SEQUENCE OWNED BY; Schema: public;
+-- Name: django_summernote_attachment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.django_summernote_attachment_id_seq OWNED BY public.django_summernote_attachment.id;
 
 
 --
--- Name: djcelery_crontabschedule; Type: TABLE; Schema: public;
+-- Name: djcelery_crontabschedule; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.djcelery_crontabschedule (

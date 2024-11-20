@@ -68,9 +68,15 @@ class StripePayoutAccountForm(StateMachineModelForm):
     def __init__(self, *args, **kwargs):
 
         stripe = get_stripe()
+
+        specs = stripe.CountrySpec.list(limit=100)
+        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+        data = specs.data
+        data.extend(specs2.data)
+
         countries = Country.objects.filter(
             alpha2_code__in=(
-                spec.id for spec in stripe.CountrySpec.list(limit=200)
+                spec.id for spec in data
             )
         )
         self.base_fields['country'].choices = [
@@ -90,17 +96,24 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         "verified",
         "payments_enabled",
         "payouts_enabled",
-        "funding",
-        "stripe_link",
         'requirements_list',
         'verification_link',
+        'stripe_link',
+        'funding'
+
     ]
     search_fields = ["account_id"]
     fields = [
+        'owner', 'public', 'partner_organization',
+        'status',
+        "verified",
+        "payments_enabled",
+        "payouts_enabled",
+        'requirements_list',
+        'verification_link',
         "business_type",
         "country",
-        "owner",
-    ] + readonly_fields
+    ]
 
     list_display = ["id", "account_id", "owner", "status"]
 
@@ -110,7 +123,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
         if obj:
             if request.user.is_superuser:
-                fields = fields + ['stripe_link']
+                fields += ['stripe_link']
             fields += ['account_id', 'funding', ]
 
         return fields

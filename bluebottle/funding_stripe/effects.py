@@ -45,18 +45,19 @@ class PutActivitiesOnHoldEffect(Effect):
 class UpdateBussinessTypeEffect(Effect):
     conditions = []
     title = _("Update bussiness type at stripe")
+    display = False
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         stripe = get_stripe()
-        funding = self.instance
+        account = self.instance
 
-        if funding.account_id:
-            account = stripe.Account.modify(
-                funding.account_id,
-                business_type=funding.business_type
+        if account.account_id:
+
+            stripe_account = stripe.Account.modify(
+                account.account_id,
+                business_type=account.business_type
             )
-            funding.update(account)
-            self.save()
+            account.update(stripe_account, save=False)
 
     def __str__(self):
         return "Update bussiness type at stripe. This might result in addiontional verfication requirements"

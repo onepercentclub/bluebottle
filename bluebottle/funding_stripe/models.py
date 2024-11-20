@@ -481,7 +481,7 @@ class StripePayoutAccount(PayoutAccount):
         )
         return account_link.url
 
-    def update(self, data):
+    def update(self, data, save=True):
         self.requirements = data.requirements.eventually_due
 
         try:
@@ -491,7 +491,7 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
-        if self.id:
+        if self.id and save:
             self.save()
 
     def retrieve_account(self):

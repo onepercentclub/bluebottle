@@ -723,7 +723,7 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar'
+            'has_usable_password', 'avatar', 'gender'
         )
 
     class JSONAPIMeta():

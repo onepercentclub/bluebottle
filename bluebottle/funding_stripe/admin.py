@@ -96,18 +96,24 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         "verified",
         "payments_enabled",
         "payouts_enabled",
-        "funding",
-        "stripe_link",
         'requirements_list',
         'verification_link',
+        'stripe_link',
+        'funding'
+
     ]
     search_fields = ["account_id"]
     fields = [
+        'owner', 'public', 'partner_organization',
+        'status',
+        "verified",
+        "payments_enabled",
+        "payouts_enabled",
+        'requirements_list',
+        'verification_link',
         "business_type",
         "country",
-        "owner",
-        "public",
-    ] + readonly_fields
+    ]
 
     list_display = ["id", "account_id", "owner", "status"]
 
@@ -117,7 +123,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
         if obj:
             if request.user.is_superuser:
-                fields = fields + ['stripe_link']
+                fields += ['stripe_link']
             fields += ['account_id', 'funding', ]
 
         return fields

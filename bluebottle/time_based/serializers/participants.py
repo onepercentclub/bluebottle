@@ -18,21 +18,14 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ParticipantSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
-    start = serializers.SerializerMethodField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
     status = serializers.SerializerMethodField()
 
     def get_status(self, obj):
         return obj.status
 
-    def get_start(self, obj):
-        if obj.contributions.exists():
-            return obj.contributions.last().start
-        return None
-
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
-            "start",
             "total_duration",
             "registration",
         )

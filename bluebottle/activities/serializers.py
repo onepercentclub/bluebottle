@@ -15,9 +15,9 @@ from rest_framework_json_api.serializers import PolymorphicModelSerializer, Mode
 
 from bluebottle.activities.models import Contributor, Activity
 from bluebottle.collect.serializers import CollectActivityListSerializer, CollectActivitySerializer, \
-    CollectContributorListSerializer
+    CollectContributorListSerializer, CollectContributorSerializer
 from bluebottle.deeds.serializers import (
-    DeedListSerializer, DeedSerializer, DeedParticipantListSerializer
+    DeedListSerializer, DeedSerializer, DeedParticipantListSerializer, DeedParticipantSerializer
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import IMAGE_SIZES
@@ -25,7 +25,7 @@ from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.serializers import (
     FundingListSerializer, FundingSerializer,
-    DonorListSerializer, TinyFundingSerializer
+    DonorListSerializer, TinyFundingSerializer, DonorSerializer
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.serializers import (
@@ -473,12 +473,15 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
 
 class ContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
-        DonorListSerializer,
+        DonorSerializer,
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
         PeriodicParticipantSerializer,
         ScheduleParticipantSerializer,
-        TeamScheduleParticipantSerializer
+        TeamScheduleParticipantSerializer,
+        DeedParticipantSerializer,
+        CollectContributorSerializer,
+
     ]
 
     included_serializers = {
@@ -495,7 +498,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Contributor
         meta_fields = (
-            'created', 'updated',
+            'created', 'updated', 'start', 'current_status'
         )
 
 
@@ -530,7 +533,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Contributor
         meta_fields = (
-            'created', 'updated',
+            'created', 'updated', 'start', 'current_status'
         )
 
 
@@ -551,7 +554,7 @@ class ContributionListSerializer(ModelSerializer):
         model = Contributor
         fields = ('id', 'type', 'contributor')
         meta_fields = (
-            'created', 'updated',
+            'created', 'updated', 'start', 'current_status'
         )
 
     included_serializers = {

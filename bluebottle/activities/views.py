@@ -16,8 +16,7 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageSerializer,
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
-    ContributorListSerializer,
-    ActivityImageSerializer, ContributionListSerializer, )
+    ActivityImageSerializer, ContributionListSerializer, ContributorSerializer, )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.collect.models import CollectContributor
@@ -186,7 +185,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             )
             .filter(user=self.request.user)
             .exclude(status__in=["rejected", "failed"])
-            .exclude(donor__status__in=["new"])
+            .exclude(donor__status__in=["new", "expired"])
             .order_by("-created")
             .annotate(
                 total_duration=Sum(
@@ -202,7 +201,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
             )
         )
 
-    serializer_class = ContributorListSerializer
+    serializer_class = ContributorSerializer
     pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
 

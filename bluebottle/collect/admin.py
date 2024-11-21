@@ -75,7 +75,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
         'target',
         'realized',
         'enable_impact',
-        'location'
+        'location',
     )
 
     export_as_csv_fields = (

@@ -654,6 +654,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
 
 
 class ParticipantSerializer(BaseContributorSerializer):
+    total_duration = serializers.DurationField(read_only=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
@@ -678,6 +679,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
+            'total_duration'
         )
 
         validators = [

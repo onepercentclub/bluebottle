@@ -198,9 +198,6 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         )
 
     serializer_class = ContributorListSerializer
-
-    pagination_class = None
-
     permission_classes = (IsAuthenticated,)
 
 

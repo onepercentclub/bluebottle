@@ -57,6 +57,9 @@ class StripeBankAccountInline(admin.TabularInline):
     extra = 0
     can_delete = False
 
+    def has_add_permission(self, request, obj):
+        return False
+
     def bank_account_link(self, obj):
         url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id, ))
         return format_html('<a href="{}">{}</a>', url, obj)

@@ -38,7 +38,7 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination
+    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination
 )
 
 
@@ -163,6 +163,11 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
     }
 
 
+class ContributionPagination(JsonApiPagination):
+    page_size = 20
+    max_page_size = None
+
+
 class ContributorList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
@@ -198,6 +203,7 @@ class ContributorList(JsonApiViewMixin, ListAPIView):
         )
 
     serializer_class = ContributorListSerializer
+    pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
 
 

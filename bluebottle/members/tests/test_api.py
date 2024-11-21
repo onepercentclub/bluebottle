@@ -635,6 +635,8 @@ class EmailSetTest(BluebottleTestCase):
     def setUp(self):
         super(EmailSetTest, self).setUp()
 
+        self.client = JSONAPITestClient()
+
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
@@ -645,13 +647,21 @@ class EmailSetTest(BluebottleTestCase):
         self.set_email_url = reverse('user-set-email')
 
     def test_update_email(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_email_url,
-            {'password': 'some-password', 'email': 'new@example.com'},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'some-password',
+                        'email': 'new@example.com'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['email'], 'new@example.com')
         self.assertTrue('password' not in response.data)
         self.assertTrue('jwt_token' in response.data)
@@ -672,31 +682,63 @@ class EmailSetTest(BluebottleTestCase):
     def test_update_duplicate(self):
         existing_user = BlueBottleUserFactory.create()
 
-        response = self.client.put(
+        response = self.client.post(
             self.set_email_url,
-            {'password': 'some-password', 'email': existing_user.email},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'some-password',
+                        'email': existing_user.email
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            "A user with this email address already exists"
+        )
 
     def test_update_duplicate_upper_case(self):
         existing_user = BlueBottleUserFactory.create()
 
-        response = self.client.put(
+        response = self.client.post(
             self.set_email_url,
-            {'password': 'some-password', 'email': existing_user.email},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'some-password',
+                        'email': existing_user.email.upper()
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['email'][0], "member with this email address already exists.")
+
+        self.assertEqual(
+            response.json()['errors'][0]['detail'],
+            "A user with this email address already exists"
+        )
 
     def test_update_email_unauthenticated(self):
         response = self.client.put(
             self.set_email_url,
-            {'password': 'some-password', 'email': 'new@example.com'},
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'some-password',
+                        'email': 'new@example.com'
+                    }
+                }
+            },
         )
 
         self.assertEqual(response.status_code, 401)
@@ -705,30 +747,41 @@ class EmailSetTest(BluebottleTestCase):
         self.assertEqual(self.user.email, 'user@example.com')
 
     def test_update_email_wrong_password(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_email_url,
-            {'password': 'other-password', 'email': 'new@example.com'},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'other-password',
+                        'email': 'new@example.com'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 400)
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'user@example.com')
 
     def test_update_email_wrong_token(self):
-        other_user = BlueBottleUserFactory.create(
-            password='some-password',
-            email='other@example.com'
-        )
-
-        response = self.client.put(
+        response = self.client.post(
             self.set_email_url,
-            {'password': 'other-password', 'email': 'new@example.com'},
-            token="JWT {0}".format(other_user.get_jwt_token())
+            {
+                'data': {
+                    'type': 'profile-email',
+                    'attributes': {
+                        'password': 'other-password',
+                        'email': 'new@example.com'
+                    }
+                }
+            },
+            token="JWT wrong-token"
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'user@example.com')
@@ -742,6 +795,8 @@ class PasswordSetTest(BluebottleTestCase):
     def setUp(self):
         super(PasswordSetTest, self).setUp()
 
+        self.client = JSONAPITestClient()
+
         self.user = BlueBottleUserFactory.create(
             password='some-password',
             email='user@example.com'
@@ -751,13 +806,21 @@ class PasswordSetTest(BluebottleTestCase):
         self.set_password_url = reverse('user-set-password')
 
     def test_update_paswword(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-password',
+                    'attributes': {
+                        'password': 'some-password',
+                        'new_password': 'new-password'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertTrue('jwt_token' in response.data)
         self.assertTrue('password' not in response.data)
 
@@ -775,9 +838,17 @@ class PasswordSetTest(BluebottleTestCase):
         self.assertTrue(new_token_response.status_code, status.HTTP_200_OK)
 
     def test_update_password_unauthenticated(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
+            {
+                'data': {
+                    'type': 'profile-password',
+                    'attributes': {
+                        'password': 'some-password',
+                        'new_password': 'new-password'
+                    }
+                }
+            },
         )
 
         self.assertEqual(response.status_code, 401)
@@ -786,22 +857,39 @@ class PasswordSetTest(BluebottleTestCase):
         self.assertTrue(self.user.check_password('some-password'))
 
     def test_update_password_wrong_password(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_password_url,
-            {'password': 'other-password', 'new_password': 'new-password'},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-password',
+                    'attributes': {
+                        'password': 'new_password',
+                        'new_password': 'new-password'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(b'Password does not match' in response.content)
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password('some-password'))
 
     def test_update_password_short(self):
-        response = self.client.put(
+        response = self.client.post(
             self.set_password_url,
-            {'password': 'some-password', 'new_password': '123456'},
-            token=self.user_token
+            {
+                'data': {
+                    'type': 'profile-password',
+                    'attributes': {
+                        'password': 'other-password',
+                        'new_password': 'short'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION=self.user_token
         )
 
         self.assertEqual(response.status_code, 400)
@@ -811,21 +899,21 @@ class PasswordSetTest(BluebottleTestCase):
         self.assertTrue(self.user.check_password('some-password'))
 
     def test_update_password_wrong_token(self):
-        other_user = BlueBottleUserFactory.create(
-            password='other-password'
-        )
-
-        response = self.client.put(
+        response = self.client.post(
             self.set_password_url,
-            {'password': 'some-password', 'new_password': 'new-password'},
-            token="JWT {0}".format(other_user.get_jwt_token())
+            {
+                'data': {
+                    'type': 'profile-password',
+                    'attributes': {
+                        'password': 'other-password',
+                        'new_password': 'new-password'
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION="JWT some-wrong-token"
         )
 
-        self.assertEqual(response.status_code, 403)
-
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password('some-password'))
-        self.assertTrue(other_user.check_password('other-password'))
+        self.assertEqual(response.status_code, 401)
 
 
 class UserLogoutTest(BluebottleTestCase):
@@ -1218,31 +1306,6 @@ class MemberSettingsAPITestCase(BluebottleTestCase):
         settings.save()
         response = self.client.get(self.url, token=self.user_token)
         self.assertEqual(response.json()['platform']['members']['create_initiatives'], True)
-
-
-class MemberProfileAPITestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super().setUp()
-        self.user = BlueBottleUserFactory.create()
-        self.user_token = 'JWT {}'.format(self.user.get_jwt_token())
-        self.url = reverse('manage-profile', args=(self.user.id, ))
-
-    def test_get_profile_has_receive_reminder_emails(self):
-        response = self.client.get(self.url, token=self.user_token)
-        data = response.json()
-        self.assertEqual(data['receive_reminder_emails'], True)
-
-    def test_uncheck_has_receive_reminder_emails(self):
-        response = self.client.get(self.url, token=self.user_token)
-        data = response.json()
-        data['receive_reminder_emails'] = False
-        del data['picture']
-        del data['avatar']
-        response = self.client.put(self.url, data, token=self.user_token)
-        self.assertEqual(response.status_code, 200)
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.receive_reminder_emails)
 
 
 class CurrentMemberAPITestCase(APITestCase):

@@ -15,7 +15,7 @@ from bluebottle.activities.serializers import ActivityListSerializer
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer as OldImageSerializer, SorlImageField
+    ImageSerializer as OldImageSerializer
 )
 from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
@@ -69,22 +69,36 @@ class CategorySerializer(ModelSerializer):
         resource_name = 'categories'
 
 
+class AvatarImageSerializer(ImageSerializer):
+    sizes = {
+        "avatar": "200x200",
+    }
+    content_view_name = 'avatar-image'
+    relationship = 'member_set'
+
+
 class MemberSerializer(ModelSerializer):
-    avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
 
+    avatar = ImageField(required=False, allow_null=True)
+
     class Meta(object):
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'id', 'first_name', 'last_name', 'initials',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer', 'is_anonymous'
+            'about_me', 'is_co_financer', 'is_anonymous', 'avatar'
         )
 
     class JSONAPIMeta(object):
         resource_name = 'members'
+        included_resources = ['avatar']
+
+    included_serializers = {
+        'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
+    }
 
     def to_representation(self, instance):
         user = self.context['request'].user
@@ -151,13 +165,15 @@ class CurrentMemberSerializer(MemberSerializer):
 
     class JSONAPIMeta:
         resource_name = 'members'
-        included_resources = [
+        included_resources = MemberSerializer.JSONAPIMeta.included_resources + [
             'segments',
+
         ]
 
-    included_serializers = {
-        'segments': 'bluebottle.segments.serializers.SegmentDetailSerializer',
-    }
+    included_serializers = dict(
+        **MemberSerializer.included_serializers,
+        segments='bluebottle.segments.serializers.SegmentDetailSerializer',
+    )
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -326,6 +342,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -364,7 +381,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'activity_managers',
+            'owner', 'owner.avatar', 'reviewer', 'promoter', 'activity_managers',
             'categories', 'theme', 'place',
             'image', 'organization', 'organization_contact', 'activities',
             'activities.image', 'activities.location',

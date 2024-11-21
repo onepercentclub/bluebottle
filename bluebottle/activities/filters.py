@@ -327,6 +327,26 @@ class ActivitySearch(Search):
                     {"is_online": {"order": "desc"}}
                 )
 
+        if self._sort == 'start':
+            # Used for activity tab in initiatives
+            start = now()
+            end = datetime.max
+
+            search = search.sort({
+                "dates.end": {
+                    "order": "asc",
+                    "mode": "min",
+                    "nested": {
+                        "path": "dates",
+                        "filter": (
+                                Range(**{'dates.end': {'lte': end}}) &
+                                Range(**{'dates.end': {'gte': start}})
+                        )
+                    }
+                }
+            })
+            return search
+
         if self._sort == 'date' or not self._sort:
             if 'upcoming' in self.filter_values and self.filter_values['upcoming'][0] == '1':
                 start = now()

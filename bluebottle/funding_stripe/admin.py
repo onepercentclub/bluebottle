@@ -105,19 +105,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'funding'
 
     ]
-    search_fields = ["account_id"]
-    fields = [
-        'owner', 'public', 'partner_organization',
-        'status',
-        "verified",
-        "payments_enabled",
-        "payouts_enabled",
-        'requirements_list',
-        'verification_link',
-        "business_type",
-        "country",
-    ]
 
+    search_fields = ["account_id"]
     list_display = ["id", "account_id", "owner", "status"]
 
     def get_fields(self, request, obj=None):
@@ -128,6 +117,22 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             if request.user.is_superuser:
                 fields = fields + ['stripe_link']
             fields = fields + ['account_id', 'funding', ]
+
+        return fields
+
+    def get_status_fields(self, request, obj):
+        return super().get_status_fields(request, obj)[1:] + [
+            'verified', 'payments_enabled', 'payouts_enabled',
+            'requirements_list', 'verification_link'
+
+        ]
+
+    def get_basic_fields(self, request, obj):
+        fields = super().get_basic_fields(request, obj) + [
+            'business_type', 'country', 'funding'
+        ]
+        if request.user.is_superuser:
+            fields = fields + ['stripe_link']
 
         return fields
 

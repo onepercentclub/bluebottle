@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from bluebottle.activities.views import (
     ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
-    ContributorList, RelatedActivityImageList,
+    RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
     InviteDetailView, ContributionList
 )
@@ -15,9 +15,6 @@ urlpatterns = [
     url(r'^/search$',
         ActivityPreviewList.as_view(),
         name='activity-preview-list'),
-    url(r'^/contributors$',
-        ContributorList.as_view(),
-        name='contributor-list'),
 
     url(r'^/contributions$',
         ContributionList.as_view(),

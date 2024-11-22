@@ -1,12 +1,13 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.db.models import Sum, Q, F, Min
+from django.db.models import Q, F
+from django.utils.timezone import now
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor, Invite
+from bluebottle.activities.models import Activity, Contributor, Invite, Contribution
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivityLocation,
@@ -16,21 +17,12 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageSerializer,
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
-    ActivityImageSerializer, ContributionListSerializer, ContributorSerializer, )
+    ActivityImageSerializer, ContributionSerializer, )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
-from bluebottle.collect.models import CollectContributor
-from bluebottle.deeds.models import DeedParticipant
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.funding.models import Donor
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.time_based.models import (
-    DateParticipant,
-    ScheduleParticipant,
-    DeadlineParticipant,
-    PeriodicParticipant,
-    TeamScheduleParticipant, )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -167,79 +159,34 @@ class ContributionPagination(JsonApiPagination):
     max_page_size = None
 
 
-class ContributorList(JsonApiViewMixin, ListAPIView):
+class ContributionList(JsonApiViewMixin, ListAPIView):
     model = Contributor
 
-    def get_queryset(self):
-        return (
-            Contributor.objects.prefetch_related("user", "activity", "contributions")
-            .instance_of(
-                Donor,
-                DateParticipant,
-                PeriodicParticipant,
-                ScheduleParticipant,
-                TeamScheduleParticipant,
-                DeedParticipant,
-                DeadlineParticipant,
-                CollectContributor,
-            )
-            .filter(user=self.request.user)
-            .exclude(status__in=["rejected", "failed"])
-            .exclude(donor__status__in=["new", "expired"])
-            .order_by("-created")
-            .annotate(
-                total_duration=Sum(
-                    "contributions__timecontribution__value",
-                    filter=Q(contributions__status__in=["succeeded", "new"]),
-                )
-            )
-            .annotate(
-                start=Min(
-                    "contributions__timecontribution__start",
-                    filter=Q(contributions__status__in=["succeeded", "new"]),
-                )
-            )
-        )
+    def get_queryset(self, *args, **kwargs):
+        upcoming = self.request.query_params.get("filter[upcoming]") == "1"
 
-    serializer_class = ContributorSerializer
+        if upcoming:
+            queryset = Contribution.objects.filter(
+                contributor__user=self.request.user,
+                status__in=["succeeded", "new"],
+                start__gte=now(),
+            ).exclude(
+                effortcontribution__contribution_type='organizer'
+            ).order_by("start")
+        else:
+            queryset = Contribution.objects.filter(
+                contributor__user=self.request.user,
+                status__in=["succeeded", "new"],
+                start__lte=now(),
+            ).exclude(
+                effortcontribution__contribution_type='organizer'
+            ).order_by("-start")
+        return queryset
+
+    serializer_class = ContributionSerializer
+
     pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
-
-
-class ContributionList(JsonApiViewMixin, ListAPIView):
-
-    serializer_class = ContributionListSerializer
-
-    def get_queryset(self):
-        return (
-            Contributor.objects.prefetch_related("user", "activity", "contributions")
-            .instance_of(
-                Donor,
-                DateParticipant,
-                PeriodicParticipant,
-                ScheduleParticipant,
-                TeamScheduleParticipant,
-                DeedParticipant,
-                DeadlineParticipant,
-                CollectContributor,
-            )
-            .filter(user=self.request.user)
-            .exclude(status__in=["rejected", "failed"])
-            .exclude(donor__status__in=["new"])
-            .order_by("-created")
-            .annotate(
-                total_duration=Sum(
-                    "contributions__timecontribution__value",
-                    filter=Q(contributions__status__in=["succeeded", "new"]),
-                )
-            )
-            .annotate(
-                start=Min(
-                    "contributions__timecontribution__start",
-                    filter=Q(contributions__status__in=["succeeded", "new"]),
-                )
-            )
-        )
 
 
 class ActivityImage(ImageContentView):

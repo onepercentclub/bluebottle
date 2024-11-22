@@ -328,7 +328,7 @@ class Contribution(TriggerMixin, PolymorphicModel):
 class EffortContribution(Contribution):
     class ContributionTypeChoices(DjangoChoices):
         organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
-        deed = ChoiceItem('deed', label=_("Deed particpant"))
+        deed = ChoiceItem('deed', label=_("Deed participant"))
 
     contribution_type = models.CharField(
         _('Contribution type'),

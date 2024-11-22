@@ -309,6 +309,7 @@ class BaseActivityListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
+    current_status = CurrentStatusField(source='states.current_state')
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -342,7 +343,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
-            'team_activity'
+            'team_activity',
+            'current_status'
         )
 
         meta_fields = (
@@ -350,6 +352,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'created',
             'updated',
             'matching_properties',
+            'current_status'
         )
 
     class JSONAPIMeta(object):

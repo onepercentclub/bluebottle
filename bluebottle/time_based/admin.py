@@ -1191,6 +1191,7 @@ class SlotBulkAddForm(forms.Form):
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
+    save_as = True
 
     date_hierarchy = 'start'
     list_display = [

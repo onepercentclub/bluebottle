@@ -12,6 +12,7 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -118,7 +119,10 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
             'location': GeolocationFactory.create(),
-            'collect_type': self.collect_type
+            'collect_type': self.collect_type,
+            'owner': BlueBottleUserFactory.create(
+                avatar=ImageFactory.create()
+            )
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -140,6 +144,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
+        self.assertIncluded('owner.avatar')
 
         self.assertAttribute('start')
         self.assertAttribute('end')

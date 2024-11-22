@@ -169,12 +169,14 @@ class DeedParticipantSerializer(BaseContributorSerializer):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
             "user",
+            "user.avatar",
             "activity",
             "activity.goals",
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'activity': 'bluebottle.deeds.serializers.DeedSerializer',
         'activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
     }

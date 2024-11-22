@@ -126,8 +126,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
         if obj:
             if request.user.is_superuser:
-                fields += ['stripe_link']
-            fields += ['account_id', 'funding', ]
+                fields = fields + ['stripe_link']
+            fields = fields + ['account_id', 'funding', ]
 
         return fields
 

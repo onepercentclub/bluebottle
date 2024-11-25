@@ -114,7 +114,7 @@ class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
     serializer_class = ActivityPreviewSerializer
     model = Activity
     pagination_class = JsonApiElasticSearchPagination
-    renderer_classes = (ElasticSearchJSONAPIRenderer, )
+    renderer_classes = (ElasticSearchJSONAPIRenderer,)
 
     def list(self, request, *args, **kwargs):
         result = self.filter_queryset(None)
@@ -155,7 +155,7 @@ class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyA
 
 
 class ContributionPagination(JsonApiPagination):
-    page_size = 20
+    page_size = 8
     max_page_size = None
 
 
@@ -172,6 +172,11 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
                 start__gte=now(),
             ).exclude(
                 effortcontribution__contribution_type='organizer'
+            ).prefetch_related(
+                'contributor', 'contributor__activity',
+                'contributor__activity__image',
+                'contributor__activity__initiative',
+                'contributor__activity__initiative__image',
             ).order_by("start")
         else:
             queryset = Contribution.objects.filter(
@@ -180,6 +185,11 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
                 start__lte=now(),
             ).exclude(
                 effortcontribution__contribution_type='organizer'
+            ).prefetch_related(
+                'contributor', 'contributor__activity',
+                'contributor__activity__image',
+                'contributor__activity__initiative',
+                'contributor__activity__initiative__image',
             ).order_by("-start")
         return queryset
 

@@ -361,6 +361,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DateActivityListSerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
+        ScheduleActivitySerializer
     ]
 
     included_serializers = {

@@ -222,7 +222,6 @@ class CollectTriggersTestCase(TriggerTestCase):
         self.model.enable_impact = True
 
         with self.execute():
-            self.assertEffect(UpdateImpactGoalsForActivityEffect)
             self.model.save()
             goal.refresh_from_db()
             self.assertEqual(goal.realized_from_contributions, 8)

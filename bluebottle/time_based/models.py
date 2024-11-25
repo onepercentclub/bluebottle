@@ -1810,6 +1810,20 @@ class PeriodicSlot(TriggerMixin, Slot):
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
     @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
+    def initiative(self):
+        return self.activity.initiative
+
+    is_online = False
+    location = None
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/periodic-slots"
+
+    @property
     def accepted_participants(self):
         return self.participants.filter(
             status__in=["accepted", "participating", "succeeded", "new"],

@@ -29,7 +29,8 @@ from bluebottle.funding.serializers import (
     DonorListSerializer, TinyFundingSerializer, DonorSerializer
 )
 from bluebottle.geo.serializers import PointSerializer
-from bluebottle.time_based.models import TimeContribution
+from bluebottle.time_based.models import TimeContribution, DateParticipant, ScheduleParticipant, \
+    TeamScheduleParticipant, PeriodicParticipant, Slot
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
@@ -41,7 +42,7 @@ from bluebottle.time_based.serializers import (
     PeriodicParticipantSerializer,
     ScheduleActivitySerializer,
     TeamScheduleParticipantSerializer,
-    ScheduleParticipantSerializer, )
+    ScheduleParticipantSerializer, SlotSerializer, )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
     MoneySerializer
@@ -549,28 +550,32 @@ class ContributionSerializer(ModelSerializer):
             return str(obj.value)
         return
 
-    # slot = PolymorphicSerializerMethodResourceRelatedField(
-    #     serializer_class=SlotSerializer,
-    #     method_name='get_slot',
-    # )
-    #
-    # def get_slot(self, obj):
-    #     if isinstance(obj.contributor, DateParticipant):
-    #         return obj.slot_participant.slot
-    #     elif (
-    #         isinstance(obj.contributor, ScheduleParticipant)
-    #         or isinstance(obj.contributor, TeamScheduleParticipant)
-    #         or isinstance(obj.contributor, PeriodicParticipant)
-    #     ):
-    #         return obj.contributor.slot
-    #     return
+    slot = PolymorphicSerializerMethodResourceRelatedField(
+        SlotSerializer,
+        read_only=True,
+        many=False,
+        model=Slot
+    )
+
+    def get_slot(self, obj):
+        if isinstance(obj.contributor, DateParticipant):
+            return obj.slot_participant.slot
+        elif (
+            isinstance(obj.contributor, ScheduleParticipant)
+            or isinstance(obj.contributor, TeamScheduleParticipant)
+            or isinstance(obj.contributor, PeriodicParticipant)
+        ):
+            return obj.contributor.slot
+        return
 
     class JSONAPIMeta(object):
         resource_name = 'contributions'
         included_resources = [
             'contributor',
             'contributor.activity',
-            # 'slot'
+            'contributor.activity.image',
+            'contributor.activity.initiative.image',
+            'slot',
         ]
 
     class Meta(object):
@@ -580,7 +585,7 @@ class ContributionSerializer(ModelSerializer):
             'start',
             'contributor',
             'value',
-            # 'slot'
+            'slot',
         )
         meta_fields = (
             'start', 'current_status'
@@ -588,6 +593,8 @@ class ContributionSerializer(ModelSerializer):
 
     included_serializers = {
         'contributor.activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor': 'bluebottle.activities.serializers.ContributorSerializer',
         'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
     }

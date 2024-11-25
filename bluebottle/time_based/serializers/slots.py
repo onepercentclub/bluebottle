@@ -4,7 +4,7 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, ActivitySlot
+from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, ActivitySlot, PeriodicSlot
 from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField
@@ -113,7 +113,7 @@ class PeriodicSlotSerializer(ModelSerializer):
     current_status = CurrentStatusField(source="states.current_state")
 
     class Meta:
-        model = ScheduleSlot
+        model = PeriodicSlot
         fields = (
             "id",
             "activity",
@@ -133,20 +133,19 @@ class PeriodicSlotSerializer(ModelSerializer):
     included_serializers = {
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
         "location.country": "bluebottle.geo.serializers.CountrySerializer",
-        "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+        "activity": "bluebottle.time_based.serializers.PeriodicActivitySerializer",
     }
 
 
 class SlotSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
+        PeriodicSlotSerializer,
         DateActivitySlotSerializer,
         ScheduleSlotSerializer,
         TeamScheduleSlotSerializer,
-        PeriodicSlotSerializer,
     ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 

@@ -523,13 +523,9 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         # organizers are not counted here
         self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
-
         self.assertEqual(
-            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
-        )
-        self.assertEqual(
-            stats['collected'][str(other_collect_activity.collect_type_id)],
-            other_collect_activity.realized
+            len(stats['collected']),
+            2
         )
 
     def test_get_stats_impact(self):

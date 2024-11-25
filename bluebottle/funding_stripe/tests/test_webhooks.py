@@ -831,14 +831,15 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         )
 
         external_account = ExternalAccountFactory.create(
-            connect_account=self.payout_account
+            connect_account=self.payout_account,
+            account_id='some-bank-token'
         )
         self.funding = FundingFactory.create(bank_account=external_account)
         self.funding.initiative.states.submit(save=True)
         BudgetLineFactory.create(activity=self.funding)
         self.webhook = reverse("stripe-connect-webhook")
 
-        external_account = stripe.BankAccount('some-bank-token')
+        external_account = stripe.BankAccount(external_account.account_id)
         external_account.update(munch.munchify({
             'object': 'bank_account',
             'account_holder_name': 'Jane Austen',

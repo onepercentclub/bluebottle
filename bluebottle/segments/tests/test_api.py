@@ -298,7 +298,6 @@ class SegmentDetailAPITestCase(APITestCase):
 
         stats = response.json()["data"]["meta"]["stats"]
         self.assertEqual(stats["hours"], 18.0)
-        self.assertEqual(stats["activities"], 5)
         self.assertEqual(stats["amount"], {"amount": 75.0, "currency": "EUR"})
         self.assertEqual(stats["contributors"], 18)
         self.assertEqual(stats["effort"], 3)

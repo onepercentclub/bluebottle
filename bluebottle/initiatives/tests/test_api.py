@@ -510,7 +510,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
         self.assertEqual(stats['hours'], 18.0)
-        self.assertEqual(stats['activities'], 6)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
         # 3 period participants

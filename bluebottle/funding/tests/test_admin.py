@@ -7,6 +7,8 @@ from django.utils.timezone import now
 from djmoney.money import Money
 from rest_framework import status
 
+import stripe
+
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
     FundingFactory, BankAccountFactory, DonorFactory,
@@ -175,7 +177,10 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        with mock.patch('stripe.CountrySpec.list', return_value=[]):
+        specs = stripe.ListObject()
+        specs.data = []
+
+        with mock.patch('stripe.CountrySpec.list', return_value=specs):
             response = self.client.get(self.payout_account_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 

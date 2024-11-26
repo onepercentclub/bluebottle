@@ -183,7 +183,8 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
         settings = FundingPlatformSettings.objects.get()
         if settings.public_accounts:
             return self.queryset.order_by("-created").filter(
-                connect_account__public=True
+                connect_account__public=True,
+                connect_account__status='verified'
             )
         else:
             return self.queryset.order_by("-created").filter(

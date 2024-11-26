@@ -165,32 +165,34 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
         upcoming = self.request.query_params.get("filter[upcoming]") == "1"
 
+        queryset = Contribution.objects.filter(
+            contributor__user=self.request.user,
+        ).exclude(
+            contributor__status__in=['expired', 'failed'],
+        ).exclude(
+            effortcontribution__contribution_type='organizer',
+        ).prefetch_related(
+            'contributor',
+            'contributor__activity',
+            'contributor__activity__image',
+            'contributor__activity__initiative',
+            'contributor__activity__initiative__image',
+        )
         if upcoming:
-            queryset = Contribution.objects.filter(
-                contributor__user=self.request.user,
-                status__in=["succeeded", "new"],
-                start__gte=now(),
-            ).exclude(
-                effortcontribution__contribution_type='organizer'
-            ).prefetch_related(
-                'contributor', 'contributor__activity',
-                'contributor__activity__image',
-                'contributor__activity__initiative',
-                'contributor__activity__initiative__image',
+            queryset = queryset.filter(
+                Q(start__gte=now())
+                | Q(contributor__scheduleparticipant__slot__status__in=['new'])
+                | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
-            queryset = Contribution.objects.filter(
-                contributor__user=self.request.user,
-                status__in=["succeeded", "new"],
+            queryset = queryset.filter(
                 start__lte=now(),
             ).exclude(
-                effortcontribution__contribution_type='organizer'
-            ).prefetch_related(
-                'contributor', 'contributor__activity',
-                'contributor__activity__image',
-                'contributor__activity__initiative',
-                'contributor__activity__initiative__image',
+                contributor__scheduleparticipant__slot__status__in=['new']
+            ).exclude(
+                contributor__periodicparticipant__slot__status__in=['new', 'running']
             ).order_by("-start")
+
         return queryset
 
     serializer_class = ContributionSerializer

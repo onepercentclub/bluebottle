@@ -1855,6 +1855,10 @@ class BaseScheduleSlot(TriggerMixin, Slot):
     location_hint = models.TextField(_("location hint"), null=True, blank=True)
 
     @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
     def end(self):
         if self.duration and self.start:
             return self.start + self.duration
@@ -1877,6 +1881,9 @@ class ScheduleSlot(BaseScheduleSlot):
         return self.participants.filter(
             status__in=["accepted", "participating", "succeeded", "new"],
         )
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/schedule-slots"
 
 
 class TeamScheduleSlot(BaseScheduleSlot):

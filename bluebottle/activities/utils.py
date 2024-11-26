@@ -492,12 +492,6 @@ class BaseContributorSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    start = serializers.SerializerMethodField()
-
-    def get_start(self, obj):
-        if obj.contributions.exists():
-            return obj.contributions.last().start
-        return None
 
     class Meta(object):
         model = Contribution

@@ -1,0 +1,24 @@
+{% extends "base.mail.html" %} {% load i18n %} {% block content %}
+<p class="donation-intro">
+    {% blocktrans context 'email' %} Hi {{ recipient_name }},
+    <br />
+    <br />
+    Identity verification failed for an organization you manage.
+    <br />
+    <br />
+    Earlier, you information to verify your identity was submitted, but
+    unfortunately, this was not successful. This could be due to various
+    reasons. Please check the link below and find a link to update your
+    information If you still have problems, contact the platform manager at {{
+    contact_email }}.
+    <br />
+    <br />
+    Please do this as soon as possible. {% endblocktrans %}
+</p>
+{% endblock content %} {% block action %}
+<a
+    href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}"
+>
+    {% trans 'Check details' context 'email' %}
+</a>
+{% endblock %}`

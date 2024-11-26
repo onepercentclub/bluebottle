@@ -9,6 +9,8 @@ from bluebottle.funding.messages import (
     PayoutAccountVerified,
     PayoutAccountMarkedIncomplete,
     LivePayoutAccountMarkedIncomplete,
+    PublicPayoutAccountMarkedIncomplete,
+    LivePublicPayoutAccountMarkedIncomplete
 )
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
@@ -161,7 +163,14 @@ class StripePayoutAccountTriggers(TriggerManager):
                     PayoutAccountMarkedIncomplete,
                 ),
                 NotificationEffect(
+                    PublicPayoutAccountMarkedIncomplete,
+                ),
+                NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
+                    conditions=[has_live_campaign],
+                ),
+                NotificationEffect(
+                    LivePublicPayoutAccountMarkedIncomplete,
                     conditions=[has_live_campaign],
                 ),
                 TransitionEffect(

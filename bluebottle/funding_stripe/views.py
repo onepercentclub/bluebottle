@@ -413,29 +413,31 @@ class ConnectWebHookView(View):
         try:
             if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
+
+                external_account_ids = [
+                    external_account.id for external_account
+                    in event.data.object.external_accounts.data
+                ]
+                for bank_account in account.external_accounts.all():
+                    if bank_account.account_id not in external_account_ids:
+                        bank_account.delete()
+
+                for external_account in event.data.object.external_accounts.data:
+                    ExternalAccount.objects.get_or_create(
+                        connect_account=account,
+                        account_id=external_account.id,
+                        defaults={'status': "new"}
+                    )
+
                 account.update(event.data.object)
                 account.save()
 
                 return HttpResponse("Updated connect account")
-
-            if event.type == 'account.external_account.created':
-                connect_account = self.get_account(event.data.object.account)
-                ExternalAccount.objects.get_or_create(
-                    connect_account=connect_account,
-                    account_id=event.data.object.id,
-                    defaults={'status': "new"}
-                )
-                return HttpResponse("External account created")
-            if event.type == 'account.external_account.deleted':
-                account = ExternalAccount.objects.get(
-                    account_id=event.data.object.id
-                )
-                account.delete()
-                return HttpResponse("External account deleted")
             else:
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
+            __import__('ipdb').set_trace()
             error = "Payout not found"
             logger.error(error)
             return HttpResponse(error, status=400)

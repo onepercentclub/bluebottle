@@ -73,9 +73,11 @@ class StripePayoutAccountForm(StateMachineModelForm):
         stripe = get_stripe()
 
         specs = stripe.CountrySpec.list(limit=100)
-        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
         data = specs.data
-        data.extend(specs2.data)
+
+        if specs:
+            specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+            data.extend(specs2.data)
 
         countries = Country.objects.filter(
             alpha2_code__in=(

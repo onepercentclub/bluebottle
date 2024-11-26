@@ -1,41 +1,15 @@
-{% extends "base.mail.html" %}
-{% load djmoney %}
-{% load i18n %}
+{% extends "base.mail.html" %} {% load djmoney %} {% load i18n %} {% block
+content %}
+<p class="donation-intro">
+    {% blocktrans context 'email' %} Hi {{ recipient_name }},<br />
+    Thanks for your donation! {% endblocktrans %}
+</p>
 
-{% block content %}
-    <p class="donation-intro">
-        {% blocktrans context 'email' %}
-        Hi {{ recipient_name }},<br />
-        Thanks for your donation! 
-        {% endblocktrans %}
-    </p>
-
-    {% include 'mails/messages/partials/donation_receipt.html' %}
-
-    {% if pledged %}
-        <p class="twelve columns">
-            {% blocktrans with amount=obj.amount %}
-                <strong>Please transfer the amount of {{ amount }} to "{{ title }}".</strong><br />
-            {% endblocktrans %}
-        </p>
-    {% endif %}
-    {% if SHARE_OPTIONS.facebook or SHARE_OPTIONS.twitter %}
-        <table class="donation-table-share twelve columns">
-            <tr class="donation-table-share-title">{% trans "Give some extra support and share this campaign with your network." %}</tr>
-            <tr class="donation-share-buttons">
-                <td>
-                    {% if SHARE_OPTIONS.facebook %}
-                        <a class="action-facebook" href="https://www.facebook.com/sharer/sharer.php?u={{obj.activity.get_absolute_url}}">
-                            {% trans 'Share on facebook' %}
-                        </a>
-                    {%  endif %}
-                    {% if SHARE_OPTIONS.twitter %}
-                        <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{obj.activity.get_absolute_url}}">
-                            {% trans 'Share on Twitter' %}
-                        </a>
-                    {% endif %}
-                </td>
-            </tr>
-        </table>
-    {% endif %}
-{% endblock content %}
+{% include 'mails/messages/partials/donation_receipt.html' %} {% if pledged %}
+<p class="twelve columns">
+    {% blocktrans with amount=obj.amount %}
+    <strong>Please transfer the amount of {{ amount }} to "{{ title }}".</strong
+    ><br />
+    {% endblocktrans %}
+</p>
+{% endif %} {% endblock content %}

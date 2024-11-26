@@ -597,15 +597,6 @@ EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 # to SECRET_KEY. Even better, provide one in a client's properties.py file
 TENANT_JWT_SECRET = 'global-tenant-secret'
 
-# email properties
-TENANT_MAIL_PROPERTIES = {
-    'logo': '',
-    'address': '',
-    'sender': '',
-    'footer': '',
-    'website': '',
-}
-
 CLOSED_SITE = False
 PARTNER_LOGIN = False
 

@@ -486,8 +486,8 @@ class ExternalAccount(BankAccount):
         resource_name = 'payout-accounts/stripe-external-accounts'
 
     class Meta(object):
-        verbose_name = _('Stripe external account')
-        verbose_name_plural = _('Stripe external account')
+        verbose_name = _('Bank account')
+        verbose_name_plural = _('Bank accounts')
 
     def __str__(self):
         return "Stripe external account {}".format(self.account_id)

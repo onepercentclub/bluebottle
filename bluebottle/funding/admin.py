@@ -606,7 +606,7 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
         return ['owner', 'public', 'partner_organization']
 
     def get_status_fields(self, request, obj):
-        return ['status', 'created', 'partner_organization']
+        return ['status', 'created', ]
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (

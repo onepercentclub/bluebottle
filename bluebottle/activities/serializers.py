@@ -410,6 +410,9 @@ class ActivitySerializer(PolymorphicModelSerializer):
         ScheduleActivitySerializer,
     ]
 
+    def get_segments(self, obj):
+        return obj.segments.filter(segment_type__visibility=True)
+
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
@@ -437,6 +440,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
             'current_status',
             'contributor_count',
             'deleted_successful_contributors',
+            'registration_status'
         )
 
     class JSONAPIMeta(object):
@@ -487,7 +491,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
     ]
 
     included_serializers = {
-        'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -500,7 +504,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Contributor
         meta_fields = (
-            'created', 'updated', 'start', 'current_status'
+            'created', 'updated', 'start', 'current_status', 'transitions', 'permissions', 'slot_count'
         )
 
 
@@ -575,6 +579,7 @@ class ContributionSerializer(ModelSerializer):
             'contributor',
             'contributor.activity',
             'contributor.activity.image',
+            'contributor.activity.segments',
             'contributor.activity.initiative.image',
             'slot',
         ]

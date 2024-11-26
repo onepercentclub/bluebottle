@@ -361,6 +361,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.model.states.reapply()
 
         with self.execute():
+
             self.assertTransitionEffect(
                 CollectContributionStateMachine.succeed, self.model.contributions.first()
             )

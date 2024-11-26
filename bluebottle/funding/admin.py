@@ -602,9 +602,16 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
 
+    def get_basic_fields(self, request, obj):
+        return ['owner', 'public', 'partner_organization']
+
+    def get_status_fields(self, request, obj):
+        return ['status', 'created', 'partner_organization']
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+            (_('Basic'), {'fields': self.get_basic_fields(request, obj)}),
+            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
             fieldsets += (

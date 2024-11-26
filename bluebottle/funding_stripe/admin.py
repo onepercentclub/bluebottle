@@ -14,8 +14,10 @@ from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.geo.models import Country
 
 from bluebottle.clients import properties
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
+from bluebottle.funding.admin import (
+    PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
     BankAccountChildAdmin
+)
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
@@ -111,16 +113,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     search_fields = ["account_id"]
     list_display = ["id", "account_id", "owner", "status"]
 
-    def get_fields(self, request, obj=None):
-
-        fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
-
-        if obj:
-            if request.user.is_superuser:
-                fields = fields + ['stripe_link']
-            fields = fields + ['account_id', 'funding', ]
-
-        return fields
+    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
 
     def get_status_fields(self, request, obj):
         return super().get_status_fields(request, obj)[1:] + [
@@ -134,7 +127,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             'business_type', 'country', 'funding'
         ]
         if request.user.is_superuser:
-            fields = fields + ['stripe_link']
+            fields = fields + ['stripe_link', 'account_id']
 
         return fields
 

@@ -9,7 +9,7 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
 )
@@ -141,11 +141,6 @@ class CollectActivityTriggers(ActivityTriggers):
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[SetOverallContributor]
-        )
     ]
 
 

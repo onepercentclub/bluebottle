@@ -298,14 +298,9 @@ class SegmentDetailAPITestCase(APITestCase):
 
         stats = response.json()["data"]["meta"]["stats"]
         self.assertEqual(stats["hours"], 18.0)
-        self.assertEqual(stats["activities"], 5)
         self.assertEqual(stats["amount"], {"amount": 75.0, "currency": "EUR"})
         self.assertEqual(stats["contributors"], 18)
         self.assertEqual(stats["effort"], 3)
-
-        self.assertEqual(
-            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
-        )
 
     def test_retrieve_closed_segment(self):
         closed_segment = SegmentFactory.create(

@@ -4,9 +4,9 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, ActivitySlot, PeriodicSlot
-from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
+from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, PeriodicSlot, Slot
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
+from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -128,7 +128,11 @@ class PeriodicSlotSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/periodic-slots"
-        included_resources = ["location", "location.country", "activity"]
+        included_resources = [
+            "location",
+            "location.country",
+            "activity"
+        ]
 
     included_serializers = {
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
@@ -156,7 +160,9 @@ class SlotSerializer(PolymorphicModelSerializer):
         ]
 
     class Meta(object):
-        model = ActivitySlot
+        model = Slot
         meta_fields = (
-            'created', 'updated', 'start', 'current_status'
+            'created',
+            'updated',
+            'current_status'
         )

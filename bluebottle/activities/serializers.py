@@ -602,7 +602,7 @@ class ContributionSerializer(ModelSerializer):
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor': 'bluebottle.activities.serializers.ContributorSerializer',
-        'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'slot': 'bluebottle.time_based.serializers.SlotSerializer',
     }
 
 

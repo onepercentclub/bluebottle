@@ -249,21 +249,21 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
 
-    def test_enable_impact(self):
+    def test_set_impact(self):
         self.defaults['status'] = 'open'
-        self.defaults['target'] = 5
-
+        self.defaults['target'] = 50
         self.create()
-        goal = ImpactGoalFactory.create(activity=self.model, target=10)
+        goal = ImpactGoalFactory.create(
+            activity=self.model,
+            target=100,
+            participant_target=50
+        )
         DeedParticipantFactory.create(activity=self.model)
 
-        self.model.enable_impact = True
-
         with self.execute():
-            self.assertEffect(UpdateImpactGoalsForActivityEffect)
             self.model.save()
             goal.refresh_from_db()
-            self.assertEqual(goal.realized_from_contributions, 2)
+            self.assertEqual(goal.participant_impact, 2)
 
     def test_change_target(self):
         self.defaults['status'] = 'open'

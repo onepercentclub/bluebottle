@@ -48,6 +48,23 @@ class CollectActivityStateMachine(ActivityStateMachine):
         description=_("Succeed the activity.")
     )
 
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_("Your activity will be open to contributions."),
+        automatic=False,
+        name=_('Publish'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted
+        ],
+    )
+
     reopen = Transition(
         [
             ActivityStateMachine.expired,
@@ -140,7 +157,11 @@ class CollectContributorStateMachine(ContributorStateMachine):
     )
 
     re_accept = Transition(
-        ContributorStateMachine.succeeded,
+        [
+            ContributorStateMachine.succeeded,
+            rejected,
+            ContributorStateMachine.failed
+        ],
         accepted,
         name=_('Re-accept'),
         automatic=True,

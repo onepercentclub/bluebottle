@@ -54,7 +54,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
             ActivityStateMachine.needs_work,
         ],
         ActivityStateMachine.open,
-        description=_('Publish this activity.'),
+        description=_("Your activity will be open to contributions."),
         automatic=False,
         name=_('Publish'),
         permission=ActivityStateMachine.is_owner,

@@ -251,6 +251,11 @@ class CollectContributorTriggers(ContributorTriggers):
         TransitionTrigger(
             CollectContributorStateMachine.withdraw,
             effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.expire,
+                    conditions=[activity_is_finished, activity_will_be_empty]
+                ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),

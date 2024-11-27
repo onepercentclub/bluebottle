@@ -42,7 +42,7 @@ from bluebottle.time_based.serializers import (
     PeriodicParticipantSerializer,
     ScheduleActivitySerializer,
     TeamScheduleParticipantSerializer,
-    ScheduleParticipantSerializer, SlotSerializer, )
+    ScheduleParticipantSerializer, PolymorphicSlotSerializer, )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
     MoneySerializer
@@ -508,7 +508,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
         )
 
 
-class ContributorListSerializer(PolymorphicModelSerializer):
+class PolymorphicContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
         DateParticipantListSerializer,
@@ -526,6 +526,7 @@ class ContributorListSerializer(PolymorphicModelSerializer):
         'contributions': 'bluebottle.activities.serializers.MoneySerializer',
         'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+        'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
     }
 
     class JSONAPIMeta(object):
@@ -534,12 +535,17 @@ class ContributorListSerializer(PolymorphicModelSerializer):
             'activity',
             'slots',
             'slots.slot',
+            'registration'
         ]
 
     class Meta(object):
         model = Contributor
         meta_fields = (
-            'created', 'updated', 'start', 'current_status'
+            'created',
+            'updated',
+            'start',
+            'current_status',
+            'registration_status'
         )
 
 
@@ -556,7 +562,7 @@ class ContributionSerializer(ModelSerializer):
         return
 
     slot = PolymorphicSerializerMethodResourceRelatedField(
-        SlotSerializer,
+        PolymorphicSlotSerializer,
         read_only=True,
         many=False,
         model=Slot
@@ -594,20 +600,22 @@ class ContributionSerializer(ModelSerializer):
             'slot',
         )
         meta_fields = (
-            'start', 'current_status'
+            'start',
+            'current_status'
         )
 
     included_serializers = {
+        'contributor': 'bluebottle.activities.serializers.ContributorSerializer',
         'contributor.activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
-        'contributor': 'bluebottle.activities.serializers.ContributorSerializer',
-        'slot': 'bluebottle.time_based.serializers.SlotSerializer',
+        'contributor.registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
+        'slot': 'bluebottle.time_based.serializers.PolymorphicSlotSerializer',
     }
 
 
 class ContributionListSerializer(ModelSerializer):
-    contributor = PolymorphicResourceRelatedField(ContributorListSerializer, queryset=Contributor.objects.all())
+    contributor = PolymorphicResourceRelatedField(PolymorphicContributorSerializer, queryset=Contributor.objects.all())
 
     class JSONAPIMeta(object):
         resource_name = 'contributions'

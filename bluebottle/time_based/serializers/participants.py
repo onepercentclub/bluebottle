@@ -2,7 +2,7 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
-from bluebottle.fsm.serializers import TransitionSerializer
+from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
 from bluebottle.time_based.models import (
     DeadlineParticipant,
     DeadlineRegistration,
@@ -19,17 +19,18 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class ParticipantSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-    status = serializers.SerializerMethodField()
-
-    def get_status(self, obj):
-        return obj.status
+    registration_status = CurrentStatusField(source='registration.states.current_state')
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
             "total_duration",
             "registration",
+            "registration_status"
         )
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ("permissions",)
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + (
+            "permissions",
+            "registration_status"
+        )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = [
@@ -70,19 +71,6 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
-
-    def get_start(self, obj):
-        if obj.slot:
-            return obj.slot.start
-        return None
-
-    def get_status(self, obj):
-        if obj.registration:
-            if obj.registration.status == 'new':
-                return 'pending'
-            elif obj.registration.status != 'approved':
-                return obj.registration.status
-        return obj.status
 
     class Meta(ParticipantSerializer.Meta):
         fields = ParticipantSerializer.Meta.fields + ("slot",)
@@ -142,11 +130,6 @@ class PeriodicParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('periodic-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=PeriodicRegistration.objects.all())
     slot = ResourceRelatedField(read_only=True)
-
-    def get_start(self, obj):
-        if obj.slot:
-            return obj.slot.start
-        return None
 
     class Meta(ParticipantSerializer.Meta):
         model = PeriodicParticipant

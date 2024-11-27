@@ -141,7 +141,7 @@ class PeriodicSlotSerializer(ModelSerializer):
     }
 
 
-class SlotSerializer(PolymorphicModelSerializer):
+class PolymorphicSlotSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         PeriodicSlotSerializer,
         DateActivitySlotSerializer,

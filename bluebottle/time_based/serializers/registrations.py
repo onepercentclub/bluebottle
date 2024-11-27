@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers, validators
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import ResourceRelatedField
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.files.serializers import PrivateDocumentSerializer, PrivateDocumentField
@@ -205,6 +205,21 @@ class PeriodicRegistrationSerializer(RegistrationSerializer):
             'participants': 'bluebottle.time_based.serializers.PeriodicParticipantSerializer'
         }
     )
+
+
+class PolymorphicRegistrationSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        DeadlineRegistrationSerializer,
+        ScheduleRegistrationSerializer,
+        TeamScheduleRegistrationSerializer,
+        PeriodicRegistrationSerializer
+    ]
+
+    class Meta(object):
+        model = Registration
+        meta_fields = (
+            'created', 'updated', 'start', 'current_status'
+        )
 
 
 class RegistrationTransitionSerializer(TransitionSerializer):

@@ -478,7 +478,13 @@ class BaseContributorSerializer(ModelSerializer):
             'current_status',
             'start'
         )
-        meta_fields = ('transitions', 'created', 'updated', 'start', 'current_status')
+        meta_fields = (
+            'transitions',
+            'created',
+            'updated',
+            'start',
+            'current_status',
+        )
 
     class JSONAPIMeta(object):
         included_resources = [

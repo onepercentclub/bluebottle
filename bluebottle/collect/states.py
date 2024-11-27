@@ -110,7 +110,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
 @register(CollectContributor)
 class CollectContributorStateMachine(ContributorStateMachine):
     withdrawn = State(
-        _('Cancelled'),
+        _('Withdrawn'),
         'withdrawn',
         _('This person has cancelled.')
     )
@@ -127,7 +127,13 @@ class CollectContributorStateMachine(ContributorStateMachine):
 
     def is_user(self, user):
         """is contributor"""
-        return self.instance.user == user
+        return (
+            self.instance.user == user or
+            self.instance.activity.owner == user or
+            self.instance.activity.initiative.owner == user or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
 
     def is_owner(self, user):
         """is contributor"""

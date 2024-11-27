@@ -20,7 +20,7 @@ from bluebottle.activities.models import (
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
-from bluebottle.collect.models import CollectContribution
+from bluebottle.collect.models import CollectType, CollectActivity
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -507,23 +507,6 @@ def get_stats_for_activities(activities):
         value=Sum('value')
     )
 
-    money = MoneyContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True)
-    )
-
-    collect = CollectContribution.objects.filter(
-        status='succeeded',
-        contributor__user__isnull=False,
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True)
-    )
-
     amounts = MoneyContribution.objects.filter(
         status='succeeded',
         contributor__activity__id__in=ids
@@ -552,14 +535,25 @@ def get_stats_for_activities(activities):
     contributor_count += Activity.objects.filter(id__in=ids).\
         aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
-    collected = CollectContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).values(
-        'type_id'
-    ).annotate(
-        amount=Sum('value')
-    ).order_by()
+    types = CollectType.objects.all()
+    collect = (
+        CollectActivity.objects.filter(
+            status__in=['succeeded', 'open'],
+            id__in=ids
+        )
+        .values('collect_type_id')
+        .annotate(amount=Sum('realized'))
+    )
+
+    type_dict = {int(type_obj.id): type_obj for type_obj in types}
+
+    collected = [
+        {
+            'name': type_dict[int(col['collect_type_id'])].safe_translation_getter('name'),
+            'value': col['amount']
+        }
+        for col in collect
+    ]
 
     amount = {
         'amount': sum(
@@ -591,8 +585,7 @@ def get_stats_for_activities(activities):
         'impact': impact,
         'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
         'effort': effort['count'],
-        'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
-        'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
+        'collected': collected,
         'contributors': contributor_count,
         'amount': amount
     }

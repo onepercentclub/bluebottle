@@ -218,7 +218,7 @@ class PolymorphicRegistrationSerializer(PolymorphicModelSerializer):
     class Meta(object):
         model = Registration
         meta_fields = (
-            'created', 'updated', 'start', 'current_status'
+            'created', 'updated', 'start', 'current_status', 'transitions', 'permissions'
         )
 
 

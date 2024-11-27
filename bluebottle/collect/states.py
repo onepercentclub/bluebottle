@@ -110,7 +110,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
 @register(CollectContributor)
 class CollectContributorStateMachine(ContributorStateMachine):
     withdrawn = State(
-        _('Cancelled'),
+        _('Withdrawn'),
         'withdrawn',
         _('This person has cancelled.')
     )

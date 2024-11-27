@@ -2,7 +2,7 @@ from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
-from bluebottle.fsm.serializers import TransitionSerializer, CurrentStatusField
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
     DeadlineParticipant,
     DeadlineRegistration,
@@ -19,17 +19,14 @@ from bluebottle.utils.serializers import ResourcePermissionField
 class ParticipantSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-    registration_status = CurrentStatusField(source='registration.states.current_state')
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
             "total_duration",
             "registration",
-            "registration_status"
         )
         meta_fields = BaseContributorSerializer.Meta.meta_fields + (
             "permissions",
-            "registration_status"
         )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):

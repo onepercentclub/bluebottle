@@ -30,7 +30,7 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import TimeContribution, DateParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, PeriodicParticipant, Slot
+    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
@@ -42,7 +42,7 @@ from bluebottle.time_based.serializers import (
     PeriodicParticipantSerializer,
     ScheduleActivitySerializer,
     TeamScheduleParticipantSerializer,
-    ScheduleParticipantSerializer, PolymorphicSlotSerializer, )
+    ScheduleParticipantSerializer, PolymorphicSlotSerializer, PolymorphicRegistrationSerializer, )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import (
     MoneySerializer
@@ -579,6 +579,16 @@ class ContributionSerializer(ModelSerializer):
             return obj.contributor.slot
         return
 
+    registration = PolymorphicSerializerMethodResourceRelatedField(
+        PolymorphicRegistrationSerializer,
+        read_only=True,
+        many=False,
+        model=Registration
+    )
+
+    def get_registration(self, obj):
+        return getattr(obj.contributor, 'registration', None)
+
     class JSONAPIMeta(object):
         resource_name = 'contributions'
         included_resources = [
@@ -587,6 +597,7 @@ class ContributionSerializer(ModelSerializer):
             'contributor.activity.image',
             'contributor.activity.segments',
             'contributor.activity.initiative.image',
+            'registration',
             'slot',
         ]
 
@@ -598,6 +609,7 @@ class ContributionSerializer(ModelSerializer):
             'contributor',
             'value',
             'slot',
+            'registration',
         )
         meta_fields = (
             'start',
@@ -609,7 +621,7 @@ class ContributionSerializer(ModelSerializer):
         'contributor.activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
-        'contributor.registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
+        'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
         'slot': 'bluebottle.time_based.serializers.PolymorphicSlotSerializer',
     }
 

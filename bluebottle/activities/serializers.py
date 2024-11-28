@@ -420,6 +420,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',

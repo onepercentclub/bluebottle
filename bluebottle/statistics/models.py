@@ -59,7 +59,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
 
     timeout = 3600
 
-    def get_value(self, start=None, end=None, subregion=None):
+    def get_value(self, start=None, end=None, subregion=None, user=None):
         return self.value
 
     unit = None
@@ -161,7 +161,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
-    def get_value(self, start=None, end=None, subregion=None):
+    def get_value(self, start=None, end=None, subregion=None, user=None):
         goals = self.impact_type.goals.filter(
             activity__status='succeeded',
         )

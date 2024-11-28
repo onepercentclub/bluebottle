@@ -1554,48 +1554,71 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class ContributorListAPITestCase(BluebottleTestCase):
+class ContributionListAPITestCase(BluebottleTestCase):
     def setUp(self):
-        super(ContributorListAPITestCase, self).setUp()
+        super(ContributionListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-        participants = DateParticipantFactory.create_batch(2, user=self.user)
-        for participant in participants:
-            slot = DateActivitySlotFactory.create(activity=participant.activity)
-            SlotParticipantFactory.create(slot=slot, participant=participant)
+        activity = DateActivityFactory.create()
 
-        DeadlineParticipantFactory.create_batch(2, user=self.user)
-        DonorFactory.create_batch(2, user=self.user, status='succeeded')
-        DonorFactory.create_batch(2, user=self.user, status='new')
-        DeedParticipantFactory.create_batch(2, user=self.user)
-        CollectContributorFactory.create_batch(2, user=self.user)
-
-        participant = DateParticipantFactory.create(user=self.user)
-        SlotParticipantFactory.create(
-            slot=participant.activity.slots.first(), participant=participant
+        slot1 = DateActivitySlotFactory.create(
+            start=now() - timedelta(days=2),
+            activity=activity
         )
-        participant.states.reject(save=True)
+        slot2 = DateActivitySlotFactory.create(
+            start=now() + timedelta(days=2),
+            activity=activity
+        )
+
+        participant = DateParticipantFactory.create(user=self.user, activity=activity)
+        SlotParticipantFactory.create(slot=slot1, participant=participant)
+        SlotParticipantFactory.create(slot=slot2, participant=participant)
+
+        deadline = DeadlineActivityFactory.create(
+            start=(now() - timedelta(days=4, hours=1)).date(),
+        )
+
+        DeadlineParticipantFactory.create(
+            user=self.user,
+            activity=deadline
+        )
+
+        deed = DeedFactory.create(
+            start=(now() + timedelta(days=2)).date(),
+        )
+        DeedParticipantFactory.create(user=self.user, activity=deed)
+
+        collect = CollectActivityFactory.create(
+            start=(now() + timedelta(days=2)).date(),
+        )
+        CollectContributorFactory.create(user=self.user, activity=collect)
 
         DeadlineParticipantFactory.create()
         DonorFactory.create()
         DeedParticipantFactory.create()
         CollectContributorFactory.create()
 
-        self.url = reverse('contributor-list')
+        self.url = reverse('contribution-list')
 
-    def test_get(self):
+    def test_get_upcoming(self):
         response = self.client.get(
-            self.url,
+            self.url + "?filter[upcoming]=1",
             user=self.user
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
 
-        self.assertEqual(len(data['data']), 10)
+        self.assertEqual(len(data['data']), 3)
 
-        for contributor in data['data']:
+        self.assertEqual(
+            data['data'][0]['type'],
+            'contributions'
+        )
+
+        for contribution in data['data']:
+            contributor = contribution['relationships']['contributor']['data']
             self.assertTrue(
                 contributor['type'] in (
                     'contributors/time-based/date-participants',
@@ -1605,51 +1628,34 @@ class ContributorListAPITestCase(BluebottleTestCase):
                     'contributors/time-based/deadline-participants',
                 )
             )
-            self.assertTrue(contributor['type'])
+
+    def test_get_past(self):
+        response = self.client.get(
+            self.url + "?filter[upcoming]=0",
+            user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+
+        self.assertEqual(len(data['data']), 2)
+
+        self.assertEqual(
+            data['data'][0]['type'],
+            'contributions'
+        )
+
+        for contribution in data['data']:
+            contributor = contribution['relationships']['contributor']['data']
             self.assertTrue(
-                contributor['relationships']['activity']['data']['type'] in (
-                    'activities/fundings',
-                    'activities/deeds',
-                    'activities/time-based/dates',
-                    'activities/time-based/deadlines',
-                    'activities/collects'
+                contributor['type'] in (
+                    'contributors/time-based/date-participants',
+                    'contributors/collect/contributors',
+                    'contributors/deeds/participants',
+                    'contributors/donations',
+                    'contributors/time-based/deadline-participants',
                 )
             )
-
-            if contributor['type'] == 'contributors/time-based/date-participants':
-                self.assertEqual(contributor['attributes']['total-duration'], '02:00:00')
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'activities/time-based/dates'
-            ]),
-            2
-        )
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'activities/deeds'
-            ]),
-            2
-        )
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'activities/fundings'
-            ]),
-            2
-        )
-
-        self.assertEqual(
-            len([
-                resource for resource in data['included']
-                if resource['type'] == 'activities/time-based/deadlines'
-            ]),
-            2
-        )
 
     def test_get_anonymous(self):
         response = self.client.get(

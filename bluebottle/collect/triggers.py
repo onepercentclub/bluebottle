@@ -190,6 +190,29 @@ def is_not_owner(effect):
     return True
 
 
+@register(CollectContribution)
+class CollectContributionTriggers(ContributionTriggers):
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            CollectContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributionStateMachine.reset,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+    ]
+
+
 @register(CollectContributor)
 class CollectContributorTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -263,18 +286,17 @@ class CollectContributorTriggers(ContributorTriggers):
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
                 ),
-                RelatedTransitionEffect('contributions', CollectContributionStateMachine.reset),
                 NotificationEffect(ParticipantJoinedNotification)
             ]
         ),
+
         TransitionTrigger(
             CollectContributorStateMachine.re_accept,
             effects=[
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
                 ),
-                RelatedTransitionEffect('contributions', CollectContributionStateMachine.reset),
-                NotificationEffect(ParticipantJoinedNotification)
+                NotificationEffect(ParticipantAddedNotification)
             ]
         ),
 
@@ -285,30 +307,13 @@ class CollectContributorTriggers(ContributorTriggers):
                     'contributions',
                     CollectContributionStateMachine.succeed,
                 ),
-            ]
-        ),
-
-    ]
-
-
-@register(CollectContribution)
-class CollectContributionTriggers(ContributionTriggers):
-    triggers = ContributionTriggers.triggers + [
-        TransitionTrigger(
-            CollectContributionStateMachine.initiate,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.succeed,
+                    conditions=[activity_is_finished]
                 ),
+
             ]
         ),
 
-        TransitionTrigger(
-            CollectContributionStateMachine.reset,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
-                ),
-            ]
-        ),
     ]

@@ -7,7 +7,7 @@ from bluebottle.activities.messages import (
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import OrganizerStateMachine
-from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
 )
@@ -15,7 +15,6 @@ from bluebottle.collect.states import (
     CollectActivityStateMachine, CollectContributorStateMachine, CollectContributionStateMachine
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
-from bluebottle.impact.tests.factories import ImpactGoalFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
@@ -168,45 +167,6 @@ class CollectTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(CollectActivityStateMachine.succeed)
             self.assertNotificationEffect(ActivitySucceededNotification)
-
-    def test_set_realized(self):
-
-        self.defaults['target'] = 5
-
-        self.create()
-        goal = ImpactGoalFactory.create(activity=self.model, target=10)
-
-        self.model.realized = 100
-
-        with self.execute():
-            self.assertEffect(SetOverallContributor)
-
-            self.model.save()
-            goal.refresh_from_db()
-
-            self.assertEqual(len(self.model.active_contributors), 1)
-            self.assertEqual(self.model.active_contributors.get().value, self.model.realized)
-            self.assertEqual(
-                self.model.active_contributors.get().contributions.get().value, self.model.realized
-            )
-            self.assertEqual(
-                self.model.active_contributors.get().contributions.get().type, self.model.collect_type
-            )
-
-    def test_set_realized_again(self):
-        self.test_set_realized()
-
-        self.model.realized = 200
-
-        with self.execute():
-            self.assertEffect(SetOverallContributor)
-            self.model.save()
-
-            self.assertEqual(len(self.model.active_contributors), 1)
-            self.assertEqual(self.model.active_contributors.get().value, self.model.realized)
-            self.assertEqual(
-                self.model.active_contributors.get().contributions.get().value, self.model.realized
-            )
 
 
 class CollectContributorTriggerTestCase(TriggerTestCase):
@@ -384,6 +344,17 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             )
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
+
+    def test_reaccept(self):
+        self.create()
+
+        self.model.states.remove(save=True)
+        self.model.states.re_accept()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantAddedNotification)
 
     def test_remove_finished(self):
         self.create()

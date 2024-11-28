@@ -127,7 +127,13 @@ class CollectContributorStateMachine(ContributorStateMachine):
 
     def is_user(self, user):
         """is contributor"""
-        return self.instance.user == user
+        return (
+            self.instance.user == user or
+            self.instance.activity.owner == user or
+            self.instance.activity.initiative.owner == user or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
 
     def is_owner(self, user):
         """is contributor"""
@@ -158,13 +164,14 @@ class CollectContributorStateMachine(ContributorStateMachine):
 
     re_accept = Transition(
         [
-            ContributorStateMachine.succeeded,
             rejected,
-            ContributorStateMachine.failed
+            ContributorStateMachine.failed,
+            withdrawn,
         ],
         accepted,
-        name=_('Re-accept'),
-        automatic=True,
+        name=_('Re-Accept'),
+        automatic=False,
+        permission=is_owner
     )
 
     withdraw = Transition(
@@ -195,15 +202,6 @@ class CollectContributorStateMachine(ContributorStateMachine):
         rejected,
         name=_('Remove'),
         description=_("Remove contributor from the activity."),
-        automatic=False,
-        permission=is_owner,
-    )
-
-    accept = Transition(
-        rejected,
-        accepted,
-        name=_('Re-Accept'),
-        description=_("User is re-accepted after previously withdrawing."),
         automatic=False,
         permission=is_owner,
     )

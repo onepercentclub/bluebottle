@@ -345,6 +345,17 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNotificationEffect(ParticipantRemovedNotification)
             self.assertNotificationEffect(ParticipantRemovedOwnerNotification)
 
+    def test_reaccept(self):
+        self.create()
+
+        self.model.states.remove(save=True)
+        self.model.states.re_accept()
+        with self.execute():
+            self.assertTransitionEffect(
+                CollectContributionStateMachine.succeed, self.model.contributions.first()
+            )
+            self.assertNotificationEffect(ParticipantAddedNotification)
+
     def test_remove_finished(self):
         self.create()
 

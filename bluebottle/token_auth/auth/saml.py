@@ -8,6 +8,7 @@ import urllib.parse
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.errors import OneLogin_Saml2_Error
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
+from onelogin.saml2.response import OneLogin_Saml2_Response
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.base import BaseTokenAuthentication
@@ -41,8 +42,8 @@ def get_saml_request(request):
 
 class SAMLAuthentication(BaseTokenAuthentication):
 
-    def __init__(self, request, **kwargs):
-        super(SAMLAuthentication, self).__init__(request, **kwargs)
+    def __init__(self, request, settings, **kwargs):
+        super(SAMLAuthentication, self).__init__(request, settings, **kwargs)
         self.auth = OneLogin_Saml2_Auth(get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
@@ -114,6 +115,8 @@ class SAMLAuthentication(BaseTokenAuthentication):
         #     raise TokenAuthenticationError(error)
         try:
             self.auth.process_response(saml_request_id)
+            from datetime import datetime
+            print(self.auth.get_last_response_xml(), datetime.now())
             SAMLLog.log(body=self.auth.get_last_response_xml())
         except OneLogin_Saml2_Error as e:
             logger.error('Saml login error: {}'.format(e))

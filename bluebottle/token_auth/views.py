@@ -1,5 +1,8 @@
 import re
 
+from bluebottle.clients import properties
+
+from django.conf import settings
 from django.contrib.auth import login
 from django.core.exceptions import ImproperlyConfigured
 from django.http.response import HttpResponseRedirect, HttpResponse
@@ -9,24 +12,11 @@ from django.views.generic.base import View, TemplateView
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
 
 
-def get_auth(request, **kwargs):
-    settings = get_settings()
-    try:
-        backend = settings['backend']
-        if not backend.startswith('bluebottle'):
-            backend = 'bluebottle.{}'.format(backend)
-    except AttributeError:
-        raise ImproperlyConfigured('TokenAuth backend not set')
-
-    try:
-        cls = import_string(backend)
-    except AttributeError:
-        raise ImproperlyConfigured(
-            'TokenAuth backend {} is not defined'.format(backend)
-        )
-    return cls(request, **kwargs)
+def get_auth(request, settings):
+    return SAMLAuthentication(request, settings)
 
 
 class TokenRedirectView(View):
@@ -43,13 +33,9 @@ class TokenRedirectView(View):
         return HttpResponseRedirect(sso_url)
 
 
-class TokenLoginView(View):
-    """
-    Parse GET/POST request and login through set Authentication backend
-    """
-
-    def get(self, request, link=None, token=None):
-        auth = get_auth(request, token=token, link=link)
+class SAMLLoginView(View):
+    def post(self, request):
+        auth = get_auth(request, self.settings)
 
         try:
             user, created = auth.authenticate()
@@ -59,6 +45,7 @@ class TokenLoginView(View):
             return HttpResponseRedirect(url)
 
         target_url = auth.target_url or "/"
+
         if target_url and re.match('^\/\w\w\/admin', target_url):
             # Admin login:
             # Log user in using cookies and redirect directly
@@ -71,7 +58,19 @@ class TokenLoginView(View):
         response['cache-control'] = "no-store, no-cache, private"
         return response
 
-    post = get
+
+class UserSAMLLoginView(SAMLLoginView):
+    @property
+    def settings(self):
+        return properties.TOKEN_AUTH
+
+
+
+class SupportSAMLLoginView(SAMLLoginView):
+    @property
+    def settings(self):
+        return settings.SUPPORT_TOKEN_AUTH
+    pass
 
 
 class TokenLogoutView(TemplateView):
@@ -98,8 +97,8 @@ class TokenErrorView(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['message'] = request.GET.get('message', 'Unknown')
-        auth = get_auth(request, **kwargs)
-        context['ssoUrl'] = auth.sso_url()
+        #auth = get_auth(request, **kwargs)
+        #context['ssoUrl'] = auth.sso_url()
         return self.render_to_response(context)
 
 

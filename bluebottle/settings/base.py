@@ -597,15 +597,6 @@ EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 # to SECRET_KEY. Even better, provide one in a client's properties.py file
 TENANT_JWT_SECRET = 'global-tenant-secret'
 
-# email properties
-TENANT_MAIL_PROPERTIES = {
-    'logo': '',
-    'address': '',
-    'sender': '',
-    'footer': '',
-    'website': '',
-}
-
 CLOSED_SITE = False
 PARTNER_LOGIN = False
 
@@ -614,7 +605,7 @@ EXPOSED_TENANT_PROPERTIES = [
     'social_auth_facebook_key', 'date_format', 'bb_apps', 'donation_amounts',
     'facebook_sharing_reviewed', 'project_create_flow', 'project_create_types',
     'project_contact_types', 'project_contact_method', 'closed_site',
-    'partner_login', 'share_options', 'sso_url', 'project_suggestions',
+    'partner_login', 'sso_url', 'project_suggestions',
     'readOnlyFields', 'search_options', 'tasks'
 ]
 
@@ -676,16 +667,6 @@ BASE_CURRENCY = 'USD'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False
-
-# Social share options in project/fundraiser detail
-SHARE_OPTIONS = {
-    'twitter': True,
-    'facebook': True,
-    'linkedin': False,
-    'embedded': False,
-    'link': False,
-    'flyer': False
-}
 
 SHOW_DONATION_AMOUNTS = True
 
@@ -828,3 +809,41 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+SUPPORT_TOKEN_AUTH =  {
+    'assertion_mapping': {
+        'first_name': u'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+        'last_name': u'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname',
+        'email': u'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
+        'remote_id': u'nameId'
+    },
+    'sp': {
+        'singleLogoutService': {
+            'url': u'https://goodup-demo.localhost:3000/token/logout/',
+            'binding': u'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+        },
+        'assertionConsumerService': {
+            'url': u'http://goodup-demo.localhost:3000/token/login/',
+            'binding': u'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST'},
+            'entityId': u'urn:federation:dll-ciportal',
+            'NameIDFormat': u'urn:oasis:names:tc:SAML:2.0:nameid-format:string'
+        },
+        'idp': {
+            'singleLogoutService': {
+            'url': u'https://accounts.google.com/o/saml2/idp?idpid=C02ckor2s',
+            'binding': u'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+        },
+        'entityId': u'https://accounts.google.com/o/saml2?idpid=C02ckor2s',
+        'x509cert': u'MIIDdDCCAlygAwIBAgIGAX6QoWsZMA0GCSqGSIb3DQEBCwUAMHsxFDASBgNVBAoTC0dvb2dsZSBJbmMuMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MQ8wDQYDVQQDEwZHb29nbGUxGDAWBgNVBAsTD0dvb2dsZSBGb3IgV29yazELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWEwHhcNMjIwMTI1MDk0NjQ0WhcNMjcwMTI0MDk0NjQ0WjB7MRQwEgYDVQQKEwtHb29nbGUgSW5jLjEWMBQGA1UEBxMNTW91bnRhaW4gVmlldzEPMA0GA1UEAxMGR29vZ2xlMRgwFgYDVQQLEw9Hb29nbGUgRm9yIFdvcmsxCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3pvoc70ZA5/0Ab9GRFXtW9vwXH6t0VZiuPC5oH5M1AKc7Vda56fgqFRilNm9tCik+KFEYbiKgiMU6u1rKRfUICOjYoFdAWrUQdvdCWsWK2dHeDDia9XO8kLPnwGhpbrxBCoSGxdz0Wg1szopDkKTmqPAXWqYJLVvG4JDAPxg1yGW7LJzIGxSthJ/mjaugXIInvI/HmlnEuw1GzsJmbT8YUDh/JQevYEB8NBTVW57vWbPNBdyudo1Q9xlekliqFGKuAg486uxh9AItJBvKm20sjJFRMp8PfvWbGaEiL0THWFi8IMyMToyKUBeEvk4UCO3ULdKjIto2+xjBzVUsltcUwIDAQABMA0GCSqGSIb3DQEBCwUAA4IBAQCBUCF/nxLWBx9sSQcthbPpqtv3fQ5B7MrRmL1JIEp2rUNMASXsdouOSiNORUcYG2jBWfxYg8d6SSco8cUDUJBeCoIzHcQ8J4FQI0+ghbrPp1SYl8XT5jnnskecetS8AEsJiL9T1srcf/39RBVFpMlnC6j2GJimhBgRneEPLg59fRK9A0sslVyMKPgOqzYGYBhOCPgM4zqTYA6w9pBDYGL0SQwdmm5fH4DGF8ekjvfz/MMcEefMQwlpY2Sc//HnxI3MeBbY0hGzr+6jj5nYO9NwCX+ZAjEBFNO5qOc1yXYWiuzTLOagCFzpoWnaj3m7RQHTRvs/NHvaP68yvmlS04+k',
+        'singleSignOnService': {
+            'url': u'https://accounts.google.com/o/saml2/idp?idpid=C02ckor2s',
+            'binding': u'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect'
+        }
+    },
+    'strict': False,
+    'debug': False,
+    'security': {
+        'requestedAuthnContext': False
+    },
+    'backend': u'token_auth.auth.saml.SAMLAuthentication'
+}

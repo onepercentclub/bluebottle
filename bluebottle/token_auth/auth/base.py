@@ -18,11 +18,11 @@ class BaseTokenAuthentication():
     Base class for TokenAuthentication.
     """
 
-    def __init__(self, request, **kwargs):
+    def __init__(self, request, settings, **kwargs):
         self.args = kwargs
         self.request = request
 
-        self.settings = get_settings()
+        self.settings = settings
 
     def sso_url(self, target_url=None):
         raise NotImplementedError()

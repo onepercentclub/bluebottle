@@ -553,6 +553,7 @@ def get_stats_for_activities(activities):
             'value': col['amount']
         }
         for col in collect
+        if col['collect_type_id']
     ]
 
     amount = {

@@ -181,6 +181,7 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
+                | Q(contributor__teamscheduleparticipant__slot__status__in=['new'])
                 | Q(contributor__scheduleparticipant__slot__status__in=['new'])
                 | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
             ).order_by("start")
@@ -189,6 +190,8 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
                 start__lte=now(),
             ).exclude(
                 contributor__scheduleparticipant__slot__status__in=['new']
+            ).exclude(
+                contributor__teamscheduleparticipant__slot__status__in=['new']
             ).exclude(
                 contributor__periodicparticipant__slot__status__in=['new', 'running']
             ).order_by("-start")

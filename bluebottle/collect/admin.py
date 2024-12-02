@@ -74,7 +74,6 @@ class CollectActivityAdmin(ActivityChildAdmin):
         'collect_type',
         'target',
         'realized',
-        'enable_impact',
         'location'
     )
 

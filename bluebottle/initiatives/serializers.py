@@ -87,9 +87,9 @@ class MemberSerializer(ModelSerializer):
     class Meta(object):
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'id', 'first_name', 'last_name', 'initials',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer', 'is_anonymous'
+            'about_me', 'is_co_financer', 'is_anonymous', 'avatar'
         )
 
     class JSONAPIMeta(object):
@@ -342,6 +342,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -380,7 +381,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
     class JSONAPIMeta(object):
         included_resources = [
-            'owner', 'reviewer', 'promoter', 'activity_managers',
+            'owner', 'owner.avatar', 'reviewer', 'promoter', 'activity_managers',
             'categories', 'theme', 'place',
             'image', 'organization', 'organization_contact', 'activities',
             'activities.image', 'activities.location',

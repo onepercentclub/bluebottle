@@ -84,6 +84,9 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                         serializer_data["type"] in included_cache
                         and serializer_data["id"]
                         in included_cache[serializer_data["type"]]
+                        and not [
+                            field for field in included_resources if field.startswith(f'{field_name}.')
+                        ]
                     )
 
                     if already_included:

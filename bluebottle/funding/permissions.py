@@ -18,10 +18,14 @@ class DonorOwnerOrSucceededPermission(IsOwner):
 
 class PaymentPermission(IsOwner):
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated and request.auth and obj.donation.client_secret:
+        if (
+            not request.user.is_authenticated and
+            request.auth and
+            obj.donation.client_secret
+        ):
             return obj.donation.client_secret == request.auth
-        else:
-            return request.user.is_authenticated and request.user == obj.donation.user
+
+        return super(PaymentPermission, self).has_object_permission(request, view, obj.donation)
 
 
 class CanExportSupportersPermission(IsOwner):

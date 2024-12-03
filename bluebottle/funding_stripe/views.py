@@ -74,7 +74,10 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
     queryset = PaymentIntent.objects.all()
     serializer_class = PaymentIntentSerializer
 
-    permission_classes = []
+    authentication_classes = (
+        JSONWebTokenAuthentication, DonorAuthentication,
+    )
+    permission_classes = [PaymentPermission]
 
     def get_object(self):
         obj = super().get_object()

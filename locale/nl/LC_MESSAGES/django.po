@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-04 11:45+0200\n"
-"PO-Revision-Date: 2024-10-04 12:27\n"
+"PO-Revision-Date: 2024-12-03 17:56\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -3787,7 +3787,7 @@ msgstr "Actie vereist voor je crowdfunding campagne"
 
 #: bluebottle/funding/messages.py:183
 msgid "Payout account rejected"
-msgstr "Payout account afgewezen"
+msgstr "Uitbetalingsaccount afgewezen"
 
 #: bluebottle/funding/messages.py:202
 msgid "Your identity has been verified"
@@ -4264,7 +4264,7 @@ msgstr "Bankrekening moet nog worden geverifieerd"
 
 #: bluebottle/funding/states.py:542
 msgid "Bank account is rejected"
-msgstr "Payout account is afgewezen"
+msgstr "Bankrekening is afgewezen"
 
 #: bluebottle/funding/states.py:549 bluebottle/funding_stripe/states.py:111
 msgid "Bank account details are entered."
@@ -4293,35 +4293,35 @@ msgstr "Keur de bankrekening goed."
 
 #: bluebottle/funding/states.py:581
 msgid "Payout account was created."
-msgstr "Payout account is aangemaakt."
+msgstr "Uitbetalingsaccount is aangemaakt."
 
 #: bluebottle/funding/states.py:586
 msgid "Payout account is pending verification."
-msgstr "Payout account verificatie in behandeling."
+msgstr "Uitbetalingsaccount verificatie in behandeling."
 
 #: bluebottle/funding/states.py:591
 msgid "Payout account has been verified."
-msgstr "Payout account is geverifieerd."
+msgstr "Uitbetalingsaccount is geverifieerd."
 
 #: bluebottle/funding/states.py:596
 msgid "Payout account was rejected."
-msgstr "Payout account is afgewezen."
+msgstr "Uitbetalingsaccount is afgewezen."
 
 #: bluebottle/funding/states.py:601
 msgid "Payout account is missing information or documents."
-msgstr "Payout account mist informatie of document."
+msgstr "Uitbetalingsaccount mist informatie of document."
 
 #: bluebottle/funding/states.py:620
 msgid "Payout account has been created"
-msgstr "Payout account is aangemaakt"
+msgstr "Uitbetalingsaccount is aangemaakt"
 
 #: bluebottle/funding/states.py:627
 msgid "Submit payout account for review."
-msgstr "Stuur payout account in voor review."
+msgstr "Dien uitbetalingsaccount in voor review."
 
 #: bluebottle/funding/states.py:635
 msgid "Verify the payout account."
-msgstr "Payout account goedkeuren."
+msgstr "Uitbetalingsaccount goedkeuren."
 
 #: bluebottle/funding/states.py:644
 msgid "Reject the payout account."
@@ -4333,7 +4333,7 @@ msgstr "Mist informatie"
 
 #: bluebottle/funding/states.py:653
 msgid "Mark the payout account as incomplete. The initiator will have to add more information."
-msgstr "Markeer de payout account als incompleet. De initiator zal meer informatie moeten verstrekken."
+msgstr "Markeer het uitbetalingsaccount als incompleet. De initiator zal meer informatie moeten verstrekken."
 
 #: bluebottle/funding/states.py:670
 msgid "Verify the KYC account. You will hereby confirm that you verified the users identity."
@@ -4341,7 +4341,7 @@ msgstr "Verifiëer het KYC document. Hiermee bevestig je dat je de identiteit va
 
 #: bluebottle/funding/states.py:682
 msgid "Reject the payout account. The uploaded ID scan will be removed with this step."
-msgstr "Keur het KYC account af. Het geüploade document wordt verwijderd met deze stap."
+msgstr "Keur het uitbetalingsaccount af. Het geüploade document wordt verwijderd met deze stap."
 
 #: bluebottle/funding/templates/admin/delete_payout_effect.html:5
 msgid "Delete payouts for"
@@ -4770,7 +4770,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/live_payout_account_rejected.html:19
 msgctxt "email"
 msgid "Check payout account"
-msgstr "Uitbetaling account controleren"
+msgstr "Uitbetalingsaccount controleren"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:7
 #: bluebottle/wallposts/models.py:79
@@ -4920,7 +4920,7 @@ msgstr "\n"
 
 #: bluebottle/funding/validators.py:16
 msgid "Make sure your payout account is verified"
-msgstr "Zorg ervoor dat je payout account is geverifieerd"
+msgstr "Zorg ervoor dat je uitbetalingsaccount is geverifieerd"
 
 #: bluebottle/funding/validators.py:30
 msgid "Make sure the deadline is in the future."
@@ -5127,11 +5127,11 @@ msgstr "Begint met 'acct_...'"
 
 #: bluebottle/funding_stripe/models.py:447
 msgid "stripe payout account"
-msgstr "stripe betaalrekening"
+msgstr "stripe uitbetalingsaccount"
 
 #: bluebottle/funding_stripe/models.py:448
 msgid "stripe payout accounts"
-msgstr "stripe betaalrekeningen"
+msgstr "stripe uitbetalingsaccounts"
 
 #: bluebottle/funding_stripe/models.py:459
 msgid "Starts with 'ba_...'"

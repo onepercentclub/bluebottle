@@ -281,7 +281,7 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
         ):
             response = self.client.get(
                 self.intent_url,
-                HTTP_AUTHORIZATION=f'donation {self.donation.client_secret}'
+                HTTP_AUTHORIZATION=f'donation {self.intent.client_secret}'
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 

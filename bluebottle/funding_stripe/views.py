@@ -18,7 +18,7 @@ from bluebottle.funding.authentication import (
     ClientSecretAuthentication,
 )
 from bluebottle.funding.models import Donor
-from bluebottle.funding.permissions import PaymentPermission
+from bluebottle.funding.permissions import PaymentPermission, IntentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
 from bluebottle.funding_stripe.models import (
@@ -77,7 +77,7 @@ class StripePaymentIntentDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPI
     authentication_classes = (
         JSONWebTokenAuthentication, DonorAuthentication,
     )
-    permission_classes = [PaymentPermission]
+    permission_classes = [IntentPermission]
 
     def get_object(self):
         obj = super().get_object()

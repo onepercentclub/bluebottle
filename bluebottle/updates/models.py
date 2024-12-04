@@ -78,7 +78,7 @@ class Update(TriggerMixin, models.Model):
 
 
 class UpdateImage(models.Model):
-    image = ImageField()
+    image = ImageField(null=True)
     update = models.ForeignKey(
         Update,
         related_name='images',

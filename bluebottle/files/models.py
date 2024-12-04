@@ -88,4 +88,4 @@ class RelatedImage(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    image = ImageField()
+    image = ImageField(null=True)

@@ -98,6 +98,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         ('activities_online', _('Activities Online')),
         ('time_spent', _('Time spent')),
         ('deeds_done', _('Deeds done')),
+        ('collect_done', _('Collect done')),
         ('members', _("Number of members"))
     ]
     translations = TranslatedFields(
@@ -138,6 +139,8 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
             'time_spent': 'time',
 
             'deeds_done': 'deeds',
+
+            'collect_done': 'collect',
 
             'members': 'people',
         }

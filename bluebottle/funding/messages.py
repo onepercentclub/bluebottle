@@ -210,6 +210,19 @@ class LivePayoutAccountMarkedIncomplete(TransitionMessage):
         return members
 
 
+class PayoutAccountVerified(TransitionMessage):
+    subject = _(u'Your identity has been verified')
+    template = 'messages/payout_account_verified'
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+    @property
+    def is_valid(self):
+        return not self.public and super().is_valid()
+
+
 class PublicPayoutAccountRejected(PayoutAccountRejected):
     subject = _(u'Action required for your identity verification')
     template = 'messages/public_payout_account_rejected'
@@ -237,13 +250,13 @@ class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete)
         return self.public and super().is_valid()
 
 
-class PayoutAccountVerified(TransitionMessage):
+class PublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
-    template = 'messages/payout_account_verified'
+    template = 'messages/public_payout_account_verified'
 
-    def get_recipients(self):
-        """the activity organizer"""
-        return [self.obj.owner]
+    @property
+    def is_valid(self):
+        return self.public and super().is_valid()
 
 
 class NewRequirementsMessage(TransitionMessage):

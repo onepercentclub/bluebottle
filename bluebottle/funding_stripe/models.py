@@ -487,7 +487,11 @@ class StripePayoutAccount(PayoutAccount):
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            pass
+            self.verified = (
+                data.company.owners_provided or
+                data.company.executives_provided or
+                data.company.directors_provided
+            )
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

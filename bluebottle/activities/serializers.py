@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from geopy.distance import distance, lonlat
 from rest_framework import serializers
-from rest_framework_json_api.relations import PolymorphicResourceRelatedField
+from rest_framework_json_api.relations import PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer, Serializer
 
 from bluebottle.activities.models import Contributor, Activity, Contribution
@@ -30,7 +30,7 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import TimeContribution, DateParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration
+    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration, SlotParticipant
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
@@ -552,6 +552,11 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
 
 class ContributionSerializer(ModelSerializer):
     contributor = PolymorphicResourceRelatedField(ContributorSerializer, queryset=Contributor.objects.all())
+    slot_participant = SerializerMethodResourceRelatedField(
+        model=SlotParticipant,
+        read_only=True,
+        source='get_slot_participant'
+    )
     current_status = CurrentStatusField(source='states.current_state')
     value = serializers.SerializerMethodField()
 
@@ -590,6 +595,9 @@ class ContributionSerializer(ModelSerializer):
     def get_registration(self, obj):
         return getattr(obj.contributor, 'registration', None)
 
+    def get_slot_participant(self, obj):
+        return getattr(obj, 'slot_participant', None)
+
     class JSONAPIMeta(object):
         resource_name = 'contributions'
         included_resources = [
@@ -599,6 +607,7 @@ class ContributionSerializer(ModelSerializer):
             'contributor.activity.segments',
             'contributor.activity.initiative.image',
             'registration',
+            'slot_participant',
             'slot',
         ]
 
@@ -611,6 +620,7 @@ class ContributionSerializer(ModelSerializer):
             'value',
             'slot',
             'registration',
+            'slot_participant',
         )
         meta_fields = (
             'start',
@@ -623,6 +633,7 @@ class ContributionSerializer(ModelSerializer):
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
+        'slot_participant': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.PolymorphicSlotSerializer',
     }
 

@@ -7,7 +7,7 @@ from bluebottle.files.widgets import ImageWidget, DocumentWidget, PrivateDocumen
 
 class ImageField(ForeignKey):
 
-    def __init__(self, to=None, on_delete=models.CASCADE, related_name=None, related_query_name=None,
+    def __init__(self, to=None, on_delete=models.SET_NULL, related_name=None, related_query_name=None,
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
         if not to:
@@ -34,7 +34,7 @@ class ImageField(ForeignKey):
 
 class DocumentField(ForeignKey):
 
-    def __init__(self, to=None, on_delete=models.CASCADE, related_name=None, related_query_name=None,
+    def __init__(self, to=None, on_delete=models.SET_NULL, related_name=None, related_query_name=None,
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, **kwargs):
         if not to:
@@ -76,7 +76,7 @@ class PrivateDocumentModelChoiceField(ModelChoiceField):
 
 class PrivateDocumentField(ForeignKey):
 
-    def __init__(self, to=None, on_delete=models.CASCADE, related_name=None, related_query_name=None,
+    def __init__(self, to=None, on_delete=models.SET_NULL, related_name=None, related_query_name=None,
                  limit_choices_to=None, parent_link=False, to_field=None,
                  db_constraint=True, view_name=None, **kwargs):
         if not to:

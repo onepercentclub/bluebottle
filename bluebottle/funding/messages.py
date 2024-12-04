@@ -165,10 +165,6 @@ class PayoutAccountRejected(TransitionMessage):
     subject = _(u'Action required for your crowdfunding campaign')
     template = 'messages/payout_account_rejected'
 
-    @property
-    def is_valid(self):
-        return not self.public and super().is_valid()
-
     def get_recipients(self):
         """the activity organizer"""
         return [self.obj.owner]
@@ -177,10 +173,6 @@ class PayoutAccountRejected(TransitionMessage):
 class PayoutAccountMarkedIncomplete(TransitionMessage):
     subject = _("Action required for your crowdfunding campaign")
     template = "messages/payout_account_marked_incomplete"
-
-    @property
-    def is_valid(self):
-        return not self.public and super().is_valid()
 
     def get_recipients(self):
         """the activity organizer"""
@@ -194,10 +186,6 @@ class LivePayoutAccountMarkedIncomplete(TransitionMessage):
     context = {
         'id': 'id'
     }
-
-    @property
-    def is_valid(self):
-        return not self.public and super().is_valid()
 
     def get_recipients(self):
         """platform support email addresses"""
@@ -218,45 +206,25 @@ class PayoutAccountVerified(TransitionMessage):
         """the activity organizer"""
         return [self.obj.owner]
 
-    @property
-    def is_valid(self):
-        return not self.public and super().is_valid()
-
 
 class PublicPayoutAccountRejected(PayoutAccountRejected):
     subject = _(u'Action required for your identity verification')
     template = 'messages/public_payout_account_rejected'
-
-    @property
-    def is_valid(self):
-        return self.public and super().is_valid()
 
 
 class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
     subject = _("Action required for identity verification")
     template = "messages/public_payout_account_marked_incomplete"
 
-    @property
-    def is_valid(self):
-        return self.public and super().is_valid()
-
 
 class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete):
     subject = _(u'Incomplete payout account for running campaign')
     template = 'messages/live_public_payout_account_rejected'
 
-    @property
-    def is_valid(self):
-        return self.public and super().is_valid()
-
 
 class PublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/public_payout_account_verified'
-
-    @property
-    def is_valid(self):
-        return self.public and super().is_valid()
 
 
 class NewRequirementsMessage(TransitionMessage):

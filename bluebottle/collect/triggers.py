@@ -9,7 +9,7 @@ from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
 )
@@ -21,7 +21,6 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
@@ -91,21 +90,6 @@ class CollectActivityTriggers(ActivityTriggers):
             ]
         ),
 
-        ModelChangedTrigger(
-            'enable_impact',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
-            'target',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
         TransitionTrigger(
             CollectActivityStateMachine.auto_approve,
             effects=[
@@ -157,11 +141,6 @@ class CollectActivityTriggers(ActivityTriggers):
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[SetOverallContributor]
-        )
     ]
 
 
@@ -209,6 +188,29 @@ def is_not_owner(effect):
     if 'user' in effect.options:
         return effect.instance.activity.owner != effect.options['user']
     return True
+
+
+@register(CollectContribution)
+class CollectContributionTriggers(ContributionTriggers):
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            CollectContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributionStateMachine.reset,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                ),
+            ]
+        ),
+    ]
 
 
 @register(CollectContributor)
@@ -267,6 +269,11 @@ class CollectContributorTriggers(ContributorTriggers):
         TransitionTrigger(
             CollectContributorStateMachine.withdraw,
             effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.expire,
+                    conditions=[activity_is_finished, activity_will_be_empty]
+                ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
@@ -276,16 +283,20 @@ class CollectContributorTriggers(ContributorTriggers):
         TransitionTrigger(
             CollectContributorStateMachine.reapply,
             effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.expire,
-                    conditions=[activity_is_finished]
-                ),
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
                 ),
-
                 NotificationEffect(ParticipantJoinedNotification)
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributorStateMachine.re_accept,
+            effects=[
+                TransitionEffect(
+                    CollectContributorStateMachine.succeed,
+                ),
+                NotificationEffect(ParticipantAddedNotification)
             ]
         ),
 
@@ -296,30 +307,13 @@ class CollectContributorTriggers(ContributorTriggers):
                     'contributions',
                     CollectContributionStateMachine.succeed,
                 ),
-            ]
-        ),
-
-    ]
-
-
-@register(CollectContribution)
-class CollectContributionTriggers(ContributionTriggers):
-    triggers = ContributionTriggers.triggers + [
-        TransitionTrigger(
-            CollectContributionStateMachine.initiate,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.succeed,
+                    conditions=[activity_is_finished]
                 ),
+
             ]
         ),
 
-        TransitionTrigger(
-            CollectContributionStateMachine.reset,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
-                ),
-            ]
-        ),
     ]

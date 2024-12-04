@@ -971,7 +971,6 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.execute_hook()
 
         self.assertEqual(self.payout_account.status, "incomplete")
-        __import__('ipdb').set_trace()
 
         self.assertEqual(len(mail.outbox), 3)
 

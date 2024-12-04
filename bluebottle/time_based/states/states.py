@@ -372,6 +372,24 @@ class SlotParticipantStateMachine(ModelStateMachine):
         permission=is_user,
     )
 
+    reset = Transition(
+        [succeeded, cancelled],
+        registered,
+        name=_('Reset'),
+        passed_label=_('reset'),
+        description=_("User is reset to registered."),
+        automatic=True,
+    )
+
+    succeed = Transition(
+        [removed, withdrawn, cancelled, registered],
+        succeeded,
+        name=_('Succeed'),
+        passed_label=_('succeeded'),
+        description=_("Succeed the participant, because the slot has finished."),
+        automatic=True,
+    )
+
 
 @register(TimeContribution)
 class TimeContributionStateMachine(ContributionStateMachine):

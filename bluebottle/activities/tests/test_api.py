@@ -897,6 +897,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertFound(matching)
 
+    def test_filter_theme_not_in_settings(self):
+        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+
+        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
+        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+
+        self.search({
+            'theme': matching_initiative.theme.pk,
+        })
+
+        self.assertFacets(
+            'theme',
+            {
+                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
+                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
+            }
+        )
+        self.assertFound(matching)
+
     def test_filter_theme_no_matches(self):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
@@ -1069,6 +1088,29 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="category")
 
+        matching_category = CategoryFactory.create()
+        other_category = CategoryFactory.create()
+
+        matching = DeadlineActivityFactory.create_batch(2, status='open')
+        for activity in matching:
+            activity.initiative.categories.add(matching_category)
+
+        other = DeadlineActivityFactory.create_batch(3, status='open')
+        for activity in other:
+            activity.initiative.categories.add(other_category)
+
+        self.search({'category': matching_category.pk})
+
+        self.assertFacets(
+            'category',
+            {
+                str(matching_category.pk): (matching_category.title, len(matching)),
+                str(other_category.pk): (other_category.title, len(other))
+            }
+        )
+        self.assertFound(matching)
+
+    def test_filter_category_not_in_settings(self):
         matching_category = CategoryFactory.create()
         other_category = CategoryFactory.create()
 

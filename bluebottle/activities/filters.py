@@ -293,10 +293,10 @@ class ActivitySearch(Search):
     }
 
     possible_facets = {
-        'theme': ModelFacet('theme', Theme),
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
+        'theme': ModelFacet('theme', Theme),
     }
 
     def sort(self, search):
@@ -403,9 +403,16 @@ class ActivitySearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
-        # Always add category as a filter, so that category pages show activities
-        settings.search_filters_activities.get_or_create(type='category')
-        result = super().__new__(cls, settings.search_filters_activities.all())
+
+        # get filters from the request
+        filters = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
+        for facet in cls.possible_facets.keys():
+            if facet in filters:
+                # add filters to facets, if they are in possible_facets
+                if not settings.search_filters_activities.filter(type=facet).exists():
+                    settings.search_filters_activities.create(type=facet)
+
+        result = super().__new__(cls, settings.search_filters_activities.distinct().all())
 
         for segment_type in SegmentType.objects.all():
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)

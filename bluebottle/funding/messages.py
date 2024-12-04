@@ -229,7 +229,7 @@ class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
 
 
 class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete):
-    subject = _(u'Live campaign identity verification failed!')
+    subject = _(u'Incomplete payout account for running campaign')
     template = 'messages/live_public_payout_account_rejected'
 
     @property

@@ -3,18 +3,14 @@ content %}
 <p class="donation-intro">
     {% blocktrans context 'email' %} Hi {{ recipient_name }},
     <br /><br />
-    Identity verification was incomplete.
-    <br /><br />
-    Earlier, information to verify the identity of an organization you manage
-    was submitted. In some cases, we need extra information from you. If you
-    still have problems, contact the platform manager at {{ contact_email }}. {%
-    endblocktrans %}
+    To be able to collect funds for your organisation or avoid issues with current campaigns on {{site_name}}, we need some extra information from you. Please provide this information as soon as possible.
+    {% endblocktrans %}
 </p>
 
 {% endblock content %} {% block action %}
 <a
     href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}"
 >
-    {% trans 'Check details' context 'email' %}
+    {% trans 'Provide additional details' context 'email' %}
 </a>
 {% endblock %}`

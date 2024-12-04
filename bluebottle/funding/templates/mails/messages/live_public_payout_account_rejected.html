@@ -2,11 +2,10 @@
 <p class="donation-intro">
     {% blocktrans context 'email' %} Hi {{ recipient_name }},
     <br /><br />
-    For an ongoing crowdfunding campaign, identity verification failed.
-    <br /><br />
-    Identity verification is required for processing the payout of the campaign.
-    If the verification fails, we cannot process the payout. In that case, all
-    donations will be returned to the supporters. {% endblocktrans %}
+    For a public payout account with an active crowdfunding campaign on {{site_name}}, the identity verification is incomplete.
+
+    Please note: without a complete identity verification, the collected funds cannot be paid out. Additionally, new donations may be temporarily paused. Therefore, it’s important to provide the missing information as soon as possible.
+    {% endblocktrans %}
 </p>
 {% endblock content %} {% block action %}
 <a

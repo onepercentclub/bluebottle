@@ -207,7 +207,18 @@ class ParticipantStateMachine(ContributorStateMachine):
 
 @register(DateParticipant)
 class DateParticipantStateMachine(ParticipantStateMachine):
-    pass
+    succeed = Transition(
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed,
+            ParticipantStateMachine.rejected,
+            ParticipantStateMachine.accepted
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_("This participant has completed their contribution."),
+        automatic=True,
+    )
 
 
 class RegistrationParticipantStateMachine(ParticipantStateMachine):

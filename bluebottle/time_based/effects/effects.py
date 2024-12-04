@@ -363,6 +363,21 @@ class RescheduleScheduleSlotContributions(Effect):
                 contribution.save()
 
 
+class RescheduleDateSlotContributions(Effect):
+    template = 'admin/time_based/dateactivityslot/reschedule_date_slot.html'
+
+    def post_save(self):
+        for slot_participant in self.instance.slot_participants.all():
+            for contribution in slot_participant.contributions.all():
+                contribution.start = self.instance.start
+                if self.instance.duration and self.instance.start:
+                    contribution.end = self.instance.start + self.instance.duration
+                else:
+                    contribution.end = None
+                contribution.value = self.instance.duration
+                contribution.save()
+
+
 class CheckPreparationTimeContributionEffect(Effect):
     """
     Check the status of preparation time contribution

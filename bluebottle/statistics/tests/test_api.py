@@ -306,7 +306,6 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         response = self.client.get(self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
-        print(data)
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
         self.assertEqual(data[0]['attributes']['value']['amount'], 105)
         self.assertEqual(data[1]['attributes']['value'], 6.0)

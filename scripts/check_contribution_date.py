@@ -1,4 +1,3 @@
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from bluebottle.activities.models import (
     EffortContribution,
     Contribution,
@@ -28,6 +27,7 @@ def fix_contribution(contribution, date, fix):
         contribution.save()
     else:
         pass
+
 
 def run(*args):
     fix = 'fix' in args

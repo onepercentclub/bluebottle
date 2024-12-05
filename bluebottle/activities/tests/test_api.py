@@ -1559,6 +1559,7 @@ class ContributionListAPITestCase(BluebottleTestCase):
         super(ContributionListAPITestCase, self).setUp()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
+        admin = BlueBottleUserFactory.create(is_staff=True)
 
         activity = DateActivityFactory.create()
 
@@ -1581,7 +1582,8 @@ class ContributionListAPITestCase(BluebottleTestCase):
 
         DeadlineParticipantFactory.create(
             user=self.user,
-            activity=deadline
+            activity=deadline,
+            as_user=admin
         )
 
         deed = DeedFactory.create(

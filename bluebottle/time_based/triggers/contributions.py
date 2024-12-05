@@ -1,4 +1,5 @@
 from django.utils.timezone import now
+from pendulum import today
 
 from bluebottle.activities.triggers import (
     ContributionTriggers
@@ -39,7 +40,7 @@ def should_succeed_instantly(effect):
     ):
         if (
             effect.instance.contributor.activity.start and
-            effect.instance.contributor.activity.start < now()
+            effect.instance.contributor.activity.start <= today()
         ):
             return True
         return True

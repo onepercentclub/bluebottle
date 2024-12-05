@@ -39,6 +39,16 @@ def is_finished(effect):
     )
 
 
+def is_started(effect):
+    """
+    is started
+    """
+    return (
+        not effect.instance.start or
+        effect.instance.start < date.today()
+    )
+
+
 def is_not_finished(effect):
     """
     hasn't finished yet
@@ -69,6 +79,17 @@ def has_no_end_date(effect):
 @register(CollectActivity)
 class CollectActivityTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                RelatedTransitionEffect(
+                    'active_contributors',
+                    CollectContributorStateMachine.succeed,
+                    conditions=[is_started]
+                ),
+            ]
+        ),
+
         ModelChangedTrigger(
             'end',
             effects=[

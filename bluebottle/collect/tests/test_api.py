@@ -343,7 +343,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] in ('succeeded', 'withdrawn')
+                contributor['attributes']['status'] in ('accepted', 'withdrawn')
                 for contributor in self.response.json()['data']
             )
         )
@@ -368,7 +368,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'succeeded'
+                contributor['attributes']['status'] == 'accepted'
                 for contributor in self.response.json()['data']
             )
         )
@@ -407,7 +407,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'succeeded'
+                contributor['attributes']['status'] == 'accepted'
                 for contributor in self.response.json()['data']
             )
         )

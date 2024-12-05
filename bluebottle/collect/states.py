@@ -120,7 +120,7 @@ class CollectContributorStateMachine(ContributorStateMachine):
         _('This person has been removed from the activity.')
     )
     accepted = State(
-        _('Contributing'),
+        _('Participating'),
         'accepted',
         _('This person has been signed up for the activity.')
     )

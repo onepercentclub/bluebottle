@@ -1,5 +1,7 @@
 from datetime import timedelta, date
 
+from pendulum import today
+
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
@@ -236,7 +238,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
     def test_initiate_ended_activity(self):
         self.defaults['activity'].start = date.today() - timedelta(days=10)
-        self.defaults['activity'].end = date.today() - timedelta(days=8)
+        self.defaults['activity'].end = date.today() + timedelta(days=8)
         self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
 
@@ -247,18 +249,19 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertStatus(self.model, 'succeeded')
             contribution = self.model.contributions.first()
             self.assertStatus(contribution, 'succeeded')
-            self.assertEqual(contribution.start.date(), self.defaults['activity'].end)
+            self.assertEqual(contribution.start.date(), today())
 
     def test_initiate_other_user(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=BlueBottleUserFactory.create()):
             self.assertEffect(CreateCollectContribution)
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
@@ -275,7 +278,8 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(CollectContributionStateMachine.succeed)
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ManagerParticipantAddedOwnerNotification)
 

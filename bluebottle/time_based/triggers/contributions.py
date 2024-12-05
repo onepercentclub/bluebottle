@@ -39,11 +39,11 @@ def should_succeed_instantly(effect):
         effect.instance.contributor.registration.status == 'accepted'
     ):
         if (
-            effect.instance.contributor.activity.start and
+            not effect.instance.contributor.activity.start or
             effect.instance.contributor.activity.start <= today()
         ):
             return True
-        return True
+        return False
     elif isinstance(activity, ScheduleActivity):
         return False
 

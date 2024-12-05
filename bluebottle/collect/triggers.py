@@ -227,9 +227,27 @@ def is_not_owner(effect):
     return True
 
 
+def contributor_activity_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.contributor.activity.start or
+        effect.instance.contributor.activity.start < date.today()
+    )
+
+
 @register(CollectContribution)
 class CollectContributionTriggers(ContributionTriggers):
-    pass
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            CollectContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                    conditions=[contributor_activity_started]
+                ),
+            ]
+        ),
+    ]
 
 
 @register(CollectContributor)

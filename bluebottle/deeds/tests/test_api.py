@@ -10,6 +10,7 @@ from bluebottle.deeds.serializers import (
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -109,11 +110,16 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.serializer = DeedSerializer
         self.factory = DeedFactory
 
+        owner = BlueBottleUserFactory.create(
+            avatar=ImageFactory.create()
+        )
+
         self.defaults = {
-            'initiative': InitiativeFactory.create(status='approved'),
+            'initiative': InitiativeFactory.create(status='approved', owner=owner),
             'description': 'Some descrpition',
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'owner': owner
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -135,6 +141,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
+        self.assertIncluded('owner.avatar')
 
         self.assertAttribute('start')
         self.assertAttribute('end')

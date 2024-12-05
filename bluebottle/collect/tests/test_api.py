@@ -12,6 +12,7 @@ from bluebottle.collect.serializers import (
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory, CollectTypeFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
@@ -105,7 +106,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
-class CollectActivitysDetailViewAPITestCase(APITestCase):
+class CollectActivityDetailViewAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
 
@@ -118,7 +119,10 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
             'location': GeolocationFactory.create(),
-            'collect_type': self.collect_type
+            'collect_type': self.collect_type,
+            'owner': BlueBottleUserFactory.create(
+                avatar=ImageFactory.create()
+            )
         }
         self.model = self.factory.create(**self.defaults)
 
@@ -140,6 +144,7 @@ class CollectActivitysDetailViewAPITestCase(APITestCase):
 
         self.assertIncluded('initiative')
         self.assertIncluded('owner')
+        self.assertIncluded('owner.avatar')
 
         self.assertAttribute('start')
         self.assertAttribute('end')
@@ -338,7 +343,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] in ('succeeded', 'withdrawn')
+                contributor['attributes']['status'] in ('accepted', 'withdrawn')
                 for contributor in self.response.json()['data']
             )
         )
@@ -363,7 +368,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'succeeded'
+                contributor['attributes']['status'] == 'accepted'
                 for contributor in self.response.json()['data']
             )
         )
@@ -402,7 +407,7 @@ class RelatedCollectActivityContributorViewAPITestCase(APITestCase):
 
         self.assertTrue(
             all(
-                contributor['attributes']['status'] == 'succeeded'
+                contributor['attributes']['status'] == 'accepted'
                 for contributor in self.response.json()['data']
             )
         )
@@ -470,7 +475,7 @@ class CollectActivityContributorTranistionListViewAPITestCase(APITestCase):
         self.contributor = CollectContributorFactory.create(
             activity=CollectActivityFactory.create(
                 initiative=InitiativeFactory.create(status='approved'),
-                start=date.today() + timedelta(days=10),
+                start=date.today() - timedelta(days=10),
                 end=date.today() + timedelta(days=20),
             )
         )
@@ -514,7 +519,7 @@ class ContributorExportViewAPITestCase(APITestCase):
         initiative_settings.save()
 
         self.activity = CollectActivityFactory.create(
-            start=date.today() + timedelta(days=10),
+            start=date.today() - timedelta(days=10),
             end=date.today() + timedelta(days=20),
         )
 

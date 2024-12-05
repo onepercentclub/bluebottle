@@ -486,7 +486,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
         return fields
 
     def get_detail_fields(self, request, obj):
-        return self.detail_fields
+        settings = InitiativePlatformSettings.objects.get()
+        detail_fields = self.detail_fields
+        if isinstance(detail_fields, list):
+            detail_fields = tuple(detail_fields)
+        if Location.objects.exists() and not settings.enable_office_restrictions:
+            detail_fields += ('office_location',)
+        return detail_fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields
@@ -518,15 +524,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
-        if Location.objects.count():
-            if settings.enable_office_restrictions:
-                if 'office_restriction' not in self.office_fields:
-                    self.office_fields += (
-                        'office_restriction',
-                    )
-                fieldsets.insert(1, (
-                    _('Office'), {'fields': self.office_fields}
-                ))
+        if Location.objects.count() and settings.enable_office_restrictions:
+            if 'office_restriction' not in self.office_fields:
+                self.office_fields += (
+                    'office_restriction',
+                )
+            fieldsets.insert(1, (
+                _('Office'), {'fields': self.office_fields}
+            ))
 
         if request.user.is_superuser:
             fieldsets += [

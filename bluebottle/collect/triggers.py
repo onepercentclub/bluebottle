@@ -45,7 +45,7 @@ def is_started(effect):
     """
     return (
         not effect.instance.start or
-        effect.instance.start < date.today()
+        effect.instance.start <= date.today()
     )
 
 
@@ -180,6 +180,13 @@ def activity_is_started(effect):
     )
 
 
+def activity_is_not_started(effect):
+    """activity is not started"""
+    return (
+        effect.instance.activity.start > date.today()
+    )
+
+
 def activity_will_be_empty(effect):
     """activity will be empty"""
     return (
@@ -233,6 +240,10 @@ class CollectContributorTriggers(ContributorTriggers):
                     CollectContributorStateMachine.succeed,
                     conditions=[activity_is_started]
                 ),
+                TransitionEffect(
+                    CollectContributorStateMachine.accept,
+                    conditions=[activity_is_not_started]
+                ),
                 CreateCollectContribution,
                 NotificationEffect(
                     ParticipantAddedNotification,
@@ -263,18 +274,6 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantRemovedNotification),
                 NotificationEffect(ParticipantRemovedOwnerNotification),
-            ]
-        ),
-
-        TransitionTrigger(
-            CollectContributorStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.succeed,
-                    conditions=[activity_is_finished]
-                ),
-                RelatedTransitionEffect('contributions', CollectContributionStateMachine.succeed),
             ]
         ),
 

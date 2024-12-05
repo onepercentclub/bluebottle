@@ -475,7 +475,7 @@ class CollectActivityContributorTranistionListViewAPITestCase(APITestCase):
         self.contributor = CollectContributorFactory.create(
             activity=CollectActivityFactory.create(
                 initiative=InitiativeFactory.create(status='approved'),
-                start=date.today() + timedelta(days=10),
+                start=date.today() - timedelta(days=10),
                 end=date.today() + timedelta(days=20),
             )
         )
@@ -519,7 +519,7 @@ class ContributorExportViewAPITestCase(APITestCase):
         initiative_settings.save()
 
         self.activity = CollectActivityFactory.create(
-            start=date.today() + timedelta(days=10),
+            start=date.today() - timedelta(days=10),
             end=date.today() + timedelta(days=20),
         )
 

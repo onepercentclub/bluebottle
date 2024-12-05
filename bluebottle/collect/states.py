@@ -156,7 +156,7 @@ class CollectContributorStateMachine(ContributorStateMachine):
     )
 
     succeed = Transition(
-        accepted,
+        [ContributorStateMachine.new, accepted],
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
@@ -172,6 +172,13 @@ class CollectContributorStateMachine(ContributorStateMachine):
         name=_('Re-Accept'),
         automatic=False,
         permission=is_owner
+    )
+
+    accept = Transition(
+        ContributorStateMachine.new,
+        accepted,
+        name=_('Accept'),
+        automatic=True
     )
 
     withdraw = Transition(

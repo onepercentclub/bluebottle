@@ -176,6 +176,7 @@ def activity_is_finished(effect):
 def activity_is_started(effect):
     """activity is started"""
     return (
+        not effect.instance.activity.start or
         effect.instance.activity.start < date.today()
     )
 
@@ -183,6 +184,7 @@ def activity_is_started(effect):
 def activity_is_not_started(effect):
     """activity is not started"""
     return (
+        effect.instance.activity.start and
         effect.instance.activity.start > date.today()
     )
 

@@ -19,6 +19,19 @@ class MailPlatformSettings(BasePlatformSettings):
         ]
     )
 
+    address = models.CharField(
+        null=True, blank=True, max_length=80
+    )
+    sender = models.CharField(
+        null=True, blank=True, max_length=80
+    )
+    reply_to = models.CharField(
+        null=True, blank=True, max_length=80
+    )
+    footer = models.TextField(
+        null=True, blank=True
+    )
+
     class Meta(object):
         verbose_name_plural = _('mail platform settings')
         verbose_name = _('mail platform settings')

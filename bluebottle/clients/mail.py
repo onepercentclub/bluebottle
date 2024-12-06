@@ -1,7 +1,7 @@
 from django.core.mail import \
     EmailMultiAlternatives as BaseEmailMultiAlternatives
 
-from bluebottle.clients import properties
+from bluebottle.mails.models import MailPlatformSettings
 
 
 def construct_from_header():
@@ -16,17 +16,12 @@ def construct_from_header():
     # properties first.
     # properties.tenant_properties will be an empty dict if the tenant
     # properties has not be initialised yet.
-    mail_address = properties.TENANT_MAIL_PROPERTIES.get('address')
-    mail_name = properties.TENANT_MAIL_PROPERTIES.get('sender')
-    if not mail_name:
-        mail_name = properties.TENANT_MAIL_PROPERTIES.get('name')
-    if not mail_name:
-        mail_name = mail_address
+    settings = MailPlatformSettings.load()
 
-    if not mail_address:
+    if not settings.address:
         return None
 
-    return "{0} <{1}>".format(mail_name, mail_address)
+    return f"{settings.address} <{settings.sender}>"
 
 
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):
@@ -39,9 +34,10 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
         if headers is None:
             headers = {}
 
-        reply_to = properties.TENANT_MAIL_PROPERTIES.get('reply_to')
-        if reply_to:
-            headers['Reply-To'] = reply_to
+        settings = MailPlatformSettings.load()
+
+        if settings.reply_to:
+            headers['Reply-To'] = settings.reply_to
 
         if not from_email:
             from_email = construct_from_header()

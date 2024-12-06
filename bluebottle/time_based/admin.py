@@ -840,6 +840,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Slots")
     readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
     fields = readonly_fields
+    ordering = ["-start"]
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1191,6 +1192,7 @@ class SlotBulkAddForm(forms.Form):
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
+    save_as = True
 
     date_hierarchy = 'start'
     list_display = [

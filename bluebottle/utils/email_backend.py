@@ -10,10 +10,12 @@ from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
 from django.utils import translation
 from django.template.loader import get_template
+from django.template import Context
 
 from django_tools.middlewares import ThreadLocal
 
-from bluebottle.clients.context import ClientContext
+from bluebottle.cms.models import SitePlatformSettings
+
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
@@ -121,7 +123,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         language = kwargs['language']
 
     with TenantLanguage(language):
-        ctx = ClientContext(kwargs)
+        ctx = Context(kwargs)
         ctx['to'] = to  # Add the recipient to the context
         html_content = premailer.transform(
             get_template(
@@ -176,11 +178,12 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
             'tenant': connection.tenant.client_name,
             'tenant_name': connection.tenant.name
         })
-    mail_settings = {'email_logo': MailPlatformSettings.load().email_logo}
-    mail_settings['contact_email'] = properties.CONTACT_EMAIL
+
     kwargs.update({
-        'settings': mail_settings
+        'settings': MailPlatformSettings.load().email_logo,
+        'content': SitePlatformSettings.objects.get(),
     })
+
     try:
         msg = create_message(template_name=template_name,
                              to=to,

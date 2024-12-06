@@ -1,11 +1,12 @@
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot
+from bluebottle.time_based.models import ScheduleSlot, TeamScheduleSlot, PeriodicSlot, Slot
 from bluebottle.time_based.serializers.activities import RelatedLinkFieldByStatus
+from bluebottle.time_based.serializers.serializers import DateActivitySlotSerializer
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -112,7 +113,7 @@ class PeriodicSlotSerializer(ModelSerializer):
     current_status = CurrentStatusField(source="states.current_state")
 
     class Meta:
-        model = ScheduleSlot
+        model = PeriodicSlot
         fields = (
             "id",
             "activity",
@@ -127,10 +128,41 @@ class PeriodicSlotSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = "activities/time-based/periodic-slots"
-        included_resources = ["location", "location.country", "activity"]
+        included_resources = [
+            "location",
+            "location.country",
+            "activity"
+        ]
 
     included_serializers = {
         "location": "bluebottle.geo.serializers.GeolocationSerializer",
         "location.country": "bluebottle.geo.serializers.CountrySerializer",
-        "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
+        "activity": "bluebottle.time_based.serializers.PeriodicActivitySerializer",
     }
+
+
+class PolymorphicSlotSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        PeriodicSlotSerializer,
+        DateActivitySlotSerializer,
+        ScheduleSlotSerializer,
+        TeamScheduleSlotSerializer,
+    ]
+
+    included_serializers = {
+        'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'user',
+            'activity',
+        ]
+
+    class Meta(object):
+        model = Slot
+        meta_fields = (
+            'created',
+            'updated',
+            'current_status'
+        )

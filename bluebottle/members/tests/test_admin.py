@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from djmoney.money import Money
 
-from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.collect.tests.factories import CollectContributorFactory, CollectActivityFactory
 from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -561,8 +561,8 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
             primary_language='en'
         )
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        self.client.get(welkcome_email_url)
+        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
+        self.client.get(welcome_email_url)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -647,7 +647,10 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
 
     def test_engagement_shows_collect(self):
         user = BlueBottleUserFactory.create()
-        CollectContributorFactory.create(user=user)
+        activity = CollectActivityFactory.create(
+            start=None
+        )
+        CollectContributorFactory.create(activity=activity, user=user)
         url = reverse('admin:members_member_change', args=(user.id,))
         response = self.app.get(url, user=self.staff_member)
         self.assertEqual(response.status, '200 OK')

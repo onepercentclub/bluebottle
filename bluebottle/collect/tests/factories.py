@@ -3,6 +3,7 @@ from builtins import object
 import factory.fuzzy
 from pytz import UTC
 
+from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
@@ -46,7 +47,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
 
 
-class CollectContributorFactory(factory.DjangoModelFactory):
+class CollectContributorFactory(FSMModelFactory):
     class Meta(object):
         model = CollectContributor
 

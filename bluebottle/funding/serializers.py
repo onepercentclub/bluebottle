@@ -167,6 +167,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+
         ]
         resource_name = 'payout-accounts/external-accounts'
 
@@ -738,5 +739,6 @@ class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
             'allow_anonymous_rewards',
             'anonymous_donations',
             'stripe_publishable_key',
+            'public_accounts',
             'matching_name'
         )

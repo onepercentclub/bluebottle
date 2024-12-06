@@ -61,6 +61,9 @@ class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
         verbose_name = _("partner organization")
         verbose_name_plural = _("partner organizations")
 
+    class JSONAPIMeta:
+        resource_name = 'organizations'
+
 
 class OrganizationContact(ValidatedModelMixin, models.Model):
     """

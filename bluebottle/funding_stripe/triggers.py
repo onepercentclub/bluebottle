@@ -9,20 +9,24 @@ from bluebottle.funding.messages import (
     PayoutAccountVerified,
     PayoutAccountMarkedIncomplete,
     LivePayoutAccountMarkedIncomplete,
+    PublicPayoutAccountMarkedIncomplete,
+    LivePublicPayoutAccountMarkedIncomplete
 )
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptTosEffect
+from bluebottle.funding_stripe.effects import (
+    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBussinessTypeEffect
+)
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
-    ExternalAccount,
+    ExternalAccount, StripePayment,
 )
 from bluebottle.funding_stripe.states import (
     StripePayoutAccountStateMachine,
     StripeSourcePaymentStateMachine,
-    StripeBankAccountStateMachine,
+    StripeBankAccountStateMachine, StripePaymentStateMachine,
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -53,6 +57,38 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.dispute,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.refund)
+            ]
+        ),
+    ]
+
+
+@register(StripePayment)
+class StripePaymentTriggers(BasePaymentTriggers):
+    triggers = BasePaymentTriggers.triggers + [
+        TransitionTrigger(
+            StripePaymentStateMachine.authorize,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
+
+        TransitionTrigger(
+            StripePaymentStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            StripePaymentStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.fail)
+            ]
+        ),
+
+        TransitionTrigger(
+            StripePaymentStateMachine.dispute,
             effects=[
                 RelatedTransitionEffect('donation', DonorStateMachine.refund)
             ]
@@ -93,6 +129,14 @@ class StripePayoutAccountTriggers(TriggerManager):
         """The connect account is verified"""
         return (not self.instance.requirements == [])
 
+    def is_public(self):
+        """The connect account is public"""
+        return self.instance.public
+
+    def is_not_public(self):
+        """The connect account is not public"""
+        return not self.instance.public
+
     def payments_are_disabled(self):
         """The connect account is verified"""
         return not self.instance.payments_enabled
@@ -113,7 +157,8 @@ class StripePayoutAccountTriggers(TriggerManager):
         TransitionTrigger(
             StripePayoutAccountStateMachine.verify,
             effects=[
-                NotificationEffect(PayoutAccountVerified),
+                NotificationEffect(PayoutAccountVerified, conditions=[is_not_public]),
+                NotificationEffect(PayoutAccountVerified, conditions=[is_public]),
                 RelatedTransitionEffect(
                     'external_accounts',
                     StripeBankAccountStateMachine.verify
@@ -125,10 +170,19 @@ class StripePayoutAccountTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     PayoutAccountMarkedIncomplete,
+                    conditions=[is_not_public],
+                ),
+                NotificationEffect(
+                    PublicPayoutAccountMarkedIncomplete,
+                    conditions=[is_public],
                 ),
                 NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign],
+                    conditions=[has_live_campaign, is_not_public],
+                ),
+                NotificationEffect(
+                    LivePublicPayoutAccountMarkedIncomplete,
+                    conditions=[has_live_campaign, is_public],
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,
@@ -170,6 +224,13 @@ class StripePayoutAccountTriggers(TriggerManager):
             ["tos_accepted"],
             effects=[
                 AcceptTosEffect,
+            ],
+        ),
+
+        ModelChangedTrigger(
+            ["business_type"],
+            effects=[
+                UpdateBussinessTypeEffect
             ],
         ),
     ]

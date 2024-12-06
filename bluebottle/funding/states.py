@@ -267,15 +267,21 @@ class FundingStateMachine(ActivityStateMachine):
 @register(Donor)
 class DonorStateMachine(ContributorStateMachine):
     refunded = State(
-        _('refunded'),
+        _('Refunded'),
         'refunded',
-        _("The contribution was refunded.")
+        _("The donation was refunded.")
     )
 
     activity_refunded = State(
-        _('activity refunded'),
+        _('Activity refunded'),
         'activity_refunded',
-        _("The contribution was refunded because the activity refunded.")
+        _("The donation was refunded because the activity refunded.")
+    )
+
+    pending = State(
+        _('Pending'),
+        'pending',
+        _("The donation is pending while the payment is still not completed.")
     )
 
     expired = State(_('expired'), 'expired')
@@ -288,6 +294,7 @@ class DonorStateMachine(ContributorStateMachine):
         [
             ContributorStateMachine.new,
             ContributorStateMachine.failed,
+            pending,
             expired
         ],
         ContributorStateMachine.succeeded,
@@ -296,9 +303,18 @@ class DonorStateMachine(ContributorStateMachine):
         automatic=True,
     )
 
+    set_pending = Transition(
+        ContributorStateMachine.new,
+        pending,
+        name=_('Set pending'),
+        description=_("The payment for this donation needs to be completed."),
+        automatic=True,
+    )
+
     fail = Transition(
         [
             ContributorStateMachine.new,
+            pending,
             ContributorStateMachine.succeeded
         ],
         ContributorStateMachine.failed,
@@ -328,7 +344,10 @@ class DonorStateMachine(ContributorStateMachine):
     )
 
     expire = Transition(
-        [ContributorStateMachine.new],
+        [
+            ContributorStateMachine.new,
+            pending,
+        ],
         expired,
         name=_('Expire'),
         description=_("Expire the donation account. This happens when a donation is still 'new' after 10 days"),
@@ -339,27 +358,33 @@ class DonorStateMachine(ContributorStateMachine):
 @register(Payment)
 class BasePaymentStateMachine(ModelStateMachine):
     new = State(
-        _('new'),
+        _('New'),
         'new',
         _("Payment was started.")
     )
     pending = State(
-        _('pending'),
+        _('Pending'),
         'pending',
         _("Payment is authorised and will probably succeed shortly.")
     )
+    action_needed = State(
+        _('Action needed'),
+        'action_needed',
+        _("Action is needed to complete the payment.")
+    )
+
     succeeded = State(
-        _('succeeded'),
+        _('Succeeded'),
         'succeeded',
         _("Payment is successful.")
     )
     failed = State(
-        _('failed'),
+        _('Failed'),
         'failed',
         _("Payment failed.")
     )
     refunded = State(
-        _('refunded'),
+        _('Refunded'),
         'refunded',
         _("Payment was refunded.")
     )
@@ -391,8 +416,16 @@ class BasePaymentStateMachine(ModelStateMachine):
         automatic=True,
     )
 
+    require_action = Transition(
+        [new],
+        action_needed,
+        name=_('Require action'),
+        description=_("Require action to complete the payment."),
+        automatic=True,
+    )
+
     succeed = Transition(
-        [new, pending, failed, refund_requested],
+        [new, pending, failed, action_needed, refund_requested],
         succeeded,
         name=_('Succeed'),
         description=_("Payment has been completed."),

@@ -1,22 +1,16 @@
-
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
-
-from django.db import connection
-from bluebottle.clients.utils import tenant_url
-import requests
-
-from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
-
 from io import BytesIO
+
+import requests
 from django.core.files import File
 
+from bluebottle.clients import properties
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
-from bluebottle.clients import properties
 
 FILE_HASH = '1730716553814'
+
 
 def run(*args):
     for tenant in Client.objects.all().all():
@@ -51,6 +45,7 @@ def run(*args):
                 settings.logo.name = 'logo.svg'
             except Exception as e:
                 print(f'failed to get logo for {tenant.client_name}, {logo_url}')
+                print(e)
 
             try:
                 favicon_response = requests.get(favicon_url)
@@ -59,13 +54,15 @@ def run(*args):
                 settings.favicon = File(BytesIO(favicon_response.content))
                 settings.favicon.name = 'favicon.png'
             except Exception as e:
+                print(e)
                 try:
                     favicon_response = requests.get(favicon_small_url)
                     favicon_response.raise_for_status()
 
                     settings.favicon = File(BytesIO(favicon_response.content))
                     settings.favicon.name = 'favicon.png'
-                except:
+                except Exception as e:
                     print(f'failed to get favicon for {tenant.client_name}, {favicon_url}')
+                    print(e)
 
             settings.save()

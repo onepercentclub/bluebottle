@@ -109,12 +109,17 @@ class ActivitySlotSerializer(ModelSerializer):
     )
 
     def get_timezone(self, instance):
-        return instance.location.timezone if not instance.is_online and instance.location else None
+        is_online = getattr(instance, 'is_online', False)
+        has_location = getattr(instance, 'location', False)
+        return instance.location.timezone if not is_online and has_location else None
 
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
-            return instance.slot_participants.filter(participant__user=user).first()
+            if hasattr(instance, 'slot_participants'):
+                return instance.slot_participants.filter(participant__user=user).first()
+            else:
+                return instance.participants.filter(user=user).first()
 
     class Meta:
         fields = (
@@ -654,6 +659,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
 
 
 class ParticipantSerializer(BaseContributorSerializer):
+    total_duration = serializers.DurationField(read_only=True)
     motivation = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[ParticipantDocumentPermission])
 
@@ -678,6 +684,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         fields = BaseContributorSerializer.Meta.fields + (
             'motivation',
             'document',
+            'total_duration'
         )
 
         validators = [

@@ -453,14 +453,13 @@ class DonorListSerializer(BaseContributorListSerializer):
     )
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.TinyFundingSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     class Meta(BaseContributorListSerializer.Meta):
         model = Donor
         fields = BaseContributorListSerializer.Meta.fields + ('amount', 'payout_amount', 'name', 'reward', 'anonymous',)
-        meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributorListSerializer.JSONAPIMeta):
         resource_name = 'contributors/donations'

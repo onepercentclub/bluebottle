@@ -23,7 +23,9 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
-        page = form.submit().follow()
+        page = form.submit()
+        form = page.forms[0]
+        form.submit()
 
         activity.refresh_from_db()
 
@@ -41,7 +43,9 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
-        page = form.submit().follow()
+        page = form.submit()
+        form = page.forms[0]
+        form.submit()
 
         activity.refresh_from_db()
 
@@ -55,7 +59,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
 
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
-        page = form.submit().follow()
+        page = form.submit()
 
         activity.refresh_from_db()
 

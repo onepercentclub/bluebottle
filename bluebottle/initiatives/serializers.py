@@ -220,7 +220,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
-    current_status = CurrentStatusField()
+    current_status = CurrentStatusField(source='states.current_state')
 
     def get_image(self, obj):
         if obj.image:

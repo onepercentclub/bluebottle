@@ -49,14 +49,16 @@ class CollectPeriodicTasksTestCase(BluebottleTestCase):
         self.activity.end = None
         self.activity.save()
         contributors = CollectContributorFactory.create_batch(3, activity=self.activity)
-        self.run_tasks(self.activity.start + timedelta(days=1))
+        for contributor in contributors:
+            contributor.refresh_from_db()
+            self.assertEqual(contributor.status, 'accepted')
 
+        self.run_tasks(self.activity.start + timedelta(days=3))
         with LocalTenant(self.tenant, clear_tenant=True):
             self.activity.refresh_from_db()
             self.assertEqual(self.activity.status, 'open')
             for contributor in contributors:
                 contributor.refresh_from_db()
-
                 self.assertEqual(contributor.status, 'succeeded')
 
     def test_expire(self):

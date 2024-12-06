@@ -3,7 +3,9 @@ from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Count, Sum, Q
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
@@ -174,6 +176,7 @@ class BaseActivitySerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')
+    admin_url = serializers.SerializerMethodField()
 
     updates = HyperlinkedRelatedField(
         many=True,
@@ -191,6 +194,12 @@ class BaseActivitySerializer(ModelSerializer):
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
+
+    def get_admin_url(self, obj):
+        user = get_current_user()
+        if user.is_authenticated and (user.is_staff or user.is_superuser):
+            url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
+            return url
 
     matching_properties = MatchingPropertiesField()
 
@@ -257,6 +266,7 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_title',
             'next_step_description',
             'next_step_button_label',
+            'admin_url'
         )
 
         meta_fields = (
@@ -270,7 +280,8 @@ class BaseActivitySerializer(ModelSerializer):
             'deleted_successful_contributors',
             'contributor_count',
             'team_count',
-            'current_status'
+            'current_status',
+            'admin_url'
         )
 
     class JSONAPIMeta(object):

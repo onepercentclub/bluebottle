@@ -1,15 +1,23 @@
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
+from django.forms import ChoiceField
 from django.template import loader
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.utils.translation import gettext_lazy as _
 from stripe.error import StripeError
 
+from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.fsm.forms import StateMachineModelForm
+
+from bluebottle.geo.models import Country
+
 from bluebottle.clients import properties
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
+from bluebottle.funding.admin import (
+    PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
     BankAccountChildAdmin
+)
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
@@ -51,35 +59,80 @@ class StripeBankAccountInline(admin.TabularInline):
     extra = 0
     can_delete = False
 
+    def has_add_permission(self, request, obj):
+        return False
+
     def bank_account_link(self, obj):
         url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id, ))
         return format_html('<a href="{}">{}</a>', url, obj)
 
 
+class StripePayoutAccountForm(StateMachineModelForm):
+    country = ChoiceField(label=_('Country'), required=True, choices=())
+
+    def __init__(self, *args, **kwargs):
+
+        stripe = get_stripe()
+
+        specs = stripe.CountrySpec.list(limit=100)
+        data = specs.data
+
+        if specs:
+            specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+            data.extend(specs2.data)
+
+        countries = Country.objects.filter(
+            alpha2_code__in=(
+                spec.id for spec in data
+            )
+        )
+        self.base_fields['country'].choices = [
+            (country.code, country.name) for country in countries
+        ]
+
+        self.base_fields['business_type'].required = True
+        super().__init__(*args, **kwargs)
+
+
 @admin.register(StripePayoutAccount)
 class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
+    form = StripePayoutAccountForm
     model = StripePayoutAccount
     inlines = [StripeBankAccountInline]
     readonly_fields = PayoutAccountChildAdmin.readonly_fields + [
         "verified",
         "payments_enabled",
         "payouts_enabled",
-        "funding",
-        "stripe_link",
+        'requirements_list',
+        'verification_link',
+        'stripe_link',
+        'funding'
 
     ]
+
     search_fields = ["account_id"]
-    fields = ["created", "owner", "status", "business_type", "account_id", "country", "funding"]
     list_display = ["id", "account_id", "owner", "status"]
 
-    def get_fields(self, request, obj=None):
-        fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
+    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
+
+    def get_status_fields(self, request, obj):
+        return super().get_status_fields(request, obj)[1:] + [
+            'verified', 'payments_enabled', 'payouts_enabled',
+            'requirements_list', 'verification_link'
+
+        ]
+
+    def get_basic_fields(self, request, obj):
+        fields = super().get_basic_fields(request, obj) + [
+            'business_type', 'country', 'funding'
+        ]
         if request.user.is_superuser:
-            fields = fields + ['stripe_link']
+            fields = fields + ['stripe_link', 'account_id']
+
         return fields
 
     def save_model(self, request, obj, form, change):
-        if 'ba_' in obj.account_id:
+        if obj.account_id and 'ba_' in obj.account_id:
             obj.account_id = ''
             self.message_user(
                 request,
@@ -160,6 +213,13 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
             _('This is only visible for superadmin accounts.')
         )
     stripe_link.short_description = _('Stripe link')
+
+    def requirements_list(self, obj):
+        return format_html('<ul>{}</ul>', mark_safe(''.join(
+            format_html('<li>{}</li>', requirement.split('.')[-1])
+            for requirement in obj.requirements
+        )))
+    requirements_list.short_description = _('Requirements')
 
 
 @admin.register(ExternalAccount)

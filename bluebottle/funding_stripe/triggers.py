@@ -13,16 +13,18 @@ from bluebottle.funding.messages import (
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers
-from bluebottle.funding_stripe.effects import PutActivitiesOnHoldEffect, AcceptTosEffect
+from bluebottle.funding_stripe.effects import (
+    PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBussinessTypeEffect
+)
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,
-    ExternalAccount,
+    ExternalAccount, StripePayment,
 )
 from bluebottle.funding_stripe.states import (
     StripePayoutAccountStateMachine,
     StripeSourcePaymentStateMachine,
-    StripeBankAccountStateMachine,
+    StripeBankAccountStateMachine, StripePaymentStateMachine,
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -53,6 +55,38 @@ class StripeSourcePaymentTriggers(BasePaymentTriggers):
 
         TransitionTrigger(
             StripeSourcePaymentStateMachine.dispute,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.refund)
+            ]
+        ),
+    ]
+
+
+@register(StripePayment)
+class StripePaymentTriggers(BasePaymentTriggers):
+    triggers = BasePaymentTriggers.triggers + [
+        TransitionTrigger(
+            StripePaymentStateMachine.authorize,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
+
+        TransitionTrigger(
+            StripePaymentStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.succeed)
+            ]
+        ),
+        TransitionTrigger(
+            StripePaymentStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('donation', DonorStateMachine.fail)
+            ]
+        ),
+
+        TransitionTrigger(
+            StripePaymentStateMachine.dispute,
             effects=[
                 RelatedTransitionEffect('donation', DonorStateMachine.refund)
             ]
@@ -170,6 +204,13 @@ class StripePayoutAccountTriggers(TriggerManager):
             ["tos_accepted"],
             effects=[
                 AcceptTosEffect,
+            ],
+        ),
+
+        ModelChangedTrigger(
+            ["business_type"],
+            effects=[
+                UpdateBussinessTypeEffect
             ],
         ),
     ]

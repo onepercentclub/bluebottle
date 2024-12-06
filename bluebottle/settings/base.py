@@ -145,6 +145,7 @@ MIDDLEWARE = (
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
+    'bluebottle.events.middleware.ExcludeWebSocketMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
@@ -299,6 +300,7 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+    'channels'
 )
 
 TENANT_APPS = (
@@ -446,6 +448,13 @@ TENANT_APPS = (
 
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
+ASGI_APPLICATION = "bluebottle.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True

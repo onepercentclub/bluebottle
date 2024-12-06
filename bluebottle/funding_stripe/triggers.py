@@ -9,6 +9,8 @@ from bluebottle.funding.messages import (
     PayoutAccountVerified,
     PayoutAccountMarkedIncomplete,
     LivePayoutAccountMarkedIncomplete,
+    PublicPayoutAccountMarkedIncomplete,
+    LivePublicPayoutAccountMarkedIncomplete
 )
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
@@ -127,6 +129,14 @@ class StripePayoutAccountTriggers(TriggerManager):
         """The connect account is verified"""
         return (not self.instance.requirements == [])
 
+    def is_public(self):
+        """The connect account is public"""
+        return self.instance.public
+
+    def is_not_public(self):
+        """The connect account is not public"""
+        return not self.instance.public
+
     def payments_are_disabled(self):
         """The connect account is verified"""
         return not self.instance.payments_enabled
@@ -147,7 +157,8 @@ class StripePayoutAccountTriggers(TriggerManager):
         TransitionTrigger(
             StripePayoutAccountStateMachine.verify,
             effects=[
-                NotificationEffect(PayoutAccountVerified),
+                NotificationEffect(PayoutAccountVerified, conditions=[is_not_public]),
+                NotificationEffect(PayoutAccountVerified, conditions=[is_public]),
                 RelatedTransitionEffect(
                     'external_accounts',
                     StripeBankAccountStateMachine.verify
@@ -159,10 +170,19 @@ class StripePayoutAccountTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     PayoutAccountMarkedIncomplete,
+                    conditions=[is_not_public],
+                ),
+                NotificationEffect(
+                    PublicPayoutAccountMarkedIncomplete,
+                    conditions=[is_public],
                 ),
                 NotificationEffect(
                     LivePayoutAccountMarkedIncomplete,
-                    conditions=[has_live_campaign],
+                    conditions=[has_live_campaign, is_not_public],
+                ),
+                NotificationEffect(
+                    LivePublicPayoutAccountMarkedIncomplete,
+                    conditions=[has_live_campaign, is_public],
                 ),
                 TransitionEffect(
                     StripePayoutAccountStateMachine.disable,

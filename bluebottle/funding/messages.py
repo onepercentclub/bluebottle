@@ -207,6 +207,26 @@ class PayoutAccountVerified(TransitionMessage):
         return [self.obj.owner]
 
 
+class PublicPayoutAccountRejected(PayoutAccountRejected):
+    subject = _(u'Action required for your identity verification')
+    template = 'messages/public_payout_account_rejected'
+
+
+class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
+    subject = _("Action required for identity verification")
+    template = "messages/public_payout_account_marked_incomplete"
+
+
+class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete):
+    subject = _(u'Incomplete payout account for running campaign')
+    template = 'messages/live_public_payout_account_rejected'
+
+
+class PublicPayoutAccountVerified(TransitionMessage):
+    subject = _(u'Your identity has been verified')
+    template = 'messages/public_payout_account_verified'
+
+
 class NewRequirementsMessage(TransitionMessage):
     subject = _("We need more information before your account can be verified")
     template = "messages/payout_account_new_requirements"

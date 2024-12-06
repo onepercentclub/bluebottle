@@ -116,7 +116,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
 
     def get_status_fields(self, request, obj):
-        return super().get_status_fields(request, obj)[1:] + [
+        return super().get_status_fields(request, obj) + [
             'verified', 'payments_enabled', 'payouts_enabled',
             'requirements_list', 'verification_link'
 

@@ -13,20 +13,20 @@ class BaseTriggerEventEffect(Effect):
     template = 'admin/notification_effect.html'
 
     def post_save(self):
-        event = Event(type=self.type, content_object=self.instance)
+        event = Event(event_type=self.event_type, content_object=self.instance)
 
         event.save()
 
     def __str__(self):
-        return _(f'Trigger {self.type}')
+        return _(f'Trigger {self.event_type}')
 
 
-def TriggerEvent(type, conditions=None):
-    _type = type
+def TriggerEvent(event_type, conditions=None):
+    _event_type = event_type
     _conditions = conditions
 
     class _TriggerEventEffect(BaseTriggerEventEffect):
-        type = _type
+        event_type = _event_type
         conditions = _conditions or []
 
     return _TriggerEventEffect

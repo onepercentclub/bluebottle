@@ -1,7 +1,8 @@
 from datetime import timedelta
 from unittest import mock
 
-from adminsortable.models import ContentType
+from django.contrib.admin.models import ContentType
+
 import stripe
 from django.utils.timezone import now
 from djmoney.money import Money

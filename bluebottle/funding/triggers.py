@@ -11,8 +11,8 @@ from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
 from bluebottle.funding.effects import (
-    GeneratePayoutsEffect, GenerateDonorWallpostEffect,
-    RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
+    GeneratePayoutsEffect,
+    UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
     ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
@@ -373,7 +373,6 @@ class DonorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', DonationStateMachine.succeed),
                 NotificationEffect(DonationSuccessActivityManagerMessage),
                 NotificationEffect(DonationSuccessDonorMessage),
-                GenerateDonorWallpostEffect,
                 FollowActivityEffect,
                 UpdateFundingAmountsEffect,
                 TriggerEvent('donation.succeeded')
@@ -384,7 +383,6 @@ class DonorTriggers(ContributorTriggers):
             DonorStateMachine.fail,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect
             ]
@@ -401,7 +399,6 @@ class DonorTriggers(ContributorTriggers):
             DonorStateMachine.refund,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
                 UnFollowActivityEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect,

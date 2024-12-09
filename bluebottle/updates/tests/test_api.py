@@ -8,6 +8,7 @@ from bluebottle.test.utils import APITestCase
 from bluebottle.updates.models import Update
 from bluebottle.updates.serializers import UpdateSerializer
 from bluebottle.updates.tests.factories import UpdateFactory
+from bluebottle.events.tests.factories import EventFactory
 
 
 class UpdateListTestCase(APITestCase):
@@ -197,6 +198,43 @@ class UpdateDetailView(APITestCase):
         self.assertStatus(status.HTTP_200_OK)
 
         self.assertIncluded('author')
+        self.assertAttribute('message')
+        self.assertRelationship('activity')
+
+    def test_get_event(self):
+        self.model.event = EventFactory.create(
+            content_object=self.model.activity,
+            event_type="funding.approved",
+        )
+        self.model.save()
+
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('author')
+        self.assertIncluded('event')
+        self.assertAttribute('message')
+        self.assertRelationship('activity')
+
+    def test_get_event_contribution(self):
+        participant = DeedParticipantFactory.create(
+            activity=self.model.activity
+        )
+
+        self.model.event = EventFactory.create(
+            content_object=participant,
+            event_type="deed-participant.succeeded",
+        )
+        self.model.save()
+
+        self.perform_get(user=self.user)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertIncluded('author')
+        self.assertIncluded('event')
+        self.assertIncluded('event.content-object')
         self.assertAttribute('message')
         self.assertRelationship('activity')
 

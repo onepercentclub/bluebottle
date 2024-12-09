@@ -1,4 +1,8 @@
-from bluebottle.events.effects import SendEventEffect
+from bluebottle.events.effects import (
+    SendEventEffect,
+    CreateActivityUpdateEffect,
+    CreateContributionUpdateEffect
+)
 from bluebottle.events.models import Event
 from bluebottle.events.states import EventStateMachine
 from bluebottle.fsm.effects import TransitionEffect
@@ -12,14 +16,6 @@ class EventTriggers(TriggerManager):
             EventStateMachine.initiate,
             effects=[
                 TransitionEffect(
-                    EventStateMachine.draft,
-                )
-            ]
-        ),
-        TransitionTrigger(
-            EventStateMachine.draft,
-            effects=[
-                TransitionEffect(
                     EventStateMachine.publish,
                 )
             ]
@@ -27,9 +23,9 @@ class EventTriggers(TriggerManager):
         TransitionTrigger(
             EventStateMachine.publish,
             effects=[
-                SendEventEffect
-                # Create wall update
-                # Trigger webhook
+                SendEventEffect,
+                CreateActivityUpdateEffect,
+                CreateContributionUpdateEffect,
             ]
         ),
     ]

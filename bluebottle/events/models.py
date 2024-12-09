@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.fsm.triggers import TriggerMixin
 
 EVENT_TYPES = (
+    ('deed-participant.succeeded', _('Participant succeeded')),
     ('donation.succeeded', _('Donation done')),
     ('funding.approved', _('Funding campaign published')),
     ('funding.succeeded', _('Funding campaign succeeded')),
@@ -31,3 +32,6 @@ class Event(TriggerMixin, models.Model):
         ordering = ['-created']
         verbose_name = 'Event'
         verbose_name_plural = 'Events'
+
+    class JSONAPIMeta():
+        resource_name = 'events'

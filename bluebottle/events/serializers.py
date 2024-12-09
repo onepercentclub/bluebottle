@@ -7,12 +7,17 @@ from rest_framework_json_api.serializers import (
 
 from bluebottle.events.models import Event
 from bluebottle.funding.serializers import DonorSerializer, FundingSerializer
+from bluebottle.deeds.serializers import (
+    DeedParticipantSerializer, DeedSerializer
+)
 
 
 class EventObjectSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorSerializer,
         FundingSerializer,
+        DeedParticipantSerializer,
+        DeedSerializer,
     ]
 
     class Meta(object):

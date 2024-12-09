@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.events.models import Event
 from bluebottle.events.serializers import EventSerializer
+from bluebottle.updates.models import Update
 from bluebottle.fsm.effects import Effect
 
 
@@ -30,6 +31,48 @@ def TriggerEvent(event_type, conditions=None):
         conditions = _conditions or []
 
     return _TriggerEventEffect
+
+
+class BaseCreateUpdateEffect(Effect):
+    title = _('Create wallpost for event')
+    template = 'admin/notification_effect.html'
+
+    @property
+    def is_valid(self):
+        return super().is_valid and self.instance.event_type in self.event_types
+
+
+class CreateContributionUpdateEffect(BaseCreateUpdateEffect):
+    event_types = ['donation.succeeded', 'deed-participant.succeeded']
+
+    def post_save(self):
+        content_object = self.instance.content_object
+
+        update = Update(
+            author=content_object.user,
+            event=self.instance,
+            activity=content_object.activity
+        )
+        update.save()
+
+
+class CreateActivityUpdateEffect(BaseCreateUpdateEffect):
+    event_types = [
+        'funding.approved',
+        'funding.succeeded',
+        'funding.50%',
+        'funding.100%',
+    ]
+
+    def post_save(self):
+        content_object = self.instance.content_object
+
+        update = Update(
+            author=content_object.owner,
+            event=self.instance,
+            activity=content_object
+        )
+        update.save()
 
 
 class SendEventEffect(Effect):

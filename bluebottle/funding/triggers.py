@@ -1,4 +1,5 @@
 from django.utils import timezone
+from decimal import Decimal
 
 from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
@@ -79,6 +80,28 @@ def no_donations(effect):
     return not effect.instance.donations.filter(status='succeeded').count()
 
 
+def reached_percentage(effect, percentage):
+    activity = effect.instance
+    target = activity.target.amount / Decimal(100 / percentage)
+
+    raised = activity.amount_raised.amount
+    try:
+        initial_donated = activity._initial_values['amount_donated'].amount
+        initial_matching = activity._initial_values['amount_matching'].amount
+
+        return raised >= target and (initial_donated + initial_matching) < target
+    except AttributeError:
+        return False
+
+
+def reached_50_percent(effect):
+    return reached_percentage(effect, 50)
+
+
+def reached_100_percent(effect):
+    return reached_percentage(effect, 100)
+
+
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
@@ -93,7 +116,8 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.expire,
                     conditions=[should_finish]
                 ),
-                NotificationEffect(FundingApprovedMessage)
+                NotificationEffect(FundingApprovedMessage),
+                TriggerEvent('funding.approved')
             ]
         ),
 
@@ -133,7 +157,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.succeed,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingRealisedOwnerMessage)
+                NotificationEffect(FundingRealisedOwnerMessage),
+                TriggerEvent('funding.succeeded')
             ]
         ),
 
@@ -226,6 +251,14 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.partial,
                     conditions=[should_finish, target_not_reached]
                 ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'amount_raised',
+            effects=[
+                TriggerEvent('funding.50%', conditions=[reached_50_percent]),
+                TriggerEvent('funding.100%', conditions=[reached_100_percent]),
             ]
         )
     ]

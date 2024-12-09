@@ -54,6 +54,42 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
 
+    def test_trigger_reached_50_percent(self):
+        for i in range(10):
+            donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+            donor.states.succeed(save=True)
+
+        event = Event.objects.get(type='funding.50%')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_reached_100_percent(self):
+        for i in range(10):
+            donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+            donor.states.succeed(save=True)
+
+        event = Event.objects.get(type='funding.100%')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_approved(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.funding.states.approve(save=True)
+
+        event = Event.objects.get(type='funding.approved')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_succeeded(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.funding.states.approve(save=True)
+
+        donor = DonorFactory.create(activity=self.funding, amount=Money(1200, 'EUR'))
+        PledgePaymentFactory.create(donation=donor)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+
+        event = Event.objects.get(type='funding.succeeded')
+        self.assertEqual(event.content_object, self.funding)
+
     def test_trigger_lower_target(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)

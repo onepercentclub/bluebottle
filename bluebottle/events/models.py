@@ -7,6 +7,8 @@ from bluebottle.fsm.triggers import TriggerMixin
 
 EVENT_TYPES = (
     ('deed-participant.succeeded', _('Participant succeeded')),
+    ('deed.succeeded', _('Deed succeeded')),
+    ('deed.published', _('Deed published')),
     ('donation.succeeded', _('Donation done')),
     ('funding.approved', _('Funding campaign published')),
     ('funding.succeeded', _('Funding campaign succeeded')),

@@ -49,6 +49,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertEffect(TriggerEvent('deed.published'))
 
     def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
@@ -210,6 +211,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
+            self.assertEffect(TriggerEvent('deed.succeeded'))
 
     def test_succeed(self):
         self.create()

@@ -58,6 +58,8 @@ class CreateContributionUpdateEffect(BaseCreateUpdateEffect):
 
 class CreateActivityUpdateEffect(BaseCreateUpdateEffect):
     event_types = [
+        'deed.published',
+        'deed.succeeded',
         'funding.approved',
         'funding.succeeded',
         'funding.50%',

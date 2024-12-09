@@ -117,6 +117,7 @@ class DeedTriggers(ActivityTriggers):
                     ]
                 )
             ]
+
         ),
 
         ModelChangedTrigger(
@@ -166,6 +167,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                TriggerEvent('deed.published')
             ]
         ),
 
@@ -190,6 +192,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                TriggerEvent('deed.succeeded')
             ]
         ),
 

@@ -1,4 +1,5 @@
 from bluebottle.events.effects import (
+    EventWebhookEffect,
     SendEventEffect,
     CreateActivityUpdateEffect,
     CreateContributionUpdateEffect
@@ -26,6 +27,7 @@ class EventTriggers(TriggerManager):
                 SendEventEffect,
                 CreateActivityUpdateEffect,
                 CreateContributionUpdateEffect,
+                EventWebhookEffect
             ]
         ),
     ]

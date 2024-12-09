@@ -32,8 +32,16 @@ class Event(TriggerMixin, models.Model):
 
     class Meta:
         ordering = ['-created']
-        verbose_name = 'Event'
-        verbose_name_plural = 'Events'
+        verbose_name = _('Event')
+        verbose_name_plural = _('Events')
 
     class JSONAPIMeta():
         resource_name = 'events'
+
+
+class Webhook(models.Model):
+    url = models.URLField(max_length=256)
+
+    class Meta:
+        verbose_name = _('Event webhook')
+        verbose_name_plural = _('Event webhooks')

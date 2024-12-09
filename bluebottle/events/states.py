@@ -23,6 +23,7 @@ class EventStateMachine(ModelStateMachine):
         draft,
         name=_('Initiate'),
         description=_('The event is initiated.'),
+        automatic=True
     )
 
     publish = Transition(
@@ -30,4 +31,5 @@ class EventStateMachine(ModelStateMachine):
         published,
         name=_('Publish'),
         description=_('Publish the event.'),
+        automatic=False
     )

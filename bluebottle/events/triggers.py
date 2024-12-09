@@ -9,6 +9,14 @@ from bluebottle.fsm.triggers import register, TriggerManager, TransitionTrigger
 class EventTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
+            EventStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    EventStateMachine.draft,
+                )
+            ]
+        ),
+        TransitionTrigger(
             EventStateMachine.draft,
             effects=[
                 TransitionEffect(

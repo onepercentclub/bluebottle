@@ -33,6 +33,8 @@ def TriggerEvent(type, conditions=None):
 
 
 class SendEventEffect(Effect):
+    template = 'admin/send_event.html'
+
     def post_save(self):
         instance = self.instance
         channel_layer = get_channel_layer()

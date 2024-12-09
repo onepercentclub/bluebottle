@@ -102,6 +102,9 @@ urlpatterns = [
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
 
+    url(r'^api/events/',
+        include('bluebottle.events.urls')),
+
 ]
 
 

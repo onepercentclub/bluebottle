@@ -24,6 +24,8 @@ from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, ParticipantWithdrewNotification
 )
 
+from bluebottle.events.effects import TriggerEvent
+
 
 class DeedTriggersTestCase(TriggerTestCase):
     factory = DeedFactory
@@ -47,6 +49,7 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertEffect(TriggerEvent('deed.published'))
 
     def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
@@ -208,6 +211,7 @@ class DeedTriggersTestCase(TriggerTestCase):
                 participant.contributions.first()
             )
             self.assertNotificationEffect(ActivitySucceededNotification)
+            self.assertEffect(TriggerEvent('deed.succeeded'))
 
     def test_succeed(self):
         self.create()
@@ -358,6 +362,7 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(
                 EffortContributionStateMachine.succeed, self.model.contributions.first()
             )
+            self.assertEffect(TriggerEvent('deed-participant.succeeded'))
 
     def test_initiate_succeeded(self):
         self.defaults['activity'].start = date.today() - timedelta(days=2)

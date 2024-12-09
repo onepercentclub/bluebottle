@@ -5,7 +5,6 @@ from django.conf import settings
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
@@ -196,7 +195,7 @@ class BaseActivitySerializer(ModelSerializer):
         return obj.segments.filter(segment_type__visibility=True)
 
     def get_admin_url(self, obj):
-        user = get_current_user()
+        user = self.context['request'].user
         if user.is_authenticated and (user.is_staff or user.is_superuser):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url

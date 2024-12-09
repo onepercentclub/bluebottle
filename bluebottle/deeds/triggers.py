@@ -20,6 +20,9 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
 )
+
+from bluebottle.events.effects import TriggerEvent
+
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
@@ -114,6 +117,7 @@ class DeedTriggers(ActivityTriggers):
                     ]
                 )
             ]
+
         ),
 
         ModelChangedTrigger(
@@ -163,6 +167,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                TriggerEvent('deed.published')
             ]
         ),
 
@@ -187,6 +192,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                TriggerEvent('deed.succeeded')
             ]
         ),
 
@@ -333,6 +339,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     EffortContributionStateMachine.succeed,
                     conditions=[contributor_is_active]
                 ),
+                TriggerEvent('deed-participant.succeeded')
             ]
         ),
 

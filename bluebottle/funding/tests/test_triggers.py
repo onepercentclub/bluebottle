@@ -1,6 +1,8 @@
 from datetime import timedelta
 from unittest import mock
 
+from django.contrib.admin.models import ContentType
+
 import stripe
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -16,6 +18,7 @@ from bluebottle.funding_stripe.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.events.models import Event
 
 
 class FundingTriggerTests(BluebottleTestCase):
@@ -51,6 +54,42 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.save()
         self.funding.refresh_from_db()
         self.assertEqual(self.funding.status, FundingStateMachine.succeeded.value)
+
+    def test_trigger_reached_50_percent(self):
+        for i in range(10):
+            donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+            donor.states.succeed(save=True)
+
+        event = Event.objects.get(event_type='funding.50%')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_reached_100_percent(self):
+        for i in range(10):
+            donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
+            donor.states.succeed(save=True)
+
+        event = Event.objects.get(event_type='funding.100%')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_approved(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.funding.states.approve(save=True)
+
+        event = Event.objects.get(event_type='funding.approved')
+        self.assertEqual(event.content_object, self.funding)
+
+    def test_trigger_succeeded(self):
+        self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
+        self.funding.states.approve(save=True)
+
+        donor = DonorFactory.create(activity=self.funding, amount=Money(1200, 'EUR'))
+        PledgePaymentFactory.create(donation=donor)
+
+        self.funding.deadline = now() - timedelta(days=1)
+        self.funding.save()
+
+        event = Event.objects.get(event_type='funding.succeeded')
+        self.assertEqual(event.content_object, self.funding)
 
     def test_trigger_lower_target(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
@@ -93,6 +132,15 @@ class DonorTriggerTests(BluebottleTestCase):
         self.donor = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         self.payment = StripePaymentFactory.create(donation=self.donor)
         self.payment.states.succeed(save=True)
+
+    def test_event(self):
+        event = Event.objects.get(
+            object_id=self.donor.pk,
+            content_type=ContentType.objects.get_for_model(self.donor.__class__)
+        )
+
+        self.assertEqual(event.content_object, self.donor)
+        self.assertEqual(event.event_type, 'donation.succeeded')
 
     def test_change_donor_amount(self):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))

@@ -26,7 +26,7 @@ install_requires = [
     'bcrypt==3.2.0',
     'beautifulsoup4==4.12.2',
     'bleach==3.3.0',
-    'celery==5.2.7',
+    'celery==4.3',
     'channels==3.0.5',
     'clamd==1.0.2',
     'defusedxml==0.6.0',

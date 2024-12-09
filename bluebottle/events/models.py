@@ -21,7 +21,7 @@ class Event(TriggerMixin, models.Model):
     content_object = GenericForeignKey(
         "content_type", "object_id"
     )
-    type = models.CharField(max_length=40, choices=EVENT_TYPES)
+    event_type = models.CharField(max_length=40, choices=EVENT_TYPES)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

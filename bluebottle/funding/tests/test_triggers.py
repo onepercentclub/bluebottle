@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest import mock
 
+from adminsortable.models import ContentType
 import stripe
 from django.utils.timezone import now
 from djmoney.money import Money
@@ -16,6 +17,7 @@ from bluebottle.funding_stripe.tests.factories import (
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.events.models import Event
 
 
 class FundingTriggerTests(BluebottleTestCase):
@@ -93,6 +95,15 @@ class DonorTriggerTests(BluebottleTestCase):
         self.donor = DonorFactory.create(activity=self.funding, amount=Money(500, 'EUR'))
         self.payment = StripePaymentFactory.create(donation=self.donor)
         self.payment.states.succeed(save=True)
+
+    def test_event(self):
+        event = Event.objects.get(
+            object_id=self.donor.pk,
+            content_type=ContentType.objects.get_for_model(self.donor.__class__)
+        )
+
+        self.assertEqual(event.content_object, self.donor)
+        self.assertEqual(event.type, 'donation.succeeded')
 
     def test_change_donor_amount(self):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))

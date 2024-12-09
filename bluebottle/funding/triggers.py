@@ -32,6 +32,7 @@ from bluebottle.funding.states import (
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
 )
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.events.effects import TriggerEvent
 
 
 def should_finish(effect):
@@ -341,7 +342,8 @@ class DonorTriggers(ContributorTriggers):
                 NotificationEffect(DonationSuccessDonorMessage),
                 GenerateDonorWallpostEffect,
                 FollowActivityEffect,
-                UpdateFundingAmountsEffect
+                UpdateFundingAmountsEffect,
+                TriggerEvent('donation.succeeded')
             ]
         ),
 

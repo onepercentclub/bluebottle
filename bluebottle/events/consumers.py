@@ -41,10 +41,11 @@ class EventConsumer(AsyncWebsocketConsumer):
             # Send serialized data back to WebSocket
             await self.send(text_data=json.dumps(serializer))
 
-    async def send_instance(self, event):
+    async def send_event(self, event):
         # Send serialized data to WebSocket
         instance = event['instance']
-        await self.send(text_data=json.dumps(instance))
+        serializer = EventSerializer(instance)
+        await self.send(text_data=json.dumps(serializer.data))
 
     @sync_to_async
     def get_latest_events(self):

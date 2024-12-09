@@ -17,6 +17,20 @@ class EventObjectSerializer(PolymorphicModelSerializer):
 
     class Meta(object):
         model = Model
+        meta_fields = (
+            'permissions',
+            'transitions',
+            'created',
+            'updated',
+            'errors',
+            'required',
+            'matching_properties',
+            'deleted_successful_contributors',
+            'contributor_count',
+            'team_count',
+            'current_status',
+            'admin_url'
+        )
 
     class JSONAPIMeta(object):
         resource_name = 'events/objects'

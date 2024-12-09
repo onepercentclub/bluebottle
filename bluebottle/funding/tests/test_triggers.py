@@ -59,7 +59,7 @@ class FundingTriggerTests(BluebottleTestCase):
             donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
             donor.states.succeed(save=True)
 
-        event = Event.objects.get(type='funding.50%')
+        event = Event.objects.get(event_type='funding.50%')
         self.assertEqual(event.content_object, self.funding)
 
     def test_trigger_reached_100_percent(self):
@@ -67,14 +67,14 @@ class FundingTriggerTests(BluebottleTestCase):
             donor = DonorFactory.create(activity=self.funding, amount=Money(100, 'EUR'))
             donor.states.succeed(save=True)
 
-        event = Event.objects.get(type='funding.100%')
+        event = Event.objects.get(event_type='funding.100%')
         self.assertEqual(event.content_object, self.funding)
 
     def test_trigger_approved(self):
         self.assertEqual(self.funding.status, FundingStateMachine.submitted.value)
         self.funding.states.approve(save=True)
 
-        event = Event.objects.get(type='funding.approved')
+        event = Event.objects.get(event_type='funding.approved')
         self.assertEqual(event.content_object, self.funding)
 
     def test_trigger_succeeded(self):
@@ -87,7 +87,7 @@ class FundingTriggerTests(BluebottleTestCase):
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
 
-        event = Event.objects.get(type='funding.succeeded')
+        event = Event.objects.get(event_type='funding.succeeded')
         self.assertEqual(event.content_object, self.funding)
 
     def test_trigger_lower_target(self):
@@ -139,7 +139,7 @@ class DonorTriggerTests(BluebottleTestCase):
         )
 
         self.assertEqual(event.content_object, self.donor)
-        self.assertEqual(event.type, 'donation.succeeded')
+        self.assertEqual(event.event_type, 'donation.succeeded')
 
     def test_change_donor_amount(self):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))

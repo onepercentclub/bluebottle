@@ -253,7 +253,6 @@ def activity_not_expired(effect):
 
 def activity_did_start(effect):
     """activity start date in the past"""
-
     return (
         not effect.instance.activity.start or
         effect.instance.activity.start < date.today()
@@ -303,6 +302,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
+                TriggerEvent('deed-participant.succeeded')
             ]
         ),
         TransitionTrigger(
@@ -339,7 +339,6 @@ class DeedParticipantTriggers(ContributorTriggers):
                     EffortContributionStateMachine.succeed,
                     conditions=[contributor_is_active]
                 ),
-                TriggerEvent('deed-participant.succeeded')
             ]
         ),
 

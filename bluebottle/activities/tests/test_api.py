@@ -1600,7 +1600,7 @@ class ContributorListAPITestCase(BluebottleTestCase):
                 contributor['type'] in (
                     'contributors/time-based/date-participants',
                     'contributors/collect/contributors',
-                    'contributors/deeds/participant',
+                    'contributors/deeds/participants',
                     'contributors/donations',
                     'contributors/time-based/deadline-participants',
                 )

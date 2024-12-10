@@ -22,7 +22,6 @@ class BaseTriggerEventEffect(Effect):
 
     def post_save(self):
         event = Event(event_type=self.event_type, content_object=self.instance)
-
         event.save()
 
     def __str__(self):
@@ -102,13 +101,16 @@ class EventWebhookEffect(Effect):
         )
 
         for hook in Webhook.objects.all():
-            requests.post(
-                hook.url,
-                data=data,
-                headers={
-                    'Content-Type': 'application/vnd.api+json'
-                }
-            )
+            try:
+                requests.post(
+                    hook.url,
+                    data=data,
+                    headers={
+                        'Content-Type': 'application/vnd.api+json'
+                    }
+                )
+            except Exception:
+                pass
 
 
 class SendEventEffect(Effect):

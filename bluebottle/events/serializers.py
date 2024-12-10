@@ -22,6 +22,7 @@ class EventObjectSerializer(PolymorphicModelSerializer):
 
     class Meta(object):
         model = Model
+        fields = ('activity',)
         meta_fields = (
             'permissions',
             'transitions',
@@ -34,11 +35,15 @@ class EventObjectSerializer(PolymorphicModelSerializer):
             'contributor_count',
             'team_count',
             'current_status',
-            'admin_url'
+            'admin_url',
         )
 
     class JSONAPIMeta(object):
         resource_name = 'events/objects'
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+    }
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -56,9 +61,11 @@ class EventSerializer(serializers.ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'content_object',
+            'content_object.activity',
         ]
         resource_name = 'events'
 
     included_serializers = {
         'content_object': 'bluebottle.events.serializers.EventObjectSerializer',
+        'content_object.activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }

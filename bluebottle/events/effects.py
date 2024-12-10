@@ -117,11 +117,10 @@ class SendEventEffect(Effect):
     def post_save(self):
         instance = self.instance
         channel_layer = get_channel_layer()
-        serializer = EventSerializer(instance)
         async_to_sync(channel_layer.group_send)(
             "events",
             {
-                "type": "send_event",
-                "instance": serializer.data,
+                "type": "send.event",
+                "instance": instance,
             }
         )

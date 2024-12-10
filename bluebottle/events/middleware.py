@@ -5,7 +5,6 @@ class ExcludeWebSocketMiddleware:
     def __call__(self, request):
         # Skip middleware for WebSocket routes
         if request.path.startswith('/ws/'):
-            print(f"WebSocket request bypassed: {request.path}")
             return None
 
         # Otherwise, continue as normal

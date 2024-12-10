@@ -4,6 +4,11 @@ from asgiref.sync import sync_to_async
 from .models import Event
 from .serializers import EventSerializer
 import logging
+from rest_framework.test import APIRequestFactory
+from rest_framework.request import Request
+
+from .views import EventListView
+from ..bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 
 logger = logging.getLogger(__name__)
 
@@ -29,23 +34,22 @@ class EventConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         logger.info("WebSocket received data.")
-        # Handle incoming WebSocket messages
         text_data_json = json.loads(text_data)
         action = text_data_json.get('action')
 
         if action == 'get_latest_events':
-            # Fetch latest events using sync-to-async
             instances = await self.get_latest_events()
-            serializer = await self.serialize_events(instances)
+            data = await self.serialize_events(instances)
 
-            # Send serialized data back to WebSocket
-            await self.send(text_data=json.dumps(serializer))
+            data['message'] = 'latest_events'
+            await self.send(text_data=json.dumps(data))
 
     async def send_event(self, event):
         # Send serialized data to WebSocket
         instance = event['instance']
-        serializer = EventSerializer(instance)
-        await self.send(text_data=json.dumps(serializer.data))
+        data = await self.serialize_events([instance])
+        data['message'] = 'new_event'
+        await self.send(text_data=json.dumps(data))
 
     @sync_to_async
     def get_latest_events(self):
@@ -59,5 +63,15 @@ class EventConsumer(AsyncWebsocketConsumer):
         """
         Serialize the event instances.
         """
-        serializer = EventSerializer(instances, many=True)
-        return serializer.data
+        context = {
+            'view': EventListView(),
+            'request': Request(APIRequestFactory().get('/'))
+        }
+        serializer = EventSerializer(instance=instances, many=True, context=context)
+        renderer = BluebottleJSONAPIRenderer()
+        data = renderer.render(
+            serializer.data,
+            'application/vnd.api+json',
+            context
+        )
+        return json.loads(data)

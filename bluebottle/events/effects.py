@@ -1,9 +1,12 @@
 import requests
+from datetime import datetime
+import json
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from django.utils.translation import gettext_lazy as _
+from django.db import connection
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.events.models import Event, Webhook
@@ -104,7 +107,12 @@ class EventWebhookEffect(Effect):
             try:
                 requests.post(
                     hook.url,
-                    data=data,
+                    data=json.dumps({
+                        'origin': connection.tenant.name,
+                        'data': json.loads(data),
+                        'type': 'event',
+                        'timestamp': datetime.now().isoformat()
+                    }),
                     headers={
                         'Content-Type': 'application/vnd.api+json'
                     }

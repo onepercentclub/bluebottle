@@ -18,7 +18,10 @@ EVENT_TYPES = (
 
 
 class Event(TriggerMixin, models.Model):
-    limit = models.Q(app_label='funding', model='donation') | models.Q(app_label='funding', model='funding')
+    limit = (models.Q(app_label='funding')
+             | models.Q(app_label='deeds')
+             | models.Q(app_label='collect')
+             | models.Q(app_label='time_based'))
     content_type = models.ForeignKey(ContentType, limit_choices_to=limit, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey(

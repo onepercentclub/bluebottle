@@ -94,8 +94,16 @@ def reached_percentage(effect, percentage):
         return False
 
 
+def reached_25_percent(effect):
+    return reached_percentage(effect, 25)
+
+
 def reached_50_percent(effect):
     return reached_percentage(effect, 50)
+
+
+def reached_75_percent(effect):
+    return reached_percentage(effect, 75)
 
 
 def reached_100_percent(effect):
@@ -257,7 +265,9 @@ class FundingTriggers(ActivityTriggers):
         ModelChangedTrigger(
             'amount_raised',
             effects=[
+                TriggerEvent('funding.25%', conditions=[reached_25_percent]),
                 TriggerEvent('funding.50%', conditions=[reached_50_percent]),
+                TriggerEvent('funding.75%', conditions=[reached_75_percent]),
                 TriggerEvent('funding.100%', conditions=[reached_100_percent]),
             ]
         )

@@ -50,7 +50,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('id', 'created', 'updated', 'content_object')
+        fields = ('id', 'created', 'updated', 'content_object', 'event_type')
         meta_fields = ('created', 'updated')
 
     class JSONAPIMeta:

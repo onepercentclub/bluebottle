@@ -8,6 +8,7 @@ from rest_framework_jwt.views import refresh_jwt_token
 from bluebottle.bb_accounts.views import AxesObtainJSONWebToken, AuthView
 
 from bluebottle.auth.views import GetAuthToken, AuthFacebookView
+from bluebottle.routing import websocket_urlpatterns
 from bluebottle.utils.views import LoginWithView
 
 urlpatterns = [
@@ -101,6 +102,9 @@ urlpatterns = [
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
 
+    url(r'^api/events/',
+        include('bluebottle.events.urls')),
+
 ]
 
 
@@ -114,13 +118,18 @@ def handler500(request):
     return response
 
 
+urlpatterns += websocket_urlpatterns
+
+
 # Serve django-staticfiles (only works in DEBUG)
 # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-development
 urlpatterns += staticfiles_urlpatterns()
 
+
 # Serve media files (only works in DEBUG)
 # https://docs.djangoproject.com/en/dev/howto/static-files/#django.conf.urls.static.static
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 urlpatterns += [
 

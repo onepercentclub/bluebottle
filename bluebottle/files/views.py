@@ -96,6 +96,7 @@ class FileContentView(RetrieveAPIView):
 
 
 class ImageContentView(FileContentView):
+    cropbox = True
 
     def get_random_image_url(self):
         if 'x' in self.kwargs['size']:
@@ -105,12 +106,17 @@ class ImageContentView(FileContentView):
             height = int(int(width) / 1.5)
         return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
 
-    def get_file(self):
+    def get_image(self):
         instance = self.get_object()
-        return getattr(instance, self.field).file
+        if hasattr(self, 'field'):
+            return getattr(instance, self.field)
+        else:
+            return instance
 
     def retrieve(self, *args, **kwargs):
-        file = self.get_file()
+        image = self.get_image()
+
+        file = image.file
 
         if 'x' in self.kwargs['size']:
             if self.kwargs['size'] not in self.allowed_sizes.values():
@@ -120,14 +126,17 @@ class ImageContentView(FileContentView):
                 return HttpResponseNotFound()
 
         size = self.kwargs['size']
+
+        cropbox = image.cropbox if self.cropbox else None
+
         try:
             width, height = size.split('x')
             if width == height and int(width) < 300:
-                thumbnail = get_thumbnail(file, size, crop='center')
+                thumbnail = get_thumbnail(file, size, crop='center', cropbox=cropbox)
             else:
-                thumbnail = get_thumbnail(file, size)
+                thumbnail = get_thumbnail(file, size, cropbox=cropbox)
         except ValueError:
-            thumbnail = get_thumbnail(file, size)
+            thumbnail = get_thumbnail(file, size, cropbox=cropbox)
 
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -173,6 +182,7 @@ class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
 
 class ImagePreview(ImageContentView):
     allowed_sizes = {'preview': '292x164', 'large': '1568x882', 'avatar': '200x200'}
+    cropbox = False
 
     queryset = Image.objects.all()
 

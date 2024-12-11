@@ -167,7 +167,7 @@ class ImageSerializer(DocumentSerializer):
 
     class Meta(object):
         model = Image
-        fields = ('id', 'file', 'filename', 'owner', 'links',)
+        fields = ('id', 'file', 'filename', 'owner', 'links', 'cropbox')
         meta_fields = ['filename']
 
 

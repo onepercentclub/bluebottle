@@ -58,6 +58,8 @@ class File(AnonymizationMixin, models.Model):
 
 
 class Image(File):
+    cropbox = models.CharField(max_length=40, blank=True)
+
     class JSONAPIMeta(object):
         resource_name = 'images'
 

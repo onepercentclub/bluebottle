@@ -12,7 +12,9 @@ EVENT_TYPES = (
     ('donation.succeeded', _('Donation done')),
     ('funding.approved', _('Funding campaign published')),
     ('funding.succeeded', _('Funding campaign succeeded')),
+    ('funding.25%', _('Funding campaign at 25%')),
     ('funding.50%', _('Funding campaign at 50%')),
+    ('funding.75%', _('Funding campaign at 75%')),
     ('funding.100%', _('Funding campaign at 100%')),
 )
 

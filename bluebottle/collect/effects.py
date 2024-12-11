@@ -3,7 +3,7 @@ from datetime import datetime, date, timedelta
 from django.utils.timezone import now, get_current_timezone
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.collect.models import CollectContributor, CollectContribution
+from bluebottle.collect.models import CollectContribution
 from bluebottle.fsm.effects import Effect
 
 
@@ -40,29 +40,6 @@ class CreateCollectContribution(Effect):
 
     def __str__(self):
         return str(_('Create collect contribution'))
-
-
-class SetOverallContributor(Effect):
-    "Create an effort contribution for the organizer or participant of the activity"
-
-    display = False
-
-    def post_save(self):
-        contributor = CollectContributor.objects.filter(user=None, activity=self.instance).first()
-        if not contributor:
-            contributor = CollectContributor.objects.create(
-                user=None,
-                activity=self.instance
-            )
-        contributor.value = self.instance.realized
-        contributor.save()
-        contribution = contributor.contributions.get()
-
-        contribution.value = self.instance.realized
-        contribution.save()
-
-    def __str__(self):
-        return str(_('Create overall contributor'))
 
 
 class SetEndDateEffect(Effect):

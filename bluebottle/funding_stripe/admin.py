@@ -14,8 +14,10 @@ from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.geo.models import Country
 
 from bluebottle.clients import properties
-from bluebottle.funding.admin import PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin, \
+from bluebottle.funding.admin import (
+    PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
     BankAccountChildAdmin
+)
 from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
@@ -57,6 +59,9 @@ class StripeBankAccountInline(admin.TabularInline):
     extra = 0
     can_delete = False
 
+    def has_add_permission(self, request, obj):
+        return False
+
     def bank_account_link(self, obj):
         url = reverse('admin:funding_stripe_externalaccount_change', args=(obj.id, ))
         return format_html('<a href="{}">{}</a>', url, obj)
@@ -68,9 +73,17 @@ class StripePayoutAccountForm(StateMachineModelForm):
     def __init__(self, *args, **kwargs):
 
         stripe = get_stripe()
+
+        specs = stripe.CountrySpec.list(limit=100)
+        data = specs.data
+
+        if specs:
+            specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+            data.extend(specs2.data)
+
         countries = Country.objects.filter(
             alpha2_code__in=(
-                spec.id for spec in stripe.CountrySpec.list(limit=200)
+                spec.id for spec in data
             )
         )
         self.base_fields['country'].choices = [
@@ -90,27 +103,31 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         "verified",
         "payments_enabled",
         "payouts_enabled",
-        "funding",
-        "stripe_link",
         'requirements_list',
         'verification_link',
-    ]
-    search_fields = ["account_id"]
-    fields = [
-        "business_type",
-        "country",
-    ] + readonly_fields
+        'stripe_link',
+        'funding'
 
+    ]
+
+    search_fields = ["account_id"]
     list_display = ["id", "account_id", "owner", "status"]
 
-    def get_fields(self, request, obj=None):
+    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
 
-        fields = super(StripePayoutAccountAdmin, self).get_fields(request, obj)
+    def get_status_fields(self, request, obj):
+        return super().get_status_fields(request, obj) + [
+            'verified', 'payments_enabled', 'payouts_enabled',
+            'requirements_list', 'verification_link'
 
-        if obj:
-            if request.user.is_superuser:
-                fields = fields + ['stripe_link']
-            fields += ['account_id', 'funding', ]
+        ]
+
+    def get_basic_fields(self, request, obj):
+        fields = super().get_basic_fields(request, obj) + [
+            'business_type', 'country', 'funding'
+        ]
+        if request.user.is_superuser:
+            fields = fields + ['stripe_link', 'account_id']
 
         return fields
 

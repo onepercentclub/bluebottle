@@ -132,8 +132,10 @@ class InitiativeAdmin(
         InitiativeCountryFilter
     ]
 
-    search_fields = ['title', 'pitch', 'story',
-                     'owner__first_name', 'owner__last_name', 'owner__email']
+    search_fields = [
+        'title', 'pitch', 'story',
+        'owner__first_name', 'owner__last_name', 'owner__email'
+    ]
 
     readonly_fields = ['link', 'created', 'updated', 'has_deleted_data', 'valid']
 

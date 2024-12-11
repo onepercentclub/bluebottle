@@ -252,6 +252,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     )
 
     @property
+    def contributor(self):
+        return self
+
+    @property
     def status_label(self):
         if self.states.current_state:
             return self.states.current_state.name
@@ -324,7 +328,7 @@ class Contribution(TriggerMixin, PolymorphicModel):
 class EffortContribution(Contribution):
     class ContributionTypeChoices(DjangoChoices):
         organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
-        deed = ChoiceItem('deed', label=_("Deed particpant"))
+        deed = ChoiceItem('deed', label=_("Deed participant"))
 
     contribution_type = models.CharField(
         _('Contribution type'),

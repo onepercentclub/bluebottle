@@ -3,7 +3,9 @@ from itertools import groupby
 
 from django.conf import settings
 from django.db.models import Count, Sum, Q
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from geopy.distance import distance, lonlat
 from moneyed import Money
 from rest_framework import serializers
@@ -20,7 +22,7 @@ from bluebottle.activities.models import (
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
-from bluebottle.collect.models import CollectContribution
+from bluebottle.collect.models import CollectType, CollectActivity
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -174,6 +176,7 @@ class BaseActivitySerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')
+    admin_url = serializers.SerializerMethodField()
 
     updates = HyperlinkedRelatedField(
         many=True,
@@ -192,6 +195,12 @@ class BaseActivitySerializer(ModelSerializer):
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
 
+    def get_admin_url(self, obj):
+        user = get_current_user()
+        if user.is_authenticated and (user.is_staff or user.is_superuser):
+            url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
+            return url
+
     matching_properties = MatchingPropertiesField()
 
     errors = ValidationErrorsField()
@@ -199,6 +208,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
@@ -256,6 +266,7 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_title',
             'next_step_description',
             'next_step_button_label',
+            'admin_url'
         )
 
         meta_fields = (
@@ -269,12 +280,14 @@ class BaseActivitySerializer(ModelSerializer):
             'deleted_successful_contributors',
             'contributor_count',
             'team_count',
-            'current_status'
+            'current_status',
+            'admin_url'
         )
 
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+            'owner.avatar',
             'image',
             'initiative',
             'goals',
@@ -307,6 +320,7 @@ class BaseActivityListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
+    current_status = CurrentStatusField(source='states.current_state')
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -340,7 +354,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
-            'team_activity'
+            'team_activity',
+            'current_status'
         )
 
         meta_fields = (
@@ -348,6 +363,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'created',
             'updated',
             'matching_properties',
+            'current_status'
         )
 
     class JSONAPIMeta(object):
@@ -408,6 +424,12 @@ class ActivitySubmitSerializer(ModelSerializer):
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    start = serializers.SerializerMethodField()
+
+    def get_start(self, obj):
+        if obj.contributions.exists():
+            return obj.contributions.last().start
+        return None
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
@@ -422,10 +444,12 @@ class BaseContributorListSerializer(ModelSerializer):
             "status",
             "created",
             "updated",
+            "start"
         )
         meta_fields = (
             "created",
             "updated",
+            "start"
         )
 
     class JSONAPIMeta(object):
@@ -443,10 +467,17 @@ class BaseContributorSerializer(ModelSerializer):
     team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
+    start = serializers.SerializerMethodField()
+
+    def get_start(self, obj):
+        if obj.contributions.exists():
+            return obj.contributions.last().start
+        return None
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
     class Meta(object):
@@ -456,12 +487,20 @@ class BaseContributorSerializer(ModelSerializer):
             'activity',
             'status',
             'current_status',
+            'start'
         )
-        meta_fields = ('transitions', 'created', 'updated', 'current_status')
+        meta_fields = (
+            'transitions',
+            'created',
+            'updated',
+            'start',
+            'current_status',
+        )
 
     class JSONAPIMeta(object):
         included_resources = [
             'user',
+            'user.avatar',
             'activity',
         ]
         resource_name = 'contributors'
@@ -474,7 +513,7 @@ class BaseContributionSerializer(ModelSerializer):
     class Meta(object):
         model = Contribution
         fields = ("value", "status", "start", "end")
-        meta_fields = ("created",)
+        meta_fields = ("created", 'end', 'start')
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'
@@ -501,23 +540,6 @@ def get_stats_for_activities(activities):
         count=Count('id', distinct=True),
         activities=Count('contributor__activity', distinct=True),
         value=Sum('value')
-    )
-
-    money = MoneyContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True)
-    )
-
-    collect = CollectContribution.objects.filter(
-        status='succeeded',
-        contributor__user__isnull=False,
-        contributor__activity__id__in=ids
-    ).aggregate(
-        count=Count('id', distinct=True),
-        activities=Count('contributor__activity', distinct=True)
     )
 
     amounts = MoneyContribution.objects.filter(
@@ -548,14 +570,26 @@ def get_stats_for_activities(activities):
     contributor_count += Activity.objects.filter(id__in=ids).\
         aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
-    collected = CollectContribution.objects.filter(
-        status='succeeded',
-        contributor__activity__id__in=ids
-    ).values(
-        'type_id'
-    ).annotate(
-        amount=Sum('value')
-    ).order_by()
+    types = CollectType.objects.all()
+    collect = (
+        CollectActivity.objects.filter(
+            status__in=['succeeded', 'open'],
+            id__in=ids
+        )
+        .values('collect_type_id')
+        .annotate(amount=Sum('realized'))
+    )
+
+    type_dict = {int(type_obj.id): type_obj for type_obj in types}
+
+    collected = [
+        {
+            'name': type_dict[int(col['collect_type_id'])].safe_translation_getter('name'),
+            'value': col['amount']
+        }
+        for col in collect
+        if col['collect_type_id']
+    ]
 
     amount = {
         'amount': sum(
@@ -587,8 +621,7 @@ def get_stats_for_activities(activities):
         'impact': impact,
         'hours': time['value'].total_seconds() / 3600 if time['value'] else 0,
         'effort': effort['count'],
-        'collected': dict((stat['type_id'], stat['amount']) for stat in collected),
-        'activities': sum(stat['activities'] for stat in [effort, time, money, collect]),
+        'collected': collected,
         'contributors': contributor_count,
         'amount': amount
     }

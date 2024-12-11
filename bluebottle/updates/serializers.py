@@ -100,10 +100,17 @@ class UpdateSerializer(serializers.ModelSerializer):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image', 'replies', 'images', 'contribution', 'activity'
+            'author',
+            'author.avatar',
+            'image',
+            'replies',
+            'images',
+            'contribution',
+            'activity'
         ]
 
     included_serializers = {
+        'author.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',

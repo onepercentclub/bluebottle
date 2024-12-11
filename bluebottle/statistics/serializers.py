@@ -4,6 +4,7 @@ from builtins import str
 
 from dateutil.relativedelta import relativedelta
 from django.utils.timezone import get_current_timezone
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework_json_api.serializers import PolymorphicModelSerializer, ModelSerializer
 
@@ -18,11 +19,15 @@ tz = get_current_timezone()
 class BaseStatisticSerializer(ModelSerializer):
     value = serializers.SerializerMethodField()
 
+    def get_user(self):
+        return None
+
     def get_value(self, obj):
         params = self.context['request'].query_params
         start = None
         end = None
         subregion = None
+        user = self.get_user()
 
         if 'year' in params:
             year = int(params['year'])
@@ -32,8 +37,10 @@ class BaseStatisticSerializer(ModelSerializer):
 
         if 'office_location__subregion' in params:
             subregion = params['office_location__subregion']
-
-        value = obj.get_value(start, end, subregion)
+        if user:
+            value = obj.get_live_value(start, end, subregion, user)
+        else:
+            value = obj.get_value(start, end, subregion, user)
 
         try:
             return {
@@ -97,3 +104,9 @@ class StatisticSerializer(BaseStatisticSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'statistics'
+
+
+class UserStatisticSerializer(StatisticSerializer):
+
+    def get_user(self):
+        return get_current_user()

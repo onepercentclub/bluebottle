@@ -410,8 +410,6 @@ class StripePayoutAccount(PayoutAccount):
                 capabilities={
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True},
-                    "bank_transfer_payments": {"requested": True},
-                    "ideal_payments": {"requested": True},
                 },
                 business_profile={"url": url, "mcc": "8398"},
                 metadata=self.metadata,
@@ -438,17 +436,24 @@ class StripePayoutAccount(PayoutAccount):
         )
         return account_link.url
 
-    def update(self, data):
+    def update(self, data, save=True):
         self.requirements = data.requirements.eventually_due
 
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            pass
+            try:
+                self.verified = (
+                    data.company.owners_provided or
+                    data.company.executives_provided or
+                    data.company.directors_provided
+                )
+            except AttributeError:
+                pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
-        if self.id:
+        if self.id and save:
             self.save()
 
     def retrieve_account(self):
@@ -529,8 +534,8 @@ class ExternalAccount(BankAccount):
         resource_name = 'payout-accounts/stripe-external-accounts'
 
     class Meta(object):
-        verbose_name = _('Stripe external account')
-        verbose_name_plural = _('Stripe external account')
+        verbose_name = _('Bank account')
+        verbose_name_plural = _('Bank accounts')
 
     def __str__(self):
         return "Stripe external account {}".format(self.account_id)

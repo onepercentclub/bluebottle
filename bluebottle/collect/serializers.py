@@ -2,17 +2,18 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    SerializerMethodResourceRelatedField, SerializerMethodHyperlinkedRelatedField
+    SerializerMethodResourceRelatedField
 )
 
+from bluebottle.activities.models import Organizer
 from bluebottle.activities.utils import (
     BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
 )
-from bluebottle.activities.models import Organizer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
@@ -32,16 +33,20 @@ class CollectActivitySerializer(BaseActivitySerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodHyperlinkedRelatedField(
-        model=CollectContributor,
-        many=True,
-        related_link_view_name='related-collect-contributors',
-        related_link_url_kwarg='activity_id'
+    contributors = RelatedLinkFieldByStatus(
+        source='participants',
+        read_only=True,
+        related_link_view_name="related-collect-contributors",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["succeeded", "accepted"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
 
     contributors_export_url = PrivateFileSerializer(
         'collect-contributors-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='contributors.csv',
         permission=CanExportParticipantsPermission,
         read_only=True
@@ -50,7 +55,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
     def get_links(self, instance):
         if instance.start and instance.end:
             return {
-                'ical': reverse_signed('collect-ical', args=(instance.pk, )),
+                'ical': reverse_signed('collect-ical', args=(instance.pk,)),
                 'google': instance.google_calendar_link,
             }
         else:
@@ -67,6 +72,9 @@ class CollectActivitySerializer(BaseActivitySerializer):
             user__isnull=False
         ).count()
 
+    target = serializers.FloatField(allow_null=True, required=False)
+    realized = serializers.FloatField(allow_null=True, required=False)
+
     class Meta(BaseActivitySerializer.Meta):
         model = CollectActivity
         fields = BaseActivitySerializer.Meta.fields + (
@@ -81,8 +89,8 @@ class CollectActivitySerializer(BaseActivitySerializer):
             'collect_type',
             'target',
             'realized',
-            'enable_impact',
-            'links'
+            'links',
+            'collect_type'
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -90,7 +98,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'my_contributor',
             'location',
-            'collect_type'
+            'collect_type',
             'goals',
             'goals.type',
         ]
@@ -108,6 +116,9 @@ class CollectActivitySerializer(BaseActivitySerializer):
 class CollectActivityListSerializer(BaseActivityListSerializer):
     permissions = ResourcePermissionField('collect-activity-detail', view_args=('pk',))
 
+    target = serializers.FloatField(allow_null=True, required=False)
+    realized = serializers.FloatField(allow_null=True, required=False)
+
     collect_type = ResourceRelatedField(
         queryset=CollectType.objects,
         required=False,
@@ -121,6 +132,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
             'end',
             'location',
             'realized',
+            'target',
             'collect_type',
             'location',
         )
@@ -135,8 +147,8 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
     included_serializers = dict(
         BaseActivityListSerializer.included_serializers,
         **{
-            'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',
         }
     )
 
@@ -160,7 +172,7 @@ class CollectContributorSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         model = CollectContributor
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
         fields = BaseContributorSerializer.Meta.fields
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
@@ -198,7 +210,6 @@ class CollectContributorTransitionSerializer(TransitionSerializer):
 
 
 class CollectTypeSerializer(ModelSerializer):
-
     class Meta(object):
         model = CollectType
         fields = ('id', 'name', 'unit', 'unit_plural')

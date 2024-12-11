@@ -140,11 +140,6 @@ class DeedTriggers(ActivityTriggers):
         ),
 
         ModelChangedTrigger(
-            'enable_impact',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
             'target',
             effects=[UpdateImpactGoalsForActivityEffect]
         ),

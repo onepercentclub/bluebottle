@@ -589,9 +589,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             self.assertEqual(
                 call["capabilities"],
                 {
-                    'bank_transfer_payments': {'requested': True},
                     'card_payments': {'requested': True},
-                    'ideal_payments': {'requested': True},
                     'transfers': {'requested': True}
                 }
             )

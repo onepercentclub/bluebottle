@@ -1,10 +1,10 @@
 from builtins import object
 from datetime import datetime
 
-import pytz
 from dateutil.parser import parse
 from django.db import connection
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -178,9 +178,16 @@ class DeadlineField(serializers.DateTimeField):
             return None
         try:
             parsed_date = parse(value).date()
-            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
-            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
-            return aware_datetime
+            return get_current_timezone().localize(
+                datetime(
+                    parsed_date.year,
+                    parsed_date.month,
+                    parsed_date.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            )
         except (ValueError, TypeError):
             self.fail('invalid', format='date')
 

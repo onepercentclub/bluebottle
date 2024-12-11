@@ -171,6 +171,8 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
             contributor__status__in=['expired', 'failed'],
         ).exclude(
             effortcontribution__contribution_type='organizer',
+        ).exclude(
+            timecontribution__contribution_type='preparation',
         ).prefetch_related(
             'contributor',
             'contributor__activity',

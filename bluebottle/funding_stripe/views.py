@@ -1,9 +1,13 @@
+import logging
+
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.generic import View
+from django_tools.middlewares.ThreadLocal import get_current_user
 from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
@@ -32,7 +36,7 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
-    ExternalAccountSerializer
+    ExternalAccountSerializer, BankTransferSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
@@ -44,7 +48,6 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,123 @@ class StripePaymentList(PaymentList):
     serializer_class = StripePaymentSerializer
 
 
+class StripeBankTransferDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = BankTransferSerializer
+
+    permission_classes = []
+
+    def get_object(self):
+        obj = super().get_object()
+        payment = obj.get_payment()
+        payment.update()
+        obj.refresh_from_db()
+        return obj
+
+
+class StripeBankTransferList(PaymentList):
+    queryset = PaymentIntent.objects.all()
+    serializer_class = BankTransferSerializer
+
+    def perform_create(self, serializer):
+        # Get data from serializer without saving
+        payment_intent_data = serializer.validated_data
+        donation = payment_intent_data['donation']
+        account_currency = str(donation.activity.target.currency)
+        currency = str(donation.amount.currency)
+
+        # Validate the currency compatibility
+        if currency != account_currency:
+            raise ValidationError(f'Bank transfer not supported for currency {currency}')
+
+        # Prepare Stripe and other necessary objects
+        stripe = get_stripe()
+        connect_account = donation.activity.bank_account.connect_account
+        payment_method_options = {}
+
+        # Set up payment method options based on currency
+        if currency == 'EUR':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "eu_bank_transfer",
+                        "eu_bank_transfer": {"country": "NL"},
+                    },
+                },
+            }
+        elif currency == 'USD':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "us_bank_transfer",
+                    },
+                },
+            }
+        elif currency == 'GBP':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "gb_bank_transfer",
+                    },
+                },
+            }
+        elif currency == 'MXN':
+            payment_method_options = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": "mx_bank_transfer",
+                    },
+                },
+            }
+
+        # Create the customer in Stripe
+        user = get_current_user()
+        customer = stripe.Customer.create(
+            stripe_account=connect_account.account_id,
+            name=user.full_name,
+            email=user.email,
+        )
+
+        # Create the payment method in Stripe
+        payment_method = stripe.PaymentMethod.create(
+            type="customer_balance",
+            stripe_account=connect_account.account_id,
+        )
+
+        # Define statement descriptor
+        statement_descriptor = connection.tenant.name[:22]
+
+        # Create the PaymentIntent in Stripe
+        intent = stripe.PaymentIntent.create(
+            amount=int(donation.amount.amount * 100),
+            currency=currency,
+            statement_descriptor=statement_descriptor,
+            statement_descriptor_suffix=statement_descriptor[:18],
+            metadata={
+                "tenant_name": connection.tenant.client_name,
+                "tenant_domain": connection.tenant.domain_url,
+                "activity_id": donation.activity.pk,
+                "activity_title": donation.activity.title,
+            },
+            stripe_account=connect_account.account_id,
+            payment_method=payment_method.id,
+            payment_method_options=payment_method_options,
+            payment_method_types=["customer_balance"],
+            customer=customer.id,
+            confirm=True
+        )
+
+        serializer.save(
+            intent_id=intent.id,
+            client_secret=intent.client_secret,
+            instructions=intent.next_action
+        )
+
+
 class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = StripePayoutAccount.objects.all()
     serializer_class = ConnectAccountSerializer
@@ -121,8 +241,8 @@ class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateA
 
     def perform_update(self, serializer):
         if (
-            "country" in serializer.validated_data
-            and serializer.instance.country != serializer.validated_data["country"]
+                "country" in serializer.validated_data
+                and serializer.instance.country != serializer.validated_data["country"]
         ):
             if serializer.instance.status == "verified":
                 raise ValidationError("Cannot change country of verified account")

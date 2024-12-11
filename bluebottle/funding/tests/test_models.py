@@ -6,17 +6,15 @@ from django.utils.timezone import now
 from moneyed import Money
 
 from bluebottle.activities.tasks import data_retention_contribution_task
-
 from bluebottle.funding.models import Payout
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, RewardFactory, DonorFactory
+from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import (
-    StripePaymentFactory, StripePayoutAccountFactory, ExternalAccountFactory
+    StripePaymentFactory
 )
-
-from bluebottle.members.models import MemberPlatformSettings
-
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -162,10 +160,7 @@ class PayoutTestCase(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", reviewed=True, status="verified"
-        )
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        self.bank_account = generate_mock_bank_account()
         self.funding.bank_account = self.bank_account
         self.funding.states.submit()
         self.funding.states.approve(save=True)

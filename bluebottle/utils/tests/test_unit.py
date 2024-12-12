@@ -252,13 +252,14 @@ jzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFMBGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtB
 nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
 
 
-class TestTenantAwareMailServer(unittest.TestCase):
+class Testtenantawaremailserver(BluebottleTestCase):
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
         EMAIL_HOST='somehost',
         EMAIL_PORT=1337)
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
+        __import__('ipdb').set_trace()
         """ Test simple / traditional case where config comes from settings """
         be = TenantAwareBackend()
         msg = EmailMultiAlternatives(subject="test", body="test",

@@ -21,7 +21,7 @@ def construct_from_header():
     if not settings.address:
         return None
 
-    return f"{settings.address} <{settings.sender}>"
+    return f"{settings.sender} <{settings.address}>"
 
 
 class EmailMultiAlternatives(BaseEmailMultiAlternatives):

@@ -37,6 +37,8 @@ from bluebottle.utils.storage import TenantFileSystemStorage
 from bluebottle.utils.utils import clean_for_hashtag, get_client_ip
 from ..email_backend import send_mail, create_message
 
+from bluebottle.mails.models import MailPlatformSettings
+
 
 def generate_random_slug():
     return str(uuid.uuid4())[:30]
@@ -345,20 +347,20 @@ class TestTenantAwareMailServer(unittest.TestCase):
 
     def test_reply_to(self):
         """ Test simple / traditional case where config comes from settings """
-        with mock.patch("bluebottle.clients.mail.properties",
-                        new=mock.Mock([])) as properties:
-            reply_to = 'info@test.example.com'
-            properties.TENANT_MAIL_PROPERTIES = {
-                'address': 'info@example.com',
-                'sender': 'Info Tester',
-                'reply_to': reply_to
-            }
-            msg = EmailMultiAlternatives(
-                subject="test", body="test",
-                to=["test@example.com"]
-            )
-            self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
-            self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
+        reply_to = 'info@test.example.com'
+
+        mail_settings = MailPlatformSettings.load()
+        mail_settings.address = 'info@example.com'
+        mail_settings.sender = 'Info Tester'
+        mail_settings.reply_to = reply_to
+        mail_settings.save()
+
+        msg = EmailMultiAlternatives(
+            subject="test", body="test",
+            to=["test@example.com"]
+        )
+        self.assertEqual(msg.extra_headers['Reply-To'], reply_to)
+        self.assertEqual(msg.from_email, 'Info Tester <info@example.com>')
 
 
 class MoneySerializerTestCase(BluebottleTestCase):

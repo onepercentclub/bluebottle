@@ -259,7 +259,6 @@ class Testtenantawaremailserver(BluebottleTestCase):
         EMAIL_PORT=1337)
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
-        __import__('ipdb').set_trace()
         """ Test simple / traditional case where config comes from settings """
         be = TenantAwareBackend()
         msg = EmailMultiAlternatives(subject="test", body="test",

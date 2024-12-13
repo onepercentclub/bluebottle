@@ -1,4 +1,5 @@
 from django.utils import timezone
+from decimal import Decimal
 
 from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.activities.states import OrganizerStateMachine
@@ -10,8 +11,8 @@ from bluebottle.fsm.triggers import (
     ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
 from bluebottle.funding.effects import (
-    GeneratePayoutsEffect, GenerateDonorWallpostEffect,
-    RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
+    GeneratePayoutsEffect,
+    UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
     ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
@@ -32,6 +33,7 @@ from bluebottle.funding.states import (
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
 )
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.events.effects import TriggerEvent
 
 
 def should_finish(effect):
@@ -78,6 +80,38 @@ def no_donations(effect):
     return not effect.instance.donations.filter(status='succeeded').count()
 
 
+def reached_percentage(effect, percentage):
+    activity = effect.instance
+    if not activity.target:
+        return False
+    target = activity.target.amount / Decimal(100 / percentage)
+
+    raised = activity.amount_raised.amount
+    try:
+        initial_donated = activity._initial_values['amount_donated'].amount
+        initial_matching = activity._initial_values['amount_matching'].amount
+
+        return raised >= target and (initial_donated + initial_matching) < target
+    except AttributeError:
+        return False
+
+
+def reached_25_percent(effect):
+    return reached_percentage(effect, 25)
+
+
+def reached_50_percent(effect):
+    return reached_percentage(effect, 50)
+
+
+def reached_75_percent(effect):
+    return reached_percentage(effect, 75)
+
+
+def reached_100_percent(effect):
+    return reached_percentage(effect, 100)
+
+
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
@@ -92,7 +126,8 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.expire,
                     conditions=[should_finish]
                 ),
-                NotificationEffect(FundingApprovedMessage)
+                NotificationEffect(FundingApprovedMessage),
+                TriggerEvent('funding.approved')
             ]
         ),
 
@@ -132,7 +167,8 @@ class FundingTriggers(ActivityTriggers):
             FundingStateMachine.succeed,
             effects=[
                 GeneratePayoutsEffect,
-                NotificationEffect(FundingRealisedOwnerMessage)
+                NotificationEffect(FundingRealisedOwnerMessage),
+                TriggerEvent('funding.succeeded')
             ]
         ),
 
@@ -225,6 +261,16 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.partial,
                     conditions=[should_finish, target_not_reached]
                 ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'amount_raised',
+            effects=[
+                TriggerEvent('funding.25%', conditions=[reached_25_percent]),
+                TriggerEvent('funding.50%', conditions=[reached_50_percent]),
+                TriggerEvent('funding.75%', conditions=[reached_75_percent]),
+                TriggerEvent('funding.100%', conditions=[reached_100_percent]),
             ]
         )
     ]
@@ -339,9 +385,9 @@ class DonorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', DonationStateMachine.succeed),
                 NotificationEffect(DonationSuccessActivityManagerMessage),
                 NotificationEffect(DonationSuccessDonorMessage),
-                GenerateDonorWallpostEffect,
                 FollowActivityEffect,
-                UpdateFundingAmountsEffect
+                UpdateFundingAmountsEffect,
+                TriggerEvent('donation.succeeded')
             ]
         ),
 
@@ -349,7 +395,6 @@ class DonorTriggers(ContributorTriggers):
             DonorStateMachine.fail,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect
             ]
@@ -366,7 +411,6 @@ class DonorTriggers(ContributorTriggers):
             DonorStateMachine.refund,
             effects=[
                 RelatedTransitionEffect('contributions', DonationStateMachine.fail),
-                RemoveDonorWallpostEffect,
                 UnFollowActivityEffect,
                 UpdateFundingAmountsEffect,
                 RemoveDonorFromPayoutEffect,

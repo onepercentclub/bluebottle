@@ -16,7 +16,7 @@ from bluebottle.cms.models import (
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, FeedContent
 )
 
 
@@ -55,6 +55,12 @@ class StatsBlockPlugin(CMSContentPlugin):
     model = StatsContent
     inlines = [StatInline]
     category = _('Stats')
+
+
+@plugin_pool.register
+class FeedBlockPlugin(CMSContentPlugin):
+    model = FeedContent
+    category = _('Feed')
 
 
 @plugin_pool.register

@@ -12,6 +12,7 @@ from rest_framework_json_api.relations import (
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
+from bluebottle.events.serializers import EventSerializer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
 from bluebottle.funding.models import FundingPlatformSettings
@@ -47,6 +48,11 @@ class UpdateSerializer(serializers.ModelSerializer):
     contribution = PolymorphicResourceRelatedField(
         read_only=True,
         polymorphic_serializer=ContributorSerializer
+    )
+
+    event = PolymorphicResourceRelatedField(
+        read_only=True,
+        polymorphic_serializer=EventSerializer
     )
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
@@ -91,6 +97,7 @@ class UpdateSerializer(serializers.ModelSerializer):
             'permissions',
             'contribution',
             'fake_name',
+            'event'
         )
         meta_fields = (
             'permissions',
@@ -106,7 +113,9 @@ class UpdateSerializer(serializers.ModelSerializer):
             'replies',
             'images',
             'contribution',
-            'activity'
+            'activity',
+            'event',
+            'event.content_object',
         ]
 
     included_serializers = {
@@ -116,6 +125,8 @@ class UpdateSerializer(serializers.ModelSerializer):
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',
         'contribution': 'bluebottle.activities.serializers.ContributorSerializer',
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'event': 'bluebottle.events.serializers.EventSerializer',
+        'event.content_object': 'bluebottle.events.serializers.EventObjectSerializer',
     }
 
 

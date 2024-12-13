@@ -20,6 +20,9 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.states import (
     DeedStateMachine, DeedParticipantStateMachine
 )
+
+from bluebottle.events.effects import TriggerEvent
+
 from bluebottle.follow.effects import (
     FollowActivityEffect, UnFollowActivityEffect
 )
@@ -114,6 +117,7 @@ class DeedTriggers(ActivityTriggers):
                     ]
                 )
             ]
+
         ),
 
         ModelChangedTrigger(
@@ -163,6 +167,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                TriggerEvent('deed.published')
             ]
         ),
 
@@ -187,6 +192,7 @@ class DeedTriggers(ActivityTriggers):
                 ),
                 NotificationEffect(ActivitySucceededNotification),
                 SetEndDateEffect,
+                TriggerEvent('deed.succeeded')
             ]
         ),
 
@@ -247,7 +253,6 @@ def activity_not_expired(effect):
 
 def activity_did_start(effect):
     """activity start date in the past"""
-
     return (
         not effect.instance.activity.start or
         effect.instance.activity.start < date.today()
@@ -297,6 +302,7 @@ class DeedParticipantTriggers(ContributorTriggers):
                     conditions=[is_user]
                 ),
                 FollowActivityEffect,
+                TriggerEvent('deed-participant.succeeded')
             ]
         ),
         TransitionTrigger(

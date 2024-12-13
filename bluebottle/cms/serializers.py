@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, FeedContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
@@ -317,6 +317,18 @@ class StatsBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/stats'
 
 
+class FeedBlockSerializer(BaseBlockSerializer):
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
+
+    class Meta(object):
+        model = FeedContent
+        fields = ('id', 'type', 'title', 'sub_title')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/feed'
+
+
 class QuotesBlockSerializer(BaseBlockSerializer):
     quotes = ResourceRelatedField(
         many=True,
@@ -534,6 +546,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         ProjectsMapBlockSerializer,
         LinksBlockSerializer,
         StatsBlockSerializer,
+        FeedBlockSerializer,
         QuotesBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,

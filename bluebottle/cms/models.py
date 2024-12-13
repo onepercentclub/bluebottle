@@ -72,7 +72,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
         'QuotesBlockPlugin',
-        'DonateButtonBlockPlugin'
+        'DonateButtonBlockPlugin',
+        'FeedBlockPlugin',
     ])
     translations = TranslatedFields()
 
@@ -253,6 +254,18 @@ class StatsContent(TitledContent):
 
     def __str__(self):
         return str(self.stats)
+
+
+@python_2_unicode_compatible
+class FeedContent(TitledContent):
+    type = 'feed'
+    preview_template = 'admin/cms/preview/feed.html'
+
+    class Meta:
+        verbose_name = _('Platform feed')
+
+    def __str__(self):
+        return 'Feed'
 
 
 @python_2_unicode_compatible

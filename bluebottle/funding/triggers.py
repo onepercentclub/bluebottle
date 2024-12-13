@@ -82,6 +82,8 @@ def no_donations(effect):
 
 def reached_percentage(effect, percentage):
     activity = effect.instance
+    if not activity.target:
+        return False
     target = activity.target.amount / Decimal(100 / percentage)
 
     raised = activity.amount_raised.amount

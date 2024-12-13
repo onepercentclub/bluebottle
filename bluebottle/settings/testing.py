@@ -397,4 +397,4 @@ CONFLUENCE = {
 
     ]}
 
-RANDOM_IMAGE_PROVIDER = "https://picsum.photos/seed/{seed}/{width}/{height}"
+# RANDOM_IMAGE_PROVIDER = "https://picsum.photos/seed/{seed}/{width}/{height}"

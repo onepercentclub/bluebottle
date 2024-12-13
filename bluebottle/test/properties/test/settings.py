@@ -5,6 +5,3 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .12
 }
 CONTACT_EMAIL = 'test@example.com'
-TENANT_MAIL_PROPERTIES = {
-    'address': 'admin@example.com'
-}

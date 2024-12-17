@@ -227,6 +227,10 @@ class DateActivitySlotInline(TabularInlinePaginated):
     per_page = 20
     can_delete = True
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('activity')
+
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(
@@ -237,13 +241,11 @@ class DateActivitySlotInline(TabularInlinePaginated):
         },
     }
     ordering = ['-start']
-    readonly_fields = ['link', 'timezone', 'status_label']
+    readonly_fields = ['link', 'status_label']
     fields = [
         'link',
         'start',
-        'timezone',
         'duration',
-        'is_online',
         'status_label'
     ]
 
@@ -272,6 +274,8 @@ class DateActivityAdmin(TimeBasedAdmin):
     inlines = (DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
+
+    queryset = DateActivity.objects.prefetch_related('slots', 'updates', 'contributors', 'goals')
 
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter),

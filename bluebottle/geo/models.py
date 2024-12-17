@@ -1,6 +1,7 @@
 from builtins import object
 
 import geocoder
+import requests
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
@@ -281,3 +282,46 @@ class Geolocation(models.Model):
                 lat=self.position.y
             )
         return 'Europe/Amsterdam'
+
+    def reverse_geocode(self):
+        access_token = settings.MAPBOX_API_KEY
+        [lon, lat] = self.position.coords
+        url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{lon},{lat}.json"
+        response = requests.get(url, params={'access_token': access_token})
+
+        if response.status_code == 200:
+            data = response.json()
+            if 'features' in data and len(data['features']) > 0:
+                return data['features'][0]
+            else:
+                return "No results found."
+        else:
+            return f"Error: {response.status_code}, {response.text}"
+
+    def update_location(self):
+        data = self.reverse_geocode()
+        if data:
+            self.mapbox_id = data['id']
+            self.formatted_address = data['place_name']
+            self.country = Country.objects.get(alpha2_code__iexact=data['context'][-1]['short_code'])
+            if data['place_type'][0] == 'address':
+                self.street = data['text']
+                self.street_number = data['address']
+
+            if 'context' in data:
+                for context_item in data['context']:
+                    if 'place' in context_item['id']:
+                        self.locality = context_item['text']
+                    elif 'postcode' in context_item['id']:
+                        self.postal_code = context_item['text']
+                    elif 'region' in context_item['id']:
+                        self.province = context_item['text']
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            old_instance = Geolocation.objects.filter(pk=self.pk).first()
+            if old_instance and old_instance.position != self.position:
+                self.update_location()
+        elif self.position and not self.mapbox_id:
+            self.update_location()
+        return super().save(*args, **kwargs)

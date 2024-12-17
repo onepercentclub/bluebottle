@@ -99,7 +99,7 @@ class BaseContributorInline(TabularInlinePaginated):
     readonly_fields = ['edit', 'created', 'status_label']
     fields = ['edit', 'created', 'user', 'status_label']
     extra = 0
-    per_page = 20
+    per_page = 10
     ordering = ['-created']
 
     template = 'admin/participant_list.html'

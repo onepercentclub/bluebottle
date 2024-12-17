@@ -203,19 +203,6 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["redirects.change_redirect"],
             },
             {
-                "name": "wallposts.wallpost",
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
-                "url": "wallposts.mediawallpost",
-                "label": _("Media wall posts"),
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
-                "name": "wallposts.reaction",
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
                 "name": "updates.update",
                 "permissions": ["updates.change_update"],
             },

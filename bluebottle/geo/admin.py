@@ -161,7 +161,7 @@ class GeolocationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'street', 'locality', 'country')
 
     list_filter = ('country', )
-    search_fields = ('locality', 'street', 'formatted_address')
+    search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
 
     fieldsets = (
         (_('Map'), {'fields': ('position', )}),

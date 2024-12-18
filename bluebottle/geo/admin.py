@@ -4,7 +4,8 @@ from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from mapwidgets import GooglePointFieldWidget
+from mapwidgets.widgets import MapboxPointFieldWidget
+
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
@@ -67,7 +68,7 @@ class LocationMergeForm(forms.Form):
 
 class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": MapboxPointFieldWidget},
     }
 
     def get_queryset(self, request):
@@ -135,7 +136,7 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
 @admin.register(Place)
 class PlaceInline(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": MapboxPointFieldWidget},
     }
     model = Place
     fields = [
@@ -155,19 +156,26 @@ admin.site.register(Location, LocationAdmin)
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": MapboxPointFieldWidget},
     }
     list_display = ('__str__', 'street', 'locality', 'country')
 
     list_filter = ('country', )
-    search_fields = ('locality', 'street', 'formatted_address')
+    search_fields = ('locality', 'street', 'formatted_address', 'mapbox_id')
 
     fieldsets = (
         (_('Map'), {'fields': ('position', )}),
         (_('Info'), {
             'fields': (
                 'locality', 'street', 'street_number', 'postal_code',
-                'province', 'country', 'formatted_address'
+                'province', 'country', 'formatted_address', 'mapbox_id'
             )
         })
     )
+
+    def get_fieldsets(self, request, obj):
+        if obj and obj.position:
+            return self.fieldsets
+        return (
+            (_('Map'), {'fields': ('position', )}),
+        )

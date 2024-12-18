@@ -82,11 +82,18 @@ function hideRecurringField() {
 }
 
 
-window.onload = function() {
+function fixMapboxWidget() {
+  let map = document.querySelector('#position-map-elem');
+  window.dispatchEvent(new Event("resize"));
+}
+
+
+window.onload = function () {
   if (!django.jQuery && jQuery) {
     django.jQuery = jQuery;
   }
   hideRecurringField()
+  fixMapboxWidget()
   replaceInlineActivityAddButton();
   removeRedundantTabs();
   addHashToInlinePaginator();

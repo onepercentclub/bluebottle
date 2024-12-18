@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from future import standard_library
+
 standard_library.install_aliases()
 import json
 import logging
@@ -11,7 +12,6 @@ from celery import shared_task
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.clients.utils import LocalTenant, tenant_url
-from bluebottle.wallposts.models import MediaWallpost
 
 logger = logging.getLogger(__name__)
 
@@ -88,21 +88,11 @@ def _post_to_facebook(instance, tenant=None):
         link = instance.content_object.get_absolute_url()
 
         image = None
-        # This code is executed via Celery, we assume the MediaWallpostPhoto
-        # is saved and available on the instance. If the user uploaded
-        # photos with the MediaWallpost we take the first one and include it
-        # in the Facebook post. Otherwise we fallback to the project image.
-        if isinstance(instance, MediaWallpost) and instance.photos.count() > 0:
-            image = urljoin(base_url,
-                            get_thumbnail(instance.photos.all()[0].photo,
-                                          "600x400").url
-                            )
-        else:
-            if hasattr(instance.content_object, 'image') and instance.content_object.image:
-                image = urljoin(
-                    base_url,
-                    get_thumbnail(instance.content_object.image, "600x400").url
-                )
+        if hasattr(instance.content_object, 'image') and instance.content_object.image:
+            image = urljoin(
+                base_url,
+                get_thumbnail(instance.content_object.image, "600x400").url
+            )
 
         description = getattr(
             instance.content_object, 'pitch', instance.content_object.description

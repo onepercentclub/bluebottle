@@ -25,8 +25,6 @@ urlpatterns = [
         include('bluebottle.news.urls.api')),
     url(r'^api/utils/',
         include('bluebottle.utils.urls.api')),
-    url(r'^api/wallposts/',
-        include('bluebottle.wallposts.urls.api')),
     url(r'^api/terms/',
         include('bluebottle.terms.urls.api')),
     url(r'^api/metadata/',

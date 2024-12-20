@@ -226,10 +226,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
     per_page = 10
     can_delete = True
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.select_related('activity')
-
     formfield_overrides = {
         models.DurationField: {
             'widget': TimeDurationWidget(

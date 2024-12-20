@@ -223,7 +223,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
 
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-    per_page = 20
+    per_page = 10
     can_delete = True
 
     formfield_overrides = {

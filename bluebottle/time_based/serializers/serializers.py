@@ -756,6 +756,7 @@ class SlotParticipantSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     permissions = ResourcePermissionField('slot-participant-detail', view_args=('pk',))
+    email = serializers.EmailField(write_only=True)
     user = AnonymizedResourceRelatedField(
         read_only=True,
         model=BlueBottleBaseUser,
@@ -770,7 +771,7 @@ class SlotParticipantSerializer(ModelSerializer):
 
     class Meta:
         model = SlotParticipant
-        fields = ['id', 'participant', 'current_status', 'user', 'slot']
+        fields = ['id', 'participant', 'current_status', 'user', 'slot', 'email']
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
         validators = []

@@ -16,7 +16,7 @@ from bluebottle.activities.permissions import (
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
 )
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -348,6 +348,14 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         slot = serializer.validated_data['slot']
+        email = serializer.validated_data.pop('email', None)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                raise ValidationError(_('User with email address not found'))
+        else:
+            user = self.request.user
+
         self.check_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -360,9 +368,9 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         else:
             participant, _created = DateParticipant.objects.get_or_create(
                 activity=slot.activity,
-                user=self.request.user,
+                user=user,
             )
-        if slot.slot_participants.filter(participant__user=self.request.user).exists():
+        if slot.slot_participants.filter(participant__user=user).exists():
             raise ValidationError(_('Participant already registered for this slot'))
         serializer.save(participant=participant)
 

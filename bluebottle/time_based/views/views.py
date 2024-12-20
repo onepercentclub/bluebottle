@@ -25,7 +25,7 @@ from bluebottle.time_based.models import (
     DateActivitySlot, SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import (
-    SlotParticipantPermission, DateSlotActivityStatusPermission
+    SlotParticipantPermission, DateSlotActivityStatusPermission, CreateByEmailPermission
 )
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
@@ -337,7 +337,10 @@ class DateParticipantTransitionList(ParticipantTransitionList):
 
 
 class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
-    permission_classes = [SlotParticipantPermission]
+    permission_classes = [
+        SlotParticipantPermission,
+        CreateByEmailPermission
+    ]
     queryset = SlotParticipant.objects.all()
     serializer_class = SlotParticipantSerializer
 

@@ -2099,6 +2099,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
+                'attributes': {},
                 'type': 'contributors/time-based/slot-participants',
                 'relationships': {
                     'slot': {
@@ -2180,6 +2181,23 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         del self.data['data']['relationships']['participant']
         response = self.client.post(self.url, json.dumps(self.data), user=user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_with_email_by_staff(self):
+        # For bulk add flow
+        BlueBottleUserFactory.create(email='rene@froger.nl')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        del self.data['data']['relationships']['participant']
+        self.data['data']['attributes']['email'] = 'rene@froger.nl'
+        response = self.client.post(self.url, json.dumps(self.data), user=staff)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_with_email_by_user(self):
+        BlueBottleUserFactory.create(email='rene@froger.nl')
+        user = BlueBottleUserFactory.create()
+        del self.data['data']['relationships']['participant']
+        self.data['data']['attributes']['email'] = 'rene@froger.nl'
+        response = self.client.post(self.url, json.dumps(self.data), user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):

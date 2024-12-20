@@ -47,7 +47,7 @@ class ParticipantSerializer(BaseContributorSerializer):
 
 class DeadlineParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('deadline-participant-detail', view_args=('pk',))
-    registration = ResourceRelatedField(queryset=DeadlineRegistration.objects.all())
+    registration = ResourceRelatedField(queryset=DeadlineRegistration.objects.all(), required=False)
 
     class Meta(ParticipantSerializer.Meta):
         model = DeadlineParticipant

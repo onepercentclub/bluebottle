@@ -468,6 +468,7 @@ class BaseContributorSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     start = serializers.SerializerMethodField()
+    email = serializers.CharField(write_only=True, required=False)
 
     def get_start(self, obj):
         if obj.contributions.exists():
@@ -487,7 +488,8 @@ class BaseContributorSerializer(ModelSerializer):
             'activity',
             'status',
             'current_status',
-            'start'
+            'start',
+            'email'
         )
         meta_fields = (
             'transitions',

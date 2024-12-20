@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
@@ -10,7 +11,9 @@ from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
+from bluebottle.members.models import Member
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
+from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -72,11 +75,20 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
 class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
+        CreateByEmailPermission
     )
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
 
     def perform_create(self, serializer):
+        email = serializer.validated_data.pop('email', None)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                raise ValidationError(_('User with email address not found'))
+        else:
+            user = self.request.user
+
         self.check_related_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -85,7 +97,10 @@ class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-        serializer.save(user=self.request.user)
+        if CollectContributor.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
+            raise ValidationError(_('User already joined'), code="exists")
+
+        serializer.save(user=user)
 
 
 class CollectContributorDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

@@ -1,5 +1,5 @@
-from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -100,7 +100,8 @@ class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
         if CollectContributor.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
             raise ValidationError(_('User already joined'), code="exists")
 
-        serializer.save(user=user)
+        send_mail = not email
+        serializer.save(user=user, send_mail=send_mail)
 
 
 class CollectContributorDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

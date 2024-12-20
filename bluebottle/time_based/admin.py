@@ -67,7 +67,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = (UpdateInline,)
+    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -223,7 +223,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
 
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-    per_page = 20
+    per_page = 10
     can_delete = True
 
     formfield_overrides = {
@@ -242,7 +242,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'start',
         'timezone',
         'duration',
-        'is_online',
         'status_label'
     ]
 

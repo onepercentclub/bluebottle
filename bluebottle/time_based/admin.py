@@ -240,10 +240,11 @@ class DateActivitySlotInline(TabularInlinePaginated):
         },
     }
     ordering = ['-start']
-    readonly_fields = ['link', 'status_label']
+    readonly_fields = ['link', 'timezone', 'status_label']
     fields = [
         'link',
         'start',
+        'timezone',
         'duration',
         'status_label'
     ]

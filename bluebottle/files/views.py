@@ -24,7 +24,12 @@ from bluebottle.files.serializers import (
     ImageSerializer
 )
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    CreateAPIView,
+    RetrieveAPIView,
+    JsonApiViewMixin,
+    RetrieveUpdateDestroyAPIView
+)
 
 mime = magic.Magic(mime=True)
 
@@ -168,7 +173,7 @@ class ImageList(FileList):
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
 
-class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+class ImageDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()
     serializer_class = UploadImageSerializer

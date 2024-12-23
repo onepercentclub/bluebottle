@@ -4,6 +4,7 @@ from builtins import object
 
 from django.db.models import QuerySet
 from django.urls import reverse
+from django.core.files.images import ImageFile
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
@@ -174,8 +175,16 @@ class ImageSerializer(DocumentSerializer):
 class UploadImageSerializer(serializers.ModelSerializer):
     links = serializers.SerializerMethodField()
     file = serializers.FileField(write_only=True)
+    size = serializers.SerializerMethodField()
 
     sizes = IMAGE_SIZES
+
+    def get_size(self, obj):
+        if obj.file:
+            obj.file.seek(0)
+            image_file = ImageFile(obj.file)
+
+            return {'width': image_file.width, 'height': image_file.height}
 
     def get_links(self, obj):
         hash = hashlib.md5(obj.file.name.encode('utf-8')).hexdigest()
@@ -191,4 +200,5 @@ class UploadImageSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Image
-        fields = ('id', 'file', 'owner', 'links', 'owner')
+        fields = ('id', 'file', 'owner', 'links', 'owner', 'cropbox')
+        meta_fields = ('size',)

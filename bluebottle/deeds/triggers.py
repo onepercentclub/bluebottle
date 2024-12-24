@@ -11,7 +11,8 @@ from bluebottle.activities.states import (
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
 )
-from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect
+from bluebottle.deeds.effects import CreateEffortContribution, RescheduleEffortsEffect, SetEndDateEffect, \
+    PublishActivityEffect, PublishParticipantJoinedEffect
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification,
     ParticipantJoinedNotification
@@ -147,6 +148,7 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             DeedStateMachine.auto_approve,
             effects=[
+                PublishActivityEffect,
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
@@ -155,6 +157,7 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             DeedStateMachine.publish,
             effects=[
+                PublishActivityEffect,
                 TransitionEffect(DeedStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(DeedStateMachine.succeed, conditions=[is_finished, has_participants]),
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
@@ -169,6 +172,7 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             DeedStateMachine.reopen,
             effects=[
+                PublishActivityEffect,
                 RelatedTransitionEffect(
                     'participants',
                     DeedParticipantStateMachine.re_accept,
@@ -323,6 +327,7 @@ class DeedParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DeedParticipantStateMachine.succeed,
             effects=[
+                PublishParticipantJoinedEffect,
                 RelatedTransitionEffect(
                     'activity',
                     DeedStateMachine.succeed,

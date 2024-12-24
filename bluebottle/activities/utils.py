@@ -2,6 +2,7 @@ from builtins import object
 from itertools import groupby
 
 from django.conf import settings
+from django.db import connection
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -506,6 +507,25 @@ class BaseContributorSerializer(ModelSerializer):
         resource_name = 'contributors'
 
 
+class BaseContributorPubSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='user.full_name', read_only=True)
+    activity_id = serializers.CharField(source='activity.remote_id', read_only=True)
+    remote_id = serializers.CharField(source='id', read_only=True)
+    platform = serializers.SerializerMethodField()
+
+    def get_platform(self, obj):
+        return connection.tenant.schema_name
+
+    class Meta(object):
+        model = Contributor
+        fields = (
+            'name',
+            'activity_id',
+            'remote_id',
+            'platform',
+        )
+
+
 # This can't be in serializers because of circular imports
 class BaseContributionSerializer(ModelSerializer):
     status = FSMField(read_only=True)
@@ -567,8 +587,9 @@ def get_stats_for_activities(activities):
 
     contributor_count += anonymous_donations
 
-    contributor_count += Activity.objects.filter(id__in=ids).\
-        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    contributor_count += Activity.objects.filter(id__in=ids).aggregate(
+        total=Sum('deleted_successful_contributors')
+    )['total'] or 0
 
     types = CollectType.objects.all()
     collect = (
@@ -604,8 +625,8 @@ def get_stats_for_activities(activities):
 
     impact = []
     for type, goals in groupby(
-        ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
-        lambda goal: goal.type
+            ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
+            lambda goal: goal.type
     ):
         value = sum(goal.realized or goal.realized_from_contributions or 0 for goal in goals)
 

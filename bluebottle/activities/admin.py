@@ -361,6 +361,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
 
     skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
 
+    # def has_change_permission(self, request, obj = ...):
+    #     if obj and obj.source_platform:
+    #         return False
+    #     return super().has_change_permission(request, obj)
+
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
 

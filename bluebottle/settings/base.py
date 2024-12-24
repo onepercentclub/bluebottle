@@ -375,6 +375,7 @@ TENANT_APPS = (
     'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
+    'bluebottle.sharing',
     'bluebottle.geo',
     'bluebottle.offices',
     'bluebottle.pages',

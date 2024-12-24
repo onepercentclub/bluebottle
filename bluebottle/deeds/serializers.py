@@ -8,10 +8,11 @@ from rest_framework_json_api.relations import (
 )
 
 from bluebottle.activities.utils import (
-    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer
+    BaseActivitySerializer, BaseActivityListSerializer, BaseContributorSerializer, BaseContributorPubSerializer
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.files.serializers import ImageSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
@@ -74,7 +75,7 @@ class DeedSerializer(BaseActivitySerializer):
 
     participants_export_url = PrivateFileSerializer(
         'deed-participant-export',
-        url_args=('pk', ),
+        url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,
         read_only=True
@@ -88,7 +89,7 @@ class DeedSerializer(BaseActivitySerializer):
     def get_links(self, instance):
         if instance.start and instance.end:
             return {
-                'ical': reverse_signed('deed-ical', args=(instance.pk, )),
+                'ical': reverse_signed('deed-ical', args=(instance.pk,)),
                 'google': instance.google_calendar_link,
             }
         else:
@@ -121,6 +122,36 @@ class DeedSerializer(BaseActivitySerializer):
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
         }
     )
+
+
+class PubImageSerializer(ImageSerializer):
+    sizes = {
+        "preview": "292x164",
+        "full": "600x337",
+    }
+
+    class Meta(ImageSerializer.Meta):
+        fields = ('id', 'links')
+
+
+class DeedPubSerializer(serializers.ModelSerializer):
+    image = PubImageSerializer()
+
+    class Meta:
+        model = Deed
+        fields = (
+            'slug',
+            'id',
+            'start',
+            'end',
+            'target',
+            'image',
+            'video_url',
+            'owner',
+            'title',
+            'description',
+            'status',
+        )
 
 
 class DeedListSerializer(BaseActivityListSerializer):
@@ -156,7 +187,7 @@ class DeedParticipantSerializer(BaseContributorSerializer):
 
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions',)
 
         validators = [
             UniqueTogetherValidator(
@@ -183,6 +214,10 @@ class DeedParticipantSerializer(BaseContributorSerializer):
 
 
 class DeedParticipantListSerializer(DeedParticipantSerializer):
+    pass
+
+
+class DeedParticipantPubSerializer(BaseContributorPubSerializer):
     pass
 
 

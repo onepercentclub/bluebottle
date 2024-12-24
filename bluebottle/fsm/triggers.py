@@ -219,6 +219,10 @@ class TriggerMixin(object):
         return effects
 
     def save(self, run_triggers=True, *args, **kwargs):
+        # if self.source_platform:
+        #     # Don't run triggers on activities from other platforms
+        #     run_triggers = False
+
         if run_triggers:
             self.execute_triggers()
 

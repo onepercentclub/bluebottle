@@ -27,6 +27,21 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
 
+    source_platform = models.CharField(
+        _('Source platform'),
+        help_text=_(
+            'If this activity was created on another platform, this field wil be set. '
+            'This platform is managed by that platform and editing here is limited.'
+        ),
+        blank=True, null=True, max_length=100
+    )
+
+    remote_id = models.CharField(
+        _('Remote ID'),
+        help_text=_('The ID of the activity on the source platform.'),
+        blank=True, null=True, max_length=100
+    )
+
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('activity manager'),
@@ -232,6 +247,10 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 @python_2_unicode_compatible
 class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
+
+    source_platform = models.CharField(max_length=100, blank=True, null=True)
+    remote_id = models.CharField(max_length=100, blank=True, null=True)
+    remote_name = models.CharField(max_length=100, blank=True, null=True)
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)

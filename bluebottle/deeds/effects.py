@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import EffortContribution
 from bluebottle.fsm.effects import Effect
+from bluebottle.sharing.publishers import publish_participant, publish_activity
 
 
 class CreateEffortContribution(Effect):
@@ -68,3 +69,29 @@ class SetEndDateEffect(Effect):
 
     def post_save(self, **kwargs):
         self.instance.end = date.today() - timedelta(days=1)
+
+
+class PublishParticipantJoinedEffect(Effect):
+    "Publish the contributor joined activity event"
+
+    display = True
+    template = 'admin/sharing/publish_participant.html'
+
+    def post_save(self, **kwargs):
+        publish_participant(self.instance)
+
+    def __str__(self):
+        return str(_('Publish contributor joined event to pubsub'))
+
+
+class PublishActivityEffect(Effect):
+    "Publish the activity event"
+
+    display = True
+    template = 'admin/sharing/publish_activity.html'
+
+    def post_save(self, **kwargs):
+        publish_activity(self.instance)
+
+    def __str__(self):
+        return str(_('Publish activity event to pubsub'))

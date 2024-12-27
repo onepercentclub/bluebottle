@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-10-04 11:45+0200\n"
-"PO-Revision-Date: 2024-10-04 14:09\n"
+"PO-Revision-Date: 2024-12-27 09:25\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -2745,7 +2745,7 @@ msgstr "¡Su actividad \"{title}\" comenzará mañana!"
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
-msgstr "Has retirado de la actividad \"{title}\""
+msgstr "Te has registrado para la actividad \"{title}\""
 
 #: bluebottle/collect/models.py:18 bluebottle/funding_stripe/states.py:88
 #: bluebottle/initiatives/models.py:426 bluebottle/time_based/models.py:1185
@@ -7695,7 +7695,7 @@ msgstr "Ha cambiado su solicitud en la actividad \"{title}\""
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
-msgstr "Has retirado de la actividad \"{title}\""
+msgstr "Te has registrado para la actividad \"{title}\""
 
 #: bluebottle/time_based/messages.py:623
 #, python-brace-format

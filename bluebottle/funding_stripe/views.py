@@ -125,46 +125,25 @@ class StripeBankTransferList(PaymentList):
         # Prepare Stripe and other necessary objects
         stripe = get_stripe()
         connect_account = donation.activity.bank_account.connect_account
-        payment_method_options = {}
 
-        # Set up payment method options based on currency
-        if currency == 'EUR':
-            payment_method_options = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": "eu_bank_transfer",
-                        "eu_bank_transfer": {"country": "NL"},
-                    },
-                },
-            }
-        elif currency == 'USD':
-            payment_method_options = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": "us_bank_transfer",
-                    },
-                },
-            }
+        bank_transfer_type = 'eu_bank_transfer'
+        if currency == 'USD':
+            bank_transfer_type = "us_bank_transfer"
         elif currency == 'GBP':
-            payment_method_options = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": "gb_bank_transfer",
-                    },
-                },
-            }
+            bank_transfer_type = "gb_bank_transfer"
         elif currency == 'MXN':
-            payment_method_options = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": "mx_bank_transfer",
-                    },
+            bank_transfer_type = "mx_bank_transfer"
+
+        payment_method_options = {
+            "customer_balance": {
+                "funding_type": "bank_transfer",
+                "bank_transfer": {
+                    "type": bank_transfer_type,
                 },
-            }
+            },
+        }
+        if currency == 'EUR':
+            payment_method_options['customer_balance']['bank_transfer']['eu_bank_transfer'] = {"country": "NL"},
 
         # Create the customer in Stripe
         user = get_current_user()

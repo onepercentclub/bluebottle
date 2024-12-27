@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
 
@@ -40,6 +40,7 @@ class SharedActivityAdmin(admin.ModelAdmin):
             self.message_user(request, f"Accepted activity: {activity.title}", messages.SUCCESS)
         except Exception as e:
             self.message_user(request, f"Error accepting activity: {str(e)}", messages.ERROR)
+        return redirect('..')
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         extra_context = extra_context or {}

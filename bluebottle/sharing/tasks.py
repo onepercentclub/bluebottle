@@ -1,18 +1,14 @@
-from subprocess import run
-
 from celery import shared_task
 
+from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.sharing.consumers import consume_activities
 
-@shared_task
-def start_consumer(schema_name):
-    """
-    Start consumers for a specific tenant schema.
-    """
-    result = run(
-        ['./manage.py', 'start_consumers', '-s', schema_name],
-        capture_output=True,
-        text=True
-    )
-    if result.returncode != 0:
-        raise Exception(f"Failed to start consumers for {schema_name}: {result.stderr}")
-    return f"Successfully started consumers for {schema_name}"
+
+@shared_task(bind=True)
+def tenant_start_consumers(self, schema_name):
+    tenant = Client.objects.get(schema_name=schema_name)
+    print(f"Starting consumers for tenant {schema_name}")
+    with LocalTenant(tenant):
+        consume_activities(),
+    print(f"Completed consumers for tenant {schema_name}")

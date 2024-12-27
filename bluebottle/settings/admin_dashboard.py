@@ -125,6 +125,15 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
+        "label": _("Sharing"),
+        "app_label": "sharing",
+        "permissions": ["sharing.change_sharedactivity"],
+        "items": [
+            {"name": "sharing.sharedactivity", "permissions": ["sharing.change_sharedactivity"]},
+            {"name": "sharing.platformconnection", "permissions": ["sharing.change_platformconnection"]},
+        ],
+    },
+    {
         "label": _("Users"),
         "app_label": "members",
         "permissions": ["members.change_member"],

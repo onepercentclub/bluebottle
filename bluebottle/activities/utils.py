@@ -488,7 +488,9 @@ class BaseContributorSerializer(ModelSerializer):
             'activity',
             'status',
             'current_status',
-            'start'
+            'start',
+            'remote_name',
+            'source_platform'
         )
         meta_fields = (
             'transitions',

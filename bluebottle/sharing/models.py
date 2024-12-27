@@ -59,3 +59,7 @@ class SharedActivity(models.Model):
         )
         self.activity = deed
         self.save()
+
+    class Meta:
+        verbose_name = _('Shared activity')
+        verbose_name_plural = _('Shared activities')

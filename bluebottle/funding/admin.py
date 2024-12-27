@@ -44,11 +44,11 @@ from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPay
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.segments.models import SegmentType
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.segments.models import SegmentType
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.utils import reverse_signed
-from bluebottle.wallposts.admin import DonorWallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ class FundingAdminForm(ActivityForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, UpdateInline, MessageAdminInline)
 
     base_model = Funding
     form = FundingAdminForm
@@ -322,7 +322,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'created'
 
     inlines = [
-        DonorWallpostInline
+        UpdateInline
     ]
 
     superadmin_fields = [

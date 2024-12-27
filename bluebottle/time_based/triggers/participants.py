@@ -163,7 +163,6 @@ class RegistrationParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             RegistrationParticipantStateMachine.auto_remove,
             effects=[
-                UnFollowActivityEffect,
                 RelatedTransitionEffect(
                     "contributions",
                     ContributionStateMachine.fail,

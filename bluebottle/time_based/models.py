@@ -98,7 +98,7 @@ class TimeBasedActivity(Activity):
     review_link = models.URLField(
         _('External website link'),
         help_text=_('Direct participants to a questionnaire created from an external website like Microsoft forms.'),
-        max_length=255,
+        max_length=2048,
         null=True, blank=True
     )
 
@@ -1810,6 +1810,20 @@ class PeriodicSlot(TriggerMixin, Slot):
     end = models.DateTimeField(_('end date and time'), null=True, blank=True)
 
     @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
+    def initiative(self):
+        return self.activity.initiative
+
+    is_online = False
+    location = None
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/periodic-slots"
+
+    @property
     def accepted_participants(self):
         return self.participants.filter(
             status__in=["accepted", "participating", "succeeded", "new"],
@@ -1841,6 +1855,10 @@ class BaseScheduleSlot(TriggerMixin, Slot):
     location_hint = models.TextField(_("location hint"), null=True, blank=True)
 
     @property
+    def owner(self):
+        return self.activity.owner
+
+    @property
     def end(self):
         if self.duration and self.start:
             return self.start + self.duration
@@ -1863,6 +1881,9 @@ class ScheduleSlot(BaseScheduleSlot):
         return self.participants.filter(
             status__in=["accepted", "participating", "succeeded", "new"],
         )
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/schedule-slots"
 
 
 class TeamScheduleSlot(BaseScheduleSlot):

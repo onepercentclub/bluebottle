@@ -19,7 +19,6 @@ from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
-from bluebottle.wallposts.admin import WallpostInline
 
 
 class InitiativeAdminForm(StateMachineModelForm):
@@ -132,8 +131,10 @@ class InitiativeAdmin(
         InitiativeCountryFilter
     ]
 
-    search_fields = ['title', 'pitch', 'story',
-                     'owner__first_name', 'owner__last_name', 'owner__email']
+    search_fields = [
+        'title', 'pitch', 'story',
+        'owner__first_name', 'owner__last_name', 'owner__email'
+    ]
 
     readonly_fields = ['link', 'created', 'updated', 'has_deleted_data', 'valid']
 
@@ -200,7 +201,6 @@ class InitiativeAdmin(
     inlines = [
         ActivityAdminInline,
         MessageAdminInline,
-        WallpostInline
     ]
 
     def link(self, obj):

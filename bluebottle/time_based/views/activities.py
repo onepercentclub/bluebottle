@@ -13,6 +13,7 @@ from bluebottle.time_based.serializers import (
 )
 from bluebottle.time_based.views.mixins import CreatePermissionMixin
 from bluebottle.transitions.views import TransitionList
+from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission
 )
@@ -24,7 +25,7 @@ from bluebottle.utils.views import (
 class TimeBasedActivityListView(JsonApiViewMixin, ListCreateAPIView, CreatePermissionMixin):
     permission_classes = (
         ActivityTypePermission,
-        OneOf(ResourcePermission, ActivityOwnerPermission),
+        OneOf(ResourcePermission, ActivityOwnerPermission, IsStaffMember),
     )
 
     def perform_create(self, serializer):

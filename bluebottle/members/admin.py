@@ -162,8 +162,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Privacy'),
             {
                 'fields': (
-                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
-                    'display_member_names'
+                    'session_only',
+                    'consent_link',
+                    'disable_cookie_consent',
+                    'anonymization_age',
+                    'display_member_names',
+                    'gtm_code',
                 )
             }
         ),
@@ -415,7 +419,7 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location')
+    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
@@ -484,7 +488,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                     {
                         'fields':
                             [
-                                'picture',
+                                'avatar',
                                 'about_me',
                                 'campaign_notifications',
                             ]

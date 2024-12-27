@@ -17,7 +17,7 @@ from bluebottle.funding.authentication import (
     DonorAuthentication,
     ClientSecretAuthentication,
 )
-from bluebottle.funding.models import Donor
+from bluebottle.funding.models import Donor, FundingPlatformSettings
 from bluebottle.funding.permissions import PaymentPermission
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding.views import PaymentList
@@ -32,6 +32,7 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
+    ExternalAccountSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
@@ -104,9 +105,7 @@ class ConnectAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView)
         return self.queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(
-            owner=self.request.user,
-        )
+        serializer.save(owner=self.request.user)
 
 
 class ConnectAccountDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
@@ -172,7 +171,7 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     permission_classes = [IsAuthenticated]
 
     queryset = ExternalAccount.objects.all()
-    serializer_class = BankAccountSerializer
+    serializer_class = ExternalAccountSerializer
 
     prefetch_for_includes = {
         'connect_account': ['connect_account'],
@@ -181,9 +180,16 @@ class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView
     related_permission_classes = {"connect_account": [IsOwner]}
 
     def get_queryset(self):
-        return self.queryset.order_by("-created").filter(
-            connect_account__owner=self.request.user
-        )
+        settings = FundingPlatformSettings.objects.get()
+        if settings.public_accounts:
+            return self.queryset.order_by("-created").filter(
+                connect_account__public=True,
+                connect_account__status='verified'
+            )
+        else:
+            return self.queryset.order_by("-created").filter(
+                connect_account__owner=self.request.user
+            )
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, "model"):
@@ -271,10 +277,10 @@ class IntentWebHookView(View):
                 return HttpResponse('Updated payment to pending')
 
             elif event.type == 'charge.refunded':
-                if not event.data.payment_intent:
+                if not event.data.object.payment_intent:
                     return HttpResponse('Not an intent payment')
 
-                payment = self.get_payment(event.data.payment_intent)
+                payment = self.get_payment(event.data.object.payment_intent)
                 payment.states.refund(save=True)
 
                 return HttpResponse('Updated payment to refunded')
@@ -408,13 +414,31 @@ class ConnectWebHookView(View):
         try:
             if event.type == "account.updated":
                 account = self.get_account(event.data.object.id)
+
+                external_account_ids = [
+                    external_account.id for external_account
+                    in event.data.object.external_accounts.data
+                ]
+                for bank_account in account.external_accounts.all():
+                    if bank_account.account_id not in external_account_ids:
+                        bank_account.delete()
+
+                for external_account in event.data.object.external_accounts.data:
+                    ExternalAccount.objects.get_or_create(
+                        connect_account=account,
+                        account_id=external_account.id,
+                        defaults={'status': "new"}
+                    )
+
                 account.update(event.data.object)
+                account.save()
 
                 return HttpResponse("Updated connect account")
             else:
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
+            __import__('ipdb').set_trace()
             error = "Payout not found"
             logger.error(error)
             return HttpResponse(error, status=400)
@@ -430,7 +454,10 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
-        serializer = self.get_serializer(specs.data, many=True)
+        specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
+        data = specs.data
+        data.extend(specs2.data)
+        serializer = self.get_serializer(data, many=True)
 
         for spec in specs.data:
             spec.pk = spec.id

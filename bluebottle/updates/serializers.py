@@ -55,7 +55,7 @@ class UpdateSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         anonymous = FundingPlatformSettings.load().anonymous_donations
         current_user = get_current_user()
-        if anonymous and data['author'] != current_user:
+        if instance.contribution and anonymous and data['author'] != current_user:
             data['author'] = None
         if instance.fake_name:
             data['author'] = None
@@ -100,10 +100,17 @@ class UpdateSerializer(serializers.ModelSerializer):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image', 'replies', 'images', 'contribution', 'activity'
+            'author',
+            'author.avatar',
+            'image',
+            'replies',
+            'images',
+            'contribution',
+            'activity'
         ]
 
     included_serializers = {
+        'author.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',

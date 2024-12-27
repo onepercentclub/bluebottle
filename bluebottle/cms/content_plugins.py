@@ -16,7 +16,7 @@ from bluebottle.cms.models import (
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
 )
 
 
@@ -60,6 +60,12 @@ class StatsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class HomepageStatisticsBlockPlugin(CMSContentPlugin):
     model = HomepageStatisticsContent
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class DonateButtonBlockPlugin(CMSContentPlugin):
+    model = DonateButtonContent
     category = _('Homepage')
 
 

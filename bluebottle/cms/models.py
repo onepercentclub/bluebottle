@@ -71,7 +71,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
-        'QuotesBlockPlugin'
+        'QuotesBlockPlugin',
+        'DonateButtonBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -318,6 +319,28 @@ class ActivitiesContent(TitledContent):
 
     def __str__(self):
         return str(self.title)
+
+
+@python_2_unicode_compatible
+class DonateButtonContent(TitledContent):
+    type = 'donate'
+
+    funding = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_('Campaign'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
+    button_text = models.CharField(max_length=80, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Donate button')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    def __str__(self):
+        return str(self.funding.title)
 
 
 @python_2_unicode_compatible
@@ -614,7 +637,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the action colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -635,7 +657,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the description colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -649,7 +670,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     footer_text_color = ColorField(
         _('Footer text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the footer colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -730,7 +750,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             blank=True,
             help_text=_('Slug of the start initiative page')
         ),
-
     )
 
     class Meta:

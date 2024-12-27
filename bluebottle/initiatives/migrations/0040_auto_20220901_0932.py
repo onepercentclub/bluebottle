@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            remove_location_widgets,
+            migrations.RunPython.noop,
             migrations.RunPython.noop
         )
     ]

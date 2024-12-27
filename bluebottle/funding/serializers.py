@@ -1,9 +1,10 @@
 from builtins import object
 from datetime import datetime
 
-import pytz
 from dateutil.parser import parse
+from django.db import connection
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import get_current_timezone
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -107,7 +108,9 @@ class BudgetLineSerializer(ModelSerializer):
     activity = ResourceRelatedField(queryset=Funding.objects.all())
     amount = MoneySerializer()
 
-    validators = [FundingCurrencyValidator()]
+    validators = [
+        FundingCurrencyValidator(),
+    ]
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
@@ -164,6 +167,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+
         ]
         resource_name = 'payout-accounts/external-accounts'
 
@@ -174,9 +178,16 @@ class DeadlineField(serializers.DateTimeField):
             return None
         try:
             parsed_date = parse(value).date()
-            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
-            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
-            return aware_datetime
+            return get_current_timezone().localize(
+                datetime(
+                    parsed_date.year,
+                    parsed_date.month,
+                    parsed_date.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            )
         except (ValueError, TypeError):
             self.fail('invalid', format='date')
 
@@ -449,14 +460,13 @@ class DonorListSerializer(BaseContributorListSerializer):
     )
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.TinyFundingSerializer',
+        'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
     class Meta(BaseContributorListSerializer.Meta):
         model = Donor
         fields = BaseContributorListSerializer.Meta.fields + ('amount', 'payout_amount', 'name', 'reward', 'anonymous',)
-        meta_fields = ('created', 'updated', )
 
     class JSONAPIMeta(BaseContributorListSerializer.JSONAPIMeta):
         resource_name = 'contributors/donations'
@@ -723,11 +733,18 @@ class PayoutSerializer(serializers.ModelSerializer):
 
 
 class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
+    matching_name = serializers.SerializerMethodField()
+
+    def get_matching_name(self, obj):
+        return obj.matching_name or connection.tenant.name
+
     class Meta(object):
         model = FundingPlatformSettings
 
         fields = (
             'allow_anonymous_rewards',
             'anonymous_donations',
-            'stripe_publishable_key'
+            'stripe_publishable_key',
+            'public_accounts',
+            'matching_name'
         )

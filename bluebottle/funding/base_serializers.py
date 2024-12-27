@@ -39,7 +39,7 @@ class BaseBankAccountSerializer(ModelSerializer):
         fields = (
             'id',
             'connect_account',
-            'status'
+            'status',
         )
 
     included_serializers = {

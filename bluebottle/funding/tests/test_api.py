@@ -1739,6 +1739,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
         funding_settings.allow_anonymous_rewards = True
+        funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
         self.assertEqual(response.status_code, 200)
@@ -1749,6 +1750,8 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
             {
                 "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
+                "matching_name": "Dagobert Duck",
+                'public_accounts': False,
                 "stripe_publishable_key": "test-pub-key",
             },
         )

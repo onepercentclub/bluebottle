@@ -125,8 +125,8 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
         donation = Donor.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, 'succeeded')
         self.assertEqual(payment.status, 'pending')
+        self.assertEqual(donation.status, 'succeeded')
         self.donation.refresh_from_db()
         self.assertEqual(self.donation.status, 'succeeded')
 
@@ -831,14 +831,15 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         )
 
         external_account = ExternalAccountFactory.create(
-            connect_account=self.payout_account
+            connect_account=self.payout_account,
+            account_id='some-bank-token'
         )
         self.funding = FundingFactory.create(bank_account=external_account)
         self.funding.initiative.states.submit(save=True)
         BudgetLineFactory.create(activity=self.funding)
         self.webhook = reverse("stripe-connect-webhook")
 
-        external_account = stripe.BankAccount('some-bank-token')
+        external_account = stripe.BankAccount(external_account.account_id)
         external_account.update(munch.munchify({
             'object': 'bank_account',
             'account_holder_name': 'Jane Austen',
@@ -869,7 +870,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                     "country": "NL",
                     "charges_enabled": True,
                     "payouts_enabled": True,
-                    "bussiness_type": "individual",
+                    "business_type": "individual",
                     "requirements": {
                         "disabled": False,
                         "eventually_due": [],

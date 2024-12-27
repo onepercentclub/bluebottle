@@ -30,7 +30,6 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -68,7 +67,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = (FollowAdminInline, UpdateInline, MessageAdminInline,)
+    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -224,7 +223,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
 
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-    per_page = 20
+    per_page = 10
     can_delete = True
 
     formfield_overrides = {
@@ -243,7 +242,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'start',
         'timezone',
         'duration',
-        'is_online',
         'status_label'
     ]
 
@@ -840,6 +838,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Slots")
     readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
     fields = readonly_fields
+    ordering = ["-start"]
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1191,6 +1190,7 @@ class SlotBulkAddForm(forms.Form):
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
+    save_as = True
 
     date_hierarchy = 'start'
     list_display = [

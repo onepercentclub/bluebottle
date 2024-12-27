@@ -18,20 +18,16 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 class ParticipantSerializer(BaseContributorSerializer):
     total_duration = serializers.DurationField(read_only=True)
-    start = serializers.DateTimeField(read_only=True)
     contributions = ResourceRelatedField(many=True, read_only=True)
-    status = serializers.SerializerMethodField()
-
-    def get_status(self, obj):
-        return obj.status
 
     class Meta(BaseContributorSerializer.Meta):
         fields = BaseContributorSerializer.Meta.fields + (
-            "start",
             "total_duration",
             "registration",
         )
-        meta_fields = BaseContributorSerializer.Meta.meta_fields + ("permissions",)
+        meta_fields = BaseContributorSerializer.Meta.meta_fields + (
+            "permissions",
+        )
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         included_resources = [
@@ -72,14 +68,6 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
 class ScheduleParticipantSerializer(ParticipantSerializer):
     permissions = ResourcePermissionField('schedule-participant-detail', view_args=('pk',))
     registration = ResourceRelatedField(queryset=ScheduleRegistration.objects.all())
-
-    def get_status(self, obj):
-        if obj.registration:
-            if obj.registration.status == 'new':
-                return 'pending'
-            elif obj.registration.status != 'approved':
-                return obj.registration.status
-        return obj.status
 
     class Meta(ParticipantSerializer.Meta):
         fields = ParticipantSerializer.Meta.fields + ("slot",)

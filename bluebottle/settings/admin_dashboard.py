@@ -203,19 +203,6 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["redirects.change_redirect"],
             },
             {
-                "name": "wallposts.wallpost",
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
-                "url": "wallposts.mediawallpost",
-                "label": _("Media wall posts"),
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
-                "name": "wallposts.reaction",
-                "permissions": ["wallposts.change_wallpost"],
-            },
-            {
                 "name": "updates.update",
                 "permissions": ["updates.change_update"],
             },
@@ -233,6 +220,22 @@ JET_SIDE_MENU_ITEMS = [
         "items": [
             {"name": "terms.terms", "permissions": ["terms.change_terms"]},
             {
+                "name": "cms.siteplatformsettings",
+                "permissions": ["cms.change_siteplatformsettings"],
+            },
+            {
+                "name": "members.memberplatformsettings",
+                "permissions": ["members.change_memberplatformsettings"],
+            },
+            {
+                "name": "notifications.notificationplatformsettings",
+                "permissions": ["notifications.notificationplatformsettings"],
+            },
+            {
+                "name": "mails.mailplatformsettings",
+                "permissions": ["mails.change_mailplatformsettings"],
+            },
+            {
                 "name": "initiatives.initiativeplatformsettings",
                 "permissions": ["initiatives.change_initiativeplatformsettings"],
             },
@@ -241,40 +244,24 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["funding.change_fundingplatformsettings"],
             },
             {
-                "name": "notifications.notificationplatformsettings",
-                "permissions": ["notifications.notificationplatformsettings"],
-            },
-            {
-                "name": "members.memberplatformsettings",
-                "permissions": ["members.change_memberplatformsettings"],
-            },
-            {
-                "name": "cms.siteplatformsettings",
-                "permissions": ["cms.change_siteplatformsettings"],
+                "name": "funding.paymentprovider",
+                "permissions": ["funding.change_paymentprovider"],
             },
             {
                 "name": "analytics.analyticsplatformsettings",
                 "permissions": ["analytics.change_analyticsplatformsettings"],
             },
             {
-                "name": "scim.scimplatformsettings",
-                "permissions": ["scim.change_scimplatformsettings"],
-            },
-            {
-                "name": "mails.mailplatformsettings",
-                "permissions": ["mails.change_mailplatformsettings"],
+                "label": _("Manage Reporting"),
+                "name": "looker.lookerembed",
             },
             {
                 "name": "utils.translationplatformsettings",
                 "permissions": ["utils.change_translationplatformsettings"],
             },
             {
-                "name": "funding.paymentprovider",
-                "permissions": ["funding.change_paymentprovider"],
-            },
-            {
-                "label": _("Manage Reporting"),
-                "name": "looker.lookerembed",
+                "name": "scim.scimplatformsettings",
+                "permissions": ["scim.change_scimplatformsettings"],
             },
             {"name": "geo.country", "permissions": ["geo.change_country"]},
             {"name": "utils.language", "permissions": ["utils.change_language"]},

@@ -46,7 +46,6 @@ from bluebottle.time_based.models import (
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
-from bluebottle.wallposts.models import Wallpost
 
 
 @admin.register(Contributor)
@@ -359,7 +358,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
     inlines = (UpdateInline, )
     form = ActivityForm
 
-    skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
+    skip_on_duplicate = [Contributor, Follow, Message, Update]
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)

@@ -17,8 +17,8 @@ changes = ''
 
 install_requires = [
     'Babel==2.9.1',
-    'Django==3.2.20',
-    'Pillow==8.3.0',
+    'Django==3.2.25',
+    'Pillow==9.5.0',
     'South==1.0.2',
     'South==1.0.2',
     'Sphinx==4.1.2',
@@ -90,6 +90,7 @@ install_requires = [
     'icalendar==4.0.4',
     'importlib_resources==5.12.0',
     'influxdb==4.1.1',
+    'jinja2==3.1.5',
     'lipisha==0.3.0',
     'lxml==5.2.2',
     'micawber==0.5.2',
@@ -125,6 +126,7 @@ install_requires = [
     'tablib==0.14.0',
     'timezonefinder==3.4.2',
     'unicodecsv==0.14.1',
+    'urllib3==1.25.11',
     'wcag-contrast-ratio==0.9',
     'wheel==0.29.0',
     'xlrd==1.2.0',

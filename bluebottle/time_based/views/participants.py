@@ -68,8 +68,8 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
         if self.queryset.filter(user=user, activity=activity).exists():
             raise ValidationError(_('User already joined'), code="exists")
 
-        send_mail = not email
-        serializer.save(user=user, send_mail=send_mail)
+        send_messages = not email
+        serializer.save(user=user, send_messages=send_messages)
 
 
 class DeadlineParticipantList(ParticipantList):

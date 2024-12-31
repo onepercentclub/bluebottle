@@ -100,8 +100,8 @@ class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
         if CollectContributor.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
             raise ValidationError(_('User already joined'), code="exists")
 
-        send_mail = not email
-        serializer.save(user=user, send_mail=send_mail)
+        send_messages = not email
+        serializer.save(user=user, send_messages=send_messages)
 
 
 class CollectContributorDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

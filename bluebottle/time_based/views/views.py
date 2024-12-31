@@ -376,8 +376,8 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         if slot.slot_participants.filter(participant__user=user).exists():
             raise ValidationError(_('Participant already registered for this slot'))
 
-        send_mail = not email
-        serializer.save(participant=participant, send_mail=send_mail)
+        send_messages = not email
+        serializer.save(participant=participant, send_messages=send_messages)
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

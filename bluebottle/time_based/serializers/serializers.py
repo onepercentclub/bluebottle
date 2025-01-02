@@ -415,8 +415,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
             "start"
         )
 
-        if instance.status == "open":
-            slots = slots.filter(start__gte=now())
+        slots = slots.filter(start__gte=now())
         return slots.first()
 
     def get_slot_count(self, instance):

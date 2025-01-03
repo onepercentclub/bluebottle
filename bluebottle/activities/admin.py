@@ -95,8 +95,8 @@ class ContributionInlineChild(StackedPolymorphicInline.Child):
 class BaseContributorInline(TabularInlinePaginated):
     model = Contributor
     raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'status_label']
-    fields = ['edit', 'created', 'user', 'status_label']
+    readonly_fields = ['edit', 'created', 'status_label', 'source_platform', 'remote_name']
+    fields = ['edit', 'created', 'user', 'status_label', 'source_platform', 'remote_name']
     extra = 0
     per_page = 10
     ordering = ['-created']

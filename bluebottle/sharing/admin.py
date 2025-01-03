@@ -15,7 +15,7 @@ class PlatformConnectionAdmin(admin.ModelAdmin):
 class SharedActivityAdmin(admin.ModelAdmin):
     readonly_fields = ['title', 'remote_id', 'platform', 'created', 'accept', 'activity', 'data']
 
-    list_display = ['title', 'platform']
+    list_display = ['title', 'platform', 'activity']
 
     def accept(self, obj):
         if obj and not obj.activity:

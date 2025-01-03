@@ -17,12 +17,12 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
-from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
-class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
@@ -230,7 +230,7 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
-class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+class Contributor(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)

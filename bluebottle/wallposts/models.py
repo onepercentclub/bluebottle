@@ -9,7 +9,6 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.utils.models import AnonymizationMixin
 from .managers import ReactionManager, WallpostManager
 
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -21,7 +20,7 @@ WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
 
 
 @python_2_unicode_compatible
-class Wallpost(AnonymizationMixin, PolymorphicModel):
+class Wallpost(PolymorphicModel):
     """
     The Wallpost base class. This class will never be used directly because the
     content of a Wallpost is always defined
@@ -253,7 +252,7 @@ class SystemWallpost(Wallpost):
 
 
 @python_2_unicode_compatible
-class Reaction(AnonymizationMixin, models.Model):
+class Reaction(models.Model):
     """
     A user reaction or comment to a Wallpost. This model is based on
     the Comments model from django.contrib.comments.

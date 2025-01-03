@@ -22,13 +22,13 @@ from bluebottle.initiatives.validators import UniqueTitleValidator
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import SegmentType
-from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, AnonymizationMixin, \
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, \
     SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
-class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
+class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     status = models.CharField(max_length=40)
     title = models.CharField(
         _('title'),

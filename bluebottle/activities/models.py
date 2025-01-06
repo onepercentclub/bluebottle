@@ -150,7 +150,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     messages = GenericRelation('notifications.Message')
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     auto_approve = True
 
@@ -390,5 +389,4 @@ class Team(TriggerMixin, models.Model):
 
 
 from bluebottle.activities.signals import *  # noqa
-from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa

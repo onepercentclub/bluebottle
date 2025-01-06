@@ -65,8 +65,8 @@ class InitProjectDataMixin(object):
         """
         Set up some basic models needed for project creation.
         """
-        management.call_command('loaddata', 'themes.json', verbosity=0)
-        management.call_command('loaddata', 'skills.json', verbosity=0)
+        management.call_command("loaddata", "themes.json", verbosity=0)
+        management.call_command("loaddata", "skills.json", verbosity=0)
 
         Language.objects.all().delete()
 
@@ -799,9 +799,9 @@ class NotificationTestCase(BluebottleTestCase):
         )
 
     def assertRecipients(self, recipients):
-        sorting = lambda user: user.id
-        actual = list(self.message.get_recipients()).sort(key=sorting)
-        expected = list(recipients).sort(key=sorting)
+        actual = set(self.message.get_recipients())
+        expected = set(recipients)
+
         if actual != expected:
             self.fail("Recipients did not match: '{}' != '{}'".format(
                 actual, expected)

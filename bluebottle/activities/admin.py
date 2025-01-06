@@ -21,7 +21,6 @@ from bluebottle.activities.models import (
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
-from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
@@ -42,11 +41,11 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
+    PeriodicParticipant,
 )
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
-from bluebottle.wallposts.admin import WallpostInline
-from bluebottle.wallposts.models import Wallpost
 
 
 @admin.register(Contributor)
@@ -61,12 +60,11 @@ class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, Sta
         DeadlineParticipant,
         ScheduleParticipant,
         TeamScheduleParticipant,
+        PeriodicParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
     date_hierarchy = 'created'
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     ordering = ('-created',)
 
@@ -99,8 +97,11 @@ class BaseContributorInline(TabularInlinePaginated):
     readonly_fields = ['edit', 'created', 'status_label']
     fields = ['edit', 'created', 'user', 'status_label']
     extra = 0
-    per_page = 20
+    per_page = 10
     ordering = ['-created']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
 
     template = 'admin/participant_list.html'
 
@@ -136,12 +137,11 @@ class ContributorChildAdmin(
     ordering = ('-created',)
     show_in_index = True
 
-    office_subregion_path = 'activity__office_location__subregion'
-
     date_hierarchy = 'contributor_date'
 
+    raw_id_fields = ('user',)
+
     readonly_fields = [
-        "user",
         "activity",
         "transition_date",
         "contributor_date",
@@ -225,8 +225,6 @@ class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, St
     )
     date_hierarchy = 'start'
 
-    office_subregion_path = 'contributor__activity__office_location__subregion'
-
     ordering = ('-start',)
 
     def lookup_allowed(self, lookup, value):
@@ -259,8 +257,6 @@ class ContributionChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin
     base_model = Contribution
     raw_id_fields = ('contributor',)
     readonly_fields = ['status', 'created', ]
-
-    office_subregion_path = 'contributor__activity__office_location__subregion'
 
     fields = [
         'contributor',
@@ -359,12 +355,10 @@ class TeamInline(admin.TabularInline):
 class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
-    inlines = (FollowAdminInline, WallpostInline, )
+    inlines = (UpdateInline, )
     form = ActivityForm
 
-    skip_on_duplicate = [Contributor, Wallpost, Follow, Message, Update]
-
-    office_subregion_path = 'office_location__subregion'
+    skip_on_duplicate = [Contributor, Follow, Message, Update]
 
     def get_formsets_with_inlines(self, request, obj=None):
         formsets = super().get_formsets_with_inlines(request, obj)
@@ -493,7 +487,13 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
         return fields
 
     def get_detail_fields(self, request, obj):
-        return self.detail_fields
+        settings = InitiativePlatformSettings.objects.get()
+        detail_fields = self.detail_fields
+        if isinstance(detail_fields, list):
+            detail_fields = tuple(detail_fields)
+        if Location.objects.exists() and not settings.enable_office_restrictions:
+            detail_fields += ('office_location',)
+        return detail_fields
 
     def get_description_fields(self, request, obj):
         fields = self.description_fields
@@ -525,15 +525,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
             (_('Description'), {'fields': self.get_description_fields(request, obj)}),
             (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         ]
-        if Location.objects.count():
-            if settings.enable_office_restrictions:
-                if 'office_restriction' not in self.office_fields:
-                    self.office_fields += (
-                        'office_restriction',
-                    )
-                fieldsets.insert(1, (
-                    _('Office'), {'fields': self.office_fields}
-                ))
+        if Location.objects.count() and settings.enable_office_restrictions:
+            if 'office_restriction' not in self.office_fields:
+                self.office_fields += (
+                    'office_restriction',
+                )
+            fieldsets.insert(1, (
+                _('Office'), {'fields': self.office_fields}
+            ))
 
         if request.user.is_superuser:
             fieldsets += [
@@ -661,8 +660,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
     date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
-
-    office_subregion_path = 'office_location__subregion'
 
     def lookup_allowed(self, key, value):
         if key in [

@@ -232,6 +232,9 @@ def add_region_manager_roles(apps, schema_editor):
             'add_wallpost',
             'change_wallpost',
             'delete_wallpost',
+            'add_update',
+            'change_update',
+            'delete_update',
             'access_looker_embeds'
         ])
 

@@ -162,8 +162,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Privacy'),
             {
                 'fields': (
-                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
-                    'display_member_names'
+                    'session_only',
+                    'consent_link',
+                    'disable_cookie_consent',
+                    'anonymization_age',
+                    'display_member_names',
+                    'gtm_code',
                 )
             }
         ),
@@ -248,6 +252,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
+
+        if request.user.region_manager and not request.user.is_superuser:
+            read_only_fields += ("region_manager",)
+
         return read_only_fields
 
     def segment_types(self, obj):
@@ -411,14 +419,12 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location')
+    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
-
-    office_subregion_path = 'location__subregion'
 
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
@@ -482,7 +488,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                     {
                         'fields':
                             [
-                                'picture',
+                                'avatar',
                                 'about_me',
                                 'campaign_notifications',
                             ]

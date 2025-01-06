@@ -48,6 +48,23 @@ class CollectActivityStateMachine(ActivityStateMachine):
         description=_("Succeed the activity.")
     )
 
+    publish = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.open,
+        description=_("Your activity will be open to contributions."),
+        automatic=False,
+        name=_('Publish'),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted
+        ],
+    )
+
     reopen = Transition(
         [
             ActivityStateMachine.expired,
@@ -93,7 +110,7 @@ class CollectActivityStateMachine(ActivityStateMachine):
 @register(CollectContributor)
 class CollectContributorStateMachine(ContributorStateMachine):
     withdrawn = State(
-        _('Cancelled'),
+        _('Withdrawn'),
         'withdrawn',
         _('This person has cancelled.')
     )
@@ -103,14 +120,20 @@ class CollectContributorStateMachine(ContributorStateMachine):
         _('This person has been removed from the activity.')
     )
     accepted = State(
-        _('Contributing'),
+        _('Participating'),
         'accepted',
         _('This person has been signed up for the activity.')
     )
 
     def is_user(self, user):
         """is contributor"""
-        return self.instance.user == user
+        return (
+            self.instance.user == user or
+            self.instance.activity.owner == user or
+            self.instance.activity.initiative.owner == user or
+            user in self.instance.activity.initiative.activity_managers.all() or
+            user.is_staff
+        )
 
     def is_owner(self, user):
         """is contributor"""
@@ -133,17 +156,29 @@ class CollectContributorStateMachine(ContributorStateMachine):
     )
 
     succeed = Transition(
-        accepted,
+        [ContributorStateMachine.new, accepted],
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
         automatic=True,
     )
 
     re_accept = Transition(
-        ContributorStateMachine.succeeded,
+        [
+            rejected,
+            ContributorStateMachine.failed,
+            withdrawn,
+        ],
         accepted,
-        name=_('Re-accept'),
-        automatic=True,
+        name=_('Re-Accept'),
+        automatic=False,
+        permission=is_owner
+    )
+
+    accept = Transition(
+        ContributorStateMachine.new,
+        accepted,
+        name=_('Accept'),
+        automatic=True
     )
 
     withdraw = Transition(
@@ -174,15 +209,6 @@ class CollectContributorStateMachine(ContributorStateMachine):
         rejected,
         name=_('Remove'),
         description=_("Remove contributor from the activity."),
-        automatic=False,
-        permission=is_owner,
-    )
-
-    accept = Transition(
-        rejected,
-        accepted,
-        name=_('Re-Accept'),
-        description=_("User is re-accepted after previously withdrawing."),
         automatic=False,
         permission=is_owner,
     )

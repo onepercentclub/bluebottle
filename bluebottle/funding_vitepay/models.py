@@ -9,6 +9,7 @@ from bluebottle.funding.models import Payment, PaymentProvider, PaymentMethod, B
 class VitepayPaymentProvider(PaymentProvider):
 
     title = 'Vitepay / Orange Money'
+    provider = 'vitepay'
 
     api_secret = models.CharField(max_length=100)
     prefix = models.CharField(max_length=10, default='goodup')
@@ -59,6 +60,7 @@ class VitepayBankAccount(BankAccount):
     account_name = models.CharField(max_length=200, null=True, blank=True)
     mobile_number = models.CharField(max_length=40, null=True, blank=True)
     provider_class = VitepayPaymentProvider
+    provider = 'vitepay'
 
     def save(self, *args, **kwargs):
         super(VitepayBankAccount, self).save(*args, **kwargs)

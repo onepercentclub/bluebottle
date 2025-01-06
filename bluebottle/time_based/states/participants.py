@@ -14,7 +14,7 @@ from bluebottle.time_based.states.states import TimeBasedStateMachine
 
 class ParticipantStateMachine(ContributorStateMachine):
     new = State(
-        _("New"),
+        _("Pending"),
         "new",
         _("This participant is new and will waiting for the registration to be accepted."),
     )
@@ -207,7 +207,18 @@ class ParticipantStateMachine(ContributorStateMachine):
 
 @register(DateParticipant)
 class DateParticipantStateMachine(ParticipantStateMachine):
-    pass
+    succeed = Transition(
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed,
+            ParticipantStateMachine.rejected,
+            ParticipantStateMachine.accepted
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_("This participant has completed their contribution."),
+        automatic=True,
+    )
 
 
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
@@ -301,7 +312,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
 class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
     add = Transition(
         [ContributorStateMachine.new],
-        ParticipantStateMachine.succeeded,
+        ParticipantStateMachine.accepted,
         name=_("Add"),
         description=_("Add this person as a participant of this activity."),
         automatic=True,

@@ -25,8 +25,13 @@ from bluebottle.activities.models import Contribution
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import KYCReadyValidator, DeadlineValidator, BudgetLineValidator, TargetValidator, \
-    DeadlineMaxValidator
+from bluebottle.funding.validators import (
+    DeadlineValidator,
+    TargetValidator,
+    DeadlineMaxValidator,
+    BudgetLineValidator,
+    KYCReadyValidator,
+)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
@@ -55,6 +60,7 @@ class PaymentCurrency(models.Model):
 class PaymentProvider(PolymorphicModel):
 
     title = 'Payment Service Provider'
+    provider = 'default'
 
     public_settings = {}
     private_settings = {}
@@ -150,7 +156,13 @@ class Funding(Activity):
 
     needs_review = True
 
-    validators = [KYCReadyValidator, DeadlineValidator, DeadlineMaxValidator, BudgetLineValidator, TargetValidator]
+    validators = [
+        DeadlineValidator,
+        DeadlineMaxValidator,
+        TargetValidator,
+        BudgetLineValidator,
+        KYCReadyValidator,
+    ]
 
     auto_approve = False
 
@@ -164,7 +176,12 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + ['title', 'description', 'target', 'bank_account']
+        fields = super().required_fields + [
+            "title",
+            "description",
+            "target",
+            "bank_account",
+        ]
 
         if not self.duration:
             fields.append('deadline')
@@ -212,12 +229,22 @@ class Funding(Activity):
             self.save()
 
     @property
+    def total_budget(self):
+        budget_lines = self.budget_lines.all()
+        total_amount = sum(line.amount.amount for line in budget_lines)
+        return Money(currency=self.target.currency, amount=total_amount)
+
+    @property
     def activity_date(self):
         return self.deadline
 
     @property
     def donations(self):
         return self.contributors.instance_of(Donor)
+
+    @property
+    def succeeded_contributor_count(self):
+        return self.donations.filter(status='succeeded').count()
 
     @property
     def genuine_amount_donated(self):
@@ -242,6 +269,13 @@ class Funding(Activity):
                 currency
             )
         return total
+
+    @property
+    def payout_account(self):
+        if self.bank_account:
+            return self.bank_account.connect_account
+        else:
+            return self.owner.funding_payout_account.first()
 
     @property
     def stats(self):
@@ -276,7 +310,7 @@ class Reward(models.Model):
     """
     amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=200)
-    description = models.CharField(_('Description'), max_length=500)
+    description = models.CharField(_('Description'), max_length=500, null=True, blank=True)
     activity = models.ForeignKey(
         'funding.Funding', verbose_name=_('Activity'), related_name='rewards', on_delete=models.CASCADE
     )
@@ -486,6 +520,11 @@ class Donor(Contributor):
         return self.created
 
     @property
+    def available_payment_methods(self):
+        payment_methods = self.activity.bank_account.payment_methods
+        return payment_methods
+
+    @property
     def payment_method(self):
         if not self.payment:
             return None
@@ -592,6 +631,16 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
+    public = models.BooleanField(default=False)
+
+    partner_organization = models.ForeignKey(
+        'organizations.Organization',
+        blank=True, null=True,
+        related_name='payout_accounts',
+        verbose_name=_('Partner organisation'),
+        on_delete=models.SET_NULL
+    )
+
     @property
     def funding(self):
         for account in self.external_accounts.all():
@@ -636,6 +685,8 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
+    provider = 'default'
 
     connect_account = models.ForeignKey(
         'funding.PayoutAccount',
@@ -698,6 +749,25 @@ class FundingPlatformSettings(BasePlatformSettings):
     allow_anonymous_rewards = models.BooleanField(
         _('Allow guests to donate rewards'), default=True
     )
+
+    public_accounts = models.BooleanField(
+        _('Allow users to select account from list of public accounts'), default=False
+    )
+
+    matching_name = models.CharField(
+        _('Name to use for match funding'),
+        max_length=60,
+        null=True,
+        blank=True,
+        help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
+    )
+
+    @property
+    def stripe_publishable_key(self):
+        from bluebottle.funding_stripe.utils import get_stripe_settings
+        settings = get_stripe_settings()
+        if settings:
+            return settings['publishable_key']
 
     class Meta(object):
         verbose_name_plural = _('funding settings')

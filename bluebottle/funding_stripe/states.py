@@ -9,7 +9,76 @@ from bluebottle.funding_stripe.models import StripePayment, StripeSourcePayment,
 
 @register(StripePayment)
 class StripePaymentStateMachine(BasePaymentStateMachine):
-    pass
+    charged = State(_('Charged'), 'charged')
+    canceled = State(_('Canceled'), 'canceled')
+    disputed = State(_('Disputed'), 'disputed')
+
+    def has_charge_token(self):
+        charge_token = getattr(self.instance, 'charge_token', None)
+        return bool(charge_token)
+
+    def is_not_refunded(self):
+        return self.instance.status not in ['refunded', 'disputed']
+
+    authorize = Transition(
+        [
+            BasePaymentStateMachine.new,
+            charged
+        ],
+        BasePaymentStateMachine.pending,
+        name=_('Authorize'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'succeed')
+        ]
+    )
+
+    succeed = Transition(
+        [
+            BasePaymentStateMachine.failed,
+            BasePaymentStateMachine.new,
+            BasePaymentStateMachine.pending,
+            BasePaymentStateMachine.action_needed,
+            charged
+        ],
+        BasePaymentStateMachine.succeeded,
+        name=_('Succeed'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'succeed')
+        ]
+    )
+
+    charge = Transition(
+        BasePaymentStateMachine.new,
+        charged,
+        name=_('Charge'),
+        automatic=True,
+        conditions=[has_charge_token]
+    )
+
+    cancel = Transition(
+        BasePaymentStateMachine.new,
+        canceled,
+        name=_('Canceled'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'fail')
+        ]
+    )
+
+    dispute = Transition(
+        [
+            BasePaymentStateMachine.new,
+            BasePaymentStateMachine.succeeded,
+        ],
+        disputed,
+        name=_('Dispute'),
+        automatic=True,
+        effects=[
+            RelatedTransitionEffect('donation', 'refund')
+        ]
+    )
 
 
 @register(StripeSourcePayment)
@@ -85,12 +154,21 @@ class StripeSourcePaymentStateMachine(BasePaymentStateMachine):
 
 @register(StripePayoutAccount)
 class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
-    pass
+    disabled = State(_("disabled"), "disabled")
+
+    disable = Transition(
+        [
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.verified,
+        ],
+        disabled,
+        name=_("Disable"),
+        automatic=True,
+    )
 
 
 @register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):
-
     def account_verified(self):
         """the related connect account is verified"""
         return self.instance.connect_account and self.instance.connect_account.status == 'verified'

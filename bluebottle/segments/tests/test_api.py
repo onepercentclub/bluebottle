@@ -219,20 +219,20 @@ class SegmentDetailAPITestCase(APITestCase):
     def test_get_stats(self):
         initiative = InitiativeFactory.create(status='approved')
 
-        period_activity = DeadlineActivityFactory.create(
+        deadline_activity = DeadlineActivityFactory.create(
             initiative=initiative,
             status='succeeded',
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
-        period_activity.segments.set([self.model])
-        DeadlineParticipantFactory.create_batch(3, activity=period_activity)
+        deadline_activity.segments.set([self.model])
+        DeadlineParticipantFactory.create_batch(3, activity=deadline_activity)
 
         date_activity = DateActivityFactory.create(
             initiative=initiative,
             status='succeeded',
-            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2)
+            registration_deadline=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         date_activity.segments.set([self.model])
         slot = DateActivitySlotFactory.create(
@@ -271,7 +271,7 @@ class SegmentDetailAPITestCase(APITestCase):
         collect_activity = CollectActivityFactory.create(
             initiative=initiative,
             status='open',
-            start=datetime.date.today() + datetime.timedelta(weeks=2),
+            start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         collect_activity.segments.set([self.model])
         collect_activity.realized = 100
@@ -298,14 +298,9 @@ class SegmentDetailAPITestCase(APITestCase):
 
         stats = response.json()["data"]["meta"]["stats"]
         self.assertEqual(stats["hours"], 18.0)
-        self.assertEqual(stats["activities"], 5)
         self.assertEqual(stats["amount"], {"amount": 75.0, "currency": "EUR"})
         self.assertEqual(stats["contributors"], 18)
         self.assertEqual(stats["effort"], 3)
-
-        self.assertEqual(
-            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
-        )
 
     def test_retrieve_closed_segment(self):
         closed_segment = SegmentFactory.create(

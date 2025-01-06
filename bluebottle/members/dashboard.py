@@ -7,6 +7,8 @@ from jet.dashboard.modules import DashboardModule
 from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
+from bluebottle.offices.admin import region_manager_filter
+
 
 class RecentMembersDashboard(DashboardModule):
     title = _('Recently joined users')
@@ -15,8 +17,10 @@ class RecentMembersDashboard(DashboardModule):
     limit = 5
 
     def init_with_context(self, context):
-        projects = Member.objects.order_by('-date_joined')
-        self.children = projects[:self.limit]
+        members = Member.objects.order_by('-date_joined')
+        user = context.request.user
+        members = region_manager_filter(members, user)
+        self.children = members[:self.limit]
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):

@@ -113,6 +113,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "Don't forget to inform the initiator of the necessary adjustments."),
         conditions=[],
         automatic=False,
+        permission=is_staff,
     )
 
     reject = Transition(
@@ -140,6 +141,7 @@ class ReviewStateMachine(ModelStateMachine):
                       "it won't show up on the search page in the front end. "
                       "The initiative will still be available in the back office and appear in your reporting."),
         automatic=False,
+        permission=is_staff,
     )
 
     delete = Transition(

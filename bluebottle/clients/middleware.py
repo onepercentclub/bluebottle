@@ -13,7 +13,7 @@ class MediaMiddleware(MiddlewareMixin):
         if (
             response.status_code == 404 and
             request.path.startswith(settings.MEDIA_URL) and
-            connection.tenant.client_name not in request.path
+            connection.tenant.schema_name not in request.path
         ):
             return redirect(
                 request.path.replace(settings.MEDIA_URL,

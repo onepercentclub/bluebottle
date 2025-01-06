@@ -81,7 +81,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-0-start_1'] = '11:00'
         form['slots-0-duration_0'] = 1
         form['slots-0-duration_1'] = 30
-        form['slots-0-is_online'] = True
 
         self.admin_add_inline_form_entry(form, 'slots')
 
@@ -89,7 +88,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-1-start_1'] = '14:00'
         form['slots-1-duration_0'] = 2
         form['slots-1-duration_1'] = 0
-        form['slots-1-is_online'] = True
 
         page = form.submit().follow()
 

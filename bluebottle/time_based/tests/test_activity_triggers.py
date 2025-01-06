@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.core import mail
+from django.utils.timezone import now
 
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
@@ -12,7 +13,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineRegistrationFactory,
-    PeriodicActivityFactory,
+    PeriodicActivityFactory, ScheduleActivityFactory, TeamScheduleRegistrationFactory,
 )
 
 
@@ -183,3 +184,79 @@ class PeriodicActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCas
     def test_publish(self):
         self.publish()
         self.assertEqual(len(self.activity.slots.all()), 1)
+
+
+class ScheduleActivityTriggerTestCase(ActivityTriggerTestCase, BluebottleTestCase):
+    factory = ScheduleActivityFactory
+
+    def setUp(self):
+        super().setUp()
+        self.activity.team_activity = 'teams'
+        self.activity.save()
+
+    def register_team(self):
+        self.registration = TeamScheduleRegistrationFactory.create(activity=self.activity, user=self.user)
+        self.team = self.registration.team
+        self.team_member = self.team.team_members.first()
+        self.slot = self.team.slots.first()
+        self.participant = self.slot.participants.first()
+        self.contribution = self.participant.contributions.first()
+        self.registration.states.accept(save=True)
+
+    def test_succeed_manually(self):
+        self.publish()
+        self.register_team()
+        self.assertEqual(len(self.activity.team_slots.all()), 1)
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.team, "accepted")
+        self.assertStatus(self.team_member, "active")
+        self.assertStatus(self.slot, "new")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.contribution, "new")
+
+        self.activity.states.succeed_manually(save=True)
+
+        self.assertStatus(self.activity, "succeeded")
+        self.assertStatus(self.team, "succeeded")
+        self.assertStatus(self.team_member, "active")
+        self.assertStatus(self.slot, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
+
+    def test_change_end_date(self):
+        self.publish()
+        self.register_team()
+
+        self.activity.deadline = date.today() - timedelta(days=10)
+        self.activity.save()
+        self.assertStatus(self.activity, "succeeded")
+        self.assertStatus(self.team, "succeeded")
+        self.assertStatus(self.team_member, "active")
+        self.assertStatus(self.slot, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")
+
+    def test_schedule_team(self):
+        self.publish()
+        self.register_team()
+
+        self.slot.start = now() + timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.team, "scheduled")
+        self.assertStatus(self.team_member, "active")
+        self.assertStatus(self.slot, "scheduled")
+        self.assertStatus(self.participant, "scheduled")
+        self.assertStatus(self.contribution, "new")
+
+    def test_schedule_team_past(self):
+        self.publish()
+        self.register_team()
+
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
+        self.assertStatus(self.team, "succeeded")
+        self.assertStatus(self.team_member, "active")
+        self.assertStatus(self.slot, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.contribution, "succeeded")

@@ -14,7 +14,7 @@ from bluebottle.time_based.effects.effects import (
     RescheduleScheduleSlotContributions,
 )
 from bluebottle.time_based.effects.slots import (
-    CreateTeamSlotParticipantsEffect
+    CreateTeamSlotParticipantsEffect, SetContributionsStartEffect
 )
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.notifications.registrations import ManagerReminderNotification
@@ -139,6 +139,7 @@ class ScheduleSlotTriggers(TriggerManager):
         TransitionTrigger(
             ScheduleSlotStateMachine.finish,
             effects=[
+                SetContributionsStartEffect,
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.succeed,
@@ -175,6 +176,10 @@ class ScheduleSlotTriggers(TriggerManager):
                     "participants",
                     ScheduleParticipantStateMachine.schedule,
                 ),
+                RelatedTransitionEffect(
+                    "team",
+                    TeamStateMachine.schedule,
+                ),
             ],
         ),
         TransitionTrigger(
@@ -183,6 +188,10 @@ class ScheduleSlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "participants",
                     ScheduleParticipantStateMachine.unschedule,
+                ),
+                RelatedTransitionEffect(
+                    "team",
+                    TeamStateMachine.unschedule,
                 ),
             ],
         ),

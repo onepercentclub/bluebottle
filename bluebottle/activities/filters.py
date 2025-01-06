@@ -101,7 +101,7 @@ class UpcomingFacet(Facet):
             )
         if filter_values == ['0']:
             return Terms(
-                status=['succeeded', 'partially_funded']
+                status=['succeeded', 'partially_funded', 'refnnded']
             )
 
 

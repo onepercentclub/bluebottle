@@ -24,7 +24,7 @@ from bluebottle.time_based.effects import (
     LockFilledSlotsEffect,
     UnlockUnfilledSlotsEffect,
     CheckPreparationTimeContributionEffect,
-    SlotParticipantUnFollowActivityEffect,
+    SlotParticipantUnFollowActivityEffect, RescheduleDateSlotContributions,
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
@@ -352,9 +352,11 @@ class ActivitySlotTriggers(TriggerManager):
                 ),
             ]
         ),
+
         ModelChangedTrigger(
             'start',
             effects=[
+                RescheduleDateSlotContributions,
                 TransitionEffect(
                     DateActivitySlotStateMachine.start,
                     conditions=[slot_is_started, slot_is_not_finished]
@@ -369,6 +371,13 @@ class ActivitySlotTriggers(TriggerManager):
                     DateActivitySlotStateMachine.reschedule,
                     conditions=[slot_is_not_started]
                 ),
+            ]
+        ),
+
+        ModelChangedTrigger(
+            'duration',
+            effects=[
+                RescheduleDateSlotContributions,
             ]
         ),
 
@@ -505,6 +514,14 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     'activity',
                     DateStateMachine.reschedule,
                 ),
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    SlotParticipantStateMachine.succeed,
+                    conditions=[
+                        slot_is_not_started
+                    ]
+                ),
+
             ]
         ),
         TransitionTrigger(
@@ -525,6 +542,10 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                         all_slots_finished,
                         activity_has_no_accepted_participants
                     ]
+                ),
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    SlotParticipantStateMachine.succeed,
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]

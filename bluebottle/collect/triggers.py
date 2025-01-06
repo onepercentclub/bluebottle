@@ -39,6 +39,16 @@ def is_finished(effect):
     )
 
 
+def is_started(effect):
+    """
+    is started
+    """
+    return (
+        not effect.instance.start or
+        effect.instance.start <= date.today()
+    )
+
+
 def is_not_finished(effect):
     """
     hasn't finished yet
@@ -69,6 +79,17 @@ def has_no_end_date(effect):
 @register(CollectActivity)
 class CollectActivityTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                RelatedTransitionEffect(
+                    'active_contributors',
+                    CollectContributorStateMachine.succeed,
+                    conditions=[is_started]
+                ),
+            ]
+        ),
+
         ModelChangedTrigger(
             'end',
             effects=[
@@ -152,6 +173,22 @@ def activity_is_finished(effect):
     )
 
 
+def activity_is_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.activity.start or
+        effect.instance.activity.start < date.today()
+    )
+
+
+def activity_is_not_started(effect):
+    """activity is not started"""
+    return (
+        effect.instance.activity.start and
+        effect.instance.activity.start > date.today()
+    )
+
+
 def activity_will_be_empty(effect):
     """activity will be empty"""
     return (
@@ -190,6 +227,14 @@ def is_not_owner(effect):
     return True
 
 
+def contributor_activity_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.contributor.activity.start or
+        effect.instance.contributor.activity.start < date.today()
+    )
+
+
 @register(CollectContribution)
 class CollectContributionTriggers(ContributionTriggers):
     triggers = ContributionTriggers.triggers + [
@@ -198,15 +243,7 @@ class CollectContributionTriggers(ContributionTriggers):
             effects=[
                 TransitionEffect(
                     CollectContributionStateMachine.succeed,
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            CollectContributionStateMachine.reset,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
+                    conditions=[contributor_activity_started]
                 ),
             ]
         ),
@@ -221,6 +258,11 @@ class CollectContributorTriggers(ContributorTriggers):
             effects=[
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
+                    conditions=[activity_is_started]
+                ),
+                TransitionEffect(
+                    CollectContributorStateMachine.accept,
+                    conditions=[activity_is_not_started]
                 ),
                 CreateCollectContribution,
                 NotificationEffect(
@@ -252,17 +294,6 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantRemovedNotification),
                 NotificationEffect(ParticipantRemovedOwnerNotification),
-            ]
-        ),
-
-        TransitionTrigger(
-            CollectContributorStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.succeed,
-                    conditions=[activity_is_finished]
-                ),
             ]
         ),
 

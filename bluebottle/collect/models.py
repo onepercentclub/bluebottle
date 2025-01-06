@@ -141,7 +141,7 @@ class CollectActivity(Activity):
     @property
     def active_contributors(self):
         return self.participants.filter(
-            status='succeeded'
+            status__in=['succeeded', 'accepted']
         )
 
     @property

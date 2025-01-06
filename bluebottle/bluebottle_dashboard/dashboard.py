@@ -9,7 +9,6 @@ from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDa
 from bluebottle.initiatives.dashboard import MyReviewingInitiatives, RecentInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.updates.dashboard import RecentUpdates
-from bluebottle.wallposts.dashboard import RecentWallposts
 
 
 class CustomIndexDashboard(Dashboard):
@@ -29,7 +28,6 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(RecentContributors())
 
         # Wallposts
-        self.children.append(RecentWallposts())
         self.children.append(RecentUpdates())
 
         # Payouts

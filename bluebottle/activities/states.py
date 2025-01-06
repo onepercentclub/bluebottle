@@ -123,7 +123,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [submitted, open, succeeded],
         rejected,
         name=_('Reject'),
         description=_(

@@ -2,9 +2,9 @@ from django.conf.urls import url
 
 from bluebottle.activities.views import (
     ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
-    ContributorList, RelatedActivityImageList,
+    RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
-    InviteDetailView
+    InviteDetailView, ContributionList
 )
 
 urlpatterns = [
@@ -15,9 +15,10 @@ urlpatterns = [
     url(r'^/search$',
         ActivityPreviewList.as_view(),
         name='activity-preview-list'),
-    url(r'^/contributors$',
-        ContributorList.as_view(),
-        name='contributor-list'),
+
+    url(r'^/contributions$',
+        ContributionList.as_view(),
+        name='contribution-list'),
 
     url(r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),

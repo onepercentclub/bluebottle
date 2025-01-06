@@ -123,6 +123,11 @@ class ImageContentView(FileContentView):
 
         file = image.file
 
+        if not file:
+            if settings.RANDOM_IMAGE_PROVIDER:
+                return HttpResponseRedirect(self.get_random_image_url())
+            return HttpResponseNotFound()
+
         if 'x' in self.kwargs['size']:
             if self.kwargs['size'] not in self.allowed_sizes.values():
                 return HttpResponseNotFound()
@@ -156,7 +161,7 @@ class ImageContentView(FileContentView):
                     response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            if thumbnail.url:
+            if thumbnail.exists():
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:

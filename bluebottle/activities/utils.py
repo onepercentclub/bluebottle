@@ -320,6 +320,7 @@ class BaseActivityListSerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
     team_activity = SerializerMethodField()
+    current_status = CurrentStatusField(source='states.current_state')
 
     def get_team_activity(self, instance):
         if InitiativePlatformSettings.load().team_activities:
@@ -353,7 +354,8 @@ class BaseActivityListSerializer(ModelSerializer):
             'status',
             'stats',
             'goals',
-            'team_activity'
+            'team_activity',
+            'current_status'
         )
 
         meta_fields = (
@@ -361,6 +363,7 @@ class BaseActivityListSerializer(ModelSerializer):
             'created',
             'updated',
             'matching_properties',
+            'current_status'
         )
 
     class JSONAPIMeta(object):
@@ -421,6 +424,12 @@ class ActivitySubmitSerializer(ModelSerializer):
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    start = serializers.SerializerMethodField()
+
+    def get_start(self, obj):
+        if obj.contributions.exists():
+            return obj.contributions.last().start
+        return None
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.TinyActivityListSerializer',
@@ -435,10 +444,12 @@ class BaseContributorListSerializer(ModelSerializer):
             "status",
             "created",
             "updated",
+            "start"
         )
         meta_fields = (
             "created",
             "updated",
+            "start"
         )
 
     class JSONAPIMeta(object):
@@ -456,6 +467,12 @@ class BaseContributorSerializer(ModelSerializer):
     team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
+    start = serializers.SerializerMethodField()
+
+    def get_start(self, obj):
+        if obj.contributions.exists():
+            return obj.contributions.last().start
+        return None
 
     included_serializers = {
         'activity': 'bluebottle.activities.serializers.ActivityListSerializer',
@@ -470,8 +487,15 @@ class BaseContributorSerializer(ModelSerializer):
             'activity',
             'status',
             'current_status',
+            'start'
         )
-        meta_fields = ('transitions', 'created', 'updated', 'current_status')
+        meta_fields = (
+            'transitions',
+            'created',
+            'updated',
+            'start',
+            'current_status',
+        )
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -489,7 +513,7 @@ class BaseContributionSerializer(ModelSerializer):
     class Meta(object):
         model = Contribution
         fields = ("value", "status", "start", "end")
-        meta_fields = ("created",)
+        meta_fields = ("created", 'end', 'start')
 
     class JSONAPIMeta(object):
         resource_name = 'contributors'

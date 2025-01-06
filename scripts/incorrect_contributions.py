@@ -122,9 +122,6 @@ def run(*args):
                 failed_schedule_team_contributions
             )
 
-            if failed_contributions:
-                __import__('ipdb').set_trace()
-
             failed_date_contributions_new = TimeContribution.objects.filter(
                 status='failed',
                 slot_participant_id__isnull=False,

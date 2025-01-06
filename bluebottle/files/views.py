@@ -107,10 +107,16 @@ class ImageContentView(FileContentView):
 
     def get_file(self):
         instance = self.get_object()
-        return getattr(instance, self.field).file
+        if getattr(instance, self.field):
+            return getattr(instance, self.field).file
 
     def retrieve(self, *args, **kwargs):
         file = self.get_file()
+
+        if not file:
+            if settings.RANDOM_IMAGE_PROVIDER:
+                return HttpResponseRedirect(self.get_random_image_url())
+            return HttpResponseNotFound()
 
         if 'x' in self.kwargs['size']:
             if self.kwargs['size'] not in self.allowed_sizes.values():
@@ -142,7 +148,7 @@ class ImageContentView(FileContentView):
                     response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            if thumbnail.url:
+            if thumbnail.exists():
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:
@@ -172,7 +178,7 @@ class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
 
 
 class ImagePreview(ImageContentView):
-    allowed_sizes = {'preview': '292x164', 'large': '1568x882'}
+    allowed_sizes = {'preview': '292x164', 'large': '1568x882', 'avatar': '200x200'}
 
     queryset = Image.objects.all()
 

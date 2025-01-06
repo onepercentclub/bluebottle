@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
 
+import mock
 from django.urls import reverse
 from django.utils.timezone import now
 from djmoney.money import Money
 from rest_framework import status
+
+import stripe
 
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
@@ -24,7 +27,12 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        bank_account = BankAccountFactory.create(status='verified')
+        bank_account = BankAccountFactory.create(
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
+        )
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
@@ -96,7 +104,9 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        account = StripePayoutAccountFactory.create(status='verified')
+        account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         bank_account = ExternalAccountFactory.create(connect_account=account, status='verified')
 
         self.funding = FundingFactory.create(
@@ -158,14 +168,20 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()
-        self.payout_account = StripePayoutAccountFactory.create(status='verified')
+        self.payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account, status='verified')
         self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))
         self.bank_account_url = reverse('admin:funding_bankaccount_change', args=(self.bank_account.id,))
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        response = self.client.get(self.payout_account_url)
+        specs = stripe.ListObject()
+        specs.data = []
+
+        with mock.patch('stripe.CountrySpec.list', return_value=specs):
+            response = self.client.get(self.payout_account_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_bank_account_admin(self):

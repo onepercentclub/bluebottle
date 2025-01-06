@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from future.utils import python_2_unicode_compatible
@@ -70,7 +71,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
-        'QuotesBlockPlugin'
+        'QuotesBlockPlugin',
+        'DonateButtonBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -259,6 +261,18 @@ class HomepageStatisticsContent(TitledContent):
     preview_template = 'admin/cms/preview/homepage-statistics.html'
     year = models.IntegerField(blank=True, null=True)
 
+    class StatTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
+    stat_type = models.CharField(
+        _("Stat type"),
+        max_length=100,
+        choices=StatTypeChoices.choices,
+        default=StatTypeChoices.all,
+        help_text=_('Stats will show all data or only activities from the user\'s office group')
+    )
+
     class Meta:
         verbose_name = _('Statistics')
 
@@ -308,6 +322,28 @@ class ActivitiesContent(TitledContent):
 
 
 @python_2_unicode_compatible
+class DonateButtonContent(TitledContent):
+    type = 'donate'
+
+    funding = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_('Campaign'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
+    button_text = models.CharField(max_length=80, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Donate button')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    def __str__(self):
+        return str(self.funding.title)
+
+
+@python_2_unicode_compatible
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,
@@ -348,7 +384,20 @@ class ShareResultsContent(TitledContent):
 
 @python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
+
     type = 'projects-map'
+
+    class MapTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
+    map_type = models.CharField(
+        _("Map type"),
+        max_length=100,
+        choices=MapTypeChoices.choices,
+        default=MapTypeChoices.all,
+        help_text=_('The map will show all activities or only from the user\'s office group')
+    )
 
     class Meta:
         verbose_name = _('Activities Map')
@@ -588,7 +637,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the action colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -609,7 +657,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the description colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -623,7 +670,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     footer_text_color = ColorField(
         _('Footer text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the footer colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -704,7 +750,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             blank=True,
             help_text=_('Slug of the start initiative page')
         ),
-
     )
 
     class Meta:

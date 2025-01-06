@@ -162,7 +162,7 @@ class FundingCancelledMessage(TransitionMessage):
 
 
 class PayoutAccountRejected(TransitionMessage):
-    subject = _(u'Your identity verification could not be verified!')
+    subject = _(u'Action required for your crowdfunding campaign')
     template = 'messages/payout_account_rejected'
 
     def get_recipients(self):
@@ -170,7 +170,16 @@ class PayoutAccountRejected(TransitionMessage):
         return [self.obj.owner]
 
 
-class LivePayoutAccountRejected(TransitionMessage):
+class PayoutAccountMarkedIncomplete(TransitionMessage):
+    subject = _("Action required for your crowdfunding campaign")
+    template = "messages/payout_account_marked_incomplete"
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class LivePayoutAccountMarkedIncomplete(TransitionMessage):
     subject = _(u'Live campaign identity verification failed!')
     template = 'messages/live_payout_account_rejected'
 
@@ -192,6 +201,35 @@ class LivePayoutAccountRejected(TransitionMessage):
 class PayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/payout_account_verified'
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class PublicPayoutAccountRejected(PayoutAccountRejected):
+    subject = _(u'Action required for your identity verification')
+    template = 'messages/public_payout_account_rejected'
+
+
+class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
+    subject = _("Action required for identity verification")
+    template = "messages/public_payout_account_marked_incomplete"
+
+
+class LivePublicPayoutAccountMarkedIncomplete(LivePayoutAccountMarkedIncomplete):
+    subject = _(u'Incomplete payout account for running campaign')
+    template = 'messages/live_public_payout_account_rejected'
+
+
+class PublicPayoutAccountVerified(TransitionMessage):
+    subject = _(u'Your identity has been verified')
+    template = 'messages/public_payout_account_verified'
+
+
+class NewRequirementsMessage(TransitionMessage):
+    subject = _("We need more information before your account can be verified")
+    template = "messages/payout_account_new_requirements"
 
     def get_recipients(self):
         """the activity organizer"""

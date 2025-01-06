@@ -1,24 +1,24 @@
 from builtins import str
-from django.urls import reverse
+
+from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from parler.admin import TranslatableAdmin
-from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 from nested_inline.admin import NestedStackedInline
+from parler.admin import TranslatableAdmin
 from solo.admin import SingletonModelAdmin
-
-from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
     Stat, Quote, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
+from bluebottle.statistics.statistics import Statistics
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
@@ -87,7 +87,7 @@ class SiteLinksAdmin(NonSortableParentAdmin):
 class StatInline(NestedStackedInline, SortableStackedInline):
     model = Stat
     extra = 0
-    fields = ('type', 'definition', 'title', 'value')
+    fields = ('type', 'stat_type', 'definition', 'title', 'value')
 
     readonly_fields = ['definition']
 

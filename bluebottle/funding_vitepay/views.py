@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class VitepayPaymentList(PaymentList):
     queryset = VitepayPayment.objects.all()
     serializer_class = VitepayPaymentSerializer
+    permission_classes = []
 
 
 class VitepayWebhookView(View):

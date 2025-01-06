@@ -14,7 +14,8 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.files.serializers import ImageField
+from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
@@ -151,6 +152,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
         super(BaseUserPreviewSerializer, self).__init__(*args, **kwargs)
 
     avatar = SorlImageField('133x133', source='picture', crop='center')
+    can_pledge = serializers.BooleanField(read_only=True)
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(
@@ -166,7 +168,7 @@ class BaseUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer
     class Meta(object):
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials', 'about_me',
-                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous')
+                  'avatar', 'full_name', 'short_name', 'is_active', 'is_anonymous', 'can_pledge')
 
 
 class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -248,7 +250,7 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('initiative-list')
     project_manage_list = PermissionField('initiative-list')
-    homepage = PermissionField('home-page-detail')
+    homepage = PermissionField('home-detail')
 
     class Meta(object):
         fields = [
@@ -268,6 +270,7 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    can_pledge = serializers.BooleanField(read_only=True)
     permissions = UserPermissionsSerializer(read_only=True)
     organization = OrganizationSerializer(
         read_only=True, source='partner_organization'
@@ -283,11 +286,12 @@ class CurrentUserSerializer(BaseUserPreviewSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
-            'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
+            'id_for_ember', 'primary_language',
+            'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'location',
             'verified', 'permissions', 'matching_options_set',
             'organization', 'segments', 'required', 'has_initiatives',
-            'hours_spent', 'hours_planned'
+            'hours_spent', 'hours_planned', 'can_pledge'
         )
 
 
@@ -306,13 +310,14 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
+    email = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail',
                                                lookup_field='pk')
-    picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
 
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
+    can_pledge = serializers.BooleanField(read_only=True)
 
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
@@ -352,11 +357,11 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     class Meta(object):
         model = BB_USER_MODEL
         fields = (
-            'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
+            'id', 'email', 'url', 'full_name', 'short_name', 'initials',
             'primary_language', 'about_me', 'location', 'avatar', 'date_joined',
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
-            'subscribed', 'segments'
+            'subscribed', 'segments', 'can_pledge',
         )
 
 
@@ -441,7 +446,7 @@ class UserDataExportSerializer(UserProfileSerializer):
         model = BB_USER_MODEL
         fields = (
             'id', 'email', 'location', 'birthdate',
-            'url', 'full_name', 'short_name', 'initials', 'picture',
+            'url', 'full_name', 'short_name', 'initials',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',
             'date_joined', 'website', 'twitter', 'facebook',
@@ -690,6 +695,7 @@ class PasswordResetSerializer(serializers.Serializer):
 
 
 class MemberProfileSerializer(ModelSerializer):
+    email = serializers.CharField(read_only=True)
     segments = ResourceRelatedField(
         many=True,
         queryset=Segment.objects.all(),
@@ -704,21 +710,26 @@ class MemberProfileSerializer(ModelSerializer):
         many=True,
         queryset=Skill.objects.all(),
     )
+    remote_id = serializers.CharField(read_only=True)
+    avatar = ImageField(required=False, allow_null=True)
+    has_usable_password = serializers.BooleanField(read_only=True)
 
     class Meta():
         model = Member
         fields = (
-            'id', 'first_name', 'last_name', 'about_me', 'required',
+            'id', 'first_name', 'last_name', 'about_me', 'full_name', 'required',
             'birthdate', 'segments', 'phone_number',
-            'location', 'place', 'themes', 'skills',
+            'location', 'place', 'themes', 'skills', 'email',
             'search_distance', 'any_search_distance', 'exclude_online',
-            'subscribed', 'matching_options_set'
+            'matching_options_set', 'remote_id', 'avatar',
+            'subscribed', 'receive_reminder_emails', 'campaign_notifications',
+            'has_usable_password', 'avatar', 'gender'
         )
 
     class JSONAPIMeta():
         resource_name = 'member/profile'
         included_resources = [
-            'location', 'place.country', 'place', 'segments'
+            'location', 'place.country', 'place', 'segments', 'avatar'
         ]
 
     included_serializers = {
@@ -726,6 +737,7 @@ class MemberProfileSerializer(ModelSerializer):
         'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }
 
     def save(self, *args, **kwargs):
@@ -755,9 +767,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         resource_name = 'reset-token-confirmations'
 
 
+class ValidatePassword:
+    requires_context = True
+
+    def __call__(self, value, field):
+        if not field.context['request'].user.check_password(value):
+            raise serializers.ValidationError(_('Password does not match'))
+
+
 class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        write_only=True, required=True, max_length=128
+        write_only=True, required=True, max_length=128, validators=[ValidatePassword()]
     )
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
@@ -767,8 +787,25 @@ class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
 
 
 class EmailSetSerializer(PasswordProtectedMemberSerializer):
+    email = serializers.EmailField(
+        max_length=254,
+        validators=[
+            UniqueEmailValidator(
+                queryset=BB_USER_MODEL.objects.all(), lookup='iexact'
+            )
+        ]
+    )
+
     class Meta(PasswordProtectedMemberSerializer.Meta):
         fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
+
+    class JSONAPIMeta:
+        resource_name = 'profile-email'
+
+    def save(self):
+        user = self.context['request'].user
+        user.email = self.validated_data['email']
+        user.save()
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
@@ -780,8 +817,10 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + \
-            PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+
+    class JSONAPIMeta:
+        resource_name = 'profile-password'
 
 
 class PasswordSetSerializer(serializers.Serializer):
@@ -825,8 +864,9 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     class Meta(object):
         model = MemberPlatformSettings
         fields = (
-            'require_consent',
             'consent_link',
+            'disable_cookie_consent',
+            'gtm_code',
             'closed',
             'email_domain',
             'session_only',

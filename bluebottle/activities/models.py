@@ -106,7 +106,7 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
 
     next_step_link = models.URLField(
         _('Redirect step link'),
-        max_length=100,
+        max_length=2048,
         blank=True,
         null=True,
         default='',
@@ -150,7 +150,6 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     messages = GenericRelation('notifications.Message')
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     auto_approve = True
 
@@ -210,10 +209,12 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
         domain = get_current_host()
         language = get_current_language()
         type = self.get_real_instance().__class__.__name__.lower()
-        if type == 'deed':
-            return f'{domain}/{language}/activities/details/deed/{self.id}/{self.slug}'
+        if type != "collectactivity":
+            return (
+                f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
+            )
         else:
-            return f"{domain}/{language}/initiatives/activities/details/{type}/{self.id}/{self.slug}"
+            return f"{domain}/{language}/initiatives/activities/details/collectactivity/{self.id}/{self.slug}"
 
     @property
     def organizer(self):
@@ -248,6 +249,10 @@ class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
         'members.Member', verbose_name=_('user'),
         null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def contributor(self):
+        return self
 
     @property
     def status_label(self):
@@ -322,7 +327,7 @@ class Contribution(TriggerMixin, PolymorphicModel):
 class EffortContribution(Contribution):
     class ContributionTypeChoices(DjangoChoices):
         organizer = ChoiceItem('organizer', label=_("Activity Organizer"))
-        deed = ChoiceItem('deed', label=_("Deed particpant"))
+        deed = ChoiceItem('deed', label=_("Deed participant"))
 
     contribution_type = models.CharField(
         _('Contribution type'),
@@ -384,5 +389,4 @@ class Team(TriggerMixin, models.Model):
 
 
 from bluebottle.activities.signals import *  # noqa
-from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa

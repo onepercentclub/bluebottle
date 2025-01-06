@@ -72,7 +72,7 @@ class StateMachineAdminMixin(object):
                     if isinstance(form.instance, TriggerMixin):
                         if form.is_valid():
                             form.save(commit=False)
-                            if form.instance:
+                            if form.instance and form.instance.pk:
                                 effects += form.instance.execute_triggers(
                                     user=request.user,
                                     send_messages=send_messages

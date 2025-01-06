@@ -55,6 +55,9 @@ class VitepayPaymentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data['data']['attributes']['status'], 'new')
-        self.assertEqual(data['data']['attributes']['payment-url'], 'https://vitepay.com/some-path-to-pay')
-        self.assertEqual(data['included'][0]['attributes']['status'], 'new')
+        self.assertEqual(data["data"]["attributes"]["status"], "new")
+        self.assertEqual(
+            data["data"]["attributes"]["payment-url"],
+            "https://vitepay.com/some-path-to-pay",
+        )
+        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")

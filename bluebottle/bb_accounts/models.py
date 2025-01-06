@@ -100,6 +100,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
+        other = ChoiceItem('other', label=_('Non-binary'))
+        none = ChoiceItem('none', label=_('I would rather not say'))
 
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
@@ -150,7 +152,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     exclude_online = models.BooleanField(_('Don’t show online/remote activities'), default=False)
 
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
-    gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
+    gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=8)
     birthdate = models.DateField(_('birthdate'), blank=True, null=True)
     about_me = models.TextField(_('about me'), blank=True)
     # TODO Use generate_picture_filename (or something) for upload_to
@@ -290,7 +292,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.last_name = 'Member'
         self.user_name = ''
         self.picture = ''
-        self.avatar = ''
         self.about_me = ''
         self.gender = ''
         self.birthdate = '1000-01-01'
@@ -300,6 +301,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.twitter = ''
         self.skypename = ''
         self.partner_organization = None
+
+        if self.avatar:
+            self.avatar.delete()
 
         self.save()
 

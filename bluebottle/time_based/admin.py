@@ -55,6 +55,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.states import SlotParticipantStateMachine
 from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
@@ -66,7 +67,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = ActivityChildAdmin.inlines + (MessageAdminInline,)
+    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -222,7 +223,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
 
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-    per_page = 20
+    per_page = 10
     can_delete = True
 
     formfield_overrides = {
@@ -241,7 +242,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'start',
         'timezone',
         'duration',
-        'is_online',
         'status_label'
     ]
 
@@ -339,13 +339,11 @@ class TeamMemberAdmin(RegionManagerAdminMixin, StateMachineAdmin):
     model = TeamMember
     inlines = [TeamScheduleParticipantAdminInline]
     list_display = ('user', 'status', 'created',)
-    readonly_fields = ('team', 'user', 'created')
+    readonly_fields = ('team', 'created')
     fields = ('team', 'user', 'status', 'states', 'created')
     raw_id_fields = ('user', 'team')
 
     superadmin_fields = ['force_status']
-
-    office_subregion_path = 'team__activity__office_location__subregion'
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
@@ -465,8 +463,6 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
     )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)
@@ -758,8 +754,6 @@ class PeriodicSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
-    office_subregion_path = "activity__office_location__subregion"
-
     def participant_count(self, obj):
         return obj.accepted_participants.count()
 
@@ -786,8 +780,6 @@ class ScheduleSlotAdmin(RegionManagerAdminMixin, StateMachineAdmin):
         "location_hint",
         "online_meeting_url"
     )
-
-    office_subregion_path = 'activity__office_location__subregion'
 
     formfield_overrides = {
         models.DurationField: {
@@ -846,6 +838,7 @@ class PeriodicSlotAdminInline(TabularInlinePaginated):
     verbose_name_plural = _("Slots")
     readonly_fields = ("edit", "start_date", "end_date", "duration_readable", "participant_count", "status_label")
     fields = readonly_fields
+    ordering = ["-start"]
 
     def participant_count(self, obj):
         return obj.accepted_participants.count()
@@ -1197,6 +1190,7 @@ class SlotBulkAddForm(forms.Form):
 class DateSlotAdmin(SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
+    save_as = True
 
     date_hierarchy = 'start'
     list_display = [
@@ -1616,7 +1610,7 @@ class ScheduleParticipantAdmin(ContributorChildAdmin):
         return self.fields
 
     readonly_fields = ContributorChildAdmin.readonly_fields + [
-        "user", "activity", "created", "updated",
+        "activity", "created", "updated",
         "registration_info",
         "slot_info",
     ]
@@ -1692,7 +1686,8 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ["user", "document", "created", "activity"]
+    raw_id_fields = ("user",)
+    readonly_fields = ["document", "created", "activity"]
     fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status"]
 

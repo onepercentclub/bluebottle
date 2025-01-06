@@ -3,6 +3,7 @@ import os
 
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django_tools.middlewares.ThreadLocal import get_current_user
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
@@ -10,9 +11,10 @@ from rest_framework_json_api.relations import (
 )
 
 from bluebottle.activities.models import Activity
-from bluebottle.activities.serializers import ActivitySerializer
+from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -35,11 +37,32 @@ class UpdateSerializer(serializers.ModelSerializer):
     parent = ResourceRelatedField(
         queryset=Update.objects.all(),
         validators=[no_nested_replies_validator],
-        required=False
+        required=False,
+        allow_null=True
     )
     replies = ResourceRelatedField(many=True, read_only=True)
+    author = ResourceRelatedField(
+        read_only=True
+    )
+    contribution = PolymorphicResourceRelatedField(
+        read_only=True,
+        polymorphic_serializer=ContributorSerializer
+    )
 
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        anonymous = FundingPlatformSettings.load().anonymous_donations
+        current_user = get_current_user()
+        if instance.contribution and anonymous and data['author'] != current_user:
+            data['author'] = None
+        if instance.fake_name:
+            data['author'] = None
+        if instance.contribution and instance.contribution.anonymous:
+            data['author'] = None
+
+        return data
 
     def validate(self, value):
         if self.partial:
@@ -65,7 +88,9 @@ class UpdateSerializer(serializers.ModelSerializer):
             'notify',
             'video_url',
             'pinned',
-            'permissions'
+            'permissions',
+            'contribution',
+            'fake_name',
         )
         meta_fields = (
             'permissions',
@@ -75,13 +100,22 @@ class UpdateSerializer(serializers.ModelSerializer):
         resource_name = 'updates'
 
         included_resources = [
-            'author', 'image', 'replies', 'images'
+            'author',
+            'author.avatar',
+            'image',
+            'replies',
+            'images',
+            'contribution',
+            'activity'
         ]
 
     included_serializers = {
+        'author.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'author': 'bluebottle.initiatives.serializers.MemberSerializer',
         'images': 'bluebottle.updates.serializers.UpdateImageSerializer',
         'replies': 'bluebottle.updates.serializers.UpdateSerializer',
+        'contribution': 'bluebottle.activities.serializers.ContributorSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
     }
 
 

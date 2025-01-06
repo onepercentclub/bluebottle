@@ -71,11 +71,20 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
         account = stripe.Account(
             id=account_id,
         )
+        account.business_type = "individual"
+        account.individual = munch.munchify({
+            "email": "test@example.com",
+            "requirements": {
+                "eventually_due": []
+            }
+        })
         account.requirements = munch.munchify({
             'eventually_due': [
                 'individual.first_name', 'individual.last_name'
             ]
         })
+        account.charges_enabled = True
+        account.payouts_enabled = True
         with mock.patch('stripe.Account.create', return_value=account):
             return super(StripePayoutAccountFactory, cls)._create(model_class, *args, **kwargs)
 
@@ -91,8 +100,3 @@ class StripePaymentProviderFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = StripePaymentProvider
-
-    credit_card = True
-    ideal = True
-    bancontact = True
-    direct_debit = True

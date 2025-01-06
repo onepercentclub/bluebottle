@@ -13,11 +13,15 @@ def should_notify(effect):
 
 
 def author_is_not_owner(effect):
-    return effect.instance.author != effect.instance.activity.owner
+    return effect.instance.author and effect.instance.author != effect.instance.activity.owner
 
 
 def has_parent(effect):
     return effect.instance.parent is not None
+
+
+def has_no_contribution(effect):
+    return effect.instance.contribution is None
 
 
 @register(Update)
@@ -31,7 +35,7 @@ class UpdateTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     OwnerNotification,
-                    conditions=[author_is_not_owner]
+                    conditions=[author_is_not_owner, has_no_contribution],
                 ),
                 NotificationEffect(
                     ParentNotification,

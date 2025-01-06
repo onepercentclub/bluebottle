@@ -52,7 +52,7 @@ def bulk_add_participants(slot, emails):
     count = 0
     for email in emails:
         try:
-            user = Member.objects.get(email=email.strip())
+            user = Member.objects.get(email__iexact=email.strip())
             participant, _created = DateParticipant.objects.get_or_create(
                 user=user, activity=activity
             )

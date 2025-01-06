@@ -30,7 +30,9 @@ class FundingScheduledTasksTestCase(BluebottleTestCase):
             target=Money(1000, 'EUR')
         )
         BudgetLineFactory.create(activity=self.funding)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding.bank_account = self.bank_account
         self.funding.save()

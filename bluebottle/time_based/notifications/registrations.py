@@ -105,6 +105,11 @@ class UserRegistrationRejectedNotification(UserRegistrationNotification):
     template = 'messages/registrations/user_rejected'
 
 
+class UserRegistrationRemovedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have been removed from the activity "{title}"')
+    template = 'messages/registrations/user_removed'
+
+
 class UserTeamRegistrationRejectedNotification(UserRegistrationNotification):
     subject = pgettext(
         "email", 'Your team has not been selected for the activity "{title}"'

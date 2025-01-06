@@ -146,7 +146,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     )
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
 
     class Meta(object):
         verbose_name = _("Initiative")
@@ -445,6 +444,3 @@ class Theme(SortableTranslatableModel):
 
     class JSONAPIMeta(object):
         resource_name = 'themes'
-
-
-from bluebottle.initiatives.wallposts import *  # noqa

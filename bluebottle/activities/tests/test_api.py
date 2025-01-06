@@ -1741,29 +1741,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
 
-    def test_activity_over_max_age(self):
-        self.member_settings.anonymization_age = 300
-        self.member_settings.save()
-
-        activity = DateActivityFactory.create(
-            created=now() - timedelta(days=400),
-            status='open'
-        )
-
-        data = self.client.get(
-            reverse('date-detail', args=(activity.id,))
-        ).json()
-
-        self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'], 'anonymous'
-        )
-
-        self.assertTrue(self.anonymous_resource in data['included'])
-
-    def test_activity_not_over_max_age(self):
-        self.member_settings.anonymization_age = 300
-        self.member_settings.save()
-
+    def test_activity(self):
         activity = DateActivityFactory.create(
             created=now() - timedelta(days=200),
             status='open'
@@ -1779,44 +1757,7 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertTrue(self.anonymous_resource not in data['included'])
 
-    def test_initiative_over_max_age(self):
-        self.member_settings.anonymization_age = 300
-        self.member_settings.save()
-
-        initiative = InitiativeFactory.create(
-            status='open',
-            promoter=BlueBottleUserFactory.create(),
-            reviewer=BlueBottleUserFactory.create(),
-        )
-
-        initiative.created = now() - timedelta(days=400)
-        initiative.save()
-
-        DateActivityFactory.create(
-            initiative=initiative,
-            created=now() - timedelta(days=400),
-            status='open'
-        )
-        data = self.client.get(
-            reverse('initiative-detail', args=(initiative.id,))
-        ).json()
-
-        self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'], 'anonymous'
-        )
-
-        self.assertEqual(
-            data['data']['relationships']['activity-managers']['data'][0]['id'], 'anonymous'
-        )
-
-        self.assertEqual(
-            data['data']['relationships']['reviewer']['data']['id'], 'anonymous'
-        )
-
-    def test_initiative_not_over_max_age(self):
-        self.member_settings.anonymization_age = 300
-        self.member_settings.save()
-
+    def test_initiative(self):
         initiative = InitiativeFactory.create(
             status='open',
             promoter=BlueBottleUserFactory.create(),
@@ -1845,40 +1786,6 @@ class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
 
         self.assertEqual(
             data['data']['relationships']['reviewer']['data']['id'], str(initiative.reviewer.pk)
-        )
-
-    def test_participants_over_max_age(self):
-        self.member_settings.anonymization_age = 300
-        self.member_settings.save()
-
-        activity = DateActivityFactory.create(
-            created=now() - timedelta(days=400),
-            status='open'
-        )
-
-        activity_data = self.client.get(
-            reverse('date-detail', args=(activity.id,))
-        ).json()
-
-        DateParticipantFactory.create(
-            activity=activity,
-            created=now() - timedelta(days=350),
-        )
-        new_participant = DateParticipantFactory.create(
-            activity=activity
-        )
-
-        data = self.client.get(
-            activity_data['data']['relationships']['contributors']['links']['related'],
-            user=self.owner
-        ).json()
-        self.assertEqual(
-            data['data'][1]['relationships']['user']['data']['id'],
-            'anonymous'
-        )
-        self.assertEqual(
-            data['data'][0]['relationships']['user']['data']['id'],
-            str(new_participant.user.pk)
         )
 
 

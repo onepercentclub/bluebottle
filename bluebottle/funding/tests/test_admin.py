@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
+from types import SimpleNamespace
 from unittest import mock
 
 import stripe
@@ -183,7 +184,7 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
             "payouts_enabled": True,
         }, stripe.api_key)
 
-        country_spec = []
+        country_spec = SimpleNamespace(**{'data': []})
 
         with mock.patch('stripe.Account.retrieve', return_value=connect_account):
             with mock.patch('stripe.CountrySpec.list', return_value=country_spec):

@@ -143,7 +143,7 @@ class StripeBankTransferList(PaymentList):
             },
         }
         if currency == 'EUR':
-            payment_method_options['customer_balance']['bank_transfer']['eu_bank_transfer'] = {"country": "NL"},
+            payment_method_options['customer_balance']['bank_transfer']['eu_bank_transfer'] = {"country": "NL"}
 
         # Create the customer in Stripe
         user = get_current_user()

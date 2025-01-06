@@ -113,7 +113,7 @@ class OfficeSerializer(ModelSerializer):
 
 
 class PlaceSerializer(ModelSerializer):
-    position = PointSerializer(allow_null=True)
+    position = PointSerializer(required=False, allow_null=True)
 
     class Meta(object):
         model = Place

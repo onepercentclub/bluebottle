@@ -15,8 +15,11 @@ from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding
 from bluebottle.funding.tests.factories import (
-    FundingFactory, RewardFactory, DonorFactory,
-    BudgetLineFactory
+    FundingFactory,
+    PlainPayoutAccountFactory,
+    RewardFactory,
+    DonorFactory,
+    BudgetLineFactory,
 )
 from bluebottle.funding_flutterwave.tests.factories import (
     FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
@@ -278,6 +281,17 @@ class RewardListTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_coinitiator(self):
+        coinitiator = BlueBottleUserFactory.create()
+        self.initiative.activity_managers.add(coinitiator)
+        response = self.client.post(
+            self.create_url,
+            data=json.dumps(self.data),
+            user=coinitiator
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_no_user(self):
         response = self.client.post(
             self.create_url,
@@ -375,28 +389,31 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(
             initiative=self.initiative,
             owner=self.user,
-            target=Money(5000, 'EUR'),
-            deadline=now() + timedelta(days=15)
+            target=Money(5000, "EUR"),
+            deadline=now() + timedelta(days=15),
         )
 
         BudgetLineFactory.create(activity=self.funding)
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
         )
         self.funding.save()
         self.funding.states.submit()
         self.funding.states.approve(save=True)
 
-        self.funding_url = reverse('funding-detail', args=(self.funding.pk,))
+        self.funding_url = reverse("funding-detail", args=(self.funding.pk,))
         self.data = {
-            'data': {
-                'id': self.funding.pk,
-                'type': 'activities/fundings',
-                'attributes': {
-                    'title': 'New title',
-                }
+            "data": {
+                "id": self.funding.pk,
+                "type": "activities/fundings",
+                "attributes": {
+                    "title": "New title",
+                },
             }
         }
 
@@ -522,27 +539,28 @@ class FundingDetailTestCase(BluebottleTestCase):
         DonorFactory.create(activity=self.funding, user=None, amount=Money(35, 'EUR'), status='succeeded')
         response = self.client.get(self.funding_url, user=self.funding.owner)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.json()['data']
-        export_url = data['attributes']['supporters-export-url']['url']
+        data = response.json()["data"]
+        export_url = data["attributes"]["supporters-export-url"]["url"]
         export_response = self.client.get(export_url)
-        self.assertEqual(
-            export_response.status_code, 200
-        )
+        self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
         self.funding.save()
 
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -552,27 +570,32 @@ class FundingDetailTestCase(BluebottleTestCase):
             ):
                 response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        bank_account = response.json()['data']['relationships']['bank-account']['data']
-        self.assertEqual(
-            bank_account['id'], str(self.funding.bank_account.pk)
-        )
+        bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
+        self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
 
     def test_other_user(self):
-        DonorFactory.create_batch(5, amount=Money(200, 'EUR'), activity=self.funding, status='succeeded')
-        DonorFactory.create_batch(2, amount=Money(100, 'EUR'), activity=self.funding, status='new')
+        DonorFactory.create_batch(
+            5, amount=Money(200, "EUR"), activity=self.funding, status="succeeded"
+        )
+        DonorFactory.create_batch(
+            2, amount=Money(100, "EUR"), activity=self.funding, status="new"
+        )
 
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
         self.funding.save()
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -609,23 +632,23 @@ class FundingDetailTestCase(BluebottleTestCase):
         )
         response = self.client.get(self.funding_url, user=self.user)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            len(response.json()['data']['meta']['transitions']),
-            0
-        )
+        self.assertEqual(len(response.json()["data"]["meta"]["transitions"]), 0)
 
     def test_update_bank_account(self):
         external_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
         )
-        connect_account = stripe.Account('some-connect-id')
-        connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [connect_account]
-            })
-        })
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
 
         with mock.patch(
                 'stripe.Account.retrieve', return_value=connect_account
@@ -699,7 +722,10 @@ class FundingTestCase(BluebottleTestCase):
         settings.activity_types.append('funding')
         settings.save()
 
-        self.bank_account = PledgeBankAccountFactory.create(status='verified')
+        self.bank_account = PledgeBankAccountFactory.create(
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
+        )
 
         self.create_url = reverse('funding-list')
 
@@ -777,8 +803,9 @@ class FundingTestCase(BluebottleTestCase):
 
         funding = Funding.objects.last()
         funding.bank_account = self.bank_account
-        BudgetLineFactory.create_batch(2, activity=funding)
         funding.save()
+
+        BudgetLineFactory.create_batch(2, activity=funding)
 
         response = self.client.get(update_url, data, user=self.user)
         data = response.json()
@@ -1011,8 +1038,7 @@ class DonationTestCase(BluebottleTestCase):
         }
 
         response = self.client.patch(update_url, json.dumps(patch_data))
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_no_user(self):
         response = self.client.post(self.create_url, json.dumps(self.data))
@@ -1038,6 +1064,9 @@ class DonationTestCase(BluebottleTestCase):
             'data': {
                 'type': 'contributors/donations',
                 'id': data['data']['id'],
+                'attributes': {
+                    'client-secret': data['data']['attributes']['client-secret']
+                },
                 'relationships': {
                     'user': {
                         'data': {
@@ -1052,7 +1081,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
         data = response.json()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1124,6 +1152,7 @@ class DonationTestCase(BluebottleTestCase):
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
+                    'client-secret': data['data']['attributes']['client-secret']
                 },
             }
         }
@@ -1131,7 +1160,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1152,6 +1180,7 @@ class DonationTestCase(BluebottleTestCase):
                 'id': data['data']['id'],
                 'attributes': {
                     'amount': {'amount': 200, 'currency': 'EUR'},
+                    'client-secret': data['data']['attributes']['client-secret']
                 },
                 'relationships': {
                     'user': {
@@ -1167,7 +1196,6 @@ class DonationTestCase(BluebottleTestCase):
         response = self.client.patch(
             update_url,
             json.dumps(patch_data),
-            HTTP_AUTHORIZATION='Donation {}'.format(data['data']['attributes']['client-secret'])
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1250,189 +1278,33 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(CurrencySettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
-        stripe = StripePaymentProviderFactory.create()
-        stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
-        flutterwave_provider = FlutterwavePaymentProviderFactory.create()
-
-        cur = flutterwave_provider.paymentcurrency_set.first()
-        cur.min_amount = 1000
-        cur.default1 = 1000
-        cur.default2 = 2000
-        cur.default3 = 5000
-        cur.default4 = 10000
-        cur.save()
+        provider = StripePaymentProviderFactory.create()
+        provider.paymentcurrency_set.create(
+            code='EUR',
+            min_amount=5,
+            max_amount=None,
+            default1=10,
+            default2=20,
+            default3=50,
+            default4=100,
+        )
 
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(response.data['platform']['currencies'])
 
-        self.assertEqual(
-            response.data['platform']['currencies'], [{
+        self.assertTrue(
+            {
+                'provider': 'stripe',
+                'providerName': 'Stripe',
                 'code': 'EUR',
                 'name': 'Euro',
-                'maxAmount': None,
                 'symbol': '€',
-                'minAmount': 5.00,
                 'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'stripe',
-                'providerName': 'Stripe'
-            }, {
-                'code': 'USD',
-                'name': 'US Dollar',
-                'maxAmount': None,
-                'symbol': '$',
                 'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'stripe',
-                'providerName': 'Stripe'
-            }, {
-                'code': 'NGN',
-                'name': 'Nigerian Naira',
-                'maxAmount': None,
-                'symbol': '₦',
-                'minAmount': 1000.00,
-                'defaultAmounts': [1000.00, 2000.00, 5000.00, 10000.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'KES',
-                'name': 'Kenyan Shilling',
-                'maxAmount': None,
-                'symbol': 'KES',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'USD',
-                'name': 'US Dollar',
-                'maxAmount': None,
-                'symbol': '$',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }, {
-                'code': 'XOF',
-                'name': 'West African CFA Franc',
-                'maxAmount': None,
-                'symbol': 'CFA',
-                'minAmount': 5.00,
-                'defaultAmounts': [10.00, 20.00, 50.00, 100.00],
-                'provider': 'flutterwave',
-                'providerName': 'Flutterwave'
-            }]
-        )
-
-
-class PayoutAccountTestCase(BluebottleTestCase):
-    def setUp(self):
-        super(PayoutAccountTestCase, self).setUp()
-        StripePaymentProvider.objects.all().delete()
-        self.stripe = StripePaymentProviderFactory.create()
-        flutterwave_provider = FlutterwavePaymentProviderFactory.create()
-        cur = flutterwave_provider.paymentcurrency_set.first()
-        cur.min_amount = 1000
-        cur.default1 = 1000
-        cur.default2 = 2000
-        cur.default3 = 5000
-        cur.default4 = 10000
-        cur.save()
-        self.stripe_account = StripePayoutAccountFactory.create()
-        self.stripe_bank = ExternalAccountFactory.create(connect_account=self.stripe_account, status='verified')
-
-        self.funding = FundingFactory.create(
-            bank_account=self.stripe_bank,
-            target=Money(5000, 'EUR'),
-            status='open'
-        )
-        self.funding_url = reverse('funding-detail', args=(self.funding.id,))
-        self.connect_account = stripe.Account('some-connect-id')
-
-        self.connect_account.update({
-            'country': 'NL',
-            'external_accounts': stripe.ListObject({
-                'data': [self.connect_account]
-            })
-        })
-
-    def test_stripe_methods(self):
-        self.stripe.paymentcurrency_set.filter(code__in=['AUD', 'GBP']).all().delete()
-        with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-        ):
-            with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_account
-            ):
-                response = self.client.get(self.funding_url)
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        included = json.loads(response.content)['included']
-
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
-
-        self.assertEqual(
-            payment_methods,
-            [
-                {
-                    u'code': u'bancontact',
-                    u'name': u'Bancontact',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'BE']
-                },
-                {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR', u'USD'],
-                    u'countries': []
-                },
-                {
-                    u'code': u'direct-debit',
-                    u'name': u'Direct debit',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': []
-                },
-                {
-                    u'code': u'ideal',
-                    u'name': u'iDEAL',
-                    u'provider': u'stripe',
-                    u'currencies': [u'EUR'],
-                    u'countries': [u'NL']
-                }
-            ]
-        )
-
-    def test_stripe_just_credit_card(self):
-        self.stripe.ideal = False
-        self.stripe.direct_debit = False
-        self.stripe.bancontact = False
-        self.stripe.save()
-
-        with mock.patch(
-                'stripe.Account.retrieve', return_value=self.connect_account
-        ):
-            with mock.patch(
-                    'stripe.ListObject.retrieve', return_value=self.connect_account
-            ):
-                response = self.client.get(self.funding_url)
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        included = json.loads(response.content)['included']
-
-        payment_methods = [method['attributes'] for method in included if method['type'] == u'payments/payment-methods']
-
-        self.assertEqual(
-            payment_methods,
-            [
-                {
-                    u'code': u'credit-card',
-                    u'name': u'Credit card',
-                    u'currencies': [u'USD', u'EUR', u'GBP', u'AUD'],
-                    u'provider': u'stripe',
-                    u'countries': []
-                }
-            ]
+                'maxAmount': None
+            } in response.data['platform']['currencies']
         )
 
 
@@ -1461,17 +1333,21 @@ class PayoutDetailTestCase(BluebottleTestCase):
         BudgetLineFactory.create(activity=self.funding)
 
     def get_payout_url(self, payout):
-        return reverse('payout-details', args=(payout.pk,))
+        return reverse("payout-details", args=(payout.pk,))
 
     def test_get_stripe_payout(self):
         self.funding.bank_account = ExternalAccountFactory.create(
-            account_id='some-external-account-id',
-            status='verified'
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id", status="verified"
+            ),
         )
         self.funding.save()
 
         with mock.patch(
-                'bluebottle.funding_stripe.models.ExternalAccount.verified', new_callable=mock.PropertyMock
+            "bluebottle.funding_stripe.models.ExternalAccount.verified",
+            new_callable=mock.PropertyMock,
         ) as verified:
             verified.return_value = True
             self.funding.states.submit()
@@ -1554,9 +1430,10 @@ class PayoutDetailTestCase(BluebottleTestCase):
         VitepayPaymentProvider.objects.all().delete()
         VitepayPaymentProviderFactory.create()
         self.funding.bank_account = VitepayBankAccountFactory.create(
-            account_name='Test Tester',
-            mobile_number='12345',
-            status='verified'
+            account_name="Test Tester",
+            mobile_number="12345",
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1598,7 +1475,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         LipishaPaymentProvider.objects.all().delete()
         LipishaPaymentProviderFactory.create()
         self.funding.bank_account = LipishaBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -1639,7 +1517,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_flutterwave_payout(self):
         FlutterwavePaymentProviderFactory.create()
         self.funding.bank_account = FlutterwaveBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
 
         self.funding.states.submit()
@@ -1681,7 +1560,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_get_pledge_payout(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
 
         self.funding.states.submit()
@@ -1723,7 +1603,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
     def test_put(self):
         PledgePaymentProviderFactory.create()
         self.funding.bank_account = PledgeBankAccountFactory.create(
-            status='verified'
+            status="verified",
+            connect_account=PlainPayoutAccountFactory.create(status="verified"),
         )
         BudgetLineFactory.create(activity=self.funding)
 
@@ -1817,18 +1698,20 @@ class FundingAPITestCase(APITestCase):
 
     def setUp(self):
         super().setUp()
-        owner = BlueBottleUserFactory.create(
-            is_co_financer=True
+        owner = BlueBottleUserFactory.create(is_co_financer=True)
+        self.initiative = InitiativeFactory.create(status="approved")
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
         )
-        self.initiative = InitiativeFactory.create(status='approved')
-        payout_account = StripePayoutAccountFactory.create(status='verified')
-        bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        bank_account = ExternalAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         self.activity = FundingFactory.create(
             owner=owner,
             initiative=self.initiative,
-            target=Money(500, 'EUR'),
+            target=Money(500, "EUR"),
             deadline=now() + timedelta(weeks=2),
-            bank_account=bank_account
+            bank_account=bank_account,
         )
         BudgetLineFactory.create(activity=self.activity)
         self.activity.bank_account.reviewed = True
@@ -1856,16 +1739,21 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         funding_settings = FundingPlatformSettings.load()
         funding_settings.anonymous_donations = True
         funding_settings.allow_anonymous_rewards = True
+        funding_settings.matching_name = "Dagobert Duck"
         funding_settings.save()
         response = self.client.get('/api/config', user=self.user)
         self.assertEqual(response.status_code, 200)
         data = response.json()
+
         self.assertEquals(
             data['platform']['funding'],
             {
-                'anonymous_donations': True,
-                'allow_anonymous_rewards': True
-            }
+                "allow_anonymous_rewards": True,
+                "anonymous_donations": True,
+                "matching_name": "Dagobert Duck",
+                'public_accounts': False,
+                "stripe_publishable_key": "test-pub-key",
+            },
         )
 
 

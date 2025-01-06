@@ -1,0 +1,9 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n %}
+
+{% block object-tools-items %}
+    <a href="{% url 'admin:segments_segment_merge' object_id %}" class="button default">
+       {% trans 'Merge' %}
+    </a>
+{{ block.super }}
+{% endblock %}

@@ -18,6 +18,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.time_based.models import TeamMember
 
 logger = logging.getLogger('bluebottle')
 
@@ -100,7 +101,7 @@ def get_matching_activities(user):
             Term(is_online=True)
         )
 
-    if user.search_distance and user.place:
+    if user.search_distance and user.search_distance != "0km" and user.place:
         position = {
             'lat': float(user.place.position[1]),
             'lon': float(user.place.position[0]),
@@ -139,16 +140,14 @@ def recommend():
             settings = InitiativePlatformSettings.objects.get()
             if settings.enable_matching_emails:
                 for user in Member.objects.filter(subscribed=True):
-                    activities = get_matching_activities(user)
+                    try:
+                        activities = get_matching_activities(user)
 
-                    if activities:
-                        notification = MatchingActivitiesNotification(user)
-                        try:
-                            notification.compose_and_send(
-                                activities=activities
-                            )
-                        except Exception as e:
-                            logger.error(e)
+                        if activities:
+                            notification = MatchingActivitiesNotification(user)
+                            notification.compose_and_send(activities=activities)
+                    except Exception as e:
+                        logger.error(e)
 
 
 @periodic_task(
@@ -203,6 +202,17 @@ def data_retention_contribution_task():
                         user=None,
                     )
 
+                team_members = TeamMember.objects.filter(
+                    created__lt=history, user__isnull=False
+                )
+                if contributors.count():
+                    logger.info(
+                        f"DATA RETENTION: {tenant.schema_name} anonymizing {team_members.count()} team members"
+                    )
+                    team_members.update(
+                        user=None,
+                    )
+
             if settings.retention_delete:
                 history = now() - relativedelta(months=settings.retention_delete)
                 contributors = Contributor.objects.filter(created__lt=history)
@@ -214,6 +224,14 @@ def data_retention_contribution_task():
                         activity = Activity.objects.filter(id=success['activity_id']).get()
                         activity.deleted_successful_contributors = success['total']
                         activity.save(run_triggers=False)
-
-                    for contributor in contributors.all():
+                    for contributor in contributors:
+                        contributions = contributor.contributions.all()
+                        contributions.update(contributor=None)
                         contributor.delete()
+
+                team_members = TeamMember.objects.filter(created__lt=history)
+                if team_members.count():
+                    logger.info(
+                        f"DATA RETENTION: {tenant.schema_name} deleting {team_members.count()} team members"
+                    )
+                    team_members.delete()

@@ -1,0 +1,13 @@
+{% load i18n %}
+<h3>{%trans "Check preparation time contribution" %}</h3>
+
+<p>
+{% blocktrans with participant=effects.0.instance.user %}
+    Check if we should change the status of the preparation time
+{% endblocktrans %}
+
+{% if effects|length > 1%} 
+    {% blocktrans with count=effects|length|add:"-1" %}
+        and {{count}} others
+    {% endblocktrans %}
+{% endif %} 

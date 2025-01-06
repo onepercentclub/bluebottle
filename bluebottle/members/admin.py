@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.db import connection
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.forms import BaseInlineFormSet
 from django.forms.widgets import Select
 from django.http import HttpResponse
@@ -49,11 +49,23 @@ from bluebottle.members.models import (
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
 from bluebottle.segments.models import SegmentType
-from bluebottle.time_based.models import DateParticipant, PeriodParticipant
-from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin, admin_info_box
+from bluebottle.time_based.models import (
+    DateParticipant,
+    PeriodicParticipant,
+    DeadlineParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+)
+from bluebottle.utils.admin import (
+    export_as_csv_action,
+    BasePlatformSettingsAdmin,
+    admin_info_box,
+)
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
+from ..offices.admin import RegionManagerAdminMixin
+from ..offices.models import OfficeSubRegion
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -150,8 +162,12 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Privacy'),
             {
                 'fields': (
-                    'session_only', 'require_consent', 'consent_link', 'anonymization_age',
-                    'display_member_names'
+                    'session_only',
+                    'consent_link',
+                    'disable_cookie_consent',
+                    'anonymization_age',
+                    'display_member_names',
+                    'gtm_code',
                 )
             }
         ),
@@ -218,13 +234,15 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             else:
                 description = _('Members are required to fill out the fields listed '
                                 'below when contributing to an activity.')
-            fieldsets += ((
-                _('Required fields'),
-                {
-                    'description': description,
-                    'fields': required_fields
-                }
-            ), )
+            fieldsets += (
+                (
+                    _('Required fields'),
+                    {
+                        'description': description,
+                        'fields': required_fields
+                    }
+                ),
+            )
 
         return fieldsets
 
@@ -234,6 +252,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
+
+        if request.user.region_manager and not request.user.is_superuser:
+            read_only_fields += ("region_manager",)
+
         return read_only_fields
 
     def segment_types(self, obj):
@@ -356,7 +378,6 @@ class LimitModelFormset(BaseInlineFormSet):
 
 
 class UserActivityInline(admin.TabularInline):
-
     readonly_fields = ['created', 'user', 'path']
     extra = 0
     model = UserActivity
@@ -397,8 +418,8 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location')
+class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
+    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
@@ -409,17 +430,36 @@ class MemberAdmin(UserAdmin):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
 
+    permission_fields = [
+        'is_active',
+        'is_staff',
+        'is_superuser',
+        'groups',
+        'is_co_financer',
+        'can_pledge',
+        'verified',
+        'kyc'
+    ]
+
+    def get_permission_fields(self, request, obj=None):
+        fields = self.permission_fields.copy()
+        if OfficeSubRegion.objects.count():
+            fields.insert(4, 'region_manager')
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         if not obj:
-            fieldsets = ((
-                None, {
-                    'classes': ('wide', ),
-                    'fields': [
-                        'first_name', 'last_name', 'email', 'is_active',
-                        'is_staff', 'groups'
-                    ]
-                }
-            ), )
+            fieldsets = (
+                (
+                    None, {
+                        'classes': ('wide',),
+                        'fields': [
+                            'first_name', 'last_name', 'email', 'is_active',
+                            'is_staff', 'groups'
+                        ]
+                    }
+                ),
+            )
         else:
             fieldsets = [
                 [
@@ -447,26 +487,17 @@ class MemberAdmin(UserAdmin):
                     _("Profile"),
                     {
                         'fields':
-                        [
-                            'picture',
-                            'about_me',
-                            'campaign_notifications',
-                        ]
+                            [
+                                'avatar',
+                                'about_me',
+                                'campaign_notifications',
+                            ]
 
                     }
                 ],
                 [
                     _('Permissions'),
-                    {'fields': [
-                        'is_active',
-                        'is_staff',
-                        'is_superuser',
-                        'groups',
-                        'is_co_financer',
-                        'can_pledge',
-                        'verified',
-                        'kyc'
-                    ]}
+                    {'fields': self.get_permission_fields(request, obj)}
                 ],
                 [
                     _('Engagement'),
@@ -479,11 +510,11 @@ class MemberAdmin(UserAdmin):
                     _('Search'),
                     {
                         'fields':
-                        [
-                            'matching_options_set',
-                            'search_distance', 'any_search_distance', 'exclude_online',
-                            'place', 'favourite_themes', 'skills', 'subscribed',
-                        ]
+                            [
+                                'matching_options_set',
+                                'search_distance', 'any_search_distance', 'exclude_online',
+                                'place', 'favourite_themes', 'skills', 'subscribed',
+                            ]
                     }
                 ],
             ]
@@ -520,13 +551,27 @@ class MemberAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = [
-            'date_joined', 'last_login',
-            'updated', 'deleted', 'login_as_link',
-            'reset_password', 'resend_welcome_link',
-            'initiatives', 'period_activities', 'date_activities',
-            'funding', 'deeds', 'collect', 'kyc',
-            'hours_spent', 'hours_planned', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "deadline_activities",
+            "periodic_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "date_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "kyc",
+            "hours_spent",
+            "hours_planned",
+            "all_contributions",
+            "data_retention_info",
         ]
 
         user_groups = request.user.groups.all()
@@ -546,15 +591,18 @@ class MemberAdmin(UserAdmin):
 
     def get_impact_fields(self, obj):
         fields = [
-            'all_contributions',
-            'hours_spent',
-            'hours_planned',
-            'initiatives',
-            'date_activities',
-            'period_activities',
-            'funding',
-            'deeds',
-            'collect',
+            "all_contributions",
+            "hours_spent",
+            "hours_planned",
+            "initiatives",
+            "date_activities",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "funding",
+            "deeds",
+            "collect",
         ]
         member_settings = MemberPlatformSettings.load()
         if member_settings.retention_delete or member_settings.retention_anonymize:
@@ -571,15 +619,18 @@ class MemberAdmin(UserAdmin):
 
     def hours_spent(self, obj):
         return obj.hours_spent
+
     hours_spent.short_description = _("Hours spent this year")
 
     def hours_planned(self, obj):
         return obj.hours_planned
+
     hours_planned.short_description = _("Hours planned this year")
 
     def all_contributions(self, obj):
         url = reverse('admin:activities_contribution_changelist') + f'?contributor__user_id={obj.id}'
         return format_html('<a href={}>{}</a>', url, _("Show all contributions"))
+
     all_contributions.short_description = _("All contributions")
 
     export_fields = (
@@ -657,41 +708,59 @@ class MemberAdmin(UserAdmin):
         if len(initiatives):
             return format_html('<ul>{}</ul>', format_html('<br/>'.join(initiatives)))
         return _('None')
+
     initiatives.short_description = _('Initiatives')
 
-    def date_activities(self, obj):
-        participants = []
-        participant_url = reverse('admin:time_based_dateparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
-            if DateParticipant.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
+    def get_stats(self, obj, contributor_model):
+        applicants = []
+        applicant_url = reverse(
+            f"admin:{contributor_model._meta.app_label}_{contributor_model._meta.model_name}_changelist"
+        )
+        stats = (
+            contributor_model.objects.filter(user=obj)
+            .values("status")
+            .annotate(count=Count("status"))
+        )
+        for stat in stats:
+            link = applicant_url + "?user_id={}&status={}".format(
+                obj.id, stat["status"]
+            )
+            applicants.append(
+                format_html(
                     '<a href="{}">{}</a> {}',
                     link,
-                    DateParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
+                    stat["count"],
+                    stat["status"],
+                )
+            )
+        if len(applicants):
+            return format_html("<ul>{}</ul>", format_html("<br/>".join(applicants)))
+        return format_html("<i>{}</i>", _("None"))
 
-        if len(participants):
-            return format_html('<ul>{}</ul>', format_html('<br/>'.join(participants)))
-        return _('None')
+    def date_activities(self, obj):
+        return self.get_stats(obj, DateParticipant)
+
     date_activities.short_description = _('Activity on a date')
 
-    def period_activities(self, obj):
-        applicants = []
-        applicant_url = reverse('admin:time_based_periodparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected']:
-            if PeriodParticipant.objects.filter(status=status, user=obj).count():
-                link = applicant_url + '?user_id={}&status={}'.format(obj.id, status)
-                applicants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    PeriodParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        if len(applicants):
-            return format_html('<ul>{}</ul>', format_html('<br/>'.join(applicants)))
-    period_activities.short_description = _('Activity over a period')
+    def periodic_activities(self, obj):
+        return self.get_stats(obj, PeriodicParticipant)
+
+    periodic_activities.short_description = _("Recurring activity")
+
+    def deadline_activities(self, obj):
+        return self.get_stats(obj, DeadlineParticipant)
+
+    periodic_activities.short_description = _("Flexible activity")
+
+    def schedule_activities(self, obj):
+        return self.get_stats(obj, ScheduleParticipant)
+
+    schedule_activities.short_description = _("Schedule activity")
+
+    def team_schedule_activities(self, obj):
+        return self.get_stats(obj, TeamScheduleParticipant)
+
+    team_schedule_activities.short_description = _("Team schedule activity")
 
     def funding(self, obj):
         donations = []
@@ -704,42 +773,24 @@ class MemberAdmin(UserAdmin):
                 Donor.objects.filter(status='succeeded', user=obj).count(),
             ))
         return format_html('<br/>'.join(donations)) or _('None')
+
     funding.short_description = _('Funding donations')
 
     def deeds(self, obj):
-        participants = []
-        participant_url = reverse('admin:deeds_deedparticipant_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
-            if DeedParticipant.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    DeedParticipant.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        return format_html('<br/>'.join(participants)) or _('None')
+        return self.get_stats(obj, DeedParticipant)
+
     deeds.short_description = _('Deed participation')
 
     def collect(self, obj):
-        participants = []
-        participant_url = reverse('admin:collect_collectcontributor_changelist')
-        for status in ['new', 'accepted', 'withdrawn', 'rejected', 'succeeded']:
-            if CollectContributor.objects.filter(status=status, user=obj).count():
-                link = participant_url + '?user_id={}&status={}'.format(obj.id, status)
-                participants.append(format_html(
-                    '<a href="{}">{}</a> {}',
-                    link,
-                    CollectContributor.objects.filter(status=status, user=obj).count(),
-                    status,
-                ))
-        return format_html('<br/>'.join(participants)) or _('None')
+        return self.get_stats(obj, CollectContributor)
+
     collect.short_description = _('Collect contributor')
 
     def following(self, obj):
         url = reverse('admin:bb_follow_follow_changelist')
         follow_count = Follow.objects.filter(user=obj).count()
         return format_html('<a href="{}?user_id={}">{} objects</a>', url, obj.id, follow_count)
+
     following.short_description = _('Following')
 
     def reset_password(self, obj):
@@ -768,6 +819,7 @@ class MemberAdmin(UserAdmin):
             obj.funding_payout_account.count(),
             _("accounts")
         )
+
     kyc.short_description = _("KYC accounts")
 
     def get_inline_instances(self, request, obj=None):
@@ -822,7 +874,7 @@ class MemberAdmin(UserAdmin):
         )
         message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
         self.message_user(request, message)
-        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
     @confirmation_form(
         SendWelcomeMailConfirmationForm,
@@ -838,7 +890,7 @@ class MemberAdmin(UserAdmin):
         message = _('User {name} will receive an welcome email.').format(name=user.full_name)
         self.message_user(request, message)
 
-        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)))
 
     @confirmation_form(
         LoginAsConfirmationForm,
@@ -858,6 +910,7 @@ class MemberAdmin(UserAdmin):
             u"<a target='_blank' href='{}'>{}</a>",
             url, _('Login as user')
         )
+
     login_as_link.short_description = _('Login as')
 
     def has_delete_permission(self, request, obj=None):

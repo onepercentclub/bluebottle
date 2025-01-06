@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from django_summernote.widgets import SummernoteWidget
+from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
 from bluebottle.segments.models import SegmentType, Segment
@@ -55,8 +56,27 @@ class SegmentAdminForm(forms.ModelForm):
         }
 
 
+class SegmentMergeForm(forms.Form):
+    to = forms.ModelChoiceField(
+        label=_("Merge with"),
+        help_text=_("Choose location to merge with"),
+        queryset=Segment.objects.all(),
+    )
+
+    title = _("Merge")
+
+    def __init__(self, obj, *args, **kwargs):
+        super(SegmentMergeForm, self).__init__(*args, **kwargs)
+
+        self.fields["to"].queryset = (
+            self.fields["to"]
+            .queryset.exclude(pk=obj.pk)
+            .filter(segment_type=obj.segment_type)
+        )
+
+
 @admin.register(Segment)
-class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
+class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
     model = Segment
     form = SegmentAdminForm
 
@@ -86,6 +106,8 @@ class SegmentAdmin(admin.ModelAdmin, DynamicArrayMixin):
             'fields': ['alternate_names'],
         }),
     )
+
+    merge_form = SegmentMergeForm
 
     def has_add_permission(self, *args, **kwargs):
         return False

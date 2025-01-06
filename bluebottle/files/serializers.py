@@ -115,7 +115,6 @@ class DocumentSerializer(ModelSerializer):
 
 
 class PrivateDocumentSerializer(DocumentSerializer):
-
     def get_link(self, obj):
         if self.relationship:
             parent = getattr(obj, self.relationship).first()
@@ -133,10 +132,12 @@ class ImageField(ResourceRelatedField):
 
 
 IMAGE_SIZES = {
-    'preview': '292x164',
-    'small': '320x180',
-    'large': '600x337',
-    'cover': '1568x882'
+    "email": "200x200",
+    "avatar": "200x200",
+    "preview": "292x164",
+    "small": "320x180",
+    "large": "600x337",
+    "cover": "1568x882",
 }
 
 

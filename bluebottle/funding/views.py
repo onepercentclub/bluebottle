@@ -10,7 +10,7 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     ActivitySegmentPermission
 )
-from bluebottle.funding.authentication import DonorAuthentication
+from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
@@ -20,8 +20,7 @@ from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSuccee
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, FundingListSerializer,
-    PayoutAccountSerializer, PlainPayoutAccountSerializer,
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
     PayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
@@ -29,7 +28,8 @@ from bluebottle.segments.models import SegmentType
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
-from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission
+from bluebottle.utils.filters import SearchFilterBackend
+from bluebottle.utils.permissions import IsOwner, OneOf, ResourcePermission, IsActivityManager
 from bluebottle.utils.views import (
     ListAPIView, ListCreateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin,
     CreateAPIView, RetrieveUpdateDestroyAPIView, PrivateFileView
@@ -46,7 +46,7 @@ class RewardList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -61,7 +61,7 @@ class RewardDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPI
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -76,7 +76,7 @@ class BudgetLineList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -91,7 +91,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
     }
 
     related_permission_classes = {
-        'activity': [IsOwner]
+        'activity': [IsActivityManager]
     }
 
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -99,7 +99,7 @@ class BudgetLineDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestro
 
 class FundingList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Funding.objects.all()
-    serializer_class = FundingListSerializer
+    serializer_class = FundingSerializer
 
     permission_classes = (
         ActivityTypePermission,
@@ -262,12 +262,32 @@ class DonationList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
         serializer.save(user=(self.request.user if self.request.user.is_authenticated else None))
 
 
+class ActivityDonationList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
+    queryset = Donor.objects.all()
+    serializer_class = DonorCreateSerializer
+
+    filter_backends = [SearchFilterBackend]
+    filterset_fields = ['status']
+
+    prefetch_for_includes = {
+        'activity': ['activity'],
+        'user': ['user'],
+        'reward': ['reward'],
+        'fundraiser': ['fundraiser'],
+    }
+
+    def get_queryset(self):
+        activity_id = self.kwargs['activity_id']
+        return Donor.objects.filter(activity_id=activity_id).filter(user=self.request.user).order_by('-created')
+
+
 class DonationDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Donor.objects.all()
     serializer_class = DonorSerializer
 
     authentication_classes = (
-        JSONWebTokenAuthentication, DonorAuthentication,
+        ClientSecretAuthentication,
+        JSONWebTokenAuthentication
     )
 
     permission_classes = (

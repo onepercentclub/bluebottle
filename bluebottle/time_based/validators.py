@@ -1,3 +1,4 @@
+import re
 from django.db.models import Min
 from django.utils.translation import gettext_lazy as _
 
@@ -19,6 +20,17 @@ class RegistrationDeadlineValidator(Validator):
         )
 
 
+class RegistrationLinkValidator(Validator):
+    field = "review_link"
+    code = "review-link"
+    message = _("Please use an full url starting with http:// or https://")
+
+    def is_valid(self):
+        return not self.instance.review_link or re.match(
+            "^http[s]?://", self.instance.review_link
+        )
+
+
 class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
@@ -29,7 +41,20 @@ class DateActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
 class PeriodActivityRegistrationDeadlineValidator(RegistrationDeadlineValidator):
     @property
     def maxDate(self):
-        return self.instance.start or self.instance.deadline
+        return self.instance.deadline
+
+
+class PeriodActivityStartDeadlineValidator(Validator):
+    field = 'deadline'
+    code = 'deadline'
+    message = _('Deadline should be after start date')
+
+    def is_valid(self):
+        return (
+            not self.instance.deadline or
+            not self.instance.start or
+            self.instance.deadline > self.instance.start
+        )
 
 
 class CompletedSlotsValidator(Validator):

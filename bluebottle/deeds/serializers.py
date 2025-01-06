@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    SerializerMethodResourceRelatedField, SerializerMethodHyperlinkedRelatedField
+    SerializerMethodResourceRelatedField
 )
 
 from bluebottle.activities.utils import (
@@ -14,6 +14,7 @@ from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
@@ -60,11 +61,15 @@ class DeedSerializer(BaseActivitySerializer):
         source='get_my_contributor'
     )
 
-    contributors = SerializerMethodHyperlinkedRelatedField(
-        model=DeedParticipant,
-        many=True,
-        related_link_url_kwarg='activity_id',
-        related_link_view_name='related-deed-participants'
+    contributors = RelatedLinkFieldByStatus(
+        read_only=True,
+        source='participants',
+        related_link_view_name="related-deed-participants",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["succeeded", "accepted"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
     )
 
     participants_export_url = PrivateFileSerializer(
@@ -105,7 +110,8 @@ class DeedSerializer(BaseActivitySerializer):
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/deeds'
         included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
-            'my_contributor', 'my_contributor.user', 'my_contributor.invite'
+            "my_contributor",
+            "my_contributor.user",
         ]
 
     included_serializers = dict(
@@ -113,7 +119,6 @@ class DeedSerializer(BaseActivitySerializer):
         **{
             'my_contributor': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
-            'my_contributor.invite': 'bluebottle.activities.utils.InviteSerializer',
         }
     )
 
@@ -163,14 +168,17 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'
         included_resources = [
-            'user', 'activity', 'activity.goals', 'invite'
+            "user",
+            "user.avatar",
+            "activity",
+            "activity.goals",
         ]
 
     included_serializers = {
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'activity': 'bluebottle.deeds.serializers.DeedSerializer',
         'activity.goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
-        'invite': 'bluebottle.activities.utils.InviteSerializer',
     }
 
 

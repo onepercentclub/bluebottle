@@ -14,9 +14,11 @@ from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
+from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
+from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType
 from ..time_based.models import TimeContribution
 
@@ -95,13 +97,23 @@ class MemberPlatformSettings(BasePlatformSettings):
         )
     )
 
-    require_consent = models.BooleanField(
-        default=False, help_text=_('Require users to consent to cookies')
-    )
     consent_link = models.CharField(
         default='"https://goodup.com/cookie-policy"',
         help_text=_('Link more information about the platforms cookie policy'),
         max_length=255
+    )
+
+    disable_cookie_consent = models.BooleanField(
+        default=False,
+        help_text=_(
+            'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'
+        )
+    )
+
+    gtm_code = models.CharField(
+        help_text=_('Adding the GTM script to your platform allows you to manage and deploy third-party tools.'),
+        max_length=255,
+        blank=True
     )
 
     background = models.ImageField(
@@ -136,8 +148,17 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     create_segments = models.BooleanField(
         default=False,
-        help_text=_('Create new segments when a user logs in. '
-                    'Leave unchecked if only priorly specified ones should be used.')
+        help_text=_(
+            "Create new segments when a user logs in. "
+            "Leave unchecked if only priorly specified ones should be used."
+        ),
+    )
+    create_locations = models.BooleanField(
+        default=False,
+        help_text=_(
+            "Create new office locations when a user logs in. "
+            "Leave unchecked if only priorly specified ones should be used."
+        ),
     )
 
     anonymization_age = models.IntegerField(
@@ -212,8 +233,13 @@ class MemberPlatformSettings(BasePlatformSettings):
     @property
     def fiscal_year_start(self):
         offset = self.fiscal_month_offset
-        month_start = (datetime(2000, 1, 1) + relativedelta(months=offset)).month
-        return (now() + relativedelta(months=offset)).replace(month=month_start, day=1, hour=0, second=0)
+        month_start = (datetime(now().year, 1, 1) + relativedelta(months=offset)).month
+        fiscal_year = (now() + relativedelta(months=offset)).replace(
+            month=month_start, day=1, hour=0, minute=0, second=0
+        )
+        if now().month < month_start:
+            return fiscal_year - relativedelta(years=1)
+        return fiscal_year
 
     @property
     def fiscal_year_end(self):
@@ -256,6 +282,15 @@ class Member(BlueBottleBaseUser):
     )
 
     place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
+    region_manager = models.ForeignKey(
+        OfficeSubRegion,
+        help_text=_(
+            "Select a region to filter the user's view to only see data relevant to that region. "
+            "Leave empty for full access to all data."
+        ),
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
 
     matching_options_set = models.DateTimeField(
         null=True, blank=True, help_text=_('When the user updated their matching preferences.')
@@ -268,6 +303,8 @@ class Member(BlueBottleBaseUser):
         blank=True,
         through='members.UserSegment'
     )
+
+    avatar = ImageField(blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)

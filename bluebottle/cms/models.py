@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from future.utils import python_2_unicode_compatible
@@ -70,7 +71,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
-        'QuotesBlockPlugin'
+        'QuotesBlockPlugin',
+        'DonateButtonBlockPlugin'
     ])
     translations = TranslatedFields()
 
@@ -259,6 +261,18 @@ class HomepageStatisticsContent(TitledContent):
     preview_template = 'admin/cms/preview/homepage-statistics.html'
     year = models.IntegerField(blank=True, null=True)
 
+    class StatTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
+    stat_type = models.CharField(
+        _("Stat type"),
+        max_length=100,
+        choices=StatTypeChoices.choices,
+        default=StatTypeChoices.all,
+        help_text=_('Stats will show all data or only activities from the user\'s office group')
+    )
+
     class Meta:
         verbose_name = _('Statistics')
 
@@ -308,6 +322,28 @@ class ActivitiesContent(TitledContent):
 
 
 @python_2_unicode_compatible
+class DonateButtonContent(TitledContent):
+    type = 'donate'
+
+    funding = models.ForeignKey(
+        'funding.Funding',
+        verbose_name=_('Campaign'),
+        on_delete=models.CASCADE,
+        limit_choices_to={'status': 'open'}
+    )
+    button_text = models.CharField(max_length=80, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('Donate button')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/donate'
+
+    def __str__(self):
+        return str(self.funding.title)
+
+
+@python_2_unicode_compatible
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,
@@ -348,7 +384,20 @@ class ShareResultsContent(TitledContent):
 
 @python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
+
     type = 'projects-map'
+
+    class MapTypeChoices(DjangoChoices):
+        all = ChoiceItem('all', label=_("Global"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+
+    map_type = models.CharField(
+        _("Map type"),
+        max_length=100,
+        choices=MapTypeChoices.choices,
+        default=MapTypeChoices.all,
+        help_text=_('The map will show all activities or only from the user\'s office group')
+    )
 
     class Meta:
         verbose_name = _('Activities Map')
@@ -400,12 +449,15 @@ class Step(SortableMixin, models.Model):
             ),
             validate_file_infection
         ],
-        help_text=_("The image will be displayed in a square. Upload a square or round "
-                    "image with equal height, to prevent your image from being cropped.")
+        help_text=_(
+            "You can upload an image with a 16:9 aspect ratio for best results or an illustration/icon as a square."
+        ),
     )
     header = models.CharField(_("Header"), max_length=100)
     text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
     link = models.CharField(_("Link"), max_length=100, blank=True, null=True)
+    link_text = models.CharField(max_length=40, blank=True, null=True)
+
     external = models.BooleanField(_("Open in new tab"), default=False, blank=False,
                                    help_text=_('Open the link in a new browser tab'))
 
@@ -585,7 +637,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     action_text_color = ColorField(
         _('Action text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the action colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -606,7 +657,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     description_text_color = ColorField(
         _('Description text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the description colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -620,7 +670,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
     footer_text_color = ColorField(
         _('Footer text colour'), null=True, blank=True,
-        default="#ffffff",
         help_text=_(
             'If the footer colour is quite light, you could set this to a darker colour for better contrast'
         )
@@ -701,7 +750,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             blank=True,
             help_text=_('Slug of the start initiative page')
         ),
-
     )
 
     class Meta:
@@ -736,12 +784,20 @@ class ImagePlainTextItem(TitledContent):
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
+        null=True,
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
             ),
             validate_file_infection
         ]
+    )
+    video_url = models.URLField(
+        _("Video URL"),
+        max_length=255,
+        null=True,
+        blank=True
     )
     action_text = models.CharField(
         max_length=80,
@@ -761,9 +817,9 @@ class ImagePlainTextItem(TitledContent):
     )
 
     RATIO_CHOICES = (
-        ('0.5', _("1:2 (Text twice as wide)")),
-        ('1', _("1:1 (Equal width)")),
-        ('2', _("2:1 (Image twice as wide)")),
+        ("0.5", _("1:2 (Text twice as wide)")),
+        ("1", _("1:1 (Equal width)")),
+        ("2", _("2:1 (Media twice as wide)")),
     )
 
     align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, default="right")
@@ -771,8 +827,8 @@ class ImagePlainTextItem(TitledContent):
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Plain Text + Image')
-        verbose_name_plural = _('Plain Text + Image')
+        verbose_name = _('Plain Text + Media')
+        verbose_name_plural = _('Plain Text + Media')
 
     def __str__(self):
         return Truncator(self.text).words(20)
@@ -788,6 +844,8 @@ class ImageItem(TitledContent):
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
+        null=True,
+        blank=True,
         validators=[
             FileMimetypeValidator(
                 allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
@@ -795,16 +853,24 @@ class ImageItem(TitledContent):
             validate_file_infection
         ]
     )
+    video_url = models.URLField(
+        _("Video URL"),
+        max_length=255,
+        null=True,
+        blank=True
+    )
     preview_template = 'admin/cms/preview/default.html'
 
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Image')
-        verbose_name_plural = _('Image')
+        verbose_name = _('Image or video')
+        verbose_name_plural = _('Image or video')
 
     def __str__(self):
-        return self.image.name
+        if self.image:
+            return self.image.name
+        return f"Image/video {self.pk}"
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image'

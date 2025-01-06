@@ -4,68 +4,17 @@ from datetime import timedelta
 from django.contrib.admin import AdminSite
 from django.urls import reverse
 from django.utils.timezone import now
-from pytz import UTC
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory, PeriodParticipantFactory
+    DateActivityFactory, DateActivitySlotFactory,
+    DateParticipantFactory, SlotParticipantFactory
 )
-
-
-class PeriodActivityAdminTestCase(BluebottleAdminTestCase):
-    extra_environ = {}
-    csrf_checks = False
-    setup_auth = True
-
-    def setUp(self):
-        super().setUp()
-        self.app.set_user(self.staff_member)
-
-    def test_list_shows_duration(self):
-        PeriodActivityFactory.create(duration_period='weeks', duration=timedelta(hours=4))
-        PeriodActivityFactory.create(duration_period='months', duration=timedelta(hours=8))
-        PeriodActivityFactory.create(duration_period=None, duration=timedelta(hours=1))
-        PeriodActivityFactory.create(duration_period='overall', duration=timedelta(hours=10))
-        url = reverse('admin:time_based_periodactivity_changelist')
-        response = self.app.get(url, user=self.staff_member)
-        self.assertEqual(response.status, '200 OK')
-        self.assertTrue('4 hours per week' in response.text)
-        self.assertTrue('8 hours per month' in response.text)
-        self.assertFalse('8 hours per months' in response.text)
-        self.assertTrue('1 hour' in response.text)
-        self.assertFalse('1 hours' in response.text)
-        self.assertTrue('10 hours' in response.text)
-
-    def test_team_activity_disabled(self):
-        activity = PeriodActivityFactory.create()
-        url = reverse('admin:time_based_periodactivity_change', args=(activity.id,))
-        page = self.app.get(url, user=self.staff_member)
-        form = page.forms[0]
-        self.assertFalse('team_activity' in form.fields)
-        self.assertEqual(activity.team_activity, 'individuals')
-
-    def test_team_activity_enabled(self):
-        initiative_settings = InitiativePlatformSettings.load()
-        initiative_settings.team_activities = True
-        initiative_settings.save()
-        activity = PeriodActivityFactory.create()
-        self.assertEqual(activity.team_activity, 'individuals')
-        url = reverse('admin:time_based_periodactivity_change', args=(activity.id,))
-        page = self.app.get(url, user=self.staff_member)
-        form = page.forms[0]
-        self.assertTrue('team_activity' in form.fields)
-        form['team_activity'] = 'teams'
-        form.submit()
-        activity.refresh_from_db()
-        self.assertEqual(activity.team_activity, 'teams')
 
 
 class DateActivityAdminTestCase(BluebottleAdminTestCase):
@@ -95,13 +44,6 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
             "0 Activities on a date" in page.text
         )
         self.assertEqual(DateActivity.objects.count(), 0)
-
-    def test_list_activities_office(self):
-        office = LocationFactory.create(name='Schin op Geul')
-        PeriodActivityFactory.create(office_location=office)
-        url = reverse('admin:time_based_periodactivity_changelist')
-        response = self.app.get(url)
-        self.assertEqual(len(response.html.find_all("a", string="Schin op Geul")), 1)
 
 
 class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
@@ -139,7 +81,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-0-start_1'] = '11:00'
         form['slots-0-duration_0'] = 1
         form['slots-0-duration_1'] = 30
-        form['slots-0-is_online'] = True
 
         self.admin_add_inline_form_entry(form, 'slots')
 
@@ -147,17 +88,15 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form['slots-1-start_1'] = '14:00'
         form['slots-1-duration_0'] = 2
         form['slots-1-duration_1'] = 0
-        form['slots-1-is_online'] = True
 
-        page = form.submit()
-        self.assertContains(page, 'That will have these effects')
-        page.forms[0].submit().follow()
+        page = form.submit().follow()
+
         self.assertEqual(page.status, '200 OK', 'Slots added to the activity')
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)
 
     def test_add_slot_participants(self):
-        activity = DateActivityFactory.create(initiative=self.initiative, slot_selection='free')
+        activity = DateActivityFactory.create(initiative=self.initiative)
         DateActivitySlotFactory.create_batch(2, activity=activity)
         participant = DateParticipantFactory.create(activity=activity)
         self.assertEqual(len(participant.slot_participants.all()), 0)
@@ -171,8 +110,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form.fields['slot_participants-1-checked'][0].checked = True
         form.fields['slot_participants-2-checked'][0].checked = True
 
-        page = form.submit()
-        page.forms['confirm'].submit().follow()
+        form.submit()
 
         self.assertEqual(len(participant.slot_participants.all()), 3)
 
@@ -256,7 +194,6 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
     def setUp(self):
         super().setUp()
         self.activity1 = DateActivityFactory.create(
-            slot_selection='free',
             capacity=None,
             slots=[]
         )
@@ -276,7 +213,6 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
             capacity=None
         )
         self.activity2 = DateActivityFactory.create(
-            slot_selection='all',
             capacity=5,
             slots=[]
         )
@@ -301,12 +237,8 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('<td class="field-attendee_limit">-</td>' in page.text)
         self.assertTrue('<td class="field-attendee_limit">5</td>' in page.text)
 
-        self.assertTrue('<td class="field-required">Required</td>' in page.text)
-        self.assertTrue('<td class="field-required">Optional</td>' in page.text)
         page = page.click('Upcoming')
         self.assertTrue('3 slots' in page.text)
-        page = page.click('Required')
-        self.assertTrue('1 slot' in page.text)
 
 
 class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
@@ -319,10 +251,14 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.activity = DateActivityFactory.create(
             slots=[]
         )
+        self.activity.initiative.states.submit()
+        self.activity.initiative.states.approve(save=True)
+        self.activity.refresh_from_db()
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
-            start=datetime.datetime(2022, 5, 15, tzinfo=UTC)
+            start=now() - datetime.timedelta(days=1)
         )
+        self.activity.states.publish(save=True)
         self.url = reverse('admin:time_based_dateactivityslot_change', args=(self.slot.id,))
         self.app.set_user(self.staff_member)
 
@@ -334,7 +270,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(h3.text.strip(), 'Warning')
         form = page.forms[0]
         form["interval"] = "day"
-        form["end"] = '2022-05-20'
+        form["end"] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
         self.assertEqual(
             page.location,
@@ -344,98 +280,24 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertContains(page, '6 Results')
         self.assertEqual(self.activity.slots.count(), 6)
         self.assertEqual(
-            [str(s.start.date()) for s in self.activity.slots.all()],
-            [
-                '2022-05-15', '2022-05-16', '2022-05-17',
-                '2022-05-18', '2022-05-19', '2022-05-20',
-            ]
+            [s.start.date() for s in self.activity.slots.all()],
+            [datetime.date.today() + timedelta(days=offset) for offset in range(-1, 5)]
         )
 
-
-class PeriodActivityAdminScenarioTestCase(BluebottleAdminTestCase):
-    extra_environ = {}
-    csrf_checks = False
-    setup_auth = True
-
-    def setUp(self):
-        super().setUp()
-        self.app.set_user(self.staff_member)
-        self.owner = BlueBottleUserFactory.create()
-        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
-
-    def test_add_team_participants(self):
-        user = BlueBottleUserFactory.create()
-        activity = PeriodActivityFactory.create(
-            initiative=self.initiative,
-            status='open',
-            team_activity='teams'
-        )
-        PeriodParticipantFactory.create(
-            user=BlueBottleUserFactory.create(),
-            activity=activity
-        )
-        self.assertEqual(activity.contributors.count(), 1)
-        url = reverse('admin:time_based_periodactivity_change', args=(activity.pk,))
-        page = self.app.get(url)
-        self.assertTrue(
-            'Add another Participant' in
-            page.text
-        )
+    def test_duplicate_reopen(self):
+        self.assertEqual(self.activity.status, 'expired')
+        page = self.app.get(self.url)
+        page = page.click('Repeat this slot')
         form = page.forms[0]
-
-        self.admin_add_inline_form_entry(form, 'contributors')
-        form['contributors-1-user'] = user.id
-
+        form["interval"] = "day"
+        form["end"] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
-        self.assertContains(
-            page,
-            "Create a team for the contributor. Make the user the owner "
-            "of the team, and allow him/her to invite other users",
+        self.assertEqual(
+            page.location,
+            f'/en/admin/time_based/dateactivity/{self.activity.id}/change/#/tab/inline_0/'
         )
-        page.forms[0].submit().follow()
-        activity.refresh_from_db()
-        self.assertEqual(activity.contributors.count(), 2)
-
-
-class TeamAdminScenarioTestCase(BluebottleAdminTestCase):
-    extra_environ = {}
-    csrf_checks = False
-    setup_auth = True
-
-    def setUp(self):
-        super().setUp()
-        self.app.set_user(self.staff_member)
-        self.owner = BlueBottleUserFactory.create()
-        self.initiative = InitiativeFactory.create(owner=self.owner, status='approved')
-
-    def test_add_team_participants(self):
-        user1 = BlueBottleUserFactory.create()
-        activity = PeriodActivityFactory.create(
-            initiative=self.initiative,
-            status='open',
-            team_activity='teams'
-        )
-        captain = PeriodParticipantFactory.create(
-            user=BlueBottleUserFactory.create(),
-            activity=activity
-        )
-        self.assertEqual(activity.contributors.count(), 1)
-        url = reverse('admin:activities_team_change', args=(captain.team.pk,))
-        page = self.app.get(url)
-        self.assertTrue(
-            'Add another Participant' in
-            page.text
-        )
-        form = page.forms[0]
-
-        self.admin_add_inline_form_entry(form, 'members')
-        form['members-1-user'] = user1.id
-
-        page = form.submit()
-        self.assertContains(
-            page,
-            "You have been added to a team for",
-        )
-        page.forms[0].submit().follow()
-        activity.refresh_from_db()
-        self.assertEqual(activity.contributors.count(), 2)
+        page = page.follow()
+        self.assertContains(page, '6 Results')
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.slots.count(), 6)
+        self.assertEqual(self.activity.status, 'open')

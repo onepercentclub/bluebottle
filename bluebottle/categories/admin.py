@@ -37,6 +37,7 @@ class CategoryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin, AdminImag
     list_display = ('title', 'slug', 'initiatives')
     inlines = (CategoryContentInline, CategoryInitiativesInline)
     translatable_ordering = 'translations__title'
+    search_fields = ('title', )
 
     def initiatives(self, obj):
         url = reverse('admin:initiatives_initiative_changelist')

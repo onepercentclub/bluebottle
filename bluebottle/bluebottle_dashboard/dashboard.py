@@ -1,17 +1,14 @@
 import importlib
 
-import rules
-from django.urls.base import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
-from jet.dashboard.modules import LinkList
 
 from bluebottle.activities.dashboard import RecentActivities, RecentContributors, UnPublishedActivities
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import MyReviewingInitiatives, RecentInitiatives
 from bluebottle.members.dashboard import RecentMembersDashboard
-from bluebottle.wallposts.dashboard import RecentWallposts
+from bluebottle.updates.dashboard import RecentUpdates
 
 
 class CustomIndexDashboard(Dashboard):
@@ -31,7 +28,7 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(RecentContributors())
 
         # Wallposts
-        self.children.append(RecentWallposts())
+        self.children.append(RecentUpdates())
 
         # Payouts
         self.children.append(PayoutsReadForApprovalDashboardModule())
@@ -44,17 +41,6 @@ class CustomIndexDashboard(Dashboard):
             order=0
         ))
         self.children.append(RecentMembersDashboard())
-        if rules.test_rule('exportdb.can_export', context['request'].user):
-            metrics_children = [
-                {
-                    'title': _('Export metrics'),
-                    'url': reverse_lazy('exportdb_export'),
-                },
-            ]
-            self.children.append(LinkList(
-                _('Export Metrics'),
-                children=metrics_children
-            ))
 
 
 class CustomAppIndexDashboard(DefaultAppIndexDashboard):

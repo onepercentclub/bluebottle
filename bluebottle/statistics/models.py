@@ -8,6 +8,7 @@ from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
+from memoize import memoize
 from parler.models import TranslatedFields, TranslatableModel
 from polymorphic.models import PolymorphicModel
 
@@ -56,7 +57,9 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
         null=True, blank=True, max_length=20
     )
 
-    def get_value(self, start=None, end=None):
+    timeout = 3600
+
+    def get_value(self, start=None, end=None, subregion=None, user=None):
         return self.value
 
     unit = None
@@ -95,6 +98,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         ('activities_online', _('Activities Online')),
         ('time_spent', _('Time spent')),
         ('deeds_done', _('Deeds done')),
+        ('collect_done', _('Collect done')),
         ('members', _("Number of members"))
     ]
     translations = TranslatedFields(
@@ -136,12 +140,18 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 
             'deeds_done': 'deeds',
 
+            'collect_done': 'collect',
+
             'members': 'people',
         }
         return mapping.get(self.query)
 
-    def get_value(self, start=None, end=None):
-        return getattr(Statistics(start, end), self.query)
+    @memoize(timeout=3600)
+    def get_value(self, start=None, end=None, subregion=None, user=None):
+        return getattr(Statistics(start, end, subregion, user), self.query)
+
+    def get_live_value(self, start=None, end=None, subregion=None, user=None):
+        return getattr(Statistics(start, end, subregion, user), self.query)
 
     def __str__(self):
         return str(self.query)
@@ -157,7 +167,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
-    def get_value(self, start=None, end=None):
+    def get_value(self, start=None, end=None, subregion=None, user=None):
         goals = self.impact_type.goals.filter(
             activity__status='succeeded',
         )

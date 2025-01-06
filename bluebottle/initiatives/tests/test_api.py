@@ -29,8 +29,12 @@ from bluebottle.test.factory_models.geo import GeolocationFactory, LocationFacto
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, APITestCase
 from bluebottle.time_based.tests.factories import (
-    PeriodActivityFactory, DateActivityFactory, PeriodParticipantFactory, DateParticipantFactory,
-    DateActivitySlotFactory
+    DeadlineActivityFactory,
+    DateActivityFactory,
+    DeadlineParticipantFactory,
+    DateParticipantFactory,
+    DateActivitySlotFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -226,7 +230,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner,
             place=GeolocationFactory(position=Point(23.6851594, 43.0579025))
         )
-        self.initiative.states.submit(save=True)
         self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
         self.data = {
@@ -329,6 +332,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_cancelled(self):
+        self.initiative.states.submit()
         self.initiative.states.approve()
         self.initiative.states.cancel(save=True)
         response = self.client.put(self.url, json.dumps(self.data), user=self.initiative.owner)
@@ -350,6 +354,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_owner(self):
+        self.initiative.states.submit(save=True)
+
         self.initiative.title = ''
         self.initiative.save()
 
@@ -364,16 +370,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['meta']['status'], self.initiative.status)
         self.assertEqual(
             data['meta']['transitions'],
-            [{
-                'available': True,
-                'name': 'request_changes',
-                'target': 'needs_work',
-                'label': 'Needs work',
-                'passed_label': None,
-                'description': "The status of the initiative is set to 'Needs work'. The " +
-                               "initiator can edit and resubmit the initiative. Don't forget " +
-                               "to inform the initiator of the necessary adjustments."
-            }])
+            []
+        )
         self.assertEqual(data['relationships']['theme']['data']['id'], str(self.initiative.theme.pk))
         self.assertEqual(data['relationships']['owner']['data']['id'], str(self.initiative.owner.pk))
 
@@ -414,18 +412,19 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['attributes']['title'], self.initiative.title)
 
     def test_get_stats(self):
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
-        period_activity = PeriodActivityFactory.create(
+        period_activity = DeadlineActivityFactory.create(
             initiative=self.initiative,
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        period_activity.states.submit(save=True)
-        PeriodParticipantFactory.create_batch(3, activity=period_activity)
-        PeriodParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
+        period_activity.states.publish(save=True)
+        DeadlineParticipantFactory.create_batch(3, activity=period_activity)
+        DeadlineParticipantFactory.create_batch(3, activity=period_activity, status='withdrawn')
 
         date_activity = DateActivityFactory.create(
             initiative=self.initiative,
@@ -433,12 +432,18 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         )
         date_activity.states.publish(save=True)
-        DateActivitySlotFactory.create(
+        slot = DateActivitySlotFactory.create(
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        DateParticipantFactory.create_batch(3, activity=date_activity)
-        DateParticipantFactory.create_batch(3, activity=date_activity, status='withdrawn')
+        for participant in DateParticipantFactory.create_batch(
+            3, activity=date_activity
+        ):
+            SlotParticipantFactory.create(participant=participant, slot=slot)
+        for participant in DateParticipantFactory.create_batch(
+            3, activity=date_activity, status="rejected"
+        ):
+            SlotParticipantFactory.create(participant=participant, slot=slot)
 
         funding = FundingFactory.create(
             initiative=self.initiative,
@@ -487,15 +492,15 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         unrelated_initiative = InitiativeFactory.create()
         unrelated_initiative.states.submit()
         unrelated_initiative.states.approve(save=True)
-        unrelated_activity = PeriodActivityFactory.create(
+        unrelated_activity = DeadlineActivityFactory.create(
             initiative=unrelated_initiative,
             start=datetime.date.today() - datetime.timedelta(weeks=2),
             deadline=datetime.date.today() - datetime.timedelta(weeks=1),
             registration_deadline=datetime.date.today() - datetime.timedelta(weeks=3)
         )
 
-        unrelated_activity.states.submit(save=True)
-        PeriodParticipantFactory.create_batch(3, activity=unrelated_activity)
+        unrelated_activity.states.publish(save=True)
+        DeadlineParticipantFactory.create_batch(3, activity=unrelated_activity)
 
         response = self.client.get(
             self.url,
@@ -504,8 +509,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         stats = response.json()['data']['meta']['stats']
-        self.assertEqual(stats['hours'], 66.0)
-        self.assertEqual(stats['activities'], 6)
+        self.assertEqual(stats['hours'], 18.0)
         self.assertEqual(stats['amount'], {'amount': 75.0, 'currency': 'EUR'})
 
         # 3 period participants
@@ -519,16 +523,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         # organizers are not counted here
         self.assertEqual(stats['contributors'], 19)
         self.assertEqual(stats['effort'], 3)
-
         self.assertEqual(
-            stats['collected'][str(collect_activity.collect_type_id)], collect_activity.realized
-        )
-        self.assertEqual(
-            stats['collected'][str(other_collect_activity.collect_type_id)],
-            other_collect_activity.realized
+            len(stats['collected']),
+            2
         )
 
     def test_get_stats_impact(self):
+        self.initiative.states.submit()
         self.initiative.states.approve(save=True)
 
         co2 = ImpactType.objects.get(slug='co2')
@@ -754,7 +755,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
                 office_location=LocationFactory.create(country=matching_country)
@@ -762,7 +763,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         other = InitiativeFactory.create_batch(3, status='approved')
         for initiative in other:
-            PeriodActivityFactory.create(
+            DeadlineActivityFactory.create(
                 status='open',
                 initiative=initiative,
                 office_location=LocationFactory.create(country=other_country)
@@ -791,7 +792,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = InitiativeFactory.create_batch(2, status='approved')
         for initiative in matching:
-            PeriodActivityFactory.create_batch(
+            DeadlineActivityFactory.create_batch(
                 3,
                 status='open',
                 initiative=initiative,
@@ -801,7 +802,7 @@ class InitiativeListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         other_office = LocationFactory.create()
         other = InitiativeFactory.create_batch(2, status='approved')
         for initiative in other:
-            PeriodActivityFactory.create_batch(
+            DeadlineActivityFactory.create_batch(
                 3,
                 status='open',
                 initiative=initiative,

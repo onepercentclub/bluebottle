@@ -1,7 +1,36 @@
 from rest_framework import permissions
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.utils.permissions import IsOwner, BasePermission
+from bluebottle.time_based.models import Team
+from bluebottle.activities.models import Activity
+from bluebottle.utils.permissions import (
+    IsOwner,
+    BasePermission,
+    ResourceOwnerPermission,
+)
+
+
+class TeamMemberPermission(ResourceOwnerPermission):
+    def has_object_action_permission(self, action, user, obj):
+        try:
+            owner = obj.team.owner
+        except Team.owner.RelatedObjectDoesNotExist:
+            owner = None
+
+        try:
+            activity_owner = obj.team.activity.owner
+        except Activity.owner.RelatedObjectDoesNotExist:
+            activity_owner = None
+
+        return (
+            user
+            in [
+                owner,
+                activity_owner,
+                obj.team.activity.initiative.owner,
+            ]
+            or user in obj.team.activity.initiative.activity_managers.all()
+        )
 
 
 class SlotParticipantPermission(IsOwner):
@@ -13,6 +42,15 @@ class SlotParticipantPermission(IsOwner):
 
     def has_object_permission(self, request, view, obj):
         return not obj.participant or request.user == obj.participant.user
+
+
+class InviteCodePermission(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return str(obj.invite_code) == str(obj.team.invite_code)
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
 
 
 class DateSlotActivityStatusPermission(BasePermission):

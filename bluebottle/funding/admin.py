@@ -42,10 +42,13 @@ from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayout
     StripeSourcePayment, ExternalAccount, StripePayment
 from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment, TelesomBankAccount
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
+from bluebottle.geo.models import Location
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.segments.models import SegmentType
+from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.utils.utils import reverse_signed
-from bluebottle.wallposts.admin import DonorWallpostInline
 
 logger = logging.getLogger(__name__)
 
@@ -125,12 +128,12 @@ class FundingAdminForm(ActivityForm):
     def clean(self):
         clean = super(FundingAdminForm, self).clean()
         donation = self.instance.donations.filter(status='succeeded').order_by('created').first()
-        if donation and clean['deadline'] > donation.created + timedelta(days=61):
-            message = str(_("Can't extend a deadline to more then 60 days from the first donation, which was {date}. "
+        if donation and clean['deadline'] > donation.created + timedelta(days=76):
+            message = str(_("Can't extend a deadline to more then 75 days from the first donation, which was {date}. "
                             "Maximum deadline is {deadline}"))
             message = message.format(
                 date=str(donation.created.date()),
-                deadline=str(donation.created.date() + timedelta(days=60)),
+                deadline=str(donation.created.date() + timedelta(days=75)),
             )
             self.errors['deadline'] = ErrorList([message])
         return clean
@@ -145,7 +148,7 @@ class FundingAdminForm(ActivityForm):
 
 @admin.register(Funding)
 class FundingAdmin(ActivityChildAdmin):
-    inlines = (BudgetLineInline, RewardInline, PayoutInline, MessageAdminInline)
+    inlines = (BudgetLineInline, RewardInline, PayoutInline, UpdateInline, MessageAdminInline)
 
     base_model = Funding
     form = FundingAdminForm
@@ -154,7 +157,21 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
+    detail_fields = ("title", "description", "image", "video_url")
+
+    status_fields = (
+        "initiative",
+        "owner",
+        "slug",
+        "highlight",
+        "created",
+        "updated",
+        "has_deleted_data",
+        "status",
+        "states",
+    )
+
+    campaign_fields = (
         'started',
         'duration',
         'deadline',
@@ -165,6 +182,36 @@ class FundingAdmin(ActivityChildAdmin):
         'donors_link',
         'bank_account',
     )
+
+    def get_fieldsets(self, request, obj=None):
+        settings = InitiativePlatformSettings.objects.get()
+        fieldsets = [
+            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (_("Date & amount"), {"fields": self.campaign_fields}),
+        ]
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                if "office_restriction" not in self.office_fields:
+                    self.office_fields += ("office_restriction",)
+                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+
+        if request.user.is_superuser:
+            fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
+
+        if SegmentType.objects.count():
+            fieldsets.append(
+                (
+                    _("Segments"),
+                    {
+                        "fields": [
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
+                        ]
+                    },
+                )
+            )
+        return fieldsets
 
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         'amount_donated', 'amount_raised',
@@ -275,7 +322,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     date_hierarchy = 'created'
 
     inlines = [
-        DonorWallpostInline
+        UpdateInline
     ]
 
     superadmin_fields = [
@@ -550,14 +597,21 @@ class PayoutAccountFundingLinkMixin(object):
 
 class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
-    raw_id_fields = ('owner',)
+    raw_id_fields = ('owner', 'partner_organization')
     readonly_fields = ['status', 'created']
-    fields = ['owner', 'status', 'created', 'reviewed']
+    fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
+
+    def get_basic_fields(self, request, obj):
+        return ['owner', 'public', 'partner_organization']
+
+    def get_status_fields(self, request, obj):
+        return ['status', 'created', ]
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+            (_('Basic'), {'fields': self.get_basic_fields(request, obj)}),
+            (_('Status'), {'fields': self.get_status_fields(request, obj)}),
         )
         if request.user.is_superuser:
             fieldsets += (
@@ -569,8 +623,8 @@ class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
 @admin.register(PayoutAccount)
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', 'reviewed', 'owner',)
-    list_filter = ('reviewed', PolymorphicChildModelFilter)
+    list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'public')
+    list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('owner',)
     show_in_index = True
     search_fields = [
@@ -580,7 +634,6 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ordering = ('-created',)
     child_models = [
         StripePayoutAccount,
-        PlainPayoutAccount
     ]
 
 
@@ -610,7 +663,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
 @admin.register(BankAccount)
 class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
-    list_display = ('created', 'polymorphic_ctype', 'status', 'funding_links')
+    list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'funding_links', 'public')
     list_filter = ('status', PolymorphicChildModelFilter)
     raw_id_fields = ('connect_account',)
     show_in_index = True
@@ -618,6 +671,12 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
                      'flutterwavebankaccount__account_holder_name',
                      'pledgebankaccount__account_holder_name',
                      ]
+
+    def public(self, obj):
+        return obj.connect_account.public
+
+    def owner(self, obj):
+        return obj.connect_account and obj.connect_account.owner
 
     ordering = ('-created',)
     child_models = [
@@ -731,4 +790,9 @@ class PayoutAdmin(StateMachineAdmin):
 
 @admin.register(FundingPlatformSettings)
 class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    pass
+
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs['widgets'] = {
+            'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
+        }
+        return super().get_form(request, obj, **kwargs)

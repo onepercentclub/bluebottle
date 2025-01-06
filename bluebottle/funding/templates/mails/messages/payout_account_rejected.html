@@ -1,28 +1,27 @@
 {% extends "base.mail.html" %}
-{% load djmoney %}
 {% load i18n %}
 
 {% block content %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},<br/>
+            Hi {{ recipient_name }},
             <br/>
-            We have received some feedback on your identity verification. <br/>
-            Please check out the comments and make the appropriate changes. 
-            <br/><br/>
-            When you’re ready, you can submit your identity verification again and we’ll make sure it’s reviewed.
-        {% endblocktrans %}
-    </p>
-    <p class="important">
-        {% blocktrans context 'email' %}
-            If you fail to complete your identity verification we won't be able to payout your crowdfunding campaign.
-            All donations will be returned to your supporters!
+            <br/>
+            You are working on a crowdfunding campaign on {{ site_name }}.
+            <br/>
+            <br/>
+            Earlier, you submitted information to verify your identity, but unfortunately, this was not successful.
+            This could be due to various reasons. Please check the link below to make sure your details are correct.
+            If you still have problems, contact the platform manager at {{ contact_email }}.
+            <br/>
+            <br/>
+            Please do this as soon as possible to avoid issues with your campaign or to resolve them quickly.
         {% endblocktrans %}
     </p>
 {% endblock content %}
 
 {% block action %}
-    <a href="{{ site }}/initiatives/activities/funding/kyc" class="action-email">
-       {% trans 'Update your data' context 'email' %}
+    <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
+       {% trans 'Check your details' context 'email' %}
     </a>
 {% endblock %}`

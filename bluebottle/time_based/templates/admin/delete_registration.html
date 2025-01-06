@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Delete registration" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance %}
+    Delete the related registration.
+{% endblocktrans %}
+</p>

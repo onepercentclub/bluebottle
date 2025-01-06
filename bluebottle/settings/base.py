@@ -1,10 +1,7 @@
 import datetime
 import os
-from collections import OrderedDict
 
-import rules
 from PIL import ImageFile
-from django.utils.translation import gettext_lazy as _
 
 from .admin_dashboard import *  # noqa
 
@@ -302,7 +299,6 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
-    'bluebottle.exports',
 )
 
 TENANT_APPS = (
@@ -346,7 +342,6 @@ TENANT_APPS = (
     'django_elasticsearch_dsl',
 
     'bluebottle.looker',
-    'bluebottle.exports',
 
     'bluebottle.members',
     'bluebottle.projects',
@@ -602,15 +597,6 @@ EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 # to SECRET_KEY. Even better, provide one in a client's properties.py file
 TENANT_JWT_SECRET = 'global-tenant-secret'
 
-# email properties
-TENANT_MAIL_PROPERTIES = {
-    'logo': '',
-    'address': '',
-    'sender': '',
-    'footer': '',
-    'website': '',
-}
-
 CLOSED_SITE = False
 PARTNER_LOGIN = False
 
@@ -660,357 +646,6 @@ PRIVATE_FILE_ALLOWED_MIME_TYPES = (
     'text/rtf'
 )
 
-EXPORTDB_EXPORT_CONF = {
-    'models': OrderedDict([
-        ('members.Member', {
-            'fields': (
-                ('id', 'User ID'),
-                ('remote_id', 'Remote ID'),
-                ('get_full_name', 'Name'),
-                ('first_name', 'First Name'),
-                ('last_name', 'Last Name'),
-                ('email', 'Email'),
-                ('location__name', _('Office location')),
-                ('birthdate', 'Birthdate'),
-                ('gender', 'Gender'),
-                ('place__street', 'Street'),
-                ('place__street_number', 'Number'),
-                ('place__locality', 'City'),
-                ('place__postal_code', 'Postal code'),
-                ('place__country__name', 'Country'),
-                ('date_joined', 'Date joined'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.UserResource',
-            'title': _('Users'),
-        }),
-        ('initiatives.Initiative', {
-            'fields': (
-                ('id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('reviewer__id', 'Reviewer ID'),
-                ('status', 'Status'),
-                ('title', 'Title'),
-                ('theme__name', 'Theme'),
-                ('location', _('Office location')),
-                ('location__group', 'Region'),
-                ('place__locality', 'Location'),
-                ('place__country__name', 'Country'),
-                ('place__country__alpha2_code', 'Country Code'),
-                ('pitch', 'Pitch'),
-                ('story', 'Story'),
-                ('image__file', 'Image'),
-
-                ('created', 'Date created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.InitiativeResource',
-            'title': _('Initiatives'),
-        }),
-        ('time_based.PeriodActivity', {
-            'fields': (
-                ('id', 'Task ID'),
-                ('initiative__title', 'Initiative Title'),
-                ('initiative__id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('title', 'Title'),
-                ('description', 'Description'),
-                ('status', 'Status'),
-                ('location__locality', 'Location'),
-                ('location__country__name', 'Country'),
-                ('location__country__alpha2_code', 'Country Code'),
-                ('office_location', 'Office Location'),
-
-                ('expertise', 'Skill'),
-                ('capacity', 'People needed'),
-                ('duration', 'Time needed'),
-                ('preparation', 'Preparation time'),
-                ('start', 'Start'),
-                ('deadline', 'Deadline'),
-
-                ('created', 'Date created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.PeriodActivityResource',
-            'title': _('Activities during a period'),
-        }),
-        ('time_based.PeriodParticipant', {
-            'fields': (
-                ('id', 'Participant ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.PeriodParticipantResource',
-            'title': _('Participants over a period'),
-        }),
-        ('time_based.DateActivity', {
-            'fields': (
-                ('id', 'Task ID'),
-                ('initiative__title', 'Initiative Title'),
-                ('initiative__id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('title', 'Title'),
-                ('description', 'Description'),
-                ('status', 'Status'),
-                ('office_location', 'Office Location'),
-
-                ('expertise', 'Skill'),
-
-                ('capacity', 'People needed'),
-                ('created', 'Date created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
-            'title': _('Activities on a date'),
-        }),
-
-        ('time_based.DateActivitySlot', {
-            'fields': (
-                ('id', 'Slot ID'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__initiative__id', 'Initiative ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__id', 'Activity ID'),
-
-                ('status', 'Status'),
-
-                ('location__locality', 'Location'),
-                ('location__country__name', 'Country'),
-                ('location__country__alpha2_code', 'Country Code'),
-
-                ('start', 'Start'),
-                ('duration', 'Duration'),
-                ('capacity', 'People needed'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DateActivitySlotResource',
-            'title': _('Activity slots'),
-        }),
-        ('time_based.DateParticipant', {
-            'fields': (
-                ('id', 'Participant ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DateParticipantResource',
-            'title': _('Participants on a date'),
-        }),
-
-        ('time_based.SlotParticipant', {
-            'fields': (
-                ('id', 'Slot Participant ID'),
-                ('slot__id', 'Slot ID'),
-                ('participant__activity__title', 'Activity Title'),
-                ('participant__activity__initiative__title', 'Initiative Title'),
-                ('participant__activity__id', 'Activity ID'),
-                ('participant__activity__status', 'Activity status'),
-                ('participant__id', 'Participant ID'),
-                ('participant__status', 'Participant status'),
-                ('participant__user__id', 'User ID'),
-                ('participant__user__remote_id', 'Remote ID'),
-                ('participant__user__email', 'Email'),
-                ('status', 'Status'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.SlotParticipantResource',
-            'title': _('Slot participants'),
-        }),
-        ('time_based.TimeContribution', {
-            'fields': (
-                ('id', 'Contribution ID'),
-                ('contributor__id', 'Participant ID'),
-                ('contributor__activity__title', 'Activity Title'),
-                ('contributor__activity__initiative__title', 'Initiative Title'),
-                ('contributor__activity__id', 'Activity ID'),
-                ('contributor__activity__status', 'Activity status'),
-                ('contributor__user__id', 'User ID'),
-                ('contributor__user__remote_id', 'Remote ID'),
-                ('contributor__user__email', 'Email'),
-
-                ('slot_participant__slot__id', 'Slot ID'),
-
-                ('status', 'Status'),
-
-                ('value', 'Time spent'),
-
-                ('start', 'Start of contribution'),
-                ('end', 'End of contribution'),
-                ('created', 'Date registered'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.TimeContributionResource',
-            'title': _('Time contributions'),
-        }),
-        ('funding.Funding', {
-            'fields': (
-                ('id', 'Funding ID'),
-                ('initiative__title', 'Initiative Title'),
-                ('initiative__id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('title', 'Title'),
-                ('description', 'Description'),
-                ('status', 'Status'),
-                ('office_location', 'Office Location'),
-
-                ('target', 'Target'),
-                ('amount_matching', 'Amount matching'),
-                ('amount_donated', 'Amount donated'),
-                ('deadline', 'Deadline'),
-
-                ('created', 'created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DateActivityResource',
-            'title': _('Funding activities'),
-        }),
-        ('funding.Donor', {
-            'fields': (
-                ('id', 'Contributor ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-
-                ('amount', 'Amount'),
-                ('anonymous', 'Anonymous'),
-                ('reward__name', 'Reward'),
-                ('name', 'Name'),
-
-                ('activity__funding__deadline', 'Activity date'),
-                ('created', 'Donor date'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DonationResource',
-            'title': _('Funding contributors'),
-        }),
-        ('deeds.Deed', {
-            'fields': (
-                ('id', 'Task ID'),
-                ('initiative__title', 'Initiative Title'),
-                ('initiative__id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('title', 'Title'),
-                ('description', 'Description'),
-                ('status', 'Status'),
-                ('start', 'Start'),
-                ('end', 'End'),
-
-                ('created', 'Date created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DeedResource',
-            'title': _('Deed activities'),
-        }),
-        ('deeds.DeedParticipant', {
-            'fields': (
-                ('id', 'Participant ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.DeedParticipantResource',
-            'title': _('Deed participants'),
-        }),
-        ('activities.EffortContribution', {
-            'fields': (
-                ('id', 'Contribution ID'),
-                ('contributor__id', 'Participant ID'),
-                ('contributor__activity__title', 'Activity Title'),
-                ('contributor__activity__initiative__title', 'Initiative Title'),
-                ('contributor__activity__id', 'Activity ID'),
-                ('contributor__activity__status', 'Activity status'),
-
-                ('contributor__user__id', 'User ID'),
-                ('contributor__user__remote_id', 'Remote ID'),
-                ('contributor__user__email', 'Email'),
-
-                ('status', 'Status'),
-                ('contribution_type', 'Contribution type'),
-
-                ('start', 'Start of contribution'),
-                ('end', 'End of contribution'),
-                ('created', 'Date registered'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.EffortContributionResource',
-            'title': _('Effort contributions'),
-        }),
-
-        ('collect.CollectActivity', {
-            'fields': (
-                ('id', 'Task ID'),
-                ('initiative__title', 'Initiative Title'),
-                ('initiative__id', 'Initiative ID'),
-                ('owner__id', 'User ID'),
-                ('owner__remote_id', 'Remote ID'),
-                ('owner__email', 'Email'),
-                ('title', 'Title'),
-                ('description', 'Description'),
-                ('status', 'Status'),
-                ('start', 'Start'),
-                ('end', 'End'),
-
-                ('created', 'Date created'),
-                ('updated', 'Last update'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.CollectActivityResource',
-            'title': _('Collection campaigns'),
-        }),
-        ('collect.CollectContributor', {
-            'fields': (
-                ('id', 'Contributor ID'),
-                ('activity__title', 'Activity Title'),
-                ('activity__initiative__title', 'Initiative Title'),
-                ('activity__id', 'Activity ID'),
-                ('activity__status', 'Activity status'),
-                ('user__id', 'User ID'),
-                ('user__remote_id', 'Remote ID'),
-                ('user__email', 'Email'),
-                ('status', 'Status'),
-            ),
-            'resource_class': 'bluebottle.exports.resources.CollectContributorResource',
-            'title': _('Collection contributors'),
-        }),
-    ])
-}
-
-EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
-EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'private', 'exports')
-EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
-EXPORTDB_USE_CELERY = True
-EXPORTDB_EXPORT_MEDIA_URL = os.path.join(MEDIA_URL, 'private/exports')
-
-# maximum delta between from/to date for exports
-EXPORT_MAX_DAYS = 365 * 20
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 
@@ -1184,3 +819,5 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+RANDOM_IMAGE_PROVIDER = ""

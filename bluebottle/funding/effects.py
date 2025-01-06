@@ -1,17 +1,15 @@
-from bluebottle.funding.models import MoneyContribution
-
-from bluebottle.fsm.state import TransitionNotPossible
-from future.utils import python_2_unicode_compatible
-
 import datetime
 
 from django.utils import timezone
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext as _
+from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.effects import Effect
+from bluebottle.fsm.state import TransitionNotPossible
+from bluebottle.funding.models import MoneyContribution
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
-from bluebottle.wallposts.models import SystemWallpost
+from bluebottle.updates.models import Update
 
 
 @python_2_unicode_compatible
@@ -130,21 +128,18 @@ class RefundPaymentAtPSPEffect(Effect):
 @python_2_unicode_compatible
 class GenerateDonorWallpostEffect(Effect):
     conditions = []
-    title = _('Create wallpost')
+    title = _('Create wall update')
     template = 'admin/generate_donation_wallpost_effect.html'
 
     def post_save(self, **kwargs):
-        SystemWallpost.objects.get_or_create(
-            author=self.instance.user,
-            donation=self.instance,
-            defaults={
-                'content_object': self.instance.activity,
-                'related_object': self.instance
-            }
+        Update.objects.get_or_create(
+            author=self.instance.user if not self.instance.anonymous else None,
+            contribution=self.instance,
+            activity=self.instance.activity,
         )
 
     def __str__(self):
-        return _('Generate wallpost for donation')
+        return _('Generate wall update for donation')
 
 
 @python_2_unicode_compatible
@@ -154,9 +149,9 @@ class RemoveDonorWallpostEffect(Effect):
     template = 'admin/remove_donation_wallpost_effect.html'
 
     def post_save(self, **kwargs):
-        SystemWallpost.objects.filter(
+        Update.objects.filter(
             author=self.instance.user,
-            donation=self.instance,
+            contribution=self.instance,
         ).all().delete()
 
     def __str__(self):

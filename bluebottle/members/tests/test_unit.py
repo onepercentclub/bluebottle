@@ -12,6 +12,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.utils import override_properties
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
     SlotParticipantFactory
@@ -64,8 +65,9 @@ class MemberTestCase(BluebottleTestCase):
 
     def test_hours_spent(self):
         activity = DateActivityFactory.create(
-            slot_selection='free'
+            initiative=InitiativeFactory.create(status="approved")
         )
+        activity.states.publish(save=True)
         slot1 = DateActivitySlotFactory.create(
             activity=activity,
             start=now() - timedelta(days=1),
@@ -91,8 +93,6 @@ class MemberTestCase(BluebottleTestCase):
             participant=participant,
             slot=slot2
         )
-
-        slot1.states.finish(save=True)
 
         self.assertEqual(
             self.user.hours_planned,
@@ -120,8 +120,10 @@ class MemberTestCase(BluebottleTestCase):
         nov19 = datetime.datetime(2019, 11, 3, tzinfo=UTC)
 
         activity = DateActivityFactory.create(
-            slot_selection='free'
+            initiative=InitiativeFactory.create(status="approved")
         )
+        activity.states.publish(save=True)
+
         slot1 = DateActivitySlotFactory.create(
             activity=activity,
             start=jan20,
@@ -177,12 +179,6 @@ class MemberTestCase(BluebottleTestCase):
             participant=participant,
             slot=slot5
         )
-
-        slot1.states.finish(save=True)
-        slot2.states.finish(save=True)
-        slot3.states.finish(save=True)
-        slot4.states.finish(save=True)
-        slot5.states.finish(save=True)
 
         platform_settings = MemberPlatformSettings.load()
         platform_settings.fiscal_month_offset = 0

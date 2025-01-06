@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from djmoney.money import Money
 
-from bluebottle.collect.tests.factories import CollectContributorFactory
+from bluebottle.collect.tests.factories import CollectContributorFactory, CollectActivityFactory
 from bluebottle.funding.tests.factories import DonorFactory
 from bluebottle.funding_pledge.models import PledgePaymentProvider
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -25,7 +25,9 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFacto
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
-    DateParticipantFactory, PeriodParticipantFactory, ParticipationFactory
+    DateParticipantFactory,
+    DeadlineParticipantFactory,
+    ParticipationFactory,
 )
 from bluebottle.utils.models import Language
 
@@ -41,6 +43,7 @@ class MockUser(object):
         self.perms = perms or []
         self.is_superuser = is_superuser
         self.is_staff = is_staff
+        self.region_manager = None
         if groups:
             self.groups = groups
         else:
@@ -246,10 +249,28 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields(self):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         expected_fields = {
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'period_activities', 'date_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "date_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "is_superuser",
+            "kyc",
+            "hours_planned",
+            "hours_spent",
+            "all_contributions",
+            "data_retention_info",
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -257,10 +278,28 @@ class MemberAdminFieldsTest(BluebottleTestCase):
     def test_readonly_fields_create(self):
         fields = self.member_admin.get_readonly_fields(self.request)
         expected_fields = {
-            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_link', 'reset_password',
-            'resend_welcome_link', 'initiatives', 'date_activities', 'period_activities', 'funding',
-            'deeds', 'collect', 'is_superuser', 'kyc', 'hours_planned', 'hours_spent', 'all_contributions',
-            'data_retention_info'
+            "date_joined",
+            "last_login",
+            "updated",
+            "deleted",
+            "login_as_link",
+            "reset_password",
+            "resend_welcome_link",
+            "initiatives",
+            "date_activities",
+            "periodic_activities",
+            "deadline_activities",
+            "schedule_activities",
+            "team_schedule_activities",
+            "funding",
+            "deeds",
+            "collect",
+            "is_superuser",
+            "kyc",
+            "hours_planned",
+            "hours_spent",
+            "all_contributions",
+            "data_retention_info",
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -403,8 +442,8 @@ class MemberAdminExportTest(BluebottleTestCase):
         )
         ParticipationFactory.create(
             value=timedelta(hours=12),
-            contributor=PeriodParticipantFactory(user=member, status='accepted'),
-            status='succeeded'
+            contributor=DeadlineParticipantFactory(user=member, status="accepted"),
+            status="succeeded",
         )
         ParticipationFactory.create_batch(
             3,
@@ -522,8 +561,8 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
             primary_language='en'
         )
 
-        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
-        self.client.get(welkcome_email_url)
+        welcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'pk': user.id})
+        self.client.get(welcome_email_url)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.subject, 'You have been assimilated to Test')
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
@@ -608,7 +647,10 @@ class MemberEngagementAdminTestCase(BluebottleAdminTestCase):
 
     def test_engagement_shows_collect(self):
         user = BlueBottleUserFactory.create()
-        CollectContributorFactory.create(user=user)
+        activity = CollectActivityFactory.create(
+            start=None
+        )
+        CollectContributorFactory.create(activity=activity, user=user)
         url = reverse('admin:members_member_change', args=(user.id,))
         response = self.app.get(url, user=self.staff_member)
         self.assertEqual(response.status, '200 OK')

@@ -29,7 +29,6 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
         activity = DateActivityFactory.create(
             slots=[],
-            slot_selection='free',
         )
 
         self.slot1 = DateActivitySlotFactory.create(

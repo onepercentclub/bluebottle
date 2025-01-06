@@ -1,0 +1,8 @@
+{% load i18n %}
+<h3>{%trans "Create first periodic slot" %}</h3>
+
+<p>
+{% blocktrans with instance=effects.0.instance  %}
+    Create the first periodic slot for {{ instance }}.
+    Subsequent slots will be created automatically.
+{% endblocktrans %}

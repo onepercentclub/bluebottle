@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.gis.db.models import PointField
 from django.urls import reverse
@@ -7,6 +8,7 @@ from mapwidgets import GooglePointFieldWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
+from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 from bluebottle.geo.models import (
     Location, Country, Place,
     Geolocation)
@@ -48,10 +50,31 @@ class CountryAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
 admin.site.register(Country, CountryAdmin)
 
 
-class LocationAdmin(admin.ModelAdmin):
+class LocationMergeForm(forms.Form):
+    to = forms.ModelChoiceField(
+        label=_("Merge with"),
+        help_text=_("Choose location to merge with"),
+        queryset=Location.objects.all(),
+    )
+
+    title = _("Merge")
+
+    def __init__(self, obj, *args, **kwargs):
+        super(LocationMergeForm, self).__init__(*args, **kwargs)
+
+        self.fields["to"].queryset = self.fields["to"].queryset.exclude(pk=obj.pk)
+
+
+class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     formfield_overrides = {
         PointField: {"widget": GooglePointFieldWidget},
     }
+
+    def get_queryset(self, request):
+        queryset = super(LocationAdmin, self).get_queryset(request)
+        if request.user.region_manager:
+            queryset = queryset.filter(subregion=request.user.region_manager)
+        return queryset
 
     def lookup_allowed(self, key, value):
         if key in ('subregion__region__id__exact',):
@@ -88,9 +111,25 @@ class LocationAdmin(admin.ModelAdmin):
     region_link.short_description = _('Office region')
 
     fieldsets = (
-        (_('Info'), {'fields': ('name', 'slug', 'subregion', 'description', 'city', 'country', 'image')}),
-        (_('Map'), {'fields': ('position', )})
+        (
+            _("Info"),
+            {
+                "fields": (
+                    "name",
+                    "slug",
+                    "subregion",
+                    "description",
+                    "city",
+                    "country",
+                    "image",
+                )
+            },
+        ),
+        (_("Map"), {"fields": ("position",)}),
+        (_("SSO"), {"fields": ("alternate_names",)}),
     )
+
+    merge_form = LocationMergeForm
 
 
 @admin.register(Place)

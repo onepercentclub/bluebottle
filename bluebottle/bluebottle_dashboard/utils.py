@@ -4,6 +4,7 @@ from django.conf import settings
 from django.urls import reverse
 from jet.utils import get_menu_items as jet_get_menu_items
 
+from bluebottle.analytics.models import AnalyticsPlatformSettings
 from bluebottle.looker.models import LookerEmbed
 from bluebottle.segments.models import SegmentType
 
@@ -34,6 +35,7 @@ def get_menu_items(context):
     Iterate over menu items and remove some based on feature flags
     """
     groups = jet_get_menu_items(context)
+    is_region_manager = context['user'].groups.filter(name='Region Manager').exists()
     for group in groups:
         properties = get_jet_item(group['label'])
         if 'enabled' in properties and properties['enabled']:
@@ -46,26 +48,52 @@ def get_menu_items(context):
             if properties and 'enabled' in properties and properties['enabled']:
                 prop = get_feature_flag(properties['enabled'])
                 if not prop:
-                    item['hide'] = True
-        if group['app_label'] == 'looker':
-            group['items'] = [{
-                'url': reverse('jet-dashboard:looker-embed', args=(look.id,)),
-                'url_blank': False,
-                'name': 'lookerembed',
-                'object_name': 'LookerEmbed',
-                'label': look.title,
-                'has_perms': True,
-                'current': False} for look in LookerEmbed.objects.all()
+                    item["hide"] = True
+        if group["app_label"] != "looker" and is_region_manager:
+            group["hide"] = True
+
+        if group["app_label"] == "looker":
+            (analytics_settings, _) = AnalyticsPlatformSettings.objects.get_or_create()
+
+            if analytics_settings.plausible_embed_link:
+                group["items"] = [
+                    {
+                        "url": reverse("jet-dashboard:plausible-embed"),
+                        "url_blank": False,
+                        "object_name": "LookerEmbed",
+                        "name": "plausible",
+                        "label": "Analytics",
+                        "has_perms": True,
+                        "current": False,
+                    }
+                ]
+
+            group["items"] += [
+                {
+                    "url": reverse("jet-dashboard:looker-embed", args=(look.id,)),
+                    "url_blank": False,
+                    "name": "lookerembed",
+                    "object_name": "LookerEmbed",
+                    "label": look.title,
+                    "has_perms": True,
+                    "current": False,
+                }
+                for look in LookerEmbed.objects.all()
             ]
-        if group['app_label'] == 'segments':
-            group['items'] += [{
-                'url': reverse('admin:segments_segmenttype_change', args=(segment_type.id,)),
-                'url_blank': False,
-                'name': 'segmenttype',
-                'object_name': 'SegmentType',
-                'label': segment_type.name,
-                'has_perms': True,
-                'current': False}
+
+        if group["app_label"] == "segments":
+            group["items"] += [
+                {
+                    "url": reverse(
+                        "admin:segments_segmenttype_change", args=(segment_type.id,)
+                    ),
+                    "url_blank": False,
+                    "name": "segmenttype",
+                    "object_name": "SegmentType",
+                    "label": segment_type.name,
+                    "has_perms": True,
+                    "current": False,
+                }
                 for segment_type in SegmentType.objects.all()
             ]
 

@@ -67,6 +67,15 @@ class TeamStateMachine(ModelStateMachine):
         automatic=True,
     )
 
+    unschedule = Transition(
+        [scheduled, succeeded],
+        accepted,
+        name=_("Schedule"),
+        passed_label=_("scheduled"),
+        description=_("Assign a slot to this activity"),
+        automatic=True,
+    )
+
     remove = Transition(
         [accepted, scheduled],
         removed,

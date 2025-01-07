@@ -22,7 +22,7 @@ class AvailableTransitionsField(ReadOnlyField):
         user = self.context['request'].user
         states = getattr(value, self.source)
 
-        return (
+        transtisions = (
             {
                 "name": transition.field,
                 "target": transition.target.value,
@@ -35,6 +35,19 @@ class AvailableTransitionsField(ReadOnlyField):
             for transition in states.possible_transitions(user=user)
             if not transition.automatic
         )
+
+        preferred_order = [
+            "approve", "request_changes",
+            "reopen", "reopen_manually",
+            "succeed_manually", "succeed",
+            "submit", "restore",
+            "cancel", "reject", "delete"
+        ]
+
+        sorted_transitions = sorted(
+            transtisions,
+            key=lambda x: preferred_order.index(x["name"]) if x["name"] in preferred_order else len(preferred_order))
+        return sorted_transitions
 
     def get_attribute(self, instance):
         return instance

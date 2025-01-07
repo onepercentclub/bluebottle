@@ -50,7 +50,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
         )
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonorFactory.create(activity=self.funding)
-        self.intent = StripePaymentIntentFactory.create(donation=self.donation)
+        self.intent = StripePaymentIntentFactory.create(
+            intent_id='some-intent-id',
+            donation=self.donation
+        )
         self.webhook = reverse('stripe-intent-webhook')
 
     def test_success(self):

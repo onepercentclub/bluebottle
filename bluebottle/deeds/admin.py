@@ -39,6 +39,8 @@ class DeedParticipantAdmin(ContributorChildAdmin):
 
 class DeedParticipantInline(BaseContributorInline):
     model = DeedParticipant
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
 
 
 @admin.register(Deed)
@@ -62,20 +64,16 @@ class DeedAdmin(ActivityChildAdmin):
         return obj.participants.count() + obj.deleted_successful_contributors or 0
     participant_count.short_description = _('Participants')
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'end',
-        'enable_impact',
-        'target',
-    )
-
     def next_step_info(self, obj):
         return admin_info_box(
             _('Redirect participants to an external website so '
               'they can complete an action such as registering a vote.')
         )
 
-    description_fields = ActivityChildAdmin.description_fields + (
+    registration_fields = (
+        'start',
+        'end',
+        'target',
         'next_step_info',
         'next_step_title',
         'next_step_description',

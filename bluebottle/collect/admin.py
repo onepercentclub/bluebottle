@@ -42,6 +42,8 @@ class CollectContributorAdmin(ContributorChildAdmin):
 
 class CollectContributorInline(BaseContributorInline):
     model = CollectContributor
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
 
 
 @admin.register(CollectActivity)
@@ -64,17 +66,15 @@ class CollectActivityAdmin(ActivityChildAdmin):
 
     def contributor_count(self, obj):
         return obj.contributors.count() + obj.deleted_successful_contributors or 0
-    contributor_count.short_description = _('Contributors')
+    contributor_count.short_description = _('Participants')
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'end',
-    )
-    description_fields = ActivityChildAdmin.description_fields + (
+    registration_fields = (
         'collect_type',
         'target',
         'realized',
-        'location'
+        'location',
+        'start',
+        'end',
     )
 
     export_as_csv_fields = (

@@ -60,44 +60,6 @@ class PaymentIntent(models.Model):
     def __str__(self):
         return self.intent_id
 
-    def initiate_intent(self):
-        statement_descriptor = connection.tenant.name[:22]
-
-        stripe = get_stripe()
-        connect_account = self.donation.activity.bank_account.connect_account
-
-        intent_args = dict(
-            amount=int(self.donation.amount.amount * 100),
-            currency=self.donation.amount.currency,
-            transfer_data={
-                'destination': connect_account.account_id,
-            },
-            automatic_payment_methods={"enabled": True},
-            statement_descriptor=statement_descriptor,
-            statement_descriptor_suffix=statement_descriptor[:18],
-            metadata=self.metadata,
-        )
-
-        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
-
-        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            intent_args['on_behalf_of'] = connect_account.account_id
-
-        if platform_currency == 'usd' and connect_account.country != 'US':
-            intent_args['on_behalf_of'] = connect_account.account_id
-
-        intent = stripe.PaymentIntent.create(
-            **intent_args
-        )
-
-        self.intent_id = intent.id
-        self.client_secret = intent.client_secret
-
-    def save(self, *args, **kwargs):
-        if not self.pk and not self.intent_id:
-            self.initiate_intent()
-        super(PaymentIntent, self).save(*args, **kwargs)
-
 
 class StripePayment(Payment):
     payment_intent = models.OneToOneField(PaymentIntent, related_name='payment', on_delete=models.CASCADE)

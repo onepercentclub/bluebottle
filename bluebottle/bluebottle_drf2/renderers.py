@@ -35,7 +35,10 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
         current_serializer = fields.serializer
         context = current_serializer.context
-        included_serializers = utils.get_included_serializers(current_serializer)
+
+        included_serializers = getattr(
+            current_serializer, "included_serializers", dict()
+        )
         included_resources = copy.copy(included_resources)
         included_resources = [
             inflection.underscore(value) for value in included_resources

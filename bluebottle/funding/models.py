@@ -631,7 +631,15 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
 
-    public = models.BooleanField(default=False)
+    public = models.BooleanField(
+        _('Public payout account'),
+        default=False,
+        help_text=_((
+            "Allow users to choose this payout account when setting up a "
+            "crowdfunding campaign (only applies if crowdfunding for public "
+            "payout accounts is enabled)."
+        ))
+    )
 
     partner_organization = models.ForeignKey(
         'organizations.Organization',
@@ -751,7 +759,9 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     public_accounts = models.BooleanField(
-        _('Allow users to select account from list of public accounts'), default=False
+        _('Allow users to select account from list of public accounts'),
+        default=False,
+        help_text=_('Allow users to select account from list of public accounts')
     )
 
     matching_name = models.CharField(

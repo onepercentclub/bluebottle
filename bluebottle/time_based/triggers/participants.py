@@ -973,6 +973,15 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
+            TeamScheduleParticipantStateMachine.unschedule,
+            effects=[
+                RelatedTransitionEffect(
+                    "contributions",
+                    ContributionStateMachine.reset,
+                ),
+            ],
+        ),
+        TransitionTrigger(
             TeamScheduleParticipantStateMachine.withdraw,
             effects=[
                 UnFollowActivityEffect,

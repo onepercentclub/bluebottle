@@ -60,6 +60,7 @@ install_requires = [
     'django-otp==1.2.0',
     'django-parler==2.3',
     'django-tabular-permissions==2.9.3',
+    'django-permissions-widget==1.5.2',
     'django-recaptcha==4.0.0',
     'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',

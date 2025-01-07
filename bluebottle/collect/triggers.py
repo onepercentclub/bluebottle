@@ -1,17 +1,15 @@
 from datetime import date
 
-from bluebottle.activities.effects import CreateTeamEffect, CreateInviteEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
-    TeamMemberAddedMessage, TeamMemberWithdrewMessage, TeamMemberRemovedMessage
 )
-from bluebottle.activities.states import OrganizerStateMachine, TeamStateMachine
+from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
-    ActivityTriggers, ContributorTriggers, ContributionTriggers, TeamTriggers
+    ActivityTriggers, ContributorTriggers, ContributionTriggers
 )
-from bluebottle.collect.effects import CreateCollectContribution, SetOverallContributor
+from bluebottle.collect.effects import CreateCollectContribution
 from bluebottle.collect.messages import (
     CollectActivityDateChangedNotification, ParticipantJoinedNotification
 )
@@ -23,11 +21,10 @@ from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
     register, TransitionTrigger, ModelChangedTrigger
 )
-from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.messages import (
     ParticipantWithdrewNotification, ParticipantRemovedNotification, ParticipantRemovedOwnerNotification,
-    TeamParticipantRemovedNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
+    NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
     ParticipantAddedNotification
 )
 
@@ -39,6 +36,16 @@ def is_finished(effect):
     return (
         effect.instance.end and
         effect.instance.end < date.today()
+    )
+
+
+def is_started(effect):
+    """
+    is started
+    """
+    return (
+        not effect.instance.start or
+        effect.instance.start <= date.today()
     )
 
 
@@ -73,6 +80,17 @@ def has_no_end_date(effect):
 class CollectActivityTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
         ModelChangedTrigger(
+            'start',
+            effects=[
+                RelatedTransitionEffect(
+                    'active_contributors',
+                    CollectContributorStateMachine.succeed,
+                    conditions=[is_started]
+                ),
+            ]
+        ),
+
+        ModelChangedTrigger(
             'end',
             effects=[
                 TransitionEffect(
@@ -91,21 +109,6 @@ class CollectActivityTriggers(ActivityTriggers):
                     ]
                 )
             ]
-        ),
-
-        ModelChangedTrigger(
-            'enable_impact',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
-            'target',
-            effects=[UpdateImpactGoalsForActivityEffect]
-        ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[UpdateImpactGoalsForActivityEffect]
         ),
 
         TransitionTrigger(
@@ -159,11 +162,6 @@ class CollectActivityTriggers(ActivityTriggers):
                 NotificationEffect(ActivityRestoredNotification),
             ]
         ),
-
-        ModelChangedTrigger(
-            'realized',
-            effects=[SetOverallContributor]
-        )
     ]
 
 
@@ -175,15 +173,31 @@ def activity_is_finished(effect):
     )
 
 
+def activity_is_started(effect):
+    """activity is started"""
+    return (
+        not effect.instance.activity.start or
+        effect.instance.activity.start < date.today()
+    )
+
+
+def activity_is_not_started(effect):
+    """activity is not started"""
+    return (
+        effect.instance.activity.start and
+        effect.instance.activity.start > date.today()
+    )
+
+
 def activity_will_be_empty(effect):
     """activity will be empty"""
-    return len(
-        effect.instance.activity.contributors.instance_of(
-            CollectContributor
-        ).filter(
-            status=CollectContributorStateMachine.succeeded
+    return (
+        len(
+            effect.instance.activity.contributors.instance_of(
+                CollectContributor
+            ).filter(status=CollectContributorStateMachine.succeeded.value)
         )
-    ) == 1
+    ) < 2
 
 
 def is_not_user(effect):
@@ -213,23 +227,27 @@ def is_not_owner(effect):
     return True
 
 
-def team_is_active(effect):
-    """Team status is open, or there is no team"""
+def contributor_activity_started(effect):
+    """activity is started"""
     return (
-        effect.instance.team.status == TeamStateMachine.open.value
-        if effect.instance.team
-        else True
+        not effect.instance.contributor.activity.start or
+        effect.instance.contributor.activity.start < date.today()
     )
 
 
-def is_team_activity(effect):
-    """Team status is open, or there is no team"""
-    return effect.instance.accepted_invite and effect.instance.accepted_invite.contributor.team
-
-
-def is_not_team_activity(effect):
-    """Team status is open, or there is no team"""
-    return not effect.instance.team
+@register(CollectContribution)
+class CollectContributionTriggers(ContributionTriggers):
+    triggers = ContributionTriggers.triggers + [
+        TransitionTrigger(
+            CollectContributionStateMachine.initiate,
+            effects=[
+                TransitionEffect(
+                    CollectContributionStateMachine.succeed,
+                    conditions=[contributor_activity_started]
+                ),
+            ]
+        ),
+    ]
 
 
 @register(CollectContributor)
@@ -240,17 +258,16 @@ class CollectContributorTriggers(ContributorTriggers):
             effects=[
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
+                    conditions=[activity_is_started]
+                ),
+                TransitionEffect(
+                    CollectContributorStateMachine.accept,
+                    conditions=[activity_is_not_started]
                 ),
                 CreateCollectContribution,
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_user]
-                ),
-                NotificationEffect(
-                    TeamMemberAddedMessage,
-                    conditions=[
-                        is_team_activity
-                    ]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
@@ -264,8 +281,6 @@ class CollectContributorTriggers(ContributorTriggers):
                     NewParticipantNotification,
                     conditions=[is_user]
                 ),
-                CreateTeamEffect,
-                CreateInviteEffect
             ]
         ),
         TransitionTrigger(
@@ -277,48 +292,42 @@ class CollectContributorTriggers(ContributorTriggers):
                     conditions=[activity_is_finished, activity_will_be_empty]
                 ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
-                NotificationEffect(ParticipantRemovedNotification, conditions=[is_not_team_activity]),
-                NotificationEffect(TeamParticipantRemovedNotification, conditions=[is_team_activity]),
+                NotificationEffect(ParticipantRemovedNotification),
                 NotificationEffect(ParticipantRemovedOwnerNotification),
-                NotificationEffect(TeamMemberRemovedMessage),
-            ]
-        ),
-
-        TransitionTrigger(
-            CollectContributorStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.succeed,
-                    conditions=[activity_is_finished]
-                ),
             ]
         ),
 
         TransitionTrigger(
             CollectContributorStateMachine.withdraw,
             effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.expire,
+                    conditions=[activity_is_finished, activity_will_be_empty]
+                ),
                 RelatedTransitionEffect('contributions', CollectContributionStateMachine.fail),
                 NotificationEffect(ParticipantWithdrewNotification),
                 NotificationEffect(ParticipantWithdrewConfirmationNotification),
-                NotificationEffect(TeamMemberWithdrewMessage),
             ]
         ),
 
         TransitionTrigger(
             CollectContributorStateMachine.reapply,
             effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    CollectActivityStateMachine.expire,
-                    conditions=[activity_is_finished]
-                ),
                 TransitionEffect(
                     CollectContributorStateMachine.succeed,
-                    conditions=[team_is_active]
                 ),
-
                 NotificationEffect(ParticipantJoinedNotification)
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectContributorStateMachine.re_accept,
+            effects=[
+                TransitionEffect(
+                    CollectContributorStateMachine.succeed,
+                ),
+                NotificationEffect(ParticipantAddedNotification)
             ]
         ),
 
@@ -328,44 +337,14 @@ class CollectContributorTriggers(ContributorTriggers):
                 RelatedTransitionEffect(
                     'contributions',
                     CollectContributionStateMachine.succeed,
-                    conditions=[team_is_active]
                 ),
+                RelatedTransitionEffect(
+                    'activity',
+                    CollectActivityStateMachine.succeed,
+                    conditions=[activity_is_finished]
+                ),
+
             ]
         ),
 
     ]
-
-
-@register(CollectContribution)
-class CollectContributionTriggers(ContributionTriggers):
-    triggers = ContributionTriggers.triggers + [
-        TransitionTrigger(
-            CollectContributionStateMachine.initiate,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            CollectContributionStateMachine.reset,
-            effects=[
-                TransitionEffect(
-                    CollectContributionStateMachine.succeed,
-                ),
-            ]
-        ),
-    ]
-
-
-TeamTriggers.triggers += [
-    TransitionTrigger(
-        TeamStateMachine.reopen,
-        effects=[
-            RelatedTransitionEffect(
-                'members', CollectContributorStateMachine.succeed
-            )
-        ]
-    )
-]

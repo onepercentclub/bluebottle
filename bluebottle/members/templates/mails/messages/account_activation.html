@@ -1,5 +1,6 @@
 {% extends "base.mail.html" %}
 {% load i18n %}
+{% load message_url %}
 
 {% block content %}
 {% if body_html %}
@@ -17,10 +18,13 @@
 
 {% block action %}
 {% if token %}
-    <a href="{{ site }}/auth/set-password/?token={{ uid }}-{{ token }}"
+
+{% with url='/auth/set-password/?token='|add:uid|add:'-'|add:token %}
+<a href={% message_url url %}"
        class="action-email">{% trans 'Set password' context 'email' %}</a>
+{% endwith %}
 {% else %}
-    <a href="{{ site }}"
+    <a href="{% message_url %}"
            class="action-email">{% trans "Take me there" context 'email' %}</a>
 {% endif %}
 {% endblock %}

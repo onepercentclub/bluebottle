@@ -129,7 +129,7 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
         default=False
     )
 
-    has_organization = models.BooleanField(null=True, default=None)
+    has_organization = models.BooleanField(null=True, default=False)
 
     organization = models.ForeignKey(
         Organization,
@@ -146,7 +146,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
     )
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='initiative_wallposts')
 
     class Meta(object):
         verbose_name = _("Initiative")
@@ -184,9 +183,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
             'has_organization', 'story', 'image',
             'theme',
         ]
-
-        if self.has_organization:
-            fields.append('organization')
 
         return fields
 
@@ -238,9 +234,6 @@ class Initiative(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.M
 
         super(Initiative, self).save(**kwargs)
 
-        if not self.activity_managers.exists():
-            self.activity_managers.add(self.owner)
-
 
 ACTIVITY_SEARCH_FILTERS = (
     ('office', _('Office')),
@@ -272,18 +265,21 @@ def get_search_filters(filters):
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
-        ('funding', _('Funding')),
-        ('periodactivity', _('Activity during a period')),
-        ('dateactivity', _('Activity on a specific date')),
-        ('deed', _('Deed')),
-        ('collect', _('Collect activity')),
+        ("funding", _("Funding")),
+        ("periodactivity", _("Activity during a period")),
+        ("dateactivity", _("Activity on a specific date")),
+        ("deadlineactivity", _("Activity within a deadline")),
+        ("scheduleactivity", _("Scheduled activity")),
+        ("periodicactivity", _("Periodic Activity")),
+        ("deed", _("Deed")),
+        ("collect", _("Collect activity")),
     )
     CONTACT_OPTIONS = (
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
 
-    activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
+    activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
         help_text=_("Enable team activities where teams sign-up instead of individuals.")
@@ -299,9 +295,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
     contact_method = models.CharField(max_length=100, choices=CONTACT_OPTIONS, default='mail')
 
-    show_all_activities = models.BooleanField(
-        default=False,
-        help_text=_("In initial search show all activities, not only upcoming.")
+    include_full_activities = models.BooleanField(
+        default=True,
+        help_text=_("Include full activities in upcoming activities list")
     )
 
     enable_impact = models.BooleanField(
@@ -448,6 +444,3 @@ class Theme(SortableTranslatableModel):
 
     class JSONAPIMeta(object):
         resource_name = 'themes'
-
-
-from bluebottle.initiatives.wallposts import *  # noqa

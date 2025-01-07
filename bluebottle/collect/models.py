@@ -10,6 +10,7 @@ from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class CollectType(SortableTranslatableModel):
@@ -69,8 +70,6 @@ class CollectActivity(Activity):
     target = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
     realized = models.DecimalField(decimal_places=3, max_digits=15, null=True, blank=True)
 
-    enable_impact = models.BooleanField(default=False)
-
     auto_approve = True
 
     activity_type = _('Collect activity')
@@ -98,6 +97,15 @@ class CollectActivity(Activity):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/collect/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     @property
     def uid(self):
@@ -127,9 +135,13 @@ class CollectActivity(Activity):
         return u'{}?{}'.format(url, urlencode(params))
 
     @property
+    def participants(self):
+        return self.contributors.instance_of(CollectContributor)
+
+    @property
     def active_contributors(self):
-        return self.contributors.instance_of(CollectContributor).filter(
-            status='succeeded'
+        return self.participants.filter(
+            status__in=['succeeded', 'accepted']
         )
 
     @property
@@ -139,7 +151,7 @@ class CollectActivity(Activity):
     @property
     def required_fields(self):
         return super().required_fields + [
-            'title', 'description', 'location', 'start', 'end', 'collect_type'
+            'title', 'description', 'collect_type'
         ]
 
 

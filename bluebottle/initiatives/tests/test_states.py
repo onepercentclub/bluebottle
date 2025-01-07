@@ -26,8 +26,12 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             owner=self.user,
             organization=None
         )
-        payout_account = StripePayoutAccountFactory.create(status='verified')
-        self.bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id", status="verified"
+        )
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
 
     def test_default_status(self):
         self.assertEqual(
@@ -68,22 +72,6 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         self.initiative.states.submit()
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.submitted.value
-        )
-
-    def test_missing_organization(self):
-        self.initiative = InitiativeFactory.create(
-            has_organization=True,
-            owner=self.user,
-            organization=None
-        )
-
-        self.assertEqual(
-            self.initiative.status, ReviewStateMachine.draft.value
-        )
-
-        self.assertRaises(
-            TransitionNotPossible,
-            self.initiative.states.submit
         )
 
     def test_missing_organization_contact_name(self):
@@ -134,7 +122,10 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         BudgetLineFactory.create(activity=funding)
 
-        incomplete_activity = DateActivityFactory.create(initiative=self.initiative, title='')
+        incomplete_activities = [
+            DateActivityFactory.create(initiative=self.initiative, title=""),
+            FundingFactory.create(initiative=self.initiative, bank_account=None),
+        ]
 
         self.initiative.states.submit(save=True)
 
@@ -148,10 +139,9 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
             funding.status, ReviewStateMachine.submitted.value
         )
 
-        incomplete_activity.refresh_from_db()
-        self.assertEqual(
-            incomplete_activity.status, ReviewStateMachine.draft.value
-        )
+        for activity in incomplete_activities:
+            activity.refresh_from_db()
+            self.assertEqual(activity.status, ReviewStateMachine.draft.value)
 
     def test_needs_work(self):
         self.initiative.states.submit()

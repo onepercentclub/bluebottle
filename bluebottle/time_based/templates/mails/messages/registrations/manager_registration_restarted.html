@@ -1,0 +1,8 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with user=obj.user.full_name context 'email' %}
+    <p>{user} have restarted your contribution to "{{ title }}".</p>
+    {% endblocktrans %}
+{% endblock %}

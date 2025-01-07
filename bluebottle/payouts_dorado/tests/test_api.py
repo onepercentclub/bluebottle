@@ -28,7 +28,9 @@ class TestPayoutApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.finance_user)
 
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="payout-account-id", status="verified"
+        )
         self.bank_account = ExternalAccountFactory.create(connect_account=payout_account)
 
         self.funding = FundingFactory.create()

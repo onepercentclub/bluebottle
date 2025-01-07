@@ -47,7 +47,12 @@ class StateMachineAdminMixin(object):
         """
         Determines the HttpResponse for the change_view stage.
         """
-        if object_id and request.method == 'POST' and not request.POST.get('post', False):
+        if (
+            object_id and
+            request.method == 'POST' and
+            not request.POST.get('post', False) and
+            '_saveasnew' not in request.POST
+        ):
             obj = self.model.objects.get(pk=object_id)
             ModelForm = self.get_form(request, obj)
             form = ModelForm(request.POST, request.FILES, instance=obj)
@@ -67,7 +72,7 @@ class StateMachineAdminMixin(object):
                     if isinstance(form.instance, TriggerMixin):
                         if form.is_valid():
                             form.save(commit=False)
-                            if form.instance:
+                            if form.instance and form.instance.pk:
                                 effects += form.instance.execute_triggers(
                                     user=request.user,
                                     send_messages=send_messages
@@ -121,6 +126,7 @@ class StateMachineAdminMixin(object):
         send_messages = request.POST.get('send_messages') == 'on'
         for form in formset.forms:
             if isinstance(form.instance, TriggerMixin):
+                send_messages = form.cleaned_data.get('send_messages', send_messages)
                 form.instance.execute_triggers(user=request.user, send_messages=send_messages)
 
         formset.save()

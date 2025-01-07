@@ -20,7 +20,11 @@ from bluebottle.statistics.tests.factories import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory,
+    DateParticipantFactory,
+    SlotParticipantFactory,
+)
 
 
 @override_settings(
@@ -133,76 +137,6 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         }
     }
 )
-class OldStatisticListListAPITestCase(BluebottleTestCase):
-
-    def setUp(self):
-        super(OldStatisticListListAPITestCase, self).setUp()
-        self.client = JSONAPITestClient()
-        self.url = reverse('statistic-list')
-        self.user = BlueBottleUserFactory()
-
-        initiative = InitiativeFactory.create()
-        activity = DateActivityFactory.create(
-            initiative=initiative,
-            owner=initiative.owner,
-        )
-        initiative.states.submit(save=True)
-        initiative.states.approve(save=True)
-        activity.states.publish(save=True)
-
-        slot = activity.slots.get()
-        slot.start = timezone.now() - datetime.timedelta(hours=1)
-        slot.duration = datetime.timedelta(minutes=6)
-        slot.save()
-
-        DateParticipantFactory.create_batch(5, activity=activity)
-
-        self.impact_type = ImpactTypeFactory.create()
-
-        self.impact_goal = ImpactGoalFactory.create(
-            type=self.impact_type,
-            target=100,
-            realized=50
-        )
-
-        self.manual = ManualStatisticFactory.create()
-        self.impact = ImpactStatisticFactory(impact_type=self.impact_type)
-        self.database = DatabaseStatisticFactory(query='people_involved')
-
-    def test_get(self):
-        response = self.client.get(self.url, user=self.user)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(len(response.json()['data']), 3)
-
-        for resource in response.json()['data']:
-            if resource['id'] == str(self.manual.pk):
-                self.assertEqual(resource['type'], 'statistics/manual-statistics')
-                self.assertEqual(resource['attributes']['value'], self.manual.value)
-                self.assertEqual(resource['attributes']['name'], self.manual.name)
-
-            if resource['id'] == str(self.impact.pk):
-                self.assertEqual(resource['type'], 'statistics/impact-statistics')
-                self.assertEqual(resource['attributes']['value'], self.impact_goal.realized)
-                self.assertEqual(resource['relationships']['impact-type']['data']['id'], str(self.impact_type.pk))
-
-            if resource['id'] == str(self.database.pk):
-                self.assertEqual(resource['type'], 'statistics/database-statistics')
-                self.assertEqual(resource['attributes']['value'], 7)
-                self.assertEqual(resource['attributes']['name'], self.database.name)
-
-        self.assertEqual(response.json()['included'][0]['id'], str(self.impact_type.pk))
-        self.assertEqual(response.json()['included'][0]['type'], 'activities/impact-types')
-
-
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
 class StatisticYearFilterListAPITestCase(BluebottleTestCase):
 
     def setUp(self):
@@ -228,8 +162,13 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         slot2.duration = datetime.timedelta(hours=8)
         slot2.save()
 
-        DateParticipantFactory.create_batch(3, activity=activity1)
-        DateParticipantFactory.create_batch(2, activity=activity2)
+        participants = DateParticipantFactory.create_batch(3, activity=activity1)
+        for participant in participants:
+            SlotParticipantFactory.create(participant=participant, slot=slot1)
+
+        participants = DateParticipantFactory.create_batch(2, activity=activity2)
+        for participant in participants:
+            SlotParticipantFactory.create(participant=participant, slot=slot2)
 
         self.impact_type = ImpactTypeFactory.create()
 
@@ -326,3 +265,47 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.assertEqual(data[1]['attributes']['value'], 150.0)
         self.assertEqual(data[2]['attributes']['value'], 5)
         self.assertEqual(data[3]['attributes']['value'], {'amount': 175.0, 'currency': 'EUR'})
+
+
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
+class UserStatisticListListAPITestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(UserStatisticListListAPITestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.url = reverse('user-statistics')
+        self.user = BlueBottleUserFactory()
+
+        initiative = InitiativeFactory.create()
+        activity = DateActivityFactory.create(
+            initiative=initiative,
+            owner=initiative.owner,
+        )
+        initiative.states.submit(save=True)
+        initiative.states.approve(save=True)
+        activity.states.publish(save=True)
+
+        slot = activity.slots.get()
+        slot.start = timezone.now() - datetime.timedelta(days=8)
+        slot.duration = datetime.timedelta(hours=6)
+        slot.save()
+        part = DateParticipantFactory.create(activity=activity, user=self.user)
+        SlotParticipantFactory.create(participant=part, slot=slot)
+
+        donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
+        for donation in donations:
+            donation.states.succeed(save=True)
+
+    def test_get(self):
+        response = self.client.get(self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()['data']
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]['attributes']['value']['amount'], 105)
+        self.assertEqual(data[1]['attributes']['value'], 6.0)

@@ -122,8 +122,13 @@ def run(*args):
         }
         url += '?expand=body.storage'
         response = requests.put(url, json=data, auth=(api['user'], api['key']))
+
+        print(f"{total} messages")
         if response.status_code == 200:
             print("[OK]")
-            print(f"{total} messages")
         else:
+            text_file = open("email_documentation.html", "w")
+            text_file.write(html)
+            text_file.close()
+            print("You can find html out put in email_documentation.html")
             print("[ERROR]")

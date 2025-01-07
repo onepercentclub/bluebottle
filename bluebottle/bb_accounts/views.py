@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.tokens import default_token_generator
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
+from bluebottle.files.views import ImageContentView
 from django.http import Http404
 from django.template import loader
 from django.utils import timezone
@@ -16,7 +17,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
-from rest_framework.exceptions import PermissionDenied, NotAuthenticated, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
@@ -28,12 +29,14 @@ from bluebottle.bb_accounts.permissions import (
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.initiatives.serializers import MemberSerializer, CurrentMemberSerializer
+from bluebottle.initiatives.serializers import (
+    MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
+)
 from bluebottle.members.messages import SignUptokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
-    UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
+    UserCreateSerializer, UserProfileSerializer,
     PasswordResetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
     EmailSetSerializer, PasswordUpdateSerializer, SignUpTokenSerializer,
@@ -47,7 +50,7 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import IsCurrentUser
 from bluebottle.utils.views import (
-    RetrieveAPIView, UpdateAPIView, RetrieveUpdateAPIView, JsonApiViewMixin, CreateAPIView
+    RetrieveAPIView, JsonApiViewMixin, CreateAPIView, RetrieveUpdateDestroyAPIView
 )
 
 USER_MODEL = get_user_model()
@@ -95,6 +98,12 @@ class CaptchaVerification(JsonApiViewMixin, CreateAPIView):
         return serializer.validated_data
 
 
+class AvatarImage(ImageContentView):
+    queryset = USER_MODEL.objects
+    field = 'avatar'
+    allowed_sizes = AvatarImageSerializer.sizes
+
+
 class UserProfileDetail(RetrieveAPIView):
     """
     Fetch User Details
@@ -129,60 +138,6 @@ class UserActivityDetail(JsonApiViewMixin, CreateAPIView):
             serializer.save(user=self.request.user)
 
 
-class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Manage User Details
-    ---
-    PUT:
-        serializer: ManageProfileSerializer
-        omit_serializer: false
-        parameters_strategy: merge
-        parameters:
-            - name: location
-              type: geo.Location
-              paramType: form
-            - name: avatar
-              type: file
-        responseMessages:
-            - code: 401
-              message: Not authenticated
-        consumes:
-            - application/json
-            - multipart/form-data
-        produces:
-            - application/json
-    """
-    documentable = True
-    queryset = USER_MODEL.objects.all()
-    permission_classes = (CurrentUserPermission, )
-    serializer_class = ManageProfileSerializer
-
-    def get_serializer(self, *args, **kwargs):
-        kwargs['partial'] = True
-        return super(ManageProfileDetail, self).get_serializer(
-            *args, **kwargs
-        )
-
-    def perform_update(self, serializer):
-        try:
-            # Read only properties come from the TOKEN_AUTH / SAML settings
-            assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']
-            user_properties = list(assertion_mapping.keys())
-
-            # Ensure read-only user properties are not being changed
-            for prop in [prop for prop in user_properties if prop in serializer.validated_data]:
-                if getattr(serializer.instance, prop) != serializer.validated_data.get(prop):
-                    raise PermissionDenied
-
-        except (AttributeError, KeyError):
-            pass
-
-        super(ManageProfileDetail, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        instance.anonymize()
-
-
 class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
     """
     Retrieve details about the member
@@ -195,13 +150,16 @@ class CurrentMemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
         return self.request.user
 
 
-class MemberProfileDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
+class MemberProfileDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve details about the member
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = MemberProfileSerializer
     permission_classes = [IsCurrentUser]
+
+    def perform_destroy(self, instance):
+        instance.anonymize()
 
 
 class MemberDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveAPIView):
@@ -428,33 +386,24 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
         serializer.instance = model(str(uuid.uuid4()), serializer.validated_data['email'])
 
 
-class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
+class PasswordProtectedMemberCreateApiView(JsonApiViewMixin, CreateAPIView):
+    permission_classes = (IsAuthenticated, )
     queryset = USER_MODEL.objects.all()
 
-    permission_classes = (CurrentUserPermission, )
+    def perform_create(self, serializer):
+        user = self.request.user
 
-    def get_object(self):
-        if isinstance(self.request.user, AnonymousUser):
-            raise NotAuthenticated()
-        return self.request.user
+        serializer.instance = user
+        user.last_logout = now()
 
-    def perform_update(self, serializer):
-        password = serializer.validated_data.pop('password')
-
-        if not self.request.user.check_password(password):
-            raise PermissionDenied('Platform is closed')
-
-        self.request.user.last_logout = now()
-        self.request.user.save()
-
-        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+        serializer.save()
 
 
-class EmailSetView(PasswordProtectedMemberUpdateApiView):
+class EmailSetView(PasswordProtectedMemberCreateApiView):
     serializer_class = EmailSetSerializer
 
 
-class PasswordSetView(PasswordProtectedMemberUpdateApiView):
+class PasswordSetView(PasswordProtectedMemberCreateApiView):
     serializer_class = PasswordUpdateSerializer
 
 
@@ -471,6 +420,7 @@ class TokenLogin(generics.CreateAPIView):
 
         try:
             user = USER_MODEL.objects.get(pk=user_id)
+
         except USER_MODEL.DoesNotExist:
             return response.Response(status=status.HTTP_404_NOT_FOUND)
 

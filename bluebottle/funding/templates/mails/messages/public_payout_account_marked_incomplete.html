@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %} {% load djmoney %} {% load i18n %} {% block
+content %}
+<p class="donation-intro">
+    {% blocktrans context 'email' %} Hi {{ recipient_name }},
+    <br /><br />
+    To be able to collect funds for your organisation or avoid issues with current campaigns on {{site_name}}, we need some extra information from you. Please provide this information as soon as possible.
+    {% endblocktrans %}
+</p>
+
+{% endblock content %} {% block action %}
+<a
+    href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}"
+>
+    {% trans 'Provide additional details' context 'email' %}
+</a>
+{% endblock %}`

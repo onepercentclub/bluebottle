@@ -28,7 +28,12 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create(activity_manager=user)
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        payout_account = StripePayoutAccountFactory.create(status='verified')
+        payout_account = StripePayoutAccountFactory.create(
+            account_id="test-account-id",
+            status="verified",
+            payouts_enabled=True,
+            payments_enabled=True,
+        )
         bank_account = ExternalAccountFactory.create(connect_account=payout_account, status='verified')
         self.funding = FundingFactory.create(
             owner=user,
@@ -56,8 +61,10 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(funding.status, funding.states.draft.value)
 
         BudgetLineFactory.create(activity=funding)
-        payout_account = PlainPayoutAccountFactory.create()
-        bank_account = BankAccountFactory.create(connect_account=payout_account, status='verified')
+        payout_account = PlainPayoutAccountFactory.create(status="verified")
+        bank_account = BankAccountFactory.create(
+            connect_account=payout_account, status="verified"
+        )
         funding.bank_account = bank_account
 
         funding.states.submit(save=True)
@@ -73,13 +80,17 @@ class FundingTestCase(BluebottleAdminTestCase):
             target=Money(500, 'EUR'),
             duration=30,
             deadline=None,
-            bank_account=BankAccountFactory.create(status='verified')
+            bank_account=BankAccountFactory.create(
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id", status="verified"
+                ),
+            ),
         )
 
         self.assertIsNone(funding.started)
 
         BudgetLineFactory.create(activity=funding)
-        funding.bank_account.status = 'verified'
 
         funding.states.submit()
         funding.states.approve(save=True)
@@ -153,7 +164,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.assertEqual(mail.outbox[2].subject, 'Your crowdfunding campaign deadline passed')
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[0].body)
         self.assertTrue(self.funding.title in mail.outbox[0].body)
-        url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(
+        url = 'http://testserver/en/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )
         self.assertTrue(url in mail.outbox[0].body)
@@ -183,7 +194,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         )
         self.assertTrue('Hi Jean Baptiste,' in mail.outbox[4].body)
         self.assertTrue(self.funding.title in mail.outbox[4].body)
-        url = 'http://testserver/en/initiatives/activities/details/funding/{}/{}'.format(
+        url = 'http://testserver/en/activities/details/funding/{}/{}'.format(
             self.funding.id, self.funding.slug
         )
         self.assertTrue(url in mail.outbox[4].body)
@@ -262,7 +273,12 @@ class FundingTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             target=Money(500, 'EUR'),
             deadline=now() + timedelta(weeks=2),
-            bank_account=BankAccountFactory.create(status='verified')
+            bank_account=BankAccountFactory.create(
+                status="verified",
+                connect_account=StripePayoutAccountFactory.create(
+                    account_id="test-account-id", status="verified"
+                ),
+            ),
         )
         BudgetLineFactory.create(activity=new_funding)
         new_funding.bank_account.reviewed = True

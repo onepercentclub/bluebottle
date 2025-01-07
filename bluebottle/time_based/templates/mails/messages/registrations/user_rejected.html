@@ -1,0 +1,8 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message%}{% blocktrans context 'email' %}
+<p>Unfortunately, you have not been selected for the activity ‘{{ title }}’.</p>
+
+<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>
+{% endblocktrans %}{% endblock %}

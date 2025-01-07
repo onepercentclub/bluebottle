@@ -5,6 +5,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
 from bluebottle.funding.models import Funding, Payout, PaymentProvider
+from bluebottle.offices.admin import region_manager_filter
 
 
 class RecentFunding(DashboardModule):
@@ -16,6 +17,8 @@ class RecentFunding(DashboardModule):
 
     def init_with_context(self, context):
         activities = Funding.objects.filter(status='submitted').order_by('-created')
+        user = context.request.user
+        activities = region_manager_filter(activities, user)
         self.children = activities[:self.limit]
 
 
@@ -28,6 +31,8 @@ class PayoutsReadForApprovalDashboardModule(DashboardModule):
 
     def init_with_context(self, context):
         payouts = Payout.objects.filter(status='new').order_by('created')
+        user = context.request.user
+        payouts = region_manager_filter(payouts, user)
         self.children = payouts[:self.limit]
 
 

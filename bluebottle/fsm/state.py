@@ -4,7 +4,6 @@ from builtins import str
 from django.dispatch import Signal
 from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
-from stripe.six import python_2_unicode_compatible
 
 
 class TransitionNotPossible(Exception):
@@ -24,10 +23,21 @@ def register(model_cls):
     return _register
 
 
-@python_2_unicode_compatible
 class BaseTransition(object):
-    def __init__(self, sources, target, name='', description='', description_front_end='',
-                 automatic=True, conditions=None, effects=None, **options):
+    def __init__(
+        self,
+        sources,
+        target,
+        name="",
+        description="",
+        description_front_end="",
+        short_description=None,
+        passed_label=None,
+        automatic=True,
+        conditions=None,
+        effects=None,
+        **options
+    ):
         self.name = name
 
         if not isinstance(sources, (list, tuple)):
@@ -39,7 +49,10 @@ class BaseTransition(object):
         self.conditions = conditions or []
         self.effects = effects or []
         self.description = description
+        self.short_description = short_description
         self.description_front_end = description_front_end or description
+
+        self.passed_label = passed_label
 
         assert not (
             not self.automatic and not self.name), 'Automatic transitions should have a name'
@@ -139,7 +152,6 @@ class Transition(BaseTransition):
         )
 
 
-@python_2_unicode_compatible
 class State(object):
     transition_class = Transition
 

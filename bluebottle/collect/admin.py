@@ -6,7 +6,7 @@ from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline
+    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline, BaseContributorInline
 )
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType, CollectContribution
 from bluebottle.utils.admin import export_as_csv_action
@@ -27,6 +27,9 @@ class CollectContributionInline(admin.TabularInline):
     readonly_fields = ('status', 'start',)
     fields = readonly_fields + ('value',)
 
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(CollectContributor)
 class CollectContributorAdmin(ContributorChildAdmin):
@@ -37,27 +40,10 @@ class CollectContributorAdmin(ContributorChildAdmin):
     inlines = [CollectContributionInline]
 
 
-class CollectContributorInline(admin.TabularInline):
+class CollectContributorInline(BaseContributorInline):
     model = CollectContributor
-    raw_id_fields = ['user']
-    readonly_fields = ['edit', 'created', 'transition_date', 'contributor_date', 'status']
-    fields = ['edit', 'user', 'created', 'status']
-    extra = 0
-
-    template = 'admin/participant_list.html'
-
-    def edit(self, obj):
-        if not obj.user and obj.activity.has_deleted_data:
-            return format_html(f'<i>{_("Anonymous")}</i>')
-        url = reverse('admin:collect_collectcontributor_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, _('Edit contributor'))
-    edit.short_description = _('Edit contributor')
-
-    def get_readonly_fields(self, request, obj=None):
-        fields = self.readonly_fields
-        if obj and obj.has_deleted_data:
-            fields += ('user',)
-        return fields
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
 
 
 @admin.register(CollectActivity)
@@ -80,18 +66,15 @@ class CollectActivityAdmin(ActivityChildAdmin):
 
     def contributor_count(self, obj):
         return obj.contributors.count() + obj.deleted_successful_contributors or 0
-    contributor_count.short_description = _('Contributors')
+    contributor_count.short_description = _('Participants')
 
-    detail_fields = ActivityChildAdmin.detail_fields + (
-        'start',
-        'end',
-    )
-    description_fields = ActivityChildAdmin.description_fields + (
+    registration_fields = (
         'collect_type',
         'target',
         'realized',
-        'enable_impact',
-        'location'
+        'location',
+        'start',
+        'end',
     )
 
     export_as_csv_fields = (

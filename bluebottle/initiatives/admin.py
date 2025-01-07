@@ -17,8 +17,8 @@ from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
+from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
-from bluebottle.wallposts.admin import WallpostInline
 
 
 class InitiativeAdminForm(StateMachineModelForm):
@@ -65,7 +65,8 @@ class InitiativeCountryFilter(admin.SimpleListFilter):
             values_list('place__country__id', flat=True)
         countries = Country.objects.filter(id__in=country_ids).language(language). \
             order_by('translations__name')
-        return [(c.id, c.name) for c in countries]
+        country_list = sorted(set([(c.id, c.name) for c in countries]), key=lambda pair: pair[1])
+        return country_list
 
     def queryset(self, request, queryset):
         if self.value():
@@ -101,15 +102,20 @@ class ActivityManagersInline(admin.TabularInline):
 
 
 @admin.register(Initiative)
-class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, StateMachineAdmin):
+class InitiativeAdmin(
+    PolymorphicInlineSupportMixin, NotificationAdminMixin,
+    RegionManagerAdminMixin, StateMachineAdmin
+):
     form = InitiativeAdminForm
 
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = (
-        'owner', 'reviewer',
+        'owner',
+        'reviewer',
         'promoter',
-        'organization', 'organization_contact',
+        'organization',
+        'organization_contact',
         'place',
         'theme',
     )
@@ -125,8 +131,10 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
         InitiativeCountryFilter
     ]
 
-    search_fields = ['title', 'pitch', 'story',
-                     'owner__first_name', 'owner__last_name', 'owner__email']
+    search_fields = [
+        'title', 'pitch', 'story',
+        'owner__first_name', 'owner__last_name', 'owner__email'
+    ]
 
     readonly_fields = ['link', 'created', 'updated', 'has_deleted_data', 'valid']
 
@@ -193,7 +201,6 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, NotificationAdminMixin, Sta
     inlines = [
         ActivityAdminInline,
         MessageAdminInline,
-        WallpostInline
     ]
 
     def link(self, obj):
@@ -260,11 +267,13 @@ class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettin
         }),
         (_('Options'), {
             'fields': (
-                'contact_method', 'require_organization',
+                'contact_method',
+                'require_organization',
                 'enable_impact',
-                'enable_multiple_dates',
-                'enable_open_initiatives', 'enable_participant_exports',
+                'enable_open_initiatives',
+                'enable_participant_exports',
                 'enable_matching_emails',
+                'include_full_activities'
             )
         }),
     )

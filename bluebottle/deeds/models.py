@@ -111,8 +111,8 @@ class Deed(Activity):
 
 class DeedParticipant(Contributor):
     class Meta(object):
-        verbose_name = _("Participant")
-        verbose_name_plural = _("Participants")
+        verbose_name = _("Deed participant")
+        verbose_name_plural = _("Deed participants")
 
         permissions = (
             ('api_read_deedparticipant', 'Can view deed through the API'),
@@ -127,7 +127,7 @@ class DeedParticipant(Contributor):
         )
 
     class JSONAPIMeta(object):
-        resource_name = 'contributors/deeds/participant'
+        resource_name = 'contributors/deeds/participants'
 
 
 from bluebottle.deeds.periodic_tasks import *  # noqa

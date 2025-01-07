@@ -1,10 +1,10 @@
+from builtins import object
+from builtins import str
 from collections import Iterable
 from functools import partial
 
-from builtins import str
-from builtins import object
-from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
+from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.fsm.state import TransitionNotPossible
@@ -154,16 +154,17 @@ class BaseRelatedTransitionEffect(Effect):
 
     def pre_save(self, effects):
         for instance in self.instances:
-            effect = self.transition_effect_class(
-                instance, parent=self.instance, **self.options
-            )
+            if instance:
+                effect = self.transition_effect_class(
+                    instance, parent=self.instance, **self.options
+                )
 
-            if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
-                self.executed = True
-                effect.pre_save(effects=effects)
-                effects.append(effect)
+                if effect not in effects and effect.is_valid and self.transition in effect.machine.transitions.values():
+                    self.executed = True
+                    effect.pre_save(effects=effects)
+                    effects.append(effect)
 
-            instance.execute_triggers(effects=effects)
+                instance.execute_triggers(effects=effects)
 
     def post_save(self):
         if self.executed:

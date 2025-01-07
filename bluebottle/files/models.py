@@ -42,8 +42,8 @@ class File(AnonymizationMixin, models.Model):
     name = models.CharField(null=True, blank=True, max_length=50)
 
     def save(self, *args, **kwargs):
-        if not self.name:
-            self.name = self.file.name
+        if not self.name and self.file.name:
+            self.name = self.file.name[:50]
 
         super().save(*args, **kwargs)
 
@@ -88,4 +88,4 @@ class RelatedImage(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    image = ImageField()
+    image = ImageField(null=True)

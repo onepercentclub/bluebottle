@@ -195,6 +195,20 @@ class Segment(models.Model):
 
         super().save(*args, **kwargs)
 
+    def merge(self, other):
+        self.alternate_names += other.alternate_names
+
+        activities_through = self.activities.through
+        activities_through.objects.filter(segment_id=other.pk).update(
+            segment_id=self.pk
+        )
+
+        users_through = self.users.through
+        users_through.objects.filter(segment_id=other.pk).update(segment_id=self.pk)
+
+        other.delete()
+        self.save()
+
     @property
     def text_color(self):
         rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color, 'RGB')]
@@ -205,7 +219,7 @@ class Segment(models.Model):
         if contrast.passes_AA(contrast_with_white, large=True):
             return 'white'
         else:
-            return 'grey'
+            return "text"
 
     def __str__(self):
         return self.name

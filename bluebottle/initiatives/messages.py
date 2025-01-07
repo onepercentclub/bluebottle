@@ -16,10 +16,18 @@ class InitiativeSubmittedStaffMessage(TransitionMessage):
     def get_recipients(self):
         """enabled staff members"""
         from bluebottle.members.models import Member
-        return list(
-            Member.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).
-            filter(submitted_initiative_notifications=True).all()
-        )
+
+        recipients = Member.objects.filter(
+            Q(is_staff=True) | Q(is_superuser=True)
+        ).filter(submitted_initiative_notifications=True)
+
+        if self.obj.location and self.obj.location.subregion:
+            recipients = recipients.filter(
+                Q(region_manager=self.obj.location.subregion)
+                | Q(region_manager__isnull=True)
+            )
+
+        return list(recipients)
 
 
 class InitiativeApprovedOwnerMessage(TransitionMessage):

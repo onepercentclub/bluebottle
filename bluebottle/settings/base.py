@@ -144,7 +144,6 @@ MIDDLEWARE = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
-    'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
@@ -223,7 +222,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.SHA1PasswordHasher',
     'django.contrib.auth.hashers.MD5PasswordHasher',
     'django.contrib.auth.hashers.CryptPasswordHasher',
-    'hashers_passlib.phpass',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -308,7 +306,6 @@ TENANT_APPS = (
     'django_otp.plugins.otp_totp',
     'two_factor',
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
-
 
     'django.contrib.contenttypes',
     'polymorphic',
@@ -436,10 +433,10 @@ TENANT_APPS = (
     'djmoney',
     'solo',
     'nested_inline',
-    'permissions_widget',
+    'tabular_permissions',
     'django.forms',
     'axes',
-    'captcha',
+    'django_recaptcha',
     'colorfield',
     'django_summernote',
 )
@@ -790,7 +787,7 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10

@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import EffortContribution
@@ -14,18 +14,19 @@ class CreateEffortContribution(Effect):
 
     def pre_save(self, effects):
         contribution_date = now()
-        tz = get_current_timezone()
         if self.instance.activity.start and self.instance.activity.start > contribution_date.date():
-            contribution_date = tz.localize(
+            contribution_date = make_aware(
                 datetime.combine(
                     self.instance.activity.start, datetime.min.replace(hour=12).time()
-                )
+                ),
+                get_current_timezone()
             )
         elif self.instance.activity.end and self.instance.activity.end < contribution_date.date():
-            contribution_date = tz.localize(
+            contribution_date = make_aware(
                 datetime.combine(
                     self.instance.activity.end, datetime.min.replace(hour=12).time()
-                )
+                ),
+                get_current_timezone()
             )
         self.contribution = EffortContribution(
             contributor=self.instance,
@@ -46,13 +47,13 @@ class RescheduleEffortsEffect(Effect):
     display = False
 
     def post_save(self, **kwargs):
-        tz = get_current_timezone()
-
         if self.instance.start and self.instance.start > now().date():
-            start = tz.localize(
+            start = make_aware(
                 datetime.combine(
                     self.instance.start, datetime.min.replace(hour=12).time()
-                )
+                ),
+                get_current_timezone()
+
             )
             self.instance.efforts.update(
                 start=start,
@@ -62,7 +63,6 @@ class RescheduleEffortsEffect(Effect):
 class SetEndDateEffect(Effect):
     title = _('Set end date, if no deadline is specified')
     template = 'admin/set_end_date.html'
-
     def is_valid(self):
         return not self.instance.end
 

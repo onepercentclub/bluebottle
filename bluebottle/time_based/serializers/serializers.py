@@ -407,7 +407,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     def get_contributor_count(self, instance):
         return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
             status__in=['accepted', 'succeeded'],
-            dateparticipant__slot_participants__status='registered'
+            dateparticipant__slot_participants__status__in=['registered', 'succeeded']
         ).count()
 
     def get_first_slot(self, instance):

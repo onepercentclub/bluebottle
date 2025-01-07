@@ -72,7 +72,7 @@ def run(*args):
                 status='failed',
                 slot_participant_id__isnull=False,
                 contributor__status__in=('accepted',),
-                slot_participant__status__in=('registered',),
+                slot_participant__status__in=('registered', 'succeeded'),
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
 

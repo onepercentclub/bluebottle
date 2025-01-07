@@ -170,8 +170,6 @@ class BaseActivitySerializer(ModelSerializer):
     contributor_count = serializers.SerializerMethodField()
     team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
-    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
-    stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, read_only=True)
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
@@ -240,7 +238,6 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'image',
@@ -314,8 +311,6 @@ class BaseActivityListSerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = AnonymizedResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
-    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
-    stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
@@ -342,7 +337,6 @@ class BaseActivityListSerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'image',

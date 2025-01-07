@@ -2,7 +2,7 @@ dist: bionic
 sudo: false
 language: python
 addons:
-  postgresql: "10"
+  postgresql: "13"
   apt:
     packages:
       - libxmlsec1
@@ -23,7 +23,7 @@ services:
   - elasticsearch
 env:
   global:
-  - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+    - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - "echo 'xpack.security.enabled: false' | sudo tee -a /etc/elasticsearch/elasticsearch.yml"
   - sudo systemctl restart elasticsearch
@@ -45,5 +45,5 @@ notifications:
   slack:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
-- bash post_travis.sh
-- python -m coverage combine; python -m coverage report --omit "**/migrations/**"; coveralls
+  - bash post_travis.sh
+  - python -m coverage combine; python -m coverage report --omit "**/migrations/**"; coveralls

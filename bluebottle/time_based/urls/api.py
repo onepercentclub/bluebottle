@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from bluebottle.time_based.views import (
     DateActivityDetailView,
@@ -27,109 +27,109 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    url(r'^/date$',
+    re_path(r'^/date$',
         DateActivityListView.as_view(),
         name='date-list'),
 
-    url(r'^/date/(?P<pk>\d+)$',
+    re_path(r'^/date/(?P<pk>\d+)$',
         DateActivityDetailView.as_view(),
         name='date-detail'),
 
-    url(r'^/date/(?P<activity_id>\d+)/participants$',
+    re_path(r'^/date/(?P<activity_id>\d+)/participants$',
         DateActivityRelatedParticipantList.as_view(),
         name='date-participants'),
 
-    url(r'^/date/slots/(?P<slot_id>\d+)/participants$',
+    re_path(r'^/date/slots/(?P<slot_id>\d+)/participants$',
         SlotRelatedParticipantList.as_view(),
         name='slot-participants'),
 
-    url(r'^/date/slots$',
+    re_path(r'^/date/slots$',
         DateSlotListView.as_view(),
         name='date-slot-list'),
 
-    url(r'^/date/(?P<pk>\d+)/(?P<related_field>\w+)$',
+    re_path(r'^/date/(?P<pk>\d+)/(?P<related_field>\w+)$',
         DateSlotListView.as_view(),
         name='date-slots'),
 
-    url(r'^/date/slots/(?P<pk>\d+)$',
+    re_path(r'^/date/slots/(?P<pk>\d+)$',
         DateSlotDetailView.as_view(),
         name='date-slot-detail'),
 
-    url(r'^/date/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
+    re_path(r'^/date/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
         DateActivityIcalView.as_view(),
         name='date-ical'),
 
-    url(r'^/slot/ical/(?P<pk>\d+)$',
+    re_path(r'^/slot/ical/(?P<pk>\d+)$',
         ActivitySlotIcalView.as_view(),
         name='slot-ical'),
 
-    url(r'^/date/transitions$',
+    re_path(r'^/date/transitions$',
         DateTransitionList.as_view(),
         name='date-transition-list'),
 
-    url(r'^/slot/transitions$',
+    re_path(r'^/slot/transitions$',
         DateSlotTransitionList.as_view(),
         name='slot-transition-list'),
 
-    url(r'^/participants/date$',
+    re_path(r'^/participants/date$',
         DateParticipantList.as_view(),
         name='date-participant-list'),
-    url(r'^/participants/date/(?P<pk>\d+)$',
+    re_path(r'^/participants/date/(?P<pk>\d+)$',
         DateParticipantDetail.as_view(),
         name='date-participant-detail'),
-    url(r'^/participants/date/transitions$',
+    re_path(r'^/participants/date/transitions$',
         DateParticipantTransitionList.as_view(),
         name='date-participant-transition-list'),
 
-    url(r'^/participants/date/(?P<pk>\d+)/document$',
+    re_path(r'^/participants/date/(?P<pk>\d+)/document$',
         DateParticipantDocumentDetail.as_view(),
         name='date-participant-document'),
 
-    url(r'^/slot-participants$',
+    re_path(r'^/slot-participants$',
         SlotParticipantListView.as_view(),
         name='slot-participant-list'),
 
-    url(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
+    re_path(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
         RelatedSlotParticipantListView.as_view(),
         name='related-slot-participant-list'),
 
-    url(r'^/slot-participants/(?P<pk>\d+)$',
+    re_path(r'^/slot-participants/(?P<pk>\d+)$',
         SlotParticipantDetailView.as_view(),
         name='slot-participant-detail'),
-    url(r'^/slot-participants/transitions$',
+    re_path(r'^/slot-participants/transitions$',
         SlotParticipantTransitionList.as_view(),
         name='slot-participant-transition-list'),
 
-    url(r'^/contributions/time/(?P<pk>\d+)$',
+    re_path(r'^/contributions/time/(?P<pk>\d+)$',
         TimeContributionDetail.as_view(),
         name='time-contribution-detail'),
 
-    url(r'^/date/export/(?P<pk>[\d]+)$',
+    re_path(r'^/date/export/(?P<pk>[\d]+)$',
         DateParticipantExportView.as_view(),
         name='date-participant-export'),
 
-    url(r'^/slot/export/(?P<pk>[\d]+)$',
+    re_path(r'^/slot/export/(?P<pk>[\d]+)$',
         SlotParticipantExportView.as_view(),
         name='slot-participant-export'),
 
-    url(
+    re_path(
         r'^/skills$',
         SkillList.as_view(),
         name='skill-list'
     ),
-    url(
+    re_path(
         r'^/skills/(?P<pk>\d+)$',
         SkillDetail.as_view(),
         name='skill'
     ),
 
-    url(
+    re_path(
         r'^/period/(?P<pk>\d+)$',
         PeriodActivityDetailView.as_view(),
         name="period-detail",
     ),
-    url(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
-    url(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),
-    url(r"^/schedule", include("bluebottle.time_based.urls.schedule_api")),
-    url(r"^/teams", include("bluebottle.time_based.urls.team_api")),
+    re_path(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
+    re_path(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),
+    re_path(r"^/schedule", include("bluebottle.time_based.urls.schedule_api")),
+    re_path(r"^/teams", include("bluebottle.time_based.urls.team_api")),
 ]

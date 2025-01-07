@@ -1,7 +1,7 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from ..views import RedirectListView
 
 urlpatterns = [
-    url(r'^$', RedirectListView.as_view(), name='redirect-list')
+    re_path(r'^$', RedirectListView.as_view(), name='redirect-list')
 ]

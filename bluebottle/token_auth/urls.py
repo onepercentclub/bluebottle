@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from bluebottle.token_auth.views import (
     MetadataView, TokenLogoutView,
     TokenRedirectView, TokenLoginView,
@@ -7,14 +7,14 @@ from bluebottle.token_auth.views import (
 
 
 urlpatterns = [
-    url(r'^redirect/$', TokenRedirectView.as_view(),
+    re_path(r'^redirect/$', TokenRedirectView.as_view(),
         name='token-redirect'),
-    url(r'^login/(?P<token>.*?)$', TokenLoginView.as_view(),
+    re_path(r'^login/(?P<token>.*?)$', TokenLoginView.as_view(),
         name='token-login'),
-    url(r'^logout/$', TokenLogoutView.as_view(), name='token-logout'),
-    url(r'^link/(?P<token>.+?)/(?P<link>.+?)$', TokenLoginView.as_view(),
+    re_path(r'^logout/$', TokenLogoutView.as_view(), name='token-logout'),
+    re_path(r'^link/(?P<token>.+?)/(?P<link>.+?)$', TokenLoginView.as_view(),
         name='token-login-link'),
-    url(r'^error/$', TokenErrorView.as_view(), name='token-error'),
-    url(r'^missing/$', MembersOnlyView.as_view(), name='members-only'),
-    url(r'^metadata/$', MetadataView.as_view(), name='token-metadata'),
+    re_path(r'^error/$', TokenErrorView.as_view(), name='token-error'),
+    re_path(r'^missing/$', MembersOnlyView.as_view(), name='members-only'),
+    re_path(r'^metadata/$', MetadataView.as_view(), name='token-metadata'),
 ]

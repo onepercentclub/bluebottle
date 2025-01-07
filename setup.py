@@ -59,7 +59,7 @@ install_requires = [
     'django-nested-inline==0.4.6',
     'django-otp==1.2.0',
     'django-parler==2.3',
-    'django-permissions-widget==1.5.2',
+    'django-tabular-permissions==2.9.3',
     'django-recaptcha==4.0.0',
     'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',

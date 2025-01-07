@@ -166,6 +166,20 @@ class StripePayoutAccountStateMachine(PayoutAccountStateMachine):
         automatic=True,
     )
 
+    verify = Transition(
+        [
+            PayoutAccountStateMachine.new,
+            PayoutAccountStateMachine.incomplete,
+            PayoutAccountStateMachine.rejected,
+            PayoutAccountStateMachine.pending,
+            disabled
+        ],
+        PayoutAccountStateMachine.verified,
+        name=_('Verify'),
+        description=_("Verify the payout account."),
+        automatic=True,
+    )
+
 
 @register(ExternalAccount)
 class StripeBankAccountStateMachine(BankAccountStateMachine):

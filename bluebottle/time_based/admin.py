@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 
 from django import forms
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, widgets, StackedInline
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
@@ -1183,11 +1183,11 @@ class DateSlotAdmin(SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^(?P<pk>\d+)/duplicate/$',
+            re_path(r'^(?P<pk>\d+)/duplicate/$',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
                 ),
-            url(r'^(?P<pk>\d+)/bulk_add/$',
+            re_path(r'^(?P<pk>\d+)/bulk_add/$',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='time_based_dateactivityslot_bulk_add'
                 ),
@@ -1379,10 +1379,10 @@ class DateParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
+    inlines = ContributorChildAdmin.inlines + (
         ParticipantSlotInline,
         TimeContributionInlineAdmin
-    ]
+    )
     fields = ContributorChildAdmin.fields + ['motivation', 'document']
     list_display = ['__str__', 'email', 'activity_link', 'status']
 
@@ -1411,9 +1411,9 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
-        TimeContributionInlineAdmin
-    ]
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
     fields = ContributorChildAdmin.fields + ['registration_info']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
@@ -1460,9 +1460,9 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
-        TimeContributionInlineAdmin
-    ]
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
 
     fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]
@@ -1557,7 +1557,7 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
 
-    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin, )
 
     fields = ContributorChildAdmin.fields + ["registration_info", "slot_info"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]

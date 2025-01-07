@@ -4,7 +4,7 @@ from django.contrib.gis.db.models import PointField
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from mapwidgets import GooglePointFieldWidget
+from mapwidgets import GoogleMapPointFieldWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.models import Activity
@@ -67,7 +67,7 @@ class LocationMergeForm(forms.Form):
 
 class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": GoogleMapPointFieldWidget},
     }
 
     def get_queryset(self, request):
@@ -135,7 +135,7 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
 @admin.register(Place)
 class PlaceInline(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": GoogleMapPointFieldWidget},
     }
     model = Place
     fields = [
@@ -155,7 +155,7 @@ admin.site.register(Location, LocationAdmin)
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": GooglePointFieldWidget},
+        PointField: {"widget": GoogleMapPointFieldWidget},
     }
     list_display = ('__str__', 'street', 'locality', 'country')
 

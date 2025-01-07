@@ -172,10 +172,10 @@ class PayoutStripeBankSerializer(serializers.ModelSerializer):
 
 class CountrySpecSerializer(serializers.Serializer):
     default_currency = serializers.CharField()
-    supported_bank_account_currencies = serializers.ListField(serializers.CharField)
-    supported_payment_currencies = serializers.ListField(serializers.CharField)
-    supported_payment_methods = serializers.ListField(serializers.CharField)
-    supported_transfer_countries = serializers.ListField(serializers.CharField)
+    supported_bank_account_currencies = serializers.ListField(child=serializers.CharField())
+    supported_payment_currencies = serializers.ListField(child=serializers.CharField())
+    supported_payment_methods = serializers.ListField(child=serializers.CharField())
+    supported_transfer_countries = serializers.ListField(child=serializers.CharField())
     verification_fields = serializers.SerializerMethodField()
 
     def get_verification_fields(self, obj):

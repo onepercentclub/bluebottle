@@ -77,7 +77,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         ]
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
             'my_contributor.contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
@@ -233,7 +233,7 @@ class DateActivitySlotSerializer(ActivitySlotSerializer):
         ]
 
     included_serializers = dict(
-        ActivitySlotSerializer.included_serializers,
+        ActivitySlotSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -498,7 +498,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
         ]
 
     included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers,
+        TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -580,7 +580,7 @@ class TimeBasedActivityListSerializer(BaseActivityListSerializer):
         ]
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
         }
@@ -604,7 +604,7 @@ class DateActivityListSerializer(DateActivitySlotInfoMixin, TimeBasedActivityLis
         included_resources = TimeBasedActivityListSerializer.JSONAPIMeta.included_resources + ['slots']
 
     included_serializers = dict(
-        TimeBasedActivityListSerializer.included_serializers,
+        TimeBasedActivityListSerializer.included_serializers.serializers,
         **{
             'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
@@ -649,7 +649,7 @@ class DateParticipantListSerializer(ParticipantListSerializer):
         ]
 
     included_serializers = dict(
-        ParticipantListSerializer.included_serializers,
+        ParticipantListSerializer.included_serializers.serializers,
         **{
             'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
             'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
@@ -734,7 +734,7 @@ class DateParticipantSerializer(ParticipantSerializer):
         ]
 
     included_serializers = dict(
-        ParticipantSerializer.included_serializers,
+        ParticipantSerializer.included_serializers.serializers,
         **{
             'user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'document': 'bluebottle.time_based.serializers.DateParticipantDocumentSerializer',

@@ -23,7 +23,7 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework.relations import ManyRelatedField, MANY_RELATION_KWARGS
 
 
-from captcha import client
+from django_recaptcha import client
 
 from bluebottle.utils.utils import get_client_ip
 from .models import Language, TranslationPlatformSettings

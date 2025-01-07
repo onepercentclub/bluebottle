@@ -6,7 +6,7 @@ from adminsortable.admin import NonSortableParentAdmin
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import default_token_generator
 from django.db import connection
 from django.db import models
@@ -924,11 +924,7 @@ admin.site.register(Member, MemberAdmin)
 
 
 class NewGroupChangeForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        # Dynamically set permission widget to make it Tenant aware
-        super(NewGroupChangeForm, self).__init__(*args, **kwargs)
-        permissions = Permission.objects.all()
-        self.fields['permissions'] = PermissionSelectMultipleField(queryset=permissions, required=False)
+    pass
 
 
 class GroupsAdmin(GroupAdmin):

@@ -12,17 +12,23 @@ urlpatterns = [
         r'^/transitions$',
         ActivityTransitionList.as_view(),
         name='activity-transition-list'),
-    re_path(r'^/search$',
+    re_path(
+        r'^/search$',
         ActivityPreviewList.as_view(),
-        name='activity-preview-list'),
+        name='activity-preview-list'
+    ),
 
-    re_path(r'^/contributions$',
+    re_path(
+        r'^/contributions$',
         ContributionList.as_view(),
-        name='contribution-list'),
+        name='contribution-list'
+    ),
 
-    re_path(r'^/(?P<pk>\d+)$',
+    re_path(
+        r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),
-        name='activity-detail'),
+        name='activity-detail'
+    ),
 
     re_path(
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
@@ -30,9 +36,11 @@ urlpatterns = [
         name='activity-image'
     ),
 
-    re_path(r'^/related-images$',
+    re_path(
+        r'^/related-images$',
         RelatedActivityImageList.as_view(),
-        name='related-activity-image-list'),
+        name='related-activity-image-list'
+    ),
     re_path(
         r'^/(?P<pk>\d+)/related-image/(?P<size>\d+(x\d+)?)$',
         RelatedActivityImageContent.as_view(),

@@ -6,13 +6,19 @@ from bluebottle.terms.views import (
 )
 
 urlpatterns = [
-    re_path(r'^current$',
+    re_path(
+        r'^current$',
         CurrentTermsDetailView.as_view(),
-        name='current-terms'),
-    re_path(r'^agreements/$',
+        name='current-terms'
+    ),
+    re_path(
+        r'^agreements/$',
         TermsAgreementListView.as_view(),
-        name='terms-agreement-list'),
-    re_path(r'^agreements/current$',
+        name='terms-agreement-list'
+    ),
+    re_path(
+        r'^agreements/current$',
         CurrentTermsAgreementDetailView.as_view(),
-        name='current-terms-agreement'),
+        name='current-terms-agreement'
+    ),
 ]

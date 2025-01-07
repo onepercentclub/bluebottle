@@ -36,15 +36,30 @@ urlpatterns = [
     re_path(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
     re_path(r'^passwordreset/confirm$', PasswordResetConfirm.as_view(), name='password-reset-confirm'),
     re_path(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
-    re_path(r'^profiles/manage/(?P<pk>\d+)$', ManageProfileDetail.as_view(),
-        name='manage-profile'),
-    re_path(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
-        name='user-profile-detail'),
+    re_path(
+        r'^profiles/manage/(?P<pk>\d+)$',
+        ManageProfileDetail.as_view(),
+        name='manage-profile'
+    ),
+    re_path(
+        r'^profiles/(?P<pk>\d+)$',
+        UserProfileDetail.as_view(),
+        name='user-profile-detail'
+    ),
     re_path(r'^tokenlogin$', TokenLogin.as_view(), name='token-login'),
-    re_path(r'^verification/$', UserVerification.as_view(),
-        name='user-verification'),
-    re_path(r'^export/$', UserDataExport.as_view(),
-        name='user-export'),
-    re_path(r'^password-strength$', PasswordStrengthDetail.as_view(),
-        name='password-strength'),
+    re_path(
+        r'^verification/$',
+        UserVerification.as_view(),
+        name='user-verification'
+    ),
+    re_path(
+        r'^export/$',
+        UserDataExport.as_view(),
+        name='user-export'
+    ),
+    re_path(
+        r'^password-strength$',
+        PasswordStrengthDetail.as_view(),
+        name='password-strength'
+    ),
 ]

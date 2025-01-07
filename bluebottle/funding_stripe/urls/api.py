@@ -30,42 +30,59 @@ urlpatterns = [
     re_path(
         r"^/external-account$",
         ExternalAccountList.as_view(),
-        name='stripe-external-account-list'),
-    re_path(r'^/external-account/(?P<pk>[\d]+)$',
+        name='stripe-external-account-list'
+    ),
+    re_path(
+        r'^/external-account/(?P<pk>[\d]+)$',
         ExternalAccountDetails.as_view(),
-        name='stripe-external-account-details'),
+        name='stripe-external-account-details'
+    ),
 
     # Payments
-    re_path(r'^/payments$',
+    re_path(
+        r'^/payments$',
         StripePaymentList.as_view(),
-        name='stripe-payment-list'),
+        name='stripe-payment-list'
+    ),
 
-    re_path(r'^/payment-intents$',
+    re_path(
+        r'^/payment-intents$',
         StripePaymentIntentList.as_view(),
-        name='stripe-payment-intent-list'),
+        name='stripe-payment-intent-list'
+    ),
 
-    re_path(r'^/payment-intents/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/payment-intents/(?P<pk>[\d]+)$',
         StripePaymentIntentDetail.as_view(),
-        name='stripe-payment-intent-detail'),
+        name='stripe-payment-intent-detail'
+    ),
 
-    re_path(r'^/source-payments$',
+    re_path(
+        r'^/source-payments$',
         StripeSourcePaymentList.as_view(),
-        name='stripe-source-payment-list'),
+        name='stripe-source-payment-list'
+    ),
 
     # Webhooks
-    re_path(r'^/intent-webhook$',
+    re_path(
+        r'^/intent-webhook$',
         IntentWebHookView.as_view(),
-        name='stripe-intent-webhook'),
-    re_path(r'^/source-webhook$',
+        name='stripe-intent-webhook'
+    ),
+    re_path(
+        r'^/source-webhook$',
         SourceWebHookView.as_view(),
-        name='stripe-source-webhook'),
-    re_path(r'^/connect-webhook$',
+        name='stripe-source-webhook'
+    ),
+    re_path(
+        r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
-        name="stripe-connect-webhook"),
+        name="stripe-connect-webhook"
+    ),
     re_path(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
     re_path(
         r"^/country-specs/(?P<pk>[\w]+)$",
         CountrySpecDetail.as_view(),
-        name="country-specs-detail",
+        name="country-specs-detail"
     ),
 ]

@@ -41,15 +41,24 @@ urlpatterns = [
     re_path(r'^member/current$', CurrentMemberDetail.as_view(), name='current-member-detail'),
     re_path(r'^member/profile/(?P<pk>\d+)$', MemberProfileDetail.as_view(), name='member-profile-detail'),
     re_path(r'^member/(?P<pk>\d+)$', MemberDetail.as_view(), name='member-detail'),
-    re_path(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
-        name='user-profile-detail'),
+    re_path(
+        r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
+        name='user-profile-detail'
+    ),
     re_path(r'^tokenlogin$', TokenLogin.as_view(), name='token-login'),
-    re_path(r'^verification/$', UserVerification.as_view(),
-        name='user-verification'),
-    re_path(r'^export/$', UserDataExport.as_view(),
-        name='user-export'),
-    re_path(r'^password-strength$', PasswordStrengthDetail.as_view(),
-        name='password-strength'),
+    re_path(
+        r'^verification/$', UserVerification.as_view(),
+        name='user-verification'
+    ),
+    re_path(
+        r'^export/$', UserDataExport.as_view(),
+        name='user-export'
+    ),
+    re_path(
+        r'^password-strength$',
+        PasswordStrengthDetail.as_view(),
+        name='password-strength'
+    ),
     re_path(
         r'^(?P<pk>\d+)/avatar/(?P<size>\d+x\d+)$',
         AvatarImage.as_view(),

@@ -58,10 +58,13 @@ class PageAdmin(PlaceholderFieldAdmin):
         base_urls = super(PageAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = [
-            re_path(r'^(?P<pk>\d+)/preview/$',
+            re_path(
+                r'^(?P<pk>\d+)/preview/$',
                 self.admin_site.admin_view(
-                    self.preview_canvas),
-                name="{0}_{1}_preview".format(*info)),
+                    self.preview_canvas
+                ),
+                name="{0}_{1}_preview".format(*info)
+            ),
         ]
 
         return urlpatterns + base_urls

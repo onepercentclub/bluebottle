@@ -1183,14 +1183,16 @@ class DateSlotAdmin(SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(r'^(?P<pk>\d+)/duplicate/$',
+            re_path(
+                r'^(?P<pk>\d+)/duplicate/$',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
-                ),
-            re_path(r'^(?P<pk>\d+)/bulk_add/$',
+            ),
+            re_path(
+                r'^(?P<pk>\d+)/bulk_add/$',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='time_based_dateactivityslot_bulk_add'
-                ),
+            ),
         ]
         return extra_urls + urls
 

@@ -26,17 +26,26 @@ urlpatterns = [
     re_path('admin/logout/', admin_logout),
 
     # Django Admin, docs and password reset
-    re_path(r'^admin/password_reset/$',
+    re_path(
+        r'^admin/password_reset/$',
         admin_password_reset,
-        name='admin_password_reset'),
-    re_path(r'^admin/password_reset/done/$',
-        PasswordResetDoneView.as_view(), name='password_reset_done'),
-    re_path(r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        name='admin_password_reset'
+    ),
+    re_path(
+        r'^admin/password_reset/done/$',
+        PasswordResetDoneView.as_view(),
+        name='password_reset_done'
+    ),
+    re_path(
+        r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         PasswordResetConfirmView.as_view(),
-        name='password_reset_confirm'),
-    re_path(r'^admin/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        name='password_reset_confirm'
+    ),
+    re_path(
+        r'^admin/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         PasswordResetConfirmView.as_view(),
-        {'post_reset_redirect': '/admin'}, name='password_reset_confirm'),
+        {'post_reset_redirect': '/admin'}, name='password_reset_confirm'
+    ),
     re_path(r'^admin/', admin.site.urls),
 
     re_path(r'^admin/utils/tinymce/', include('tinymce.urls')),

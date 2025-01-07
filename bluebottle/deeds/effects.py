@@ -63,6 +63,7 @@ class RescheduleEffortsEffect(Effect):
 class SetEndDateEffect(Effect):
     title = _('Set end date, if no deadline is specified')
     template = 'admin/set_end_date.html'
+
     def is_valid(self):
         return not self.instance.end
 

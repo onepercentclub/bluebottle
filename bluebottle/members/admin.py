@@ -831,18 +831,21 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            re_path(r'^login-as/(?P<pk>\d+)/$',
+            re_path(
+                r'^login-as/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.login_as),
                 name='members_member_login_as'
-                ),
-            re_path(r'^password-reset/(?P<pk>\d+)/$',
+            ),
+            re_path(
+                r'^password-reset/(?P<pk>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
-                ),
-            re_path(r'^resend_welcome_email/(?P<pk>\d+)/$',
+            ),
+            re_path(
+                r'^resend_welcome_email/(?P<pk>\d+)/$',
                 self.resend_welcome_email,
                 name='auth_user_resend_welcome_mail'
-                )
+            )
         ]
         return extra_urls + urls
 

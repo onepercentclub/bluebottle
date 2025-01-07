@@ -4,13 +4,19 @@ from bluebottle.funding_pledge.views import PledgePaymentList, PledgeBankAccount
     PledgeBankAccountAccountDetail
 
 urlpatterns = [
-    re_path(r'^$',
+    re_path(
+        r'^$',
         PledgePaymentList.as_view(),
-        name='pledge-payment-list'),
-    re_path(r'^/bank-accounts/$',
+        name='pledge-payment-list'
+    ),
+    re_path(
+        r'^/bank-accounts/$',
         PledgeBankAccountAccountList.as_view(),
-        name='pledge-external-account-list'),
-    re_path(r'^/bank-accounts/(?P<pk>[\d]+)$',
+        name='pledge-external-account-list'
+    ),
+    re_path(
+        r'^/bank-accounts/(?P<pk>[\d]+)$',
         PledgeBankAccountAccountDetail.as_view(),
-        name='pledge-external-account-detail'),
+        name='pledge-external-account-detail'
+    ),
 ]

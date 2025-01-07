@@ -30,19 +30,29 @@ urlpatterns = [
     re_path(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
     re_path(r'^/export/(?P<pk>[\d]+)$', SupportersExportView.as_view(), name='funding-supporters-export'),
 
-    re_path(r'^/payouts/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/payouts/(?P<pk>[\d]+)$',
         PayoutDetails.as_view(),
-        name='payout-details'),
-    re_path(r'^/payout-accounts$',
+        name='payout-details'
+    ),
+    re_path(
+        r'^/payout-accounts$',
         PayoutAccountList.as_view(),
-        name='payout-account-list'),
-    re_path(r'^/payout-accounts/plain$',
+        name='payout-account-list'
+    ),
+    re_path(
+        r'^/payout-accounts/plain$',
         PlainPayoutAccountList.as_view(),
-        name='plain-payout-account-list'),
-    re_path(r'^/payout-accounts/plain/(?P<pk>[\d]+)$',
+        name='plain-payout-account-list'
+    ),
+    re_path(
+        r'^/payout-accounts/plain/(?P<pk>[\d]+)$',
         PlainPayoutAccountDetail.as_view(),
-        name='plain-payout-account-detail'),
-    re_path(r'^/payout-accounts/plain/(?P<pk>\d+)/document$',
+        name='plain-payout-account-detail'
+    ),
+    re_path(
+        r'^/payout-accounts/plain/(?P<pk>\d+)/document$',
         PlainPayoutAccountDocumentDetail.as_view(),
-        name="kyc-document"),
+        name="kyc-document"
+    ),
 ]

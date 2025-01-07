@@ -585,13 +585,14 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()
         extra_urls = [
-            re_path(r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+            re_path(
+                r'^send-impact-reminder-message/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
-                )
+            )
         ]
         return extra_urls + urls
 

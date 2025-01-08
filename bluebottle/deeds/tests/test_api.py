@@ -624,7 +624,26 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         mail.outbox = []
         staff = BlueBottleUserFactory.create(is_staff=True)
         data = self.data
-        data['data']['attributes'] = {'email': self.user.email}
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': True
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_by_email_staff_no_messages(self):
+        mail.outbox = []
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        data = self.data
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': False
+        }
         self.perform_create(user=staff, data=data)
 
         self.assertStatus(status.HTTP_201_CREATED)

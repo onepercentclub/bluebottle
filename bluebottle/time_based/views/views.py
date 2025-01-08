@@ -352,7 +352,7 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         slot = serializer.validated_data['slot']
         email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:

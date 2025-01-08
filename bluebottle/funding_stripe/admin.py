@@ -77,7 +77,7 @@ class StripePayoutAccountForm(StateMachineModelForm):
         specs = stripe.CountrySpec.list(limit=100)
         data = specs.data
 
-        if specs:
+        if specs and data:
             specs2 = stripe.CountrySpec.list(limit=100, starting_after=specs.data[-1].id)
             data.extend(specs2.data)
 

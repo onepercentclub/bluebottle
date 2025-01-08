@@ -5,7 +5,7 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect
+    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -240,6 +240,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                CreateInitialPeriodicParticipantEffect,
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
@@ -275,7 +276,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -286,7 +287,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -297,7 +298,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),

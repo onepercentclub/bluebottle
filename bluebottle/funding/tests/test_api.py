@@ -35,7 +35,7 @@ from bluebottle.funding_pledge.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
-    StripeSourcePaymentFactory
+    StripeSourcePaymentFactory, ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory

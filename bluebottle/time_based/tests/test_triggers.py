@@ -5,7 +5,7 @@ import mock
 from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.models import Organizer
@@ -1358,8 +1358,9 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
             status="open",
             review=False
         )
-        start = get_current_timezone().localize(
-            datetime.combine(self.activity.start, datetime.min.time())
+        start = make_aware(
+            datetime.combine(self.activity.start, datetime.min.time()),
+            get_current_timezone()
         )
 
         self.defaults = {

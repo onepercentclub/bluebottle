@@ -6,7 +6,7 @@ from datetime import timedelta, datetime
 from django.core import mail
 from django.db import connection
 from django.utils import timezone
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now, get_current_timezone, make_aware
 from moneyed import Money
 
 from bluebottle.activities.models import Organizer
@@ -100,7 +100,7 @@ class FundingTestCase(BluebottleAdminTestCase):
         deadline = now() + timedelta(days=30)
         self.assertAlmostEqual(
             funding.deadline,
-            get_current_timezone().localize(
+            make_aware(
                 datetime(
                     deadline.year,
                     deadline.month,
@@ -108,7 +108,8 @@ class FundingTestCase(BluebottleAdminTestCase):
                     hour=23,
                     minute=59,
                     second=59
-                )
+                ),
+                get_current_timezone()
             ),
             delta=timedelta(seconds=1)
         )

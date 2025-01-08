@@ -360,10 +360,13 @@ class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(
-            status__in=['registered', 'new', 'succeeded'],
-            participant__status='accepted'
-        )
+        if self.pk:
+            return self.slot_participants.filter(
+                status__in=['registered', 'new', 'succeeded'],
+                participant__status='accepted'
+            )
+        else:
+            return []
 
     @property
     def durations(self):
@@ -1004,29 +1007,44 @@ class Participant(Contributor):
 
     @property
     def finished_contributions(self):
-        return self.contributions.filter(
-            timecontribution__end__lte=timezone.now()
-        ).exclude(
-            timecontribution__contribution_type=ContributionTypeChoices.preparation
-        )
+        if self.pk:
+            return self.contributions.filter(
+                timecontribution__end__lte=timezone.now()
+            ).exclude(
+                timecontribution__contribution_type=ContributionTypeChoices.preparation
+            )
+        else:
+            return []
 
     @property
     def preparation_contributions(self):
-        return self.contributions.filter(
-            timecontribution__contribution_type=ContributionTypeChoices.preparation
-        )
+        if self.pk:
+            return self.contributions.filter(
+                timecontribution__contribution_type=ContributionTypeChoices.preparation
+            )
+        else:
+            return []
 
     @property
     def current_contribution(self):
-        return self.contributions.get(status='new')
+        if self.pk:
+            return self.contributions.get(status='new')
+        else:
+            return []
 
     @property
     def upcoming_contributions(self):
-        return self.contributions.filter(start__gt=timezone.now())
+        if self.pk:
+            return self.contributions.filter(start__gt=timezone.now())
+        else:
+            return []
 
     @property
     def started_contributions(self):
-        return self.contributions.filter(start__lt=timezone.now())
+        if self.pk:
+            return self.contributions.filter(start__lt=timezone.now())
+        else:
+            return []
 
     class Meta:
         abstract = True
@@ -1250,7 +1268,10 @@ class DeadlineRegistration(Registration):
 
     @property
     def participants(self):
-        return self.deadlineparticipant_set.all()
+        if self.pk:
+            return self.deadlineparticipant_set.all()
+        else:
+            return []
 
     class Meta:
         verbose_name = _("Candidate for flexible activities")
@@ -1334,7 +1355,10 @@ class PeriodicRegistration(Registration):
 
     @property
     def participants(self):
-        return self.periodicparticipant_set.all()
+        if self.pk:
+            return self.periodicparticipant_set.all()
+        else:
+            return []
 
     class Meta:
         verbose_name = _("Candidate for recurring activities")

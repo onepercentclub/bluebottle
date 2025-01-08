@@ -1,5 +1,5 @@
 from builtins import object
-from rest_framework.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.funding.models import Donor, Payment, BankAccount, PayoutAccount

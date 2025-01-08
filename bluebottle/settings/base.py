@@ -143,6 +143,7 @@ MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
+    'bluebottle.utils.middleware.TenantLocaleMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',

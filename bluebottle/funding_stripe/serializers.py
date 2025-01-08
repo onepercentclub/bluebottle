@@ -36,6 +36,31 @@ class PaymentIntentSerializer(ModelSerializer):
     }
 
 
+class BankTransferSerializer(PaymentIntentSerializer):
+    intent_id = serializers.CharField(read_only=True)
+    client_secret = serializers.CharField(read_only=True)
+    next_url = serializers.SerializerMethodField()
+
+    def get_next_url(self, obj):
+        return obj.instructions.display_bank_transfer_instructions.hosted_instructions_url
+
+    donation = ResourceRelatedField(queryset=Donor.objects.all())
+
+    class Meta(object):
+        model = PaymentIntent
+        fields = ('intent_id', 'client_secret', 'donation', 'next_url')
+
+    class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
+        resource_name = 'payments/stripe-bank-transfers'
+        included_resources = ['donation', 'donation.activity', 'donation.updates']
+
+    included_serializers = {
+        'donation': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation.updates': 'bluebottle.updates.serializers.UpdateSerializer',
+        'donation.activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+
 class StripePaymentSerializer(PaymentSerializer):
     payment_intent = ResourceRelatedField(queryset=PaymentIntent.objects.all(), write_only=True)
 

@@ -8,7 +8,7 @@ from bluebottle.funding_stripe.views import (
     StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
     ConnectAccountSession,
     CountrySpecList,
-    CountrySpecDetail,
+    CountrySpecDetail, StripeBankTransferList, StripeBankTransferDetail,
 )
 
 urlpatterns = [
@@ -55,6 +55,18 @@ urlpatterns = [
         r'^/payment-intents/(?P<pk>[\d]+)$',
         StripePaymentIntentDetail.as_view(),
         name='stripe-payment-intent-detail'
+    ),
+
+    re_path(
+        r'^/bank-transfers$',
+        StripeBankTransferList.as_view(),
+        name='stripe-bank-transfer-list'
+    ),
+
+    re_path(
+        r'^/bank-transfers/(?P<pk>[\d]+)$',
+        StripeBankTransferDetail.as_view(),
+        name='stripe-bank-transfer-detail'
     ),
 
     re_path(

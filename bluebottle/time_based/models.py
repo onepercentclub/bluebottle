@@ -1951,11 +1951,14 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(
-        PeriodicSlot, on_delete=models.CASCADE, related_name="participants"
+        PeriodicSlot,
+        on_delete=models.CASCADE,
+        related_name="participants",
+        null=True,
     )
 
     class Meta:
-        verbose_name = _("Participant to ecurring activities")
+        verbose_name = _("Participant to recurring activities")
         verbose_name_plural = _("Participants to recurring activities")
 
         permissions = (

@@ -79,7 +79,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             )
             create_intent.assert_called_with(
                 amount=int(self.donation.amount.amount * 100),
-                currency=self.donation.amount.currency,
+                currency=str(self.donation.amount.currency),
                 metadata={
                     "tenant_name": "test",
                     "activity_id": self.donation.activity.pk,
@@ -125,7 +125,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             )
             create_intent.assert_called_with(
                 amount=int(self.donation.amount.amount * 100),
-                currency=self.donation.amount.currency,
+                currency=str(self.donation.amount.currency),
                 metadata={
                     "tenant_name": "test",
                     "activity_id": self.donation.activity.pk,

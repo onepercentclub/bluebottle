@@ -43,6 +43,7 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
 
     def perform_create(self, serializer):
         email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
@@ -68,7 +69,6 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
         if self.queryset.filter(user=user, activity=activity).exists():
             raise ValidationError(_('User already joined'), code="exists")
 
-        send_messages = not email
         serializer.save(user=user, send_messages=send_messages)
 
 

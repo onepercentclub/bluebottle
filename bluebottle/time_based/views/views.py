@@ -352,6 +352,7 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         slot = serializer.validated_data['slot']
         email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
@@ -376,7 +377,6 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         if slot.slot_participants.filter(participant__user=user).exists():
             raise ValidationError(_('Participant already registered for this slot'))
 
-        send_messages = not email
         serializer.save(participant=participant, send_messages=send_messages)
 
 

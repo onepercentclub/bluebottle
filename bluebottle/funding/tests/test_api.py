@@ -564,6 +564,36 @@ class FundingDetailTestCase(BluebottleTestCase):
         bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
         self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
 
+    def test_get_bank_account_staff(self):
+        self.staff = BlueBottleUserFactory.create(is_staff=True)
+        self.funding.bank_account = ExternalAccountFactory.create(
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id"
+            ),
+        )
+        self.funding.save()
+
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
+
+        with mock.patch(
+                'stripe.Account.retrieve', return_value=connect_account
+        ):
+            with mock.patch(
+                    'stripe.ListObject.retrieve', return_value=connect_account
+            ):
+                response = self.client.get(self.funding_url, user=self.staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
+        self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
+
     def test_other_user(self):
         DonorFactory.create_batch(
             5, amount=Money(200, "EUR"), activity=self.funding, status="succeeded"

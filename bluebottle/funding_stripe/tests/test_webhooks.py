@@ -1001,6 +1001,17 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payout_account.status, "disabled")
         self.assertEqual(self.funding.status, "on_hold")
 
+        self.connect_account.charges_enabled = True
+        self.connect_account.requirements = {
+            "eventually_due": []
+        }
+        self.execute_hook()
+
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, "verified")
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, "open")
+
     def test_document_rejected(self):
         self.verify()
         self.connect_account.individual.verification.details = (

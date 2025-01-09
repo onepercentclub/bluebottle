@@ -161,7 +161,6 @@ class MemberPlatformSettings(BasePlatformSettings):
         ),
     )
 
-
     require_office = models.BooleanField(
         _('Office location'),
         default=False,

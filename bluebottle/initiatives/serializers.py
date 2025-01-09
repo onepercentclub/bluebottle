@@ -41,7 +41,7 @@ from bluebottle.utils.fields import (
     FSMField
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin, AnonymizedResourceRelatedField
+    ResourcePermissionField, NoCommitMixin
 )
 from bluebottle.utils.utils import get_current_language
 
@@ -268,11 +268,11 @@ class ActivitiesField(HyperlinkedRelatedField):
 class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
-    reviewer = AnonymizedResourceRelatedField(read_only=True)
-    promoter = AnonymizedResourceRelatedField(read_only=True)
+    activity_managers = ResourceRelatedField(read_only=True, many=True)
+    reviewer = ResourceRelatedField(read_only=True)
+    promoter = ResourceRelatedField(read_only=True)
     current_status = CurrentStatusField(source='states.current_state')
 
     activities = ActivitiesField()
@@ -396,9 +396,9 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 class InitiativeListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     image = ImageField(required=False, allow_null=True)
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    activity_managers = AnonymizedResourceRelatedField(read_only=True, many=True)
+    activity_managers = ResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)

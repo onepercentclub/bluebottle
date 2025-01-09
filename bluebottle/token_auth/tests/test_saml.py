@@ -33,7 +33,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def _request(self, method, target, session=None, *args, **kwargs):
         request = getattr(RequestFactory(), method)(target, *args, **kwargs)
 
-        middleware = SessionMiddleware()
+        middleware = SessionMiddleware(response_mock)
         middleware.process_request(request)
         if session:
             request.session.update(session)

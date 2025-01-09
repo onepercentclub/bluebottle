@@ -668,7 +668,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
                      ]
 
     def public(self, obj):
-        return obj.connect_account.public
+        return obj.connect_account and obj.connect_account.public
 
     def owner(self, obj):
         return obj.connect_account and obj.connect_account.owner

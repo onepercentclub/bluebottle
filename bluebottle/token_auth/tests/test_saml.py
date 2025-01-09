@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import TestCase, RequestFactory
 from future import standard_library
-from mock import patch
+from mock import patch, MagicMock
 from onelogin.saml2.utils import OneLogin_Saml2_Utils
 
 from bluebottle.members.models import MemberPlatformSettings
@@ -19,6 +19,8 @@ from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKE
 
 standard_library.install_aliases()
 
+response_mock = MagicMock()
+
 
 class TestSAMLTokenAuthentication(TestCase):
     """
@@ -26,7 +28,7 @@ class TestSAMLTokenAuthentication(TestCase):
     """
 
     def setUp(self):
-        self.session_middleware = SessionMiddleware()
+        self.session_middleware = SessionMiddleware(response_mock)
 
     def _request(self, method, target, session=None, *args, **kwargs):
         request = getattr(RequestFactory(), method)(target, *args, **kwargs)

@@ -176,6 +176,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         _('Can pledge'),
         default=False,
         help_text=_('User can create a pledge donation.'))
+    can_do_bank_transfer = models.BooleanField(
+        _('Can do bank transfer'),
+        default=False,
+        help_text=_('Bank transfers are only available to selected regions.'))
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded

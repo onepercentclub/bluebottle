@@ -6,14 +6,13 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from django_tools.middlewares.ThreadLocal import get_current_user
+from djchoices import DjangoChoices, ChoiceItem
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
+from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
-from djchoices import DjangoChoices, ChoiceItem
-
 
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
@@ -21,6 +20,9 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -29,95 +31,7 @@ class PaymentIntent(models.Model):
     client_secret = models.CharField(max_length=100)
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-
-            statement_descriptor = connection.tenant.name[:22]
-
-            stripe = get_stripe()
-            user = get_current_user()
-            connect_account = self.donation.activity.bank_account.connect_account
-
-            intent_args = dict(
-                amount=int(self.donation.amount.amount * 100),
-                currency=self.donation.amount.currency,
-                transfer_data={
-                    'destination': connect_account.account_id,
-                },
-                automatic_payment_methods={"enabled": True},
-                statement_descriptor=statement_descriptor,
-                statement_descriptor_suffix=statement_descriptor[:18],
-                metadata=self.metadata,
-            )
-
-            platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
-            donation_currency = self.donation.amount.currency.code.lower()
-
-            if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-                intent_args['on_behalf_of'] = connect_account.account_id
-
-            if platform_currency == 'usd' and connect_account.country != 'US':
-                intent_args['on_behalf_of'] = connect_account.account_id
-
-            if (
-                # Change this is we can do international bank transfers
-                'on_behalf_of' not in intent_args
-                and platform_currency == donation_currency
-                and user and user.id
-                and (user.is_staff or user.is_superuser)
-            ):
-                payment_method_options = {
-                    "customer_balance": {
-                        "funding_type": "bank_transfer",
-                        "bank_transfer": {
-                            "type": "eu_bank_transfer",
-                            "eu_bank_transfer": {"country": "NL"},
-                        },
-                    },
-                }
-                if platform_currency == 'usd':
-                    payment_method_options = {
-                        "customer_balance": {
-                            "funding_type": "bank_transfer",
-                            "bank_transfer": {
-                                "type": "us_bank_transfer",
-                            },
-                        },
-                    }
-                if platform_currency == 'gbp':
-                    payment_method_options = {
-                        "customer_balance": {
-                            "funding_type": "bank_transfer",
-                            "bank_transfer": {
-                                "type": "gb_bank_transfer",
-                            },
-                        },
-                    }
-                if donation_currency == 'mxn':
-                    payment_method_options = {
-                        "customer_balance": {
-                            "funding_type": "bank_transfer",
-                        },
-                    }
-
-                customer = stripe.Customer.create(
-                    name=user.full_name,
-                    email=user.email,
-                )
-
-                intent_args['customer'] = customer.id
-                intent_args['payment_method_options'] = payment_method_options
-                intent_args['payment_method_data'] = {"type": "customer_balance"}
-
-            intent = stripe.PaymentIntent.create(
-                **intent_args
-            )
-
-            self.intent_id = intent.id
-            self.client_secret = intent.client_secret
-
-        super(PaymentIntent, self).save(*args, **kwargs)
+    instructions = models.JSONField(blank=True, null=True)
 
     @property
     def intent(self):
@@ -334,6 +248,13 @@ class StripePaymentProvider(PaymentProvider):
         blank=True,
         verbose_name=_('Stripe payment sources webhook secret'),
         help_text=_('The secret for payment sources webhook.')
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default='EUR',
+        verbose_name=_('Currency'),
+        help_text=_('The currency for the global account.')
     )
 
     refund_enabled = True
@@ -558,7 +479,11 @@ class ExternalAccount(BankAccount):
                         self._account = account
 
             if not hasattr(self, '_account'):
-                self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                try:
+                    self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                except InvalidRequestError as error:
+                    logger.error(error)
+                    self._account = None
             return self._account
 
     @property

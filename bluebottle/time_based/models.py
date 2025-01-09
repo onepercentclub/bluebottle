@@ -23,7 +23,7 @@ from bluebottle.time_based.validators import (
     PeriodActivityStartDeadlineValidator,
     RegistrationLinkValidator,
 )
-from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, to_text
 from bluebottle.utils.widgets import get_human_readable_duration
 
@@ -272,7 +272,7 @@ class DateActivity(TimeBasedActivity):
         return self.start + self.duration
 
 
-class ActivitySlot(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, models.Model):
+class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=40)
@@ -1090,7 +1090,7 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, AnonymizationMixin, models.Model):
+class SlotParticipant(TriggerMixin, models.Model):
 
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
@@ -1927,11 +1927,14 @@ class TeamScheduleSlot(BaseScheduleSlot):
 
 class PeriodicParticipant(Participant, Contributor):
     slot = models.ForeignKey(
-        PeriodicSlot, on_delete=models.CASCADE, related_name="participants"
+        PeriodicSlot,
+        on_delete=models.CASCADE,
+        related_name="participants",
+        null=True,
     )
 
     class Meta:
-        verbose_name = _("Participant to ecurring activities")
+        verbose_name = _("Participant to recurring activities")
         verbose_name_plural = _("Participants to recurring activities")
 
         permissions = (

@@ -11,6 +11,7 @@ from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
+from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
@@ -19,6 +20,9 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -475,7 +479,11 @@ class ExternalAccount(BankAccount):
                         self._account = account
 
             if not hasattr(self, '_account'):
-                self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                try:
+                    self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                except InvalidRequestError as error:
+                    logger.error(error)
+                    self._account = None
             return self._account
 
     @property

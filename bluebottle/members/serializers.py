@@ -198,9 +198,6 @@ class AnonymizedUserPreviewSerializer(PrivateProfileMixin, serializers.ModelSeri
 
 
 class UserPreviewSerializer(serializers.ModelSerializer):
-    """
-    User preview serializer that respects anonymization_age
-    """
 
     def __init__(self, *args, **kwargs):
         self.hide_last_name = kwargs.pop('hide_last_name', None)

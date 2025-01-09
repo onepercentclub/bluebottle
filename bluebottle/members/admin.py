@@ -165,7 +165,6 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                     'session_only',
                     'consent_link',
                     'disable_cookie_consent',
-                    'anonymization_age',
                     'display_member_names',
                     'gtm_code',
                 )

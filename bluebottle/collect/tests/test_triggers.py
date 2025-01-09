@@ -1,7 +1,5 @@
 from datetime import timedelta, date
 
-from pendulum import today
-
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
@@ -249,7 +247,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertStatus(self.model, 'succeeded')
             contribution = self.model.contributions.first()
             self.assertStatus(contribution, 'succeeded')
-            self.assertEqual(contribution.start.date(), today())
+            self.assertEqual(contribution.start.date(), date.today())
 
     def test_initiate_other_user(self):
         self.defaults['activity'].start = date.today() - timedelta(days=10)

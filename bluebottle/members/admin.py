@@ -436,6 +436,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         'groups',
         'is_co_financer',
         'can_pledge',
+        'can_do_bank_transfer',
         'verified',
         'kyc'
     ]

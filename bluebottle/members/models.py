@@ -161,6 +161,11 @@ class MemberPlatformSettings(BasePlatformSettings):
         ),
     )
 
+    anonymization_age = models.IntegerField(
+        default=0,
+        help_text=_("Require members to enter or verify the fields below once after logging in.")
+    )
+
     require_office = models.BooleanField(
         _('Office location'),
         default=False,

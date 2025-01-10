@@ -310,12 +310,12 @@ class Member(BlueBottleBaseUser):
     @classmethod
     def create_by_email(cls, email, **kwargs):
         validate_email(email)
-        first_name, last_name = email.split('@')
+        name, _domain = email.split('@')
         user = cls.objects.create(
             email=email,
             username=email,
-            first_name=first_name,
-            last_name=last_name,
+            first_name=name,
+            last_name='',
         )
         return user
 

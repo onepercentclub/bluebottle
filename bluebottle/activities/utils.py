@@ -683,13 +683,7 @@ def bulk_add_participants(activity, emails, send_messages):
             if not user:
                 if settings.closed:
                     email = email.strip()
-                    firstname, lastname = email.split('@')
-                    user = Member.objects.create_user(
-                        email=email,
-                        username=email,
-                        first_name=firstname,
-                        last_name=lastname,
-                    )
+                    user = Member.create_by_email(email)
                     created += 1
                 else:
                     failed += 1

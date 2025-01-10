@@ -13,12 +13,11 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.fields import ImageField
-from bluebottle.utils.models import AnonymizationMixin
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class File(AnonymizationMixin, models.Model):
+class File(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
     file = models.FileField(

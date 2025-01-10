@@ -22,14 +22,15 @@ from bluebottle.activities.models import (
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
-from bluebottle.collect.models import CollectType, CollectActivity
+from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot
+from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
@@ -655,4 +656,40 @@ class InviteSerializer(ModelSerializer):
     included_serializers = {
         'team': 'bluebottle.activities.utils.TeamSerializer',
         'team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+
+def bulk_add_participants(activity, emails, send_messages):
+    added = 0
+    existing = 0
+    failed = 0
+    Participant = None
+    if isinstance(activity, Deed):
+        Participant = DeedParticipant
+    if isinstance(activity, CollectActivity):
+        Participant = CollectContributor
+    if isinstance(activity, DeadlineActivity):
+        Participant = DeadlineParticipant
+
+    if not Participant:
+        raise AttributeError(f'Could not find participant type for {activity}')
+
+    for email in emails:
+        try:
+            user = Member.objects.get(email__iexact=email.strip())
+            if Participant.objects.filter(user=user, activity=activity).exists():
+                existing += 1
+            else:
+                Participant.objects.create(
+                    user=user,
+                    activity=activity,
+                    send_messages=send_messages
+                )
+                added += 1
+        except Member.DoesNotExist:
+            failed += 1
+    return {
+        'added': added,
+        'existing': existing,
+        'failed': failed
     }

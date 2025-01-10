@@ -5,10 +5,8 @@
     <a href="{% url 'admin:time_based_dateactivityslot_duplicate' object_id %}" class="button default">
        {% trans 'Repeat this slot' %}
     </a>
-  {%  if request.user.is_superuser %}
     <a href="{% url 'admin:time_based_dateactivityslot_bulk_add' object_id %}" class="button">
       {% trans 'Bulk add participants' %}
     </a>
-  {% endif %}
 {{ block.super }}
 {% endblock %}

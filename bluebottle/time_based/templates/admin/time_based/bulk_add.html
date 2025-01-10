@@ -16,12 +16,11 @@
     <form action="" method="post">
         {% csrf_token %}
         <fieldset class="module aligned module_0 initialized selected">
-            <div class="description warning">
-                <h3 class="warning">{% trans "Warning" %}</h3>
+            <div class="description">
                 <p>
-                  {% blocktrans %}
-                      This is an experimental feature. Please use with cause.
-                  {% endblocktrans %}
+                    {% blocktrans %}
+                        You can add participants to this slot by entering their email addresses below.
+                    {% endblocktrans %}
                 </p>
                   <p>
                     {% blocktrans %}

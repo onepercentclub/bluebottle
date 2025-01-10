@@ -2,10 +2,8 @@
 {% load i18n %}
 
 {% block object-tools-items %}
-  {%  if request.user.is_superuser %}
-    <a href="{% url 'admin:time_based_deadlineactivity_bulk_add' object_id %}" class="button">
-      {% trans 'Bulk add participants' %}
-    </a>
-  {% endif %}
+  <a href="{% url 'admin:time_based_deadlineactivity_bulk_add' object_id %}" class="button">
+    {% trans 'Bulk add participants' %}
+  </a>
 {{ block.super }}
 {% endblock %}

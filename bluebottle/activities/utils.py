@@ -32,7 +32,7 @@ from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class TeamSerializer(ModelSerializer):
@@ -164,7 +164,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
@@ -312,7 +312,7 @@ class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -423,7 +423,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     start = serializers.SerializerMethodField()
 
     def get_start(self, obj):
@@ -463,7 +463,7 @@ class BaseContributorListSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')

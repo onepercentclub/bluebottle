@@ -31,7 +31,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
@@ -407,7 +407,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     def get_contributor_count(self, instance):
         return instance.deleted_successful_contributors + instance.contributors.not_instance_of(Organizer).filter(
             status__in=['accepted', 'succeeded'],
-            dateparticipant__slot_participants__status='registered'
+            dateparticipant__slot_participants__status__in=['registered', 'succeeded']
         ).count()
 
     def get_first_slot(self, instance):
@@ -415,8 +415,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
             "start"
         )
 
-        if instance.status == "open":
-            slots = slots.filter(start__gte=now())
+        slots = slots.filter(start__gte=now())
         return slots.first()
 
     def get_slot_count(self, instance):
@@ -756,7 +755,7 @@ class SlotParticipantSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     permissions = ResourcePermissionField('slot-participant-detail', view_args=('pk',))
-    user = AnonymizedResourceRelatedField(
+    user = ResourceRelatedField(
         read_only=True,
         model=BlueBottleBaseUser,
         default=serializers.CurrentUserDefault()

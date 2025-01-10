@@ -182,19 +182,26 @@ class MatchingFacet(BooleanFacet):
         if not user.is_authenticated:
             return filters
 
-        if user.exclude_online:
-            filters = filters & ~Term(is_online=True)
-
         if user.search_distance and user.place and not user.any_search_distance:
             place = user.place
-            distance_filter = GeoDistance(
-                _expand__to_dot=False,
-                distance=user.search_distance,
-                position={
-                    'lat': float(place.position[1]),
-                    'lon': float(place.position[0]),
-                }
-            ) | Term(is_online=True)
+            if user.exclude_online:
+                distance_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=user.search_distance,
+                    position={
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
+                    }
+                )
+            else:
+                distance_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=user.search_distance,
+                    position={
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
+                    }
+                ) | Term(is_online=True)
 
             filters = filters & distance_filter
 

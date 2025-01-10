@@ -79,7 +79,7 @@ class AddressesField(serializers.RelatedField):
         }]
 
     def to_internal_value(self, value):
-        if value and 'locality' in value[0]:
+        if value and 'locality' in value[0] and value[0]['locality']:
             queryset = self.get_queryset()
             location_name = value[0]['locality']
             try:

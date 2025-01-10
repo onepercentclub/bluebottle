@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
 from datetime import timedelta
+from types import SimpleNamespace
+from unittest import mock
 
-import mock
+import stripe
 from django.urls import reverse
 from django.utils.timezone import now
 from djmoney.money import Money
 from rest_framework import status
 
-import stripe
-
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.tests.factories import (
-    FundingFactory, BankAccountFactory, DonorFactory,
+    FundingFactory, DonorFactory,
     BudgetLineFactory, RewardFactory
 )
+from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.funding_stripe.tests.factories import StripePaymentFactory, StripePayoutAccountFactory, \
-    ExternalAccountFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -27,19 +27,14 @@ class FundingTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        bank_account = BankAccountFactory.create(
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id", status="verified"
-            ),
-        )
+        bank_account = generate_mock_bank_account()
         self.funding = FundingFactory.create(
             owner=self.superuser,
             initiative=self.initiative,
             bank_account=bank_account
         )
         BudgetLineFactory.create(activity=self.funding)
-        self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id, ))
+        self.admin_url = reverse('admin:funding_funding_change', args=(self.funding.id,))
 
     def test_funding_admin_review(self):
         self.client.force_login(self.superuser)
@@ -104,10 +99,8 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", status="verified"
-        )
-        bank_account = ExternalAccountFactory.create(connect_account=account, status='verified')
+
+        bank_account = generate_mock_bank_account()
 
         self.funding = FundingFactory.create(
             owner=self.superuser,
@@ -118,9 +111,9 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
 
     def test_donation_total(self):
         for donation in DonorFactory.create_batch(
-            2,
-            activity=self.funding,
-            amount=Money(100, 'NGN')
+                2,
+                activity=self.funding,
+                amount=Money(100, 'NGN')
         ):
             PledgePaymentFactory.create(donation=donation)
 
@@ -151,7 +144,7 @@ class DonationAdminTestCase(BluebottleAdminTestCase):
     def test_donation_reward(self):
         donation = DonorFactory.create(activity=self.funding)
 
-        url = reverse('admin:funding_donor_change', args=(donation.pk, ))
+        url = reverse('admin:funding_donor_change', args=(donation.pk,))
         first = RewardFactory.create(title='First', activity=self.funding)
         second = RewardFactory.create(title='Second', activity=self.funding)
         third = RewardFactory.create(title='Third')
@@ -168,21 +161,35 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         super(PayoutAccountAdminTestCase, self).setUp()
-        self.payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", status="verified"
-        )
-        self.bank_account = ExternalAccountFactory.create(connect_account=self.payout_account, status='verified')
+        self.bank_account = generate_mock_bank_account()
+        self.payout_account = self.bank_account.connect_account
+
         self.payout_account_url = reverse('admin:funding_payoutaccount_change', args=(self.payout_account.id,))
         self.bank_account_url = reverse('admin:funding_bankaccount_change', args=(self.bank_account.id,))
         self.client.force_login(self.superuser)
 
     def test_payout_account_admin(self):
-        specs = stripe.ListObject()
-        specs.data = []
+        connect_account = stripe.StripeObject.construct_from({
+            "id": "some-connect-id",
+            "country": "NL",
+            "requirements": stripe.StripeObject.construct_from({
+                'current_deadline': None,
+                'currently_due': [],
+                'disabled_reason': None,
+                'eventually_due': [],
+                'past_due': [],
+                'pending_verification': []
+            }, stripe.api_key),
+            "charges_enabled": True,
+            "payouts_enabled": True,
+        }, stripe.api_key)
 
-        with mock.patch('stripe.CountrySpec.list', return_value=specs):
-            response = self.client.get(self.payout_account_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        country_spec = SimpleNamespace(**{'data': []})
+
+        with mock.patch('stripe.Account.retrieve', return_value=connect_account):
+            with mock.patch('stripe.CountrySpec.list', return_value=country_spec):
+                response = self.client.get(self.payout_account_url)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_bank_account_admin(self):
         response = self.client.get(self.bank_account_url)

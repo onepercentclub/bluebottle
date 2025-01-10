@@ -21,7 +21,6 @@ from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings, ActivitySearchFilter
 from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory
@@ -1718,75 +1717,6 @@ class ContributionListAPITestCase(BluebottleTestCase):
         data = response.json()
 
         self.assertEqual(len(data['data']), 0)
-
-
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
-@tag('elasticsearch')
-class ActivityAPIAnonymizationTestCase(ESTestCase, BluebottleTestCase):
-    anonymous_resource = {
-        'id': 'anonymous',
-        'type': 'members',
-        'attributes': {
-            'is-anonymous': True
-        }
-    }
-
-    def setUp(self):
-        super(ActivityAPIAnonymizationTestCase, self).setUp()
-        self.member_settings = MemberPlatformSettings.load()
-
-        self.client = JSONAPITestClient()
-        self.owner = BlueBottleUserFactory.create()
-
-    def test_activity(self):
-        activity = DateActivityFactory.create(
-            created=now() - timedelta(days=200),
-            status='open'
-        )
-
-        data = self.client.get(
-            reverse('date-detail', args=(activity.id,))
-        ).json()
-
-        self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'], str(activity.owner.pk)
-        )
-
-        self.assertTrue(self.anonymous_resource not in data['included'])
-
-    def test_initiative(self):
-        initiative = InitiativeFactory.create(
-            status='open',
-            promoter=BlueBottleUserFactory.create(),
-            reviewer=BlueBottleUserFactory.create(),
-        )
-
-        initiative.created = now() - timedelta(days=200)
-        initiative.save()
-
-        DateActivityFactory.create(
-            initiative=initiative,
-            status='open'
-        )
-        data = self.client.get(
-            reverse('initiative-detail', args=(initiative.id,))
-        ).json()
-
-        self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'], str(initiative.owner.pk)
-        )
-
-        self.assertEqual(
-            data['data']['relationships']['activity-managers']['data'][0]['id'],
-            str(initiative.activity_managers.first().pk)
-        )
-
-        self.assertEqual(
-            data['data']['relationships']['reviewer']['data']['id'], str(initiative.reviewer.pk)
-        )
 
 
 @override_settings(

@@ -3,7 +3,7 @@ from unittest import mock
 from django.urls import reverse
 from rest_framework import status
 
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
@@ -57,6 +57,7 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         form = page.forms[0]
         form.set('position', 'POINT (5.707144274290329 52.504414974388936)')
         form.submit()
+        Country.objects.get_or_create(alpha2_code='NL')
 
         geolocation = Geolocation.objects.last()
 

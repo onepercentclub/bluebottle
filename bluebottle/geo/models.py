@@ -306,7 +306,11 @@ class Geolocation(models.Model):
             self.mapbox_id = data['id']
             if not self.formatted_address or replace:
                 self.formatted_address = data['place_name']
-            self.country = Country.objects.get(alpha2_code__iexact=data['context'][-1]['short_code'])
+            country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
+            if country:
+                self.country = country
+            else:
+                raise ValueError(f"Country not found for {data['context'][-1]['short_code']}")
             if data['place_type'][0] == 'address':
                 if not self.street or replace:
                     self.street = data['text']

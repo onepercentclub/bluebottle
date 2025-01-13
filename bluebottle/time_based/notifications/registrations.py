@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
-from bluebottle.time_based.models import PeriodicActivity
+from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
 from bluebottle.utils.widgets import duration_to_hours
 
 
@@ -67,6 +67,10 @@ class UserRegistrationNotification(TransitionMessage):
                 context['period'] = _('week')
             if self.obj.activity.period == 'months':
                 context['period'] = _('month')
+        if isinstance(self.obj.activity, DeadlineActivity):
+            context['start'] = self.obj.activity.start
+            context['end'] = self.obj.activity.deadline
+            context['duration'] = duration_to_hours(self.obj.activity.duration)
 
         return context
 
@@ -135,14 +139,44 @@ class UserRegistrationRestartedNotification(UserRegistrationNotification):
         return context
 
 
-class UserAppliedNotification(UserRegistrationNotification):
+class DeadlineUserAppliedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have applied to the activity "{title}"')
-    template = 'messages/registrations/user_applied'
+    template = 'messages/registrations/deadline/user_applied'
 
 
-class UserJoinedNotification(UserRegistrationNotification):
+class DeadlineUserJoinedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have joined the activity "{title}"')
-    template = 'messages/registrations/user_joined'
+    template = 'messages/registrations/deadline/user_joined'
+
+
+class ScheduleUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/schedule/user_applied'
+
+
+class ScheduleUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/schedule/user_joined'
+
+
+class TeamScheduleUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/schedule/team_applied'
+
+
+class TeamScheduleUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/schedule/team_joined'
+
+
+class PeriodicUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/periodic/user_applied'
+
+
+class PeriodicUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/periodic/user_joined'
 
 
 class ManagerTeamRegistrationCreatedReviewNotification(ManagerRegistrationNotification):

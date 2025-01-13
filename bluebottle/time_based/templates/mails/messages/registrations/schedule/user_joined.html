@@ -1,0 +1,35 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+          You joined an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    <p>
+        {% trans "What's next" %}
+        <ul>
+            <li>
+                <b>{% translate "Schedule" %}</b> -
+                {% translate "The activity manager will contact you to discuss a specific date, time and location." %}
+            </li>
+        </ul>
+    </p>
+{% endblock %}
+
+
+{% block end_message %}
+  <p>
+    <i>
+      {% blocktrans context 'email' %}
+        If you are unable to participate, please withdraw via the activity page so that others can take your place.
+      {% endblocktrans %}
+    </i>
+  </p>
+{% endblock %}

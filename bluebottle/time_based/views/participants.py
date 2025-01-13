@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.members.models import Member
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
     TeamScheduleParticipant
 from bluebottle.time_based.serializers import (
@@ -47,7 +47,14 @@ class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
-                raise ValidationError(_('User with email address not found'))
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="exists")
+                else:
+                    raise ValidationError(_('User with email address not found'))
         else:
             user = self.request.user
 

@@ -670,6 +670,16 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
                             result['added']
                         ).format(count=result['added'])
                     )
+                if result['created']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} user created and added as a participant.',
+                            '{count} users created and added as a participant.',
+                            result['added']
+                        ).format(count=result['created'])
+                    )
 
                 if result['existing']:
                     messages.add_message(

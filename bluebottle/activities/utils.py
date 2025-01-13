@@ -28,7 +28,7 @@ from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusF
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import Member
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant
 from bluebottle.utils.exchange_rates import convert
@@ -660,6 +660,7 @@ class InviteSerializer(ModelSerializer):
 
 
 def bulk_add_participants(activity, emails, send_messages):
+    created = 0
     added = 0
     existing = 0
     failed = 0
@@ -676,7 +677,19 @@ def bulk_add_participants(activity, emails, send_messages):
 
     for email in emails:
         try:
-            user = Member.objects.get(email__iexact=email.strip())
+
+            user = Member.objects.filter(email__iexact=email.strip()).first()
+            settings = MemberPlatformSettings.objects.get()
+            if not user:
+                if settings.closed:
+                    email = email.strip()
+                    user = Member.create_by_email(email)
+                    created += 1
+                else:
+                    failed += 1
+                    continue
+            else:
+                added += 1
             if Participant.objects.filter(user=user, activity=activity).exists():
                 existing += 1
             else:
@@ -685,11 +698,12 @@ def bulk_add_participants(activity, emails, send_messages):
                     activity=activity,
                     send_messages=send_messages
                 )
-                added += 1
-        except Member.DoesNotExist:
+        except Exception as error:
+            print(error)
             failed += 1
     return {
         'added': added,
         'existing': existing,
-        'failed': failed
+        'failed': failed,
+        'created': created
     }

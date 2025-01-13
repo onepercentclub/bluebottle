@@ -10,8 +10,9 @@ from bluebottle.utils.models import BasePlatformSettings
 class AnalyticsPlatformSettings(BasePlatformSettings):
     class PlatformTypes(DjangoChoices):
         corporate = ChoiceItem('corporate', label=_('Corporate'))
-        programs = ChoiceItem('programs', label=_('Programs'))
         civic = ChoiceItem('civic', label=_('Civic'))
+        society = ChoiceItem('society', label=_('Society'))
+        programs = ChoiceItem('programs', label=_('Programs'))
 
     user_base = models.PositiveIntegerField(
         _("User base"),
@@ -37,6 +38,12 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
 
     plausible_embed_link = models.CharField(
         _("Plausibe embed link"), null=True, blank=True, max_length=256
+    )
+
+    terminated = models.BooleanField(
+        _("Terminated"),
+        default=False,
+        help_text=_('Is the platform terminated?')
     )
 
     class Meta(object):

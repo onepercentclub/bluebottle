@@ -43,7 +43,10 @@ class SCIMPath():
                 # Part is like `emails[type eq "work"]` which is parted to `["emails", "type", "work"]`
                 # Try to get the correct item from the list
                 attr = part.attrs[0]
-                data = [item for item in data[attr] if item[part[1]] == part[2]][0]
+                try:
+                    data = [item for item in data[attr] if item[part[1]] == part[2]][0]
+                except IndexError:
+                    return None
             else:
                 # Part is just a string
                 try:

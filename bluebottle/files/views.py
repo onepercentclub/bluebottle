@@ -20,8 +20,8 @@ from bluebottle.files.serializers import (
     FileSerializer,
     PrivateDocumentSerializer,
     PrivateFileSerializer,
-    UploadImageSerializer,
-    ImageSerializer
+    ImageSerializer,
+    ORIGINAL_SIZE
 )
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
@@ -128,16 +128,12 @@ class ImageContentView(FileContentView):
                 return HttpResponseRedirect(self.get_random_image_url())
             return HttpResponseNotFound()
 
-        if 'x' in self.kwargs['size']:
-            if self.kwargs['size'] not in self.allowed_sizes.values():
-                return HttpResponseNotFound()
-        else:
-            if not self.kwargs['size'] in [val.split('x')[0] for val in self.allowed_sizes.values()]:
-                return HttpResponseNotFound()
+        if self.kwargs['size'] not in self.allowed_sizes.values() and self.kwargs['size'] != ORIGINAL_SIZE:
+            return HttpResponseNotFound()
 
         size = self.kwargs['size']
 
-        cropbox = image.cropbox if self.cropbox else None
+        cropbox = image.cropbox if self.kwargs['size'] != ORIGINAL_SIZE else None
 
         try:
             width, height = size.split('x')
@@ -181,7 +177,7 @@ class ImageList(FileList):
 class ImageDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()
-    serializer_class = UploadImageSerializer
+    serializer_class = ImageSerializer
 
 
 class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):

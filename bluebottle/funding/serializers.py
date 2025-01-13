@@ -3,8 +3,8 @@ from datetime import datetime
 
 from dateutil.parser import parse
 from django.db import connection
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -49,7 +49,6 @@ from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
-from bluebottle.organizations.models import Organization
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
@@ -240,9 +239,6 @@ class FundingSerializer(BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
-    partner_organization = SerializerMethodResourceRelatedField(
-        read_only=True, source='get_partner_organization', model=Organization
-    )
 
     rewards = ResourceRelatedField(
         many=True, read_only=True
@@ -352,7 +348,6 @@ class FundingSerializer(BaseActivitySerializer):
             "supporters_export_url",
             "psp",
             "donations",
-            "partner_organization",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -375,7 +370,6 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
-            'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer'
         }
     )
 

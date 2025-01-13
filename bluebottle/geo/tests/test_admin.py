@@ -51,13 +51,13 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         self.admin_add_url = reverse('admin:geo_geolocation_add')
 
     def test_geolocation_admin(self, mock_reverse_geocode):
+        Country.objects.get_or_create(alpha2_code='NL')
         self.app.set_user(self.user)
         page = self.app.get(self.admin_add_url)
         self.assertEqual(page.status_code, status.HTTP_200_OK)
         form = page.forms[0]
         form.set('position', 'POINT (5.707144274290329 52.504414974388936)')
         form.submit()
-        Country.objects.get_or_create(alpha2_code='NL')
 
         geolocation = Geolocation.objects.last()
 

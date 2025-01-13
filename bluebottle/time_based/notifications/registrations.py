@@ -191,9 +191,9 @@ class ManagerTeamRegistrationCreatedNotification(ManagerRegistrationNotification
 
 class TeamAppliedNotification(UserRegistrationNotification):
     subject = pgettext("email", 'You have registered your team on "{site_name}"')
-    template = "messages/registrations/team_applied"
+    template = "messages/registrations/schedule/team_applied"
 
 
 class TeamJoinedNotification(UserRegistrationNotification):
     subject = pgettext("email", 'You have registered your team on "{site_name}"')
-    template = "messages/registrations/team_joined"
+    template = "messages/registrations/schedule/team_joined"

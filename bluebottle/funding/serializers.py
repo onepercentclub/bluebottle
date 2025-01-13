@@ -49,6 +49,7 @@ from bluebottle.funding_vitepay.serializers import (
     VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
 )
 from bluebottle.members.models import Member
+from bluebottle.organizations.models import Organization
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import (
@@ -239,6 +240,10 @@ class FundingSerializer(BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+    partner_organization = SerializerMethodResourceRelatedField(
+        read_only=True, source='get_partner_organization', model=Organization
+    )
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -346,7 +351,8 @@ class FundingSerializer(BaseActivitySerializer):
             "payout_account",
             "supporters_export_url",
             "psp",
-            "donations"
+            "donations",
+            "partner_organization",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -357,6 +363,7 @@ class FundingSerializer(BaseActivitySerializer):
             'bank_account',
             'co_financers',
             'co_financers.user',
+            'partner_organization',
         ]
         resource_name = 'activities/fundings'
 
@@ -368,6 +375,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+            'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer'
         }
     )
 
@@ -392,6 +400,16 @@ class FundingSerializer(BaseActivitySerializer):
             )
 
         return methods
+
+    def get_partner_organization(self, obj):
+        if obj.initiative.organization:
+            return obj.initiative.organization
+        if (
+            obj.bank_account
+            and obj.bank_account.connect_account
+            and obj.bank_account.connect_account.partner_organization
+        ):
+            return obj.bank_account.connect_account.partner_organization
 
 
 class FundingTransitionSerializer(TransitionSerializer):

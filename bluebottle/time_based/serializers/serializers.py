@@ -31,7 +31,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
@@ -755,7 +755,7 @@ class SlotParticipantSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     permissions = ResourcePermissionField('slot-participant-detail', view_args=('pk',))
-    user = AnonymizedResourceRelatedField(
+    user = ResourceRelatedField(
         read_only=True,
         model=BlueBottleBaseUser,
         default=serializers.CurrentUserDefault()

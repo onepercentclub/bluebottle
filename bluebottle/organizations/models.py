@@ -9,12 +9,12 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class Organization(ValidatedModelMixin, AnonymizationMixin, models.Model):
+class Organization(ValidatedModelMixin, models.Model):
     """
     Organizations can run Projects. An organization has one or more members.
     """

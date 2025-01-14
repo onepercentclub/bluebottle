@@ -94,8 +94,8 @@ class RegistrationSerializer(ModelSerializer):
             not user.is_staff and
             not user.is_superuser
         ):
-            del result['answer']
-            del result['document']
+            result['answer'] = None
+            result['document'] = None
 
         return result
 

@@ -1,0 +1,11 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+{% block message %}
+<p>
+    {% blocktrans context 'email' %}You have created the activity {{title}} but have not published it yet. This means no one will be able to find your activity and join it.{% endblocktrans %}
+</p>
+<p>
+    {% blocktrans context 'email' %}You can publish your activity from your activity detail page.{% endblocktrans %}
+</p>
+{% endblock %}
+

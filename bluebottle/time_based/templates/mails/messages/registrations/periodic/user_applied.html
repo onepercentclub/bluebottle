@@ -1,0 +1,44 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You applied to an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    <p>
+        {% translate "What's next:" %}
+        <ul>
+            <li>
+                <b>{% translate "Review" %}</b> -
+                {% translate "The activity manager will review your application." %}
+            </li>
+            <li>
+                <b>{% translate "Contribute" %}</b> -
+                {% blocktrans %}
+                    When you are accepted you are expected to contribute {{ duration }} every {{ period }}.
+                {% endblocktrans %}
+            </li>
+            <li>
+                <b>{% translate "Update" %}</b> -
+                {% translate "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page." %}
+            </li>
+        </ul>
+    </p>
+{% endblock %}
+
+{% block end_message %}
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                If you are unable to participate, please withdraw via the activity page so that others can take your place.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}

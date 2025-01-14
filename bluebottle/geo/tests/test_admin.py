@@ -5,6 +5,7 @@ from rest_framework import status
 
 from bluebottle.geo.models import Geolocation, Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 mapbox_response = {
@@ -51,7 +52,8 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         self.admin_add_url = reverse('admin:geo_geolocation_add')
 
     def test_geolocation_admin(self, mock_reverse_geocode):
-        Country.objects.get_or_create(alpha2_code='NL')
+        if not Country.objects.filter(alpha2_code='NL').exists():
+            CountryFactory.create(alpha2_code='NL')
         self.app.set_user(self.user)
         page = self.app.get(self.admin_add_url)
         self.assertEqual(page.status_code, status.HTTP_200_OK)

@@ -556,7 +556,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField()
+    updated = models.DateTimeField(default=timezone.now)
 
     donation = models.OneToOneField(Donor, related_name='payment', on_delete=models.CASCADE)
 

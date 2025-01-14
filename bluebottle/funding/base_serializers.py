@@ -11,7 +11,7 @@ class PaymentSerializer(ModelSerializer):
     status = FSMField(read_only=True)
     donation = ResourceRelatedField(queryset=Donor.objects.all())
 
-    transitions = AvailableTransitionsField()
+    transitions = AvailableTransitionsField(source='states')
 
     class Meta(object):
         model = Payment

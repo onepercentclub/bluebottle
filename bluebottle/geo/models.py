@@ -301,30 +301,40 @@ class Geolocation(models.Model):
         else:
             return f"Error: {response.status_code}, {response.text}"
 
-    def update_location(self):
+    def update_location(self, replace=False):
         data = self.reverse_geocode()
         if data:
             self.mapbox_id = data['id']
-            self.formatted_address = data['place_name']
-            self.country = Country.objects.get(alpha2_code__iexact=data['context'][-1]['short_code'])
+            if not self.formatted_address or replace:
+                self.formatted_address = data['place_name']
+            country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
+            if country:
+                self.country = country
+            else:
+                raise ValueError(f"Country not found for {data['context'][-1]['short_code']}")
             if data['place_type'][0] == 'address':
-                self.street = data['text']
-                self.street_number = data['address']
+                if not self.street or replace:
+                    self.street = data['text']
+                if not self.street_number or replace:
+                    self.street_number = getattr(data, 'address', '')
 
             if 'context' in data:
                 for context_item in data['context']:
                     if 'place' in context_item['id']:
-                        self.locality = context_item['text']
+                        if not self.locality or replace:
+                            self.locality = context_item['text']
                     elif 'postcode' in context_item['id']:
-                        self.postal_code = context_item['text']
+                        if not self.postal_code or replace:
+                            self.postal_code = context_item['text']
                     elif 'region' in context_item['id']:
-                        self.province = context_item['text']
+                        if not self.province or replace:
+                            self.province = context_item['text']
 
     def save(self, *args, **kwargs):
         if self.pk:
             old_instance = Geolocation.objects.filter(pk=self.pk).first()
             if old_instance and old_instance.position != self.position:
-                self.update_location()
-        elif self.position and not self.mapbox_id:
+                self.update_location(replace=True)
+        if self.position and self.mapbox_id in ['unknown', '', None]:
             self.update_location()
         return super().save(*args, **kwargs)

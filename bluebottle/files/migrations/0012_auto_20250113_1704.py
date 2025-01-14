@@ -19,4 +19,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(set_cropbox, migrations.RunPython.noop)
     ]

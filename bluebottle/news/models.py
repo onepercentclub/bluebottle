@@ -10,13 +10,13 @@ from fluent_contents.rendering import render_placeholder
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import PublishableModel, AnonymizationMixin, get_language_choices
+from bluebottle.utils.models import PublishableModel, get_language_choices
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class NewsItem(AnonymizationMixin, PublishableModel):
+class NewsItem(PublishableModel):
 
     title = models.CharField(_("Title"), max_length=200)
     slug = models.SlugField(_("Slug"))

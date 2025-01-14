@@ -14,7 +14,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.utils.fields import FSMField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class ContactEmailField(serializers.CharField):
@@ -40,7 +40,7 @@ class ContactEmailField(serializers.CharField):
 
 class RegistrationSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     contact_email = ContactEmailField()

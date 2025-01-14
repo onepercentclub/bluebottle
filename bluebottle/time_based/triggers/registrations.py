@@ -22,8 +22,6 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
-    UserAppliedNotification,
-    UserJoinedNotification,
     ManagerTeamRegistrationCreatedNotification,
     ManagerTeamRegistrationCreatedReviewNotification,
     TeamAppliedNotification,
@@ -36,7 +34,9 @@ from bluebottle.time_based.notifications.registrations import (
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
     ManagerRegistrationStoppedNotification,
-    ManagerRegistrationRestartedNotification,
+    ManagerRegistrationRestartedNotification, DeadlineUserAppliedNotification, DeadlineUserJoinedNotification,
+    PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, ScheduleUserAppliedNotification,
+    ScheduleUserJoinedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -162,14 +162,14 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    DeadlineUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ]
         ),
@@ -246,14 +246,14 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    PeriodicUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ],
         ),
@@ -373,14 +373,14 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    ScheduleUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ],
         ),

@@ -442,9 +442,10 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def sequence(self):
-        ids = list(self.activity.slots.values_list('id', flat=True))
-        if len(ids) and self.id and self.id in ids:
-            return ids.index(self.id) + 1
+        if self.pk:
+            ids = list(self.activity.slots.values_list('id', flat=True))
+            if len(ids) and self.id and self.id in ids:
+                return ids.index(self.id) + 1
         return '-'
 
     @property

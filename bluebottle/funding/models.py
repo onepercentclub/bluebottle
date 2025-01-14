@@ -240,7 +240,10 @@ class Funding(Activity):
 
     @property
     def donations(self):
-        return self.contributors.instance_of(Donor)
+        if self.pk:
+            return self.contributors.instance_of(Donor)
+        else:
+            return Donor.objects.none()
 
     @property
     def succeeded_contributor_count(self):

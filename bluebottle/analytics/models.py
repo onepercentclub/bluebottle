@@ -12,7 +12,6 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         corporate = ChoiceItem('corporate', label=_('Corporate'))
         civic = ChoiceItem('civic', label=_('Civic'))
         society = ChoiceItem('society', label=_('Society'))
-        programs = ChoiceItem('programs', label=_('Programs'))
 
     user_base = models.PositiveIntegerField(
         _("User base"),

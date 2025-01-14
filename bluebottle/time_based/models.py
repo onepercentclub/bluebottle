@@ -905,9 +905,12 @@ class ScheduleActivity(RegistrationActivity):
 
     @property
     def unscheduled_slots(self):
-        if self.team_activity == 'teams':
-            return self.team_slots.filter(status='new')
-        return self.slots.filter(status='new')
+        if self.pk:
+            if self.team_activity == 'teams':
+                return self.team_slots.filter(status='new')
+            return self.slots.filter(status='new')
+        else:
+            return []
 
     class Meta:
         verbose_name = _("Schedule activity")

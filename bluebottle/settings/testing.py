@@ -398,3 +398,17 @@ CONFLUENCE = {
     ]}
 
 RANDOM_IMAGE_PROVIDER = "https://picsum.photos/seed/{seed}/{width}/{height}"
+
+MAPBOX_API_KEY = 'test'
+
+MAP_WIDGETS = {
+    "Mapbox": {
+        "accessToken": 'test',
+        "PointField": {
+            "interactive": {
+                "markerFitZoom": 14,
+            },
+            "geocoderOptions": {},
+        },
+    },
+}

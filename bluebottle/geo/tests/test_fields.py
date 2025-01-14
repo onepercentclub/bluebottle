@@ -11,6 +11,7 @@ class PointFieldTest(BluebottleTestCase):
         country = CountryFactory.create()
         geolocation = Geolocation.objects.create(
             position=Point(23.6764778, 43.0682267),
+            mapbox_id='some-id',
             country=country
         )
         geolocation.save()

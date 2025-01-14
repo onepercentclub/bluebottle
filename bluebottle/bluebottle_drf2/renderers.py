@@ -117,10 +117,10 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
 
                         resource_type = (
                             serializer_resource.get('type')
-                            or relation_type
                             or utils.get_resource_type_from_instance(
                                 nested_resource_instance
                             )
+                            or relation_type
                         )
                         serializer_fields = utils.get_serializer_fields(
                             serializer.__class__(

@@ -29,7 +29,7 @@ from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, SafeField
 
 
-class QuoteSerializer(serializers.ModelSerializer):
+class QuoteSerializer(ModelSerializer):
     image = SorlImageField('100x100', crop='center')
 
     class Meta(object):
@@ -40,7 +40,7 @@ class QuoteSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/quotes/quotes'
 
 
-class SlideSerializer(serializers.ModelSerializer):
+class SlideSerializer(ModelSerializer):
     background_image = SorlImageField('1600x674', crop='center')
     small_background_image = SorlImageField('200x84', crop='center', source='background_image')
 
@@ -60,7 +60,7 @@ class SlideSerializer(serializers.ModelSerializer):
         )
 
 
-class StepSerializer(serializers.ModelSerializer):
+class StepSerializer(ModelSerializer):
     image = SorlImageField("500x500", upscale=False)
 
     text = SafeField(required=False, allow_blank=True)
@@ -73,7 +73,7 @@ class StepSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/steps/steps'
 
 
-class LogoSerializer(serializers.ModelSerializer):
+class LogoSerializer(ModelSerializer):
     image = SorlImageField('x150', crop='center')
 
     class Meta(object):
@@ -84,7 +84,7 @@ class LogoSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/logos/logos'
 
 
-class LinkSerializer(serializers.ModelSerializer):
+class LinkSerializer(ModelSerializer):
     image = SorlImageField('800x600', crop='center')
 
     class Meta(object):

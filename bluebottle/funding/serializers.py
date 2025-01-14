@@ -3,8 +3,8 @@ from datetime import datetime
 
 from dateutil.parser import parse
 from django.db import connection
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -239,6 +239,7 @@ class FundingSerializer(BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -346,7 +347,7 @@ class FundingSerializer(BaseActivitySerializer):
             "payout_account",
             "supporters_export_url",
             "psp",
-            "donations"
+            "donations",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -357,6 +358,7 @@ class FundingSerializer(BaseActivitySerializer):
             'bank_account',
             'co_financers',
             'co_financers.user',
+            'partner_organization',
         ]
         resource_name = 'activities/fundings'
 
@@ -392,6 +394,16 @@ class FundingSerializer(BaseActivitySerializer):
             )
 
         return methods
+
+    def get_partner_organization(self, obj):
+        if obj.initiative.organization:
+            return obj.initiative.organization
+        if (
+            obj.bank_account
+            and obj.bank_account.connect_account
+            and obj.bank_account.connect_account.partner_organization
+        ):
+            return obj.bank_account.connect_account.partner_organization
 
 
 class FundingTransitionSerializer(TransitionSerializer):

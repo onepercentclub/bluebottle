@@ -134,14 +134,17 @@ class TimeBasedActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(
-            PeriodParticipant,
-            DateParticipant,
-            DeadlineParticipant,
-            PeriodicParticipant,
-            ScheduleParticipant,
-            TeamScheduleParticipant
-        )
+        if self.pk:
+            return self.contributors.instance_of(
+                PeriodParticipant,
+                DateParticipant,
+                DeadlineParticipant,
+                PeriodicParticipant,
+                ScheduleParticipant,
+                TeamScheduleParticipant
+            )
+        else:
+            return Contributor.objects.node()
 
     @property
     def pending_participants(self):

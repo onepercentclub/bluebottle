@@ -673,8 +673,8 @@ class ParticipantSerializer(BaseContributorSerializer):
             not user.is_staff and
             not user.is_superuser
         ):
-            del result['motivation']
-            del result['document']
+            result['motivation'] = None
+            result['document'] = None
 
         return result
 

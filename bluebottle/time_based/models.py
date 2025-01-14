@@ -898,7 +898,10 @@ class ScheduleActivity(RegistrationActivity):
 
     @property
     def accepted_participants(self):
-        return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
+        if self.pk:
+            return self.registrations.filter(status__in=["accepted", "succeeded", "scheduled"])
+        else:
+            return ScheduleRegistration.objects.none()
 
     @property
     def unscheduled_slots(self):

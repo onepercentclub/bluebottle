@@ -20,7 +20,7 @@ def get_default_cropbox(image, ratio=16 / 9, border=0.0):
         top = int((image.height / 2) - (new_height / 2))
         bottom = int((image.height / 2) + (new_height / 2))
 
-    if border:
+    if border and right > border * 2 and bottom > border * 2:
         new_width = right - left
         new_height = top - bottom
 

@@ -304,9 +304,13 @@ class Geolocation(models.Model):
         data = self.reverse_geocode()
         if data and data != "No results found.":
             self.mapbox_id = data['id']
+            country = None
             if not self.formatted_address or replace:
                 self.formatted_address = data['place_name']
-            country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
+            if 'context' in data:
+                country = Country.objects.filter(alpha2_code__iexact=data['context'][-1]['short_code']).first()
+            elif 'short_code' in data['properties']:
+                country = Country.objects.filter(alpha2_code__iexact=data['properties']['short_code']).first()
             if country:
                 self.country = country
             else:

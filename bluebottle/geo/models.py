@@ -302,7 +302,7 @@ class Geolocation(models.Model):
 
     def update_location(self, replace=False):
         data = self.reverse_geocode()
-        if data:
+        if data and data != "No results found.":
             self.mapbox_id = data['id']
             if not self.formatted_address or replace:
                 self.formatted_address = data['place_name']

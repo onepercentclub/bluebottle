@@ -27,7 +27,7 @@ urlpatterns = [
         name='initiative-review-transition-list'
     ),
     url(
-        r'^/(?P<pk>\d+)/image/(?P<size>\d+x\d+)$',
+        r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         InitiativeImage.as_view(),
         name='initiative-image'
     ),

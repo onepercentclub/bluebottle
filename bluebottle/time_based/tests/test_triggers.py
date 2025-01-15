@@ -24,10 +24,11 @@ from bluebottle.time_based.messages import (
     ParticipantChangedNotification,
     ParticipantJoinedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, )
 from bluebottle.time_based.notifications.participants import UserScheduledNotification
-from bluebottle.time_based.notifications.registrations import UserJoinedNotification, \
-    ManagerRegistrationCreatedNotification, UserAppliedNotification, ManagerRegistrationCreatedReviewNotification, \
+from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
+    ManagerRegistrationCreatedReviewNotification, \
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
-    UserRegistrationRestartedNotification
+    UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
+    ScheduleUserJoinedNotification
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -1415,6 +1416,7 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
 class RegistrationTriggerTestBase:
     factory = None
     activity_factory = None
+    user_joined_notification = None
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
@@ -1434,7 +1436,7 @@ class RegistrationTriggerTestBase:
         )
         with self.execute(user=user):
             self.assertNotificationEffect(
-                UserJoinedNotification
+                self.user_joined_notification
             )
             self.assertNotificationEffect(
                 ManagerRegistrationCreatedNotification
@@ -1449,7 +1451,7 @@ class RegistrationTriggerTestBase:
         )
         with self.execute(user=self.user):
             self.assertNotificationEffect(
-                UserAppliedNotification
+                PeriodicUserAppliedNotification
             )
             self.assertNotificationEffect(
                 ManagerRegistrationCreatedReviewNotification
@@ -1489,6 +1491,7 @@ class PeriodicRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
 
     factory = PeriodicRegistrationFactory
     activity_factory = PeriodicActivityFactory
+    user_joined_notification = PeriodicUserJoinedNotification
 
     def test_user_stops(self):
         self.test_join()
@@ -1527,6 +1530,7 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
 
     factory = ScheduleRegistrationFactory
     activity_factory = ScheduleActivityFactory
+    user_joined_notification = ScheduleUserJoinedNotification
 
     def test_manager_schedules_slot(self):
         self.test_join()

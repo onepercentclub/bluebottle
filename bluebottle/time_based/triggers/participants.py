@@ -446,7 +446,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
 class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
     def slot_is_finished(effect):
         """Slot has status finished"""
-        return effect.instance.slot.status == "finished"
+        return effect.instance.slot and effect.instance.slot.status == "finished"
 
     def registration_is_accepted(effect):
         """Review needed"""

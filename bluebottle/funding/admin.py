@@ -34,14 +34,13 @@ from bluebottle.funding.models import (
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
     FundingPlatformSettings, MoneyContribution)
 from bluebottle.funding.states import DonorStateMachine
-from bluebottle.funding_flutterwave.models import FlutterwavePaymentProvider, FlutterwaveBankAccount, \
-    FlutterwavePayment
-from bluebottle.funding_lipisha.models import LipishaPaymentProvider, LipishaBankAccount, LipishaPayment
-from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider, PledgeBankAccount
+from bluebottle.funding_flutterwave.models import FlutterwavePayment
+from bluebottle.funding_lipisha.models import LipishaPayment
+from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, StripePayment
-from bluebottle.funding_telesom.models import TelesomPaymentProvider, TelesomPayment, TelesomBankAccount
-from bluebottle.funding_vitepay.models import VitepayPaymentProvider, VitepayBankAccount, VitepayPayment
+from bluebottle.funding_telesom.models import TelesomPayment
+from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -572,10 +571,6 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     child_models = (
         PledgePaymentProvider,
         StripePaymentProvider,
-        VitepayPaymentProvider,
-        FlutterwavePaymentProvider,
-        TelesomPaymentProvider,
-        LipishaPaymentProvider
     )
 
 
@@ -673,7 +668,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
                      ]
 
     def public(self, obj):
-        return obj.connect_account.public
+        return obj.connect_account and obj.connect_account.public
 
     def owner(self, obj):
         return obj.connect_account and obj.connect_account.owner
@@ -681,11 +676,6 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
     ordering = ('-created',)
     child_models = [
         ExternalAccount,
-        FlutterwaveBankAccount,
-        LipishaBankAccount,
-        VitepayBankAccount,
-        PledgeBankAccount,
-        TelesomBankAccount
     ]
 
 

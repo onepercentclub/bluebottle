@@ -1,46 +1,73 @@
-from builtins import str
+from unittest import mock
 
-from django.contrib.gis.geos import Point
-from django.contrib.messages import get_messages
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
-from bluebottle.geo.models import Geolocation
+from bluebottle.geo.models import Geolocation, Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.utils import BluebottleAdminTestCase
+
+mapbox_response = {
+    'id': 'address.8367876655690618',
+    'type': 'Feature',
+    'place_type': ['address'],
+    'relevance': 1,
+    'properties': {
+        'accuracy': 'rooftop',
+        'mapbox_id': 'dXJuOm1ieGFkcjowYzM5NTBjMi0wMjNhLTQxNTUtOTRmOS1kZTFmZDcxOWQwMTY'
+    },
+    'text': 'Brouwersdam Buitenzijde',
+    'place_name': 'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands',
+    'center': [3.851166, 51.762731],
+    'geometry': {'type': 'Point', 'coordinates': [3.851166, 51.762731]},
+    'address': '20',
+    'context': [
+        {'id': 'postcode.8367876655690618', 'text': '3253 MM'},
+        {'id': 'place.12961960', 'mapbox_id': 'dXJuOm1ieHBsYzp4Y2lv',
+         'wikidata': 'Q21060', 'text': 'Ouddorp'},
+        {'id': 'region.25768', 'mapbox_id': 'dXJuOm1ieHBsYzpaS2c',
+         'wikidata': 'Q694', 'short_code': 'NL-ZH', 'text': 'South Holland'},
+        {'id': 'country.8872', 'mapbox_id': 'dXJuOm1ieHBsYzpJcWc',
+         'wikidata': 'Q55', 'short_code': 'nl', 'text': 'Netherlands'}
+    ]
+}
 
 
-class GeolocationAdminTest(TestCase):
+@mock.patch(
+    'bluebottle.geo.models.Geolocation.reverse_geocode',
+    return_value=mapbox_response
+)
+class GeolocationAdminTest(BluebottleAdminTestCase):
     """
     Test Geolocation admin
     """
+    extra_environ = {}
+    csrf_checks = False
+    setup_auth = True
 
     def setUp(self):
         super(GeolocationAdminTest, self).setUp()
-        self.country = CountryFactory.create(name='Plopsaland')
         self.user = BlueBottleUserFactory(is_staff=True, is_superuser=True)
         self.admin_add_url = reverse('admin:geo_geolocation_add')
 
-    def test_geolocation_admin(self):
-        self.client.force_login(self.user)
-        response = self.client.get(self.admin_add_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_geolocation_admin(self, mock_reverse_geocode):
+        if not Country.objects.filter(alpha2_code='NL').exists():
+            CountryFactory.create(alpha2_code='NL')
+        self.app.set_user(self.user)
+        page = self.app.get(self.admin_add_url)
+        self.assertEqual(page.status_code, status.HTTP_200_OK)
+        form = page.forms[0]
+        form.set('position', 'POINT (5.707144274290329 52.504414974388936)')
+        form.submit()
 
-        # Use the position format as used by point widget
-        data = {
-            'position': 'POINT (23.6765763312 43.0681866356)',
-            'country': self.country.id
-        }
-
-        response = self.client.post(self.admin_add_url, data, follow=True)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        messages = list(get_messages(response.wsgi_request))
         geolocation = Geolocation.objects.last()
 
-        expected = (
-            'The geolocation “<a href="/en/admin/geo/geolocation/{}/change/">{}</a>” '
-            'was added successfully.'
-        ).format(geolocation.id, geolocation.country.name)
-        self.assertEqual(str(messages[0]), expected)
-        self.assertEqual(geolocation.position.wkt, Point(23.6765763312, 43.0681866356).wkt)
+        self.assertEqual(
+            geolocation.formatted_address,
+            'Brouwersdam Buitenzijde 20, 3253 MM Ouddorp, Netherlands'
+        )
+        self.assertEqual(
+            geolocation.locality,
+            'Ouddorp'
+        )

@@ -50,7 +50,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
         )
         self.funding = FundingFactory.create(initiative=self.initiative, bank_account=self.bank_account)
         self.donation = DonorFactory.create(activity=self.funding)
-        self.intent = StripePaymentIntentFactory.create(donation=self.donation)
+        self.intent = StripePaymentIntentFactory.create(
+            intent_id='some-intent-id',
+            donation=self.donation
+        )
         self.webhook = reverse('stripe-intent-webhook')
 
     def test_success(self):
@@ -121,7 +124,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
-        payment = self.intent.payment
+        payment = self.intent.get_payment()
 
         donation = Donor.objects.get(pk=self.donation.pk)
 
@@ -997,6 +1000,17 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         self.assertEqual(self.payout_account.status, "disabled")
         self.assertEqual(self.funding.status, "on_hold")
+
+        self.connect_account.charges_enabled = True
+        self.connect_account.requirements = {
+            "eventually_due": []
+        }
+        self.execute_hook()
+
+        self.payout_account.refresh_from_db()
+        self.assertEqual(self.payout_account.status, "verified")
+        self.funding.refresh_from_db()
+        self.assertEqual(self.funding.status, "open")
 
     def test_document_rejected(self):
         self.verify()

@@ -28,12 +28,13 @@ from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusF
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.organizations.models import Organization
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class TeamSerializer(ModelSerializer):
@@ -165,7 +166,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
@@ -178,6 +179,9 @@ class BaseActivitySerializer(ModelSerializer):
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')
     admin_url = serializers.SerializerMethodField()
+    partner_organization = SerializerMethodResourceRelatedField(
+        read_only=True, source='get_partner_organization', model=Organization
+    )
 
     updates = HyperlinkedRelatedField(
         many=True,
@@ -202,6 +206,10 @@ class BaseActivitySerializer(ModelSerializer):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url
 
+    def get_partner_organization(self, obj):
+        if obj.initiative.organization:
+            return obj.initiative.organization
+
     matching_properties = MatchingPropertiesField()
 
     errors = ValidationErrorsField()
@@ -223,7 +231,8 @@ class BaseActivitySerializer(ModelSerializer):
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'office_location': 'bluebottle.geo.serializers.OfficeSerializer',
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
-        'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer'
+        'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
+        'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -267,7 +276,8 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_title',
             'next_step_description',
             'next_step_button_label',
-            'admin_url'
+            'admin_url',
+            'partner_organization'
         )
 
         meta_fields = (
@@ -306,6 +316,7 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location',
             'office_location.subregion',
             'office_location.subregion.region',
+            'partner_organization'
         ]
 
 
@@ -313,7 +324,7 @@ class BaseActivityListSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
-    owner = AnonymizedResourceRelatedField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
     type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
     stats = serializers.OrderedDict(read_only=True)
@@ -424,7 +435,7 @@ class ActivitySubmitSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorListSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     start = serializers.SerializerMethodField()
 
     def get_start(self, obj):
@@ -464,7 +475,7 @@ class BaseContributorListSerializer(ModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseContributorSerializer(ModelSerializer):
     status = FSMField(read_only=True)
-    user = AnonymizedResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
+    user = ResourceRelatedField(read_only=True, default=serializers.CurrentUserDefault())
     team = ResourceRelatedField(read_only=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')

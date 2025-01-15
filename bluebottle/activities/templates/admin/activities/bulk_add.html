@@ -37,6 +37,7 @@
                             <p>{{ field.contents|linebreaksbr }}</p>
                         {% else %}
                             {{ field }}
+                        <label for="id_send_messages"></label>
                         {% endif %}
                         {% if field.help_text %}
                             <p class="help">{{ field.help_text|safe }}</p>

@@ -355,10 +355,6 @@ html {
 }
 
 .field-slot .related-lookup:before {
-    content: "\e604"
+    content: "\e604";
 }
 
-
-input[type=checkbox][name=send_messages] {
-    display: block;
-}

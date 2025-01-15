@@ -221,10 +221,13 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_location(self, obj):
         location = False
         if hasattr(obj, 'slots') and obj.slots:
-            slots = self.get_filtered_slots(obj)
+            slots = self.get_filtered_slots(obj, only_upcoming=True)
+            if not len(slots):
+                slots = self.get_filtered_slots(obj)
 
-            if len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) == 1:
+            if len(set(slot.locality for slot in slots)) == 1:
                 location = slots[0]
+
         elif type == 'funding':
             places = [location for location in obj.location if location.type == 'place']
             if places:
@@ -327,7 +330,10 @@ class ActivityPreviewSerializer(ModelSerializer):
             return obj.is_online
 
     def get_has_multiple_locations(self, obj):
-        return len(set(slot.formatted_address for slot in self.get_filtered_slots(obj))) > 1
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        if not len(slots):
+            slots = self.get_filtered_slots(obj)
+        return len(set(slot.locality for slot in slots)) > 1
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

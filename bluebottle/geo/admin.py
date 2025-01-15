@@ -16,6 +16,23 @@ from bluebottle.geo.models import (
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin
 
 
+class CustomMapboxPointFieldWidget(MapboxPointFieldWidget):
+
+    @property
+    def media(self):
+        return self._media(
+            extra_js=[
+                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js",
+                "/static/assets/admin/js/mapbox-sdk.min.js",
+                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js",
+            ],
+            extra_css=[
+                "https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css",
+                "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css",
+            ],
+        )
+
+
 class LocationFilter(admin.SimpleListFilter):
     title = _('Location')
     parameter_name = 'location'
@@ -68,7 +85,7 @@ class LocationMergeForm(forms.Form):
 
 class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": MapboxPointFieldWidget},
+        PointField: {"widget": CustomMapboxPointFieldWidget},
     }
 
     def get_queryset(self, request):
@@ -136,7 +153,7 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
 @admin.register(Place)
 class PlaceInline(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": MapboxPointFieldWidget},
+        PointField: {"widget": CustomMapboxPointFieldWidget},
     }
     model = Place
     fields = [
@@ -156,7 +173,7 @@ admin.site.register(Location, LocationAdmin)
 @admin.register(Geolocation)
 class GeolocationAdmin(admin.ModelAdmin):
     formfield_overrides = {
-        PointField: {"widget": MapboxPointFieldWidget},
+        PointField: {"widget": CustomMapboxPointFieldWidget},
     }
     list_display = ('__str__', 'street', 'locality', 'country')
 

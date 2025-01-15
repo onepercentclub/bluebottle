@@ -1,7 +1,5 @@
-import time
 from datetime import date, datetime, timedelta
 
-import mock
 from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.template import defaultfilters
@@ -20,9 +18,8 @@ from bluebottle.time_based.effects.effects import (
     CreatePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
-    ParticipantAppliedNotification,
-    ParticipantChangedNotification,
-    ParticipantJoinedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, )
+    ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification,
+)
 from bluebottle.time_based.notifications.participants import UserScheduledNotification
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification, \

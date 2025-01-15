@@ -333,7 +333,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         if not len(slots):
             slots = self.get_filtered_slots(obj)
-        return len(set(slot.formatted_address for slot in slots)) > 1
+        return len(set(slot.locality for slot in slots)) > 1
 
     def get_is_full(self, obj):
         slots = self.get_filtered_slots(obj)

@@ -7,9 +7,11 @@ from bluebottle.files.utils import get_default_cropbox
 def set_cropbox(apps, schema_editor):
     Image = apps.get_model('files', 'Image')
     for image in Image.objects.all():
-        image.cropbox = get_default_cropbox(ImageFile(image.file))
+        if image.file.storage.exists(image.file.name):
+            with image.file.open():
+                image.cropbox = get_default_cropbox(ImageFile(image.file))
 
-        image.save()
+                image.save()
 
 
 class Migration(migrations.Migration):

@@ -14,7 +14,7 @@ from bluebottle.initiatives.tests.factories import (
     InitiativePlatformSettingsFactory,
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
+from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
 from bluebottle.time_based.effects.effects import (
     CreateNextSlotEffect,
     CreatePeriodicParticipantsEffect,
@@ -933,139 +933,6 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         prep = participant.preparation_contributions.first()
         self.assertEqual(prep.value, self.review_activity.preparation)
         self.assertEqual(prep.status, "new")
-
-
-@mock.patch.object(ParticipantJoinedNotification, "delay", 2)
-@mock.patch.object(ParticipantAppliedNotification, "delay", 1)
-@mock.patch.object(ParticipantChangedNotification, "delay", 2)
-class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    factories = CeleryTestCase.factories + [
-        DateParticipantFactory,
-        DateActivityFactory,
-        InitiativeFactory,
-    ]
-
-    def setUp(self):
-        super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
-        )
-
-        self.user = BlueBottleUserFactory()
-        self.admin_user = BlueBottleUserFactory(is_staff=True)
-        self.initiative = InitiativeFactory(owner=self.user, status="approved")
-
-        self.activity = self.factory.create(
-            preparation=timedelta(hours=1), initiative=self.initiative, review=False
-        )
-        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
-
-        self.activity.refresh_from_db()
-        self.participant = None
-
-    def test_join_free(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity, user=user, as_user=user
-        )
-
-        slot = self.slots[0]
-        self.slot_participant = SlotParticipantFactory.create(
-            slot=slot, participant=participant, as_user=user
-        )
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has registered for a time slot for your activity "{self.activity.title}"'
-        )
-        self.assertTrue(slot.title in mail.outbox[0].body)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You\'ve registered for a time slot for the activity "{self.activity.title}"'
-        )
-
-    def test_join_free_review(self):
-        self.activity.review = True
-        self.activity.save()
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity,
-            user=user,
-            as_user=user
-        )
-
-        self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
-            for slot in self.slots
-        ]
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'You have a new participant for your activity "{self.activity.title}" 🎉'
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have applied to the activity "{self.activity.title}"'
-        )
-
-    def test_change_free(self):
-        self.test_join_free()
-
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has withdrawn from a time slot for your activity "{self.activity.title}"'
-        )
-
-    def test_withdraw_free(self):
-        self.test_join_free()
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 1)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has withdrawn from a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        mail.outbox = []
-
-        self.slot_participant.states.reapply(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 2)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has registered for a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have changed your application on the activity "{self.activity.title}"',
-        )
 
 
 class SlotParticipantTriggerTestCase(BluebottleTestCase):

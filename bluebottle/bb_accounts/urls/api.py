@@ -55,12 +55,11 @@ urlpatterns = [
         name='user-export'
     ),
     re_path(
-        r'^password-strength$',
-        PasswordStrengthDetail.as_view(),
+        r'^password-strength$', PasswordStrengthDetail.as_view(),
         name='password-strength'
     ),
     re_path(
-        r'^(?P<pk>\d+)/avatar/(?P<size>\d+x\d+)$',
+        r'^(?P<pk>\d+)/avatar/(?P<size>\d+(x\d+)?)$',
         AvatarImage.as_view(),
         name='avatar-image'
     ),

@@ -132,7 +132,7 @@ install_requires = [
 
     # Github requirements
     'django-exportdb@git+https://github.com/onepercentclub/django-exportdb.git@0.4.8#egg=django-exportdb-0.4.8-github',
-    'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@1ac34b9c0760c75be59f461ce231411346688824#egg=django-tenant-extras-2.0.17',
+    'django-tenant-extras@git+https://github.com/onepercentclub/django-tenant-extras.git@ae234877e24e9dbccfab8a758a3ca4d6bbef1cb3#egg=django-tenant-extras-2.0.17',
     'django-fluent-contents@git+https://github.com/onepercentclub/django-fluent-contents.git@27f309c7b54bdfa4fada4a8a2d9ae744e967bc31#egg=django-fluent-contents-27f309',
     'django-taggit-autocomplete-modified@git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
 ]

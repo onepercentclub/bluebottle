@@ -82,6 +82,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
     initiative = serializers.CharField(source='initiative.title')
+    owner = serializers.SerializerMethodField()
 
     image = serializers.SerializerMethodField()
     matching_properties = serializers.SerializerMethodField()
@@ -93,6 +94,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     is_full = serializers.SerializerMethodField()
 
     type = serializers.SerializerMethodField()
+    resource_name = serializers.CharField()
 
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -343,6 +345,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         elif obj.type == 'period':
             return obj.status != 'open'
 
+    def get_owner(self, obj):
+        return obj.owner.full_name
+
     class Meta(object):
         model = Activity
         fields = (
@@ -351,7 +356,8 @@ class ActivityPreviewSerializer(ModelSerializer):
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
-            'collect_type', 'highlight', 'contribution_duration',
+            'collect_type', 'highlight', 'contribution_duration', 'owner',
+            'resource_name'
         )
         meta_fields = ('current_status',)
 

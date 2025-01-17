@@ -36,6 +36,7 @@ class ActivityDocument(Document):
     status = fields.KeywordField()
 
     type = fields.KeywordField()
+    resource_name = fields.KeywordField()
     manager = fields.KeywordField()
 
     current_status = fields.NestedField(properties={
@@ -250,6 +251,9 @@ class ActivityDocument(Document):
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
+
+    def prepare_resource_name(self, instance):
+        return str(instance.__class__.JSONAPIMeta.resource_name)
 
     def prepare_activity_type(self, instance):
         mapping = {

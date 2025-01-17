@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user, get_current_request
 from elasticsearch_dsl import TermsFacet, Facet, Q
 from elasticsearch_dsl.aggs import A
-from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
+from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range, MatchNone
 from pytz import UTC
 
 from bluebottle.activities.documents import activity
@@ -208,6 +208,24 @@ class MatchingFacet(BooleanFacet):
         return filters
 
 
+class ManagingFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A('filter', filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ['1']:
+            user = get_current_user()
+
+            if not user.is_authenticated:
+                return MatchNone()
+            return Term(manager=user.id)
+
+
 class InitiativeFacet(TermsFacet):
     def __init__(self, **kwargs):
         super().__init__(field='owner', **kwargs)
@@ -300,6 +318,7 @@ class ActivitySearch(Search):
     }
 
     possible_facets = {
+        'managing': ManagingFacet(),
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),

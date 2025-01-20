@@ -80,11 +80,11 @@ class ActivityStateMachine(ModelStateMachine):
 
     def initiative_is_submitted(self):
         """the initiative has been submitted"""
-        return self.instance.initiative.status in ('submitted', 'approved')
+        return not self.instance.initiative_id or self.instance.initiative.status in ('submitted', 'approved')
 
     def initiative_is_not_approved(self):
         """the initiative has not yet been approved"""
-        return not self.initiative_is_approved()
+        return self.initiative_is_approved()
 
     def is_staff(self, user):
         """user is a staff member"""
@@ -94,8 +94,12 @@ class ActivityStateMachine(ModelStateMachine):
         """user is the owner"""
         return (
             user == self.instance.owner or
-            user == self.instance.initiative.owner or
-            user in self.instance.initiative.activity_managers.all() or
+            (
+                self.instance.initiative and (
+                    user == self.instance.initiative.owner or
+                    user in self.instance.initiative.activity_managers.all()
+                )
+            ) or
             user.is_staff
         )
 
@@ -141,7 +145,10 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         submitted,
-        description=_('Submit the activity for approval.'),
+        description=_((
+            'After submitting your activity, it will be reviewed by a platform administrator.'
+            'You cannot make changes until this process has completed.'
+        )),
         automatic=False,
         name=_('Submit'),
         permission=is_owner,
@@ -157,6 +164,21 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Approve'),
         automatic=True,
         conditions=[should_auto_approve],
+        description=_(
+            "The activity will be visible in the frontend and people can apply to "
+            "the activity."
+        ),
+    )
+
+    approve = Transition(
+        [
+            submitted,
+            rejected
+        ],
+        open,
+        name=_('Approve'),
+        automatic=False,
+        permissions=[is_staff],
         description=_(
             "The activity will be visible in the frontend and people can apply to "
             "the activity."

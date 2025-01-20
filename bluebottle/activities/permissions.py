@@ -16,7 +16,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         is_owner = user in [
             owner,
             obj.initiative.owner,
-        ] or user in obj.initiative.activity_managers.all()
+        ] or user in obj.initiative.activity_managers.all() if obj.initiative else []
 
         if action == 'POST':
             return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)

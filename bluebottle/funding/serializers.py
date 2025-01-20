@@ -396,9 +396,10 @@ class FundingSerializer(BaseActivitySerializer):
         return methods
 
     def get_partner_organization(self, obj):
-        if obj.initiative.organization:
+        organization = super().get_partner_organzation()
+        if organization:
             return obj.initiative.organization
-        if (
+        elif (
             obj.bank_account
             and obj.bank_account.connect_account
             and obj.bank_account.connect_account.partner_organization

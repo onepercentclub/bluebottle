@@ -17,7 +17,7 @@ def initiative_is_approved(effect):
     """
     The initiative is approved
     """
-    return effect.instance.initiative.status == 'approved'
+    return effect.instance.initiative and effect.instance.initiative.status == 'approved'
 
 
 def has_organizer(effect):

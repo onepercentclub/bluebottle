@@ -356,6 +356,7 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
         self.payment_intent = stripe.PaymentIntent("some intent id")
         self.payment_intent.update(
             {
+                'status': 'succeeded',
                 "client_secret": self.intent.client_secret,
                 "charges": []
             }

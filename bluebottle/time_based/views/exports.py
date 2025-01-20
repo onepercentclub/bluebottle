@@ -28,16 +28,13 @@ class TimebasedExportView(ExportView):
 
         for (field, name) in self.get_fields():
             if field.startswith('segment.'):
-                if instance.user:
-                    row.append(
-                        ", ".join(
-                            instance.user.segments.filter(
-                                segment_type_id=field.split('.')[-1]
-                            ).values_list('name', flat=True)
-                        )
+                row.append(
+                    ", ".join(
+                        instance.user.segments.filter(
+                            segment_type_id=field.split('.')[-1]
+                        ).values_list('name', flat=True)
                     )
-                else:
-                    row.append('')
+                )
             else:
                 row.append(prep_field(self.request, instance, field))
 

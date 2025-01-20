@@ -51,7 +51,7 @@ urlpatterns = [
     url(r'^password-strength$', PasswordStrengthDetail.as_view(),
         name='password-strength'),
     url(
-        r'^(?P<pk>\d+)/avatar/(?P<size>\d+x\d+)$',
+        r'^(?P<pk>\d+)/avatar/(?P<size>\d+(x\d+)?)$',
         AvatarImage.as_view(),
         name='avatar-image'
     ),

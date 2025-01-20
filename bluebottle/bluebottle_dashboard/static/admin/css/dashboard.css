@@ -194,6 +194,12 @@ form .aligned p.file-upload + p.help {
     margin: 16px;
 }
 
+
+.module .description {
+    padding: 20px;
+    padding-left: 50px;
+}
+
 .js-inline-admin-formset.nested-inline {
     display: inline-block;
     margin-left: 60px;

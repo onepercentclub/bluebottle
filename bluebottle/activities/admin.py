@@ -367,7 +367,7 @@ class ActivityBulkAddForm(forms.Form):
 
     send_messages = forms.BooleanField(
         label=_('Send messages'),
-        help_text=_('Notify the participants that they have been added to this activity.'),
+        help_text=_('Email participants that they have been added to this activity.'),
         initial=True
     )
 

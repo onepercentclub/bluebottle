@@ -697,8 +697,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
                         request,
                         messages.WARNING,
                         ngettext(
-                            '{count} participant could not be added because the user does not exist.',
-                            '{count} participants could not be added because the users do not exist.',
+                            '{count} participant could not be added. Please check if the email address is correct.',
+                            '{count} participants could not be added. Please check if the email addresses are correct.',
                             result['failed']
                         ).format(count=result['failed'])
                     )

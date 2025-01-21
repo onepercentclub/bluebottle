@@ -17,16 +17,9 @@
         {% csrf_token %}
         <fieldset class="module aligned module_0 initialized selected">
             <div class="description">
-                <p>
-                    {% blocktrans %}
-                        You can add participants to this activity by entering their email addresses below.
-                    {% endblocktrans %}
-                </p>
-                  <p>
-                    {% blocktrans %}
-                        Make sure every line contains just one email address.
-                    {% endblocktrans %}
-                </p>
+                {% blocktrans %}
+                   Add participants to this activity using their email addresses. Separate the email addresses by commas, one per line or copy & paste a column from a spreadsheet.
+                {% endblocktrans %}
             </div>
             {% for field in form %}
                 <div class="form-row{% if field.errors %} errors{% endif %}">

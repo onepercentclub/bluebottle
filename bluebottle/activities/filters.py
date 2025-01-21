@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user, get_current_request
 from elasticsearch_dsl import TermsFacet, Facet, Q
 from elasticsearch_dsl.aggs import A
-from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range
+from elasticsearch_dsl.query import Term, Terms, Nested, MatchAll, GeoDistance, Range, MatchNone
 from pytz import UTC
 
 from bluebottle.activities.documents import activity
@@ -208,6 +208,45 @@ class MatchingFacet(BooleanFacet):
         return filters
 
 
+class ManagingFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A('filter', filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ['1']:
+            user = get_current_user()
+
+            if not user.is_authenticated:
+                return MatchNone()
+            return Term(manager=user.id)
+
+
+class StatusFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A('filter', filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ['draft']:
+            return Terms(status=['draft', 'needs_work'])
+        if filter_values == ['open']:
+            return Terms(status=['open', 'running', 'full', 'on_hold'])
+        if filter_values == ['succeeded']:
+            return Terms(status=['succeeded', 'partially_funded'])
+        if filter_values == ['failed']:
+            return Terms(status=['refunded', 'rejected', 'expired', 'deleted', 'failed', 'cancelled'])
+        return MatchNone()
+
+
 class InitiativeFacet(TermsFacet):
     def __init__(self, **kwargs):
         super().__init__(field='owner', **kwargs)
@@ -300,6 +339,8 @@ class ActivitySearch(Search):
     }
 
     possible_facets = {
+        'status': StatusFacet(),
+        'managing': ManagingFacet(),
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
@@ -450,7 +491,7 @@ class ActivitySearch(Search):
                 )
             )
 
-        if 'initiative.id' not in self._filters:
+        if 'initiative.id' not in self._filters and 'status' not in self._filters:
             search = search.filter(
                 Terms(status=['succeeded', 'open', 'full', 'partially_funded', 'refunded'])
             )

@@ -1215,8 +1215,7 @@ a.footer:visited {
 div.info-box {
     background-color: #E6F0FA;
     color: #0066CC;
-    padding: 12px;
-    padding-left: 44px;
+    padding: 12px 12px 12px 44px;
 }
 
 div.info-box::before {

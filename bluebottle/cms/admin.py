@@ -36,7 +36,7 @@ class LinkInline(SortableStackedInline):
     extra = 0
 
     fields = (
-        'title', 'link_permissions',
+        'title', 'groups',
         'highlight', 'open_in_new_tab',
         'link'
     )

@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -655,7 +657,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
             form = ActivityBulkAddForm(data=request.POST, activity=activity)
             if form.is_valid():
                 data = form.cleaned_data
-                emails = data['emails'].split('\n')
+                emails = re.split(r'[,;\n]', data['emails'])
                 send_messages = data['send_messages']
                 result = bulk_add_participants(activity, emails, send_messages)
                 if result['added']:
@@ -695,8 +697,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
                         request,
                         messages.WARNING,
                         ngettext(
-                            '{count} participant could not be added because the user does not exist.',
-                            '{count} participants could not be added because the users do not exist.',
+                            '{count} participant could not be added. Please check if the email address is correct.',
+                            '{count} participants could not be added. Please check if the email addresses are correct.',
                             result['failed']
                         ).format(count=result['failed'])
                     )

@@ -767,7 +767,7 @@ class SlotParticipantSerializer(ModelSerializer):
     slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
 
     def validate(self, data):
-        if data['slot'].status != 'open':
+        if data['slot'].status != 'open' and not data['email']:
             raise ValidationError('Participants cannot sign up for full slots')
         return data
 

@@ -54,7 +54,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         _('Fiscal year offset'),
         help_text=_('Set the number of months your fiscal year will be offset by. '
                     'This will also take into account how the impact metrics are shown on the homepage. '
-                    'e.g. If the year starts from September (so earlier) then this value should be -4.'),
+                    'e.g. If the year starts from September (so 4 months earlier) then this value should be 4.'),
         default=0)
 
     reminder_q1 = models.BooleanField(
@@ -242,6 +242,8 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     def fiscal_year(self):
         offset = self.fiscal_month_offset
+        if now().month < (12 - offset):
+            return (now() - relativedelta(months=offset)).year + 1
         return (now() - relativedelta(months=offset)).year
 
     class Meta(object):

@@ -29,11 +29,9 @@
 {% endblock %}
 
 {% block end_message %}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-              If your team is unable to participate, please withdraw via the activity page so that another team can take your place.
-            {% endblocktrans %}
-        </i>
-    </p>
+  <div class="info-box">
+      {% blocktrans context 'email' %}
+        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If your team is unable to participate, please withdraw in time so we can find a suitable solution.
+      {% endblocktrans %}
+  </div>
 {% endblock %}

@@ -57,7 +57,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         Initiative,
         related_name='activities',
         on_delete=models.CASCADE,
-        null=True
+        null=True,
+        blank=True
     )
 
     theme = models.ForeignKey(
@@ -172,6 +173,16 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     auto_approve = True
 
     activity_type = _('Activity')
+
+    @property
+    def owners(self):
+        yield self.owner
+
+        if self.initiative:
+            yield self.initiative.owner
+
+            for manager in self.initiative.activity_managers.all():
+                yield manager
 
     @property
     def succeeded_contributor_count(self):

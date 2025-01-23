@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 from parler.models import TranslatedFields
+from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
@@ -263,6 +264,17 @@ def get_search_filters(filters):
     return filters
 
 
+class CreateFlowChoices(DjangoChoices):
+    initiative = ChoiceItem(
+        'initiative',
+        label=_("Start the create flow by creating an initiative")
+    )
+    acitivity = ChoiceItem(
+        'activity',
+        label=_("Directly create an activity")
+    )
+
+
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
@@ -340,6 +352,13 @@ class InitiativePlatformSettings(BasePlatformSettings):
             "Users will be able to set their preferences for a personalised activity overview "
             "and receive monthly emails with activities that best suit them."
         ))
+    )
+
+    create_flow = models.CharField(
+        _('Create flow'),
+        default=CreateFlowChoices.initiative,
+        choices=CreateFlowChoices.choices,
+        max_length=100
     )
 
     @property

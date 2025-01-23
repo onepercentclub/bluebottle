@@ -567,7 +567,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_participant_exports',
             'enable_open_initiatives',
             'has_locations',
-            'enable_matching_emails'
+            'enable_matching_emails',
+            'create_flow'
         )
 
 

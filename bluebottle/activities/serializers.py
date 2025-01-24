@@ -359,7 +359,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'collect_type', 'highlight', 'contribution_duration', 'owner',
             'resource_name'
         )
-        meta_fields = ('current_status',)
+        meta_fields = ('current_status', 'created')
 
     class JSONAPIMeta:
         resource_name = 'activities/preview'

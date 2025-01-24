@@ -34,6 +34,7 @@ class ActivityDocument(Document):
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
+    created = fields.DateField()
 
     type = fields.KeywordField()
     resource_name = fields.KeywordField()

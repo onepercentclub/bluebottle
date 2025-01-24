@@ -630,9 +630,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 CreateRegistrationEffect,
                 NotificationEffect(
-                    conditions=[is_not_self],
-                ),
-                NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_self],
                 ),

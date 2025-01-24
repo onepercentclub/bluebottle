@@ -298,6 +298,7 @@ SHARED_APPS = (
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+
 )
 
 TENANT_APPS = (
@@ -422,8 +423,8 @@ TENANT_APPS = (
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',
     'fluent_contents.plugins.rawhtml',
-    'django_wysiwyg',
     'tinymce',
+    'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
     'taggit',
@@ -622,6 +623,7 @@ CELERY_MAIL = False
 SEND_MAIL = False
 
 DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
+
 
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)

@@ -356,7 +356,15 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
-                raise ValidationError(_('User with email address not found'))
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="exists")
+                else:
+                    raise ValidationError(_('User with email address not found'))
+
         else:
             user = self.request.user
 

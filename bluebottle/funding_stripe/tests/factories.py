@@ -41,8 +41,9 @@ class StripePaymentIntentFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         stripe = get_stripe()
         payment_intent = stripe.PaymentIntent(kwargs.get('intent_id', 'some intent id'))
+
         payment_intent.update({
-            'client_secret': 'some client secret',
+            'client_secret': kwargs.get('client_secret', 'some client secret'),
         })
         with mock.patch('stripe.PaymentIntent.create', return_value=payment_intent):
             return super(StripePaymentIntentFactory, cls)._create(model_class, *args, **kwargs)

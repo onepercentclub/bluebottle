@@ -120,13 +120,12 @@ class ImageContentView(FileContentView):
 
     def retrieve(self, *args, **kwargs):
         image = self.get_image()
-
-        file = image.file
-
-        if not file:
+        if not image or not image.file:
             if settings.RANDOM_IMAGE_PROVIDER:
                 return HttpResponseRedirect(self.get_random_image_url())
             return HttpResponseNotFound()
+
+        file = image.file
 
         if self.kwargs['size'] not in self.allowed_sizes.values() and self.kwargs['size'] != ORIGINAL_SIZE:
             return HttpResponseNotFound()

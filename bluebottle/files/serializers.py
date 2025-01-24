@@ -155,7 +155,7 @@ class ImageSerializer(DocumentSerializer):
             image_file = ImageFile(obj.file)
 
             return {'width': image_file.width, 'height': image_file.height}
-        except FileNotFoundError:
+        except (FileNotFoundError, AttributeError):
             pass
 
     def get_links(self, obj):

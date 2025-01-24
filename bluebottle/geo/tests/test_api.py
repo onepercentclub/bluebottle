@@ -75,18 +75,18 @@ class UsedCountryListTestCase(GeoTestCase):
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
-        belgium = Country.objects.get(translations__name="Belgium")
+        belgium = Country.objects.get(alpha2_code="BE")
         location_be = GeolocationFactory.create(country=belgium)
 
-        bulgaria = Country.objects.get(translations__name="Bulgaria")
+        bulgaria = Country.objects.get(alpha2_code="BG")
         location_bg = GeolocationFactory.create(country=bulgaria)
 
-        germany = Country.objects.get(translations__name="Germany")
+        germany = Country.objects.get(alpha2_code="DE")
         location_de = GeolocationFactory.create(country=germany)
 
-        turkey = Country.objects.get(translations__name="Turkey")
-
+        turkey = Country.objects.get(alpha2_code="TR")
         location_tr = GeolocationFactory.create(country=turkey)
+
         initiative = InitiativeFactory.create(
             status='approved',
             place=location_tr

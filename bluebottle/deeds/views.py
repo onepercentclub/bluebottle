@@ -1,16 +1,19 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
     DeedParticipantTransitionSerializer
 )
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
+from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -73,11 +76,28 @@ class DeedRelatedParticipantList(RelatedContributorListView):
 class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
+        CreateByEmailPermission
     )
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer
 
     def perform_create(self, serializer):
+        email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="exists")
+                else:
+                    raise ValidationError(_('User with email address not found'))
+        else:
+            user = self.request.user
+
         self.check_related_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -87,11 +107,14 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
+        if not email:
+            if self.request.user.required:
+                raise ValidationError('Required fields', code="required")
 
-        if self.request.user.required:
-            raise ValidationError('Required fields', code="required")
+        if DeedParticipant.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
+            raise ValidationError(_('Already participating'), code="exists")
 
-        serializer.save(user=self.request.user)
+        serializer.save(user=user, send_messages=send_messages)
 
 
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

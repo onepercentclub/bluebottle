@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from django.core import mail
 from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -110,6 +111,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
     def test_user_joins_activity(self):
+        mail.outbox = []
         api_user_joins_activity(self, self.activity, self.supporter)
         assert_participant_status(self, self.activity, self.supporter, status='accepted')
 
@@ -122,6 +124,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_slot_participant_status(self, self.slot2, self.supporter, status='registered')
         assert_slot_participant_status(self, self.slot3, self.supporter, status='registered')
         assert_slot_participant_status(self, self.slot4, self.supporter, status='registered')
+        self.assertEqual(len(mail.outbox), 8)
 
     def test_user_joins_review_activity_accepted(self):
         self.activity.review = True

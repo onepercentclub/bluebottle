@@ -16,7 +16,7 @@ from bluebottle.activities.permissions import (
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
 )
 from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -25,7 +25,7 @@ from bluebottle.time_based.models import (
     DateActivitySlot, SlotParticipant, Skill
 )
 from bluebottle.time_based.permissions import (
-    SlotParticipantPermission, DateSlotActivityStatusPermission
+    SlotParticipantPermission, DateSlotActivityStatusPermission, CreateByEmailPermission
 )
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
@@ -337,7 +337,10 @@ class DateParticipantTransitionList(ParticipantTransitionList):
 
 
 class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
-    permission_classes = [SlotParticipantPermission]
+    permission_classes = [
+        SlotParticipantPermission,
+        CreateByEmailPermission
+    ]
     queryset = SlotParticipant.objects.all()
     serializer_class = SlotParticipantSerializer
 
@@ -348,6 +351,23 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
 
     def perform_create(self, serializer):
         slot = serializer.validated_data['slot']
+        email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="exists")
+                else:
+                    raise ValidationError(_('User with email address not found'))
+
+        else:
+            user = self.request.user
+
         self.check_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -360,11 +380,12 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         else:
             participant, _created = DateParticipant.objects.get_or_create(
                 activity=slot.activity,
-                user=self.request.user,
+                user=user,
             )
-        if slot.slot_participants.filter(participant__user=self.request.user).exists():
+        if slot.slot_participants.filter(participant__user=user).exists():
             raise ValidationError(_('Participant already registered for this slot'))
-        serializer.save(participant=participant)
+
+        serializer.save(participant=participant, send_messages=send_messages)
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):

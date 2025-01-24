@@ -150,6 +150,7 @@ class TriggerMixin(object):
         return result
 
     def __init__(self, *args, **kwargs):
+        self._send_messages = kwargs.pop('send_messages', True)
         super(TriggerMixin, self).__init__(*args, **kwargs)
         self._triggers = []
         self._postponed_effects = []
@@ -197,6 +198,9 @@ class TriggerMixin(object):
     def execute_triggers(self, effects=None, **options):
         if 'user' not in options and get_current_user():
             options['user'] = get_current_user()
+
+        if 'send_messages' not in options:
+            options['send_messages'] = self._send_messages
 
         if hasattr(self, '_state_machines'):
             for machine_name in self._state_machines:

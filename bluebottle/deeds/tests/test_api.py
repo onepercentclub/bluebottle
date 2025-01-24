@@ -1,6 +1,7 @@
 import io
 from datetime import timedelta, date
 
+from django.core import mail
 from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
@@ -590,6 +591,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.fields = ['activity']
 
     def test_create(self):
+        mail.outbox = []
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -602,6 +604,7 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.assertPermission('PATCH', True)
 
         self.assertTransition('withdraw')
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_create_required_question(self):
         MemberPlatformSettings.objects.update_or_create(
@@ -616,6 +619,44 @@ class DeedParticipantListViewAPITestCase(APITestCase):
         self.perform_create()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_by_email_staff(self):
+        mail.outbox = []
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        data = self.data
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': True
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_create_by_email_staff_no_messages(self):
+        mail.outbox = []
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        data = self.data
+        data['data']['attributes'] = {
+            'email': self.user.email,
+            'send_messages': False
+        }
+        self.perform_create(user=staff, data=data)
+
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        self.assertIncluded('activity')
+        self.assertIncluded('user')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_by_email_user(self):
+        data = self.data
+        data['data']['attributes'] = {'email': self.user.email}
+        self.perform_create(user=self.user, data=data)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
 
 
 class DeedParticipantTransitionListViewAPITestCase(APITestCase):

@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import validate_email
 from django.db import models
 from django.db.models import Sum
 from django.utils.timezone import now
@@ -302,6 +303,18 @@ class Member(BlueBottleBaseUser):
     )
 
     avatar = ImageField(blank=True, null=True)
+
+    @classmethod
+    def create_by_email(cls, email, **kwargs):
+        validate_email(email)
+        name, _domain = email.split('@')
+        user = cls.objects.create(
+            email=email,
+            username=email,
+            first_name=name,
+            last_name='',
+        )
+        return user
 
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)

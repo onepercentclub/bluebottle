@@ -1,12 +1,15 @@
+import re
+
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import connection
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 from django_admin_inline_paginator.admin import PaginationFormSetBase, TabularInlinePaginated
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
@@ -18,6 +21,7 @@ from bluebottle.activities.messages import ImpactReminderMessage
 from bluebottle.activities.models import (
     Activity, Contributor, Organizer, Contribution, EffortContribution, Team
 )
+from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectContributor, CollectActivity
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -121,6 +125,7 @@ class BaseContributorInline(TabularInlinePaginated):
             obj._meta.model_name
         ), args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, _('Edit'))
+
     edit.short_description = _('Edit')
 
     def status_label(self, obj):
@@ -236,6 +241,7 @@ class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, St
         if obj and obj.contributor_id:
             url = reverse('admin:activities_contributor_change', args=(obj.contributor.id,))
             return format_html('<a href="{}">{}</a>', url, obj.contributor)
+
     contributor_link.short_description = _('Contributor')
 
     def contribution_type(self, obj):
@@ -328,6 +334,7 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             obj
         )
+
     team_link.short_description = _('Edit')
 
     def slot_link(self, obj):
@@ -349,13 +356,132 @@ class TeamInline(admin.TabularInline):
             reverse('admin:activities_team_change', args=(obj.id,)),
             _('Add time slot')
         )
+
     slot_link.short_description = _('Time slot')
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ActivityBulkAddForm(forms.Form):
+    emails = forms.CharField(
+        label=_('Emails'),
+        help_text=_('Enter the email addresses of the participants you want to add to this activity.'),
+        widget=forms.Textarea
+    )
+
+    send_messages = forms.BooleanField(
+        label=_('Send messages'),
+        help_text=_('Email participants that they have been added to this activity.'),
+        initial=True
+    )
+
+    title = _('Bulk add participants')
+
+    def __init__(self, data=None, *args, **kwargs):
+        if data:
+            super(ActivityBulkAddForm, self).__init__(data)
+        else:
+            super(ActivityBulkAddForm, self).__init__()
+
+    class Media:
+        css = {
+            'all': ('checkbox.css',)
+        }
+
+
+class BulkAddMixin(object):
+
+    bulk_add_form = ActivityBulkAddForm
+    bulk_add_template = 'admin/activities/bulk_add.html'
+
+    def get_urls(self):
+        urls = super(BulkAddMixin, self).get_urls()
+
+        extra_urls = [
+            url(r'^(?P<pk>\d+)/bulk_add/$',
+                self.admin_site.admin_view(self.bulk_add_participants),
+                name='{}_{}_bulk_add'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                )),
+        ]
+        return extra_urls + urls
+
+    def bulk_add_participants(self, request, pk, *args, **kwargs):
+        activity = self.model.objects.get(pk=pk)
+        route = 'admin:{}_{}_change'.format(
+            self.model._meta.app_label,
+            self.model._meta.model_name
+        )
+
+        activity_detail = reverse(route, args=(pk,))
+
+        if not request.user.is_superuser:
+            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
+
+        if request.method == "POST":
+            form = self.bulk_add_form(data=request.POST)
+            if form.is_valid():
+                data = form.cleaned_data
+                emails = re.split(r'[,;\n]', data['emails'])
+                send_messages = data['send_messages']
+                result = bulk_add_participants(activity, emails, send_messages)
+                if result['added']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} participant was added.',
+                            '{count} participants were added.',
+                            result['added']
+                        ).format(count=result['added'])
+                    )
+                if result['created']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} user created and added as a participant.',
+                            '{count} users created and added as a participant.',
+                            result['added']
+                        ).format(count=result['created'])
+                    )
+
+                if result['existing']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} participant already joined.',
+                            '{count} participants already joined.',
+                            result['existing']
+                        ).format(count=result['existing'])
+                    )
+
+                if result['failed']:
+                    messages.add_message(
+                        request,
+                        messages.WARNING,
+                        ngettext(
+                            '{count} participant could not be added. Please check if the email address is correct.',
+                            '{count} participants could not be added. Please check if the email addresses are correct.',
+                            result['failed']
+                        ).format(count=result['failed'])
+                    )
+            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
+
+        context = {
+            'opts': self.model._meta,
+            'activity': activity,
+            'form': self.bulk_add_form(activity=activity)
+        }
+        return TemplateResponse(
+            request, self.bulk_add_template, context
+        )
+
+
+class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
-    inlines = (UpdateInline, )
+    inlines = (UpdateInline,)
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Follow, Message, Update]
@@ -507,6 +633,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
             reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
             obj.initiative
         )
+
     initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):
@@ -584,14 +711,16 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
 
     def get_urls(self):
         urls = super(ActivityChildAdmin, self).get_urls()
+
         extra_urls = [
-            url(r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+            url(
+                r'^send-impact-reminder-message/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
-                )
+            )
         ]
         return extra_urls + urls
 
@@ -693,6 +822,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
             return "-"
         url = reverse('admin:geo_location_change', args=(obj.office_location.id,))
         return format_html('<a href="{}">{}</a>', url, obj.office_location)
+
     location_link.short_description = _('office')
 
     def get_list_display(self, request):
@@ -719,7 +849,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
 
 
 class ActivityInlineChild(StackedPolymorphicInline.Child):
-
     ordering = ['-created']
 
     def state_name(self, obj):

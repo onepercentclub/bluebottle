@@ -1,7 +1,6 @@
 import dateutil
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
     SerializerMethodResourceRelatedField
@@ -157,13 +156,6 @@ class DeedParticipantSerializer(BaseContributorSerializer):
     class Meta(BaseContributorSerializer.Meta):
         model = DeedParticipant
         meta_fields = BaseContributorSerializer.Meta.meta_fields + ('permissions', )
-
-        validators = [
-            UniqueTogetherValidator(
-                queryset=DeedParticipant.objects.all(),
-                fields=('activity', 'user')
-            )
-        ]
 
     class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
         resource_name = 'contributors/deeds/participants'

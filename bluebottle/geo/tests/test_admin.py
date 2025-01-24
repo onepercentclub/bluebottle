@@ -57,7 +57,7 @@ class GeolocationAdminTest(BluebottleAdminTestCase):
         self.app.set_user(self.user)
         page = self.app.get(self.admin_add_url)
         self.assertEqual(page.status_code, status.HTTP_200_OK)
-        form = page.forms[0]
+        form = page.forms[1]
         form.set('position', 'POINT (5.707144274290329 52.504414974388936)')
         form.submit()
 

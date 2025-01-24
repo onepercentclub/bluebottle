@@ -113,7 +113,7 @@ class MemberSerializer(ModelSerializer):
             not user.is_staff and
             not user.is_superuser
         ):
-            del representation['last_name']
+            representation['last_name'] = None
             representation['full_name'] = representation['first_name']
 
         return representation

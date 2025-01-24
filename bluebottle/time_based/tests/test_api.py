@@ -7,9 +7,10 @@ import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.urls import reverse
-from django.utils.timezone import now, utc
+from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
+from pytz import UTC
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -2556,8 +2557,8 @@ class SlotIcalTestCase(BluebottleTestCase):
                 delta=timedelta(seconds=10)
             )
 
-            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
@@ -2663,8 +2664,8 @@ class DateIcalTestCase(BluebottleTestCase):
                 delta=timedelta(seconds=10)
             )
 
-            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
@@ -2707,8 +2708,8 @@ class DateIcalTestCase(BluebottleTestCase):
             delta=timedelta(seconds=10)
         )
 
-        self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-        self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+        self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+        self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(

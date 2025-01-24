@@ -39,7 +39,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue(
             "All of the following related items will be deleted" in page.text
         )
-        page = page.forms[0].submit().follow()
+        page = page.forms[1].submit().follow()
         self.assertTrue(
             "0 Activities on a date" in page.text
         )
@@ -148,7 +148,7 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
-        form = page.forms[0]
+        form = page.forms[1]
         form['contributions-0-value_0'] = 0
         form['contributions-0-value_1'] = 0
         page = form.submit()
@@ -268,7 +268,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         page = page.click('Repeat this slot')
         h3 = page.html.find('h3')
         self.assertEqual(h3.text.strip(), 'Warning')
-        form = page.forms[0]
+        form = page.forms[1]
         form["interval"] = "day"
         form["end"] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()
@@ -288,7 +288,7 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         self.assertEqual(self.activity.status, 'expired')
         page = self.app.get(self.url)
         page = page.click('Repeat this slot')
-        form = page.forms[0]
+        form = page.forms[1]
         form["interval"] = "day"
         form["end"] = str((now() + datetime.timedelta(days=4)).date())
         page = form.submit()

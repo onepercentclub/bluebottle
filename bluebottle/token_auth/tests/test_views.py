@@ -1,5 +1,7 @@
 from future import standard_library
 standard_library.install_aliases()
+
+import mock
 from builtins import object
 from urllib.parse import urlencode
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -126,7 +128,8 @@ class LoginViewTestCase(TestCase):
         admin_link = '/en/admin/projects'
         request = self.factory.get('/api/sso/authenticate')
         request.LANGUAGE_CODE = 'en'
-        SessionMiddleware().process_request(request)
+
+        SessionMiddleware(mock.MagicMock).process_request(request)
         request.session.save()
 
         response = self.view.get(request, link=admin_link)

@@ -893,7 +893,7 @@ class LoginJsonApiTestCase(BluebottleTestCase):
                 'code': 'invalid',
                 'detail': 'Unable to log in with provided credentials.',
                 'source': {
-                    'pointer': '/data/attributes/non-field-errors'
+                    'pointer': '/data'
                 },
                 'status': '400'
             }]

@@ -136,7 +136,10 @@ class CollectActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(CollectContributor)
+        if self.pk:
+            return self.contributors.instance_of(CollectContributor)
+        else:
+            return CollectContributor.objects.none()
 
     @property
     def active_contributors(self):

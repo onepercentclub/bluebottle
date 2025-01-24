@@ -1,7 +1,7 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.clients.views import SettingsView
 
 urlpatterns = [
-    url(r'^$', SettingsView.as_view(), name='settings')
+    re_path(r'^$', SettingsView.as_view(), name='settings')
 ]

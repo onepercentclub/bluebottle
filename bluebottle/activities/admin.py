@@ -375,7 +375,7 @@ class ActivityBulkAddForm(forms.Form):
 
     title = _('Bulk add participants')
 
-    def __init__(self, activity, data=None, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         if data:
             super(ActivityBulkAddForm, self).__init__(data)
         else:
@@ -387,7 +387,98 @@ class ActivityBulkAddForm(forms.Form):
         }
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class BulkAddMixin(object):
+
+    bulk_add_form = ActivityBulkAddForm
+    bulk_add_template = 'admin/activities/bulk_add.html'
+
+    def get_urls(self):
+        urls = super(BulkAddMixin, self).get_urls()
+
+        extra_urls = [
+            url(r'^(?P<pk>\d+)/bulk_add/$',
+                self.admin_site.admin_view(self.bulk_add_participants),
+                name='{}_{}_bulk_add'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                )),
+        ]
+        return extra_urls + urls
+
+    def bulk_add_participants(self, request, pk, *args, **kwargs):
+        activity = self.model.objects.get(pk=pk)
+        route = 'admin:{}_{}_change'.format(
+            self.model._meta.app_label,
+            self.model._meta.model_name
+        )
+
+        activity_detail = reverse(route, args=(pk,))
+
+        if not request.user.is_superuser:
+            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
+
+        if request.method == "POST":
+            form = self.bulk_add_form(data=request.POST)
+            if form.is_valid():
+                data = form.cleaned_data
+                emails = re.split(r'[,;\n]', data['emails'])
+                send_messages = data['send_messages']
+                result = bulk_add_participants(activity, emails, send_messages)
+                if result['added']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} participant was added.',
+                            '{count} participants were added.',
+                            result['added']
+                        ).format(count=result['added'])
+                    )
+                if result['created']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} user created and added as a participant.',
+                            '{count} users created and added as a participant.',
+                            result['added']
+                        ).format(count=result['created'])
+                    )
+
+                if result['existing']:
+                    messages.add_message(
+                        request,
+                        messages.INFO,
+                        ngettext(
+                            '{count} participant already joined.',
+                            '{count} participants already joined.',
+                            result['existing']
+                        ).format(count=result['existing'])
+                    )
+
+                if result['failed']:
+                    messages.add_message(
+                        request,
+                        messages.WARNING,
+                        ngettext(
+                            '{count} participant could not be added. Please check if the email address is correct.',
+                            '{count} participants could not be added. Please check if the email addresses are correct.',
+                            result['failed']
+                        ).format(count=result['failed'])
+                    )
+            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
+
+        context = {
+            'opts': self.model._meta,
+            'activity': activity,
+            'form': self.bulk_add_form(activity=activity)
+        }
+        return TemplateResponse(
+            request, self.bulk_add_template, context
+        )
+
+
+class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location']
     inlines = (UpdateInline,)
@@ -623,14 +714,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
 
         extra_urls = [
             url(
-                r'^(?P<pk>\d+)/bulk_add/$',
-                self.admin_site.admin_view(self.bulk_add_participants),
-                name='{}_{}_bulk_add'.format(
-                    self.model._meta.app_label,
-                    self.model._meta.model_name
-                ),
-            ),
-            url(
                 r'^send-impact-reminder-message/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
@@ -640,78 +723,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, St
             )
         ]
         return extra_urls + urls
-
-    def bulk_add_participants(self, request, pk, *args, **kwargs):
-        activity = self.model.objects.get(pk=pk)
-        route = 'admin:{}_{}_change'.format(
-            self.model._meta.app_label,
-            self.model._meta.model_name
-        )
-
-        activity_detail = reverse(route, args=(pk,))
-
-        if not request.user.is_superuser:
-            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
-
-        if request.method == "POST":
-            form = ActivityBulkAddForm(data=request.POST, activity=activity)
-            if form.is_valid():
-                data = form.cleaned_data
-                emails = re.split(r'[,;\n]', data['emails'])
-                send_messages = data['send_messages']
-                result = bulk_add_participants(activity, emails, send_messages)
-                if result['added']:
-                    messages.add_message(
-                        request,
-                        messages.INFO,
-                        ngettext(
-                            '{count} participant was added.',
-                            '{count} participants were added.',
-                            result['added']
-                        ).format(count=result['added'])
-                    )
-                if result['created']:
-                    messages.add_message(
-                        request,
-                        messages.INFO,
-                        ngettext(
-                            '{count} user created and added as a participant.',
-                            '{count} users created and added as a participant.',
-                            result['added']
-                        ).format(count=result['created'])
-                    )
-
-                if result['existing']:
-                    messages.add_message(
-                        request,
-                        messages.INFO,
-                        ngettext(
-                            '{count} participant already joined.',
-                            '{count} participants already joined.',
-                            result['existing']
-                        ).format(count=result['existing'])
-                    )
-
-                if result['failed']:
-                    messages.add_message(
-                        request,
-                        messages.WARNING,
-                        ngettext(
-                            '{count} participant could not be added. Please check if the email address is correct.',
-                            '{count} participants could not be added. Please check if the email addresses are correct.',
-                            result['failed']
-                        ).format(count=result['failed'])
-                    )
-            return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
-
-        context = {
-            'opts': self.model._meta,
-            'activity': activity,
-            'form': ActivityBulkAddForm(activity=activity)
-        }
-        return TemplateResponse(
-            request, 'admin/activities/bulk_add.html', context
-        )
 
     @confirmation_form(
         ImpactReminderConfirmationForm,

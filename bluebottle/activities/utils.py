@@ -28,10 +28,11 @@ from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusF
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.organizations.models import Organization
 from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant
+from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
+    SlotParticipant, DateActivitySlot, DateParticipant
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -682,35 +683,56 @@ def bulk_add_participants(activity, emails, send_messages):
         Participant = CollectContributor
     if isinstance(activity, DeadlineActivity):
         Participant = DeadlineParticipant
+    if isinstance(activity, DateActivitySlot):
+        Participant = SlotParticipant
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
-
+    new = False
     for email in emails:
         try:
-
             user = Member.objects.filter(email__iexact=email.strip()).first()
             settings = MemberPlatformSettings.objects.get()
             if not user:
+                new = True
                 if settings.closed:
                     email = email.strip()
-                    user = Member.create_by_email(email)
-                    created += 1
+                    try:
+                        user = Member.create_by_email(email)
+                        created += 1
+                    except Exception:
+                        failed += 1
+                        continue
                 else:
                     failed += 1
                     continue
-            else:
-                added += 1
-            if Participant.objects.filter(user=user, activity=activity).exists():
-                existing += 1
-            else:
-                Participant.objects.create(
+            if isinstance(activity, DateActivitySlot):
+                slot = activity
+                participant, _cr = DateParticipant.objects.get_or_create(
                     user=user,
-                    activity=activity,
-                    send_messages=send_messages
+                    activity=slot.activity
                 )
-        except Exception as error:
-            print(error)
+                slot_participant, cr = SlotParticipant.objects.get_or_create(
+                    participant=participant,
+                    slot=slot
+                )
+                if cr:
+                    if not new:
+                        added += 1
+                else:
+                    existing += 1
+            else:
+                if Participant.objects.filter(user=user, activity=activity).exists():
+                    existing += 1
+                else:
+                    if not new:
+                        added += 1
+                    Participant.objects.create(
+                        user=user,
+                        activity=activity,
+                        send_messages=send_messages
+                    )
+        except Exception:
             failed += 1
     return {
         'added': added,

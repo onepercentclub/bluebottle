@@ -112,7 +112,7 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
                 raise ValidationError('Required fields', code="required")
 
         if DeedParticipant.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
-            raise ValidationError(_('User already exists'), code="exists")
+            raise ValidationError(_('Already participating'), code="exists")
 
         serializer.save(user=user, send_messages=send_messages)
 

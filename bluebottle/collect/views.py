@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
@@ -10,7 +11,9 @@ from bluebottle.collect.serializers import (
     CollectActivitySerializer, CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
+from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -72,11 +75,28 @@ class CollectActivityRelatedCollectContributorList(RelatedContributorListView):
 class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
+        CreateByEmailPermission
     )
     queryset = CollectContributor.objects.all()
     serializer_class = CollectContributorSerializer
 
     def perform_create(self, serializer):
+        email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="exists")
+                else:
+                    raise ValidationError(_('User with email address not found'))
+        else:
+            user = self.request.user
+
         self.check_related_object_permissions(
             self.request,
             serializer.Meta.model(**serializer.validated_data)
@@ -85,7 +105,10 @@ class CollectContributorList(JsonApiViewMixin, ListCreateAPIView):
             self.request,
             serializer.Meta.model(**serializer.validated_data)
         )
-        serializer.save(user=self.request.user)
+        if CollectContributor.objects.filter(user=user, activity=serializer.validated_data['activity']).exists():
+            raise ValidationError(_('User already joined'), code="exists")
+
+        serializer.save(user=user, send_messages=send_messages)
 
 
 class CollectContributorDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

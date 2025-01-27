@@ -104,8 +104,17 @@ class ActivityPreviewSerializer(ModelSerializer):
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
+    activity = serializers.SerializerMethodField()
 
     collect_type = serializers.SerializerMethodField()
+
+    def get_activity(self, obj):
+        return {
+            'data': {
+                'type': obj.resource_name,
+                'id': obj.meta['id']
+            }
+        }
 
     def get_current_status(self, obj):
         model = None
@@ -357,7 +366,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type', 'highlight', 'contribution_duration', 'owner',
-            'resource_name'
+            'resource_name', 'activity'
         )
         meta_fields = ('current_status', 'created')
 

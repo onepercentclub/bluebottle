@@ -260,17 +260,10 @@ class DeadlineParticipantTriggerCase(ParticipantTriggerTestCase, BluebottleTestC
 
         self.assertEqual(self.participant.registration.status, "accepted")
 
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.assertEqual(
             mail.outbox[0].subject,
-            'A participant has been added to your activity "{}" 🎉'.format(
-                self.activity.title
-            ),
-        )
-
-        self.assertEqual(
-            mail.outbox[1].subject,
             'You have been added to the activity "{}" 🎉'.format(self.activity.title),
         )
 

@@ -31,6 +31,7 @@ from bluebottle.activities.admin import (
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.time_based.models import (
@@ -1127,7 +1128,11 @@ class SlotDuplicateForm(forms.Form):
 class SlotBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
-        help_text=_('Enter one email address per line'),
+        help_text=_(
+            'Add participants to this slot using their email addresses. '
+            'Separate the email addresses by commas, one per line or '
+            'copy & paste a column from a spreadsheet.'
+        ),
         widget=forms.Textarea
     )
 
@@ -1144,9 +1149,6 @@ class SlotBulkAddForm(forms.Form):
             super(SlotBulkAddForm, self).__init__(data)
         else:
             super(SlotBulkAddForm, self).__init__()
-        self.fields['emails'].help_text = _(
-            'Enter the email addresses of the participants you want to add to this slot.'
-        )
 
 
 @admin.register(DateActivitySlot)
@@ -1210,11 +1212,14 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
         else:
             start = slot.start
 
+        settings = MemberPlatformSettings.load()
+
         context = {
             'opts': self.model._meta,
             'slot': slot,
             'time': start.strftime('%H:%M %Z'),
-            'form': SlotDuplicateForm(slot=slot)
+            'form': SlotDuplicateForm(slot=slot),
+            'closed': settings.closed
         }
         return TemplateResponse(
             request, 'admin/time_based/duplicate_slot.html', context

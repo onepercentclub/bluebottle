@@ -32,6 +32,7 @@ from bluebottle.funding.models import Funding, Donor, MoneyContribution
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
@@ -363,7 +364,11 @@ class TeamInline(admin.TabularInline):
 class ActivityBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
-        help_text=_('Enter the email addresses of the participants you want to add to this activity.'),
+        help_text=_(
+            'Add participants to this activity using their email addresses. '
+            'Separate the email addresses by commas, one per line or '
+            'copy & paste a column from a spreadsheet.'
+        ),
         widget=forms.Textarea
     )
 
@@ -468,10 +473,13 @@ class BulkAddMixin(object):
                     )
             return HttpResponseRedirect(activity_detail + '#/tab/inline_0/')
 
+        settings = MemberPlatformSettings.load()
+
         context = {
             'opts': self.model._meta,
             'activity': activity,
-            'form': self.bulk_add_form(activity=activity)
+            'form': self.bulk_add_form(activity=activity),
+            'closed': settings.closed
         }
         return TemplateResponse(
             request, self.bulk_add_template, context

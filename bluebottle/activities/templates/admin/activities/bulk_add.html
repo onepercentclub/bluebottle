@@ -16,11 +16,13 @@
     <form action="" method="post">
         {% csrf_token %}
         <fieldset class="module aligned module_0 initialized selected">
-            <div class="description">
-                {% blocktrans %}
-                   Add participants to this activity using their email addresses. Separate the email addresses by commas, one per line or copy & paste a column from a spreadsheet.
-                {% endblocktrans %}
-            </div>
+            {% if closed %}
+                <div class="description">
+                    {% blocktrans %}
+                        Only use the work email addresses of the participants you want to add not their personal addresses.
+                    {% endblocktrans %}
+                </div>
+            {% endif %}
             {% for field in form %}
                 <div class="form-row{% if field.errors %} errors{% endif %}">
                     <div{% if field.is_checkbox %} class="checkbox-row"{% endif %}>

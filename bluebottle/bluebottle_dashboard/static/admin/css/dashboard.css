@@ -364,3 +364,8 @@ html {
     content: "\e604";
 }
 
+
+form .aligned .form-row label+p.help {
+    margin-left: 12.85714rem;
+    padding-left: 0;
+}

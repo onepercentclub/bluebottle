@@ -365,9 +365,8 @@ class ActivityBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
         help_text=_(
-            'Add participants to this activity using their email addresses. '
-            'Separate the email addresses by commas, one per line or '
-            'copy & paste a column from a spreadsheet.'
+            'Separate the email addresses by commas, one per '
+            'line or copy & paste a column from a spreadsheet.'
         ),
         widget=forms.Textarea
     )

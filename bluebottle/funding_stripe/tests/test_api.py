@@ -17,16 +17,17 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory,
     StripePaymentProviderFactory,
+    StripePaymentIntentFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class StripePaymentIntentTestCase(BluebottleTestCase):
+class StripePaymentIntentListTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripePaymentIntentTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
@@ -323,10 +324,11 @@ class StripeBankTransferTestCase(BluebottleTestCase):
         self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
 
-class StripeSourcePaymentTestCase(BluebottleTestCase):
+class StripePaymentIntentDetailTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripeSourcePaymentTestCase, self).setUp()
+        super().setUp()
+        StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -335,83 +337,78 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create(
-            connect_account=StripePayoutAccountFactory.create(
-                status="verified", account_id="test-account-id"
-            )
+            connect_account=StripePayoutAccountFactory.create(account_id="account-id")
         )
 
         self.funding = FundingFactory.create(
             initiative=self.initiative, bank_account=self.bank_account
         )
-        self.donation = DonorFactory.create(activity=self.funding, user=None)
+        self.donation = DonorFactory.create(activity=self.funding)
+        self.intent = StripePaymentIntentFactory.create(
+            donation=self.donation,
+            client_secret='some-client-secret'
+        )
 
-        self.payment_url = reverse("stripe-source-payment-list")
+        self.intent_url = reverse(
+            "stripe-payment-intent-detail", args=(self.intent.pk, )
+        )
 
-        self.data = {
-            "data": {
-                "type": "payments/stripe-source-payments",
-                "attributes": {
-                    "source-token": "test-token",
-                },
-                "relationships": {
-                    "donation": {
-                        "data": {
-                            "type": "contributors/donations",
-                            "id": self.donation.pk,
-                        }
-                    }
-                },
+        self.payment_intent = stripe.PaymentIntent("some intent id")
+        self.payment_intent.update(
+            {
+                'status': 'succeeded',
+                "client_secret": self.intent.client_secret,
+                "charges": []
             }
-        }
-
-    def test_create_payment(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        with mock.patch("stripe.Source.modify"):
-            response = self.client.post(
-                self.payment_url, data=json.dumps(self.data), user=self.user
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
-
-    def test_create_payment_anonymous(self):
-        with mock.patch("stripe.Source.modify"):
-            response = self.client.post(
-                self.payment_url,
-                data=json.dumps(self.data),
-                HTTP_AUTHORIZATION="Donation {}".format(self.donation.client_secret),
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
-
-    def test_create_intent_other_user(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        response = self.client.post(
-            self.payment_url,
-            data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create(),
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_get_user(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(self.intent_url, user=self.donation.user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_intent_no_user(self):
-        response = self.client.post(
-            self.payment_url,
-            data=json.dumps(self.data),
-        )
+    def test_get_other_user(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url, user=BlueBottleUserFactory.create()
+            )
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_get_anonymous(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(self.intent_url)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_client_secret(self):
+        self.donation.user = None
+        self.donation.save()
+
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url,
+                HTTP_AUTHORIZATION=f'donation {self.intent.client_secret}'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_wrong_client_secret(self):
+        self.donation.user = None
+        self.donation.save()
+
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url, HTTP_AUTHORIZATION='donation some-other-secret'
+            )
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class ConnectAccountDetailsTestCase(BluebottleTestCase):

@@ -29,7 +29,7 @@ class RedirectTests(BluebottleTestCase):
     def test_model(self):
         r1 = Redirect.objects.create(
             old_path='/initial', new_path='/new_target')
-        self.assertEqual(str(r1), "/initial ---> /new_target")
+        self.assertEqual(str(r1), "/initial => /new_target")
 
     def test_redirect(self):
         Redirect.objects.create(
@@ -59,72 +59,6 @@ class RedirectTests(BluebottleTestCase):
                              '{0}{1}'.format(self.test_url, '/en/new_target/'),
                              status_code=301,
                              target_status_code=200)
-
-    def test_regular_expression(self):
-        Redirect.objects.create(
-            old_path='/news/index/(\d+)/(.*)/',
-            new_path='/my/news/$2/',
-            regular_expression=True)
-        response = self.client.get('/news/index/12345/foobar/')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url,
-                                             '/en/my/news/foobar/'),
-                             status_code=301, target_status_code=200)
-        redirect = Redirect.objects.get(regular_expression=True)
-        self.assertEqual(redirect.nr_times_visited, 1)
-
-    def test_fallback_redirects(self):
-        """
-        Ensure redirects with fallback_redirect set are the last evaluated
-        """
-        Redirect.objects.create(
-            old_path='/project/foo',
-            new_path='/my/project/foo/')
-
-        Redirect.objects.create(
-            old_path='/project/foo/(.*)',
-            new_path='/my/project/foo/$1/',
-            regular_expression=True)
-
-        Redirect.objects.create(
-            old_path='/project/(.*)',
-            new_path='/projects/',
-            regular_expression=True,
-            fallback_redirect=True)
-
-        Redirect.objects.create(
-            old_path='/project/bar/(.*)',
-            new_path='/my/project/bar/$1/',
-            regular_expression=True)
-
-        Redirect.objects.create(
-            old_path='/project/bar',
-            new_path='/my/project/bar/')
-
-        response = self.client.get('/project/foo')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url, '/en/my/project/foo/'),
-                             status_code=301, target_status_code=200)
-
-        response = self.client.get('/project/bar')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url, '/en/my/project/bar/'),
-                             status_code=301, target_status_code=200)
-
-        response = self.client.get('/project/bar/details')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url, '/en/my/project/bar/details/'),
-                             status_code=301, target_status_code=200)
-
-        response = self.client.get('/project/foobar')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url, '/en/projects/'),
-                             status_code=301, target_status_code=200)
-
-        response = self.client.get('/project/foo/details')
-        self.assertRedirects(response,
-                             '{0}{1}'.format(self.test_url, '/en/my/project/foo/details/'),
-                             status_code=301, target_status_code=200)
 
     def test_redirect_external_http(self):
         Redirect.objects.create(

@@ -23,7 +23,6 @@ from bluebottle.time_based.effects.participants import (
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect,
 )
 from bluebottle.time_based.messages import (
-    ManagerParticipantAddedOwnerNotification,
     ParticipantAddedNotification,
 )
 from bluebottle.time_based.models import (
@@ -262,7 +261,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(ManagerParticipantAddedOwnerNotification),
                 NotificationEffect(ParticipantAddedNotification),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
@@ -631,10 +629,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification,
-                    conditions=[is_not_self],
-                ),
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_self],

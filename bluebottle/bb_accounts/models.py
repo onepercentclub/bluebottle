@@ -308,6 +308,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
         if self.avatar:
             self.avatar.delete()
+            self.avatar = None
 
         self.save()
 

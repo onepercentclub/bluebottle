@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-15 08:37+0100\n"
-"PO-Revision-Date: 2025-01-15 10:04\n"
+"POT-Creation-Date: 2025-01-21 13:06+0100\n"
+"PO-Revision-Date: 2025-01-21 15:14\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de\n"
@@ -2051,7 +2051,7 @@ msgstr "\n"
 "                  "
 
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:47
-#: bluebottle/geo/admin.py:61
+#: bluebottle/geo/admin.py:78
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
 #: bluebottle/segments/admin.py:66
@@ -2299,7 +2299,7 @@ msgstr "Inhaltsblock"
 msgid "content blocks"
 msgstr "inhaltliche Blöcke"
 
-#: bluebottle/clients/models.py:12 bluebottle/files/models.py:22
+#: bluebottle/clients/models.py:12 bluebottle/files/models.py:24
 #: bluebottle/organizations/models.py:25 bluebottle/organizations/models.py:79
 #: bluebottle/terms/models.py:13 bluebottle/updates/models.py:53
 msgid "created"
@@ -2378,8 +2378,8 @@ msgstr "Haupt"
 msgid "About"
 msgstr "Über"
 
-#: bluebottle/cms/models.py:115 bluebottle/geo/admin.py:116
-#: bluebottle/geo/admin.py:168
+#: bluebottle/cms/models.py:115 bluebottle/geo/admin.py:133
+#: bluebottle/geo/admin.py:185
 msgid "Info"
 msgstr "Info"
 
@@ -3326,10 +3326,6 @@ msgstr "Endet am %(end)s"
 #: bluebottle/time_based/templates/mails/messages/participant_applied.html:27
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:19
 #: bluebottle/time_based/templates/mails/messages/participant_joined.html:26
-#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:49
-#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:37
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:39
-#: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_applied.html:32
 #: bluebottle/time_based/templates/mails/messages/registrations/user_applied.html:27
 #: bluebottle/time_based/templates/mails/messages/team_member_joined.html:31
 #: bluebottle/time_based/templates/mails/messages/teams/user_teammember_joined.html:17
@@ -3350,16 +3346,16 @@ msgstr "Helfen Sie Ihren Teilnehmern morgen voll motiviert zu starten. Senden Si
 msgid "The end date should be after the start date"
 msgstr "Das Enddatum sollte nach dem Startdatum liegen"
 
-#: bluebottle/files/models.py:24 bluebottle/files/models.py:79
+#: bluebottle/files/models.py:26 bluebottle/files/models.py:90
 msgid "file"
 msgstr "Datei"
 
-#: bluebottle/files/models.py:36 bluebottle/initiatives/models.py:40
+#: bluebottle/files/models.py:38 bluebottle/initiatives/models.py:40
 #: bluebottle/organizations/models.py:29 bluebottle/organizations/models.py:76
 msgid "owner"
 msgstr "besitzer"
 
-#: bluebottle/files/models.py:40
+#: bluebottle/files/models.py:42
 msgid "used"
 msgstr "verwendet"
 
@@ -3563,7 +3559,7 @@ msgid "Payment"
 msgstr "Zahlung"
 
 #: bluebottle/funding/admin.py:91 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:256
+#: bluebottle/funding_stripe/models.py:257
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:13
 msgid "Currency"
 msgstr "Währung"
@@ -5272,80 +5268,80 @@ msgstr "Offene Aktivitäten, die gewartet werden"
 msgid "Update business type at stripe"
 msgstr "Geschäftstyp im Streifen aktualisieren"
 
-#: bluebottle/funding_stripe/models.py:217
+#: bluebottle/funding_stripe/models.py:218
 msgid "Stripe publishable key"
 msgstr "Streifen publizierbarer Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:218
-#: bluebottle/funding_stripe/models.py:226
+#: bluebottle/funding_stripe/models.py:219
+#: bluebottle/funding_stripe/models.py:227
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Dies wird nur benötigt, wenn Sie ein bestimmtes Stripe-Konto verwenden möchten."
 
-#: bluebottle/funding_stripe/models.py:225
+#: bluebottle/funding_stripe/models.py:226
 msgid "Stripe secret key"
 msgstr "Geheimer Stripe-Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:233
+#: bluebottle/funding_stripe/models.py:234
 msgid "Stripe connect webhook secret"
 msgstr "Webhook Geheimnis für Stripe verbinden"
 
-#: bluebottle/funding_stripe/models.py:234
+#: bluebottle/funding_stripe/models.py:235
 msgid "The secret for connect webhook."
 msgstr "Das Geheimnis zum Verbinden von Webhook."
 
-#: bluebottle/funding_stripe/models.py:241
+#: bluebottle/funding_stripe/models.py:242
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe Zahlungsabsichten Webhook Geheimnis"
 
-#: bluebottle/funding_stripe/models.py:242
+#: bluebottle/funding_stripe/models.py:243
 msgid "The secret for payment intents webhook."
 msgstr "Das Geheimnis für Zahlung beabsichtigt webhook."
 
-#: bluebottle/funding_stripe/models.py:249
+#: bluebottle/funding_stripe/models.py:250
 msgid "Stripe payment sources webhook secret"
 msgstr "Stripe Zahlungsquellen Webhook Secret"
 
-#: bluebottle/funding_stripe/models.py:250
+#: bluebottle/funding_stripe/models.py:251
 msgid "The secret for payment sources webhook."
 msgstr "Das Geheimnis für Zahlungsquellen Webhook."
 
-#: bluebottle/funding_stripe/models.py:257
+#: bluebottle/funding_stripe/models.py:258
 msgid "The currency for the global account."
 msgstr "Die Währung für das globale Konto."
 
-#: bluebottle/funding_stripe/models.py:302
+#: bluebottle/funding_stripe/models.py:303
 msgid "Commercial company"
 msgstr "Handelsunternehmen"
 
-#: bluebottle/funding_stripe/models.py:306
+#: bluebottle/funding_stripe/models.py:307
 msgid "Individual person"
 msgstr "Individuelle Person"
 
-#: bluebottle/funding_stripe/models.py:310
+#: bluebottle/funding_stripe/models.py:311
 msgid "Non-profit organization"
 msgstr "Non-Profit-Organisation"
 
-#: bluebottle/funding_stripe/models.py:315
+#: bluebottle/funding_stripe/models.py:316
 msgid "Starts with 'acct_...'"
 msgstr "Beginnt mit 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:458
+#: bluebottle/funding_stripe/models.py:459
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:459
+#: bluebottle/funding_stripe/models.py:460
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:470
+#: bluebottle/funding_stripe/models.py:471
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:508
+#: bluebottle/funding_stripe/models.py:509
 msgid "Bank account"
 msgstr "Bankkonto"
 
-#: bluebottle/funding_stripe/models.py:509
+#: bluebottle/funding_stripe/models.py:510
 msgid "Bank accounts"
 msgstr "Bankkonten"
 
@@ -5436,37 +5432,37 @@ msgstr "Vitepay Bankkonten"
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr "Zahlung für {activity_title} am {tenant_name}"
 
-#: bluebottle/geo/admin.py:20
+#: bluebottle/geo/admin.py:37
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:14
 msgid "Location"
 msgstr "Standort"
 
-#: bluebottle/geo/admin.py:31
+#: bluebottle/geo/admin.py:48
 msgid "My location ({})"
 msgstr "Mein Standort ({})"
 
-#: bluebottle/geo/admin.py:56 bluebottle/segments/admin.py:61
+#: bluebottle/geo/admin.py:73 bluebottle/segments/admin.py:61
 msgid "Merge with"
 msgstr "Zusammenführen mit"
 
-#: bluebottle/geo/admin.py:57 bluebottle/segments/admin.py:62
+#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:62
 msgid "Choose location to merge with"
 msgstr "Wählen Sie einen Ort zum Zusammenführen"
 
-#: bluebottle/geo/admin.py:105 bluebottle/slides/models.py:32
+#: bluebottle/geo/admin.py:122 bluebottle/slides/models.py:32
 msgid "Office group"
 msgstr "Bürogruppe"
 
-#: bluebottle/geo/admin.py:112
+#: bluebottle/geo/admin.py:129
 msgid "Office region"
 msgstr "Büroregion"
 
-#: bluebottle/geo/admin.py:129 bluebottle/geo/admin.py:167
-#: bluebottle/geo/admin.py:180
+#: bluebottle/geo/admin.py:146 bluebottle/geo/admin.py:184
+#: bluebottle/geo/admin.py:197
 msgid "Map"
 msgstr "Karte"
 
-#: bluebottle/geo/admin.py:130 bluebottle/segments/admin.py:105
+#: bluebottle/geo/admin.py:147 bluebottle/segments/admin.py:105
 msgid "SSO"
 msgstr "SSO"
 
@@ -10347,6 +10343,13 @@ msgstr "\n"
 "        <p>Hi %(recipient_name)s,</p>\n"
 "    "
 
+#: bluebottle/time_based/templates/mails/messages/participant_base.html:25
+msgctxt "email"
+msgid "\n"
+"        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If you are unable to participate, please withdraw in time so we can find a suitable solution.\n"
+"      "
+msgstr ""
+
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:6
 #, python-format
 msgctxt "email"
@@ -10671,11 +10674,9 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:24
 #, python-format
 msgid "\n"
-"                    When you are accepted you are expected to contribute %(duration)s every %(period)s.\n"
+"                    When you are accepted you are expected to contribute %(duration)s hour(s) every %(period)s.\n"
 "                "
-msgstr "\n"
-"                    Wenn du akzeptiert wirst, wirst du von %(duration)s jede %(period)sbeisteuern.\n"
-"                "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
@@ -10687,6 +10688,14 @@ msgstr "Aktualisieren"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:26
 msgid "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page."
 msgstr "Wenn Sie aufhören möchten, zur Aktivität beizutragen, stellen Sie sicher, dass Sie Ihre Teilnahme von der Aktivitätsdetailseite stoppen."
+
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:38
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:35
+msgctxt "email"
+msgid "\n"
+"        Our partners are counting on your participation. Stopping at the last moment or not showing up will affect their planning. If you are unable to participate, please stop in time so we can find a suitable solution.\n"
+"      "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:6
 #: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:6
@@ -10706,22 +10715,9 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:20
 #, python-format
 msgid "\n"
-"                    You are expected to contribute %(duration)s every %(period)s.\n"
+"                    You are expected to contribute %(duration)s hour(s) every %(period)s.\n"
 "                "
-msgstr "\n"
-"                    Es wird erwartet, dass Sie %(duration)s jeden %(period)sbeitragen.\n"
-"                "
-
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:36
-#: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:30
-#: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:24
-msgctxt "email"
-msgid "\n"
-"        If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
-"      "
-msgstr "\n"
-"        Wenn Sie nicht teilnehmen können, ziehen Sie sich bitte über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.\n"
-"      "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6
 #| msgid ""
@@ -10752,14 +10748,13 @@ msgstr "Einladen"
 msgid "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed."
 msgstr "Du kannst Leute in dein Team einladen, während du darauf wartest, zu planen oder es zu tun, wenn Datum, Zeit und Ort bestätigt werden."
 
-#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:34
+#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:33
+#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:29
 msgctxt "email"
 msgid "\n"
-"              If your team is unable to participate, please withdraw via the activity page so that another team can take your place.\n"
-"            "
-msgstr "\n"
-"              Wenn Ihr Team nicht teilnehmen kann, ziehen Sie sich bitte über die Aktivitätsseite zurück, damit ein anderes Team Ihren Platz einnehmen kann.\n"
-"            "
+"        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If your team is unable to participate, please withdraw in time so we can find a suitable solution.\n"
+"      "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:6
 #| msgid ""
@@ -10779,15 +10774,6 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:20
 msgid "The activity manager will contact you to discuss a specific date, time and location."
 msgstr "Der Aktivitätsmanager wird sich mit Ihnen in Verbindung setzen, um ein bestimmtes Datum, Zeit und Ort zu besprechen."
-
-#: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:30
-msgctxt "email"
-msgid "\n"
-"        If you are unable to participate, please withdraw your team via the activity page so that others can take your place.\n"
-"      "
-msgstr "\n"
-"        Wenn Sie nicht teilnehmen können, ziehen Sie Ihr Team bitte über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.\n"
-"      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:6
 #| msgid ""
@@ -10836,6 +10822,15 @@ msgstr "\n"
 "        <p>Gute Nachrichten, Sie wurden für die Aktivität \"%(title)s\" akzeptiert!</p>\n"
 "        <p>Wenn Sie nicht teilnehmen können, Bitte ziehen Sie sich über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.</p>\n"
 "    "
+
+#: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:24
+msgctxt "email"
+msgid "\n"
+"        If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
+"      "
+msgstr "\n"
+"        Wenn Sie nicht teilnehmen können, ziehen Sie sich bitte über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.\n"
+"      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_removed.html:4
 #, python-format

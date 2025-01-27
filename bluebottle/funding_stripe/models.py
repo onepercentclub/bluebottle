@@ -81,6 +81,7 @@ class StripePayment(Payment):
     def update(self):
         stripe = get_stripe()
         intent = self.payment_intent.intent
+
         if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
             self.states.require_action(save=True)
         elif len(intent.charges) == 0 and self.status != self.states.action_needed.value:

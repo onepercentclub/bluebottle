@@ -205,22 +205,6 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
 
-@register(DateParticipant)
-class DateParticipantStateMachine(ParticipantStateMachine):
-    succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
-            ParticipantStateMachine.rejected,
-            ParticipantStateMachine.accepted
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
-        automatic=True,
-    )
-
-
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
     accept = Transition(
         [
@@ -505,3 +489,132 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     pass
+
+
+@register(DateParticipant)
+class DateParticipantStateMachine(RegistrationParticipantStateMachine):
+    registered = State(
+        _('registered'),
+        'registered',
+        _("This person registered.")
+    )
+    succeeded = State(
+        _('succeeded'),
+        'succeeded',
+        _("The contribution was successful.")
+    )
+    removed = State(
+        _('removed'),
+        'removed',
+        _('This person no longer takes part.')
+    )
+    withdrawn = State(
+        _('withdrawn'),
+        'withdrawn',
+        _('This person has withdrawn. Spent hours are retained.')
+    )
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _("The contribution was cancelled. This person's contribution "
+          "is removed and the spent hours are reset to zero.")
+    )
+
+    def is_user(self, user):
+        """is participant"""
+        return self.instance.user == user
+
+    def can_accept_participant(self, user):
+        """can accept participant"""
+        return (
+            user in [
+                self.instance.activity.owner,
+                self.instance.activity.initiative.owner
+            ] or
+            user.is_staff or
+            user in self.instance.activity.initiative.activity_managers.all()
+        )
+
+    def slot_is_open(self):
+        """task is open"""
+        from bluebottle.time_based.states import DateActivitySlotStateMachine
+        return self.instance.slot_id and self.instance.slot.status in (
+            'open',
+            'running',
+            DateActivitySlotStateMachine.running.value,
+        )
+
+    initiate = Transition(
+        EmptyState(),
+        registered,
+        name=_('Initiate'),
+        description=_("User registered to join the slot."),
+    )
+
+    accept = Transition(
+        [removed, withdrawn, cancelled],
+        registered,
+        name=_('Accept'),
+        passed_label=_('accepted'),
+        description=_("Accept the previously rejected person as a participant."),
+        description_front_end=_("Do you want to accept this person as a participant?"),
+        automatic=False,
+        permission=can_accept_participant,
+    )
+
+    remove = Transition(
+        registered,
+        removed,
+        name=_('Remove'),
+        passed_label=_('removed'),
+        description=_("Remove this person as a participant."),
+        automatic=False,
+        permission=can_accept_participant,
+    )
+
+    withdraw = Transition(
+        registered,
+        withdrawn,
+        name=_('Withdraw'),
+        passed_label=_('withdrawn'),
+        description=_("Cancel the participation."),
+        description_front_end=_(
+            "You will no longer participate in this time slot. "
+            "You can rejoin as long as the activity is open."
+        ),
+        automatic=False,
+        permission=is_user,
+        hide_from_admin=True,
+    )
+
+    reapply = Transition(
+        withdrawn,
+        registered,
+        name=_('Reapply'),
+        passed_label=_('reapplied'),
+        description=_("User re-applies after previously withdrawing."),
+        description_front_end=_(
+            "Do you want to join this time slot again?"
+        ),
+        automatic=False,
+        conditions=[slot_is_open],
+        permission=is_user,
+    )
+
+    reset = Transition(
+        [succeeded, cancelled],
+        registered,
+        name=_('Reset'),
+        passed_label=_('reset'),
+        description=_("User is reset to registered."),
+        automatic=True,
+    )
+
+    succeed = Transition(
+        [removed, withdrawn, cancelled, registered],
+        succeeded,
+        name=_('Succeed'),
+        passed_label=_('succeeded'),
+        description=_("Succeed the participant, because the slot has finished."),
+        automatic=True,
+    )

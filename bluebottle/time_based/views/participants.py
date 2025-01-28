@@ -5,12 +5,12 @@ from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant
+    TeamScheduleParticipant, DateParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
     ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer
+    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -124,6 +124,13 @@ class RelatedParticipantListView(
         queryset = super().get_queryset()
 
         return queryset.filter(activity_id__in=self.kwargs["activity_id"])
+
+
+class DateRelatedParticipantList(RelatedContributorListView):
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateParticipantSerializer
 
 
 class DeadlineRelatedParticipantList(RelatedContributorListView):

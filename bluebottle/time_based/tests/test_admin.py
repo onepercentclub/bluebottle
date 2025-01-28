@@ -13,7 +13,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateRegistrationFactory
 )
 
 
@@ -119,7 +119,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
             initiative=self.initiative,
             status='open'
         )
-        DateParticipantFactory.create(activity=activity)
+        DateRegistrationFactory.create(activity=activity)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
         self.assertTrue(
@@ -137,10 +137,10 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         super().setUp()
         self.app.set_user(self.staff_member)
         self.supporter = BlueBottleUserFactory.create()
-        self.participant = DateParticipantFactory.create(status='participant')
-        slot = self.participant.activity.slots.first()
-        SlotParticipantFactory.create(
-            participant=self.participant,
+        self.registration = DateRegistrationFactory.create(status='accepted')
+        slot = self.registration.activity.slots.first()
+        DateParticipantFactory.create(
+            registration=self.registration,
             slot=slot
         )
 

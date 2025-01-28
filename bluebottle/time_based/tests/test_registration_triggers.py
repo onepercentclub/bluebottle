@@ -13,7 +13,8 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
-    TeamScheduleRegistrationFactory,
+    TeamScheduleRegistrationFactory, DateActivityFactory, DateRegistrationFactory, DateParticipantFactory,
+    DateActivitySlotFactory,
 )
 
 
@@ -67,6 +68,10 @@ class RegistrationTriggerTestCase:
 
         self.create()
         self.assertEqual(self.registration.status, "new")
+        self.assertEqual(
+            len(mail.outbox),
+            2,
+        )
 
         self.assertEqual(
             mail.outbox[-2].subject,
@@ -125,6 +130,51 @@ class RegistrationTriggerTestCase:
                 self.activity.title
             ),
         )
+
+
+class DateRegistrationTriggerTestCase(
+    RegistrationTriggerTestCase, BluebottleTestCase
+):
+    activity_factory = DateActivityFactory
+    factory = DateRegistrationFactory
+
+    def create(self):
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.participant = DateParticipantFactory.create(
+            registration=self.registration,
+            slot=self.slot,
+        )
+
+    def test_initial(self):
+        super().test_initial()
+        self.assertEqual(len(self.registration.participants.all()), 1)
+
+        participant = self.registration.participants.get()
+        self.assertEqual(participant.status, "succeeded")
+
+    def test_initial_review(self):
+        super().test_initial_review()
+        self.assertEqual(len(self.registration.participants.all()), 1)
+        self.assertEqual(self.registration.participants.get().status, "new")
+
+    def test_accept(self):
+        super().test_accept()
+        self.assertEqual(self.registration.participants.get().status, "succeeded")
+
+    def test_reject(self):
+        super().test_reject()
+        self.assertEqual(self.registration.participants.get().status, "rejected")
+
+    def test_reject_then_accept(self):
+        super().test_reject()
+        self.registration.states.accept(save=True)
+
+        self.assertEqual(self.registration.participants.get().status, "succeeded")
 
 
 class DeadlineRegistrationTriggerTestCase(

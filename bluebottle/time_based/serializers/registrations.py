@@ -10,7 +10,7 @@ from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransition
 from bluebottle.time_based.models import (
     DeadlineRegistration, PeriodicRegistration,
     Registration, ScheduleRegistration,
-    TeamScheduleRegistration
+    TeamScheduleRegistration, DateRegistration
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
 from bluebottle.utils.fields import FSMField
@@ -104,6 +104,26 @@ class RegistrationSerializer(ModelSerializer):
             if not data.get('answer'):
                 raise ValidationError({'answer': [_('This field is required')]})
         return data
+
+
+class DateRegistrationSerializer(RegistrationSerializer):
+    permissions = ResourcePermissionField('date-registration-detail', view_args=('pk',))
+    participants = ResourceRelatedField(many=True, read_only=True, source='dateparticipant_set')
+
+    class Meta(RegistrationSerializer.Meta):
+        model = DateRegistration
+
+    class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-registrations'
+
+    included_serializers = dict(
+        RegistrationSerializer.included_serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.DateRegistrationDocumentSerializer',
+            'participants': 'bluebottle.time_based.serializers.DateParticipantSerializer'
+        }
+    )
 
 
 class DeadlineRegistrationSerializer(RegistrationSerializer):
@@ -229,6 +249,17 @@ class RegistrationTransitionSerializer(TransitionSerializer):
         included_resources = [
             'resource', 'resource.activity'
         ]
+
+
+class DateRegistrationTransitionSerializer(RegistrationTransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateRegistration.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.DateRegistrationSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
+
+    class JSONAPIMeta(RegistrationTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-registration-transitions'
 
 
 class DeadlineRegistrationTransitionSerializer(RegistrationTransitionSerializer):

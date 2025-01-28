@@ -21,8 +21,6 @@ from bluebottle.time_based.effects import (
     ActiveTimeContributionsTransitionEffect,
     CreateSlotTimeContributionEffect,
     CreatePreparationTimeContributionEffect,
-    LockFilledSlotsEffect,
-    UnlockUnfilledSlotsEffect,
     CheckPreparationTimeContributionEffect,
     SlotParticipantUnFollowActivityEffect, RescheduleDateSlotContributions,
 )
@@ -47,13 +45,12 @@ from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
     DateParticipant,
-    SlotParticipant,
 )
 from bluebottle.time_based.states import (
     DateActivitySlotStateMachine,
     DateStateMachine,
     ParticipantStateMachine,
-    SlotParticipantStateMachine,
+    DateParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
@@ -222,7 +219,7 @@ def slot_is_full(effect):
     """
     Slot is full. Capacity is filled by participants.
     """
-    participant_count = effect.instance.slot_participants.filter(
+    participant_count = effect.instance.participants.filter(
         participant__status='accepted',
         status__in=['registered', 'succeeded']
     ).count()
@@ -242,12 +239,13 @@ def participant_slot_will_be_full(effect):
     """
     the slot will be filled
     """
-    participant_count = effect.instance.slot.slot_participants.filter(
-        status="registered", participant__status='accepted'
+    participant_count = effect.instance.slot.participants.filter(
+        status="registered",
+        registration__status='accepted'
     ).count()
     if (
         effect.instance.slot.capacity and
-        effect.instance.participant.status == 'accepted' and
+        effect.instance.status == 'accepted' and
         participant_count + 1 >= effect.instance.slot.capacity
     ):
         return True
@@ -258,9 +256,9 @@ def participant_slot_will_be_not_full(effect):
     """
     the slot will be unfilled
     """
-    participant_count = effect.instance.slot.slot_participants.filter(
+    participant_count = effect.instance.slot.participants.filter(
         status='registered',
-        participant__status='accepted'
+        registration__status='accepted'
     ).count()
     if effect.instance.slot.capacity and participant_count - 1 < effect.instance.slot.capacity:
         return True
@@ -515,7 +513,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                 ),
                 RelatedTransitionEffect(
                     'accepted_participants',
-                    SlotParticipantStateMachine.succeed,
+                    DateParticipantStateMachine.succeed,
                     conditions=[
                         slot_is_not_started
                     ]
@@ -544,7 +542,7 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                 ),
                 RelatedTransitionEffect(
                     'accepted_participants',
-                    SlotParticipantStateMachine.succeed,
+                    DateParticipantStateMachine.succeed,
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]
@@ -934,35 +932,6 @@ class ParticipantTriggers(ContributorTriggers):
     ]
 
 
-@register(DateParticipant)
-class DateParticipantTriggers(ParticipantTriggers):
-    triggers = ParticipantTriggers.triggers + [
-        TransitionTrigger(
-            ParticipantStateMachine.accept,
-            effects=[
-                LockFilledSlotsEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.reset,
-                ),
-            ]
-        ),
-        TransitionTrigger(
-            ParticipantStateMachine.reject,
-            effects=[
-                UnlockUnfilledSlotsEffect,
-            ]
-        ),
-
-        TransitionTrigger(
-            ParticipantStateMachine.remove,
-            effects=[
-                UnlockUnfilledSlotsEffect,
-            ]
-        ),
-    ]
-
-
 def participant_slot_is_finished(effect):
     """
     Slot end date/time has passed
@@ -972,7 +941,7 @@ def participant_slot_is_finished(effect):
 
 
 def applicant_is_accepted(effect):
-    return effect.instance.participant.status == 'accepted'
+    return effect.instance.registration.status == 'accepted'
 
 
 def is_participant(effect):
@@ -981,11 +950,11 @@ def is_participant(effect):
     return effect.instance.participant.user == effect.options['user']
 
 
-@register(SlotParticipant)
-class SlotParticipantTriggers(TriggerManager):
+@register(DateParticipant)
+class DateParticipantTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
-            SlotParticipantStateMachine.initiate,
+            DateParticipantStateMachine.initiate,
             effects=[
                 CreateSlotTimeContributionEffect,
                 RelatedTransitionEffect(
@@ -1016,7 +985,7 @@ class SlotParticipantTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
-            SlotParticipantStateMachine.remove,
+            DateParticipantStateMachine.remove,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
@@ -1034,7 +1003,7 @@ class SlotParticipantTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
-            SlotParticipantStateMachine.accept,
+            DateParticipantStateMachine.accept,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
@@ -1053,7 +1022,7 @@ class SlotParticipantTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
-            SlotParticipantStateMachine.withdraw,
+            DateParticipantStateMachine.withdraw,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
@@ -1073,7 +1042,7 @@ class SlotParticipantTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
-            SlotParticipantStateMachine.reapply,
+            DateParticipantStateMachine.reapply,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(

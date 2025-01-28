@@ -5,7 +5,7 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect
+    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -22,8 +22,6 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
-    UserAppliedNotification,
-    UserJoinedNotification,
     ManagerTeamRegistrationCreatedNotification,
     ManagerTeamRegistrationCreatedReviewNotification,
     TeamAppliedNotification,
@@ -36,7 +34,9 @@ from bluebottle.time_based.notifications.registrations import (
     UserRegistrationRestartedNotification,
     UserRegistrationStoppedNotification,
     ManagerRegistrationStoppedNotification,
-    ManagerRegistrationRestartedNotification,
+    ManagerRegistrationRestartedNotification, DeadlineUserAppliedNotification, DeadlineUserJoinedNotification,
+    PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, ScheduleUserAppliedNotification,
+    ScheduleUserJoinedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -162,14 +162,14 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    DeadlineUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ]
         ),
@@ -240,19 +240,20 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.initiate,
             effects=[
+                CreateInitialPeriodicParticipantEffect,
                 NotificationEffect(
                     ManagerRegistrationCreatedReviewNotification,
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    PeriodicUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    PeriodicUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ],
         ),
@@ -275,7 +276,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -286,7 +287,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
             ],
         ),
         TransitionTrigger(
@@ -297,7 +298,7 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
                     PeriodicActivityStateMachine.lock,
                     conditions=[activity_no_spots_left],
                 ),
-                CreateInitialPeriodicParticipantEffect,
+                AdjustInitialPeriodicParticipantEffect,
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -372,14 +373,14 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserAppliedNotification, conditions=[review_needed, is_user]
+                    ScheduleUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    UserJoinedNotification, conditions=[no_review_needed, is_user]
+                    ScheduleUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ],
         ),

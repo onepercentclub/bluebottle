@@ -107,11 +107,11 @@ class CollectTriggersTestCase(TriggerTestCase):
         self.model.start = date.today() - timedelta(days=1)
 
         with self.execute():
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 CollectContributorStateMachine.succeed,
                 participant
             )
-            self.assertNoTransitionEffect(
+            self.assertTransitionEffect(
                 CollectContributionStateMachine.succeed,
                 participant.contributions.first()
             )
@@ -194,13 +194,9 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
     def test_initiate(self):
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.model.user):
-            self.assertEffect(CreateCollectContribution)
-
-            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            self.assertEffect(CreateCollectContribution)
+            self.assertStatus(self.model, 'accepted')
             self.assertNotificationEffect(ParticipantJoinedNotification)
             self.assertNotificationEffect(NewParticipantNotification)
 
@@ -214,9 +210,11 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.model = self.factory.build(**self.defaults)
 
         with self.execute(user=self.model.user):
-            self.assertEffect(CreateCollectContribution)
-            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
+            self.assertEffect(CreateCollectContribution)
+            self.model.save()
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.assertStatus(self.model, 'succeeded')
             self.assertTransitionEffect(
                 CollectContributionStateMachine.succeed, self.model.contributions.first()
             )
@@ -231,40 +229,37 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
 
         with self.execute(user=self.model.user):
             self.assertEffect(CreateCollectContribution)
-            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            self.assertStatus(self.model, 'accepted')
             contribution = self.model.contributions.first()
             self.assertEqual(contribution.start.date(), self.defaults['activity'].start)
 
     def test_initiate_ended_activity(self):
         self.defaults['activity'].start = date.today() - timedelta(days=10)
-        self.defaults['activity'].end = date.today() - timedelta(days=8)
+        self.defaults['activity'].end = date.today() + timedelta(days=8)
         self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
 
         with self.execute(user=self.model.user):
+            self.model.save()
             self.assertEffect(CreateCollectContribution)
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
-            self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            self.assertStatus(self.model, 'succeeded')
             contribution = self.model.contributions.first()
-            self.assertEqual(contribution.start.date(), self.defaults['activity'].end)
+            self.assertStatus(contribution, 'succeeded')
+            self.assertEqual(contribution.start.date(), date.today())
 
     def test_initiate_other_user(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=BlueBottleUserFactory.create()):
             self.assertEffect(CreateCollectContribution)
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
@@ -272,15 +267,17 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             self.assertNoNotificationEffect(NewParticipantNotification)
 
     def test_initiate_other_owner(self):
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].end = date.today() + timedelta(days=8)
+        self.defaults['activity'].save()
         self.model = self.factory.build(**self.defaults)
         with self.execute(user=self.defaults['activity'].owner):
             self.assertEffect(CreateCollectContribution)
 
             self.assertTransitionEffect(CollectContributorStateMachine.succeed)
             self.model.save()
-            self.assertTransitionEffect(
-                CollectContributionStateMachine.succeed, self.model.contributions.first()
-            )
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
             self.assertNoNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
@@ -371,7 +368,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
         self.create()
 
         CollectContributorFactory.create(activity=self.model.activity)
-
+        self.model.activity.start = date.today() - timedelta(days=10)
         self.model.activity.end = date.today() - timedelta(days=5)
         self.model.activity.save()
 

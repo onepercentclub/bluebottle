@@ -19,7 +19,7 @@ def run(*args):
                 status='succeeded',
                 slot_participant_id__isnull=False
             ).exclude(
-                Q(slot_participant__status__in=('registered', )) &
+                Q(slot_participant__status__in=('registered', 'succeeded')) &
                 Q(contributor__status__in=('accepted', 'new', )) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
@@ -72,7 +72,7 @@ def run(*args):
                 status='failed',
                 slot_participant_id__isnull=False,
                 contributor__status__in=('accepted',),
-                slot_participant__status__in=('registered',),
+                slot_participant__status__in=('registered', 'succeeded'),
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
 

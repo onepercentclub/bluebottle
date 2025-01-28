@@ -13,7 +13,7 @@ def should_notify(effect):
 
 
 def author_is_not_owner(effect):
-    return effect.instance.author != effect.instance.activity.owner
+    return effect.instance.author and effect.instance.author != effect.instance.activity.owner
 
 
 def has_parent(effect):

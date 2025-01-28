@@ -7,7 +7,7 @@ from moneyed.classes import Money
 
 from bluebottle.activities.models import Contributor, EffortContribution, Activity
 from bluebottle.clients import properties
-from bluebottle.collect.models import CollectActivity
+from bluebottle.collect.models import CollectActivity, CollectContributor, CollectContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding_pledge.models import PledgePayment
@@ -238,6 +238,21 @@ class Statistics(object):
         efforts = EffortContribution.objects.filter(
             self.date_filter('start'),
             contributor__polymorphic_ctype=ContentType.objects.get_for_model(DeedParticipant),
+            status='succeeded'
+        )
+        if self.user:
+            efforts = efforts.filter(contributor__user=self.user)
+        if self.subregion:
+            efforts = efforts.filter(
+                contributor__user__location__subregion=self.subregion
+            )
+        return efforts.count()
+
+    @property
+    def collect_done(self):
+        efforts = CollectContribution.objects.filter(
+            self.date_filter('start'),
+            contributor__polymorphic_ctype=ContentType.objects.get_for_model(CollectContributor),
             status='succeeded'
         )
         if self.user:

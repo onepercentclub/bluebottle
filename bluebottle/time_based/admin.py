@@ -30,13 +30,9 @@ from bluebottle.activities.admin import (
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
-from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
-from bluebottle.geo.models import Location
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
-from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -68,7 +64,7 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = (FollowAdminInline, UpdateInline, MessageAdminInline,)
+    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -165,48 +161,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
             _("Answer these questions if you selected 'Ask a single question on the platform'")
         )
 
-    def get_registration_fields(self, request, obj):
-        return self.registration_fields
-
-    def get_fieldsets(self, request, obj=None):
-        settings = InitiativePlatformSettings.objects.get()
-        fieldsets = [
-            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
-            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
-            (
-                _("Participation"),
-                {"fields": self.get_registration_fields(request, obj)},
-            ),
-        ]
-
-        if Location.objects.count():
-            if settings.enable_office_restrictions:
-                if 'office_restriction' not in self.office_fields:
-                    self.office_fields += (
-                        'office_restriction',
-                    )
-            fieldsets.insert(2, (
-                _('Office'), {'fields': self.office_fields}
-            ))
-
-        if request.user.is_superuser:
-            fieldsets += [
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
-            ]
-
-        if SegmentType.objects.count():
-            fieldsets.insert(4, (
-                _('Segments'), {
-                    'fields': [
-                        segment_type.field_name
-                        for segment_type in SegmentType.objects.all()
-                    ]
-                }
-            ))
-        return fieldsets
-
     def participant_count(self, obj):
         return obj.succeeded_contributor_count
 
@@ -224,7 +178,7 @@ class TimeBasedActivityAdminForm(ActivityForm):
 
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
-    per_page = 20
+    per_page = 10
     can_delete = True
 
     formfield_overrides = {
@@ -243,7 +197,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
         'start',
         'timezone',
         'duration',
-        'is_online',
         'status_label'
     ]
 
@@ -465,6 +418,9 @@ class TeamAdmin(PolymorphicInlineSupportMixin, RegionManagerAdminMixin, StateMac
     )
     raw_id_fields = ('user', 'registration', 'activity')
     inlines = [TeamMemberAdminInline]
+
+    list_filter = [StateMachineFilter]
+    office_subregion_path = 'activity__office_location__subregion'
 
     def get_inlines(self, request, obj):
         inlines = super().get_inlines(request, obj)

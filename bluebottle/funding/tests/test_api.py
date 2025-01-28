@@ -21,6 +21,7 @@ from bluebottle.funding.tests.factories import (
     DonorFactory,
     BudgetLineFactory,
 )
+from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_flutterwave.tests.factories import (
     FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 )
@@ -33,8 +34,8 @@ from bluebottle.funding_pledge.tests.factories import (
 )
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
-from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePaymentProviderFactory, \
-    StripePayoutAccountFactory, StripeSourcePaymentFactory
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
+    StripeSourcePaymentFactory, ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
     VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
@@ -395,13 +396,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         BudgetLineFactory.create(activity=self.funding)
 
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id", status="verified"
-            ),
-        )
+        self.funding.bank_account = generate_mock_bank_account()
         self.funding.save()
         self.funding.states.submit()
         self.funding.states.approve(save=True)
@@ -545,6 +540,32 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
+
+        self.funding.bank_account = generate_mock_bank_account()
+
+        self.funding.save()
+
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": "NL",
+                "external_accounts": stripe.ListObject({"data": [connect_account]}),
+            }
+        )
+
+        with mock.patch(
+                'stripe.Account.retrieve', return_value=connect_account
+        ):
+            with mock.patch(
+                    'stripe.ListObject.retrieve', return_value=connect_account
+            ):
+                response = self.client.get(self.funding_url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
+        self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
+
+    def test_get_bank_account_staff(self):
+        self.staff = BlueBottleUserFactory.create(is_staff=True)
         self.funding.bank_account = ExternalAccountFactory.create(
             account_id="some-external-account-id",
             status="verified",
@@ -568,7 +589,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             with mock.patch(
                     'stripe.ListObject.retrieve', return_value=connect_account
             ):
-                response = self.client.get(self.funding_url, user=self.user)
+                response = self.client.get(self.funding_url, user=self.staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         bank_account = response.json()["data"]["relationships"]["bank-account"]["data"]
         self.assertEqual(bank_account["id"], str(self.funding.bank_account.pk))
@@ -581,13 +602,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             2, amount=Money(100, "EUR"), activity=self.funding, status="new"
         )
 
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id"
-            ),
-        )
+        self.funding.bank_account = generate_mock_bank_account()
         self.funding.save()
         connect_account = stripe.Account("some-connect-id")
         connect_account.update(
@@ -635,13 +650,7 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()["data"]["meta"]["transitions"]), 0)
 
     def test_update_bank_account(self):
-        external_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id"
-            ),
-        )
+        external_account = generate_mock_bank_account()
         connect_account = stripe.Account("some-connect-id")
         connect_account.update(
             {
@@ -1336,13 +1345,7 @@ class PayoutDetailTestCase(BluebottleTestCase):
         return reverse("payout-details", args=(payout.pk,))
 
     def test_get_stripe_payout(self):
-        self.funding.bank_account = ExternalAccountFactory.create(
-            account_id="some-external-account-id",
-            status="verified",
-            connect_account=StripePayoutAccountFactory.create(
-                account_id="test-account-id", status="verified"
-            ),
-        )
+        self.funding.bank_account = generate_mock_bank_account()
         self.funding.save()
 
         with mock.patch(
@@ -1700,12 +1703,7 @@ class FundingAPITestCase(APITestCase):
         super().setUp()
         owner = BlueBottleUserFactory.create(is_co_financer=True)
         self.initiative = InitiativeFactory.create(status="approved")
-        payout_account = StripePayoutAccountFactory.create(
-            account_id="test-account-id", status="verified"
-        )
-        bank_account = ExternalAccountFactory.create(
-            connect_account=payout_account, status="verified"
-        )
+        bank_account = generate_mock_bank_account()
         self.activity = FundingFactory.create(
             owner=owner,
             initiative=self.initiative,
@@ -1751,6 +1749,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
                 "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
                 "matching_name": "Dagobert Duck",
+                'public_accounts': False,
                 "stripe_publishable_key": "test-pub-key",
             },
         )

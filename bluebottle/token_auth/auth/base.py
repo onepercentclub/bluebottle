@@ -8,7 +8,6 @@ from bluebottle.geo.models import Location
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 
 logger = logging.getLogger(__name__)
 

@@ -4,19 +4,16 @@ from bluebottle.clients import properties
 
 from django.conf import settings
 from django.contrib.auth import login
-from django.core.exceptions import ImproperlyConfigured
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.template import loader
-from django.utils.module_loading import import_string
 from django.views.generic.base import View, TemplateView
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 
 
-def get_auth(request, settings):
-    return SAMLAuthentication(request, settings)
+def get_auth(request, settings, saml_request=None):
+    return SAMLAuthentication(request, settings, saml_request=saml_request)
 
 
 class TokenRedirectView(View):
@@ -34,8 +31,14 @@ class TokenRedirectView(View):
 
 
 class SAMLLoginView(View):
+    def get_auth(self, request):
+        return get_auth(request, self.settings)
+
+    def authenticated(self, user):
+        pass
+
     def post(self, request):
-        auth = get_auth(request, self.settings)
+        auth = self.get_auth(request)
 
         try:
             user, created = auth.authenticate()
@@ -43,6 +46,8 @@ class SAMLLoginView(View):
         except TokenAuthenticationError as e:
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
+
+        self.authenticated(user)
 
         target_url = auth.target_url or "/"
 
@@ -65,12 +70,28 @@ class UserSAMLLoginView(SAMLLoginView):
         return properties.TOKEN_AUTH
 
 
-
 class SupportSAMLLoginView(SAMLLoginView):
+    def authenticated(self, user):
+
+        if not user.is_superuser or not user.is_staff:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+
+    def get_auth(self, request):
+        saml_request = {
+            'https': 'on',
+            'http_host': 'sso.goodup.com',
+            'script_name': '',
+            'get_data': request.GET.copy() or request.POST.copy(),
+            'post_data': request.POST.copy(),
+        }
+
+        return get_auth(request, self.settings, saml_request=saml_request)
+
     @property
     def settings(self):
         return settings.SUPPORT_TOKEN_AUTH
-    pass
 
 
 class TokenLogoutView(TemplateView):
@@ -97,21 +118,6 @@ class TokenErrorView(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['message'] = request.GET.get('message', 'Unknown')
-        #auth = get_auth(request, **kwargs)
-        #context['ssoUrl'] = auth.sso_url()
-        return self.render_to_response(context)
-
-
-class MembersOnlyView(TemplateView):
-
-    query_string = True
-    template_name = 'token/members-only.tpl'
-
-    def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
-        context = self.get_context_data(**kwargs)
-        context['url'] = request.GET.get('url', '')
-        context['ssoUrl'] = auth.sso_url()
         return self.render_to_response(context)
 
 

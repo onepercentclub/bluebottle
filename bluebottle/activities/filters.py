@@ -101,7 +101,7 @@ class UpcomingFacet(Facet):
             )
         if filter_values == ['0']:
             return Terms(
-                status=['succeeded', 'partially_funded']
+                status=['succeeded', 'partially_funded', 'refnnded']
             )
 
 
@@ -182,19 +182,26 @@ class MatchingFacet(BooleanFacet):
         if not user.is_authenticated:
             return filters
 
-        if user.exclude_online:
-            filters = filters & ~Term(is_online=True)
-
         if user.search_distance and user.place and not user.any_search_distance:
             place = user.place
-            distance_filter = GeoDistance(
-                _expand__to_dot=False,
-                distance=user.search_distance,
-                position={
-                    'lat': float(place.position[1]),
-                    'lon': float(place.position[0]),
-                }
-            ) | Term(is_online=True)
+            if user.exclude_online:
+                distance_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=user.search_distance,
+                    position={
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
+                    }
+                )
+            else:
+                distance_filter = GeoDistance(
+                    _expand__to_dot=False,
+                    distance=user.search_distance,
+                    position={
+                        'lat': float(place.position[1]),
+                        'lon': float(place.position[0]),
+                    }
+                ) | Term(is_online=True)
 
             filters = filters & distance_filter
 
@@ -293,10 +300,10 @@ class ActivitySearch(Search):
     }
 
     possible_facets = {
-        'theme': ModelFacet('theme', Theme),
         'category': ModelFacet('categories', Category, 'title'),
         'skill': ModelFacet('expertise', Skill),
         'country': ModelFacet('country', Country),
+        'theme': ModelFacet('theme', Theme),
     }
 
     def sort(self, search):
@@ -403,9 +410,16 @@ class ActivitySearch(Search):
 
     def __new__(cls, *args, **kwargs):
         settings = InitiativePlatformSettings.objects.get()
-        # Always add category as a filter, so that category pages show activities
-        settings.search_filters_activities.get_or_create(type='category')
-        result = super().__new__(cls, settings.search_filters_activities.all())
+
+        # get filters from the request
+        filters = args[1] if len(args) > 1 and isinstance(args[1], dict) else {}
+        for facet in cls.possible_facets.keys():
+            if facet in filters:
+                # add filters to facets, if they are in possible_facets
+                if not settings.search_filters_activities.filter(type=facet).exists():
+                    settings.search_filters_activities.create(type=facet)
+
+        result = super().__new__(cls, settings.search_filters_activities.distinct().all())
 
         for segment_type in SegmentType.objects.all():
             result.facets[f'segment.{segment_type.slug}'] = SegmentFacet(segment_type)

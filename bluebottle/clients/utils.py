@@ -143,28 +143,21 @@ def get_user_site_links(user):
 
         for link in group.links.all():
             allowed = True
-            if link.link_permissions.exists():
-                # Check permissions
-                for perm in link.link_permissions.all():
-                    # has_perm  present allowed
-                    # yes       yes     yes
-                    # yes       no      no
-                    # no        yes     no
-                    # no        no      yes
-                    allowed = (user.has_perm(perm.permission) == perm.present) and allowed
-
-            if not allowed:
-                continue
-
-            link_data = {
-                'title': link.title,
-                'isHighlighted': link.highlight,
-                'openInNewTab': link.open_in_new_tab,
-                'link': link.link,
-                'sequence': link.link_order
-            }
-
-            links.append(link_data)
+            if link.groups.exists():
+                allowed = False
+                for auth_group in link.groups.all():
+                    if user.groups.filter(name=auth_group.name).exists():
+                        allowed = True
+                        break
+            if allowed:
+                link_data = {
+                    'title': link.title,
+                    'isHighlighted': link.highlight,
+                    'openInNewTab': link.open_in_new_tab,
+                    'link': link.link,
+                    'sequence': link.link_order
+                }
+                links.append(link_data)
 
         response['groups'].append({
             'title': group.title,

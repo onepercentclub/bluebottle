@@ -38,6 +38,7 @@ class Update(TriggerMixin, models.Model):
         'activities.Contributor',
         related_name='updates',
         verbose_name=_('Related contribution'),
+        help_text=_('The contribution this update is related to, e.g. the donation'),
         on_delete=models.deletion.CASCADE,
         blank=True,
         null=True
@@ -78,7 +79,7 @@ class Update(TriggerMixin, models.Model):
 
 
 class UpdateImage(models.Model):
-    image = ImageField()
+    image = ImageField(null=True)
     update = models.ForeignKey(
         Update,
         related_name='images',

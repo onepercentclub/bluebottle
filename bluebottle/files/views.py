@@ -20,11 +20,16 @@ from bluebottle.files.serializers import (
     FileSerializer,
     PrivateDocumentSerializer,
     PrivateFileSerializer,
-    UploadImageSerializer,
-    ImageSerializer
+    ImageSerializer,
+    ORIGINAL_SIZE
 )
 from bluebottle.utils.permissions import IsOwner
-from bluebottle.utils.views import CreateAPIView, RetrieveAPIView, JsonApiViewMixin
+from bluebottle.utils.views import (
+    CreateAPIView,
+    RetrieveAPIView,
+    JsonApiViewMixin,
+    RetrieveUpdateDestroyAPIView
+)
 
 mime = magic.Magic(mime=True)
 
@@ -96,6 +101,7 @@ class FileContentView(RetrieveAPIView):
 
 
 class ImageContentView(FileContentView):
+    cropbox = True
 
     def get_random_image_url(self):
         if 'x' in self.kwargs['size']:
@@ -105,29 +111,37 @@ class ImageContentView(FileContentView):
             height = int(int(width) / 1.5)
         return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
 
-    def get_file(self):
+    def get_image(self):
         instance = self.get_object()
-        return getattr(instance, self.field).file
+        if hasattr(self, 'field'):
+            return getattr(instance, self.field)
+        else:
+            return instance
 
     def retrieve(self, *args, **kwargs):
-        file = self.get_file()
+        image = self.get_image()
+        if not image or not image.file:
+            if settings.RANDOM_IMAGE_PROVIDER:
+                return HttpResponseRedirect(self.get_random_image_url())
+            return HttpResponseNotFound()
 
-        if 'x' in self.kwargs['size']:
-            if self.kwargs['size'] not in self.allowed_sizes.values():
-                return HttpResponseNotFound()
-        else:
-            if not self.kwargs['size'] in [val.split('x')[0] for val in self.allowed_sizes.values()]:
-                return HttpResponseNotFound()
+        file = image.file
+
+        if self.kwargs['size'] not in self.allowed_sizes.values() and self.kwargs['size'] != ORIGINAL_SIZE:
+            return HttpResponseNotFound()
 
         size = self.kwargs['size']
+
+        cropbox = image.cropbox if self.kwargs['size'] != ORIGINAL_SIZE else None
+
         try:
             width, height = size.split('x')
             if width == height and int(width) < 300:
-                thumbnail = get_thumbnail(file, size, crop='center')
+                thumbnail = get_thumbnail(file, size, crop='center', cropbox=cropbox)
             else:
-                thumbnail = get_thumbnail(file, size)
+                thumbnail = get_thumbnail(file, size, cropbox=cropbox)
         except ValueError:
-            thumbnail = get_thumbnail(file, size)
+            thumbnail = get_thumbnail(file, size, cropbox=cropbox)
 
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -142,7 +156,7 @@ class ImageContentView(FileContentView):
                     response = HttpResponseNotFound()
         else:
             response = HttpResponse()
-            if thumbnail.url:
+            if thumbnail.exists():
                 response['Content-Type'] = content_type
                 response['X-Accel-Redirect'] = thumbnail.url
             elif settings.RANDOM_IMAGE_PROVIDER:
@@ -159,10 +173,10 @@ class ImageList(FileList):
     allowed_mime_types = settings.IMAGE_ALLOWED_MIME_TYPES
 
 
-class ImageDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
+class ImageDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (IsOwner,)
     queryset = Image.objects.all()
-    serializer_class = UploadImageSerializer
+    serializer_class = ImageSerializer
 
 
 class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
@@ -173,6 +187,7 @@ class PrivateFileDetail(JsonApiViewMixin, RetrieveDestroyAPIView):
 
 class ImagePreview(ImageContentView):
     allowed_sizes = {'preview': '292x164', 'large': '1568x882', 'avatar': '200x200'}
+    cropbox = False
 
     queryset = Image.objects.all()
 

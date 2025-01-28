@@ -34,7 +34,7 @@ from bluebottle.funding.validators import (
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
 
 logger = logging.getLogger(__name__)
 
@@ -376,7 +376,7 @@ class BudgetLine(models.Model):
 
 
 @python_2_unicode_compatible
-class Fundraiser(AnonymizationMixin, models.Model):
+class Fundraiser(models.Model):
     owner = models.ForeignKey(
         'members.Member', related_name="funding_fundraisers", on_delete=models.CASCADE
     )
@@ -618,7 +618,7 @@ class PaymentMethod(object):
 
 
 @python_2_unicode_compatible
-class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, PolymorphicModel):
+class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     owner = models.ForeignKey(
@@ -630,6 +630,24 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
+    public = models.BooleanField(
+        _('Public payout account'),
+        default=False,
+        help_text=_((
+            "Allow users to choose this payout account when setting up a "
+            "crowdfunding campaign (only applies if crowdfunding for public "
+            "payout accounts is enabled)."
+        ))
+    )
+
+    partner_organization = models.ForeignKey(
+        'organizations.Organization',
+        blank=True, null=True,
+        related_name='payout_accounts',
+        verbose_name=_('Partner organisation'),
+        on_delete=models.SET_NULL
+    )
 
     @property
     def funding(self):
@@ -675,6 +693,7 @@ class BankAccount(TriggerMixin, PolymorphicModel):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
+
     provider = 'default'
 
     connect_account = models.ForeignKey(
@@ -737,6 +756,12 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
     allow_anonymous_rewards = models.BooleanField(
         _('Allow guests to donate rewards'), default=True
+    )
+
+    public_accounts = models.BooleanField(
+        _('Allow users to select account from list of public accounts'),
+        default=False,
+        help_text=_('Allow users to select account from list of public accounts')
     )
 
     matching_name = models.CharField(

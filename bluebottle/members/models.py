@@ -54,7 +54,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         _('Fiscal year offset'),
         help_text=_('Set the number of months your fiscal year will be offset by. '
                     'This will also take into account how the impact metrics are shown on the homepage. '
-                    'e.g. If the year starts from September (so earlier) then this value should be -4.'),
+                    'e.g. If the year starts from September (so 4 months earlier) then this value should be 4.'),
         default=0)
 
     reminder_q1 = models.BooleanField(
@@ -106,12 +106,12 @@ class MemberPlatformSettings(BasePlatformSettings):
     disable_cookie_consent = models.BooleanField(
         default=False,
         help_text=_(
-            'Handle cookie consent externally using something like cookie bot'
+            'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'
         )
     )
 
     gtm_code = models.CharField(
-        help_text=_('Link more information about the platforms cookie policy'),
+        help_text=_('Adding the GTM script to your platform allows you to manage and deploy third-party tools.'),
         max_length=255,
         blank=True
     )
@@ -159,11 +159,6 @@ class MemberPlatformSettings(BasePlatformSettings):
             "Create new office locations when a user logs in. "
             "Leave unchecked if only priorly specified ones should be used."
         ),
-    )
-
-    anonymization_age = models.IntegerField(
-        default=0,
-        help_text=_("Require members to enter or verify the fields below once after logging in.")
     )
 
     require_office = models.BooleanField(
@@ -247,6 +242,8 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     def fiscal_year(self):
         offset = self.fiscal_month_offset
+        if now().month < (12 - offset):
+            return (now() - relativedelta(months=offset)).year + 1
         return (now() - relativedelta(months=offset)).year
 
     class Meta(object):

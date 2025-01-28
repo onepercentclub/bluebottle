@@ -6,10 +6,12 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
+from djchoices import DjangoChoices, ChoiceItem
 from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
+from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
@@ -17,7 +19,10 @@ from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host, get_current_language
+from bluebottle.utils.utils import get_current_host
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @python_2_unicode_compatible
@@ -26,41 +31,7 @@ class PaymentIntent(models.Model):
     client_secret = models.CharField(max_length=100)
     donation = models.ForeignKey(Donor, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
-
-    created = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            # FIXME: First verify that the funding activity has a valid Stripe account connected.
-
-            statement_descriptor = connection.tenant.name[:22]
-
-            connect_account = self.donation.activity.bank_account.connect_account
-            intent_args = dict(
-                amount=int(self.donation.amount.amount * 100),
-                currency=self.donation.amount.currency,
-                transfer_data={
-                    'destination': connect_account.account_id,
-                },
-                statement_descriptor=statement_descriptor,
-                statement_descriptor_suffix=statement_descriptor[:18],
-                metadata=self.metadata,
-                automatic_payment_methods={
-                    'enabled': True,
-                },
-            )
-            provider = StripePaymentProvider.objects.get()
-            if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES or provider.stripe_secret:
-                intent_args['on_behalf_of'] = connect_account.account_id
-            stripe = get_stripe()
-            intent = stripe.PaymentIntent.create(
-                **intent_args
-            )
-
-            self.intent_id = intent.id
-            self.client_secret = intent.client_secret
-
-        super(PaymentIntent, self).save(*args, **kwargs)
+    instructions = models.JSONField(blank=True, null=True)
 
     @property
     def intent(self):
@@ -110,20 +81,32 @@ class StripePayment(Payment):
     def update(self):
         stripe = get_stripe()
         intent = self.payment_intent.intent
-        if len(intent.charges) == 0:
+
+        if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
+            self.states.require_action(save=True)
+        elif len(intent.charges) == 0 and self.status != self.states.action_needed.value:
             # No charge. Do we still need to charge?
-            self.states.fail()
-        elif intent.charges.data[0].refunded and self.status != self.states.refunded.value:
-            self.states.refund()
+            self.states.fail(save=True)
+        elif len(intent.charges) > 0 and intent.charges.data[0].refunded and self.status != self.states.refunded.value:
+            self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
-            self.states.authorize()
+            self.states.authorize(save=True)
         elif intent.status == 'failed' and self.status != self.states.failed.value:
-            self.states.fail()
+            self.states.fail(save=True)
         elif intent.status == 'succeeded':
             transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
             self.donation.payout_amount = Money(
                 transfer.amount / 100.0, transfer.currency
             )
+
+            if (
+                    self.donation.amount.currency == transfer.currency
+                    and self.donation.amount.amount != transfer.amount / 100.00
+            ):
+                self.donation.amount = Money(
+                    transfer.amount / 100.0, transfer.currency
+                )
+
             self.donation.save()
             if self.status != self.states.succeeded.value:
                 self.states.succeed(save=True)
@@ -226,7 +209,6 @@ class StripeSourcePayment(Payment):
 
 
 class StripePaymentProvider(PaymentProvider):
-
     title = 'Stripe'
 
     stripe_publishable_key = models.CharField(
@@ -269,6 +251,13 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('The secret for payment sources webhook.')
     )
 
+    currency = models.CharField(
+        max_length=3,
+        default='EUR',
+        verbose_name=_('Currency'),
+        help_text=_('The currency for the global account.')
+    )
+
     refund_enabled = True
 
     @property
@@ -296,7 +285,7 @@ with open('bluebottle/funding_stripe/data/document_spec.json') as file:
 @memoize(timeout=60 * 60 * 24)
 def get_specs(country):
     stripe = get_stripe()
-    return stripe.CountrySpec.retrieve(country)
+    return stripe.CountrySpec.retrieve(country=country)
 
 
 STRIPE_EUROPEAN_COUNTRY_CODES = [
@@ -308,10 +297,31 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+class BusinessTypeChoices(DjangoChoices):
+    company = ChoiceItem(
+        'company',
+        label=_("Commercial company")
+    )
+    individual = ChoiceItem(
+        'individual',
+        label=_("Individual person")
+    )
+    non_profit = ChoiceItem(
+        'non_profit',
+        label=_("Non-profit organization")
+    )
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2)
-    business_type = models.CharField(max_length=100, blank=True)
+    business_type = models.CharField(
+        max_length=100,
+        blank=True,
+        choices=BusinessTypeChoices.choices,
+        default=BusinessTypeChoices.individual
+
+    )
 
     verified = models.BooleanField(default=False)
 
@@ -346,9 +356,9 @@ class StripePayoutAccount(PayoutAccount):
         }
 
     def save(self, *args, **kwargs):
-        if (not self.account_id) and self.country:
-            stripe = get_stripe()
+        stripe = get_stripe()
 
+        if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():
                 url = (
                     Funding.objects.filter(owner=self.owner).first().get_absolute_url()
@@ -363,29 +373,28 @@ class StripePayoutAccount(PayoutAccount):
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type="individual",
+                business_type=self.business_type,
                 capabilities={
                     "transfers": {"requested": True},
                     "card_payments": {"requested": True},
                 },
                 business_profile={"url": url, "mcc": "8398"},
-                individual={"email": self.owner.email},
                 metadata=self.metadata,
             )
 
-            self.business_type = account.business_type
             self.account_id = account.id
-            self.requirements = account.individual.requirements.eventually_due
+            self.update(account)
 
         super().save(*args, **kwargs)
 
-    def get_account_link(self):
+    @property
+    def verification_link(self):
         stripe = get_stripe()
-        url = get_current_host() + '/' + get_current_language() + '/payout-account/overview'
+
         account_link = stripe.AccountLink.create(
             account=self.account_id,
-            refresh_url=url,
-            return_url=url,
+            refresh_url=f'{get_current_host()}/activities/stripe/expired',
+            return_url=f'{get_current_host()}/activities/stripe/complete',
             type="account_onboarding",
             collection_options={
                 "fields": "eventually_due",
@@ -394,18 +403,26 @@ class StripePayoutAccount(PayoutAccount):
         )
         return account_link.url
 
-    def update(self, data):
+    def update(self, data, save=True):
         self.requirements = data.requirements.eventually_due
 
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            pass
+            try:
+                self.verified = (
+                    data.company.owners_provided or
+                    data.company.executives_provided or
+                    data.company.directors_provided
+                )
+            except AttributeError:
+                pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 
-        self.save()
+        if self.id and save:
+            self.save()
 
     def retrieve_account(self):
         try:
@@ -436,7 +453,6 @@ class StripePayoutAccount(PayoutAccount):
     def check_status(self):
         if self.account:
             del self.account
-
         self.update(self.account)
 
     class Meta(object):
@@ -464,7 +480,11 @@ class ExternalAccount(BankAccount):
                         self._account = account
 
             if not hasattr(self, '_account'):
-                self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                try:
+                    self._account = self.connect_account.account.external_accounts.retrieve(self.account_id)
+                except InvalidRequestError as error:
+                    logger.error(error)
+                    self._account = None
             return self._account
 
     @property

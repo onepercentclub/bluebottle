@@ -35,6 +35,31 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
     }
 
 
+class BankTransferSerializer(PaymentIntentSerializer):
+    intent_id = serializers.CharField(read_only=True)
+    client_secret = serializers.CharField(read_only=True)
+    next_url = serializers.SerializerMethodField()
+
+    def get_next_url(self, obj):
+        return obj.instructions.display_bank_transfer_instructions.hosted_instructions_url
+
+    donation = ResourceRelatedField(queryset=Donor.objects.all())
+
+    class Meta(object):
+        model = PaymentIntent
+        fields = ('intent_id', 'client_secret', 'donation', 'next_url')
+
+    class JSONAPIMeta(PaymentSerializer.JSONAPIMeta):
+        resource_name = 'payments/stripe-bank-transfers'
+        included_resources = ['donation', 'donation.activity', 'donation.updates']
+
+    included_serializers = {
+        'donation': 'bluebottle.funding.serializers.DonorSerializer',
+        'donation.updates': 'bluebottle.updates.serializers.UpdateSerializer',
+        'donation.activity': 'bluebottle.funding.serializers.FundingSerializer',
+    }
+
+
 class StripePaymentSerializer(PaymentSerializer):
     payment_intent = ResourceRelatedField(queryset=PaymentIntent.objects.all(), write_only=True)
 
@@ -53,6 +78,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
 
     included_serializers = {
         'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
+        'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
@@ -68,6 +94,7 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
             "payments_enabled",
             "payouts_enabled",
             "external_accounts",
+            "partner_organization",
             "country",
             "current_status",
             "business_type",
@@ -79,7 +106,8 @@ class ConnectAccountSerializer(serializers.ModelSerializer):
         resource_name = 'payout-accounts/stripes'
         included_resources = [
             'external_accounts',
-            'owner'
+            'owner',
+            'partner_organization'
         ]
 
 
@@ -120,6 +148,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
 
     included_serializers = {
         'connect_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
+        'connect_account.partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
     }
 
     def create(self, data):
@@ -148,7 +177,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
 
     class JSONAPIMeta(BaseBankAccountSerializer.JSONAPIMeta):
         resource_name = 'payout-accounts/stripe-external-accounts'
-        included_resources = ['connect_account']
+        included_resources = ['connect_account', 'connect_account.partner_organization']
 
 
 class PayoutStripeBankSerializer(serializers.ModelSerializer):

@@ -171,6 +171,8 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
             contributor__status__in=['expired', 'failed'],
         ).exclude(
             effortcontribution__contribution_type='organizer',
+        ).exclude(
+            timecontribution__contribution_type='preparation',
         ).prefetch_related(
             'contributor',
             'contributor__activity',
@@ -181,7 +183,10 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
         if upcoming:
             queryset = queryset.filter(
                 Q(start__gte=now())
+                | Q(contributor__deadlineparticipant__status__in=['new'])
+                | Q(contributor__teamscheduleparticipant__slot__status__in=['new'])
                 | Q(contributor__scheduleparticipant__slot__status__in=['new'])
+                | Q(contributor__periodicparticipant__status='new')
                 | Q(contributor__periodicparticipant__slot__status__in=['new', 'running'])
             ).order_by("start")
         else:
@@ -189,6 +194,12 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
                 start__lte=now(),
             ).exclude(
                 contributor__scheduleparticipant__slot__status__in=['new']
+            ).exclude(
+                contributor__deadlineparticipant__status__in=['new']
+            ).exclude(
+                contributor__teamscheduleparticipant__slot__status__in=['new']
+            ).exclude(
+                contributor__periodicparticipant__status='new'
             ).exclude(
                 contributor__periodicparticipant__slot__status__in=['new', 'running']
             ).order_by("-start")

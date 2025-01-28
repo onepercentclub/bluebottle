@@ -1,0 +1,33 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+  <p>
+    {% blocktrans context 'email' %}
+      You have registered your team for <b>{{ title }}!</b>
+    {% endblocktrans %}
+  </p>
+
+    <p>
+        {% translate "What's next:" %}
+        <ul>
+            <li>
+                <b>{% translate "Schedule" %}</b> -
+                {% translate "The activity manager will contact you to discuss a specific date, time and location." %}
+            </li>
+            <li>
+                <b>{% translate "Invite" %}</b> -
+                {% translate "You can invite people to your team while you wait to be scheduled or do it when the date, time and location is confirmed." %}
+            </li>
+        </ul>
+    </p>
+{% endblock %}
+
+
+{% block end_message %}
+  <div class="info-box">
+      {% blocktrans context 'email' %}
+        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If your team is unable to participate, please withdraw in time so we can find a suitable solution.
+      {% endblocktrans %}
+  </div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.mail.html" %} {% load i18n %} {% block content %}
+<p class="donation-intro">
+    {% blocktrans context 'email' %} Hi {{ recipient_name }},
+    <br /><br />
+    For a public payout account with an active crowdfunding campaign on {{site_name}}, the identity verification is incomplete.
+
+    Please note: without a complete identity verification, the collected funds cannot be paid out. Additionally, new donations may be temporarily paused. Therefore, it’s important to provide the missing information as soon as possible.
+    {% endblocktrans %}
+</p>
+{% endblock content %} {% block action %}
+<a
+    href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}"
+>
+    {% trans 'Check payout account' context 'email' %}
+</a>
+{% endblock %}`

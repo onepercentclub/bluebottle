@@ -1,9 +1,9 @@
 from builtins import object
 from datetime import datetime
 
-import pytz
 from dateutil.parser import parse
 from django.db import connection
+from django.utils.timezone import get_current_timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
@@ -167,6 +167,7 @@ class BankAccountSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta(object):
         included_resources = [
             'owner',
+
         ]
         resource_name = 'payout-accounts/external-accounts'
 
@@ -177,9 +178,16 @@ class DeadlineField(serializers.DateTimeField):
             return None
         try:
             parsed_date = parse(value).date()
-            naive_datetime = datetime.combine(parsed_date, datetime.min.time())
-            aware_datetime = pytz.timezone('UTC').localize(naive_datetime)
-            return aware_datetime
+            return get_current_timezone().localize(
+                datetime(
+                    parsed_date.year,
+                    parsed_date.month,
+                    parsed_date.day,
+                    hour=23,
+                    minute=59,
+                    second=59
+                )
+            )
         except (ValueError, TypeError):
             self.fail('invalid', format='date')
 
@@ -231,6 +239,7 @@ class FundingSerializer(BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -302,12 +311,13 @@ class FundingSerializer(BaseActivitySerializer):
         user = self.context["request"].user
         if (
             self.instance
-            and user
-            not in [
+            and user not in [
                 self.instance.owner,
                 self.instance.initiative.owner,
             ]
             and user not in self.instance.initiative.activity_managers.all()
+            and not user.is_staff
+            and not user.is_superuser
         ):
             del fields["bank_account"]
             del fields["required"]
@@ -337,7 +347,7 @@ class FundingSerializer(BaseActivitySerializer):
             "payout_account",
             "supporters_export_url",
             "psp",
-            "donations"
+            "donations",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -348,6 +358,7 @@ class FundingSerializer(BaseActivitySerializer):
             'bank_account',
             'co_financers',
             'co_financers.user',
+            'partner_organization',
         ]
         resource_name = 'activities/fundings'
 
@@ -383,6 +394,16 @@ class FundingSerializer(BaseActivitySerializer):
             )
 
         return methods
+
+    def get_partner_organization(self, obj):
+        if obj.initiative.organization:
+            return obj.initiative.organization
+        if (
+            obj.bank_account
+            and obj.bank_account.connect_account
+            and obj.bank_account.connect_account.partner_organization
+        ):
+            return obj.bank_account.connect_account.partner_organization
 
 
 class FundingTransitionSerializer(TransitionSerializer):
@@ -737,5 +758,6 @@ class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
             'allow_anonymous_rewards',
             'anonymous_donations',
             'stripe_publishable_key',
+            'public_accounts',
             'matching_name'
         )

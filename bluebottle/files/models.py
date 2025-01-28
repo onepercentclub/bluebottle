@@ -6,6 +6,7 @@ import uuid
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.images import ImageFile
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -13,12 +14,12 @@ from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.files.fields import ImageField
-from bluebottle.utils.models import AnonymizationMixin
+from bluebottle.files.utils import get_default_cropbox
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
 @python_2_unicode_compatible
-class File(AnonymizationMixin, models.Model):
+class File(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created = models.DateField(_('created'), default=timezone.now)
     file = models.FileField(
@@ -58,8 +59,17 @@ class File(AnonymizationMixin, models.Model):
 
 
 class Image(File):
+    cropbox = models.CharField(max_length=40, blank=True)
+
     class JSONAPIMeta(object):
         resource_name = 'images'
+
+    def save(self, *args, **kwargs):
+        if not self.cropbox and self.file:
+            image = ImageFile(self.file)
+            self.cropbox = get_default_cropbox(image, 16 / 9, 40)
+
+        super().save(*args, **kwargs)
 
 
 class Document(File):
@@ -88,4 +98,4 @@ class RelatedImage(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    image = ImageField()
+    image = ImageField(null=True)

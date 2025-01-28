@@ -1,4 +1,7 @@
+from datetime import date
+
 from django.utils.timezone import now
+
 
 from bluebottle.activities.triggers import (
     ContributionTriggers
@@ -37,7 +40,12 @@ def should_succeed_instantly(effect):
         effect.instance.contributor.registration and
         effect.instance.contributor.registration.status == 'accepted'
     ):
-        return True
+        if (
+            not effect.instance.contributor.activity.start or
+            effect.instance.contributor.activity.start <= date.today()
+        ):
+            return True
+        return False
     elif isinstance(activity, ScheduleActivity):
         return False
 

@@ -37,7 +37,10 @@ class BaseStatisticSerializer(ModelSerializer):
 
         if 'office_location__subregion' in params:
             subregion = params['office_location__subregion']
-        value = obj.get_value(start, end, subregion, user)
+        if user:
+            value = obj.get_live_value(start, end, subregion, user)
+        else:
+            value = obj.get_value(start, end, subregion, user)
 
         try:
             return {

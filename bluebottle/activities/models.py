@@ -17,12 +17,12 @@ from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
-from bluebottle.utils.models import ValidatedModelMixin, AnonymizationMixin
+from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
 
 
 @python_2_unicode_compatible
-class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, PolymorphicModel):
+class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     class TeamActivityChoices(DjangoChoices):
         teams = ChoiceItem('teams', label=_("Teams"))
         individuals = ChoiceItem('individuals', label=_("Individuals"))
@@ -150,7 +150,6 @@ class Activity(TriggerMixin, AnonymizationMixin, ValidatedModelMixin, Polymorphi
     messages = GenericRelation('notifications.Message')
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
-    wallposts = GenericRelation('wallposts.Wallpost', related_query_name='activity_wallposts')
 
     auto_approve = True
 
@@ -230,7 +229,7 @@ def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):
 
 
 @python_2_unicode_compatible
-class Contributor(TriggerMixin, AnonymizationMixin, PolymorphicModel):
+class Contributor(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
@@ -390,5 +389,4 @@ class Team(TriggerMixin, models.Model):
 
 
 from bluebottle.activities.signals import *  # noqa
-from bluebottle.activities.wallposts import *  # noqa
 from bluebottle.activities.states import *  # noqa

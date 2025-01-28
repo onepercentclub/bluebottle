@@ -339,7 +339,6 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
-                RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed),
             ]
         ),
     ]
@@ -509,6 +508,21 @@ class ScheduleActivityTriggers(RegistrationActivityTriggers):
                 RelatedTransitionEffect("teams", TeamStateMachine.restore),
             ],
         ),
+
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect("unscheduled_slots", ScheduleSlotStateMachine.finish),
+            ],
+        ),
+
+        TransitionTrigger(
+            RegistrationActivityStateMachine.succeed_manually,
+            effects=[
+                RelatedTransitionEffect("unscheduled_slots", ScheduleSlotStateMachine.finish),
+            ],
+        ),
+
     ]
 
 

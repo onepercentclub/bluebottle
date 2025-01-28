@@ -1,16 +1,14 @@
 from builtins import next
+
 from mock import patch
 
-from django.contrib.auth.models import Permission
-from django.contrib.auth import get_user_model
-
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.utils import LanguageFactory
-from bluebottle.test.factory_models.cms import (
-    SiteLinksFactory, LinkFactory, LinkGroupFactory, LinkPermissionFactory
-)
 from bluebottle.clients.utils import get_user_site_links
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory, GroupFactory
+from bluebottle.test.factory_models.cms import (
+    SiteLinksFactory, LinkFactory, LinkGroupFactory
+)
+from bluebottle.test.factory_models.utils import LanguageFactory
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.models import Language
 
 
@@ -64,45 +62,17 @@ class TestSiteLinks(BluebottleTestCase):
         link = _group_by_name(results, 'about')['links'][0]
         self.assertTrue(link['openInNewTab'])
 
-    def test_user_site_links_perm(self):
-        # Add link with resultpage permission
+    def test_user_site_links_group(self):
         secret_link = self._add_link(title='Results Page', link='results')
-        perm = LinkPermissionFactory.create(permission='cms.api_change_resultpage',
-                                            present=True)
-        secret_link.link_permissions.add(perm)
+        partners = GroupFactory.create(name='partners')
+        secret_link.groups.add(partners)
 
-        # User can't access link with permissions
         results = get_user_site_links(self.user1)
         self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
 
-        # Add resultpage permission to User
-        resultpage_perm = Permission.objects.get(codename='api_change_resultpage')
-        self.user1.user_permissions.add(resultpage_perm)
-        self.user1 = get_user_model().objects.get(pk=self.user1.pk)
-
-        # User can now access link with resultpage permission
+        partners.user_set.add(self.user1)
         results = get_user_site_links(self.user1)
         self.assertEqual(len(_group_by_name(results, 'main')['links']), 3)
-
-    def test_user_site_links_missing_perm(self):
-        # Add link with absent resultpage permission
-        secret_link = self._add_link(title='Public Results Page', link='/pages/results')
-        perm = LinkPermissionFactory.create(permission='cms.api_change_resultpage',
-                                            present=False)
-        secret_link.link_permissions.add(perm)
-
-        # User can access link without permission
-        results = get_user_site_links(self.user1)
-        self.assertEqual(len(_group_by_name(results, 'main')['links']), 3)
-
-        # Add resultpage permission to User
-        resultpage_perm = Permission.objects.get(codename='api_change_resultpage')
-        self.user1.user_permissions.add(resultpage_perm)
-        self.user1 = get_user_model().objects.get(pk=self.user1.pk)
-
-        # User can not access link with absent resultpage permission
-        results = get_user_site_links(self.user1)
-        self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
 
     @patch('bluebottle.utils.models.get_language')
     def test_language_language_fallback(self, mock_get_language):

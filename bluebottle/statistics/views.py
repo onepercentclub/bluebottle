@@ -31,4 +31,5 @@ class UserStatisticList(JsonApiViewMixin, ListAPIView):
             DatabaseStatistic(pk='my1', query='donated_total', name='Donated total', sequence=1),
             DatabaseStatistic(pk='my2', query='time_spent', name='Hours spent', sequence=2),
             DatabaseStatistic(pk='my3', query='deeds_done', name='Deeds done', sequence=3),
+            DatabaseStatistic(pk='my4', query='collect_done', name='Collect done', sequence=3),
         ]

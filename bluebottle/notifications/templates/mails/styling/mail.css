@@ -6,6 +6,9 @@ center {
 body {
     --action-color: {{ content.action_color }};
     --action-text-color: {{  content.action_text_color }};
+    --descriptive-color: {{ content.descriptive_color }};
+    --descriptive-text-color: {{ content.descriptive_text_color }};
+    --link-color: {{ content.link_color }};
 }
 
 a img,
@@ -652,11 +655,7 @@ h3 a,
 h4 a,
 h5 a,
 h6 a {
-    color: {
-{
-    content.descriptive_color
-}
-};
+    color: var(--link-color);
 }
 
 h1,
@@ -737,11 +736,7 @@ h5 a:active,
 h5 a:visited,
 h6 a:active,
 h6 a:visited {
-    color: {
-{
-    content.descriptive_color
-}
-} !important;
+    color: var(--link-color) !important;
 }
 
 .panel {

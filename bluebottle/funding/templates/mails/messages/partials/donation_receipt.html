@@ -1,53 +1,50 @@
 {% load i18n %}
 {% load message_url %}
 
-<table class="donation-table twelve columns">
-    <tr class="donation-table-row">
-        <th class="donation-title">
-            {% trans "Donor" %} {% if obj.reward %} - {{obj.reward.title}} {% endif %}
-        </th>
-        <th class="donation-amount">{{ obj.amount }}</th>
-        <tr class="donation-location">
-            <td><a href="{% message_url obj.activity.get_absolute_url %}">{{obj.activity.title}}</a></td>
-        </tr>
-    </tr>
-    <tr class="donation-table-row">
-        <tr class="donation-table-address">
-            {% if obj.anonymous %}
-                <td>
-                    {% trans "Anonymous" %}<br />
-                </td>
-            {% else %}
-                <td>
-                    {% if not obj.anonymous and 'members.api_read_full_member' in to.get_all_permissions %}
-                        {{obj.user.full_name}} <br />
-                    {% else %}
-                        {{obj.user.first_name}} <br />
-                    {% endif %}
-                </td>
-            {% endif %}
-            <td>
-                <table>
-                    <tr class="order-block">
-                        <td>{% trans "Date" %}</td>
-                        <td nowrap="true">{{obj.created}}</td>
-                    </tr>
-                    <tr class="order-block">
-                        <td>{% trans "Order" %}</td>
-                        <td>{{obj.id}}</td>
-                    </tr>
-                    <tr class="order-block">
-                        <td>{% trans "Initiator" %}</td>
-                        <td>{{obj.activity.initiative.owner.full_name}}</td>
-                    </tr>
-                    {% if obj.project.organization %}
-                    <tr class="order-block">
-                        <td>{% trans "Organization" %}</td>
-                        <td>{{obj.activity.initiative.organization.name}}</td>
-                    </tr>
-                    {% endif %}
-                </table>
-            </td>
-        </tr>
-    </tr>
-</table>
+
+<div class="receipt">
+    <div class="receipt-header">
+        <div>
+            {{obj.user.full_name}}
+        </div>
+        <div>
+            {{ obj.amount }}
+        </div>
+    </div>
+    <div class="receipt-body">
+        <div class="receipt-activity">
+            {{obj.activity.title}}
+        </div>
+        {% if obj.activity.partner_organization %}
+        <div class="receipt-organization">
+            {{obj.activity.partner_organization.name}}
+        </div>
+        {% endif %}
+        {% if obj.reward %}
+        <div class="receipt-reward">
+            {% trans "Reward:" %} {{obj.reward.title}}
+        </div>
+        {% endif %}
+        <div class="receipt-divider">
+            <svg xmlns="http://www.w3.org/2000/svg" width="570" height="2" viewBox="0 0 570 2" fill="none">
+                <path d="M0 1H570" stroke="#DBDBDB" stroke-width="2" stroke-dasharray="8 8"/>
+            </svg>
+        </div>
+        <div class="receipt-info">
+            <div class="receipt-info-label">
+                {% trans "Date" %} -
+            </div>
+            <div class="receipt-info-value">
+                {{obj.created}}
+            </div>
+        </div>
+        <div class="receipt-info">
+            <div class="receipt-info-label">
+                {% trans "Order" %} -
+            </div>
+            <div class="receipt-info-value">
+                {{obj.id}}
+            </div>
+        </div>
+    </div>
+</div>

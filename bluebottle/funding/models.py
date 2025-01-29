@@ -168,6 +168,17 @@ class Funding(Activity):
 
     activity_type = _('Crowdfunding campaign')
 
+    @property
+    def partner_organization(self):
+        if (
+            self.bank_account
+            and self.bank_account.connect_account
+            and self.bank_account.connect_account.partner_organization
+        ):
+            return self.bank_account.connect_account.partner_organization
+        if self.initiative.organization:
+            return self.initiative.organization
+
     def admin_clean(self):
         for val in self.validators:
             validator = val(self)

@@ -8,8 +8,10 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.fsm.effects import Effect
 from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.funding.models import MoneyContribution
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
+
 
 
 @python_2_unicode_compatible
@@ -260,3 +262,21 @@ class CreateDonationEffect(Effect):
 
     def __str__(self):
         return _('Create a donation')
+
+
+@python_2_unicode_compatible
+class RemoveAnonymousRewardEffect(Effect):
+    conditions = []
+    display = False
+
+    @property
+    def is_valid(self):
+        settings = FundingPlatformSettings.load()
+        return self.instance.user is None and not settings.allow_anonymous_rewards 
+
+    def post_save(self, **kwargs):
+        self.instance.reward = None
+        self.instance.save()
+
+    def __str__(self):
+        return _('Remove anonymous donation')

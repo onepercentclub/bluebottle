@@ -14,7 +14,8 @@ from bluebottle.funding.effects import (
     RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
     SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect
+    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect,
+    RemoveAnonymousRewardEffect
 )
 from bluebottle.funding.messages import (
     DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
@@ -341,7 +342,8 @@ class DonorTriggers(ContributorTriggers):
                 NotificationEffect(DonationSuccessDonorMessage),
                 GenerateDonorWallpostEffect,
                 FollowActivityEffect,
-                UpdateFundingAmountsEffect
+                UpdateFundingAmountsEffect,
+                RemoveAnonymousRewardEffect,
             ]
         ),
 

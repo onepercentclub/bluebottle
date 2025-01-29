@@ -13,7 +13,6 @@ from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.updates.models import Update
 
 
-
 @python_2_unicode_compatible
 class GeneratePayoutsEffect(Effect):
     conditions = []
@@ -272,11 +271,10 @@ class RemoveAnonymousRewardEffect(Effect):
     @property
     def is_valid(self):
         settings = FundingPlatformSettings.load()
-        return self.instance.user is None and not settings.allow_anonymous_rewards 
+        return self.instance.user is None and not settings.allow_anonymous_rewards
 
-    def post_save(self, **kwargs):
+    def pre_save(self, **kwargs):
         self.instance.reward = None
-        self.instance.save()
 
     def __str__(self):
         return _('Remove anonymous donation')

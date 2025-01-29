@@ -110,6 +110,7 @@ class DonorTriggerTests(BluebottleTestCase):
         payment.states.succeed(save=True)
 
         donor.refresh_from_db()
+
         self.assertEqual(donor.status, 'succeeded')
         self.assertEqual(donor.reward, reward)
 

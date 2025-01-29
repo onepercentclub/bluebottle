@@ -243,7 +243,7 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     def fiscal_year(self):
         offset = self.fiscal_month_offset
-        if now().month < (12 - offset):
+        if (now().month - offset) < 0:
             return (now() - relativedelta(months=offset)).year + 1
         return (now() - relativedelta(months=offset)).year
 

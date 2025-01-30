@@ -3,7 +3,7 @@ center {
     width: 100%;
 }
 
-body {
+:root {
     --action-color: {{ content.action_color }};
     --action-text-color: {{  content.action_text_color }};
     --descriptive-color: {{ content.descriptive_color }};

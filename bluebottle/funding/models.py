@@ -638,9 +638,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         on_delete=models.CASCADE
     )
 
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-    reviewed = models.BooleanField(default=False)
+    created = models.DateTimeField(_('created'), default=timezone.now)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+    reviewed = models.BooleanField(_('reviewed'), default=False)
 
     public = models.BooleanField(
         _('Public payout account'),

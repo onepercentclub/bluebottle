@@ -3,14 +3,6 @@ center {
     width: 100%;
 }
 
-:root {
-    --action-color: {{ content.action_color }};
-    --action-text-color: {{  content.action_text_color }};
-    --descriptive-color: {{ content.descriptive_color }};
-    --descriptive-text-color: {{ content.descriptive_text_color }};
-    --link-color: {{ content.link_color }};
-}
-
 a img,
 hr {
     border: none;
@@ -143,7 +135,7 @@ table.donation-table .donation-table-row .data-value {
 
 .donation-table-share .donation-share-buttons td a {
     border-radius: 4px;
-    color: var(--action-text-color, #fff);
+    color: {{ content.action_text_color }};
     float: left;
     font-family: HelveticaNeueLTPro-Roman, Helvetica, Arial, sans-serif;
     font-size: 20px;
@@ -655,7 +647,7 @@ h3 a,
 h4 a,
 h5 a,
 h6 a {
-    color: var(--link-color);
+    color: {{ content.link_color }};
 }
 
 h1,
@@ -720,7 +712,7 @@ a {
 
 a:active,
 a:hover {
-    color: var(--action-color) !important;
+    color: {{ content.link_color }} !important;
 }
 
 a:visited,
@@ -736,7 +728,7 @@ h5 a:active,
 h5 a:visited,
 h6 a:active,
 h6 a:visited {
-    color: var(--link-color) !important;
+    color: {{ content.link_color }} !important;
 }
 
 .panel {
@@ -768,9 +760,9 @@ table.large-button td,
 table.medium-button td,
 table.small-button td,
 table.tiny-button td {
-    background: var(--action-color);
+    background: {{ content.action_color }};
     border: none;
-    color: var(--action-text-color);
+    color:{{ content.action_text_color }};
     display: block;
     padding: 8px 0;
     text-align: center;
@@ -798,7 +790,7 @@ table.large-button td a,
 table.medium-button td a,
 table.small-button td a,
 table.tiny-button td a {
-    color: var(--action-text-color, #fff);
+    color: {{ content.action_text_color }};
     display: block;
     font-family: {
 {
@@ -828,7 +820,7 @@ table.small-button:hover td a,
 table.tiny-button td a:visited,
 table.tiny-button:active td a,
 table.tiny-button:hover td a {
-        color: var(--action-text-color, #fff) !important;
+    color: {{ content.action_text_color }} !important;
 }
 
 table.tiny-button td a {
@@ -853,7 +845,7 @@ table.large-button td a {
 table.button:active td,
 table.button:hover td,
 table.button:visited td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
 }
 
 table.button:hover td,
@@ -861,13 +853,13 @@ table.large-button:hover td,
 table.medium-button:hover td,
 table.small-button:hover td,
 table.tiny-button:hover td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
 }
 
 table.secondary td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
     border-color: #d0d0d0;
-    color: var(--action-text-color) !important;
+    color: {{ content.action_text_color }} !important;
 
 }
 

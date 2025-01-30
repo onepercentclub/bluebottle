@@ -3,7 +3,7 @@ center {
     width: 100%;
 }
 
-body {
+:root {
     --action-color: {{ content.action_color }};
     --action-text-color: {{  content.action_text_color }};
     --descriptive-color: {{ content.descriptive_color }};
@@ -143,7 +143,7 @@ table.donation-table .donation-table-row .data-value {
 
 .donation-table-share .donation-share-buttons td a {
     border-radius: 4px;
-    color: #fff;
+    color: var(--action-text-color, #fff);
     float: left;
     font-family: HelveticaNeueLTPro-Roman, Helvetica, Arial, sans-serif;
     font-size: 20px;
@@ -798,7 +798,7 @@ table.large-button td a,
 table.medium-button td a,
 table.small-button td a,
 table.tiny-button td a {
-    color: #fff;
+    color: var(--action-text-color, #fff);
     display: block;
     font-family: {
 {
@@ -828,7 +828,7 @@ table.small-button:hover td a,
 table.tiny-button td a:visited,
 table.tiny-button:active td a,
 table.tiny-button:hover td a {
-    color: #fff !important;
+        color: var(--action-text-color, #fff) !important;
 }
 
 table.tiny-button td a {

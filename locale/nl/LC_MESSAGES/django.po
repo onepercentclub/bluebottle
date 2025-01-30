@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-01-30 15:09+0100\n"
-"PO-Revision-Date: 2025-01-30 14:12\n"
+"PO-Revision-Date: 2025-01-30 14:55\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl\n"
@@ -75,7 +75,7 @@ msgstr "E-mails"
 
 #: bluebottle/activities/admin.py:368 bluebottle/time_based/admin.py:1132
 msgid "Separate the email addresses by commas, one per line or copy & paste a column from a spreadsheet."
-msgstr ""
+msgstr "Scheid e-mailadressen met komma’s, plaats ze op aparte regels, of kopieer een kolom uit een spreadsheet en plak deze."
 
 #: bluebottle/activities/admin.py:375
 #: bluebottle/fsm/templates/admin/change_effects_confirmation.html:62
@@ -87,7 +87,7 @@ msgstr "Verstuur berichten"
 
 #: bluebottle/activities/admin.py:376
 msgid "Email participants that they have been added to this activity."
-msgstr ""
+msgstr "E-mail de deelnemers dat ze aan de activiteit zijn toegevoegd."
 
 #: bluebottle/activities/admin.py:380
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:15
@@ -104,29 +104,29 @@ msgstr "Bulk toevoegen deelnemers"
 #, python-brace-format
 msgid "{count} participant was added."
 msgid_plural "{count} participants were added."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} deelnemer is toegevoegd."
+msgstr[1] "{count} deelnemers zijn toegevoegd."
 
 #: bluebottle/activities/admin.py:446
 #, python-brace-format
 msgid "{count} user created and added as a participant."
 msgid_plural "{count} users created and added as a participant."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} gebruikersaccount aangemaakt en toegevoegd als deelnemer."
+msgstr[1] "{count} gebruikersaccounts aangemaakt en toegevoegd als deelnemers."
 
 #: bluebottle/activities/admin.py:457
 #, python-brace-format
 msgid "{count} participant already joined."
 msgid_plural "{count} participants already joined."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} deelnemer doet al mee."
+msgstr[1] "{count} deelnemers doen al mee."
 
 #: bluebottle/activities/admin.py:468
 #, python-brace-format
 msgid "{count} participant could not be added. Please check if the email address is correct."
 msgid_plural "{count} participants could not be added. Please check if the email addresses are correct."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} deelnemer kon niet worden toegevoegd. Controleer of het e-mailadres juist is."
+msgstr[1] "{count} deelnemers konden niet worden toegevoegd. Controleer of de e-mailadressen juist zijn."
 
 #: bluebottle/activities/admin.py:644 bluebottle/initiatives/models.py:151
 msgid "Initiative"
@@ -1060,7 +1060,9 @@ msgstr "Startpagina"
 msgid "\n"
 "                        Only use the work email addresses of the participants you want to add not their personal addresses.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"                        Gebruik alleen het werk-e-mailadres van de deelnemers die je wilt toevoegen niet hun persoonlijke adres.\n"
+"                    "
 
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:47
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:47
@@ -2459,7 +2461,7 @@ msgstr "Sociaal"
 
 #: bluebottle/cms/models.py:135
 msgid "Groups that can see this link. Leave empty if it should be visible to everyone."
-msgstr ""
+msgstr "Groepen die deze link kunnen zien. Laat leeg als deze voor iedereen zichtbaar moet zijn."
 
 #: bluebottle/cms/models.py:137
 msgid "Display the link as a button"
@@ -3174,18 +3176,18 @@ msgstr "Je neemt deel aan een activiteit op <b>%(site_name)s</b>"
 #: bluebottle/time_based/views/participants.py:55
 #: bluebottle/time_based/views/views.py:364
 msgid "Not a valid email address"
-msgstr ""
+msgstr "Geen geldig e-mailadres"
 
 #: bluebottle/collect/views.py:96 bluebottle/deeds/views.py:97
 #: bluebottle/time_based/views/participants.py:57
 #: bluebottle/time_based/views/views.py:366
 msgid "User with email address not found"
-msgstr ""
+msgstr "Geen gebruiker gevonden met dit e-mailadres"
 
 #: bluebottle/collect/views.py:109
 #: bluebottle/time_based/views/participants.py:77
 msgid "User already joined"
-msgstr ""
+msgstr "Gebruiker doet al mee"
 
 #: bluebottle/common/templates/404.html:6
 #: bluebottle/common/templates/404.html:10
@@ -3432,7 +3434,7 @@ msgstr "De einddatum moet later zijn dan de startdatum"
 
 #: bluebottle/deeds/views.py:115
 msgid "Already participating"
-msgstr ""
+msgstr "Doet al mee"
 
 #: bluebottle/files/models.py:26 bluebottle/files/models.py:90
 msgid "file"
@@ -4983,7 +4985,7 @@ msgstr " Hallo %(recipient_name)s,\n"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:25
 msgid "Reward:"
-msgstr ""
+msgstr "Beloning:"
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:35
 #: bluebottle/initiatives/models.py:241 bluebottle/terms/models.py:43
@@ -6566,7 +6568,7 @@ msgstr "Fiscaal jaar gecompenseerd"
 
 #: bluebottle/members/models.py:56
 msgid "Set the number of months your fiscal year will be offset by. This will also take into account how the impact metrics are shown on the homepage. e.g. If the year starts from September (so 4 months earlier) then this value should be 4."
-msgstr ""
+msgstr "Stel in hoeveel maanden eerder je fiscale jaar begint ten opzichte van januari. Als je fiscale jaar bijvoorbeeld in september begint (dat is 4 maanden vóór januari), vul dan 4 in. Dit heeft ook invloed op hoe de impactstatistieken op de startpagina worden weergegeven."
 
 #: bluebottle/members/models.py:62
 msgid "Reminder Q1"
@@ -7904,7 +7906,7 @@ msgstr "We tonen deze opties omdat het slot plaatsvindt op {start}"
 
 #: bluebottle/time_based/admin.py:1140
 msgid "Email participants that they have been added to this slot."
-msgstr ""
+msgstr "E-mail deelnemers dat ze aan dit tijdsblok zijn toegevoegd."
 
 #: bluebottle/time_based/admin.py:1179
 msgid "Accepted participants"
@@ -10413,7 +10415,9 @@ msgctxt "email"
 msgid "\n"
 "        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If you are unable to participate, please withdraw in time so we can find a suitable solution.\n"
 "      "
-msgstr ""
+msgstr "\n"
+"        Onze partners rekenen op je deelname. Afmelden op het laatste moment of niet komen opdagen zal hun planning beïnvloeden. Als je niet kunt deelnemen, meld je dan op tijd af zodat we een passende oplossing kunnen vinden.\n"
+"      "
 
 #: bluebottle/time_based/templates/mails/messages/participant_changed.html:6
 #, python-format
@@ -10735,7 +10739,9 @@ msgstr "\n"
 msgid "\n"
 "                    When you are accepted you are expected to contribute %(duration)s hour(s) every %(period)s.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Wanneer je bent geaccepteerd, wordt je verwacht elke %(period)s %(duration)s uur bij te dragen.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
@@ -10754,7 +10760,9 @@ msgctxt "email"
 msgid "\n"
 "        Our partners are counting on your participation. Stopping at the last moment or not showing up will affect their planning. If you are unable to participate, please stop in time so we can find a suitable solution.\n"
 "      "
-msgstr ""
+msgstr "\n"
+"        Onze partners rekenen op je deelname. Stoppen op het laatste moment of niet komen opdagen zal hun planning beïnvloeden. Als je niet meer kunt deelnemen, stop dan op tijd zodat we een passende oplossing kunnen vinden.\n"
+"      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:6
 #: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:6
@@ -10775,7 +10783,9 @@ msgstr "\n"
 msgid "\n"
 "                    You are expected to contribute %(duration)s hour(s) every %(period)s.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"          Er wordt van je verwacht dat je elke %(period)s %(duration)s uur bijdraagt.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6
 #| msgid ""
@@ -10812,7 +10822,9 @@ msgctxt "email"
 msgid "\n"
 "        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If your team is unable to participate, please withdraw in time so we can find a suitable solution.\n"
 "      "
-msgstr ""
+msgstr "\n"
+"        Onze partners rekenen op je deelname. Afmelden op het laatste moment of niet komen opdagen zal hun planning beïnvloeden. Als je team niet kan deelnemen, meld je dan op tijd af zodat we een passende oplossing kunnen vinden.\n"
+"      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_joined.html:6
 #| msgid ""

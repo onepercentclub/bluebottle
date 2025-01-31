@@ -25,7 +25,7 @@ class TokenRedirectView(View):
     pattern_name = 'article-detail'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
         sso_url = auth.sso_url(target_url=request.GET.get('url'))
         return HttpResponseRedirect(sso_url)
 

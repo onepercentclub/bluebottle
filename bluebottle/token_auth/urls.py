@@ -17,7 +17,7 @@ urlpatterns = [
     ),
     url(
         r'^support-login/$', SupportSAMLLoginView.as_view(),
-        name='token-login'
+        name='support-token-login'
     ),
     url(r'^logout/$', TokenLogoutView.as_view(), name='token-logout'),
     url(r'^error/$', TokenErrorView.as_view(), name='token-error'),

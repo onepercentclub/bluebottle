@@ -361,7 +361,6 @@ class TestSAMLTokenAuthentication(TestCase):
 
     def test_auth_existing_with_segment(self):
         member_settings = MemberPlatformSettings.load()
-        member_settings.enable_segments = True
         member_settings.create_segments = True
         member_settings.save()
 
@@ -402,7 +401,6 @@ class TestSAMLTokenAuthentication(TestCase):
 
     def test_auth_existing_with_segment_slug(self):
         member_settings = MemberPlatformSettings.load()
-        member_settings.enable_segments = True
         member_settings.create_segments = True
         member_settings.save()
 
@@ -442,7 +440,6 @@ class TestSAMLTokenAuthentication(TestCase):
 
         LocationFactory.create(slug='user', name='User Office')
         member_settings = MemberPlatformSettings.load()
-        member_settings.enable_segments = True
         member_settings.create_segments = True
         member_settings.save()
         SegmentTypeFactory.create(slug='function', name='Function')

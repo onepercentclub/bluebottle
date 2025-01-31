@@ -231,7 +231,8 @@ class Page(PublishableModel):
         'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',
-        'DocumentPlugin'
+        'DocumentPlugin',
+        'ImagePlainTextBlockPlugin',
     ])
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19

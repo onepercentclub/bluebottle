@@ -4,10 +4,12 @@ from builtins import object
 
 from django.db.models import QuerySet
 from django.urls import reverse
-from django.core.files.images import ImageFile
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
+
+from sorl.thumbnail import default
+from PIL import ImageOps
 
 from bluebottle.files.models import Document, Image, PrivateDocument
 from bluebottle.utils.utils import reverse_signed
@@ -152,7 +154,9 @@ class ImageSerializer(DocumentSerializer):
     def get_size(self, obj):
         try:
             obj.file.seek(0)
-            image_file = ImageFile(obj.file)
+            image_file = ImageOps.exif_transpose(
+                default.engine.get_image(obj.file)
+            )
 
             return {'width': image_file.width, 'height': image_file.height}
         except (FileNotFoundError, AttributeError):

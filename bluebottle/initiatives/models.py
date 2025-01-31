@@ -245,6 +245,10 @@ ACTIVITY_SEARCH_FILTERS = (
     ('team_activity', _('Individual / Team')),
     ('theme', _('Theme')),
     ('category', _('Category')),
+    ('office', _('Office')),
+    ('office', _('Office')),
+    ('office_subregion', _('Office group')),
+    ('office_region', _('Office region')),
 )
 
 

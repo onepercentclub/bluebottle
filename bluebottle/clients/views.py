@@ -2,8 +2,14 @@
 
 from rest_framework import views, response
 from django.db import connection
+from django.views.generic import TemplateView
+
 
 from bluebottle.clients.utils import get_public_properties
+
+
+class Robots(TemplateView):
+    template_name = 'robots.txt'
 
 
 class SettingsView(views.APIView):

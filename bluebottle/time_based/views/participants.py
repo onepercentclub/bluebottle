@@ -1,7 +1,5 @@
-from django.db.models import Sum, Q
-
 from bluebottle.activities.permissions import ContributorPermission
-from bluebottle.activities.views import RelatedContributorListView
+from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
     TeamScheduleParticipant
 from bluebottle.time_based.serializers import (
@@ -33,23 +31,7 @@ from bluebottle.utils.views import (
 )
 
 
-class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
-
-    def get_queryset(self):
-        queryset = (
-            super()
-            .get_queryset()
-            .annotate(
-                total_duration=Sum(
-                    "contributions__timecontribution__value",
-                    filter=Q(contributions__status__in=["succeeded", "new"]),
-                )
-            )
-        )
-        my = self.request.query_params.get("filter[my]")
-        if my:
-            queryset = queryset.filter(user=self.request.user)
-        return queryset
+class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -60,30 +42,7 @@ class DeadlineParticipantList(ParticipantList):
     queryset = DeadlineParticipant.objects.prefetch_related(
         'user', 'activity'
     )
-    serializer = DeadlineParticipantSerializer
-
-
-class ScheduleParticipantList(ParticipantList):
-    queryset = ScheduleParticipant.objects.prefetch_related(
-        "user",
-        "activity",
-    )
-    serializer = ScheduleParticipantSerializer
-
-
-class TeamScheduleParticipantList(ParticipantList):
-    queryset = TeamScheduleParticipant.objects.prefetch_related(
-        "user",
-        "activity",
-    )
-    serializer = TeamScheduleParticipantSerializer
-
-
-class PeriodicParticipantList(ParticipantList):
-    queryset = PeriodicParticipant.objects.prefetch_related(
-        "user", "activity"
-    ).order_by("-slot__start")
-    serializer = PeriodicParticipantSerializer
+    serializer_class = DeadlineParticipantSerializer
 
 
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

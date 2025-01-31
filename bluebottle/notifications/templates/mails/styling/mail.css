@@ -3,11 +3,6 @@ center {
     width: 100%;
 }
 
-body {
-    --action-color: {{ content.action_color }};
-    --action-text-color: {{ content.action_text_color }};
-}
-
 a img,
 hr {
     border: none;
@@ -81,120 +76,51 @@ hr {
     height: 1px;
 }
 
-table.donation-table {
-    background: #f5f5f5;
-    margin-bottom: 52px !important;
-}
-
-table.donation-table tr {
-    display: block;
-}
-
-table.donation-table .donation-table-row {
-    border-top: dashed 1px #bbb;
-    display: block;
-    padding: 14px 22px;
-}
-
 table.donation-table .donation-table-row .donation-amount,
 table.donation-table .donation-table-row .donation-title {
-    color: #4a4a4a;
+    color: #281E50;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 32px;
+    padding: 16px;
+}
+
+table.donation-table .donation-table-row .donation-organization {
+    color: #4A4A4A;
     font-size: 16px;
-}
-
-table.donation-table .donation-table-row th:first-child {
-    float: left;
-    width: 60%;
-}
-
-table.donation-table .donation-table-row th:last-child {
-    float: right;
-    text-align: right;
-    width: 30%;
-}
-
-table.donation-table .donation-location {
-    display: block;
-    padding: 0 22px;
-}
-
-table.donation-table .donation-location td {
-    display: inline-block;
-    font-size: 13px;
-    text-align: left;
-    text-decoration: underline;
-    width: 100%;
-}
-
-table.donation-table .donation-table-address {
-    display: block;
-    padding: 0 22px;
-}
-
-table.donation-table .donation-table-address td {
-    color: #4a4a4a;
-    display: inline-block;
-    float: left;
-    font-family: HelveticaNeueLTPro-Roman, Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    width: 50%;
-}
-
-table.donation-table .donation-table-address td:nth-child(2) {
+    font-style: normal;
     font-weight: 700;
+    line-height: 24px;
+    padding: 8px;
 }
 
-table.donation-table .donation-table-address td table {
-    width: 100%;
+table.donation-table .donation-reward {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    border-radius: 6px;
+    background: #FFF;
+    padding: 8px;
+    margin: 8px;
 }
 
-table.donation-table .donation-table-address td table .order-block {
-    display: inherit;
-    float: right;
-    width: 100%;
+table.donation-table .donation-table-row .data-label {
+    color: #929292;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
 }
 
-table.donation-table .donation-table-address td table .order-block td:first-child {
-    color: #999;
-    margin-right: 3%;
-    text-align: right;
-    width: 47%;
+table.donation-table .donation-table-row .data-value {
+    color: #4A4A4A;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
 }
 
-table.donation-table .donation-table-address td table .order-block td:last-child {
-    color: #4a4a4a;
-    text-align: left;
-    width: 47%;
-}
-
-table.donation-table .donation-table-address td table .order-block td:last-child::before {
-    content: "\00a0";
-    position: relative;
-}
-
-@media (max-width: 600px) {
-    table.donation-table .donation-table-address td {
-        width: 50% !important;
-    }
-
-    table.donation-table .donation-table-address td:first-child {
-        color: #999;
-        margin-right: 3%;
-        text-align: right;
-        width: 47% !important;
-    }
-
-    table.donation-table .donation-table-address td:last-child {
-        color: #4a4a4a;
-        text-align: left;
-        width: 47% !important;
-    }
-
-    table.donation-table .donation-table-address td:last-child::before {
-        content: inherit;
-        position: relative;
-    }
-}
 
 .donation-table-share {
     color: #666;
@@ -209,7 +135,7 @@ table.donation-table .donation-table-address td table .order-block td:last-child
 
 .donation-table-share .donation-share-buttons td a {
     border-radius: 4px;
-    color: #fff;
+    color: {{ content.action_text_color }};
     float: left;
     font-family: HelveticaNeueLTPro-Roman, Helvetica, Arial, sans-serif;
     font-size: 20px;
@@ -218,42 +144,98 @@ table.donation-table .donation-table-address td table .order-block td:last-child
     width: 42%;
 }
 
-.donation-table-share .donation-share-buttons td a:active,
-.donation-table-share .donation-share-buttons td a:visited {
-    color: #fff !important;
-}
-
-.donation-table-share .donation-share-buttons td a.action-facebook {
-    background: #3b5998;
-    float: left;
-}
-
-.donation-table-share .donation-share-buttons td a.action-twitter {
-    background: #55acee;
-    float: right;
-}
-
-@media (max-width: 600px) {
-    .donation-table-share .donation-share-buttons td a {
-        display: inline-block;
-        width: 89%;
-    }
-
-    .donation-table-share .donation-share-buttons td a.action-facebook {
-        float: none;
-        margin-bottom: 11px;
-    }
-
-    .donation-table-share .donation-share-buttons td a.action-twitter {
-        float: none;
-    }
-}
-
 img.center,
 table.column,
 table.columns,
 table.container {
     margin: 0 auto;
+}
+
+div.receipt {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 16px 0;
+    background: #F6F6F6;
+    order: 2;
+    flex-grow: 0;
+
+}
+
+div.receipt .receipt-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    font-weight: bold;
+    align-self: stretch;
+    color: #281E50;
+    font-size: 24px;
+    font-style: normal;
+    margin: 16px;
+}
+
+div.receipt .receipt-activity {
+    color: #4A4A4A;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 24px;
+    margin: 4px 16px;
+}
+
+
+div.receipt .receipt-organization {
+    color: #4A4A4A;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    margin: 4px 16px;
+}
+
+div.receipt .receipt-reward {
+    display: flex;
+    padding: 4px 10px;
+    margin: 4px 8px;
+    align-items: flex-end;
+    gap: 10px;
+    align-self: stretch;
+    border-radius: 6px;
+    background: #FFF;
+}
+
+div.receipt .receipt-divider {
+    display: flex;
+    padding: 16px;
+    justify-content: center;
+}
+
+div.receipt .receipt-info {
+    display: flex;
+    padding: 0 16px;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 13px;
+}
+
+div.receipt .receipt-info .receipt-info-label {
+    color: #929292;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+div.receipt .receipt-info .receipt-info-value {
+    color: #4A4A4A;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
 }
 
 table.body {
@@ -272,9 +254,6 @@ table.row {
     width: 100%;
 }
 
-table.container table.row {
-    display: block;
-}
 
 td.wrapper {
     padding: 10px 40px 0 0;
@@ -668,11 +647,7 @@ h3 a,
 h4 a,
 h5 a,
 h6 a {
-    color: {
-{
-    content.descriptive_color
-}
-};
+    color: {{ content.link_color }};
 }
 
 h1,
@@ -737,7 +712,7 @@ a {
 
 a:active,
 a:hover {
-    color: var(--action-color) !important;
+    color: {{ content.link_color }} !important;
 }
 
 a:visited,
@@ -753,11 +728,7 @@ h5 a:active,
 h5 a:visited,
 h6 a:active,
 h6 a:visited {
-    color: {
-{
-    content.descriptive_color
-}
-} !important;
+    color: {{ content.link_color }} !important;
 }
 
 .panel {
@@ -789,9 +760,9 @@ table.large-button td,
 table.medium-button td,
 table.small-button td,
 table.tiny-button td {
-    background: var(--action-color);
+    background: {{ content.action_color }};
     border: none;
-    color: var(--action-text-color);
+    color:{{ content.action_text_color }};
     display: block;
     padding: 8px 0;
     text-align: center;
@@ -819,7 +790,7 @@ table.large-button td a,
 table.medium-button td a,
 table.small-button td a,
 table.tiny-button td a {
-    color: #fff;
+    color: {{ content.action_text_color }};
     display: block;
     font-family: {
 {
@@ -849,7 +820,7 @@ table.small-button:hover td a,
 table.tiny-button td a:visited,
 table.tiny-button:active td a,
 table.tiny-button:hover td a {
-    color: #fff !important;
+    color: {{ content.action_text_color }} !important;
 }
 
 table.tiny-button td a {
@@ -874,7 +845,7 @@ table.large-button td a {
 table.button:active td,
 table.button:hover td,
 table.button:visited td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
 }
 
 table.button:hover td,
@@ -882,12 +853,13 @@ table.large-button:hover td,
 table.medium-button:hover td,
 table.small-button:hover td,
 table.tiny-button:hover td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
 }
+
 table.secondary td {
-    background: var(--action-color) !important;
+    background: {{ content.action_color }} !important;
     border-color: #d0d0d0;
-    color: var(--action-text-color) !important;
+    color: {{ content.action_text_color }} !important;
 
 }
 
@@ -1110,7 +1082,6 @@ body.outlook p {
 .matching-activities-email-list .matching-item .matching-item-title {
     display: block;
     margin-bottom: 8px;
-    font-family: Helvetica Neue;
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
@@ -1120,7 +1091,6 @@ body.outlook p {
 .matching-activities-email-list .matching-item .matching-item-expertise-theme,
 .matching-activities-email-list .matching-item .matching-item-location {
     display: inline-block;
-    font-family: Helvetica Neue;
     font-style: normal;
     font-weight: 400;
     line-height: 24px;

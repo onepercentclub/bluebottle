@@ -149,7 +149,7 @@ class ImageContentView(FileContentView):
             try:
                 response = HttpResponse(content=thumbnail.read())
                 response['Content-Type'] = content_type
-            except FileNotFoundError:
+            except (FileNotFoundError, ZeroDivisionError):
                 if settings.RANDOM_IMAGE_PROVIDER:
                     response = HttpResponseRedirect(self.get_random_image_url())
                 else:

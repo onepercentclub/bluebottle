@@ -19,7 +19,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.models import DateParticipant, ScheduleParticipant
+from bluebottle.time_based.models import DateParticipant, ScheduleParticipant, Registration
 from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
@@ -365,6 +365,11 @@ class ContributorDataRetentionTest(BluebottleTestCase):
                 contributor.slot.save()
             contributor.contributions.update(status='succeeded')
 
+            registration = getattr(contributor, 'registration', None)
+            if registration:
+                registration.created = date
+                registration.save()
+
     def setUp(self):
         super(ContributorDataRetentionTest, self).setUp()
         months_ago_12 = now() - relativedelta(months=12)
@@ -395,9 +400,11 @@ class ContributorDataRetentionTest(BluebottleTestCase):
     def test_data_retention_dont_delete_without_settings(self):
         self.assertEqual(Contributor.objects.count(), 12)
         self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 4)
         self.task()
         self.assertEqual(Contributor.objects.count(), 12)
         self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 4)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
@@ -406,6 +413,7 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         member_settings.save()
         self.assertEqual(Contributor.objects.count(), 12)
         self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Registration.objects.count(), 4)
         self.task()
         self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
         self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
@@ -414,3 +422,5 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
         self.assertEqual(Contribution.objects.count(), 12)
+        self.assertEqual(Contributor.objects.count(), 9)
+        self.assertEqual(Registration.objects.count(), 1)

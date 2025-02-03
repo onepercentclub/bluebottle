@@ -390,7 +390,8 @@ class CheckPreparationTimeContributionEffect(Effect):
         has_registrations = registration.participants.filter(
             status__in=['registered']
         ).exists()
-        prep_time = registration.contributions.filter(
+
+        prep_time = self.instance.contributions.filter(
             timecontribution__contribution_type=ContributionTypeChoices.preparation
         ).first()
         if prep_time:

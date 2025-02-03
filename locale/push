@@ -1,0 +1,11 @@
+#! /usr/bin/bash
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+AHEAD=`git rev-list --left-right --count $BRANCH...origin/master| cut -f1`
+
+if [ "$AHEAD" == "0" ]; then
+  crowdin push &&
+  echo "New strrings can be translated at: https://crowdin.com/project/bluebottle";
+else
+  echo "Branch is behind master. Please merge master before pushing translations";
+fi

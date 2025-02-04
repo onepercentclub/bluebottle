@@ -1,0 +1,6 @@
+User-agent: *
+{% if settings.closed %}
+Disallow: /
+{% else %}
+Alllow: /
+{% endif %}

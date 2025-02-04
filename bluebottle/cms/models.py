@@ -654,6 +654,10 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    @property
+    def link_color(self):
+        return self.alternative_link_color or self.action_color
+
     description_color = ColorField(
         _('Description colour'), null=True, blank=True,
         help_text=_(

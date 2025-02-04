@@ -1,9 +1,5 @@
-from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError
-
 from bluebottle.activities.permissions import ContributorPermission
-from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.members.models import Member, MemberPlatformSettings
+from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
     TeamScheduleParticipant, DateParticipant
 from bluebottle.time_based.serializers import (
@@ -35,48 +31,11 @@ from bluebottle.utils.views import (
 )
 
 
-class ParticipantList(JsonApiViewMixin, CreateAPIView, CreatePermissionMixin):
+class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
-
-    def perform_create(self, serializer):
-        email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
-        if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
-                member_settings = MemberPlatformSettings.load()
-                if member_settings.closed:
-                    try:
-                        user = Member.create_by_email(email.strip())
-                    except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="exists")
-                else:
-                    raise ValidationError(_('User with email address not found'))
-        else:
-            user = self.request.user
-
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        if not email:
-            if self.request.user.required:
-                raise ValidationError('Required fields', code="required")
-
-        activity = serializer.validated_data['activity']
-        if self.queryset.filter(user=user, activity=activity).exists():
-            raise ValidationError(_('User already joined'), code="exists")
-
-        serializer.save(user=user, send_messages=send_messages)
 
 
 class DeadlineParticipantList(ParticipantList):

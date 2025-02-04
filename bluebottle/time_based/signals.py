@@ -13,7 +13,7 @@ from bluebottle.time_based.models import (
 def update_delete_registration(sender, instance, **kwargs):
 
     try:
-        if instance.registration.participants.count() == 0:
+        if instance.registration and instance.registration.participants.count() == 0:
             instance.registration.delete()
     except Registration.DoesNotExist:
         # Catch the case where the registration is already deleted

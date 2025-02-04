@@ -3,6 +3,7 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
+from django.core.validators import validate_email
 from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone, now
@@ -356,6 +357,10 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
         if email:
             user = Member.objects.filter(email__iexact=email).first()
             if not user:
+                try:
+                    validate_email(email)
+                except Exception:
+                    raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
                 if member_settings.closed:
                     try:

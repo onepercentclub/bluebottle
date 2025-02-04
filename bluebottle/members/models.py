@@ -41,10 +41,10 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     closed = models.BooleanField(
-        default=False, help_text=_('Require login before accessing the platform')
+        _('closed'), default=False, help_text=_('Require login before accessing the platform')
     )
     create_initiatives = models.BooleanField(
-        default=True, help_text=_('Members can create initiatives')
+        _('create initiatives'), default=True, help_text=_('Members can create initiatives')
     )
     do_good_hours = models.PositiveIntegerField(
         _('Impact hours'),
@@ -75,21 +75,24 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=False,
     )
 
-    login_methods = MultiSelectField(max_length=100, choices=LOGIN_METHODS, default=['password'])
+    login_methods = MultiSelectField(_('login methods'), max_length=100, choices=LOGIN_METHODS, default=['password'])
     confirm_signup = models.BooleanField(
-        default=False, help_text=_('Require verifying the user\'s email before signup')
+        _('confirm signup'), default=False, help_text=_('Require verifying the user\'s email before signup')
     )
     email_domain = models.CharField(
+        _('email domains'),
         blank=True, null=True,
         help_text=_('Domain that all email should belong to'),
         max_length=256
     )
     session_only = models.BooleanField(
+        _('session only'),
         default=False,
         help_text=_('Limit user session to browser session')
     )
 
     required_questions_location = models.CharField(
+        _('required questions location'),
         choices=REQUIRED_QUESTIONS_OPTIONS,
         max_length=12,
         default='login',
@@ -99,12 +102,14 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     consent_link = models.CharField(
+        _('consent link'),
         default='"https://goodup.com/cookie-policy"',
         help_text=_('Link more information about the platforms cookie policy'),
         max_length=255
     )
 
     disable_cookie_consent = models.BooleanField(
+        _('disable cookie consent$'),
         default=False,
         help_text=_(
             'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'
@@ -112,12 +117,14 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     gtm_code = models.CharField(
+        _('gtm code'),
         help_text=_('Adding the GTM script to your platform allows you to manage and deploy third-party tools.'),
         max_length=255,
         blank=True
     )
 
     background = models.ImageField(
+        _('background'),
         null=True, blank=True, upload_to='site_content/',
         validators=[
             FileMimetypeValidator(
@@ -128,26 +135,31 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     enable_gender = models.BooleanField(
+        _('enable gender'),
         default=False,
         help_text=_('Show gender question in profile form')
     )
 
     enable_birthdate = models.BooleanField(
+        _('enable birthday'),
         default=False,
         help_text=_('Show birthdate question in profile form')
     )
 
     enable_address = models.BooleanField(
+        _('email address'),
         default=False,
         help_text=_('Show address question in profile form')
     )
 
     enable_segments = models.BooleanField(
+        _('email segments'),
         default=False,
         help_text=_('Enable segments for users e.g. department or job title.')
     )
 
     create_segments = models.BooleanField(
+        _('create segments'),
         default=False,
         help_text=_(
             "Create new segments when a user logs in. "
@@ -155,6 +167,7 @@ class MemberPlatformSettings(BasePlatformSettings):
         ),
     )
     create_locations = models.BooleanField(
+        _('create locations'),
         default=False,
         help_text=_(
             "Create new office locations when a user logs in. "
@@ -243,7 +256,7 @@ class MemberPlatformSettings(BasePlatformSettings):
 
     def fiscal_year(self):
         offset = self.fiscal_month_offset
-        if now().month < (12 - offset):
+        if (now().month - offset) < 0:
             return (now() - relativedelta(months=offset)).year + 1
         return (now() - relativedelta(months=offset)).year
 

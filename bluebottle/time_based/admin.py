@@ -47,7 +47,6 @@ from bluebottle.time_based.models import (
     ScheduleSlot,
     BaseScheduleSlot,
     Skill,
-    SlotParticipant,
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
     TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, ActivitySlot,
     DateRegistration, )
@@ -1298,7 +1297,7 @@ class ParticipantSlotForm(ModelForm):
         self.fields['slot'].widget = SlotWidget(attrs={'slot': slot})
 
     class Meta:
-        model = SlotParticipant
+        model = DateParticipant
         fields = ['slot', 'checked']
 
     def save(self, commit=True):
@@ -1346,7 +1345,7 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
 
 class ParticipantSlotInline(admin.TabularInline):
     parent_object = None
-    model = SlotParticipant
+    model = DateParticipant
     formset = ParticipantSlotFormSet
     form = ParticipantSlotForm
 
@@ -1712,46 +1711,6 @@ class TeamScheduleRegistrationAdmin(RegistrationChildAdmin):
 @admin.register(PeriodicRegistration)
 class PeriodicRegistrationAdmin(RegistrationChildAdmin):
     inlines = [PeriodicParticipantAdminInline]
-
-
-@admin.register(SlotParticipant)
-class SlotParticipantAdmin(StateMachineAdmin):
-    raw_id_fields = ['participant', 'slot']
-    list_display = ['participant', 'slot']
-
-    inlines = [TimeContributionInlineAdmin]
-
-    formfield_overrides = {
-        models.DurationField: {
-            'widget': TimeDurationWidget(
-                show_days=False,
-                show_hours=True,
-                show_minutes=True,
-                show_seconds=False)
-        },
-        models.TextField: {
-            'widget': Textarea(
-                attrs={
-                    'rows': 3,
-                    'cols': 80
-                }
-            )
-        },
-    }
-
-    detail_fields = ['participant', 'slot', 'status', 'states']
-
-    def get_fieldsets(self, request, obj=None):
-        fieldsets = (
-            (_('Detail'), {'fields': self.detail_fields}),
-        )
-        if request.user.is_superuser:
-            fieldsets += (
-                (_('Super admin'), {'fields': (
-                    'force_status',
-                )}),
-            )
-        return fieldsets
 
 
 @admin.register(Skill)

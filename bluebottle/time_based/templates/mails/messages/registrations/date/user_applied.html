@@ -21,26 +21,16 @@
             </li>
             <li>
                 <b>{% translate "Contribute" %}</b> -
-                {% blocktrans context 'email' %}
-                    You join the activity.
+                {% blocktrans %}
+                    When you are accepted you can participate at the place and time indicated below.
                 {% endblocktrans %}
             </li>
         </ul>
     </p>
-
     <p>
-        <i>
-            {% blocktrans context 'email' %}
-                You will receive a notification by email when the activity manager accepts your application.
-            {% endblocktrans %}
-        </i>
+        {% for slot in slots %}
+            {% include 'mails/messages/partial/slot.html' %}
+        {% endfor %}
     </p>
-{% endblock %}
 
-{% block end_message %}
-  <div class="info-box">
-      {% blocktrans context 'email' %}
-        Our partners are counting on your participation. Stopping at the last moment or not showing up will affect their planning. If you are unable to participate, please stop in time so we can find a suitable solution.
-      {% endblocktrans %}
-  </div>
 {% endblock %}

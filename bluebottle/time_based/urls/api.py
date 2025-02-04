@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from bluebottle.time_based.views import (
     DateActivityDetailView,
     DateActivityListView,
-    DateActivityRelatedParticipantList,
+    DateActivityRelatedRegistrationList,
     DateParticipantDetail,
     DateParticipantDocumentDetail,
     DateParticipantList,
@@ -12,16 +12,14 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     DateSlotDetailView,
     DateSlotListView,
-    SlotParticipantListView,
     SlotParticipantDetailView,
     SlotParticipantTransitionList,
     DateActivityIcalView,
     ActivitySlotIcalView,
     DateParticipantExportView,
-    SlotRelatedParticipantList,
+    DateRelatedParticipantList,
     SkillList,
     SkillDetail,
-    RelatedSlotParticipantListView,
     DateSlotTransitionList,
     SlotParticipantExportView, PeriodActivityDetailView
 )
@@ -35,13 +33,13 @@ urlpatterns = [
         DateActivityDetailView.as_view(),
         name='date-detail'),
 
-    url(r'^/date/(?P<activity_id>\d+)/participants$',
-        DateActivityRelatedParticipantList.as_view(),
-        name='date-participants'),
+    url(r'^/date/(?P<activity_id>\d+)/registrations',
+        DateActivityRelatedRegistrationList.as_view(),
+        name='date-registrations'),
 
     url(r'^/date/slots/(?P<slot_id>\d+)/participants$',
-        SlotRelatedParticipantList.as_view(),
-        name='slot-participants'),
+        DateRelatedParticipantList.as_view(),
+        name='date-participants'),
 
     url(r'^/date/slots$',
         DateSlotListView.as_view(),
@@ -81,17 +79,19 @@ urlpatterns = [
         DateParticipantTransitionList.as_view(),
         name='date-participant-transition-list'),
 
+    url(r'^/registrations/date$',
+        DateParticipantList.as_view(),
+        name='date-registration-list'),
+    url(r'^/registrations/date/(?P<pk>\d+)$',
+        DateParticipantDetail.as_view(),
+        name='date-registration-detail'),
+    url(r'^/registrations/date/transitions$',
+        DateParticipantTransitionList.as_view(),
+        name='date-registration-transition-list'),
+
     url(r'^/participants/date/(?P<pk>\d+)/document$',
         DateParticipantDocumentDetail.as_view(),
         name='date-participant-document'),
-
-    url(r'^/slot-participants$',
-        SlotParticipantListView.as_view(),
-        name='slot-participant-list'),
-
-    url(r'^/participants/date/(?P<participant_id>\d+)/slot-participants$',
-        RelatedSlotParticipantListView.as_view(),
-        name='related-slot-participant-list'),
 
     url(r'^/slot-participants/(?P<pk>\d+)$',
         SlotParticipantDetailView.as_view(),

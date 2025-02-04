@@ -3,7 +3,6 @@ from datetime import datetime, time
 
 import dateutil
 import icalendar
-from django.core.validators import validate_email
 from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone, now
@@ -16,28 +15,26 @@ from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityStatusPermission,
     ContributorPermission, ContributionPermission, DeleteActivityPermission,
 )
-from bluebottle.activities.views import RelatedContributorListView
-from bluebottle.members.models import MemberPlatformSettings, Member
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
     TimeContribution,
-    DateActivitySlot, SlotParticipant, Skill
+    DateActivitySlot, Skill, DateRegistration
 )
 from bluebottle.time_based.permissions import (
-    SlotParticipantPermission, DateSlotActivityStatusPermission, CreateByEmailPermission
+    DateParticipantPermission, DateSlotActivityStatusPermission
 )
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
-    DateParticipantSerializer,
     DateParticipantListSerializer,
-    DateParticipantTransitionSerializer,
     TimeContributionSerializer,
     DateActivitySlotSerializer,
-    SlotParticipantSerializer,
-    SlotParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer,
+    DateParticipantSerializer,
+    DateParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer, DateRegistrationSerializer,
 )
+from bluebottle.time_based.views import RelatedRegistrationListView
 from bluebottle.time_based.views.mixins import BaseSlotIcalView
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.admin import prep_field
@@ -46,20 +43,20 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
-    CreateAPIView, ListAPIView, JsonApiViewMixin,
+    ListAPIView, JsonApiViewMixin,
     RelatedPermissionMixin,
     PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
 )
 
 
-class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
+class OldRelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, ListAPIView):
     # This view is used by activity manager when reviewing participants
     # and by the participant when viewing their own registrations e.g. My time slots
     permission_classes = [
         OneOf(ResourcePermission, ResourceOwnerPermission),
     ]
 
-    queryset = SlotParticipant.objects.prefetch_related(
+    queryset = DateParticipant.objects.prefetch_related(
         'slot', 'participant', 'participant__user'
     )
 
@@ -92,7 +89,7 @@ class RelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin, L
             participant=participant
         )
 
-    serializer_class = SlotParticipantSerializer
+    serializer_class = DateParticipantSerializer
 
 
 class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
@@ -170,14 +167,14 @@ class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = DateActivitySlotSerializer
 
 
-class DateActivityRelatedParticipantList(RelatedContributorListView):
-    queryset = DateParticipant.objects.prefetch_related(
-        'user', 'slot_participants', 'slot_participants__slot'
+class DateActivityRelatedRegistrationList(RelatedRegistrationListView):
+    queryset = DateRegistration.objects.prefetch_related(
+        'user', 'participants', 'participants__slot'
     )
-    serializer_class = DateParticipantSerializer
+    serializer_class = DateRegistrationSerializer
 
 
-class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
+class DateRelatedParticipantList(JsonApiViewMixin, ListAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
@@ -204,7 +201,7 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
         queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
 
-        queryset = queryset.filter(participant__status='accepted')
+        queryset = queryset.filter(registration__status='accepted')
 
         if user.is_anonymous:
             queryset = queryset.filter(
@@ -221,8 +218,8 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
 
         return queryset
 
-    queryset = SlotParticipant.objects.prefetch_related('participant', 'participant__user')
-    serializer_class = SlotParticipantSerializer
+    queryset = DateParticipant.objects.prefetch_related('registration', 'user')
+    serializer_class = DateParticipantSerializer
 
 
 class DateTransitionList(TransitionList):
@@ -310,6 +307,10 @@ class DateParticipantList(ParticipantList):
         else:
             return DateParticipantListSerializer
 
+    def perform_create(self, serializer):
+        slot = serializer.validated_data['slot']
+        serializer.save(activity=slot.activity, user=self.request.user)
+
 
 class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
@@ -337,72 +338,16 @@ class DateParticipantTransitionList(ParticipantTransitionList):
     queryset = DateParticipant.objects.all()
 
 
-class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
-    permission_classes = [
-        SlotParticipantPermission,
-        CreateByEmailPermission
-    ]
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
-
-    def get_queryset(self, *args, **kwargs):
-        return super().queryset(*args, **kwargs).filter(
-            participant__status__in=['new', 'accepted']
-        )
-
-    def perform_create(self, serializer):
-        slot = serializer.validated_data['slot']
-        email = serializer.validated_data.pop('email', None)
-        send_messages = serializer.validated_data.pop('send_messages', True)
-        if email:
-            user = Member.objects.filter(email__iexact=email).first()
-            if not user:
-                try:
-                    validate_email(email)
-                except Exception:
-                    raise ValidationError(_('Not a valid email address'), code="invalid")
-                member_settings = MemberPlatformSettings.load()
-                if member_settings.closed:
-                    try:
-                        user = Member.create_by_email(email.strip())
-                    except Exception:
-                        raise ValidationError(_('Not a valid email address'), code="exists")
-                else:
-                    raise ValidationError(_('User with email address not found'))
-
-        else:
-            user = self.request.user
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        if 'participant' in serializer.validated_data:
-            participant = serializer.validated_data['participant']
-            if participant.activity != slot.activity:
-                raise ValidationError(_('Participant does not belong to this activity'))
-        else:
-            participant, _created = DateParticipant.objects.get_or_create(
-                activity=slot.activity,
-                user=user,
-            )
-        if slot.slot_participants.filter(participant__user=user).exists():
-            raise ValidationError(_('Participant already registered for this slot'))
-
-        serializer.save(participant=participant, send_messages=send_messages)
-
-
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = [SlotParticipantPermission]
+    permission_classes = [DateParticipantPermission]
 
-    queryset = SlotParticipant.objects.all()
-    serializer_class = SlotParticipantSerializer
+    queryset = DateParticipant.objects.all()
+    serializer_class = DateParticipantSerializer
 
 
 class SlotParticipantTransitionList(TransitionList):
-    serializer_class = SlotParticipantTransitionSerializer
-    queryset = SlotParticipant.objects.all()
+    serializer_class = DateParticipantTransitionSerializer
+    queryset = DateParticipant.objects.all()
 
 
 class ParticipantDocumentDetail(PrivateFileView):

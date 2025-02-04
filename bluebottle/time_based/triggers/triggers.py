@@ -24,6 +24,7 @@ from bluebottle.time_based.effects import (
     CheckPreparationTimeContributionEffect,
     SlotParticipantUnFollowActivityEffect, RescheduleDateSlotContributions,
 )
+from bluebottle.time_based.effects.participants import CreateDateRegistrationEffect
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
     ChangedSingleDateNotification,
@@ -941,13 +942,13 @@ def participant_slot_is_finished(effect):
 
 
 def applicant_is_accepted(effect):
-    return effect.instance.registration.status == 'accepted'
+    return effect.instance.registration and effect.instance.registration.status == 'accepted'
 
 
 def is_participant(effect):
     if 'user' not in effect.options:
         return False
-    return effect.instance.participant.user == effect.options['user']
+    return effect.instance.user == effect.options['user']
 
 
 @register(DateParticipant)
@@ -956,6 +957,7 @@ class DateParticipantTriggers(TriggerManager):
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
             effects=[
+                CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',

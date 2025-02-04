@@ -4,7 +4,7 @@ from django.utils.timezone import get_current_timezone
 from bluebottle.time_based.models import DateActivitySlot
 
 from bluebottle.members.models import Member
-from bluebottle.time_based.models import DateParticipant, SlotParticipant
+from bluebottle.time_based.models import DateParticipant, DateRegistration
 
 
 def nth_weekday(date):
@@ -53,11 +53,11 @@ def bulk_add_slot_participants(slot, emails):
     for email in emails:
         try:
             user = Member.objects.get(email__iexact=email.strip())
-            participant, _created = DateParticipant.objects.get_or_create(
+            registration, _created = DateRegistration.objects.get_or_create(
                 user=user, activity=activity
             )
-            slot_participant, created = SlotParticipant.objects.get_or_create(
-                participant=participant,
+            participant, created = DateParticipant.objects.get_or_create(
+                registration=registration,
                 slot=slot
             )
             if created:

@@ -108,7 +108,7 @@ class RegistrationSerializer(ModelSerializer):
 
 class DateRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('date-registration-detail', view_args=('pk',))
-    participants = ResourceRelatedField(many=True, read_only=True, source='dateparticipant_set')
+    participants = ResourceRelatedField(many=True, read_only=True)
 
     class Meta(RegistrationSerializer.Meta):
         model = DateRegistration
@@ -120,7 +120,7 @@ class DateRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.DateRegistrationDocumentSerializer',
+            'document': 'bluebottle.time_based.serializers.registrations.DateRegistrationDocumentSerializer',
             'participants': 'bluebottle.time_based.serializers.DateParticipantSerializer'
         }
     )
@@ -323,4 +323,9 @@ class TeamScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
 
 class PeriodicRegistrationDocumentSerializer(PrivateDocumentSerializer):
     content_view_name = 'periodic-registration-document'
+    relationship = 'registration_set'
+
+
+class DateRegistrationDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'date-registration-document'
     relationship = 'registration_set'

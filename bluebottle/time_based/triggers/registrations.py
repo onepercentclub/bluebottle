@@ -17,7 +17,8 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration, DateRegistration,
+    TeamScheduleRegistration,
+    DateRegistration,
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -36,7 +37,7 @@ from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationStoppedNotification,
     ManagerRegistrationRestartedNotification, DeadlineUserAppliedNotification, DeadlineUserJoinedNotification,
     PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, ScheduleUserAppliedNotification,
-    ScheduleUserJoinedNotification,
+    ScheduleUserJoinedNotification, DateUserAppliedNotification, DateUserJoinedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
@@ -570,14 +571,14 @@ class DateRegistrationTriggers(RegistrationTriggers):
                     conditions=[review_needed, is_user],
                 ),
                 NotificationEffect(
-                    DeadlineUserAppliedNotification, conditions=[review_needed, is_user]
+                    DateUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
                     ManagerRegistrationCreatedNotification,
                     conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
-                    DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
+                    DateUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ]
         ),

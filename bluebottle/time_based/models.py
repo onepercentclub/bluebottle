@@ -1125,7 +1125,7 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        'time_based.SlotParticipant',
+        'time_based.OldSlotParticipant',
         null=True, blank=True,
         related_name='contributions',
         on_delete=models.SET_NULL
@@ -1743,7 +1743,7 @@ class TeamScheduleParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/team-schedule-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
+class OldSlotParticipant(TriggerMixin, models.Model):
 
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE

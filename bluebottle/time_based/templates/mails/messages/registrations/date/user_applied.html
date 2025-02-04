@@ -1,0 +1,46 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You applied to an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    <p>
+        {% translate "What's next:" %}
+        <ul>
+            <li>
+                <b>{% translate "Review" %}</b> -
+                {% translate "The activity manager will review your application." %}
+            </li>
+            <li>
+                <b>{% translate "Contribute" %}</b> -
+                {% blocktrans context 'email' %}
+                    You join the activity.
+                {% endblocktrans %}
+            </li>
+        </ul>
+    </p>
+
+    <p>
+        <i>
+            {% blocktrans context 'email' %}
+                You will receive a notification by email when the activity manager accepts your application.
+            {% endblocktrans %}
+        </i>
+    </p>
+{% endblock %}
+
+{% block end_message %}
+  <div class="info-box">
+      {% blocktrans context 'email' %}
+        Our partners are counting on your participation. Stopping at the last moment or not showing up will affect their planning. If you are unable to participate, please stop in time so we can find a suitable solution.
+      {% endblocktrans %}
+  </div>
+{% endblock %}

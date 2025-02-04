@@ -17,7 +17,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration,
+    TeamScheduleRegistration, DateRegistration,
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -553,6 +553,71 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                 ),
                 NotificationEffect(
                     UserTeamRegistrationRejectedNotification,
+                ),
+            ],
+        ),
+    ]
+
+
+@register(DateRegistration)
+class DateRegistrationTriggers(RegistrationTriggers):
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
+            effects=[
+                NotificationEffect(
+                    ManagerRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    DeadlineUserAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    ManagerRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    DeadlineUserJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    DeadlineParticipantStateMachine.accept,
+                ),
+                NotificationEffect(
+                    UserRegistrationAcceptedNotification,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    DeadlineParticipantStateMachine.accept,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),

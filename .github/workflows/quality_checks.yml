@@ -16,6 +16,12 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+ 
+      - name: Restore cached virtualenv
+        uses: actions/cache/restore@v4
+        with:
+          key: env-${{ hashFiles('setup.py') }}
+          path: env
 
       - name: Create virtualenv
         run: virtualenv env
@@ -23,7 +29,13 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install -e .[test]
+          pip install -e .[dev]
+
+      - name: Saved cached virtualenv
+        uses: actions/cache/save@v4
+        with:
+          key: env-${{ hashFiles('requirements.txt') }}
+          path: env
 
       - name: Extract messages
         run: |
@@ -59,7 +71,7 @@ jobs:
       - name: Install pip dependencies
         run: |
           source env/bin/activate
-          pip install -e .[test]
+          pip install -e .[dev]
 
       - name: Lint
         run: |

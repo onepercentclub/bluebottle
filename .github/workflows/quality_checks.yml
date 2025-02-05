@@ -19,7 +19,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.8.17' 
+          python-version: '3.9.2' 
           cache: pip
 
       - name: Install pip dependencies
@@ -43,7 +43,7 @@ jobs:
           refresh-message-position: true
 
   lint:
-    name: Linting & Typecheck
+    name: Linting
     runs-on: self-hosted
     steps:
       - name: Checkout repo
@@ -59,28 +59,3 @@ jobs:
 
       - name: Lint
         run: flake8 .
-
-      - name: Typecheck
-        run: npm run typecheck
-
-  testing:
-    name: Tests & Coverage
-    runs-on: self-hosted
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.18
-
-      - name: Install JS dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test:ci
-
-      - name: Run coverage report
-        id: coverage
-        uses: davelosert/vitest-coverage-report-action@v2

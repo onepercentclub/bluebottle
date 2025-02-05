@@ -605,7 +605,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     def get_my_contributor(self, instance):
         user = self.context['request'].user
         if user.is_authenticated:
-            return instance.contributors.filter(user=user).instance_of(DateParticipant).first()
+            return instance.registrations.filter(user=user).first()
 
     class Meta(TimeBasedBaseSerializer.Meta):
         model = DateActivity
@@ -633,7 +633,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers,
         **{
-            'my_contributor': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+            'my_contributor': 'bluebottle.time_based.serializers.DateRegistrationSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',
             'first_slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }

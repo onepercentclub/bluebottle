@@ -37,7 +37,7 @@ jobs:
           python ./locale/check_translations.py --locales=nl  > translation-message.txt
 
       - name: Echo 
-        run: echo translation-message.txt
+        run: cat translation-message.txt
 
       - name: Post comment
         uses: mshick/add-pr-comment@v2

@@ -23,6 +23,12 @@ jobs:
       - name: Activate virtualenv
         run: . ./env/bin/activate
 
+      - name: debug
+        run: echo `which python`
+
+      - name: debug
+        run: echo `which pip`
+
       - name: Install pip dependencies
         run: pip install -e .[test]
 

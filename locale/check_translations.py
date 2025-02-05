@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='Check translation percentages')
 
 # Optional argument
 parser.add_argument(
-    '--source-locale', 
+    '--source-locale',
     type=str,
     default='en',
     help='Base locale to check strings against'
@@ -45,9 +45,8 @@ if __name__ == '__main__':
     ]
     sources = polib.pofile(os.path.join(args.path, args.source_locale, 'LC_MESSAGES/django.po'))
 
-
     for locale in args.locales.split(','):
-        path = os.path.join(args.path, locale,  'LC_MESSAGES/django.po')
+        path = os.path.join(args.path, locale, 'LC_MESSAGES/django.po')
         translations = polib.pofile(path)
 
         missing = []
@@ -68,7 +67,6 @@ if __name__ == '__main__':
                 print(f'and {len(missing) - display_missing} more\n')
         else:
             print(f'All strings for {locale} are translated\n')
-        
+
     if failed:
         sys.exit(1)
-

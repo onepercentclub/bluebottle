@@ -538,7 +538,6 @@ class DateActivityAdmin(TimeBasedAdmin):
     inlines = (
         DateActivitySlotInline,
         DateRegistrationAdminInline,
-        DateParticipantAdminInline
     ) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True

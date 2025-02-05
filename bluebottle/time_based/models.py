@@ -444,9 +444,7 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def contributor_count(self):
-        return self.participants.filter(
-            status__in=['registered', 'succeeded']
-        ).filter(participant__status__in=['accepted']).count()
+        return self.participants.filter(status__in=['accepted', 'succeeded']).count()
 
     @property
     def local_timezone(self):

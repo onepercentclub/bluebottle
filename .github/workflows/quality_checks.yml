@@ -1,0 +1,86 @@
+name: Quality Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  translations:
+    name: Translations
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8.17' 
+          cache: pip
+
+      - name: Install pip dependencies
+        run: pip install -e .[test]
+
+      - name: Extract messages
+        run: python manage.py makemessages --locale=en --ignore=bluebottle/notifications/tests/
+
+      - name: Check missing translations
+        run: python ./locale/check_translatoins.py --locales=nl > translation-message.txt
+        id: missingTranslations
+
+      - name: Echo 
+        run: echo translation-message.txt
+
+      - name: Post comment
+        uses: mshick/add-pr-comment@v2
+        if: always() 
+        with:
+          message-path: translation-message.txt
+          refresh-message-position: true
+
+  lint:
+    name: Linting & Typecheck
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8.17' 
+          cache: pip
+
+      - name: Install pip dependencies
+        run: pip install -e .[test]
+
+      - name: Lint
+        run: flake8 .
+
+      - name: Typecheck
+        run: npm run typecheck
+
+  testing:
+    name: Tests & Coverage
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.18
+
+      - name: Install JS dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Run coverage report
+        id: coverage
+        uses: davelosert/vitest-coverage-report-action@v2

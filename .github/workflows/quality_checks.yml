@@ -21,7 +21,7 @@ jobs:
         run: virtualenv env
 
       - name: Activate virtualenv
-        run: . ./env/bin/activate
+        run: source env/bin/activate
 
       - name: debug
         run: echo `which python`

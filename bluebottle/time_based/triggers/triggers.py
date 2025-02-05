@@ -19,33 +19,25 @@ from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
     RescheduleSlotDurationsEffect,
     ActiveTimeContributionsTransitionEffect,
-    CreateSlotTimeContributionEffect,
     CreatePreparationTimeContributionEffect,
-    CheckPreparationTimeContributionEffect,
-    SlotParticipantUnFollowActivityEffect, RescheduleDateSlotContributions,
+    RescheduleDateSlotContributions,
 )
-from bluebottle.time_based.effects.participants import CreateDateRegistrationEffect
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
     ChangedSingleDateNotification,
-    ManagerSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantWithdrewNotification,
     ParticipantAcceptedNotification,
     ParticipantAddedNotification,
     ParticipantAppliedNotification,
-    ParticipantChangedNotification,
     ParticipantCreatedNotification,
     ParticipantRejectedNotification,
     ParticipantRemovedNotification,
     ParticipantRemovedOwnerNotification,
-    ParticipantSlotParticipantRegisteredNotification,
     ParticipantWithdrewNotification,
     SlotCancelledNotification,
 )
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
-    DateParticipant,
 )
 from bluebottle.time_based.states import (
     DateActivitySlotStateMachine,
@@ -221,7 +213,7 @@ def slot_is_full(effect):
     Slot is full. Capacity is filled by participants.
     """
     participant_count = effect.instance.participants.filter(
-        participant__status='accepted',
+        registration__status='accepted',
         status__in=['registered', 'succeeded']
     ).count()
     if effect.instance.capacity and participant_count >= effect.instance.capacity:
@@ -231,7 +223,7 @@ def slot_is_full(effect):
 
 def slot_is_not_full(effect):
     """
-    slot is not full. Still some spots avaialable
+    slot is not full. Still some spots available
     """
     return not slot_is_full(effect)
 
@@ -242,11 +234,12 @@ def participant_slot_will_be_full(effect):
     """
     participant_count = effect.instance.slot.participants.filter(
         status="registered",
-        registration__status='accepted'
+        registration__status="accepted"
     ).count()
     if (
         effect.instance.slot.capacity and
-        effect.instance.status == 'accepted' and
+        effect.instance.status == 'registered' and
+        effect.instance.registration.status == 'accepted' and
         participant_count + 1 >= effect.instance.slot.capacity
     ):
         return True
@@ -929,144 +922,5 @@ class ParticipantTriggers(ContributorTriggers):
                     ParticipantWithdrewConfirmationNotification
                 ),
             ]
-        ),
-    ]
-
-
-def participant_slot_is_finished(effect):
-    """
-    Slot end date/time has passed
-    """
-    if effect.instance.id:
-        return effect.instance.slot.is_complete and effect.instance.slot.end < now()
-
-
-def applicant_is_accepted(effect):
-    return effect.instance.registration and effect.instance.registration.status == 'accepted'
-
-
-def is_participant(effect):
-    if 'user' not in effect.options:
-        return False
-    return effect.instance.user == effect.options['user']
-
-
-@register(DateParticipant)
-class DateParticipantTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            DateParticipantStateMachine.initiate,
-            effects=[
-                CreateDateRegistrationEffect,
-                CreateSlotTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
-                ),
-                NotificationEffect(
-                    ManagerSlotParticipantRegisteredNotification,
-                    conditions=[
-                        applicant_is_accepted,
-                        is_participant
-                    ]
-                ),
-                NotificationEffect(
-                    ParticipantSlotParticipantRegisteredNotification,
-                    conditions=[
-                        applicant_is_accepted,
-                        is_participant
-                    ]
-                )
-            ]
-        ),
-
-        TransitionTrigger(
-            DateParticipantStateMachine.remove,
-            effects=[
-                CheckPreparationTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.fail,
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
-                ),
-                NotificationEffect(ParticipantChangedNotification),
-                SlotParticipantUnFollowActivityEffect,
-            ],
-        ),
-
-        TransitionTrigger(
-            DateParticipantStateMachine.accept,
-            effects=[
-                CheckPreparationTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
-                ),
-                NotificationEffect(ParticipantChangedNotification),
-                FollowActivityEffect,
-            ],
-        ),
-
-        TransitionTrigger(
-            DateParticipantStateMachine.withdraw,
-            effects=[
-                CheckPreparationTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.fail,
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.unlock,
-                    conditions=[participant_slot_will_be_not_full]
-                ),
-                NotificationEffect(
-                    ManagerSlotParticipantWithdrewNotification,
-                ),
-                SlotParticipantUnFollowActivityEffect,
-            ],
-        ),
-
-        TransitionTrigger(
-            DateParticipantStateMachine.reapply,
-            effects=[
-                CheckPreparationTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.reset,
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
-                ),
-                RelatedTransitionEffect(
-                    'slot',
-                    DateActivitySlotStateMachine.lock,
-                    conditions=[participant_slot_will_be_full]
-                ),
-                NotificationEffect(ParticipantChangedNotification),
-                NotificationEffect(
-                    ManagerSlotParticipantRegisteredNotification,
-                    conditions=[applicant_is_accepted]
-                ),
-                FollowActivityEffect,
-            ],
         ),
     ]

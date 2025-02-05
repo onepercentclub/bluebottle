@@ -225,6 +225,7 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_durations(self):
+        # TODO Fix this
         return self.durations.filter(
             slot_participant__status__in=("registered", "succeeded"),
             contributor__status__in=('new', 'accepted')
@@ -360,21 +361,21 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     @property
     def accepted_participants(self):
-        return self.slot_participants.filter(
+        return self.participants.filter(
             status__in=['registered', 'new', 'succeeded'],
-            participant__status='accepted'
+            registration__status='accepted'
         )
 
     @property
     def durations(self):
         return TimeContribution.objects.filter(
-            slot_participant__slot=self
+            participant__slot=self
         )
 
     @property
     def active_durations(self):
         return self.durations.filter(
-            slot_participant__status__in=("registered", "succeeded"),
+            participant__status__in=("registered", "succeeded"),
             contributor__status__in=("new", "accepted"),
         )
 
@@ -443,7 +444,7 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def contributor_count(self):
-        return self.slot_participants.filter(
+        return self.participants.filter(
             status__in=['registered', 'succeeded']
         ).filter(participant__status__in=['accepted']).count()
 

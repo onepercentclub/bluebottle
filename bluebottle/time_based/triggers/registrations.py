@@ -2,6 +2,7 @@ from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffe
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
@@ -43,8 +44,7 @@ from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
     RegistrationStateMachine,
     TeamStateMachine,
-    ScheduleActivityStateMachine,
-)
+    ScheduleActivityStateMachine, )
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
@@ -596,10 +596,6 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.accept,
             effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    DeadlineParticipantStateMachine.accept,
-                ),
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -608,10 +604,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
-                RelatedTransitionEffect(
-                    "participants",
-                    DeadlineParticipantStateMachine.accept,
-                ),
+                LockFilledSlotsEffect,
             ],
         ),
         TransitionTrigger(

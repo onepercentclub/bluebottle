@@ -26,8 +26,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    'locales',
-    nargs="?",
+    '--locales',
     type=str,
     default='nl',
     help='Locales to check'
@@ -54,6 +53,7 @@ if __name__ == '__main__':
             message = translations.find(source.msgid)
 
             if not message or not message.translated():
+                print(source.msgid)
                 missing.append(source.msgid)
 
         if missing:

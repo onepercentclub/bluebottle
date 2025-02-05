@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 
-AHEAD=`git rev-list --left-right --count origin/master,,,$BRANCH| cut -f1`
+AHEAD=`git rev-list --left-right --count origin/master...$BRANCH| cut -f1`
 
 if [ "$AHEAD" == "0" ]; then
 

@@ -20,15 +20,6 @@ jobs:
       - name: Create virtualenv
         run: virtualenv env
 
-      - name: Activate virtualenv
-        run: 
-
-      - name: debug
-        run: echo `which python`
-
-      - name: debug
-        run: echo `which pip`
-
       - name: Install pip dependencies
         run: |
           source env/bin/activate

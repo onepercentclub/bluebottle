@@ -28,12 +28,12 @@ jobs:
       - name: Extract messages
         run: |
           source env/bin/activate
-          python manage.py makemessages --locale=en --ignore=bluebottle/notifications/tests/
+          python manage.py makemessages --locale=en --ignore=bluebottle/notifications/tests/ --settings=bluebottle.settings.testing
 
       - name: Check missing translations
         run: |
           source env/bin/activate
-          python ./locale/check_translatoins.py --locales=nl > translation-message.txt
+          python ./locale/check_translatoins.py --locales=nl  > translation-message.txt
 
       - name: Echo 
         run: echo translation-message.txt

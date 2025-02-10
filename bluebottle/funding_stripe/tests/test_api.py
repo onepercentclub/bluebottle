@@ -125,7 +125,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
             with mock.patch(
                 "stripe.Account.retrieve", return_value=self.connect_account
             ):
-                response = self.client.post(
+                self.client.post(
                     self.intent_url, data=json.dumps(self.data), user=self.user
                 )
                 create_intent.assert_called_with(
@@ -158,7 +158,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
             with mock.patch(
                 "stripe.Account.retrieve", return_value=self.connect_account
             ):
-                response = self.client.post(
+                self.client.post(
                     self.intent_url, data=json.dumps(self.data), user=self.user
                 )
                 create_intent.assert_called_with(
@@ -188,7 +188,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
             with mock.patch(
                 "stripe.Account.retrieve", return_value=self.connect_account
             ):
-                response = self.client.post(
+                self.client.post(
                     self.intent_url, data=json.dumps(self.data), user=self.user
                 )
                 create_intent.assert_called_with(
@@ -218,7 +218,7 @@ class StripePaymentIntentListTestCase(BluebottleTestCase):
             with mock.patch(
                 "stripe.Account.retrieve", return_value=self.connect_account
             ):
-                response = self.client.post(
+                self.client.post(
                     self.intent_url, data=json.dumps(self.data), user=self.user
                 )
                 create_intent.assert_called_with(
@@ -750,7 +750,6 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             )
 
         data = json.loads(response.content)
-    
 
         self.assertEqual(
             data["data"]["attributes"]["country"],

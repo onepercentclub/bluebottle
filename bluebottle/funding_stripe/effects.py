@@ -17,7 +17,7 @@ class AcceptTosEffect(Effect):
 
             service_argreement = (
                 self.instance.account.tos_acceptance.service_agreement if
-                hasattr(self.instance.account.tos_acceptance, 'service_agreement') else 
+                hasattr(self.instance.account.tos_acceptance, 'service_agreement') else
                 "full"
             )
 

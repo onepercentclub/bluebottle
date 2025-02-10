@@ -395,6 +395,7 @@ class StripePayoutAccount(PayoutAccount):
         super().save(*args, **kwargs)
 
     _spec = None
+
     @property
     def spec(self):
         stripe = get_stripe()
@@ -421,7 +422,6 @@ class StripePayoutAccount(PayoutAccount):
             capabilities['card_payments'] = {"requested": True}
 
         return capabilities
-
 
     @property
     def verification_link(self):

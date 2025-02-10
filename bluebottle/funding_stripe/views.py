@@ -4,8 +4,6 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
 from moneyed import Money
@@ -115,13 +113,12 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
             # Only do  on_behalf_of when card_payments are enabled
             if payment_provider.country != connect_account.country:
                 if payment_provider.country in STRIPE_EUROPEAN_COUNTRY_CODES:
-                    if connect_account.country  not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                    if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
                         # European stripe account and connect account not in Europe
                         init_args['on_behalf_of'] = connect_account.account_id
-                else:                 #    
+                else:
                     # Non european stripe account and countries differ
                     init_args['on_behalf_of'] = connect_account.account_id
-
 
             if platform_currency == 'usd' and connect_account.country != 'US':
                 init_args['on_behalf_of'] = connect_account.account_id

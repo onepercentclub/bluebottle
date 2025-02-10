@@ -41,9 +41,9 @@ def get_saml_request(request):
 
 class SAMLAuthentication(BaseTokenAuthentication):
 
-    def __init__(self, request, **kwargs):
-        super(SAMLAuthentication, self).__init__(request, **kwargs)
-        self.auth = OneLogin_Saml2_Auth(get_saml_request(request), self.settings)
+    def __init__(self, request, settings, saml_request=None, **kwargs):
+        super(SAMLAuthentication, self).__init__(request, settings, **kwargs)
+        self.auth = OneLogin_Saml2_Auth(saml_request or get_saml_request(request), self.settings)
 
     def sso_url(self, target_url=None):
         result = self.auth.login(

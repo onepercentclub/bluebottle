@@ -17,7 +17,7 @@ class TestBaseTokenAuthentication(TestCase):
 
     def setUp(self):
         with self.settings(TOKEN_AUTH={}):
-            self.auth = BaseTokenAuthentication(None)
+            self.auth = BaseTokenAuthentication(None, settings={})
 
     @patch.object(
         BaseTokenAuthentication,

@@ -211,6 +211,15 @@ class StripeSourcePayment(Payment):
 class StripePaymentProvider(PaymentProvider):
     title = 'Stripe'
 
+    country = models.CharField(
+        max_length=2,
+        default="NL",
+        verbose_name=_('Country of primary stripe account'),
+        help_text=_(
+            'Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. '
+        )
+    )
+
     stripe_publishable_key = models.CharField(
         max_length=200,
         null=True,
@@ -374,18 +383,45 @@ class StripePayoutAccount(PayoutAccount):
                 type="custom",
                 settings=self.account_settings,
                 business_type=self.business_type,
-                capabilities={
-                    "transfers": {"requested": True},
-                    "card_payments": {"requested": True},
-                },
+                capabilities=self.capabilities,
                 business_profile={"url": url, "mcc": "8398"},
                 metadata=self.metadata,
+                tos_acceptance={'service_agreement': self.service_agreement},
             )
 
             self.account_id = account.id
             self.update(account)
 
         super().save(*args, **kwargs)
+
+    _spec = None
+    @property
+    def spec(self):
+        stripe = get_stripe()
+
+        if not self._spec or self._spec.id != self.country:
+            self._spec = stripe.CountrySpec.retrieve(id=self.country)
+
+        return self._spec
+
+    @property
+    def service_agreement(self):
+        if 'card_payments' in self.capabilities:
+            return 'full'
+        else:
+            return 'recipient'
+
+    @property
+    def capabilities(self):
+        capabilities = {
+            "transfers": {"requested": True},
+        }
+
+        if self.spec.supported_bank_account_currencies:
+            capabilities['card_payments'] = {"requested": True}
+
+        return capabilities
+
 
     @property
     def verification_link(self):

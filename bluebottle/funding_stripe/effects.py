@@ -15,10 +15,16 @@ class AcceptTosEffect(Effect):
         if self.instance.tos_accepted:
             stripe = get_stripe()
 
+            service_argreement = (
+                self.instance.account.tos_acceptance.service_agreement if
+                hasattr(self.instance.account.tos_acceptance, 'service_agreement') else 
+                "full"
+            )
+
             stripe.Account.modify(
                 self.instance.account_id,
                 tos_acceptance={
-                    "service_agreement": "full",
+                    "service_agreement": service_argreement,
                     "date": now(),
                     "ip": get_client_ip(get_current_request()),
                 },

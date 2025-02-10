@@ -107,13 +107,25 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         }
         init_args['automatic_payment_methods'] = {"enabled": True}
 
-        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
+        payment_provider = StripePaymentProvider.objects.first()
 
-        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            init_args['on_behalf_of'] = connect_account.account_id
+        platform_currency = payment_provider.get_default_currency()[0].lower()
+        international_transfers_enabled  = payment_provider.international_transfers_enabled
 
-        if platform_currency == 'usd' and connect_account.country != 'US':
-            init_args['on_behalf_of'] = connect_account.account_id
+        if 'card_payments' in connect_account.account.capabilities:
+            # Only do  on_behalf_of when card_payments are enabled
+            if payment_provider.country != connect_account.country:
+                if payment_provider.country in STRIPE_EUROPEAN_COUNTRY_CODES:
+                    if connect_account.country  not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                        # European stripe account and connect account not in Europe
+                        init_args['on_behalf_of'] = connect_account.account_id
+                else:                 #    
+                    # Non european stripe account and countries differ
+                    init_args['on_behalf_of'] = connect_account.account_id
+
+
+            if platform_currency == 'usd' and connect_account.country != 'US':
+                init_args['on_behalf_of'] = connect_account.account_id
 
         stripe = get_stripe()
         intent = stripe.PaymentIntent.create(
@@ -587,7 +599,6 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            __import__('ipdb').set_trace()
             error = "Payout not found"
             logger.error(error)
             return HttpResponse(error, status=400)
@@ -599,7 +610,6 @@ class ConnectWebHookView(View):
 class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     serializer_class = CountrySpecSerializer
 
-    @method_decorator(cache_page(60 * 60 * 24))
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
@@ -608,7 +618,7 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         data.extend(specs2.data)
         serializer = self.get_serializer(data, many=True)
 
-        for spec in specs.data:
+        for spec in data:
             spec.pk = spec.id
 
         return Response(serializer.data)

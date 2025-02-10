@@ -605,7 +605,7 @@ EXPOSED_TENANT_PROPERTIES = [
     'social_auth_facebook_key', 'date_format', 'bb_apps', 'donation_amounts',
     'facebook_sharing_reviewed', 'project_create_flow', 'project_create_types',
     'project_contact_types', 'project_contact_method', 'closed_site',
-    'partner_login', 'share_options', 'sso_url', 'project_suggestions',
+    'partner_login', 'sso_url', 'project_suggestions',
     'readOnlyFields', 'search_options', 'tasks'
 ]
 
@@ -667,16 +667,6 @@ BASE_CURRENCY = 'USD'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False
-
-# Social share options in project/fundraiser detail
-SHARE_OPTIONS = {
-    'twitter': True,
-    'facebook': True,
-    'linkedin': False,
-    'embedded': False,
-    'link': False,
-    'flyer': False
-}
 
 SHOW_DONATION_AMOUNTS = True
 
@@ -820,5 +810,3 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
-
-RANDOM_IMAGE_PROVIDER = ""

@@ -6,10 +6,12 @@ import uuid
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.files.images import ImageFile
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+from sorl.thumbnail import default
+from PIL import UnidentifiedImageError, ImageOps
 
 from future.utils import python_2_unicode_compatible
 
@@ -66,8 +68,15 @@ class Image(File):
 
     def save(self, *args, **kwargs):
         if not self.cropbox and self.file:
-            image = ImageFile(self.file)
-            self.cropbox = get_default_cropbox(image, 16 / 9, 40)
+            self.file.file.seek(0)
+            try:
+                image = ImageOps.exif_transpose(
+                    default.engine.get_image(self.file.file)
+                )
+
+                self.cropbox = get_default_cropbox(image, 16 / 9, 40)
+            except UnidentifiedImageError:
+                pass
 
         super().save(*args, **kwargs)
 

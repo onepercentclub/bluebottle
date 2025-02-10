@@ -167,11 +167,11 @@ class TextForm(CMSContentItemForm):
 @plugin_pool.register
 class ImagePlainTextBlockPlugin(CMSContentPlugin):
     model = ImagePlainTextItem
-    category = _('Homepage')
+    category = _('Multimedia')
     form = TextForm
 
 
 @plugin_pool.register
 class ImageBlockPlugin(CMSContentPlugin):
     model = ImageItem
-    category = _('Homepage')
+    category = _('Multimedia')

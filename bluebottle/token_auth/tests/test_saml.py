@@ -17,6 +17,8 @@ from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.models import SAMLLog
 from bluebottle.token_auth.tests.saml_settings import TOKEN_AUTH2_SETTINGS, TOKEN_AUTH_SETTINGS
 
+from bluebottle.clients import properties
+
 standard_library.install_aliases()
 
 
@@ -44,7 +46,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
 
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             sso_url = urllib.parse.urlparse(auth_backend.sso_url())
             query = urllib.parse.parse_qs(sso_url.query)
@@ -65,7 +67,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_sso_url_custom_target(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             sso_url = urllib.parse.urlparse(auth_backend.sso_url(target_url='/test'))
             query = urllib.parse.parse_qs(sso_url.query)
@@ -95,7 +97,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             user, created = auth_backend.authenticate()
 
@@ -124,7 +126,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
             self.assertRaises(
                 TokenAuthenticationError,
                 auth_backend.authenticate
@@ -151,7 +153,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             user, created = auth_backend.authenticate()
 
@@ -183,7 +185,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             user, created = auth_backend.authenticate()
 
@@ -214,7 +216,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             user, created = auth_backend.authenticate()
 
@@ -245,7 +247,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             user, created = auth_backend.authenticate()
 
@@ -277,7 +279,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             user, created = auth_backend.authenticate()
@@ -312,7 +314,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             user, created = auth_backend.authenticate()
@@ -348,7 +350,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             user, created = auth_backend.authenticate()
@@ -390,7 +392,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should still work.
             user, created = auth_backend.authenticate()
@@ -431,7 +433,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
             user, created = auth_backend.authenticate()
             self.assertFalse(created)
 
@@ -468,7 +470,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             user, created = auth_backend.authenticate()
@@ -496,7 +498,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             self.assertRaises(
@@ -522,7 +524,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response, 'RelayState': '/test'}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertEqual(auth_backend.target_url, '/test')
 
@@ -539,7 +541,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response, 'RelayState': 'javascript://alert("test")'}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertIsNone(auth_backend.target_url)
 
@@ -556,7 +558,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response, 'RelayState': ' javascript://alert("test")'}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertIsNone(auth_backend.target_url)
 
@@ -573,7 +575,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response, 'RelayState': 'https://bla.com'}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertIsNone(auth_backend.target_url)
 
@@ -593,7 +595,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertRaises(
                 TokenAuthenticationError,
@@ -616,7 +618,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
                 HTTP_HOST='www.stuff.com',
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             self.assertRaises(
                 TokenAuthenticationError,
@@ -632,7 +634,7 @@ class TestSAMLTokenAuthentication(TestCase):
         # Make sure NameIDPolicy doesn't show up in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             sso_url = urllib.parse.urlparse(auth_backend.sso_url())
             query = urllib.parse.parse_qs(sso_url.query)
@@ -654,7 +656,7 @@ class TestSAMLTokenAuthentication(TestCase):
         # Make sure RequestedAuthnContext doesn't show up in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             sso_url = urllib.parse.urlparse(auth_backend.sso_url())
             query = urllib.parse.parse_qs(sso_url.query)
@@ -675,7 +677,7 @@ class TestSAMLTokenAuthentication(TestCase):
         # Make sure RequestedAuthnContext has right property in SAMLReuqest
         with self.settings(TOKEN_AUTH=TOKEN_AUTH2_SETTINGS):
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             sso_url = urllib.parse.urlparse(auth_backend.sso_url())
             query = urllib.parse.parse_qs(sso_url.query)
@@ -709,7 +711,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=settings):
 
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             result = auth_backend.parse_user({
                 'team': ['Marketing'],
@@ -751,7 +753,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=settings):
             user = BlueBottleUserFactory.create()
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             auth_backend.set_segments(user, {
                 'segment.segment': ['Online Marketing', 'Marketing']
@@ -788,7 +790,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=settings):
 
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             result = auth_backend.parse_user({
                 'nameId': ['1234325']
@@ -812,7 +814,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=settings):
 
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             result = auth_backend.parse_user({
                 'nameId': ['1234325'],
@@ -841,7 +843,7 @@ class TestSAMLTokenAuthentication(TestCase):
         with self.settings(TOKEN_AUTH=settings):
 
             request = self._request('get', '/sso/redirect', HTTP_HOST='www.stuff.com')
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             result = auth_backend.parse_user({
                 'nameId': ['1234325'],

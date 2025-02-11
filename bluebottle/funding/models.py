@@ -770,9 +770,13 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     public_accounts = models.BooleanField(
-        _('Allow users to select account from list of public accounts'),
+        _('Crowdfunding for verified organisations'),
         default=False,
-        help_text=_('Allow users to select account from list of public accounts')
+        help_text=_(
+            'When enabled, campaign initiators must select from a list of organisations with a '
+            'public payout account that will receive the raised money, rather than providing the '
+            'bank account details themselves.'
+        )
     )
 
     matching_name = models.CharField(

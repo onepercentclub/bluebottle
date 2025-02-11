@@ -153,7 +153,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Profile'),
             {
                 'fields': (
-                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_gender', 'enable_birthdate',
                     'enable_address', 'create_segments'
                 )
             }

@@ -219,6 +219,11 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             return effect.instance.activity.start < now().date()
         return True
 
+    def is_not_self(self):
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -229,9 +234,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreatePreparationTimeContributionEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
-                    conditions=[
-                        is_admin
-                    ]
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
@@ -587,7 +590,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
 
     def is_not_self(self):
         user = self.options.get('user')
-        return self.instance.user != user and self.instance.activity.owner != user
+        return user and self.instance.user != user
 
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -598,7 +601,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.add, conditions=[is_admin]
+                    ScheduleParticipantStateMachine.add,
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,

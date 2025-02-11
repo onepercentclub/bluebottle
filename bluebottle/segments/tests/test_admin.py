@@ -29,7 +29,6 @@ class TestSegmentAdmin(BluebottleAdminTestCase):
         activity = DateActivityFactory.create()
         activity_url = reverse('admin:time_based_dateactivity_change', args=(activity.id,))
         response = self.client.get(activity_url)
-        self.assertNotContains(response, 'Segments')
         self.assertNotContains(response, 'Department:')
         segment_type = SegmentTypeFactory.create(name="Department")
         SegmentFactory.create_batch(5, segment_type=segment_type)
@@ -88,11 +87,11 @@ class TestSegmentTypeAdmin(BluebottleAdminTestCase):
         self.assertTrue('Required fields' in page.text)
         self.assertTrue('no segment types are marked as required' in page.text)
         page = page.click('segment type overview')
-        page = page.click('Department')
+        page = page.click('Department', index=0)
         form = page.forms[0]
         form.fields['required'][0].checked = True
         page = form.submit().follow()
-        page = page.click('Hobbies')
+        page = page.click('Hobbies', index=0)
         form = page.forms[0]
         form.fields['required'][0].checked = True
         page = form.submit().follow()

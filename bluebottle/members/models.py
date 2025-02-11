@@ -152,12 +152,6 @@ class MemberPlatformSettings(BasePlatformSettings):
         help_text=_('Show address question in profile form')
     )
 
-    enable_segments = models.BooleanField(
-        _('email segments'),
-        default=False,
-        help_text=_('Enable segments for users e.g. department or job title.')
-    )
-
     create_segments = models.BooleanField(
         _('create segments'),
         default=False,

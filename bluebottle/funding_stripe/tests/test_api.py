@@ -766,7 +766,10 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get(self):
-        response = self.client.get(self.account_url, user=self.user)
+        with mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
+        ):
+            response = self.client.get(self.account_url, user=self.user)
 
         data = json.loads(response.content)
 
@@ -899,7 +902,9 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ) as retrieve, mock.patch(
             "stripe.ListObject.retrieve", return_value=self.connect_external_account
-        ) as retrieve:
+        ) as retrieve, mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
+        ):
             response = self.client.get(self.url, user=self.user)
             retrieve.assert_called_with(self.external_account.account_id)
             self.assertEqual(response.status_code, 200)

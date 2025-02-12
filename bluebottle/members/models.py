@@ -53,9 +53,11 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
     fiscal_month_offset = models.IntegerField(
         _('Fiscal year offset'),
-        help_text=_('Set the number of months your fiscal year will be offset by. '
-                    'This will also take into account how the impact metrics are shown on the homepage. '
-                    'e.g. If the year starts from September (so 4 months earlier) then this value should be 4.'),
+        help_text=_(
+            'Set how many months earlier your fiscal year starts compared to January. '
+            'For example, if your fiscal year starts in September (which is 4 months before '
+            'January), enter 4. This also affects how impact metrics are displayed on the homepage.'
+        ),
         default=0)
 
     reminder_q1 = models.BooleanField(
@@ -109,7 +111,7 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     disable_cookie_consent = models.BooleanField(
-        _('disable cookie consent$'),
+        _('disable cookie consent'),
         default=False,
         help_text=_(
             'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'

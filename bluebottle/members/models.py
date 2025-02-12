@@ -111,7 +111,7 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     disable_cookie_consent = models.BooleanField(
-        _('disable cookie consent$'),
+        _('disable cookie consent'),
         default=False,
         help_text=_(
             'Handle cookie consent externally (e.g. Cookiebot) - (Required when GTM is added.)'

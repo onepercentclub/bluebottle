@@ -555,11 +555,11 @@ class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
 
 
 class InactiveParticipantAddedNotification(TransitionMessage):
-    subject = pgettext('email', "You have been added to the activity {activity name}")
+    subject = pgettext('email', "You have been added to the activity {title}")
     template = 'messages/inactive-participant-added'
 
     context = {
-        'title': 'title',
+        'title': 'activity.title',
     }
 
     @property
@@ -567,10 +567,10 @@ class InactiveParticipantAddedNotification(TransitionMessage):
         user = self.obj.user
 
         token = TimestampSigner().sign(user.pk)
-        url = self.obj.activity.get_absolute_url()
+        activity_url = self.obj.activity.get_absolute_url()
 
-        url = f'/auth/confirm/?token={token}&email={user.email}&url={url}'
-        return self.obj.get_absolute_url()
+        url = f'/auth/confirm/?token={token}&email={user.email}&url={activity_url}'
+        return url
 
     def get_recipients(self):
         """Participant"""

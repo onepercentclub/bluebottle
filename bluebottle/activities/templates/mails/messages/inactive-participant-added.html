@@ -1,5 +1,6 @@
 {% extends "mails/messages/participant_base.html" %}
 {% load i18n %}
+{% load message_url %}
 
 {% block message %}{% blocktrans context 'email' %}
 <p>You have been added to the activity "{{ title }}" as a participant.</p>

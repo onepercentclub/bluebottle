@@ -289,7 +289,7 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_auth_existing_inactive_success(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with remote_id with caps
-            member = BlueBottleUserFactory.create(
+            BlueBottleUserFactory.create(
                 remote_id='492882615ACF31C8096B627245D76AE53036C090',
                 email='smartin@yaco.es',
                 username='smartin',

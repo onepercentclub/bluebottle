@@ -220,6 +220,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         return True
 
     def is_not_self(self):
+        "Participant is created by other user"
         user = self.options.get('user')
 
         return user and self.instance.user != user
@@ -589,6 +590,7 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         return not effect.instance.slot or not effect.instance.slot.end
 
     def is_not_self(self):
+        "Participant is created by other user"
         user = self.options.get('user')
         return user and self.instance.user != user
 

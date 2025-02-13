@@ -295,7 +295,6 @@ class TestSAMLTokenAuthentication(TestCase):
                 username='smartin',
                 is_active=False
             )
-            __import__('ipdb').set_trace()
 
             filename = os.path.join(
                 os.path.dirname(__file__), 'data/valid_response.xml.base64'

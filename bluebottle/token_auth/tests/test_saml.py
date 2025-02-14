@@ -311,7 +311,7 @@ class TestSAMLTokenAuthentication(TestCase):
                 HTTP_HOST='www.stuff.com',
                 data={'SAMLResponse': response}
             )
-            auth_backend = SAMLAuthentication(request)
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
 
             # Login should stil work.
             user, created = auth_backend.authenticate()

@@ -182,6 +182,31 @@ class MatchingFacet(BooleanFacet):
         if not user.is_authenticated:
             return filters
 
+        if user.location:
+            office = user.location
+            office_filter = Term(
+                office_restriction__restriction='all'
+            ) | (
+                Term(office_restriction__office=office.id) &
+                Term(office_restriction__restriction='office')
+            )
+
+            if office.subregion:
+                office_filter = office_filter | (
+                    Term(office_restriction__subregion=office.subregion.id) &
+                    Term(office_restriction__restriction='office_subregion')
+                )
+
+                if office_filter.subregion.region:
+                    office_filter = office_filter | (
+                        Term(office_restriction__region=office.subregion.region.id) &
+                        Term(office_restriction__restriction='office_region')
+                    )
+            filters = filters & Nested(
+                path='office_restriction',
+                query=office_filter
+            )
+
         if user.search_distance and user.place and not user.any_search_distance:
             place = user.place
             if user.exclude_online:

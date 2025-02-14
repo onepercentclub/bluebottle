@@ -1,32 +1,19 @@
 import re
 
+from bluebottle.clients import properties
+
+from django.conf import settings
 from django.contrib.auth import login
-from django.core.exceptions import ImproperlyConfigured
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.template import loader
-from django.utils.module_loading import import_string
 from django.views.generic.base import View, TemplateView
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
-from bluebottle.token_auth.utils import get_settings
+from bluebottle.token_auth.auth.saml import SAMLAuthentication
 
 
-def get_auth(request, **kwargs):
-    settings = get_settings()
-    try:
-        backend = settings['backend']
-        if not backend.startswith('bluebottle'):
-            backend = 'bluebottle.{}'.format(backend)
-    except AttributeError:
-        raise ImproperlyConfigured('TokenAuth backend not set')
-
-    try:
-        cls = import_string(backend)
-    except AttributeError:
-        raise ImproperlyConfigured(
-            'TokenAuth backend {} is not defined'.format(backend)
-        )
-    return cls(request, **kwargs)
+def get_auth(request, settings, saml_request=None):
+    return SAMLAuthentication(request, settings, saml_request=saml_request)
 
 
 class TokenRedirectView(View):
@@ -38,18 +25,20 @@ class TokenRedirectView(View):
     pattern_name = 'article-detail'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
         sso_url = auth.sso_url(target_url=request.GET.get('url'))
         return HttpResponseRedirect(sso_url)
 
 
-class TokenLoginView(View):
-    """
-    Parse GET/POST request and login through set Authentication backend
-    """
+class SAMLLoginView(View):
+    def get_auth(self, request):
+        return get_auth(request, self.settings)
 
-    def get(self, request, link=None, token=None):
-        auth = get_auth(request, token=token, link=link)
+    def authenticated(self, user):
+        pass
+
+    def post(self, request):
+        auth = self.get_auth(request)
 
         try:
             user, created = auth.authenticate()
@@ -58,7 +47,10 @@ class TokenLoginView(View):
             url = '/token/error?message={0}'.format(e)
             return HttpResponseRedirect(url)
 
+        self.authenticated(user)
+
         target_url = auth.target_url or "/"
+
         if target_url and re.match('^\/\w\w\/admin', target_url):
             # Admin login:
             # Log user in using cookies and redirect directly
@@ -71,7 +63,35 @@ class TokenLoginView(View):
         response['cache-control'] = "no-store, no-cache, private"
         return response
 
-    post = get
+
+class UserSAMLLoginView(SAMLLoginView):
+    @property
+    def settings(self):
+        return properties.TOKEN_AUTH
+
+
+class SupportSAMLLoginView(SAMLLoginView):
+    def authenticated(self, user):
+
+        if not user.is_superuser or not user.is_staff:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+
+    def get_auth(self, request):
+        saml_request = {
+            'https': 'on',
+            'http_host': 'sso.goodup.com',
+            'script_name': '',
+            'get_data': request.GET.copy() or request.POST.copy(),
+            'post_data': request.POST.copy(),
+        }
+
+        return get_auth(request, self.settings, saml_request=saml_request)
+
+    @property
+    def settings(self):
+        return settings.SUPPORT_TOKEN_AUTH
 
 
 class TokenLogoutView(TemplateView):
@@ -98,21 +118,6 @@ class TokenErrorView(TemplateView):
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         context['message'] = request.GET.get('message', 'Unknown')
-        auth = get_auth(request, **kwargs)
-        context['ssoUrl'] = auth.sso_url()
-        return self.render_to_response(context)
-
-
-class MembersOnlyView(TemplateView):
-
-    query_string = True
-    template_name = 'token/members-only.tpl'
-
-    def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
-        context = self.get_context_data(**kwargs)
-        context['url'] = request.GET.get('url', '')
-        context['ssoUrl'] = auth.sso_url()
         return self.render_to_response(context)
 
 

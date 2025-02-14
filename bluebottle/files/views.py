@@ -142,6 +142,8 @@ class ImageContentView(FileContentView):
                 thumbnail = get_thumbnail(file, size, cropbox=cropbox)
         except ValueError:
             thumbnail = get_thumbnail(file, size, cropbox=cropbox)
+        except ZeroDivisionError:
+            thumbnail = get_thumbnail(file, size)
 
         content_type = mimetypes.guess_type(file.name)[0]
 

@@ -5,6 +5,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, widgets, StackedInline
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+from django.contrib import messages
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
@@ -1098,9 +1099,10 @@ class SlotDuplicateForm(forms.Form):
 
     end = forms.DateField(
         label=_('End date'),
-        help_text=_('Select a date until which the series runs. If you plan '
-                    'further than 6 months in the future, '
-                    'the loading time can be quite long.'),
+        help_text=_(
+            'This is the date the time slots will repeat until. '
+            'Allow for a long loading time if more than 20 time blocks have to be created.'
+        ),
         widget=widgets.AdminDateWidget()
     )
 
@@ -1114,15 +1116,15 @@ class SlotDuplicateForm(forms.Form):
             super(SlotDuplicateForm, self).__init__(data)
         else:
             super(SlotDuplicateForm, self).__init__()
-        interval_day = _('Every day')
-        interval_week = _('Each week on {weekday}').format(
+        interval_day = _('Daily')
+        interval_week = _('Weekly on the  {weekday}').format(
             weekday=start.strftime('%A')
         )
-        interval_month = _('Monthly every {nth} {weekday}').format(
+        interval_month = _('Monthly on the {nth} {weekday}').format(
             nth=ordinalize(nth_weekday(start)),
             weekday=start.strftime('%A')
         )
-        interval_monthday = _('Monthly every {monthday}').format(
+        interval_monthday = _('Monthly on the {monthday}').format(
             monthday=ordinalize(slot.start.strftime('%-d'))
         )
         interval_choices = (
@@ -1133,7 +1135,7 @@ class SlotDuplicateForm(forms.Form):
         )
         self.fields['interval'].choices = interval_choices
         self.fields['interval'].help_text = _(
-            'We selected these choices because this slot takes place {start}'
+            'Options here are based on when this time slot takes place - {start}'
         ).format(start=start.strftime('%A %-d %B %Y %H:%M %Z'))
 
 
@@ -1214,7 +1216,12 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
             form = SlotDuplicateForm(data=request.POST, slot=slot)
             if form.is_valid():
                 data = form.cleaned_data
-                duplicate_slot(slot, data['interval'], data['end'])
+                dates = duplicate_slot(slot, data['interval'], data['end'])
+                messages.success(
+                    request,
+                    _('%(dates)s time slots created' % {'dates': len(dates)})
+                )
+
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 

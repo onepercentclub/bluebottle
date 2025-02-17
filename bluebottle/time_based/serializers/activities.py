@@ -539,8 +539,8 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
     slots = HyperlinkedRelatedField(
         many=True,
         read_only=True,
-        related_link_view_name='date-slots',
-        related_link_url_kwarg='pk',
+        related_link_view_name='related-date-slots',
+        related_link_url_kwarg='activity_id',
     )
 
     permissions = ResourcePermissionField('date-detail', view_args=('pk',))
@@ -552,7 +552,7 @@ class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer)
 
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name="date-registrations",
+        related_link_view_name="related-date-registrations",
         related_link_url_kwarg="activity_id",
         statuses={
             "new": ["new"],

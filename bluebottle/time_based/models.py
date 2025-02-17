@@ -369,14 +369,13 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     @property
     def durations(self):
         return TimeContribution.objects.filter(
-            participant__slot=self
+            contributor__dateparticipant__slot=self
         )
 
     @property
     def active_durations(self):
         return self.durations.filter(
-            participant__status__in=("registered", "succeeded"),
-            contributor__status__in=("new", "accepted"),
+            contributor__status__in=("new", "accepted", 'succeeded'),
         )
 
     @property

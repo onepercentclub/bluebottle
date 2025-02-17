@@ -46,7 +46,7 @@ class DateRegistrationList(RegistrationList):
     queryset = DateRegistration.objects.prefetch_related(
         'user', 'activity'
     )
-    serializer_class = DeadlineRegistrationSerializer
+    serializer_class = DateRegistrationSerializer
 
 
 class DeadlineRegistrationList(RegistrationList):

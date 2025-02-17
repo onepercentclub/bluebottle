@@ -1,19 +1,12 @@
 import re
-from datetime import datetime, time
 
-import dateutil
 import icalendar
-from django.db.models import Q, ExpressionWrapper, BooleanField
 from django.http import HttpResponse
 from django.utils.timezone import utc, get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
-from rest_framework import filters
-from rest_framework.exceptions import ValidationError
 
-from bluebottle.activities.models import Activity
 from bluebottle.activities.permissions import (
-    ActivityOwnerPermission, ActivityStatusPermission,
-    ContributorPermission, ContributionPermission, DeleteActivityPermission,
+    ContributionPermission
 )
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.models import SegmentType
@@ -24,13 +17,11 @@ from bluebottle.time_based.models import (
     DateActivitySlot, Skill, DateRegistration
 )
 from bluebottle.time_based.permissions import (
-    DateParticipantPermission, DateSlotActivityStatusPermission
+    DateParticipantPermission
 )
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
-    DateParticipantListSerializer,
     TimeContributionSerializer,
-    DateActivitySlotSerializer,
     DateParticipantSerializer,
     DateParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer, DateRegistrationSerializer,
 )
@@ -42,7 +33,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView,
+    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView,
     ListAPIView, JsonApiViewMixin,
     RelatedPermissionMixin,
     PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
@@ -92,134 +83,11 @@ class OldRelatedSlotParticipantListView(JsonApiViewMixin, RelatedPermissionMixin
     serializer_class = DateParticipantSerializer
 
 
-class DateSlotListView(JsonApiViewMixin, ListCreateAPIView):
-    related_permission_classes = {
-        'activity': [
-            ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission),
-            DeleteActivityPermission
-        ]
-    }
-
-    def filter_queryset(self, queryset):
-        queryset = super().filter_queryset(queryset)
-        try:
-            activity_id = self.kwargs.get('pk', None) or self.request.GET.get('activity')
-            queryset = queryset.filter(activity_id=int(activity_id))
-        except (KeyError, TypeError):
-            raise ValidationError('Missing required parameter: activity')
-        except ValueError:
-            raise ValidationError('Invalid parameter: activity ({})'.format(activity_id))
-
-        try:
-            contributor_id = self.request.GET['contributor']
-            queryset = queryset.filter(
-                slot_participants__status__in=['registered', 'succeeded'],
-                slot_participants__participant_id=contributor_id
-            )
-        except ValueError:
-            raise ValidationError('Invalid parameter: contributor ({})'.format(contributor_id))
-        except KeyError:
-            pass
-
-        tz = get_current_timezone()
-
-        start = self.request.GET.get('start')
-        ordering = self.request.GET.get('ordering')
-        try:
-            if ordering == '-start':
-                queryset = queryset.filter(
-                    start__lte=dateutil.parser.parse(start).astimezone(tz)
-                )
-            else:
-                queryset = queryset.filter(
-                    start__gte=dateutil.parser.parse(start).astimezone(tz)
-                )
-        except (ValueError, TypeError):
-            pass
-
-        end = self.request.GET.get('end')
-        try:
-            queryset = queryset.filter(
-                start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
-            )
-        except (ValueError, TypeError):
-            pass
-
-        return queryset
-
-    permission_classes = [TenantConditionalOpenClose, DateSlotActivityStatusPermission, ]
-    queryset = DateActivitySlot.objects.all()
-    serializer_class = DateActivitySlotSerializer
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['start']
-
-
-class DateSlotDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    related_permission_classes = {
-        'activity': [
-            ActivityStatusPermission,
-            OneOf(ResourcePermission, ActivityOwnerPermission)
-        ]
-    }
-    permission_classes = [DateSlotActivityStatusPermission, ]
-    queryset = DateActivitySlot.objects.all()
-    serializer_class = DateActivitySlotSerializer
-
-
 class DateActivityRelatedRegistrationList(RelatedRegistrationListView):
     queryset = DateRegistration.objects.prefetch_related(
         'user', 'participants', 'participants__slot'
     )
     serializer_class = DateRegistrationSerializer
-
-
-class DateRelatedParticipantList(JsonApiViewMixin, ListAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    def get_serializer_context(self, **kwargs):
-        context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
-
-        if self.request.user:
-            activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
-
-            if (
-                activity.owner == self.request.user or
-                self.request.user in activity.initiative.activity_managers.all() or
-                self.request.user.is_staff or
-                self.request.user.is_superuser
-            ):
-                context['display_member_names'] = 'full_name'
-
-        return context
-
-    def get_queryset(self, *args, **kwargs):
-        user = self.request.user
-        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
-        queryset = super().get_queryset(*args, **kwargs).filter(slot_id=self.kwargs['slot_id'])
-
-        queryset = queryset.filter(registration__status='accepted')
-
-        if user.is_anonymous:
-            queryset = queryset.filter(
-                status__in=('registered', 'succeeded'),
-            )
-        elif (
-            user != activity.owner and
-            user != activity.initiative.owner and
-            user not in activity.initiative.activity_managers.all() and
-            not user.is_staff and
-            not user.is_superuser
-        ):
-            queryset = queryset.filter(status__in=('registered', 'succeeded'))
-
-        return queryset
-
-    queryset = DateParticipant.objects.prefetch_related('registration', 'user')
-    serializer_class = DateParticipantSerializer
 
 
 class DateTransitionList(TransitionList):
@@ -232,110 +100,10 @@ class DateSlotTransitionList(TransitionList):
     queryset = DateActivitySlot.objects.all()
 
 
-class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(user=self.request.user)
-
-    def get_serializer_context(self, **kwargs):
-        context = super().get_serializer_context(**kwargs)
-        context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
-
-        if 'activity_id' in kwargs:
-            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-            context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
-
-            if self.request.user and self.request.user.is_authenticated and (
-                self.request.user in context['owners'] or
-                self.request.user.is_staff or
-                self.request.user.is_superuser
-            ):
-                context['display_member_names'] = 'full_name'
-        else:
-            if self.request.user and self.request.user.is_authenticated and (
-                self.request.user.is_staff or
-                self.request.user.is_superuser
-            ):
-                context['display_member_names'] = 'full_name'
-
-        return context
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            queryset = self.queryset.filter(
-                Q(user=self.request.user) |
-                Q(activity__owner=self.request.user) |
-                Q(activity__initiative__activity_manager=self.request.user) |
-                Q(status__in=('accepted', 'succeeded',))
-            ).annotate(
-                current_user=ExpressionWrapper(
-                    Q(user=self.request.user if self.request.user.is_authenticated else None),
-                    output_field=BooleanField()
-                )
-            ).order_by('-current_user', '-id')
-        else:
-            queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
-            )
-
-        if 'activity_id' in self.kwargs:
-            queryset = queryset.filter(
-                activity_id=self.kwargs['activity_id']
-            )
-        return queryset
-
-
-class DateParticipantList(ParticipantList):
-    queryset = DateParticipant.objects.all()
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return DateParticipantSerializer
-        else:
-            return DateParticipantListSerializer
-
-    def perform_create(self, serializer):
-        slot = serializer.validated_data['slot']
-        serializer.save(activity=slot.activity, user=self.request.user)
-
-
 class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
     serializer_class = TimeContributionSerializer
     permission_classes = [ContributionPermission]
-
-
-class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
-    )
-
-
-class DateParticipantDetail(ParticipantDetail):
-    queryset = DateParticipant.objects.all()
-    serializer_class = DateParticipantSerializer
-
-
-class ParticipantTransitionList(TransitionList):
-    pass
-
-
-class DateParticipantTransitionList(ParticipantTransitionList):
-    serializer_class = DateParticipantTransitionSerializer
-    queryset = DateParticipant.objects.all()
 
 
 class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
@@ -348,17 +116,6 @@ class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
 class SlotParticipantTransitionList(TransitionList):
     serializer_class = DateParticipantTransitionSerializer
     queryset = DateParticipant.objects.all()
-
-
-class ParticipantDocumentDetail(PrivateFileView):
-    max_age = 15 * 60  # 15 minutes
-    queryset = DateParticipant.objects
-    relation = 'document'
-    field = 'file'
-
-
-class DateParticipantDocumentDetail(ParticipantDocumentDetail):
-    queryset = DateParticipant.objects
 
 
 class DateActivityIcalView(PrivateFileView):

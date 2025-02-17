@@ -229,6 +229,16 @@ class DateParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = DateParticipant
 
+    @classmethod
+    def create(cls, *args, **kwargs):
+        if 'slot' not in kwargs:
+            activity = kwargs.get('activity') or DateActivityFactory.create()
+            kwargs['slot'] = DateActivitySlotFactory.create(
+                activity=activity,
+            )
+
+        return super().create(*args, **kwargs)
+
     activity = factory.SubFactory(DateActivityFactory)
     registration = factory.SubFactory(DateRegistrationFactory)
     slot = factory.SubFactory(DateActivitySlotFactory)

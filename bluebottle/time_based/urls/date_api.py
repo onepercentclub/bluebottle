@@ -7,7 +7,11 @@ from bluebottle.time_based.views import (
     DateRegistrationTransitionList,
     DateRegistrationDetail,
     DateRegistrationDocumentDetail, DateParticipantTransitionList, DateParticipantExportView,
-    DateRelatedParticipantList, DateParticipantDetail, DateParticipantList
+    DateRelatedParticipantList, DateParticipantDetail, DateParticipantList,
+    DateSlotRelatedParticipantView,
+    DateActivityIcalView,
+    DateSlotDetailView, DateSlotListView,
+    ActivitySlotIcalView
 )
 
 urlpatterns = [
@@ -39,7 +43,7 @@ urlpatterns = [
 
     url(r'^/(?P<activity_id>\d+)/participants$',
         DateRelatedParticipantList.as_view(),
-        name='date-participants'),
+        name='date-related-participants'),
 
     url(r'^/participants$',
         DateParticipantList.as_view(),
@@ -52,7 +56,33 @@ urlpatterns = [
         DateParticipantDetail.as_view(),
         name='date-participant-detail'),
 
+    url(r'^/slots$',
+        DateSlotListView.as_view(),
+        name='date-slot-list'),
+
+    url(r'^/(?P<activity_id>\d+)/slots$',
+        DateSlotListView.as_view(),
+        name='related-date-slots'),
+
+    url(r'^/slots/(?P<pk>\d+)$',
+        DateSlotDetailView.as_view(),
+        name='date-slot-detail'),
+
+    url(r'^/slots/(?P<slot_id>\d+)/participants$',
+        DateSlotRelatedParticipantView.as_view(),
+        name='date-slot-related-participants'),
+
     url(r'^/export/(?P<pk>[\d]+)$',
         DateParticipantExportView.as_view(),
         name='date-participant-export'),
+
+    url(r'^/ical/(?P<pk>\d+)/(?P<user_id>\d+)$',
+        DateActivityIcalView.as_view(),
+        name='date-ical'),
+
+    url(r'^/slot/ical/(?P<pk>\d+)$',
+        ActivitySlotIcalView.as_view(),
+        name='slot-ical'),
+
+
 ]

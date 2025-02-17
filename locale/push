@@ -1,0 +1,18 @@
+#! /usr/bin/bash
+BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+AHEAD=`git rev-list --left-right --count origin/master...$BRANCH| cut -f1`
+
+if [ "$AHEAD" == "0" ]; then
+
+  if [ -z "$(git diff --staged --quiet)" ]; then
+    python manage.py makemessages --locale=en
+    crowdin push 
+    echo "New strrings can be translated at: https://crowdin.com/project/bluebottle";
+    echo "Do not forget to commit the changes to the locale files";
+  else
+    echo "Please commit your staged changes before pushing string";
+  fi
+else
+  echo "Branch is behind master. Please merge master before pushing translations";
+fi

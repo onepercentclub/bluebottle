@@ -148,7 +148,8 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField()
+    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
 

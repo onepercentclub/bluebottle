@@ -99,6 +99,10 @@ class ActivityPreviewSerializer(ModelSerializer):
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+
+    capacity = serializers.SerializerMethodField()
+    contributor_count = serializers.SerializerMethodField()
+
     start = serializers.SerializerMethodField()
     end = serializers.SerializerMethodField()
     highlight = serializers.BooleanField()
@@ -107,6 +111,8 @@ class ActivityPreviewSerializer(ModelSerializer):
     activity = serializers.SerializerMethodField()
 
     collect_type = serializers.SerializerMethodField()
+    collect_target = serializers.SerializerMethodField()
+    realized = serializers.SerializerMethodField()
 
     def get_activity(self, obj):
         return {
@@ -215,6 +221,14 @@ class ActivityPreviewSerializer(ModelSerializer):
             ][0]
         except IndexError:
             pass
+
+    def get_collect_target(self, obj):
+        target = getattr(obj, 'target', None)
+        if target and isinstance(obj.target, (int, float)):
+            return target
+
+    def get_realized(self, obj):
+        return getattr(obj, 'realized', None)
 
     def get_theme(self, obj):
         try:
@@ -357,16 +371,25 @@ class ActivityPreviewSerializer(ModelSerializer):
     def get_owner(self, obj):
         return obj.owner.full_name
 
+    def get_contributor_count(self, obj):
+        return obj.contributor_count
+
+    def get_capacity(self, obj):
+        return obj.capacity
+
+    def get_collect(self, obj):
+        return obj.capacity
+
     class Meta(object):
         model = Activity
         fields = (
             'id', 'slug', 'type', 'title', 'theme', 'expertise',
-            'initiative', 'image', 'matching_properties', 'target',
-            'amount_raised', 'target', 'amount_matching', 'end', 'start',
+            'initiative', 'image', 'matching_properties',
+            'amount_raised', 'realized', 'collect_target', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',
             'slot_count', 'is_online', 'has_multiple_locations', 'is_full',
             'collect_type', 'highlight', 'contribution_duration', 'owner',
-            'resource_name', 'activity'
+            'resource_name', 'activity', 'capacity', 'contributor_count',
         )
         meta_fields = ('current_status', 'created')
 

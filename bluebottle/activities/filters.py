@@ -197,7 +197,7 @@ class MatchingFacet(BooleanFacet):
                     Term(office_restriction__restriction='office_subregion')
                 )
 
-                if office_filter.subregion.region:
+                if office.subregion.region:
                     office_filter = office_filter | (
                         Term(office_restriction__region=office.subregion.region.id) &
                         Term(office_restriction__restriction='office_region')

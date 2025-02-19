@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-12 09:59+0100\n"
-"PO-Revision-Date: 2025-02-12 09:08\n"
+"POT-Creation-Date: 2025-02-19 13:09+0100\n"
+"PO-Revision-Date: 2025-02-19 12:12\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -268,11 +268,11 @@ msgstr "Mit Ihrem Team"
 msgid "As an individual"
 msgstr "Als Einzelperson"
 
-#: bluebottle/activities/filters.py:295
+#: bluebottle/activities/filters.py:320
 msgid "In-person"
 msgstr "Persönlich"
 
-#: bluebottle/activities/filters.py:295
+#: bluebottle/activities/filters.py:320
 msgid "Online/remote"
 msgstr "Online/Remote"
 
@@ -280,14 +280,14 @@ msgstr "Online/Remote"
 msgid "Send impact reminder message"
 msgstr "Nachricht zur Einschlagserinnerung senden"
 
-#: bluebottle/activities/messages.py:17 bluebottle/activities/messages.py:33
-#: bluebottle/activities/messages.py:47
+#: bluebottle/activities/messages.py:20 bluebottle/activities/messages.py:36
+#: bluebottle/activities/messages.py:50
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new post on '{title}'"
 msgstr "Du hast einen neuen Beitrag auf '{title}'"
 
-#: bluebottle/activities/messages.py:39
+#: bluebottle/activities/messages.py:42
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_owner_reaction.html:14
 #: bluebottle/activities/templates/mails/messages/activity_wallpost_reaction.html:14
 #: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.html:14
@@ -296,13 +296,13 @@ msgctxt "email"
 msgid "View response"
 msgstr "Antwort anzeigen"
 
-#: bluebottle/activities/messages.py:63
+#: bluebottle/activities/messages.py:66
 #, python-brace-format
 msgctxt "email"
 msgid "Update from '{title}'"
 msgstr "Update von '{title}'"
 
-#: bluebottle/activities/messages.py:90 bluebottle/collect/messages.py:56
+#: bluebottle/activities/messages.py:93 bluebottle/collect/messages.py:56
 #: bluebottle/deeds/messages.py:56 bluebottle/time_based/messages.py:425
 #: bluebottle/time_based/messages.py:449 bluebottle/time_based/messages.py:769
 #: bluebottle/time_based/messages.py:796 bluebottle/time_based/messages.py:879
@@ -314,87 +314,87 @@ msgctxt "email"
 msgid "Open your activity"
 msgstr "Öffne deine Aktivität"
 
-#: bluebottle/activities/messages.py:104
+#: bluebottle/activities/messages.py:107
 #, python-brace-format
 msgctxt "email"
 msgid "Please share the impact results for your activity \"{title}\"."
 msgstr "Bitte teilen Sie die Ergebnisse für Ihre Aktivität \"{title}\"."
 
-#: bluebottle/activities/messages.py:118
+#: bluebottle/activities/messages.py:121
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has succeeded 🎉"
 msgstr "Ihre Aktivität \"{title}\" hat :party_popper erfolgreich gemacht:"
 
-#: bluebottle/activities/messages.py:126
+#: bluebottle/activities/messages.py:129
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has been restored"
 msgstr "Die Aktivität \"{title}\" wurde wiederhergestellt"
 
-#: bluebottle/activities/messages.py:134
+#: bluebottle/activities/messages.py:137
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been rejected"
 msgstr "Ihre Aktivität \"{title}\" wurde abgelehnt"
 
-#: bluebottle/activities/messages.py:142
+#: bluebottle/activities/messages.py:145
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been cancelled"
 msgstr "Ihre Aktivität \"{title}\" wurde abgebrochen"
 
-#: bluebottle/activities/messages.py:150
+#: bluebottle/activities/messages.py:153
 #, python-brace-format
 msgctxt "email"
 msgid "The registration deadline for your activity \"{title}\" has expired"
 msgstr "Die Registrierungsfrist für Ihre Aktivität \"{title}\" ist abgelaufen"
 
-#: bluebottle/activities/messages.py:166
+#: bluebottle/activities/messages.py:169
 #: bluebottle/time_based/notifications/participants.py:69
 #, python-brace-format
 msgctxt "email"
 msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Sie haben die Aktivität \"{title} \" zurückgezogen"
 
-#: bluebottle/activities/messages.py:180
+#: bluebottle/activities/messages.py:183
 #, python-brace-format
 msgctxt "email"
 msgid "{first_name}, there are {count} activities on {site_name} matching your profile"
 msgstr "{first_name}, es gibt {count} Aktivitäten auf {site_name} , die deinem Profil entsprechen"
 
-#: bluebottle/activities/messages.py:192
+#: bluebottle/activities/messages.py:195
 msgctxt "email"
 msgid "View more activities"
 msgstr "Weitere Aktivitäten anzeigen"
 
-#: bluebottle/activities/messages.py:224
+#: bluebottle/activities/messages.py:227
 msgctxt "email"
 msgid "Multiple locations"
 msgstr "Mehrere Orte"
 
-#: bluebottle/activities/messages.py:227
+#: bluebottle/activities/messages.py:230
 msgctxt "email"
 msgid "Mutliple time slots"
 msgstr "Mehrfache Zeitnischen"
 
-#: bluebottle/activities/messages.py:238
+#: bluebottle/activities/messages.py:241
 msgctxt "email"
 msgid "Starts immediately"
 msgstr "Startet sofort"
 
-#: bluebottle/activities/messages.py:241 bluebottle/activities/messages.py:257
+#: bluebottle/activities/messages.py:244 bluebottle/activities/messages.py:260
 msgctxt "email"
 msgid "runs indefinitely"
 msgstr "läuft unbegrenzt"
 
-#: bluebottle/activities/messages.py:256
+#: bluebottle/activities/messages.py:259
 msgctxt "email"
 msgid "starts immediately"
 msgstr "beginnt sofort"
 
-#: bluebottle/activities/messages.py:291 bluebottle/activities/messages.py:396
-#: bluebottle/activities/messages.py:418 bluebottle/activities/messages.py:440
+#: bluebottle/activities/messages.py:294 bluebottle/activities/messages.py:399
+#: bluebottle/activities/messages.py:421 bluebottle/activities/messages.py:443
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
 #: bluebottle/time_based/messages.py:87 bluebottle/time_based/messages.py:130
@@ -414,103 +414,109 @@ msgctxt "email"
 msgid "View activity"
 msgstr "Aktivität anzeigen"
 
-#: bluebottle/activities/messages.py:299
+#: bluebottle/activities/messages.py:302
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has joined \"{title}\""
 msgstr "Ein neues Team ist beigetreten \"{title}\""
 
-#: bluebottle/activities/messages.py:304
+#: bluebottle/activities/messages.py:307
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to \"{title}\""
 msgstr "Ein neues Team hat sich auf \"{title} \" beworben"
 
-#: bluebottle/activities/messages.py:309
+#: bluebottle/activities/messages.py:312
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been accepted for \"{title}\""
 msgstr "Ihr Team wurde für \"{title} \" akzeptiert"
 
-#: bluebottle/activities/messages.py:324 bluebottle/activities/messages.py:350
-#: bluebottle/activities/messages.py:371
+#: bluebottle/activities/messages.py:327 bluebottle/activities/messages.py:353
+#: bluebottle/activities/messages.py:374
 #, python-brace-format
 msgctxt "email"
 msgid "Team cancellation for '{title}'"
 msgstr "Team Stornierung für '{title}'"
 
-#: bluebottle/activities/messages.py:335
+#: bluebottle/activities/messages.py:338
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been rejected for \"{title}\""
 msgstr "Ihr Team wurde für \"{title} \" abgelehnt"
 
-#: bluebottle/activities/messages.py:359
+#: bluebottle/activities/messages.py:362
 #, python-brace-format
 msgctxt "email"
 msgid "You’re added to a team for '{title}'"
 msgstr "Du wurdest einem Team für '{title} ' hinzugefügt"
 
-#: bluebottle/activities/messages.py:380
+#: bluebottle/activities/messages.py:383
 #: bluebottle/activities/templates/mails/messages/team_reopened.html:6
 msgctxt "email"
 msgid "Your team was accepted again"
 msgstr "Ihr Team wurde erneut akzeptiert"
 
-#: bluebottle/activities/messages.py:389
+#: bluebottle/activities/messages.py:392
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team for \"{title}\""
 msgstr "Jemand ist Ihrem Team beigetreten für \"{title}\""
 
-#: bluebottle/activities/messages.py:411
+#: bluebottle/activities/messages.py:414
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for \"{title}\""
 msgstr "Ein Teilnehmer hat sich aus Ihrem Team zurückgezogen für \"{title}\""
 
-#: bluebottle/activities/messages.py:433
+#: bluebottle/activities/messages.py:436
 #, python-brace-format
 msgctxt "email"
 msgid "Team member removed for ‘{title}’"
 msgstr "Teammitglied wurde für ‘{title} ’ entfernt"
 
-#: bluebottle/activities/messages.py:461
+#: bluebottle/activities/messages.py:464
 msgctxt "email"
 msgid "Find activities"
 msgstr "Aktivitäten finden"
 
-#: bluebottle/activities/messages.py:515
+#: bluebottle/activities/messages.py:518
 #, python-brace-format
 msgctxt "email"
 msgid "Publish your activity \"{title}\""
 msgstr "Veröffentlichen Sie Ihre Aktivität \"{title}\""
 
-#: bluebottle/activities/messages.py:527
+#: bluebottle/activities/messages.py:530
 msgctxt "email"
 msgid "Publish your activity"
 msgstr "Veröffentlichen Sie Ihre Aktivität"
 
-#: bluebottle/activities/messages.py:535
+#: bluebottle/activities/messages.py:538
 msgctxt "email"
 msgid "It’s a new year, let's make some impact!"
 msgstr "Es ist ein neues Jahr, lassen Sie uns etwas bewirken!"
 
-#: bluebottle/activities/messages.py:540
+#: bluebottle/activities/messages.py:543
 msgctxt "email"
 msgid "Haven’t joined an activity yet? Let’s get started!"
 msgstr "Noch keine Aktivität beigetreten? Los geht's!"
 
-#: bluebottle/activities/messages.py:545
+#: bluebottle/activities/messages.py:548
 msgctxt "email"
 msgid "Half way through the year and still plenty of activities to join"
 msgstr "Hälfte des Jahres und noch viele Aktivitäten zum Mitmachen"
 
-#: bluebottle/activities/messages.py:550
+#: bluebottle/activities/messages.py:553
 #, python-brace-format
 msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
 msgstr "Nutzen Sie Ihre {do_good_hours} Stunden der Auswirkung!"
+
+#: bluebottle/activities/messages.py:558
+#, python-brace-format
+msgctxt "email"
+msgid "You have been added to the activity {title}"
+msgstr ""
 
 #: bluebottle/activities/models.py:27 bluebottle/notifications/models.py:58
 #: bluebottle/time_based/models.py:1530
@@ -1401,6 +1407,30 @@ msgid "\n"
 msgstr "\n"
 "        Lass dich vor Jahresende mit einigen guten Ursachen beschäftigen, es gibt viele Aktivitäten, die deine Hilfe benötigen!\n"
 "    "
+
+#: bluebottle/activities/templates/mails/messages/inactive-participant-added.html:5
+#, python-format
+msgctxt "email"
+msgid "\n"
+"<p>You have been added to an activity on %(site_name)s</p>\n"
+msgstr ""
+
+#: bluebottle/activities/templates/mails/messages/inactive-participant-added.html:13
+msgctxt "email"
+msgid "\n"
+"            View activity \n"
+"        "
+msgstr ""
+
+#: bluebottle/activities/templates/mails/messages/inactive-participant-added.html:22
+#: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:24
+msgctxt "email"
+msgid "\n"
+"        If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
+"      "
+msgstr "\n"
+"        Wenn Sie nicht teilnehmen können, ziehen Sie sich bitte über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.\n"
+"      "
 
 #: bluebottle/activities/templates/mails/messages/matching_activities.html:7
 #, python-format
@@ -6755,11 +6785,11 @@ msgstr "Wählen Sie eine Region aus, um die Benutzeransicht zu filtern, um nur d
 msgid "When the user updated their matching preferences."
 msgstr "Wenn der Benutzer aktualisiert ihre passenden Einstellungen."
 
-#: bluebottle/members/models.py:447
+#: bluebottle/members/models.py:448
 msgid "User activity"
 msgstr "Benutzeraktivität"
 
-#: bluebottle/members/models.py:448
+#: bluebottle/members/models.py:449
 msgid "User activities"
 msgstr "Benutzeraktivitäten"
 
@@ -10847,15 +10877,6 @@ msgstr "\n"
 "        <p>Gute Nachrichten, Sie wurden für die Aktivität \"%(title)s\" akzeptiert!</p>\n"
 "        <p>Wenn Sie nicht teilnehmen können, Bitte ziehen Sie sich über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.</p>\n"
 "    "
-
-#: bluebottle/time_based/templates/mails/messages/registrations/user_joined.html:24
-msgctxt "email"
-msgid "\n"
-"        If you are unable to participate, please withdraw via the activity page so that others can take your place.\n"
-"      "
-msgstr "\n"
-"        Wenn Sie nicht teilnehmen können, ziehen Sie sich bitte über die Aktivitätsseite zurück, damit andere Ihren Platz einnehmen können.\n"
-"      "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_removed.html:4
 #, python-format

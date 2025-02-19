@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-12 09:59+0100\n"
-"PO-Revision-Date: 2025-02-12 09:08\n"
+"POT-Creation-Date: 2025-02-19 15:02+0100\n"
+"PO-Revision-Date: 2025-02-19 14:06\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -268,11 +268,11 @@ msgstr "Con tu equipo"
 msgid "As an individual"
 msgstr "Como individuo"
 
-#: bluebottle/activities/filters.py:295
+#: bluebottle/activities/filters.py:320
 msgid "In-person"
 msgstr "En persona"
 
-#: bluebottle/activities/filters.py:295
+#: bluebottle/activities/filters.py:320
 msgid "Online/remote"
 msgstr "En línea/remoto"
 
@@ -11236,14 +11236,68 @@ msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "Segundos"
 
-#: tenants/crowdfunding-010/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/purpose-in-action/settings.py:26
-#: tenants/voor-apeldoorn/settings.py:26
+#: tenants/abn/settings.py:23 tenants/achmea-voor-elkaar/settings.py:23
+#: tenants/almelo/settings.py:22 tenants/apg/settings.py:23
+#: tenants/athlon/settings.py:23
+#: tenants/bedrijven-voor-amsterdam/settings.py:23
+#: tenants/buurt-aed/settings.py:23 tenants/corona/settings.py:22
+#: tenants/crowdfunding-010/settings.py:23
+#: tenants/crowdfunding-voornatuur/settings.py:23
+#: tenants/geef-om-zorg/settings.py:23 tenants/gent/settings.py:22
+#: tenants/goes/settings.py:22 tenants/haarlemmermeer/settings.py:22
+#: tenants/hollandskroon/settings.py:22
+#: tenants/join-rabo-foundation/settings.py:23
+#: tenants/jong-ondernemen/settings.py:23 tenants/kerstactie/settings.py:22
+#: tenants/kwf/settings.py:23 tenants/maximising-potential/settings.py:23
+#: tenants/nl2025/settings.py:22 tenants/nlcares/settings.py:26
+#: tenants/nlmtd/settings.py:26 tenants/nn/settings.py:23
+#: tenants/onepercent/settings.py:22 tenants/ouderenfonds/settings.py:23
+#: tenants/peer/settings.py:23 tenants/pggm/settings.py:23
+#: tenants/purpose-in-action/settings.py:23
+#: tenants/rabobank-noordwest/settings.py:23 tenants/rabobank/settings.py:25
+#: tenants/regiobank/settings.py:23 tenants/rooftop-revolution/settings.py:22
+#: tenants/shell-uk/settings.py:27 tenants/startsomething/settings.py:27
+#: tenants/studentbattle/settings.py:23 tenants/tilburg/settings.py:22
+#: tenants/transavia/settings.py:23 tenants/utrecht/settings.py:22
+#: tenants/venlo/settings.py:23 tenants/voor-apeldoorn/settings.py:23
+#: tenants/voor-je-buurt-belgie/settings.py:23
+#: tenants/voor-je-buurt/settings.py:23 tenants/voor-je-stadsie/settings.py:23
+#: tenants/voor-leeuwarden/settings.py:23 tenants/west-friesland/settings.py:22
+#: tenants/zaanstad/settings.py:22
 msgid "Dutch"
 msgstr "Neerlandés"
 
-#: tenants/do-good-up/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/accenture/settings.py:27
+#: tenants/action-against-corona/settings.py:22 tenants/apg/settings.py:24
+#: tenants/bedrijven-voor-amsterdam/settings.py:24
+#: tenants/booking-community/settings.py:24 tenants/booking/settings.py:28
+#: tenants/boost-your-business/settings.py:23
+#: tenants/bright-future-afghanistan/settings.py:23
+#: tenants/bugaboo/settings.py:23 tenants/close-the-gap/settings.py:23
+#: tenants/corona/settings.py:23
+#: tenants/deloitte-impact-foundation/settings.py:27
+#: tenants/deloitte-uk/settings.py:26 tenants/dll/settings.py:26
+#: tenants/do-good-up/settings.py:24 tenants/dsm/settings.py:23
+#: tenants/ey/settings.py:23 tenants/good-growth-in-action/settings.py:24
+#: tenants/goodup-demo/settings.py:23 tenants/impact-booster/settings.py:25
+#: tenants/innovating-justice/settings.py:22
+#: tenants/join-rabo-foundation/settings.py:24
+#: tenants/jong-ondernemen/settings.py:24 tenants/leap2/settings.py:23
+#: tenants/mars-demo/settings.py:22 tenants/mars/settings.py:23
+#: tenants/maximising-potential/settings.py:24
+#: tenants/nexteconomy/settings.py:26 tenants/nlcares/settings.py:27
+#: tenants/nlmtd/settings.py:27 tenants/nn/settings.py:24
+#: tenants/nola-connects/settings.py:23 tenants/nordea/settings.py:24
+#: tenants/onepercent/settings.py:23 tenants/partos/settings.py:23
+#: tenants/pggm/settings.py:24 tenants/purpose-in-action/settings.py:24
+#: tenants/shell-uk/settings.py:26 tenants/startsomething/settings.py:26
+#: tenants/studentbattle/settings.py:24 tenants/twoscale/settings.py:23
+#: tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/voor-je-buurt/settings.py:24 tenants/voor-je-stadsie/settings.py:24
 msgid "English"
 msgstr "Inglés"
+
+#: tenants/nexteconomy/settings.py:27 tenants/twoscale/settings.py:24
+msgid "French"
+msgstr ""
 

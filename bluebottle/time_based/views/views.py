@@ -1,15 +1,11 @@
-import re
-
 import icalendar
 from django.http import HttpResponse
-from django.utils.timezone import utc, get_current_timezone, now
+from django.utils.timezone import utc, now
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.permissions import (
     ContributionPermission
 )
-from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
     DateParticipant,
@@ -28,7 +24,6 @@ from bluebottle.time_based.serializers import (
 from bluebottle.time_based.views import RelatedRegistrationListView
 from bluebottle.time_based.views.mixins import BaseSlotIcalView
 from bluebottle.transitions.views import TransitionList
-from bluebottle.utils.admin import prep_field
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
@@ -172,76 +167,6 @@ class ActivitySlotIcalView(BaseSlotIcalView):
         status__in=['cancelled', 'deleted', 'rejected'],
         activity__status__in=['cancelled', 'deleted', 'rejected'],
     )
-
-
-class DateParticipantExportView(ExportView):
-    filename = "participants"
-
-    def get_fields(self):
-        question = self.get_object().review_title
-        fields = (
-            ('participant__user__email', 'Email'),
-            ('participant__user__full_name', 'Name'),
-            ('created', 'Registration Date'),
-            ('calculated_status', 'Status'),
-        )
-        if question:
-            fields += (
-                ('participant__motivation', question),
-            )
-
-        segments = tuple(
-            (f"segment.{segment.pk}", segment.name) for segment in SegmentType.objects.all()
-        )
-
-        return fields + segments
-
-    model = DateActivity
-
-    def get_row(self, instance):
-        row = []
-
-        for (field, name) in self.get_fields():
-            if field.startswith('segment.'):
-                row.append(
-                    ", ".join(
-                        instance.user.segments.filter(
-                            segment_type_id=field.split('.')[-1]
-                        ).values_list('name', flat=True)
-                    )
-                )
-            else:
-                row.append(prep_field(self.request, instance, field))
-
-        return row
-
-    def write_data(self, workbook):
-        activity = self.get_object()
-        bold = workbook.add_format({'bold': True})
-        if activity.status == 'succeeded':
-            slots = activity.slots.order_by('start')
-        else:
-            slots = activity.active_slots.filter(start__gt=now()).order_by('start')
-        for slot in slots:
-            title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
-            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
-            worksheet = workbook.add_worksheet(title)
-            worksheet.set_column(0, 4, 30)
-            c = 0
-            for field in self.get_fields():
-                worksheet.write(0, c, field[1], bold)
-                c += 1
-            r = 0
-
-            for participant in slot.slot_participants.all():
-                row = self.get_row(participant)
-                r += 1
-                worksheet.write_row(r, 0, row)
-
-    def get_instances(self):
-        return self.get_object().contributors.instance_of(
-            DateParticipant
-        ).prefetch_related('user__segments')
 
 
 class SlotParticipantExportView(ExportView):

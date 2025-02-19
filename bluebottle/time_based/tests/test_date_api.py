@@ -1,7 +1,9 @@
+from io import BytesIO
 import icalendar
 from datetime import date, timedelta
 
 from django.urls import reverse
+from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -50,6 +52,65 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
         'description': 'Test description',
         'review': False,
     }
+
+    def setUp(self):
+        super().setUp()
+
+    def test_create_complete(self, user=None, data=None):
+        user = self.defaults['initiative'].owner
+        self.perform_create(user=user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        for relationship in self.relationships:
+            self.assertRelationship(relationship)
+
+        for included in self.included:
+            self.assertIncluded(included)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+        self.assertPermission('PUT', True)
+        self.assertPermission('GET', True)
+        self.assertPermission('PATCH', True)
+
+        self.assertTransition('delete')
+
+        # A full activity was created. Now add a slot
+        slot_url = reverse('date-slot-list')
+        response = self.client.post(
+            slot_url,
+            {
+                'data': {
+                    'type': 'activities/time-based/date-slots',
+                    'attributes': {
+                        'start': '2026-01-01 10:00:00',
+                        'duration': '01:00',
+                        'is-online': True
+                    },
+                    'relationships': {
+                        'activity': {
+                            'data': {
+                                'id': self.response.json()['data']['id'],
+                                'type': 'activities/time-based/dates'
+                            }
+                        }
+                    }
+                }
+            },
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        activity = [
+            resource for resource in response.json()['included']
+            if resource['type'] == 'activities/time-based/dates'
+        ][0]
+
+        # Now the activity is really complete and we should be able to publish it
+        self.assertTrue(
+            'publish' in [transition['name'] for transition in activity['meta']['transitions']]
+        )
 
 
 class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestCase):
@@ -236,3 +297,18 @@ class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase
     url_name = 'date-detail'
 
     activity_defaults = {}
+
+    def test_get(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 5)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )
+        )

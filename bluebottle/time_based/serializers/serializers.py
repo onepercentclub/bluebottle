@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, SerializerMethodResourceRelatedField, ResourceRelatedField,
@@ -19,7 +18,7 @@ from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import (
     TimeBasedActivity, DateActivity,
     DateParticipant, TimeContribution, DateActivitySlot,
-    DateRegistration, Skill
+    Skill
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.serializers import DateActivitySerializer

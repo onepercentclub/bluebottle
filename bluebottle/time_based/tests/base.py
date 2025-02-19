@@ -20,6 +20,7 @@ class TimeBasedActivityListAPITestCase:
     attributes = ['start', 'title', 'description', 'review']
     relationships = ['initiative', 'owner']
     included = ['initiative', 'owner']
+    defaults = {}
 
     @property
     def model_name(self):

@@ -1,6 +1,7 @@
 from io import BytesIO
 import icalendar
 from datetime import date, timedelta
+from django.utils.timezone import now
 
 from django.urls import reverse
 from openpyxl import load_workbook
@@ -211,13 +212,39 @@ class DateParticipantTransitionListAPITestCase(TimeBasedParticipantTransitionLis
     target_status = 'removed'
 
 
+class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+    url_name = 'date-detail'
+
+    activity_defaults = {}
+
+    def test_get(self):
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+
+        workbook = load_workbook(filename=BytesIO(self.response.content))
+        self.assertEqual(len(workbook.worksheets), 5)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )
+        )
+
+
 class DateSlotDetailAPITestCase(APITestCase):
     url_name = 'date-slot-detail'
     serializer = DateActivitySlotSerializer
     factory = DateActivitySlotFactory
 
     fields = []
-    attributes = []
+    attributes = [
+        'start', 'duration', 'is-online'
+    ]
+    included = ['activity']
 
     defaults = {}
 
@@ -233,29 +260,41 @@ class DateSlotDetailAPITestCase(APITestCase):
             review=False,
             owner=self.manager,
         )
-        registration = DateRegistrationFactory.create(
-            activity=self.activity,
-            user=self.participant,
-        )
-        participant = DateParticipantFactory.create(
-            registration=registration,
-            activity=self.activity,
-            slot=DateActivitySlotFactory.create(activity=self.activity)
-        )
-        self.model = participant.slot
+
+        self.model = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name, args=(self.model.pk,))
 
-    def test_set_date_activity_manager(self):
+    def test_get(self):
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+        for relationship in self.included:
+            self.assertIncluded(relationship)
+
+    def test_get_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+        for relationship in self.included:
+            self.assertIncluded(relationship)
+
+    def test_update_activity_manager(self):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.manager)
         self.assertStatus(status.HTTP_200_OK)
 
-    def test_set_date_admin(self):
+    def test_update_admin(self):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.admin)
         self.assertStatus(status.HTTP_200_OK)
 
-    def test_set_date_participant(self):
+    def test_set_update_participant(self):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.participant)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
@@ -266,7 +305,10 @@ class DateSlotDetailAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_ical_download(self):
-        self.perform_get(user=self.admin)
+        start = (date.today() + timedelta(days=10)).strftime("%Y-%m-%d %H:00:00")
+        self.perform_update(
+            {"start": start, "duration": "4:0:0", "is_online": True}, user=self.admin
+        )
 
         ical_response = self.client.get(
             self.response.json()["data"]["attributes"]["links"]["ical"],
@@ -291,24 +333,140 @@ class DateSlotDetailAPITestCase(APITestCase):
             )
 
 
-class DateActivityExportTestCase(TimeBasedActivityAPIExportTestCase, APITestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-    url_name = 'date-detail'
+class DateSlotListAPITestCase(APITestCase):
+    url_name = 'date-slot-list'
+    serializer = DateActivitySlotSerializer
+    factory = DateActivitySlotFactory
 
-    activity_defaults = {}
+    fields = ['activity', 'duration', 'is_online']
+    attributes = [
+        'start', 'duration', 'is_online'
+    ]
+    included = ['activity']
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.admin = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory.create()
+        self.participant = BlueBottleUserFactory.create()
+        self.activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            owner=self.manager,
+        )
+
+        self.url = reverse(self.url_name)
+
+        self.defaults = {
+            'is_online': False,
+            'activity': self.activity
+        }
 
     def test_get(self):
-        self.perform_get(user=self.activity.owner)
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    def test_create(self):
+        self.perform_create(user=self.activity.owner)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+        for included in self.included:
+            self.assertIncluded(included)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+        self.assertPermission('PUT', True)
+        self.assertPermission('GET', True)
+        self.assertPermission('PATCH', True)
+
+    def test_create_manager(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_admin(self):
+        self.perform_create(user=self.manager)
+        self.assertStatus(status.HTTP_201_CREATED)
+
+    def test_create_other_user(self):
+        self.perform_create(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_403_FORBIDDEN)
+
+    def test_create_anonymous(self):
+        self.perform_create()
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+
+class DateSlotRelatedListAPITestCase(APITestCase):
+    url_name = 'related-date-slots'
+    serializer = DateActivitySlotSerializer
+    factory = DateActivitySlotFactory
+
+    attributes = [
+        'start', 'duration', 'is_online'
+    ]
+    included = ['activity']
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.admin = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory.create()
+        self.participant = BlueBottleUserFactory.create()
+        self.activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            owner=self.manager,
+            slots=[]
+        )
+
+        self.factory.create_batch(3, activity=self.activity, start=now() + timedelta(days=5))
+        self.factory.create_batch(2, activity=self.activity, start=now() - timedelta(days=5))
+        self.url = reverse(self.url_name, args=(self.activity.pk, ))
+
+    def test_get_manager_future(self):
+        self.perform_get(user=self.manager)
         self.assertStatus(status.HTTP_200_OK)
 
-        workbook = load_workbook(filename=BytesIO(self.response.content))
-        self.assertEqual(len(workbook.worksheets), 5)
+        self.assertTotal(5)
 
-        sheet = workbook.get_active_sheet()
+        for included in self.included:
+            self.assertIncluded(included)
 
-        self.assertEqual(
-            tuple(sheet.values)[0],
-            ('Email', 'Name', 'Registration Date', 'Status', 'Registration answer', )
-        )
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+    def test_get_future(self):
+        self.perform_get(query={'start': date.today(), 'ordering': 'start'})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(3)
+
+        for included in self.included:
+            self.assertIncluded(included)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+    def test_get_passed(self):
+        self.perform_get(query={'start': date.today(), 'ordering': '-start'})
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(2)
+
+        for included in self.included:
+            self.assertIncluded(included)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+    def test_get_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_get_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)

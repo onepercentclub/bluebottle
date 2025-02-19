@@ -78,6 +78,74 @@ class ActivityImageSerializer(ImageSerializer):
     relationship = 'activity_set'
 
 
+class ActivitySerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        FundingSerializer,
+        DeedSerializer,
+        CollectActivitySerializer,
+        DateActivitySerializer,
+        DeadlineActivitySerializer,
+        PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
+    ]
+
+    def get_segments(self, obj):
+        return obj.segments.filter(segment_type__visibility=True)
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
+        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
+        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
+        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
+        'initiative.organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'initiative.organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
+    }
+
+    class Meta(object):
+        model = Activity
+        meta_fields = (
+            'permissions',
+            'transitions',
+            'created',
+            'updated',
+            'errors',
+            'required',
+            'current_status',
+            'contributor_count',
+            'deleted_successful_contributors',
+            'registration_status'
+        )
+
+    class JSONAPIMeta(object):
+        included_resources = [
+            'owner',
+            'image',
+            'initiative',
+            'goals',
+            'goals.type',
+            'location',
+            'initiative.image',
+            'initiative.place',
+            'initiative.location',
+            'initiative.activity_managers',
+            'initiative.promoter',
+            'initiative.organization',
+            'initiative.organization_contact',
+        ]
+
+
+class PreviewRelatedActivityField(PolymorphicResourceRelatedField):
+    def to_representation(self, obj):
+        return {'id': obj.meta.id, 'type': obj.resource_name}
+
+
 class ActivityPreviewSerializer(ModelSerializer):
     theme = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
@@ -108,19 +176,14 @@ class ActivityPreviewSerializer(ModelSerializer):
     highlight = serializers.BooleanField()
     contribution_duration = serializers.SerializerMethodField()
     current_status = serializers.SerializerMethodField()
-    activity = serializers.SerializerMethodField()
+    activity = PreviewRelatedActivityField(ActivitySerializer, queryset=Activity.objects.all(), source="*")
 
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
 
     def get_activity(self, obj):
-        return {
-            'data': {
-                'type': obj.resource_name,
-                'id': obj.meta['id']
-            }
-        }
+        return {'id': obj.meta['id'], 'type': obj.resource_name}
 
     def get_current_status(self, obj):
         model = None
@@ -440,69 +503,6 @@ class ActivityListSerializer(PolymorphicModelSerializer):
             'initiative.image',
             'initiative.place',
             'initiative.location',
-        ]
-
-
-class ActivitySerializer(PolymorphicModelSerializer):
-    polymorphic_serializers = [
-        FundingSerializer,
-        DeedSerializer,
-        CollectActivitySerializer,
-        DateActivitySerializer,
-        DeadlineActivitySerializer,
-        PeriodicActivitySerializer,
-        ScheduleActivitySerializer,
-    ]
-
-    def get_segments(self, obj):
-        return obj.segments.filter(segment_type__visibility=True)
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
-        'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
-        'goals.type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
-        'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
-        'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
-        'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
-        'initiative.place': 'bluebottle.geo.serializers.GeolocationSerializer',
-        'initiative.organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
-        'initiative.organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
-    }
-
-    class Meta(object):
-        model = Activity
-        meta_fields = (
-            'permissions',
-            'transitions',
-            'created',
-            'updated',
-            'errors',
-            'required',
-            'current_status',
-            'contributor_count',
-            'deleted_successful_contributors',
-            'registration_status'
-        )
-
-    class JSONAPIMeta(object):
-        included_resources = [
-            'owner',
-            'image',
-            'initiative',
-            'goals',
-            'goals.type',
-            'location',
-            'initiative.image',
-            'initiative.place',
-            'initiative.location',
-            'initiative.activity_managers',
-            'initiative.promoter',
-            'initiative.organization',
-            'initiative.organization_contact',
         ]
 
 

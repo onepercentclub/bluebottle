@@ -3,7 +3,7 @@ from django.db.models import Q
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant
+    TeamScheduleParticipant, DateParticipant, DateActivity
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
@@ -101,11 +101,16 @@ class RelatedParticipantListView(
 
 
 class SlotRelatedParticipantListView(
-    JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin,
+    AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView, 
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    @property
+    def owners(self):
+        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        return [activity.owner] + list(activity.initiative.activity_managers.all())
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])

@@ -7,6 +7,8 @@ from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.members.models import MemberPlatformSettings
+
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
@@ -552,3 +554,27 @@ class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
             self.assertTrue(
                 resource['meta']['current-status']['value'] in ['accepted', 'succeeded']
             )
+
+    def test_get_user_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=BlueBottleUserFactory.create())
+
+        self.assertStatus(status.HTTP_200_OK)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertIsNone(member['attributes']['last-name'])
+
+    def test_get_activity_owner_only_first_name(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=self.activity.owner)
+
+        self.assertStatus(status.HTTP_200_OK)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])
+
+    def test_get_staff_only_firstname(self):
+        MemberPlatformSettings.objects.update_or_create(display_member_names='first_name')
+        self.perform_get(user=BlueBottleUserFactory.create(is_staff=True))
+
+        self.assertStatus(status.HTTP_200_OK)
+        for member in self.included_by_type(self.response, 'members'):
+            self.assertTrue(member['attributes']['last-name'])

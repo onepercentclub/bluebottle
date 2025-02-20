@@ -268,7 +268,7 @@ class StatusFacet(Facet):
         if filter_values == ['succeeded']:
             return Terms(status=['succeeded', 'partially_funded'])
         if filter_values == ['failed']:
-            return Terms(status=['refunded', 'rejected', 'expired', 'deleted', 'failed', 'cancelled'])
+            return Terms(status=['refunded', 'rejected', 'expired', 'failed', 'cancelled'])
         return MatchNone()
 
 

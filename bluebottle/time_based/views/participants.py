@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
@@ -99,16 +101,31 @@ class RelatedParticipantListView(
 
 
 class SlotRelatedParticipantListView(
-    FilterRelatedUserMixin, JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin,
+    JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin,
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
 
-        return queryset.filter(slot_id=self.kwargs["slot_id"])
+        if self.request.user.is_authenticated:
+            if self.request.user.is_staff:
+                queryset = self.queryset
+            else:
+                queryset = self.queryset.filter(
+                    Q(user=self.request.user) |
+                    Q(slot__activity__owner=self.request.user) |
+                    Q(slot__activity__initiative__activity_manager=self.request.user) |
+                    Q(status__in=('accepted', 'succeeded',))
+                ).order_by('-id')
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded',)
+            ).order_by('-id')
+
+        return queryset
 
 
 class DateRelatedParticipantList(RelatedParticipantListView):

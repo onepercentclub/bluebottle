@@ -470,3 +470,85 @@ class DateSlotRelatedListAPITestCase(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
+
+
+class DateSlotRelatedParticipantsListAPITestCase(APITestCase):
+    url_name = 'date-slot-related-participants'
+    serializer = DateParticipantSerializer
+    factory = DateParticipantFactory
+
+    attributes = []
+    included = ['slot', 'activity']
+
+    def setUp(self):
+        super().setUp()
+        self.manager = BlueBottleUserFactory.create()
+        self.admin = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory.create()
+        self.participant = BlueBottleUserFactory.create()
+        self.activity = DateActivityFactory.create(
+            initiative=InitiativeFactory.create(status='approved'),
+            status='open',
+            review=False,
+            owner=self.manager,
+            slots=[]
+        )
+        self.slot = DateActivitySlotFactory.create(activity=self.activity)
+        self.factory.create_batch(2, slot=self.slot, status='accepted')
+        self.factory.create_batch(2, slot=self.slot, status='succeeded')
+        self.factory.create_batch(2, slot=self.slot, status='withdrawn')
+
+        self.url = reverse(self.url_name, args=(self.slot.pk, ))
+
+    def test_get_manager(self):
+        self.perform_get(user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(6)
+
+        for included in self.included:
+            self.assertIncluded(included)
+
+        for attribute in self.attributes:
+            self.assertAttribute(attribute)
+
+    def test_get_admin(self):
+        self.perform_get(user=self.admin)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(6)
+
+    def test_other_user(self):
+        self.perform_get(user=BlueBottleUserFactory.create())
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(4)
+
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['meta']['current-status']['value'] in ['accepted', 'succeeded']
+            )
+
+    def test_failed_participant(self):
+        participant = self.slot.participants.filter(status='withdrawn').first()
+
+        self.perform_get(user=participant.user)
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(5)
+
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['meta']['current-status']['value'] in ['accepted', 'succeeded', 'withdrawn']
+            )
+
+    def test_anonymous(self):
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+
+        self.assertTotal(4)
+
+        for resource in self.response.json()['data']:
+            self.assertTrue(
+                resource['meta']['current-status']['value'] in ['accepted', 'succeeded']
+            )

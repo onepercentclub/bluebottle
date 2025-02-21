@@ -449,7 +449,8 @@ class StripePayoutAccount(PayoutAccount):
                 self.verified = (
                     data.company.owners_provided or
                     data.company.executives_provided or
-                    data.company.directors_provided
+                    data.company.directors_provided or
+                    (data.payouts_enabled and data.charges_enabled)
                 )
             except AttributeError:
                 pass

@@ -2,8 +2,18 @@
 
 from rest_framework import views, response
 from django.db import connection
+from django.views.generic import TemplateView
+
 
 from bluebottle.clients.utils import get_public_properties
+from bluebottle.members.models import MemberPlatformSettings
+
+
+class Robots(TemplateView):
+    template_name = 'robots.txt'
+
+    def get_context_data(self, **kwargs):
+        return dict(settings=MemberPlatformSettings.load(), **super().get_context_data(**kwargs))
 
 
 class SettingsView(views.APIView):

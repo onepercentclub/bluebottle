@@ -174,14 +174,13 @@ class PeriodicRegistrationTriggerTestCase(
 
     def test_initial_review(self):
         super().test_initial_review()
-
-        self.assertEqual(self.registration.participants.count(), 0)
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertEqual(self.registration.participants.get().status, "new")
 
     def test_accept(self):
         super().test_accept()
-
         self.assertEqual(self.registration.participants.count(), 1)
-        self.assertEqual(self.registration.participants.get().status, "new")
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
     def test_remove(self):
         self.test_accept()

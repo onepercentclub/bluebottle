@@ -53,7 +53,7 @@ install_requires = [
     'django-localflavor==3.0.1',
     'django-lockdown==1.4.2',
     'django-loginas==0.3.2',
-    'django-map-widgets==0.3.1',
+    'django-map-widgets==0.5.1',
     'django-memoize==2.3.1',
     'django-money==1.3.1',
     'django-multiselectfield==0.1.12',
@@ -161,7 +161,7 @@ tests_requires = [
 
 dev_requires = [
     'ipdb',
-    'flake8'
+    'flake8==5.0.4'
 ]
 
 setup(

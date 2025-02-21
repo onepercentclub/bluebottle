@@ -38,7 +38,7 @@ from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
 from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount, StripePayment
+    StripeSourcePayment, ExternalAccount, StripePayment, PaymentIntent
 from bluebottle.funding_telesom.models import TelesomPayment
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.geo.models import Location
@@ -395,51 +395,24 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
         return custom_urls + urls
 
     def sync_payment(self, request, pk=None):
-        donor = Donor.objects.get(pk=pk)
-        if str(donor.amount.currency) == 'NGN':
-            try:
-                donor.payment
-            except Payment.DoesNotExist:
-                payment = FlutterwavePayment.objects.create(
-                    donation=donor,
-                    tx_ref=donor.pk
-                )
-                payment.save()
-                self.message_user(
-                    request,
-                    'Generated missing payment',
-                    level='SUCCESS'
-                )
-            donor.payment.update()
+        try:
+            payment_intent = PaymentIntent.objects.filter(donation_id=pk).get()
+            payment = payment_intent.get_payment()
+            payment.update()
             self.message_user(
                 request,
-                'Checked payment status for {}'.format(donor.payment),
+                'Status checked',
                 level='INFO'
             )
-        else:
-            try:
-                if donor.payment.update:
-                    donor.payment.update()
-                    self.message_user(
-                        request,
-                        'Checked payment status for {}'.format(donor.payment),
-                        level='INFO'
-                    )
-                else:
-                    self.message_user(
-                        request,
-                        'Warning cannot check status for {}'.format(donor.payment),
-                        level='INFO'
-                    )
-            except Payment.DoesNotExist:
-                self.message_user(
-                    request,
-                    'Payment not found',
-                    level='WARNING'
-                )
-
-        donor_url = reverse('admin:funding_donor_change', args=(donor.id,))
-        response = HttpResponseRedirect(donor_url)
+        except PaymentException as e:
+            self.message_user(
+                request,
+                'Error checking status {}'.format(e),
+                level='WARNING'
+            )
+        donation_url = reverse('admin:funding_donor_change'.format(
+        ), args=(pk,))
+        response = HttpResponseRedirect(donation_url)
         return response
 
     def sync_payment_link(self, obj):
@@ -668,7 +641,7 @@ class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmi
                      ]
 
     def public(self, obj):
-        return obj.connect_account.public
+        return obj.connect_account and obj.connect_account.public
 
     def owner(self, obj):
         return obj.connect_account and obj.connect_account.owner

@@ -31,7 +31,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.permissions import ParticipantDocumentPermission, CanExportParticipantsPermission
 from bluebottle.time_based.states import ParticipantStateMachine
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import ResourcePermissionField, AnonymizedResourceRelatedField
+from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
 
@@ -304,7 +304,9 @@ class DateActivitySlotInfoMixin():
         }
 
     def get_location_info(self, obj):
-        slots = self.get_filtered_slots(obj, only_upcoming=False)
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        if not slots:
+            slots = self.get_filtered_slots(obj, only_upcoming=False)
         is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
 
         locations = slots.values_list(
@@ -755,7 +757,9 @@ class SlotParticipantSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     permissions = ResourcePermissionField('slot-participant-detail', view_args=('pk',))
-    user = AnonymizedResourceRelatedField(
+    email = serializers.EmailField(write_only=True, required=False)
+    send_messages = serializers.BooleanField(write_only=True, required=False)
+    user = ResourceRelatedField(
         read_only=True,
         model=BlueBottleBaseUser,
         default=serializers.CurrentUserDefault()
@@ -763,13 +767,22 @@ class SlotParticipantSerializer(ModelSerializer):
     slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
 
     def validate(self, data):
-        if data['slot'].status != 'open':
+        email = data.get('email', None)
+        if data['slot'].status != 'open' and not email:
             raise ValidationError('Participants cannot sign up for full slots')
         return data
 
     class Meta:
         model = SlotParticipant
-        fields = ['id', 'participant', 'current_status', 'user', 'slot']
+        fields = [
+            'id',
+            'participant',
+            'current_status',
+            'user',
+            'slot',
+            'email',
+            'send_messages'
+        ]
         meta_fields = ('status', 'transitions', 'current_status', 'permissions')
 
         validators = []

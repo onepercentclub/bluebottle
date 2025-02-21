@@ -740,17 +740,17 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
+        location = GeolocationFactory.create(
+            position=Point(x=4.8981734, y=52.3790565)
         )
-
-        slot.location.save()
+        slot = self.activity.slots.first()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create()
 
         user.place = PlaceFactory.create(
-            position=Point(x=4.9848386, y=52.3929661)
+            position=Point(x=4.8981730, y=52.3790560)
         )
         user.skills.add(self.activity.expertise)
         user.favourite_themes.add(self.activity.initiative.theme)
@@ -772,12 +772,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.refresh_from_db()
         self.activity.states.cancel(save=True)
 
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
+        location = GeolocationFactory.create(
+            position=Point(x=4.8981734, y=52.3790565)
         )
-
-        slot.location.save()
+        slot = self.activity.slots.first()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create()
 
@@ -802,11 +802,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
+        location = GeolocationFactory.create(
+            position=Point(x=4.8981734, y=52.3790565)
         )
-        slot.location.save()
+        slot = self.activity.slots.first()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create()
         user.place = PlaceFactory.create(
@@ -827,11 +828,14 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
-        slot = self.activity.slots.first()
-        slot.location.position = Point(
-            x=4.8981734, y=52.3790565
+        location = GeolocationFactory.create(
+            position=Point(
+                x=4.8981734, y=52.3790565
+            )
         )
-        slot.location.save()
+        slot = self.activity.slots.first()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create(
             location=LocationFactory.create(
@@ -851,9 +855,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
+        location = GeolocationFactory.create(
+            position=Point(x=4.4207882, y=51.9280712)
+        )
         slot = self.activity.slots.first()
-        slot.location.position = Point(x=4.4207882, y=51.9280712)
-        slot.location.save()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create()
         user.place = PlaceFactory.create(
@@ -874,9 +881,12 @@ class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCa
         self.activity.initiative.states.submit(save=True)
         self.activity.initiative.states.approve(save=True)
 
+        location = GeolocationFactory(
+            position=Point(x=4.4207882, y=51.9280712)
+        )
         slot = self.activity.slots.first()
-        slot.location.position = Point(x=4.4207882, y=51.9280712)
-        slot.location.save()
+        slot.location = location
+        slot.save()
 
         user = BlueBottleUserFactory.create(
             location=LocationFactory.create(
@@ -2099,6 +2109,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
 
         self.data = {
             'data': {
+                'attributes': {},
                 'type': 'contributors/time-based/slot-participants',
                 'relationships': {
                     'slot': {
@@ -2180,6 +2191,23 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         del self.data['data']['relationships']['participant']
         response = self.client.post(self.url, json.dumps(self.data), user=user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_with_email_by_staff(self):
+        # For bulk add flow
+        BlueBottleUserFactory.create(email='rene@froger.nl')
+        staff = BlueBottleUserFactory.create(is_staff=True)
+        del self.data['data']['relationships']['participant']
+        self.data['data']['attributes']['email'] = 'rene@froger.nl'
+        response = self.client.post(self.url, json.dumps(self.data), user=staff)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_with_email_by_user(self):
+        BlueBottleUserFactory.create(email='rene@froger.nl')
+        user = BlueBottleUserFactory.create()
+        del self.data['data']['relationships']['participant']
+        self.data['data']['attributes']['email'] = 'rene@froger.nl'
+        response = self.client.post(self.url, json.dumps(self.data), user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):

@@ -22,7 +22,6 @@ from bluebottle.time_based.effects.participants import (
     CreateRegistrationEffect,
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, )
 from bluebottle.time_based.messages import (
-    ManagerParticipantAddedOwnerNotification,
     ParticipantAddedNotification,
 )
 from bluebottle.time_based.models import (
@@ -220,6 +219,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             return effect.instance.activity.start < now().date()
         return True
 
+    def is_not_self(self):
+        "Participant is created by other user"
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -230,9 +235,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreatePreparationTimeContributionEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
-                    conditions=[
-                        is_admin
-                    ]
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
@@ -262,7 +265,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(ManagerParticipantAddedOwnerNotification),
                 NotificationEffect(ParticipantAddedNotification),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
@@ -446,7 +448,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
 class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
     def slot_is_finished(effect):
         """Slot has status finished"""
-        return effect.instance.slot.status == "finished"
+        return effect.instance.slot and effect.instance.slot.status == "finished"
 
     def registration_is_accepted(effect):
         """Review needed"""
@@ -618,8 +620,9 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         return not effect.instance.slot or not effect.instance.slot.end
 
     def is_not_self(self):
+        "Participant is created by other user"
         user = self.options.get('user')
-        return self.instance.user != user and self.instance.activity.owner != user
+        return user and self.instance.user != user
 
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -630,7 +633,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.add, conditions=[is_admin]
+                    ScheduleParticipantStateMachine.add,
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
@@ -661,10 +665,6 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             ScheduleParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification,
-                    conditions=[is_not_self],
-                ),
                 NotificationEffect(
                     ParticipantAddedNotification,
                     conditions=[is_not_self],

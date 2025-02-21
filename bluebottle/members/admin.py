@@ -153,7 +153,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Profile'),
             {
                 'fields': (
-                    'enable_gender', 'enable_birthdate', 'enable_segments',
+                    'enable_gender', 'enable_birthdate',
                     'enable_address', 'create_segments'
                 )
             }
@@ -165,7 +165,6 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                     'session_only',
                     'consent_link',
                     'disable_cookie_consent',
-                    'anonymization_age',
                     'display_member_names',
                     'gtm_code',
                 )
@@ -437,6 +436,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         'groups',
         'is_co_financer',
         'can_pledge',
+        'can_do_bank_transfer',
         'verified',
         'kyc'
     ]

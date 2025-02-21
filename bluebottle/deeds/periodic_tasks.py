@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from bluebottle.activities.periodic_tasks import UnpublishedActivitiesReminderTask
 
 from bluebottle.deeds.messages import DeedReminderNotification
 from bluebottle.deeds.models import (
@@ -71,5 +72,5 @@ class DeedReminderTask(ModelPeriodicTask):
 
 
 Deed.periodic_tasks = [
-    DeedStartedTask, DeedFinishedTask, DeedReminderTask
+    DeedStartedTask, DeedFinishedTask, DeedReminderTask, UnpublishedActivitiesReminderTask
 ]

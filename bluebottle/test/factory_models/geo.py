@@ -67,6 +67,7 @@ class GeolocationFactory(factory.DjangoModelFactory):
     locality = factory.Faker('city')
     position = Point(13.4, 52.5)
     country = factory.SubFactory(CountryFactory)
+    mapbox_id = 'some-mapbox-id'
     formatted_address = factory.LazyAttribute(
         lambda o: '{} {} {} {}'.format(
             o.street, o.street_number, o.locality, o.country.name

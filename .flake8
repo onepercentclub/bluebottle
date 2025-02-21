@@ -13,4 +13,5 @@ exclude =
     **/node_modules/*,
     docs,
     build,
-    tenants
+    tenants,
+    env

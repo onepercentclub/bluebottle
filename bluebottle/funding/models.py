@@ -34,7 +34,7 @@ from bluebottle.funding.validators import (
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import BasePlatformSettings, AnonymizationMixin, ValidatedModelMixin
+from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +167,17 @@ class Funding(Activity):
     auto_approve = False
 
     activity_type = _('Crowdfunding campaign')
+
+    @property
+    def partner_organization(self):
+        if (
+            self.bank_account
+            and self.bank_account.connect_account
+            and self.bank_account.connect_account.partner_organization
+        ):
+            return self.bank_account.connect_account.partner_organization
+        if self.initiative.organization:
+            return self.initiative.organization
 
     def admin_clean(self):
         for val in self.validators:
@@ -376,7 +387,7 @@ class BudgetLine(models.Model):
 
 
 @python_2_unicode_compatible
-class Fundraiser(AnonymizationMixin, models.Model):
+class Fundraiser(models.Model):
     owner = models.ForeignKey(
         'members.Member', related_name="funding_fundraisers", on_delete=models.CASCADE
     )
@@ -618,7 +629,7 @@ class PaymentMethod(object):
 
 
 @python_2_unicode_compatible
-class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, PolymorphicModel):
+class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     owner = models.ForeignKey(
@@ -627,9 +638,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, AnonymizationMixin, Polym
         on_delete=models.CASCADE
     )
 
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-    reviewed = models.BooleanField(default=False)
+    created = models.DateTimeField(_('created'), default=timezone.now)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+    reviewed = models.BooleanField(_('reviewed'), default=False)
 
     public = models.BooleanField(
         _('Public payout account'),
@@ -759,9 +770,13 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     public_accounts = models.BooleanField(
-        _('Allow users to select account from list of public accounts'),
+        _('Crowdfunding for verified organisations'),
         default=False,
-        help_text=_('Allow users to select account from list of public accounts')
+        help_text=_(
+            'When enabled, campaign initiators must select from a list of organisations with a '
+            'public payout account that will receive the raised money, rather than providing the '
+            'bank account details themselves.'
+        )
     )
 
     matching_name = models.CharField(

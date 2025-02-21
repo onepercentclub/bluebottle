@@ -1,5 +1,6 @@
 import json
 from builtins import range
+from unittest import mock
 
 from django.contrib.gis.geos import Point
 from django.urls import reverse
@@ -9,6 +10,7 @@ from rest_framework import status
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
+from bluebottle.geo.tests.test_admin import mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import (
@@ -73,18 +75,18 @@ class UsedCountryListTestCase(GeoTestCase):
     def setUp(self):
         super(UsedCountryListTestCase, self).setUp()
 
-        belgium = Country.objects.get(translations__name="Belgium")
+        belgium = Country.objects.get(alpha2_code="BE")
         location_be = GeolocationFactory.create(country=belgium)
 
-        bulgaria = Country.objects.get(translations__name="Bulgaria")
+        bulgaria = Country.objects.get(alpha2_code="BG")
         location_bg = GeolocationFactory.create(country=bulgaria)
 
-        germany = Country.objects.get(translations__name="Germany")
+        germany = Country.objects.get(alpha2_code="DE")
         location_de = GeolocationFactory.create(country=germany)
 
-        turkey = Country.objects.get(translations__name="Turkey")
-
+        turkey = Country.objects.get(alpha2_code="TR")
         location_tr = GeolocationFactory.create(country=turkey)
+
         initiative = InitiativeFactory.create(
             status='approved',
             place=location_tr
@@ -200,7 +202,11 @@ class GeolocationCreateTestCase(GeoTestCase):
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory.create()
 
-    def test_api_geolocation_create(self):
+    @mock.patch(
+        'bluebottle.geo.models.Geolocation.reverse_geocode',
+        return_value=mapbox_response
+    )
+    def test_api_geolocation_create(self, mock_reverse_geocode):
         """
         Ensure post request returns 201.
         """

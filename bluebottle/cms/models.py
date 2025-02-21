@@ -129,6 +129,11 @@ class LinkGroup(SortableMixin):
 class Link(SortableMixin):
     link_group = SortableForeignKey(LinkGroup, related_name='links', on_delete=models.CASCADE)
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        blank=True,
+        help_text=_('Groups that can see this link. Leave empty if it should be visible to everyone.')
+    )
     highlight = models.BooleanField(default=False, help_text=_('Display the link as a button'))
     open_in_new_tab = models.BooleanField(default=False, blank=False, help_text=_('Open the link in a new browser tab'))
     title = models.CharField(_('Title'), null=False, max_length=100)
@@ -648,6 +653,10 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             'If the action colour is quite light, you can set this colour to use for text links'
         )
     )
+
+    @property
+    def link_color(self):
+        return self.alternative_link_color or self.action_color
 
     description_color = ColorField(
         _('Description colour'), null=True, blank=True,

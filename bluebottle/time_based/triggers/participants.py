@@ -459,18 +459,24 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
 
     def send_daily_reminder(effect):
         """Is daily recurring, after 4 iterations send every day"""
+        if not effect.instance.registration:
+            return False
         period = effect.instance.activity.period
         count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
         return period == 'days' and count >= 4 and (count - 4) % 3 == 0
 
     def send_weekly_reminder(effect):
         """Is weekly recurring, after 2 iterations send every week"""
+        if not effect.instance.registration:
+            return False
         period = effect.instance.activity.period
         count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
         return period == "weeks" and count > 1
 
     def send_monthly_reminder(effect):
         """Is monthly recurring, after 2 iterations send every month"""
+        if not effect.instance.registration:
+            return False
         period = effect.instance.activity.period
         count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
         return period == "months" and count > 1

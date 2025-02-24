@@ -127,6 +127,14 @@ class ActivityDocument(Document):
         }
     )
 
+    office = fields.NestedField(
+        attr='office_location',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     office_subregion = fields.NestedField(
         attr='office_location.subregion',
         properties={

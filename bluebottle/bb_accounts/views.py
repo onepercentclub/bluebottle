@@ -217,14 +217,13 @@ class Logout(generics.CreateAPIView):
 
     """
     permission_classes = (IsAuthenticated, )
-    parser_classes = (parsers.JSONParser, )
 
     def create(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             self.request.user.last_logout = timezone.now()
             self.request.user.save()
 
-        return response.Response('', status=status.HTTP_204_NO_CONTENT)
+        return response.Response('Logged out', status=status.HTTP_201_CREATED)
 
 
 class SignUpToken(JsonApiViewMixin, CreateAPIView):

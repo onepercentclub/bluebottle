@@ -218,7 +218,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         ),
     )
 
-    reopen = Transition(
+    restore = Transition(
         cancelled,
         open,
         name=_('Reopen'),

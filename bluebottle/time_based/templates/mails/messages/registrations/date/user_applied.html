@@ -1,0 +1,36 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+            You applied to an activity on <b>{{ site_name }}!</b>
+        {% endblocktrans %}
+    </p>
+
+    <p>
+        <b>{{ title }}</b>
+    </p>
+
+    <p>
+        {% translate "What's next:" %}
+        <ul>
+            <li>
+                <b>{% translate "Review" %}</b> -
+                {% translate "The activity manager will review your application." %}
+            </li>
+            <li>
+                <b>{% translate "Contribute" %}</b> -
+                {% blocktrans %}
+                    When you are accepted you can participate at the place and time indicated below.
+                {% endblocktrans %}
+            </li>
+        </ul>
+    </p>
+    <p>
+        {% for slot in slots %}
+            {% include 'mails/messages/partial/slot.html' %}
+        {% endfor %}
+    </p>
+
+{% endblock %}

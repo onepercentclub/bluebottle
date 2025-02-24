@@ -174,6 +174,16 @@ class PeriodicUserAppliedNotification(UserRegistrationNotification):
     template = 'messages/registrations/periodic/user_applied'
 
 
+class DateUserAppliedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/date/user_applied'
+
+
+class DateUserJoinedNotification(UserRegistrationNotification):
+    subject = pgettext('email', 'You have joined the activity "{title}"')
+    template = 'messages/registrations/date/user_joined'
+
+
 class PeriodicUserJoinedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have joined the activity "{title}"')
     template = 'messages/registrations/periodic/user_joined'

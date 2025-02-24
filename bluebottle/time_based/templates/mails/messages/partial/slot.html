@@ -1,8 +1,7 @@
 {% load i18n %}
-<p class="{% if slot.changed %}italic{% endif %}">
-    <b>{{ slot.title }}</b>
-    {% if slot.changed %}
-        {% trans "Changed" %}
+<div class="slot-info">
+    {% if slot.title %}
+        <b>{{ slot.title }}</b>
     {% endif %}
     <br/>
     {{ slot.start_date }} <br/>
@@ -24,4 +23,4 @@
         {% endif %}
     {% endif %}
     <br/>
-</p>
+</div>

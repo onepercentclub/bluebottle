@@ -205,22 +205,6 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
 
-@register(DateParticipant)
-class DateParticipantStateMachine(ParticipantStateMachine):
-    succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
-            ParticipantStateMachine.rejected,
-            ParticipantStateMachine.accepted
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
-        automatic=True,
-    )
-
-
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
     accept = Transition(
         [
@@ -505,3 +489,14 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     pass
+
+
+@register(DateParticipant)
+class DateParticipantStateMachine(RegistrationParticipantStateMachine):
+
+    def activity_is_open(self):
+        """task is open"""
+        return self.instance.slot_id and self.instance.slot.status in (
+            'open',
+            'running',
+        )

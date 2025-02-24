@@ -30,7 +30,7 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import TimeContribution, DateParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration, SlotParticipant
+    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration
 from bluebottle.time_based.serializers import (
     DateActivityListSerializer,
     DeadlineActivitySerializer,
@@ -558,8 +558,8 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
 
 class ContributionSerializer(ModelSerializer):
     contributor = PolymorphicResourceRelatedField(ContributorSerializer, queryset=Contributor.objects.all())
-    slot_participant = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
+    participant = SerializerMethodResourceRelatedField(
+        model=DateParticipant,
         read_only=True,
         source='get_slot_participant'
     )

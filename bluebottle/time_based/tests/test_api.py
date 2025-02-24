@@ -23,11 +23,13 @@ from bluebottle.test.utils import (
     APITestCase
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
-from bluebottle.time_based.models import SlotParticipant, Skill
+from bluebottle.time_based.models import Skill, DateParticipant
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, SkillFactory
+    DateActivitySlotFactory,
+    SkillFactory,
+    DateRegistrationFactory
 )
 
 
@@ -224,7 +226,12 @@ class DateListAPIViewTestCase(TimeBasedListAPIViewTestCase, BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TimeBasedDetailAPIViewTestCase():
+class DateDetailAPIViewTestCase(BluebottleTestCase):
+    type = 'date'
+    factory = DateActivityFactory
+    participant_factory = DateParticipantFactory
+    registration_factory = DateRegistrationFactory
+
     def setUp(self):
         super().setUp()
         self.settings = InitiativePlatformSettings.load()
@@ -259,6 +266,12 @@ class TimeBasedDetailAPIViewTestCase():
                 }
             }
         }
+        self.data['data']['attributes'].update({
+            'start': str(now() + timedelta(days=21)),
+            'duration': '4:00',
+        })
+        self.slot = self.activity.slots.first()
+        self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
 
     def assertTransitionInData(self, transition, data):
         self.assertIn(transition, [trans['name'] for trans in data['meta']['transitions']])
@@ -377,7 +390,7 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertIsNone(export_url)
 
     def test_get_owner_export_enabled(self):
-        self.participant_factory.create_batch(4, activity=self.activity)
+        self.registration_factory.create_batch(4, activity=self.activity)
 
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_participant_exports = True
@@ -450,15 +463,15 @@ class TimeBasedDetailAPIViewTestCase():
         user.segments.add(workshop)
         user.segments.add(metal)
         user.segments.add(classical)
-        participant = self.participant_factory.create(
+        registration = self.registration_factory.create(
             activity=self.activity,
             user=user,
             status='accepted'
         )
         for slot in self.activity.slots.all():
-            SlotParticipantFactory.create(
+            DateParticipantFactory.create(
                 slot=slot,
-                participant=participant,
+                registration=registration,
                 status='registered'
             )
         self.activity.review_title = "Motivation"
@@ -503,13 +516,13 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertTransitionInData('cancel', self.data)
 
     def test_get_contributors(self):
-        participants = self.participant_factory.create_batch(4, activity=self.activity)
-        withdrawn = self.participant_factory.create(activity=self.activity)
+        registrations = self.registration_factory.create_batch(4, activity=self.activity)
+        withdrawn = self.registration_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
 
-        for participant in [withdrawn] + participants:
-            SlotParticipantFactory.create(
-                participant=participant, slot=self.activity.slots.get()
+        for registration in [withdrawn] + registrations:
+            DateParticipantFactory.create(
+                registration=registration, slot=self.activity.slots.get()
             )
 
         response = self.client.get(self.url, user=self.activity.owner)
@@ -534,13 +547,13 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors_anonymous(self):
-        participants = self.participant_factory.create_batch(4, activity=self.activity)
-        withdrawn = self.participant_factory.create(activity=self.activity)
+        registrations = self.registration_factory.create_batch(4, activity=self.activity)
+        withdrawn = self.registration_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
 
-        for participant in [withdrawn] + participants:
-            SlotParticipantFactory.create(
-                participant=participant, slot=self.activity.slots.get()
+        for registration in [withdrawn] + registrations:
+            DateParticipantFactory.create(
+                registration=registration, slot=self.activity.slots.get()
             )
 
         response = self.client.get(self.url)
@@ -565,18 +578,18 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_contributors_participant(self):
-        participants = self.participant_factory.create_batch(4, activity=self.activity)
-        withdrawn = self.participant_factory.create(activity=self.activity)
+        registrations = self.registration_factory.create_batch(4, activity=self.activity)
+        withdrawn = self.registration_factory.create(activity=self.activity)
         withdrawn.states.withdraw(save=True)
-        used_participant = self.participant_factory.create(activity=self.activity)
-        used_participant.states.withdraw(save=True)
+        used_registration = self.registration_factory.create(activity=self.activity)
+        used_registration.states.withdraw(save=True)
 
-        for participant in [withdrawn, used_participant] + participants:
-            SlotParticipantFactory.create(
-                participant=participant, slot=self.activity.slots.get()
+        for registration in [withdrawn, used_registration] + registrations:
+            DateParticipantFactory.create(
+                registration=registration, slot=self.activity.slots.get()
             )
 
-        response = self.client.get(self.url, user=used_participant.user)
+        response = self.client.get(self.url, user=used_registration.user)
 
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -588,7 +601,7 @@ class TimeBasedDetailAPIViewTestCase():
 
         response = self.client.get(
             self.response_data["relationships"]["contributors"]["links"]["related"],
-            user=used_participant.user,
+            user=used_registration.user,
         )
         self.response_data = response.json()['data']
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -621,13 +634,13 @@ class TimeBasedDetailAPIViewTestCase():
         )
 
     def test_get_my_contributor(self):
-        participant = self.participant_factory.create(activity=self.activity)
-        response = self.client.get(self.url, user=participant.user)
+        registration = self.registration_factory.create(activity=self.activity)
+        response = self.client.get(self.url, user=registration.user)
 
-        included_participant = get_first_included_by_type(
-            response, self.participant_factory._meta.model.JSONAPIMeta.resource_name
+        included_registration = get_first_included_by_type(
+            response, self.registration_factory._meta.model.JSONAPIMeta.resource_name
         )
-        self.assertEqual(str(participant.pk), included_participant['id'])
+        self.assertEqual(str(registration.pk), included_registration['id'])
 
     def test_update_owner(self):
         response = self.client.put(self.url, json.dumps(self.data), user=self.activity.owner)
@@ -710,198 +723,189 @@ class TimeBasedDetailAPIViewTestCase():
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class DateDetailAPIViewTestCase(TimeBasedDetailAPIViewTestCase, BluebottleTestCase):
-    type = 'date'
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
+def test_get_calendar_links(self):
+    response = self.client.get(self.url, user=self.activity.owner)
 
-    def setUp(self):
-        super().setUp()
+    links = response.json()['data']['attributes']['links']
 
-        self.data['data']['attributes'].update({
-            'start': str(now() + timedelta(days=21)),
-            'duration': '4:00',
-        })
-        self.slot = self.activity.slots.first()
-        self.slot_url = reverse('date-slot-detail', args=(self.slot.pk,))
-
-    def test_get_calendar_links(self):
-        response = self.client.get(self.url, user=self.activity.owner)
-
-        links = response.json()['data']['attributes']['links']
-
-        self.assertTrue(
-            links['ical'].startswith(
-                reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
-            )
+    self.assertTrue(
+        links['ical'].startswith(
+            reverse('date-ical', args=(self.activity.pk, self.activity.owner.id))
         )
+    )
 
-    def test_matching_all(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
 
-        location = GeolocationFactory.create(
-            position=Point(x=4.8981734, y=52.3790565)
+def test_matching_all(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
+
+    location = GeolocationFactory.create(
+        position=Point(x=4.8981734, y=52.3790565)
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
+
+    user = BlueBottleUserFactory.create()
+
+    user.place = PlaceFactory.create(
+        position=Point(x=4.8981730, y=52.3790560)
+    )
+    user.skills.add(self.activity.expertise)
+    user.favourite_themes.add(self.activity.initiative.theme)
+    user.save()
+
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    data = response.json()['data']
+
+    self.assertEqual(data['meta']['matching-properties']['skill'], True)
+    self.assertEqual(data['meta']['matching-properties']['theme'], True)
+    self.assertEqual(data['meta']['matching-properties']['location'], True)
+
+
+def test_matching_all_cancelled(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
+
+    self.activity.refresh_from_db()
+    self.activity.states.cancel(save=True)
+
+    location = GeolocationFactory.create(
+        position=Point(x=4.8981734, y=52.3790565)
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
+
+    user = BlueBottleUserFactory.create()
+
+    PlaceFactory.create(
+        content_object=user,
+        position=Point(x=4.9848386, y=52.3929661)
+    )
+
+    user.skills.add(self.activity.expertise)
+    user.favourite_themes.add(self.activity.initiative.theme)
+
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    data = response.json()['data']
+
+    self.assertEqual(data['meta']['matching-properties']['skill'], False)
+    self.assertEqual(data['meta']['matching-properties']['theme'], False)
+    self.assertEqual(data['meta']['matching-properties']['location'], False)
+
+
+def test_matching_location_place(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
+
+    location = GeolocationFactory.create(
+        position=Point(x=4.8981734, y=52.3790565)
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
+
+    user = BlueBottleUserFactory.create()
+    user.place = PlaceFactory.create(
+        position=Point(x=4.9848386, y=52.3929661)
+    )
+    user.save()
+
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    data = response.json()['data']
+
+    self.assertEqual(data['meta']['matching-properties']['skill'], None)
+    self.assertEqual(data['meta']['matching-properties']['theme'], None)
+    self.assertEqual(data['meta']['matching-properties']['location'], True)
+
+
+def test_matching_location_location(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
+
+    location = GeolocationFactory.create(
+        position=Point(
+            x=4.8981734, y=52.3790565
         )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
 
-        user = BlueBottleUserFactory.create()
-
-        user.place = PlaceFactory.create(
-            position=Point(x=4.8981730, y=52.3790560)
-        )
-        user.skills.add(self.activity.expertise)
-        user.favourite_themes.add(self.activity.initiative.theme)
-        user.save()
-
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], True)
-        self.assertEqual(data['meta']['matching-properties']['theme'], True)
-        self.assertEqual(data['meta']['matching-properties']['location'], True)
-
-    def test_matching_all_cancelled(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        self.activity.refresh_from_db()
-        self.activity.states.cancel(save=True)
-
-        location = GeolocationFactory.create(
-            position=Point(x=4.8981734, y=52.3790565)
-        )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
-
-        user = BlueBottleUserFactory.create()
-
-        PlaceFactory.create(
-            content_object=user,
+    user = BlueBottleUserFactory.create(
+        location=LocationFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
+    )
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        user.skills.add(self.activity.expertise)
-        user.favourite_themes.add(self.activity.initiative.theme)
+    data = response.json()['data']
 
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    self.assertEqual(data['meta']['matching-properties']['skill'], None)
+    self.assertEqual(data['meta']['matching-properties']['theme'], None)
+    self.assertEqual(data['meta']['matching-properties']['location'], True)
 
-        data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], False)
-        self.assertEqual(data['meta']['matching-properties']['theme'], False)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
+def test_matching_location_place_too_far(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
 
-    def test_matching_location_place(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
+    location = GeolocationFactory.create(
+        position=Point(x=4.4207882, y=51.9280712)
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
 
-        location = GeolocationFactory.create(
-            position=Point(x=4.8981734, y=52.3790565)
-        )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
+    user = BlueBottleUserFactory.create()
+    user.place = PlaceFactory.create(
+        position=Point(x=4.9848386, y=52.3929661)
+    )
+    user.save()
 
-        user = BlueBottleUserFactory.create()
-        user.place = PlaceFactory.create(
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    data = response.json()['data']
+
+    self.assertEqual(data['meta']['matching-properties']['skill'], None)
+    self.assertEqual(data['meta']['matching-properties']['theme'], None)
+    self.assertEqual(data['meta']['matching-properties']['location'], False)
+
+
+def test_matching_location_location_too_far(self):
+    self.activity.initiative.states.submit(save=True)
+    self.activity.initiative.states.approve(save=True)
+
+    location = GeolocationFactory(
+        position=Point(x=4.4207882, y=51.9280712)
+    )
+    slot = self.activity.slots.first()
+    slot.location = location
+    slot.save()
+
+    user = BlueBottleUserFactory.create(
+        location=LocationFactory.create(
             position=Point(x=4.9848386, y=52.3929661)
         )
-        user.save()
+    )
 
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    response = self.client.get(self.url, user=user)
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()['data']
+    data = response.json()['data']
 
-        self.assertEqual(data['meta']['matching-properties']['skill'], None)
-        self.assertEqual(data['meta']['matching-properties']['theme'], None)
-        self.assertEqual(data['meta']['matching-properties']['location'], True)
-
-    def test_matching_location_location(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        location = GeolocationFactory.create(
-            position=Point(
-                x=4.8981734, y=52.3790565
-            )
-        )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
-
-        user = BlueBottleUserFactory.create(
-            location=LocationFactory.create(
-                position=Point(x=4.9848386, y=52.3929661)
-            )
-        )
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], None)
-        self.assertEqual(data['meta']['matching-properties']['theme'], None)
-        self.assertEqual(data['meta']['matching-properties']['location'], True)
-
-    def test_matching_location_place_too_far(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        location = GeolocationFactory.create(
-            position=Point(x=4.4207882, y=51.9280712)
-        )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
-
-        user = BlueBottleUserFactory.create()
-        user.place = PlaceFactory.create(
-            position=Point(x=4.9848386, y=52.3929661)
-        )
-        user.save()
-
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], None)
-        self.assertEqual(data['meta']['matching-properties']['theme'], None)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
-
-    def test_matching_location_location_too_far(self):
-        self.activity.initiative.states.submit(save=True)
-        self.activity.initiative.states.approve(save=True)
-
-        location = GeolocationFactory(
-            position=Point(x=4.4207882, y=51.9280712)
-        )
-        slot = self.activity.slots.first()
-        slot.location = location
-        slot.save()
-
-        user = BlueBottleUserFactory.create(
-            location=LocationFactory.create(
-                position=Point(x=4.9848386, y=52.3929661)
-            )
-        )
-
-        response = self.client.get(self.url, user=user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()['data']
-
-        self.assertEqual(data['meta']['matching-properties']['skill'], None)
-        self.assertEqual(data['meta']['matching-properties']['theme'], None)
-        self.assertEqual(data['meta']['matching-properties']['location'], False)
+    self.assertEqual(data['meta']['matching-properties']['skill'], None)
+    self.assertEqual(data['meta']['matching-properties']['theme'], None)
+    self.assertEqual(data['meta']['matching-properties']['location'], False)
 
 
 class TimeBasedTransitionAPIViewTestCase():
@@ -1134,34 +1138,34 @@ class DateActivitySlotListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.json()['data'][0]['id'], str(middle.pk))
 
     def test_get_filtered_contributor_id(self):
-        participant = DateParticipantFactory.create(activity=self.activity)
+        registration = DateRegistrationFactory.create(activity=self.activity)
 
         slot = DateActivitySlotFactory.create(
             start=now() + timedelta(days=2),
             activity=self.activity
         )
 
-        slot_participant = SlotParticipantFactory(slot=slot, participant=participant)
+        slot_participant = DateParticipantFactory(slot=slot, registration=registration)
         slot_participant.states.withdraw(save=True)
 
         second = DateActivitySlotFactory.create(
             start=now() + timedelta(days=4),
             activity=self.activity
         )
-        slot_participant = SlotParticipantFactory(slot=second, participant=participant)
+        slot_participant = DateParticipantFactory(slot=second, registration=registration)
 
         third = DateActivitySlotFactory.create(
             start=now() + timedelta(days=6),
             activity=self.activity
         )
-        other_participant = DateParticipantFactory.create(activity=self.activity)
-        slot_participant = SlotParticipantFactory(slot=third, participant=other_participant)
+        other_registration = DateRegistrationFactory.create(activity=self.activity)
+        slot_participant = DateParticipantFactory(slot=third, registration=other_registration)
 
         response = self.client.get(
             self.url,
             {
                 'activity': self.activity.id,
-                'contributor': participant.id
+                'registration': registration.id
             }
         )
         self.assertEqual(response.json()['meta']['pagination']['count'], 1)
@@ -1538,10 +1542,10 @@ class ParticipantListViewTestCase():
         self.assertEqual(self.response.status_code, status.HTTP_200_OK)
 
 
-class DateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
+class OldDateParticipantListAPIViewTestCase(ParticipantListViewTestCase, BluebottleTestCase):
     type = 'date'
     factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
+    participant_factory = DateRegistrationFactory
 
     document_url_name = 'date-participant-document'
     application_type = 'contributions/time-based/date-participants'
@@ -2067,7 +2071,7 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
                 document=PrivateDocumentFactory.create()
             )
             for slot in self.activity.slots.all():
-                SlotParticipantFactory.create(
+                DateParticipantFactory.create(
                     participant=participant,
                     slot=slot
                 )
@@ -2097,20 +2101,20 @@ class RelatedDateParticipantAPIViewTestCase(RelatedParticipantsAPIViewTestCase, 
         self.assertTotal(9)
 
 
-class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
+class DateParticipantListAPIViewTestCase(BluebottleTestCase):
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.activity = DateActivityFactory.create(review=False)
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
-        self.participant = DateParticipantFactory.create(activity=self.activity)
+        self.registration = DateRegistrationFactory.create(activity=self.activity)
 
-        self.url = reverse('slot-participant-list')
+        self.url = reverse('date-participant-list')
 
         self.data = {
             'data': {
                 'attributes': {},
-                'type': 'contributors/time-based/slot-participants',
+                'type': 'contributors/time-based/date-participants',
                 'relationships': {
                     'slot': {
                         'data': {
@@ -2118,10 +2122,10 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
                             'id': self.slot.id
                         },
                     },
-                    'participant': {
+                    'registration': {
                         'data': {
-                            'type': 'contributors/time-based/date-participants',
-                            'id': self.participant.id
+                            'type': 'contributors/time-based/date-registration',
+                            'id': self.registration.id
                         },
                     },
                 }
@@ -2129,7 +2133,7 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         }
 
     def test_create_participant_user(self):
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()['data']
@@ -2139,25 +2143,25 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         )
 
         self.assertEqual(
-            data['relationships']['participant']['data']['id'], str(self.participant.pk)
+            data['relationships']['registration']['data']['id'], str(self.registration.pk)
         )
 
-        self.assertEqual(data['id'], str(self.participant.slot_participants.get().pk))
+        self.assertEqual(data['id'], str(self.registration.participants.get().pk))
 
     def test_create_participant_user_full(self):
         self.slot.capacity = 1
         self.slot.save()
 
-        part = DateParticipantFactory.create(activity=self.activity)
-        SlotParticipantFactory.create(slot=self.slot, participant=part)
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        reg = DateRegistrationFactory.create(activity=self.activity)
+        DateParticipantFactory.create(slot=self.slot, participant=reg)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_participant_user_twice(self):
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_different_user(self):
@@ -2176,13 +2180,13 @@ class SlotParticipantListAPIViewTestCase(BluebottleTestCase):
         activity = DateActivityFactory.create()
         slot = DateActivitySlotFactory.create(activity=activity)
         self.data['data']['relationships']['slot']['data']['id'] = slot.pk
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_missing_slot(self):
         del self.data['data']['relationships']['slot']
 
-        response = self.client.post(self.url, json.dumps(self.data), user=self.participant.user)
+        response = self.client.post(self.url, json.dumps(self.data), user=self.registration.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_without_participant(self):
@@ -2223,23 +2227,23 @@ class SlotParticipantDetailAPIViewTestCase(BluebottleTestCase):
             owner=self.owner
         )
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
-        self.participant1 = DateParticipantFactory.create(
+        self.reg1 = DateRegistrationFactory.create(
             user=self.supporter1,
             activity=self.activity
         )
-        SlotParticipantFactory.create(slot=self.slot, participant=self.participant1)
+        DateParticipantFactory.create(slot=self.slot, participant=self.reg1)
 
-        self.participant2 = DateParticipantFactory.create(
+        self.reg2 = DateRegistrationFactory.create(
             user=self.supporter2,
             activity=self.activity
         )
-        SlotParticipantFactory.create(slot=self.slot, participant=self.participant2)
-        self.participant2.states.withdraw(save=True)
+        DateParticipantFactory.create(slot=self.slot, participant=self.reg2)
+        self.reg2.states.withdraw(save=True)
 
-        p1_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant1)
-        p2_sl1 = SlotParticipant.objects.get(slot=self.slot, participant=self.participant2)
-        self.url_part1_slot1 = reverse('slot-participant-detail', args=(p1_sl1.id,))
-        self.url_part2_slot1 = reverse('slot-participant-detail', args=(p2_sl1.id,))
+        p1_sl1 = DateParticipant.objects.get(slot=self.slot, participant=self.reg1)
+        p2_sl1 = DateParticipant.objects.get(slot=self.slot, participant=self.reg2)
+        self.url_part1_slot1 = reverse('date-participant-detail', args=(p1_sl1.id,))
+        self.url_part2_slot1 = reverse('date-participant-detail', args=(p2_sl1.id,))
 
     def test_get_slot_participant(self):
         MemberPlatformSettings.objects.update(closed=True)
@@ -2263,7 +2267,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.activity = DateActivityFactory.create()
         self.slot = DateActivitySlotFactory.create(activity=self.activity)
         self.participant = DateParticipantFactory.create(activity=self.activity)
-        self.slot_participant = SlotParticipantFactory.create(
+        self.slot_participant = DateParticipantFactory.create(
             participant=self.participant, slot=self.slot
         )
 
@@ -2310,7 +2314,7 @@ class SlotParticipantTransitionAPIViewTestCase(BluebottleTestCase):
         self.activity.preparation = timedelta(hours=3)
         self.activity.save()
         self.participant = DateParticipantFactory.create(activity=self.activity)
-        self.slot_participant = SlotParticipantFactory.create(
+        self.slot_participant = DateParticipantFactory.create(
             participant=self.participant,
             slot=self.slot
         )
@@ -2455,7 +2459,7 @@ class TimeContributionDetailAPIViewTestCase():
         self.participant = self.participant_factory.create(
             activity=self.activity,
         )
-        SlotParticipantFactory.create(
+        DateParticipantFactory.create(
             slot=self.activity.slots.first(), participant=self.participant
         )
         self.contribution = self.participant.contributions.get()
@@ -2654,7 +2658,7 @@ class DateIcalTestCase(BluebottleTestCase):
             activity=self.activity, user=self.user
         )
         for slot in self.activity.slots.all():
-            SlotParticipantFactory.create(slot=slot, participant=participant)
+            DateParticipantFactory.create(slot=slot, participant=participant)
 
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2697,7 +2701,7 @@ class DateIcalTestCase(BluebottleTestCase):
 
     def test_get_applied_to_first(self):
         participant = DateParticipantFactory.create(activity=self.activity, user=self.user)
-        SlotParticipantFactory.create(slot=self.slots[0], participant=participant)
+        DateParticipantFactory.create(slot=self.slots[0], participant=participant)
 
         response = self.client.get(self.signed_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2785,7 +2789,7 @@ class RelatedSlotParticipantListViewTestCase(APITestCase):
         self.participant = DateParticipantFactory.create(activity=self.activity)
 
         self.slot_participants = [
-            SlotParticipantFactory.create(participant=self.participant, slot=slot)
+            DateParticipantFactory.create(participant=self.participant, slot=slot)
             for slot in self.slots[:3]
         ]
 
@@ -2829,7 +2833,7 @@ class SlotRelatedParticipantListTestCase(APITestCase):
         self.participants = DateParticipantFactory.create_batch(5, activity=self.activity)
 
         self.slot_participants = [
-            SlotParticipantFactory.create(participant=participant, slot=self.slot)
+            DateParticipantFactory.create(participant=participant, slot=self.slot)
             for participant in self.participants
         ]
 

@@ -38,7 +38,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     PeriodicSlotFactory,
     SlotParticipantFactory, ScheduleRegistrationFactory,
-    ScheduleActivityFactory, ScheduleSlotFactory, )
+    ScheduleActivityFactory, ScheduleSlotFactory, DateRegistrationFactory, )
 
 
 class TimeBasedActivityTriggerTestCase():
@@ -832,103 +832,6 @@ class ParticipantTriggerTestCase(object):
         )
 
 
-class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    def test_type(self):
-        participant = self.participant_factory.create(activity=self.review_activity)
-        SlotParticipantFactory.create(
-            participant=participant, slot=self.review_activity.slots.get()
-        )
-        self.assertEqual(
-            participant.contributions.exclude(
-                timecontribution__contribution_type="preparation"
-            )
-            .get()
-            .contribution_type,
-            "date",
-        )
-
-    def test_reaccept(self):
-        self.test_remove()
-
-        self.participants[0].states.accept(save=True)
-
-        self.activity.refresh_from_db()
-        self.assertEqual(self.activity.status, "full")
-
-        self.assertEqual(self.participants[0].contributions.first().status, "new")
-
-        self.assertEqual(self.participants[0].contributions.last().status, "succeeded")
-        self.assertTrue(
-            self.activity.followers.filter(user=self.participants[0].user).exists()
-        )
-
-    def test_initial_no_review(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity, user=user, as_user=user
-        )
-        SlotParticipantFactory(
-            slot=self.activity.slots.get(), participant=participant, as_user=user
-        )
-
-        self.assertEqual(participant.status, "accepted")
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'A participant has registered for a time slot for your activity "{}"'.format(
-                self.activity.title
-            ),
-        )
-        self.assertTrue(self.activity.followers.filter(user=participant.user).exists())
-        self.assertEqual(
-            self.activity.accepted_participants.get()
-            .contributions.exclude(timecontribution__contribution_type="preparation")
-            .get()
-            .status,
-            "new",
-        )
-        prep = participant.preparation_contributions.first()
-        self.assertEqual(prep.value, self.activity.preparation)
-        self.assertEqual(prep.status, "succeeded")
-
-    def test_initial_review(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.review_activity, user=user, as_user=user
-        )
-        SlotParticipantFactory(
-            slot=self.review_activity.slots.get(), participant=participant
-        )
-
-        self.assertEqual(participant.status, "new")
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            'You have a new participant for your activity "{}" 🎉'.format(
-                self.review_activity.title
-            ),
-        )
-        self.assertTrue(
-            self.review_activity.followers.filter(user=participant.user).exists()
-        )
-        self.assertEqual(
-            participant.contributions.exclude(
-                timecontribution__contribution_type="preparation"
-            )
-            .get()
-            .status,
-            "new",
-        )
-        prep = participant.preparation_contributions.first()
-        self.assertEqual(prep.value, self.review_activity.preparation)
-        self.assertEqual(prep.status, "new")
-
-
 @mock.patch.object(ParticipantJoinedNotification, "delay", 2)
 @mock.patch.object(ParticipantAppliedNotification, "delay", 1)
 @mock.patch.object(ParticipantChangedNotification, "delay", 2)
@@ -1062,7 +965,7 @@ class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
         )
 
 
-class SlotParticipantTriggerTestCase(BluebottleTestCase):
+class DateParticipantTriggerTestCase(BluebottleTestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create()
@@ -1075,19 +978,19 @@ class SlotParticipantTriggerTestCase(BluebottleTestCase):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
         self.activity.refresh_from_db()
-        self.participant = DateParticipantFactory.create(activity=self.activity)
+        self.registration = DateRegistrationFactory.create(activity=self.activity)
 
     def assertStatus(self, obj, status):
         obj.refresh_from_db()
         self.assertEqual(obj.status, status)
 
     def test_apply(self):
-        self.assertEqual(self.participant.slot_participants.count(), 0)
-        slot_participant = SlotParticipantFactory.create(
-            slot=self.slot1, participant=self.participant
+        self.assertEqual(self.registration.participants.count(), 0)
+        participant = DateParticipantFactory.create(
+            slot=self.slot1, registratrion=self.registration
         )
-        self.assertEqual(self.participant.slot_participants.count(), 1)
-        self.assertStatus(slot_participant, "registered")
+        self.assertEqual(self.registration.slot_participants.count(), 1)
+        self.assertStatus(participant, "registered")
 
     def test_withdraw_from_slot(self):
         slot_participant = SlotParticipantFactory.create(slot=self.slot1, participant=self.participant)

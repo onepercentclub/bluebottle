@@ -1,12 +1,15 @@
+from django.db.models import Q
+
 from bluebottle.activities.permissions import ContributorPermission
-from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
+from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant
+    TeamScheduleParticipant, DateParticipant, DateActivity
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
+    DateParticipantTransitionSerializer,
     ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer
+    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -38,6 +41,13 @@ class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, C
     )
 
 
+class DateParticipantList(ParticipantList):
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateParticipantSerializer
+
+
 class DeadlineParticipantList(ParticipantList):
     queryset = DeadlineParticipant.objects.prefetch_related(
         'user', 'activity'
@@ -49,6 +59,11 @@ class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
     )
+
+
+class DateParticipantDetail(ParticipantDetail):
+    queryset = DateParticipant.objects.all()
+    serializer_class = DateParticipantSerializer
 
 
 class DeadlineParticipantDetail(ParticipantDetail):
@@ -73,7 +88,7 @@ class PeriodicParticipantDetail(ParticipantDetail):
 
 
 class RelatedParticipantListView(
-    JsonApiViewMixin, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
+    FilterRelatedUserMixin, AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -82,17 +97,64 @@ class RelatedParticipantListView(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        return queryset.filter(activity_id__in=self.kwargs["activity_id"])
+        return queryset.filter(activity_id=self.kwargs["activity_id"])
 
 
-class DeadlineRelatedParticipantList(RelatedContributorListView):
+class SlotRelatedParticipantListView(
+    AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView,
+):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+
+    @property
+    def owners(self):
+        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        return [activity.owner] + list(activity.initiative.activity_managers.all())
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
+
+        if self.request.user.is_authenticated:
+            if self.request.user.is_staff:
+                queryset = self.queryset
+            else:
+                queryset = self.queryset.filter(
+                    Q(user=self.request.user) |
+                    Q(slot__activity__owner=self.request.user) |
+                    Q(slot__activity__initiative__activity_manager=self.request.user) |
+                    Q(status__in=('accepted', 'succeeded',))
+                ).order_by('-id')
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded',)
+            ).order_by('-id')
+
+        return queryset
+
+
+class DateRelatedParticipantList(RelatedParticipantListView):
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateParticipantSerializer
+
+
+class DateSlotRelatedParticipantView(SlotRelatedParticipantListView):
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateParticipantSerializer
+
+
+class DeadlineRelatedParticipantList(RelatedParticipantListView):
     queryset = DeadlineParticipant.objects.prefetch_related(
         'user', 'activity'
     )
     serializer_class = DeadlineParticipantSerializer
 
 
-class ScheduleRelatedParticipantList(RelatedContributorListView):
+class ScheduleRelatedParticipantList(RelatedParticipantListView):
     queryset = ScheduleParticipant.objects.prefetch_related(
         'user', 'activity'
     )
@@ -110,7 +172,7 @@ class ScheduleRelatedParticipantList(RelatedContributorListView):
         return queryset
 
 
-class TeamScheduleRelatedParticipantList(RelatedContributorListView):
+class TeamScheduleRelatedParticipantList(RelatedParticipantListView):
     queryset = TeamScheduleParticipant.objects.prefetch_related(
         'user', 'activity'
     )
@@ -118,7 +180,7 @@ class TeamScheduleRelatedParticipantList(RelatedContributorListView):
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
-class TeamSlotScheduleRelatedParticipantList(RelatedContributorListView):
+class TeamSlotScheduleRelatedParticipantList(RelatedParticipantListView):
     queryset = TeamScheduleParticipant.objects.prefetch_related(
         'user', 'activity'
     )
@@ -126,7 +188,7 @@ class TeamSlotScheduleRelatedParticipantList(RelatedContributorListView):
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly)
 
 
-class PeriodicRelatedParticipantList(RelatedContributorListView):
+class PeriodicRelatedParticipantList(RelatedParticipantListView):
     queryset = PeriodicParticipant.objects.prefetch_related(
         'user', 'activity'
     )
@@ -136,6 +198,11 @@ class PeriodicRelatedParticipantList(RelatedContributorListView):
         queryset = super().get_queryset()
         queryset = queryset.order_by("-slot__start")
         return queryset
+
+
+class DateParticipantTransitionList(TransitionList):
+    serializer_class = DateParticipantTransitionSerializer
+    queryset = DateParticipant.objects.all()
 
 
 class DeadlineParticipantTransitionList(TransitionList):

@@ -9,8 +9,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, SlotParticipant,
-    PeriodParticipant, DateActivitySlot, PeriodActivity
+    DateParticipant, PeriodParticipant, DateActivitySlot, PeriodActivity, DateRegistration
 )
 
 
@@ -47,8 +46,6 @@ class TimeBasedInfoMixin(object):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.filter(user=recipient).first()
-        elif isinstance(self.obj, SlotParticipant):
-            participant = self.obj.participant
         else:
             participant = self.obj.participants.get(user=recipient)
 
@@ -552,24 +549,24 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     @property
     def task_id(self):
-        return f'{self.__class__.__name__}-{self.obj.participant.id}'
+        return f'{self.__class__.__name__}-{self.obj.registration.id}'
 
     def get_recipients(self):
         """participant"""
-        joined_message = ParticipantJoinedNotification(self.obj.participant)
-        applied_message = ParticipantAppliedNotification(self.obj.participant)
+        joined_message = ParticipantJoinedNotification(self.obj.registration)
+        applied_message = ParticipantAppliedNotification(self.obj.registration)
         changed_message = ParticipantChangedNotification(self.obj)
 
-        participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
+        registration = DateRegistration.objects.get(pk=self.obj.registration.pk)
 
         if (
-                participant.status == 'withdrawn' or
-                joined_message.is_delayed or
-                changed_message.is_delayed or applied_message.is_delayed
+            registration.status == 'withdrawn' or
+            joined_message.is_delayed or
+            changed_message.is_delayed or applied_message.is_delayed
         ):
             return []
 
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):

@@ -31,8 +31,9 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
-    SlotParticipant, DateActivitySlot, DateParticipant
+from bluebottle.time_based.models import (
+    TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant
+)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -684,7 +685,7 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, DeadlineActivity):
         Participant = DeadlineParticipant
     if isinstance(activity, DateActivitySlot):
-        Participant = SlotParticipant
+        Participant = DateParticipant
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
@@ -712,7 +713,7 @@ def bulk_add_participants(activity, emails, send_messages):
                     user=user,
                     activity=slot.activity
                 )
-                slot_participant, cr = SlotParticipant.objects.get_or_create(
+                slot_participant, cr = DateParticipant.objects.get_or_create(
                     participant=participant,
                     slot=slot
                 )

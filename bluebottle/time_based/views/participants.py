@@ -101,7 +101,7 @@ class RelatedParticipantListView(
 
 
 class SlotRelatedParticipantListView(
-    AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView, 
+    AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView,
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

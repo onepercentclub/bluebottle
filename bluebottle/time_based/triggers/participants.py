@@ -1079,7 +1079,7 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
 
 
 @register(DateParticipant)
-class DateParticipantTriggers(ContributorTriggers):
+class DateParticipantTriggers(RegistrationParticipantTriggers):
 
     def participant_slot_is_finished(effect):
         """
@@ -1125,16 +1125,32 @@ class DateParticipantTriggers(ContributorTriggers):
             return True
         return False
 
+    def is_not_self(self):
+        "Participant is created by other user"
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
+
     triggers = [
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
             effects=[
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.add,
+                    conditions=[is_not_self],
+                ),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted],
                 ),
                 RelatedTransitionEffect(
                     'slot',
@@ -1179,6 +1195,11 @@ class DateParticipantTriggers(ContributorTriggers):
         TransitionTrigger(
             DateParticipantStateMachine.accept,
             effects=[
+                TransitionEffect(
+                    DateParticipantStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+
+                ),
                 CheckPreparationTimeContributionEffect,
                 RelatedTransitionEffect(
                     'contributions',

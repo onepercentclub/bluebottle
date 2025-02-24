@@ -148,7 +148,8 @@ class DateRegistrationTriggerTestCase(
             as_user=self.user,
         )
         self.slot = DateActivitySlotFactory.create(
-            activity=self.activity
+            activity=self.activity,
+            start=now() + timedelta(days=2)
         )
         self.participant = DateParticipantFactory.create(
             registration=self.registration,
@@ -159,21 +160,22 @@ class DateRegistrationTriggerTestCase(
         super().test_initial()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "registered")
+        self.assertStatus(self.participant, "accepted")
 
     def test_initial_review(self):
         super().test_initial_review()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "new")
-        self.assertStatus(self.participant, "registered")
+        self.assertStatus(self.participant, "new")
 
     def test_initial_past(self):
         super().test_initial()
+        print('finishing slot!!!!!!!!!!!!!!!')
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "accepted")
-        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant, "succeeded")
 
     def test_initial_review_past(self):
         super().test_initial_review()
@@ -181,9 +183,9 @@ class DateRegistrationTriggerTestCase(
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "new")
-        self.assertStatus(self.participant, "registered")
+        self.assertStatus(self.participant, "new")
 
-    def test_accept(self):
+    def test_accept_past(self):
         super().test_accept()
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()

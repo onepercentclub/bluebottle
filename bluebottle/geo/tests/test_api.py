@@ -140,7 +140,7 @@ class UsedCountryListTestCase(GeoTestCase):
         self.assertEqual(len(countries), 3)
 
     def test_api_used_country_list_endpoint_with_offices(self):
-        ireland = Country.objects.get(translations__name="Ireland")
+        ireland = Country.objects.filter(translations__name="Ireland").first()
         office = LocationFactory.create(country=ireland)
         InitiativeFactory.create(location=office, status='approved', place=None)
         response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})

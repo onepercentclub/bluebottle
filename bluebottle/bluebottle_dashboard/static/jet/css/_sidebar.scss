@@ -432,10 +432,10 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     top: 0;
-    padding-top: 410px;
+    padding-top: 0;
 
     @media (max-height: 900px) {
-      padding-top: 250px;
+      padding-top: 0;
    }
 
     @media (max-height: 700px) {
@@ -443,7 +443,7 @@
    }
 
     @include for-mobile {
-      padding-top: 360px;
+      padding-top: 0;
       width: 200px;
       body.menu-pinned & {
         left: 200px;

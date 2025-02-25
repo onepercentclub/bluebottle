@@ -5,6 +5,7 @@ from rest_framework.generics import (
     ListAPIView, RetrieveAPIView, CreateAPIView,
     RetrieveUpdateAPIView
 )
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.geo.models import Location, Country, Geolocation, Place
@@ -57,6 +58,9 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
     queryset = Location.objects.all()
 
     pagination_class = None
+    permission_classes = [
+        IsAuthenticated
+    ]
 
 
 class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
@@ -83,6 +87,9 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
 
     serializer_class = PlaceSerializer
+    permission_classes = [
+        IsAuthenticated
+    ]
 
     def perform_create(self, serializer):
         try:
@@ -98,8 +105,9 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
-
-    permission_classes = []
+    permission_classes = [
+        IsAuthenticated
+    ]
     serializer_class = PlaceSerializer
 
 

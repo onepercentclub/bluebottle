@@ -49,6 +49,13 @@ class ManagerRegistrationRestartedNotification(ManagerRegistrationNotification):
     template = "messages/registrations/manager_registration_restarted"
 
 
+class ManagerReminderNotification(ManagerRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Keep your participant list up-to-date!'
+    )
+    template = "messages/registrations/manager_reminder"
+
+
 class UserRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
@@ -137,6 +144,13 @@ class UserRegistrationRestartedNotification(UserRegistrationNotification):
         if self.obj.activity.period == 'months':
             context['period'] = pgettext('email', 'months')
         return context
+
+
+class UserReminderNotification(UserRegistrationNotification):
+    subject = pgettext(
+        "email", '⏰ Reminder: Update your participation!'
+    )
+    template = "messages/registrations/user_reminder"
 
 
 class DeadlineUserAppliedNotification(UserRegistrationNotification):

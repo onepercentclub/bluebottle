@@ -1,0 +1,16 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+        <p>
+          This is a reminder to check the list of participants for your activity, "{{ title }}".
+          It’s a good time to make sure everything is up-to-date and that everyone on the list is still active.
+        </p>
+        <p>
+          If you see any changes, like participants who are no longer involved, please update their status.
+          This will ensure the correct hours are reported.
+        </p>
+        <p>Thank you!</p>
+    {% endblocktrans %}
+{% endblock %}

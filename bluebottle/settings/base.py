@@ -441,7 +441,7 @@ TENANT_APPS = (
     'axes',
     'captcha',
     'colorfield',
-    'django_summernote',
+    'django_quill',
 )
 
 
@@ -728,38 +728,24 @@ def static_url(url):
     return os.path.join(STATIC_URL, url)
 
 
-SUMMERNOTE_CONFIG = {
-    # Using SummernoteWidget - iframe mode
-    'toolbar': [
-        ['style', ['style']],
-        ['style', ['bold', 'italic', 'underline', 'clear']],
-        ['para', ['ul', 'ol']],
-        ['insert', ['link', 'picture']],
-        ['view', ['codeview']],
-    ],
-    'disable_upload': False,
-    'attachment_model': 'projects.ProjectImage',
-    'attachment_upload_to': 'project_images/',
-    'summernote': {
-        'disableResizeImage': True
-    },
-    'default_css': (
-        static_url('rest_framework/css/bootstrap.min.css'),
-        static_url('django_summernote/summernote.css'),
-        static_url('django_summernote/django_summernote.css'),
-    ),
-    'default_js': (
-        static_url('admin/js/vendor/jquery/jquery.min.js'),
-        static_url('rest_framework/js/bootstrap.min.js'),
-        static_url('django_summernote/jquery.ui.widget.js'),
-        static_url('django_summernote/jquery.iframe-transport.js'),
-        static_url('django_summernote/jquery.fileupload.js'),
-        static_url('django_summernote/summernote.min.js'),
-        static_url('django_summernote/ResizeSensor.js'),
-    ),
-
+QUILL_CONFIGS = {
+    'default': {
+        'theme': 'snow',
+        'modules': {
+            'toolbar': [
+                {
+                    "header": [4, 5, False]
+                },
+                'bold',
+                'italic',
+                'image',
+                'link',
+                {"list": 'ordered'},
+                {"list": 'bullet'},
+            ],
+        }
+    }
 }
-SUMMERNOTE_THEME = 'bs5'
 
 HOMEPAGE = {}
 ELASTICSEARCH_DSL = {

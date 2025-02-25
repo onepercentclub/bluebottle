@@ -8,7 +8,7 @@ from bluebottle.activities.utils import get_stats_for_activities
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.segments.models import Segment, SegmentType
-from bluebottle.utils.fields import SafeField
+from bluebottle.utils.fields import RichTextField
 
 
 class SegmentTypeSerializer(serializers.ModelSerializer):
@@ -36,7 +36,7 @@ class SegmentListSerializer(serializers.ModelSerializer):
     logo = SorlImageField('180x180', crop='center')
     cover_image = SorlImageField('465x262', crop='center')
 
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
 
     included_serializers = {
         'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',

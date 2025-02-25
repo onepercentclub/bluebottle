@@ -1,3 +1,4 @@
+import json
 import mimetypes
 import xml.etree.cElementTree as et
 from builtins import object
@@ -129,6 +130,14 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         except et.ParseError:
             pass
         return tag == '{http://www.w3.org/2000/svg}svg'
+
+
+class RichTextField(serializers.CharField):
+    def to_representation(self, value):
+        return clean_html(super().to_representation(value.html))
+
+    def to_internal_value(self, data):
+        return json.dumps({'html': super().to_internal_value(data), 'delta': ''})
 
 
 class SafeField(serializers.CharField):

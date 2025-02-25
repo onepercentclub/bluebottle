@@ -30,7 +30,7 @@ class ActivityDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
-    description = fields.TextField()
+    description = fields.TextField(attr='description.html')
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
@@ -59,7 +59,7 @@ class ActivityDocument(Document):
         'id': fields.KeywordField(),
         'title': fields.TextField(),
         'pitch': fields.TextField(),
-        'story': fields.TextField(),
+        'story': fields.TextField(attr='story.html'),
         'owner': fields.KeywordField(attr='owner.id'),
         'activity_managers': fields.NestedField(
             properties={

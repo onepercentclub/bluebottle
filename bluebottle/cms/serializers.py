@@ -26,7 +26,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
 from bluebottle.slides.models import Slide
-from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, SafeField
+from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -385,7 +385,7 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
 class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = SafeField()
+    text = RichTextField()
 
     class Meta(object):
         model = ImagePlainTextItem

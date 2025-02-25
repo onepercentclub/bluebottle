@@ -1,3 +1,4 @@
+import json
 from django.test import TestCase
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
@@ -84,9 +85,9 @@ class InitiativeTestCase(TestCase):
         )
 
     def test_story_safe(self):
-        initiative = InitiativeFactory(story='<img src="test">')
+        initiative = InitiativeFactory(story=json.dumps({'html': '<img src="test">', 'delta': ''}))
         self.assertEqual(
-            initiative.story, '<img src="test">'
+            initiative.story.html, '<img src="test">'
         )
 
     def test_slug_empty(self):

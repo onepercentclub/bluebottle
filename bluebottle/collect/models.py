@@ -114,7 +114,7 @@ class CollectActivity(Activity):
     @property
     def google_calendar_link(self):
 
-        details = self.description
+        details = self.description.html
         details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)

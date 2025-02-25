@@ -292,7 +292,6 @@ SHARED_APPS = (
     'corsheaders',
     'parler',
     'daterange_filter',
-    'adminsortable',
     'solo',
     'django_filters',
     'multiselectfield',
@@ -302,6 +301,7 @@ SHARED_APPS = (
 
 TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
+    'adminsortable',
     'django_otp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',

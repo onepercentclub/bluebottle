@@ -137,7 +137,6 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("Segments"),
         "app_label": "segments",
         "permissions": ["segments.change_segmenttype"],
-        "enabled": "members.MemberPlatformSettings.enable_segments",
         "items": [
             {
                 "label": _("All segment types"),

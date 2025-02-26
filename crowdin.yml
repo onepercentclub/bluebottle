@@ -1,3 +1,5 @@
+api_token_env: CROWDIN_API_TOKEN # from env.local
+project_id: 457932
 files:
   - source: /locale/en/LC_MESSAGES/django.po
     translation: /locale/%two_letters_code%/LC_MESSAGES/django.po

@@ -617,17 +617,11 @@ class ParticipantTriggerTestCase(object):
         )
         self.assertEqual(participant.status, "accepted")
 
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.assertEqual(
             mail.outbox[0].subject,
             'You have been added to the activity "{}" 🎉'.format(
-                self.review_activity.title
-            ),
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            'A participant has been added to your activity "{}" 🎉'.format(
                 self.review_activity.title
             ),
         )

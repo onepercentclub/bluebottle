@@ -26,11 +26,12 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin, BaseContributorInline,
+    ContributorChildAdmin, BaseContributorInline, BulkAddMixin,
 )
 from bluebottle.files.fields import PrivateDocumentModelChoiceField
 from bluebottle.files.widgets import DocumentWidget
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.time_based.models import (
@@ -50,7 +51,6 @@ from bluebottle.time_based.models import (
     TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
     TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, ActivitySlot, )
 from bluebottle.time_based.states import SlotParticipantStateMachine
-from bluebottle.time_based.utils import bulk_add_participants
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
@@ -1086,9 +1086,10 @@ class SlotDuplicateForm(forms.Form):
 
     end = forms.DateField(
         label=_('End date'),
-        help_text=_('Select a date until which the series runs. If you plan '
-                    'further than 6 months in the future, '
-                    'the loading time can be quite long.'),
+        help_text=_(
+            'This is the date the time slots will repeat until. '
+            'Allow for a long loading time if more than 20 time blocks have to be created.'
+        ),
         widget=widgets.AdminDateWidget()
     )
 
@@ -1102,15 +1103,15 @@ class SlotDuplicateForm(forms.Form):
             super(SlotDuplicateForm, self).__init__(data)
         else:
             super(SlotDuplicateForm, self).__init__()
-        interval_day = _('Every day')
-        interval_week = _('Each week on {weekday}').format(
+        interval_day = _('Daily')
+        interval_week = _('Weekly on the  {weekday}').format(
             weekday=start.strftime('%A')
         )
-        interval_month = _('Monthly every {nth} {weekday}').format(
+        interval_month = _('Monthly on the {nth} {weekday}').format(
             nth=ordinalize(nth_weekday(start)),
             weekday=start.strftime('%A')
         )
-        interval_monthday = _('Monthly every {monthday}').format(
+        interval_monthday = _('Monthly on the {monthday}').format(
             monthday=ordinalize(slot.start.strftime('%-d'))
         )
         interval_choices = (
@@ -1121,31 +1122,37 @@ class SlotDuplicateForm(forms.Form):
         )
         self.fields['interval'].choices = interval_choices
         self.fields['interval'].help_text = _(
-            'We selected these choices because this slot takes place {start}'
+            'Options here are based on when this time slot takes place - {start}'
         ).format(start=start.strftime('%A %-d %B %Y %H:%M %Z'))
 
 
 class SlotBulkAddForm(forms.Form):
     emails = forms.CharField(
         label=_('Emails'),
-        help_text=_('Enter one email address per line'),
+        help_text=_(
+            'Separate the email addresses by commas, one per '
+            'line or copy & paste a column from a spreadsheet.'
+        ),
         widget=forms.Textarea
+    )
+
+    send_messages = forms.BooleanField(
+        label=_('Send messages'),
+        help_text=_('Email participants that they have been added to this slot.'),
+        initial=True
     )
 
     title = _('Bulk add participants')
 
-    def __init__(self, slot, data=None, *args, **kwargs):
+    def __init__(self, data=None, *args, **kwargs):
         if data:
             super(SlotBulkAddForm, self).__init__(data)
         else:
             super(SlotBulkAddForm, self).__init__()
-        self.fields['emails'].help_text = _(
-            'Enter the email addresses of the participants you want to add to this slot.'
-        )
 
 
 @admin.register(DateActivitySlot)
-class DateSlotAdmin(SlotAdmin):
+class DateSlotAdmin(BulkAddMixin, SlotAdmin):
     model = DateActivitySlot
     inlines = [SlotParticipantInline, MessageAdminInline]
     save_as = True
@@ -1187,12 +1194,7 @@ class DateSlotAdmin(SlotAdmin):
                 r'^(?P<pk>\d+)/duplicate/$',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
-            ),
-            re_path(
-                r'^(?P<pk>\d+)/bulk_add/$',
-                self.admin_site.admin_view(self.bulk_add_participants),
-                name='time_based_dateactivityslot_bulk_add'
-            ),
+            )
         ]
         return extra_urls + urls
 
@@ -1202,7 +1204,12 @@ class DateSlotAdmin(SlotAdmin):
             form = SlotDuplicateForm(data=request.POST, slot=slot)
             if form.is_valid():
                 data = form.cleaned_data
-                duplicate_slot(slot, data['interval'], data['end'])
+                dates = duplicate_slot(slot, data['interval'], data['end'])
+                messages.success(
+                    request,
+                    _('%(dates)s time slots created' % {'dates': len(dates)})
+                )
+
                 slot_overview = reverse('admin:time_based_dateactivity_change', args=(slot.activity.pk,))
                 return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
 
@@ -1211,40 +1218,21 @@ class DateSlotAdmin(SlotAdmin):
         else:
             start = slot.start
 
+        settings = MemberPlatformSettings.load()
+
         context = {
             'opts': self.model._meta,
             'slot': slot,
             'time': start.strftime('%H:%M %Z'),
-            'form': SlotDuplicateForm(slot=slot)
+            'form': SlotDuplicateForm(slot=slot),
+            'closed': settings.closed
         }
         return TemplateResponse(
             request, 'admin/time_based/duplicate_slot.html', context
         )
 
-    def bulk_add_participants(self, request, pk, *args, **kwargs):
-        slot = DateActivitySlot.objects.get(pk=pk)
-        slot_overview = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
-
-        if not request.user.is_superuser:
-            return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
-
-        if request.method == "POST":
-            form = SlotBulkAddForm(data=request.POST, slot=slot)
-            if form.is_valid():
-                data = form.cleaned_data
-                emails = data['emails'].split('\n')
-                result = bulk_add_participants(slot, emails)
-                messages.add_message(request, messages.INFO, '{} participants were added'.format(result))
-                return HttpResponseRedirect(slot_overview + '#/tab/inline_0/')
-
-        context = {
-            'opts': self.model._meta,
-            'slot': slot,
-            'form': SlotBulkAddForm(slot=slot)
-        }
-        return TemplateResponse(
-            request, 'admin/time_based/bulk_add.html', context
-        )
+    bulk_add_form = SlotBulkAddForm
+    bulk_add_template = 'admin/time_based/bulk_add.html'
 
 
 class TimeContributionInlineAdmin(admin.TabularInline):

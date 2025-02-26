@@ -5,6 +5,9 @@ from django.utils.timezone import now
 from rest_framework import response, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
+from django.core.validators import validate_email
+from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import Activity, Contributor, Invite, Contribution
@@ -22,7 +25,7 @@ from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
-from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -210,6 +213,48 @@ class ContributionList(JsonApiViewMixin, ListAPIView):
 
     pagination_class = ContributionPagination
     permission_classes = (IsAuthenticated,)
+
+
+class ParticipantCreateMixin:
+
+    def perform_create(self, serializer):
+        email = serializer.validated_data.pop('email', None)
+        send_messages = serializer.validated_data.pop('send_messages', True)
+        if email:
+            user = Member.objects.filter(email__iexact=email).first()
+            if not user:
+                try:
+                    validate_email(email)
+                except Exception:
+                    raise ValidationError(_('Not a valid email address'), code="invalid")
+                member_settings = MemberPlatformSettings.load()
+                if member_settings.closed:
+                    try:
+                        user = Member.create_by_email(email.strip())
+                    except Exception:
+                        raise ValidationError(_('Not a valid email address'), code="invalid")
+                else:
+                    raise ValidationError(_('User with email address not found'), code="not_found")
+        else:
+            user = self.request.user
+
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        if not email:
+            if self.request.user.required:
+                raise ValidationError('Required fields', code="required")
+
+        if self.queryset.filter(user=user, activity=serializer.validated_data['activity']).exists():
+            raise ValidationError(_('Already participating'), code="exists")
+
+        serializer.save(user=user, send_messages=send_messages)
 
 
 class ActivityImage(ImageContentView):

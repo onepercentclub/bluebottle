@@ -1,16 +1,15 @@
-from rest_framework.exceptions import ValidationError
-
-from bluebottle.activities.views import RelatedContributorListView
 from bluebottle.activities.permissions import (
     ActivityOwnerPermission, ActivityTypePermission, ActivityStatusPermission,
     DeleteActivityPermission, ContributorPermission, ActivitySegmentPermission
 )
+from bluebottle.activities.views import RelatedContributorListView, ParticipantCreateMixin
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer, DeedParticipantSerializer,
     DeedParticipantTransitionSerializer
 )
 from bluebottle.segments.views import ClosedSegmentActivityViewMixin
+from bluebottle.time_based.permissions import CreateByEmailPermission
 from bluebottle.transitions.views import TransitionList
 from bluebottle.updates.permissions import IsStaffMember
 from bluebottle.utils.permissions import (
@@ -70,28 +69,13 @@ class DeedRelatedParticipantList(RelatedContributorListView):
     serializer_class = DeedParticipantSerializer
 
 
-class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
+class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
+        CreateByEmailPermission
     )
     queryset = DeedParticipant.objects.all()
     serializer_class = DeedParticipantSerializer
-
-    def perform_create(self, serializer):
-        self.check_related_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        if self.request.user.required:
-            raise ValidationError('Required fields', code="required")
-
-        serializer.save(user=self.request.user)
 
 
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):

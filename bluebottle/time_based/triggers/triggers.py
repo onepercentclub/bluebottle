@@ -29,7 +29,6 @@ from bluebottle.time_based.effects import (
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
     ChangedSingleDateNotification,
-    ManagerParticipantAddedOwnerNotification,
     ManagerSlotParticipantRegisteredNotification,
     ManagerSlotParticipantWithdrewNotification,
     ParticipantAcceptedNotification,
@@ -804,9 +803,6 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
-                ),
-                NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification
                 ),
                 RelatedTransitionEffect(
                     'activity',

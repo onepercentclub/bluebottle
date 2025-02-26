@@ -28,7 +28,7 @@ class StripePaymentAdmin(PaymentChildAdmin):
     raw_id_fields = PaymentChildAdmin.raw_id_fields + ['payment_intent']
     base_model = StripePayment
     list_display = ['created', 'donation', 'status']
-    search_fields = ['paymentintent__intent_id']
+    search_fields = ['payment_intent__intent_id']
     readonly_fields = PaymentChildAdmin.readonly_fields
     fields = PaymentChildAdmin.fields + ['payment_intent']
 

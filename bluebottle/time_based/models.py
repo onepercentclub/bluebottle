@@ -1010,7 +1010,7 @@ class Participant(Contributor):
 
     registration = models.ForeignKey(
         'time_based.Registration',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True
     )
@@ -1651,7 +1651,7 @@ class ScheduleParticipant(Participant, Contributor):
     registration = models.ForeignKey(
         'time_based.ScheduleRegistration',
         related_name='participants',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True
     )
@@ -1706,7 +1706,7 @@ class TeamScheduleParticipant(Participant, Contributor):
     registration = models.ForeignKey(
         'time_based.TeamScheduleRegistration',
         related_name='participants',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True
     )

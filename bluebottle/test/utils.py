@@ -618,7 +618,7 @@ class APITestCase(BluebottleTestCase):
         ]
         self.assertIn(field, error_fields)
 
-    @ property
+    @property
     def data(self):
         """
         randomly generated data that can be used to perform creates
@@ -795,7 +795,7 @@ class NotificationTestCase(BluebottleTestCase):
     def create(self, **kwargs):
         self.message = self.message_class(self.obj, **kwargs)
 
-    @ property
+    @property
     def _html(self):
         return BeautifulSoup(self.message.get_content_html(
             self.message.get_recipients()[0]), 'html.parser'
@@ -840,11 +840,11 @@ class NotificationTestCase(BluebottleTestCase):
         if text in self.html_content:
             self.fail("HTML body does contain '{}'".format(text))
 
-    @ property
+    @property
     def text_content(self):
         return self.message.get_content_text(self.message.get_recipients()[0])
 
-    @ property
+    @property
     def html_content(self):
         return self.message.get_content_html(self.message.get_recipients()[0])
 

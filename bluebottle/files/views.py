@@ -142,6 +142,8 @@ class ImageContentView(FileContentView):
                 thumbnail = get_thumbnail(file, size, cropbox=cropbox)
         except ValueError:
             thumbnail = get_thumbnail(file, size, cropbox=cropbox)
+        except ZeroDivisionError:
+            thumbnail = get_thumbnail(file, size)
 
         content_type = mimetypes.guess_type(file.name)[0]
 
@@ -149,7 +151,7 @@ class ImageContentView(FileContentView):
             try:
                 response = HttpResponse(content=thumbnail.read())
                 response['Content-Type'] = content_type
-            except FileNotFoundError:
+            except (FileNotFoundError, ZeroDivisionError):
                 if settings.RANDOM_IMAGE_PROVIDER:
                     response = HttpResponseRedirect(self.get_random_image_url())
                 else:

@@ -266,8 +266,15 @@ class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
         page = page.click('Repeat this slot')
-        h3 = page.html.find('h3')
-        self.assertEqual(h3.text.strip(), 'Warning')
+
+        warning = page.html.find("div", {'class': 'warning'})
+        self.assertEqual(
+            warning.text.strip(),
+            (
+                'Ensure the time slot details are correct before repeating, as bulk changes won’t '
+                'be possible later.'
+            )
+        )
         form = page.forms[0]
         form["interval"] = "day"
         form["end"] = str((now() + datetime.timedelta(days=4)).date())

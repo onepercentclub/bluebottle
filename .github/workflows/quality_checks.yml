@@ -1,0 +1,79 @@
+name: Quality Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  translations:
+    name: Translations
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+ 
+      - name: Restore cached virtualenv
+        uses: actions/cache/restore@v4
+        with:
+          key: env-${{ hashFiles('setup.py') }}
+          path: env
+
+      - name: Create virtualenv
+        run: virtualenv env
+
+      - name: Install pip dependencies
+        run: |
+          source env/bin/activate
+          pip install -e .[dev]
+
+      - name: Saved cached virtualenv
+        uses: actions/cache/save@v4
+        with:
+          key: env-${{ hashFiles('requirements.txt') }}
+          path: env
+
+      - name: Extract messages
+        run: |
+          source env/bin/activate
+          python manage.py makemessages --locale=en --ignore=env --settings=bluebottle.settings.testing
+
+      - name: Check missing translations
+        run: |
+          source env/bin/activate
+          pip install polib
+          python ./locale/check_translations.py --locales=nl  > translation-message.txt
+
+      - name: Echo 
+        run: cat translation-message.txt
+
+      - name: Post comment
+        uses: mshick/add-pr-comment@v2
+        if: always() 
+        with:
+          message-path: translation-message.txt
+          refresh-message-position: true
+
+  lint:
+    name: Linting
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Create virtualenv
+        run: virtualenv env
+
+      - name: Install pip dependencies
+        run: |
+          source env/bin/activate
+          pip install -e .[dev]
+
+      - name: Lint
+        run: |
+          source env/bin/activate
+          flake8 .

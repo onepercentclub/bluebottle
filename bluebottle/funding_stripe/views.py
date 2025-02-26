@@ -386,6 +386,7 @@ class IntentWebHookView(View):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
         stripe = get_stripe()
+
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, stripe.webhook_secret_intents

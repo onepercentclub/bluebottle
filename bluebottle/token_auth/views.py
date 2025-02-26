@@ -103,7 +103,7 @@ class TokenLogoutView(TemplateView):
     template_name = 'token/token-logout.tpl'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
         url = auth.process_logout()
         if url:
             return HttpResponseRedirect(url)
@@ -127,6 +127,6 @@ class MetadataView(View):
     """
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, **kwargs)
+        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
         metadata = auth.get_metadata()
         return HttpResponse(content=metadata, content_type='text/xml')

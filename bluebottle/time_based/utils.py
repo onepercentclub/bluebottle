@@ -46,6 +46,8 @@ def duplicate_slot(slot, interval, end):
         slot = DateActivitySlot(start=start, **fields)
         slot.save()
 
+    return dates
+
 
 def bulk_add_slot_participants(slot, emails):
     activity = slot.activity

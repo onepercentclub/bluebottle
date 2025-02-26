@@ -447,9 +447,14 @@ class StripePayoutAccount(PayoutAccount):
         except AttributeError:
             try:
                 self.verified = (
-                    data.company.owners_provided or
-                    data.company.executives_provided or
-                    data.company.directors_provided
+                    data.requirements.currently_due == [] and
+                    data.requirements.past_due == [] and
+                    data.requirements.pending_verification == [] and
+                    data.future_requirements.currently_due == [] and
+                    data.future_requirements.past_due == [] and
+                    data.future_requirements.pending_verification == [] and
+                    data.charges_enabled and
+                    data.payouts_enabled
                 )
             except AttributeError:
                 pass

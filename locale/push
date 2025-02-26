@@ -4,8 +4,6 @@ BRANCH=`git rev-parse --abbrev-ref HEAD`
 AHEAD=`git rev-list --left-right --count origin/master...$BRANCH| cut -f1`
 
 if [ "$AHEAD" == "0" ]; then
-  export $(grep -v '^#' .env.local | xargs)
-
   if [ -z "$(git diff --staged --quiet)" ]; then
     python manage.py makemessages --locale=en
     crowdin push 

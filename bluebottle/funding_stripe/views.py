@@ -582,10 +582,21 @@ class ConnectWebHookView(View):
                         bank_account.delete()
 
                 for external_account in event.data.object.external_accounts.data:
+                    status = 'new'
+                    if (
+                        account.status == 'verified' and
+                        external_account.requirements.currently_due == [] and
+                        external_account.requirements.past_due == [] and
+                        external_account.requirements.pending_verification == [] and
+                        external_account.future_requirements.currently_due == [] and
+                        external_account.future_requirements.past_due == [] and
+                        external_account.future_requirements.pending_verification == []
+                    ):
+                        status = 'verified'
                     ExternalAccount.objects.get_or_create(
                         connect_account=account,
                         account_id=external_account.id,
-                        defaults={'status': "new"}
+                        defaults={'status': status}
                     )
 
                 account.update(event.data.object)

@@ -449,8 +449,7 @@ class StripePayoutAccount(PayoutAccount):
                 self.verified = (
                     data.company.owners_provided or
                     data.company.executives_provided or
-                    data.company.directors_provided or
-                    (data.payouts_enabled and data.charges_enabled)
+                    data.company.directors_provided
                 )
             except AttributeError:
                 pass
@@ -466,8 +465,6 @@ class StripePayoutAccount(PayoutAccount):
             stripe = get_stripe()
             account = stripe.Account.retrieve(self.account_id)
         except AuthenticationError:
-            account = {}
-        if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in account:
             account = {}
         return account
 
@@ -491,6 +488,35 @@ class StripePayoutAccount(PayoutAccount):
         if self.account:
             del self.account
         self.update(self.account)
+        self.set_external_accounts()
+
+    def set_external_accounts(self):
+        external_account_ids = [
+            external_account.id for external_account
+            in self.account.external_accounts.data
+        ]
+        for bank_account in self.external_accounts.all():
+            if bank_account.account_id not in external_account_ids:
+                bank_account.delete()
+
+        for external_account in self.account.external_accounts.data:
+            status = 'new'
+            if (
+                self.status == 'verified' and
+                external_account.requirements.currently_due == [] and
+                external_account.requirements.past_due == [] and
+                external_account.requirements.pending_verification == [] and
+                external_account.future_requirements.currently_due == [] and
+                external_account.future_requirements.past_due == [] and
+                external_account.future_requirements.pending_verification == []
+            ):
+                status = 'verified'
+
+            ExternalAccount.objects.update_or_create(
+                connect_account=self,
+                account_id=external_account.id,
+                defaults={'status': status}
+            )
 
     class Meta(object):
         verbose_name = _('stripe payout account')

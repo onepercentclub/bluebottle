@@ -84,7 +84,7 @@ install_requires = [
     'geocoder==1.37.0',
     'geopy==2.1.0',
     'html2text==2020.1.16',
-    'html-sanitizer==0.4.1',
+    'html-sanitizer==2.5.0',
     'gunicorn==19.10.0',
     'html5lib==1.1',
     'icalendar==4.0.4',

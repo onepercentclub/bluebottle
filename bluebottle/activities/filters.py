@@ -335,6 +335,7 @@ class ActivitySearch(Search):
 
     sorting = {
         'date': ['dates.start'],
+        'created': ['created'],
         'distance': ['distance']
     }
     default_sort = "date"
@@ -377,6 +378,15 @@ class ActivitySearch(Search):
 
     def sort(self, search):
         search = super().sort(search)
+
+        if self._sort == '-created':
+            search = search.sort({
+                "created": {
+                    "order": "desc",
+                }
+            })
+            return search
+
         if self._sort == 'distance':
             request = get_current_request()
             place_id = request.GET.get('place')

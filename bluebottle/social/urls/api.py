@@ -1,9 +1,11 @@
 from bluebottle.social.views import AccessTokenView
-from django.conf.urls import url
+from django.urls import re_path
 
 
 urlpatterns = [
-    url(r'^(?P<backend>[^/]+)/$',
+    re_path(
+        r'^(?P<backend>[^/]+)/$',
         AccessTokenView.as_view(),
-        name='access-token')
+        name='access-token'
+    )
 ]

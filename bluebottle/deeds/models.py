@@ -82,31 +82,43 @@ class Deed(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(DeedParticipant).filter(
-            status__in=('accepted', 'succeeded', )
-        )
+        if self.pk:
+            return self.contributors.instance_of(DeedParticipant).filter(
+                status__in=('accepted', 'succeeded', )
+            )
+        else:
+            return []
 
     @property
     def succeeded_contributor_count(self):
-        return self.participants.count() + self.deleted_successful_contributors
+        if self.pk:
+            return self.participants.count() + self.deleted_successful_contributors
+        else:
+            return []
 
     @property
     def efforts(self):
-        return EffortContribution.objects.filter(
-            contributor__activity=self,
-            contribution_type='deed'
-        )
+        if self.pk:
+            return EffortContribution.objects.filter(
+                contributor__activity=self,
+                contribution_type='deed'
+            )
+        else:
+            return []
 
     @property
     def realized(self):
-        return len(
-            EffortContribution.objects.exclude(
-                contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
-            ).filter(
-                contributor__activity=self,
-                status__in=['succeeded', 'new', ]
+        if self.pk:
+            return len(
+                EffortContribution.objects.exclude(
+                    contributor__polymorphic_ctype=ContentType.objects.get_for_model(Organizer)
+                ).filter(
+                    contributor__activity=self,
+                    status__in=['succeeded', 'new', ]
+                )
             )
-        )
+        else:
+            return []
 
 
 class DeedParticipant(Contributor):

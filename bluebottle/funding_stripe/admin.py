@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.forms import ChoiceField
@@ -152,7 +152,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     def get_urls(self):
         urls = super(StripePayoutAccountAdmin, self).get_urls()
         custom_urls = [
-            url(
+            re_path(
                 r'^(?P<account_id>.+)/check_status/$',
                 self.admin_site.admin_view(self.check_status),
                 name='funding-stripe-account-check',

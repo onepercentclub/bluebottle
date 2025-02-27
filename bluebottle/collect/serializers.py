@@ -104,7 +104,7 @@ class CollectActivitySerializer(BaseActivitySerializer):
         ]
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'my_contributor': 'bluebottle.collect.serializers.CollectContributorSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
@@ -145,7 +145,7 @@ class CollectActivityListSerializer(BaseActivityListSerializer):
         ]
 
     included_serializers = dict(
-        BaseActivityListSerializer.included_serializers,
+        BaseActivityListSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'collect_type': 'bluebottle.collect.serializers.CollectTypeSerializer',

@@ -24,7 +24,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
         page = form.submit()
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
 
         activity.refresh_from_db()
@@ -44,7 +44,7 @@ class DateActivityAdminTestCase(BluebottleAdminTestCase):
         form = page.forms['dateactivity_form']
         form['title'] = 'Complete activity'
         page = form.submit()
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
 
         activity.refresh_from_db()

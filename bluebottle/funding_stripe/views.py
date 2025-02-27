@@ -588,7 +588,6 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            __import__('ipdb').set_trace()
             error = "Payout not found"
             logger.error(error)
             return HttpResponse(error, status=400)

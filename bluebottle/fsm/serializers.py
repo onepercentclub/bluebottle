@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import ReadOnlyField
 
 from bluebottle.fsm.state import TransitionNotPossible
+from rest_framework_json_api.serializers import Serializer
 
 
 class Transition(object):
@@ -62,7 +63,7 @@ class CurrentStatusField(ReadOnlyField):
         }
 
 
-class TransitionSerializer(serializers.Serializer):
+class TransitionSerializer(Serializer):
     transition = serializers.CharField()
     message = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     send_email = serializers.BooleanField(default=True, allow_null=True)

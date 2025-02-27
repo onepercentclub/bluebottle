@@ -3,8 +3,8 @@ from datetime import datetime
 
 from dateutil.parser import parse
 from django.db import connection
-from django.utils.timezone import get_current_timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import get_current_timezone, make_aware
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -178,7 +178,7 @@ class DeadlineField(serializers.DateTimeField):
             return None
         try:
             parsed_date = parse(value).date()
-            return get_current_timezone().localize(
+            return make_aware(
                 datetime(
                     parsed_date.year,
                     parsed_date.month,
@@ -186,7 +186,8 @@ class DeadlineField(serializers.DateTimeField):
                     hour=23,
                     minute=59,
                     second=59
-                )
+                ),
+                get_current_timezone()
             )
         except (ValueError, TypeError):
             self.fail('invalid', format='date')
@@ -217,7 +218,7 @@ class FundingListSerializer(BaseActivityListSerializer):
         resource_name = 'activities/fundings'
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
@@ -363,7 +364,7 @@ class FundingSerializer(BaseActivitySerializer):
         resource_name = 'activities/fundings'
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'co_financers': 'bluebottle.funding.serializers.DonorSerializer',
             'rewards': 'bluebottle.funding.serializers.RewardSerializer',
@@ -585,7 +586,7 @@ class KycDocumentSerializer(PrivateDocumentSerializer):
     relationship = 'plainpayoutaccount_set'
 
 
-class PlainPayoutAccountSerializer(serializers.ModelSerializer):
+class PlainPayoutAccountSerializer(ModelSerializer):
     document = PrivateDocumentField(required=False, allow_null=True, permissions=[IsAdminUser])
     owner = ResourceRelatedField(read_only=True)
     status = FSMField(read_only=True)
@@ -679,7 +680,7 @@ class PayoutBankAccountSerializer(PolymorphicModelSerializer):
         model = BankAccount
 
 
-class PayoutDonationSerializer(serializers.ModelSerializer):
+class PayoutDonationSerializer(ModelSerializer):
     # For Payout service
     amount = MoneySerializer(source='payout_amount')
 
@@ -711,7 +712,7 @@ class PayoutFundingSerializer(BaseActivityListSerializer):
     }
 
 
-class PayoutSerializer(serializers.ModelSerializer):
+class PayoutSerializer(ModelSerializer):
     # For Payout service
     donations = ResourceRelatedField(read_only=True, many=True)
     activity = ResourceRelatedField(read_only=True)
@@ -745,7 +746,7 @@ class PayoutSerializer(serializers.ModelSerializer):
     }
 
 
-class FundingPlatformSettingsSerializer(serializers.ModelSerializer):
+class FundingPlatformSettingsSerializer(ModelSerializer):
     matching_name = serializers.SerializerMethodField()
 
     def get_matching_name(self, obj):

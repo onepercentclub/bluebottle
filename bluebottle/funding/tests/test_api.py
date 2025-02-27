@@ -471,7 +471,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             5
         )
 
-        co_financers = response.json()['data']['relationships']['co-financers']
+        co_financers = response.json()['data']['relationships']['co-financers']['data']
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too

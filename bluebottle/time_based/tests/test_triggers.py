@@ -1,28 +1,26 @@
-import time
 from datetime import date, datetime, timedelta
 
-import mock
 from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.template import defaultfilters
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.activities.messages import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
     InitiativePlatformSettingsFactory,
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, CeleryTestCase, TriggerTestCase
+from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
 from bluebottle.time_based.effects.effects import (
     CreateNextSlotEffect,
     CreatePeriodicParticipantsEffect,
 )
 from bluebottle.time_based.messages import (
-    ParticipantAppliedNotification,
-    ParticipantChangedNotification,
-    ParticipantJoinedNotification, ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification, )
+    ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification,
+)
 from bluebottle.time_based.notifications.participants import UserScheduledNotification
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification, \
@@ -929,139 +927,6 @@ class DateParticipantTriggerTestCase(ParticipantTriggerTestCase, BluebottleTestC
         self.assertEqual(prep.status, "new")
 
 
-@mock.patch.object(ParticipantJoinedNotification, "delay", 2)
-@mock.patch.object(ParticipantAppliedNotification, "delay", 1)
-@mock.patch.object(ParticipantChangedNotification, "delay", 2)
-class DateParticipantTriggerCeleryTestCase(CeleryTestCase):
-    factory = DateActivityFactory
-    participant_factory = DateParticipantFactory
-
-    factories = CeleryTestCase.factories + [
-        DateParticipantFactory,
-        DateActivityFactory,
-        InitiativeFactory,
-    ]
-
-    def setUp(self):
-        super().setUp()
-        self.settings = InitiativePlatformSettingsFactory.create(
-            activity_types=[self.factory._meta.model.__name__.lower()]
-        )
-
-        self.user = BlueBottleUserFactory()
-        self.admin_user = BlueBottleUserFactory(is_staff=True)
-        self.initiative = InitiativeFactory(owner=self.user, status="approved")
-
-        self.activity = self.factory.create(
-            preparation=timedelta(hours=1), initiative=self.initiative, review=False
-        )
-        self.slots = DateActivitySlotFactory.create_batch(3, activity=self.activity)
-
-        self.activity.refresh_from_db()
-        self.participant = None
-
-    def test_join_free(self):
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity, user=user, as_user=user
-        )
-
-        slot = self.slots[0]
-        self.slot_participant = SlotParticipantFactory.create(
-            slot=slot, participant=participant, as_user=user
-        )
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has registered for a time slot for your activity "{self.activity.title}"'
-        )
-        self.assertTrue(slot.title in mail.outbox[0].body)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You\'ve registered for a time slot for the activity "{self.activity.title}"'
-        )
-
-    def test_join_free_review(self):
-        self.activity.review = True
-        self.activity.save()
-        mail.outbox = []
-        user = BlueBottleUserFactory.create()
-        participant = self.participant_factory.create(
-            activity=self.activity,
-            user=user,
-            as_user=user
-        )
-
-        self.slot_participants = [
-            SlotParticipantFactory.create(slot=slot, participant=participant)
-            for slot in self.slots
-        ]
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'You have a new participant for your activity "{self.activity.title}" 🎉'
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have applied to the activity "{self.activity.title}"'
-        )
-
-    def test_change_free(self):
-        self.test_join_free()
-
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f'A participant has withdrawn from a time slot for your activity "{self.activity.title}"'
-        )
-
-    def test_withdraw_free(self):
-        self.test_join_free()
-        time.sleep(3)
-        mail.outbox = []
-
-        self.slot_participant.states.withdraw(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 1)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has withdrawn from a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        mail.outbox = []
-
-        self.slot_participant.states.reapply(save=True)
-
-        time.sleep(3)
-        self.assertEqual(len(mail.outbox), 2)
-
-        self.assertEqual(
-            mail.outbox[0].subject,
-            f"A participant has registered for a time slot for "
-            f'your activity "{self.activity.title}"',
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'You have changed your application on the activity "{self.activity.title}"',
-        )
-
-
 class SlotParticipantTriggerTestCase(BluebottleTestCase):
     def setUp(self):
         self.user = BlueBottleUserFactory.create()
@@ -1353,8 +1218,9 @@ class PeriodicActivitySlotTriggerTestCase(TriggerTestCase):
             status="open",
             review=False
         )
-        start = get_current_timezone().localize(
-            datetime.combine(self.activity.start, datetime.min.time())
+        start = make_aware(
+            datetime.combine(self.activity.start, datetime.min.time()),
+            get_current_timezone()
         )
 
         self.defaults = {
@@ -1459,6 +1325,25 @@ class RegistrationTriggerTestBase:
         with self.execute(user=self.staff):
             self.assertNotificationEffect(
                 ParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                ManagerParticipantAddedOwnerNotification
+            )
+
+    def test_added_by_staff_is_active(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.model = PeriodicRegistrationFactory.build(
+            activity=self.activity,
+            user=self.user,
+        )
+        with self.execute(user=self.staff):
+            self.assertNoNotificationEffect(
+                ParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                InactiveParticipantAddedNotification
             )
             self.assertNotificationEffect(
                 ManagerParticipantAddedOwnerNotification

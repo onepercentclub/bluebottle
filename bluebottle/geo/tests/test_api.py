@@ -140,7 +140,7 @@ class UsedCountryListTestCase(GeoTestCase):
         self.assertEqual(len(countries), 3)
 
     def test_api_used_country_list_endpoint_with_offices(self):
-        ireland = Country.objects.get(translations__name="Ireland")
+        ireland = Country.objects.filter(translations__name="Ireland").first()
         office = LocationFactory.create(country=ireland)
         InitiativeFactory.create(location=office, status='approved', place=None)
         response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})
@@ -281,9 +281,9 @@ class PlaceDetailTestCase(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)

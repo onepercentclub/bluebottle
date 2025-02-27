@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
@@ -14,66 +14,87 @@ from bluebottle.funding_stripe.views import (
 urlpatterns = [
 
     # Payout accounts
-    url(
+    re_path(
         r"^/payout-account$", ConnectAccountList.as_view(), name="connect-account-list"
     ),
-    url(
+    re_path(
         r"^/payout-account/(?P<pk>[\d]+)$",
         ConnectAccountDetails.as_view(),
         name="connect-account-detail",
     ),
-    url(
+    re_path(
         r"^/payout-account-session/$",
         ConnectAccountSession.as_view(),
         name="connect-account-session",
     ),
-    url(
+    re_path(
         r"^/external-account$",
         ExternalAccountList.as_view(),
-        name='stripe-external-account-list'),
-    url(r'^/external-account/(?P<pk>[\d]+)$',
+        name='stripe-external-account-list'
+    ),
+    re_path(
+        r'^/external-account/(?P<pk>[\d]+)$',
         ExternalAccountDetails.as_view(),
-        name='stripe-external-account-details'),
+        name='stripe-external-account-details'
+    ),
 
     # Payments
-    url(r'^/payments$',
+    re_path(
+        r'^/payments$',
         StripePaymentList.as_view(),
-        name='stripe-payment-list'),
+        name='stripe-payment-list'
+    ),
 
-    url(r'^/payment-intents$',
+    re_path(
+        r'^/payment-intents$',
         StripePaymentIntentList.as_view(),
-        name='stripe-payment-intent-list'),
+        name='stripe-payment-intent-list'
+    ),
 
-    url(r'^/payment-intents/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/payment-intents/(?P<pk>[\d]+)$',
         StripePaymentIntentDetail.as_view(),
-        name='stripe-payment-intent-detail'),
+        name='stripe-payment-intent-detail'
+    ),
 
-    url(r'^/bank-transfers$',
+    re_path(
+        r'^/bank-transfers$',
         StripeBankTransferList.as_view(),
-        name='stripe-bank-transfer-list'),
+        name='stripe-bank-transfer-list'
+    ),
 
-    url(r'^/bank-transfers/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/bank-transfers/(?P<pk>[\d]+)$',
         StripeBankTransferDetail.as_view(),
-        name='stripe-bank-transfer-detail'),
+        name='stripe-bank-transfer-detail'
+    ),
 
-    url(r'^/source-payments$',
+    re_path(
+        r'^/source-payments$',
         StripeSourcePaymentList.as_view(),
-        name='stripe-source-payment-list'),
+        name='stripe-source-payment-list'
+    ),
 
     # Webhooks
-    url(r'^/intent-webhook$',
+    re_path(
+        r'^/intent-webhook$',
         IntentWebHookView.as_view(),
-        name='stripe-intent-webhook'),
-    url(r'^/source-webhook$',
+        name='stripe-intent-webhook'
+    ),
+    re_path(
+        r'^/source-webhook$',
         SourceWebHookView.as_view(),
-        name='stripe-source-webhook'),
-    url(r'^/connect-webhook$',
+        name='stripe-source-webhook'
+    ),
+    re_path(
+        r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
-        name="stripe-connect-webhook"),
-    url(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
-    url(
+        name="stripe-connect-webhook"
+    ),
+    re_path(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
+    re_path(
         r"^/country-specs/(?P<pk>[\w]+)$",
         CountrySpecDetail.as_view(),
-        name="country-specs-detail",
+        name="country-specs-detail"
     ),
 ]

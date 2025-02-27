@@ -34,7 +34,7 @@ install_requires = [
     'django-admin-tools==0.8.1',
     'django-adminfilters==1.4.1',
     'django-appconf==1.0.3',
-    'django-axes==5.14.0',
+    'django-axes==6.5.2',
     'django-better-admin-arrayfield==1.4.2',
     'django-choices==1.7.1',
     'django-colorfield==0.5.0',

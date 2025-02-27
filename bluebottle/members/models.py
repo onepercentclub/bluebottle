@@ -322,6 +322,7 @@ class Member(BlueBottleBaseUser):
             username=email,
             first_name=name,
             last_name='',
+            is_active=False,
         )
         return user
 

@@ -180,6 +180,23 @@ class LoginTestCase(BluebottleTestCase):
             self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
             self.assertTrue(logger.call_count < 11)
 
+    def test_login_failed_spoofed_ip(self):
+        with mock.patch.object(authorization_logger, 'error') as logger:
+            for i in range(0, 14):
+                response = self.client.post(
+                    reverse('token-auth'), {'email': self.email, 'password': 'wrong'},
+                    HTTP_X_FORWARDED_FOR=f'127.0.0.{i},127.0.0.1'
+
+                )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+            response = self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertTrue(logger.call_count < 11)
+
     def test_login_failed_captcha(self):
         for i in range(0, 11):
             self.client.post(

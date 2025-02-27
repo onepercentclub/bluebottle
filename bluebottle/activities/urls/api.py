@@ -4,7 +4,7 @@ from bluebottle.activities.views import (
     ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
     RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
-    InviteDetailView, ContributionList
+    InviteDetailView, ContributionList, ActivityList
 )
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
         r'^/transitions$',
         ActivityTransitionList.as_view(),
         name='activity-transition-list'),
+
     url(r'^/search$',
         ActivityPreviewList.as_view(),
         name='activity-preview-list'),
@@ -23,6 +24,10 @@ urlpatterns = [
     url(r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),
         name='activity-detail'),
+
+    url(r'^/$',
+        ActivityList.as_view(),
+        name='activity-list'),
 
     url(
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',

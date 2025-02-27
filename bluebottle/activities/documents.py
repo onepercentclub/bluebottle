@@ -34,8 +34,10 @@ class ActivityDocument(Document):
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
+    created = fields.DateField()
 
     type = fields.KeywordField()
+    resource_name = fields.KeywordField()
     manager = fields.KeywordField()
 
     current_status = fields.NestedField(properties={
@@ -127,8 +129,16 @@ class ActivityDocument(Document):
         }
     )
 
-    office = fields.NestedField(
-        attr='office_location',
+    office_subregion = fields.NestedField(
+        attr='office_location.subregion',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    office_region = fields.NestedField(
+        attr='office_location.subregion.region',
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
@@ -162,7 +172,8 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField()
+    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
 
@@ -266,6 +277,9 @@ class ActivityDocument(Document):
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
+
+    def prepare_resource_name(self, instance):
+        return str(instance.__class__.JSONAPIMeta.resource_name)
 
     def prepare_activity_type(self, instance):
         mapping = {

@@ -1,6 +1,7 @@
 from django_tools.middlewares.ThreadLocal import get_current_user
+from elasticsearch_dsl import Facet
 from elasticsearch_dsl.faceted_search import TermsFacet
-from elasticsearch_dsl.query import Term
+from elasticsearch_dsl.query import Term, MatchNone, Terms, MatchAll
 from rest_framework.exceptions import NotAuthenticated
 
 from bluebottle.categories.models import Category
@@ -12,7 +13,7 @@ from bluebottle.utils.filters import (
     ElasticSearchFilter, Search, SegmentFacet, ModelFacet
 )
 
-from elasticsearch_dsl.query import MatchAll
+from elasticsearch_dsl.aggs import A
 
 
 class OwnerFacet(TermsFacet):
@@ -28,6 +29,25 @@ class OwnerFacet(TermsFacet):
 
     def get_values(self, data, filter_values):
         return []
+
+
+class StatusFacet(Facet):
+    agg_type = 'terms'
+
+    def get_aggregation(self):
+        return A('filter', filter=MatchAll())
+
+    def get_values(self, data, filter_values):
+        return A('filter', filter=MatchNone())
+
+    def add_filter(self, filter_values):
+        if filter_values == ['draft']:
+            return Terms(status=['draft', 'needs_work'])
+        if filter_values == ['open']:
+            return Terms(status=['approved'])
+        if filter_values == ['failed']:
+            return Terms(status=['rejected', 'deleted', 'cancelled'])
+        return MatchNone()
 
 
 class OfficeFacet(ModelFacet):
@@ -53,6 +73,7 @@ class InitiativeSearch(Search):
 
     facets = {
         'owner': OwnerFacet(),
+        'status': StatusFacet(),
     }
 
     possible_facets = {

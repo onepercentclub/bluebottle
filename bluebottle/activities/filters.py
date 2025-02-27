@@ -14,6 +14,7 @@ from bluebottle.categories.models import Category
 from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.models import Theme
+from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
@@ -334,6 +335,7 @@ class ActivitySearch(Search):
 
     sorting = {
         'date': ['dates.start'],
+        'created': ['created'],
         'distance': ['distance']
     }
     default_sort = "date"
@@ -359,8 +361,10 @@ class ActivitySearch(Search):
             labels={'0': _('In-person'), '1': _('Online/remote')}
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': UntranslatedModelFacet('office', Location),
         'date': ActivityDateRangeFacet(),
+        'office': UntranslatedModelFacet('office', Location),
+        'office_subregion': UntranslatedModelFacet('office_subregion', OfficeSubRegion),
+        'office_region': UntranslatedModelFacet('office_region', OfficeRegion),
     }
 
     possible_facets = {
@@ -374,6 +378,15 @@ class ActivitySearch(Search):
 
     def sort(self, search):
         search = super().sort(search)
+
+        if self._sort == '-created':
+            search = search.sort({
+                "created": {
+                    "order": "desc",
+                }
+            })
+            return search
+
         if self._sort == 'distance':
             request = get_current_request()
             place_id = request.GET.get('place')

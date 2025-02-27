@@ -281,9 +281,9 @@ class PlaceDetailTestCase(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)

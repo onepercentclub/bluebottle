@@ -786,11 +786,9 @@ SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
-AXES_META_PRECEDENCE_ORDER = [
-    'HTTP_X_FORWARDED_FOR',
-    'REMOTE_ADDR',
-]
-AXES_NUM_PROXIES = 1
+AXES_CLIENT_IP_CALLABLE = "bluebottle.utils.utils.get_client_ip"
+
+
 AXES_USERNAME_FORM_FIELD = 'email'
 
 USE_X_FORWARDED_HOST = True

@@ -288,6 +288,40 @@ class TestSAMLTokenAuthentication(TestCase):
             self.assertEqual(user.email, 'smartin@yaco.es')
             self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
 
+    def test_auth_existing_inactive_success(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            # Create user with remote_id with caps
+            BlueBottleUserFactory.create(
+                remote_id='492882615ACF31C8096B627245D76AE53036C090',
+                email='smartin@yaco.es',
+                username='smartin',
+                is_active=False
+            )
+
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            # Login should stil work.
+            user, created = auth_backend.authenticate()
+            self.assertFalse(created)
+            self.assertEqual(user.username, 'smartin')
+            self.assertTrue(user.is_active, 'smartin')
+
+            self.assertEqual(user.email, 'smartin@yaco.es')
+            self.assertEqual(user.remote_id, '492882615acf31c8096b627245d76ae53036c090')
+
     def test_auth_existing_with_office(self):
         settings = dict(**TOKEN_AUTH_SETTINGS)
         settings['assertion_mapping']['location.slug'] = 'cn'

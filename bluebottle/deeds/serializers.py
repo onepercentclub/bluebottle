@@ -114,7 +114,7 @@ class DeedSerializer(BaseActivitySerializer):
         ]
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'my_contributor': 'bluebottle.deeds.serializers.DeedParticipantSerializer',
             'my_contributor.user': 'bluebottle.initiatives.serializers.MemberSerializer',

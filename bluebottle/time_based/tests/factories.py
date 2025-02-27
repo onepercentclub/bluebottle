@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 
 import factory.fuzzy
 from django.utils import timezone
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware
 
 from bluebottle.test.factory_models import generate_rich_text
 
@@ -259,8 +259,9 @@ class PeriodicParticipantFactory(FSMModelFactory):
             activity = kwargs.get('activity') or PeriodicActivityFactory.create()
             kwargs['slot'] = PeriodicSlotFactory.create(
                 activity=activity,
-                start=timezone.get_current_timezone().localize(
-                    datetime.combine(activity.start, datetime.min.time())
+                start=make_aware(
+                    datetime.combine(activity.start, datetime.min.time()),
+                    timezone.get_current_timezone()
                 ),
                 duration=activity.duration
             )

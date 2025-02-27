@@ -1,4 +1,6 @@
 from rest_framework import permissions
+from rest_framework.throttling import UserRateThrottle
+
 
 from bluebottle.files.views import ImageContentView
 from bluebottle.updates.models import Update, UpdateImage
@@ -11,6 +13,17 @@ from bluebottle.utils.views import (
 )
 
 
+class UpdateThrottle(UserRateThrottle):
+    def allow_request(self, request, view):
+        try:
+            if request.data['notify']:
+                return super().allow_request(request, view)
+        except KeyError:
+            pass
+
+        return True
+
+
 class UpdateList(JsonApiViewMixin, CreateAPIView):
     queryset = Update.objects.all()
     serializer_class = UpdateSerializer
@@ -19,6 +32,7 @@ class UpdateList(JsonApiViewMixin, CreateAPIView):
         permissions.IsAuthenticated,
         ActivityOwnerUpdatePermission
     )
+    throttle_classes = [UpdateThrottle]
 
     def perform_create(self, serializer):
         if hasattr(serializer.Meta, 'model'):

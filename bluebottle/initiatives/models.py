@@ -236,7 +236,6 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
 
 
 ACTIVITY_SEARCH_FILTERS = (
-    ('office', _('Office')),
     ('country', _('Country')),
     ('date', _('Date')),
     ('distance', _('Distance')),
@@ -245,6 +244,9 @@ ACTIVITY_SEARCH_FILTERS = (
     ('team_activity', _('Individual / Team')),
     ('theme', _('Theme')),
     ('category', _('Category')),
+    ('office', _('Office')),
+    ('office_subregion', _('Office group')),
+    ('office_region', _('Office region')),
 )
 
 

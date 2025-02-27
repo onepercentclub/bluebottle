@@ -1,16 +1,16 @@
-from django.conf.urls import url
+from django.urls import re_path
 from ..views import StatisticList, OldStatisticList, UserStatisticList
 
 urlpatterns = [
-    url(
+    re_path(
         r'^$', OldStatisticList.as_view(),
         name='statistic-list'
     ),
-    url(
+    re_path(
         r'^list$', StatisticList.as_view(),
         name='statistics'
     ),
-    url(
+    re_path(
         r'^user$', UserStatisticList.as_view(),
         name='user-statistics'
     ),

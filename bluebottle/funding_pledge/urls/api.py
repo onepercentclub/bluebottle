@@ -1,16 +1,22 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.funding_pledge.views import PledgePaymentList, PledgeBankAccountAccountList, \
     PledgeBankAccountAccountDetail
 
 urlpatterns = [
-    url(r'^$',
+    re_path(
+        r'^$',
         PledgePaymentList.as_view(),
-        name='pledge-payment-list'),
-    url(r'^/bank-accounts/$',
+        name='pledge-payment-list'
+    ),
+    re_path(
+        r'^/bank-accounts/$',
         PledgeBankAccountAccountList.as_view(),
-        name='pledge-external-account-list'),
-    url(r'^/bank-accounts/(?P<pk>[\d]+)$',
+        name='pledge-external-account-list'
+    ),
+    re_path(
+        r'^/bank-accounts/(?P<pk>[\d]+)$',
         PledgeBankAccountAccountDetail.as_view(),
-        name='pledge-external-account-detail'),
+        name='pledge-external-account-detail'
+    ),
 ]

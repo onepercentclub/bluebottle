@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, date
 import jwt
 import mock
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
-from captcha import client
+from django_recaptcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
 from django.db import connection
@@ -170,6 +170,23 @@ class LoginTestCase(BluebottleTestCase):
             for i in range(0, 14):
                 response = self.client.post(
                     reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
+                )
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+            response = self.client.post(
+                reverse('token-auth'), {'email': self.email, 'password': self.password}
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            self.assertTrue(logger.call_count < 11)
+
+    def test_login_failed_spoofed_ip(self):
+        with mock.patch.object(authorization_logger, 'error') as logger:
+            for i in range(0, 14):
+                response = self.client.post(
+                    reverse('token-auth'), {'email': self.email, 'password': 'wrong'},
+                    HTTP_X_FORWARDED_FOR=f'127.0.0.{i},127.0.0.1'
+
                 )
             self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 

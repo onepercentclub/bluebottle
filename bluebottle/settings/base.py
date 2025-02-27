@@ -143,8 +143,8 @@ MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
+    'bluebottle.utils.middleware.TenantLocaleMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
-    'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
@@ -223,7 +223,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.SHA1PasswordHasher',
     'django.contrib.auth.hashers.MD5PasswordHasher',
     'django.contrib.auth.hashers.CryptPasswordHasher',
-    'hashers_passlib.phpass',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -293,22 +292,22 @@ SHARED_APPS = (
     'corsheaders',
     'parler',
     'daterange_filter',
-    'adminsortable',
     'solo',
     'django_filters',
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+
 )
 
 TENANT_APPS = (
     'bluebottle.bluebottle_dashboard',
+    'adminsortable',
     'django_otp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
     'two_factor',
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
-
 
     'django.contrib.contenttypes',
     'polymorphic',
@@ -424,8 +423,8 @@ TENANT_APPS = (
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',
     'fluent_contents.plugins.rawhtml',
-    'django_wysiwyg',
     'tinymce',
+    'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
     'taggit',
@@ -436,10 +435,10 @@ TENANT_APPS = (
     'djmoney',
     'solo',
     'nested_inline',
-    'permissions_widget',
+    'tabular_permissions',
     'django.forms',
     'axes',
-    'captcha',
+    'django_recaptcha',
     'colorfield',
     'django_quill',
 )
@@ -625,6 +624,7 @@ SEND_MAIL = False
 
 DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
+
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)
 # This fixes it
@@ -767,16 +767,14 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
-AXES_META_PRECEDENCE_ORDER = [
-    'HTTP_X_FORWARDED_FOR',
-    'REMOTE_ADDR',
-]
-AXES_NUM_PROXIES = 1
+AXES_CLIENT_IP_CALLABLE = "bluebottle.utils.utils.get_client_ip"
+
+
 AXES_USERNAME_FORM_FIELD = 'email'
 
 USE_X_FORWARDED_HOST = True

@@ -5,6 +5,9 @@ from django.template.defaultfilters import time, date
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
+
+from django.core.signing import TimestampSigner
+
 from pytz import timezone
 
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -549,3 +552,26 @@ class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
     template = 'messages/do-good-hours/reminder-q4'
+
+
+class InactiveParticipantAddedNotification(TransitionMessage):
+    subject = pgettext('email', "You have been added to the activity {title}")
+    template = 'messages/inactive-participant-added'
+
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        user = self.obj.user
+
+        token = TimestampSigner().sign(user.pk)
+        activity_url = self.obj.activity.get_absolute_url()
+
+        url = f'/auth/confirm/?token={token}&email={user.email}&url={activity_url}'
+        return url
+
+    def get_recipients(self):
+        """Participant"""
+        return [self.obj.user]

@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, make_aware
 from bluebottle.time_based.models import DateActivitySlot
 
 from bluebottle.members.models import Member
@@ -39,8 +39,9 @@ def duplicate_slot(slot, interval, end):
     )
 
     for date in dates:
-        start = tz.localize(
-            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year)
+        start = make_aware(
+            start.replace(tzinfo=None, day=date.day, month=date.month, year=date.year),
+            tz
         )
 
         slot = DateActivitySlot(start=start, **fields)

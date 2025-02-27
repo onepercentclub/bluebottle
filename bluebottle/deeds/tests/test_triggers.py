@@ -3,7 +3,8 @@ from datetime import timedelta, date
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification, InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification
 )
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
@@ -341,6 +342,17 @@ class DeedParticipantTriggersTestCase(TriggerTestCase):
         with self.execute(user=self.staff_user):
             self.assertEffect(CreateEffortContribution)
             self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
+
+    def test_added_by_admin_inactive(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=self.staff_user):
+            self.assertEffect(CreateEffortContribution)
+            self.assertNoNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(InactiveParticipantAddedNotification)
             self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
     def test_initiate_no_start_no_end(self):

@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.initiatives.views import (
     InitiativeList, InitiativeDetail, InitiativeImage,
@@ -11,61 +11,61 @@ from bluebottle.initiatives.views import (
 
 urlpatterns = [
 
-    url(
+    re_path(
         r'^$',
         InitiativeList.as_view(),
         name='initiative-list'
     ),
-    url(
+    re_path(
         r'^/(?P<pk>\d+)$',
         InitiativeDetail.as_view(),
         name='initiative-detail'
     ),
-    url(
+    re_path(
         r'^/transitions$',
         InitiativeReviewTransitionList.as_view(),
         name='initiative-review-transition-list'
     ),
-    url(
+    re_path(
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         InitiativeImage.as_view(),
         name='initiative-image'
     ),
 
-    url(
+    re_path(
         r'^/redirects$',
         InitiativeRedirectList.as_view(),
         name='initiative-redirect-list'
     ),
 
-    url(
+    re_path(
         r'^/related-images$',
         RelatedInitiativeImageList.as_view(),
         name='related-initiative-image-list'
     ),
-    url(
+    re_path(
         r'^/themes$',
         ThemeList.as_view(),
         name='initiative-theme-list'
     ),
-    url(
+    re_path(
         r'^/themes/(?P<pk>\d+)$',
         ThemeDetail.as_view(),
         name='initiative-theme'
     ),
 
-    url(
+    re_path(
         r'^/(?P<pk>\d+)/related-image/(?P<size>\d+(x\d+)?)$',
         RelatedInitiativeImageContent.as_view(),
         name='related-initiative-image-content'
     ),
 
-    url(
+    re_path(
         r'^/map/$',
         InitiativeMapList.as_view(),
         name='initiative-map-list'
     ),
-    url(
+    re_path(
         r'^/preview/$',
         InitiativePreviewList.as_view(),
         name='initiative-preview-list'

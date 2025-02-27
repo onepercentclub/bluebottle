@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from babel.numbers import get_currency_symbol
 from django import forms
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models, connection
@@ -382,7 +382,7 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            url(
+            re_path(
                 r'^(?P<pk>.+)/sync/$',
                 self.admin_site.admin_view(self.sync_payment),
                 name='funding_donation_sync',
@@ -438,8 +438,8 @@ class PaymentChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
     def get_urls(self):
         urls = super(PaymentChildAdmin, self).get_urls()
         process_urls = [
-            url(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
-            url(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
+            re_path(r'^(?P<pk>\d+)/check/$', self.check_status, name="funding_payment_check"),
+            re_path(r'^(?P<pk>\d+)/refund/$', self.refund, name="funding_payment_refund"),
         ]
         return process_urls + urls
 

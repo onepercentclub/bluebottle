@@ -21,7 +21,7 @@ from rest_framework.utils import model_meta
 
 from rest_framework.relations import ManyRelatedField
 
-from captcha import client
+from django_recaptcha import client
 
 from bluebottle.utils.utils import get_client_ip
 from .models import Language, TranslationPlatformSettings

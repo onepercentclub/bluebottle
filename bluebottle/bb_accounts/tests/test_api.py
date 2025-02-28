@@ -951,6 +951,6 @@ class UserSignupTokenApiTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(is_active=False)
         self.data['data']['attributes']['email'] = user.email
         response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 201)
         data = response.json()
         self.assertEqual(data['data']['id'], str(user.id))

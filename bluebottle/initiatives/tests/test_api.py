@@ -584,6 +584,22 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], self.initiative.title)
 
+    def test_get_story_safe(self):
+        self.initiative.story = (
+            '<p>Test</p><img src="/media/test.jpg">'
+            '<script type="javascript">alert("bla")</script>'
+        )
+        self.initiative.save()
+
+        response = self.client.get(
+            self.url
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()['data']['attributes']['story'],
+            '<p>Test</p><img src="/media/test.jpg">'
+        )
+
 
 @override_settings(
     ELASTICSEARCH_DSL_AUTOSYNC=True,

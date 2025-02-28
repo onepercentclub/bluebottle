@@ -4,6 +4,7 @@ import uuid
 import requests
 from collections import namedtuple
 
+
 from axes.utils import reset
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -19,6 +20,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status, response, generics, parsers
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_jwt.views import ObtainJSONWebTokenView
 from tenant_extras.utils import TenantLanguage
@@ -354,6 +356,7 @@ class PasswordReset(JsonApiViewMixin, CreateAPIView):
     password reset link upon successful submission.
     """
     serializer_class = PasswordResetSerializer
+    throttle_classes = [UserRateThrottle]
 
     def perform_create(self, serializer):
         try:

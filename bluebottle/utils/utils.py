@@ -37,13 +37,18 @@ to_text.ignore_emphasis = True
 
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u']
-ATTRIBUTES = {'a': ['target', 'href', 'rel'], 'img': ['src', 'alt', 'width', 'height', 'align']}
+        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
+ATTRIBUTES = {
+    'a': ['target', 'href', 'rel'],
+    'img': ['src', 'alt', 'width', 'height', 'align']
+}
+EMPTY = ['hr', 'a', 'br', 'img']
 
 
 sanitizer = Sanitizer({
     'tags': TAGS,
     'attributes': ATTRIBUTES,
+    'empty': EMPTY,
     'element_preprocessors': []
 })
 

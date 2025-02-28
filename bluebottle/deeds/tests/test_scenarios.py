@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 
 from bluebottle.deeds.tests.factories import DeedFactory
@@ -42,7 +43,7 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         activity_data = {
             'title': 'Movember',
             'start': str(date.today()),
-            'description': 'Show some stash!'
+            'description': json.dumps({'html': 'Show some stash!', 'delta': ''})
         }
         activity = api_update_deed(self, activity, activity_data)
         api_deed_transition(self, activity, 'publish')

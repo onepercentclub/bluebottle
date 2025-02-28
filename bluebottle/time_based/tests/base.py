@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 from io import BytesIO
 
@@ -27,6 +28,9 @@ class TimeBasedActivityListAPITestCase:
 
     def setUp(self):
         self.url = reverse(self.url_name)
+        self.defaults = {
+            'description': json.dumps({'html': 'test description', 'delta': ''})
+        }
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append(self.model_name)
@@ -54,7 +58,7 @@ class TimeBasedActivityListAPITestCase:
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
-        self.defaults['description'] = ''
+        self.defaults['description'] = json.dumps({'html': '', 'delta': ''})
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)
@@ -108,7 +112,7 @@ class TimeBasedActivityDetailAPITestCase:
 
     defaults = {
         'title': 'Test title',
-        'description': 'Test description',
+        'description': json.dumps({'html': 'Test description', 'delta': ''}),
         'review': False,
         'is_online': True,
     }

@@ -1329,7 +1329,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
 
-        self.activity.description = "Test<br>bla"
+        self.activity.description = json.dumps({'html': "Test<br>bla", 'delta': ''})
         self.activity.save()
 
         response = self.client.get(self.url, user=self.activity.owner)

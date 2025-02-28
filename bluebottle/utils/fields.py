@@ -228,7 +228,9 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 'title': _('This field is required'),
                 'code': 'required',
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field).replace('.', '/'))
+                    'pointer': '/data/attributes/{}'.format(
+                        inflection.dasherize(field.split('.')[0]).replace('.', '/')
+                    )
                 }
             } for field in value
         ]

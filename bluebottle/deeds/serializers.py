@@ -46,8 +46,6 @@ class DeedSerializer(BaseActivitySerializer):
                 self.fields[key].allow_null = True
                 self.fields[key].required = False
 
-    title = serializers.CharField()
-    description = serializers.CharField()
     start = serializers.DateField(validators=[StartDateValidator()], allow_null=True)
     end = serializers.DateField(allow_null=True)
 

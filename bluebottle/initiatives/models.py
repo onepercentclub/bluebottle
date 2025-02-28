@@ -182,7 +182,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     def required_fields(self):
         fields = [
             'title', 'pitch', 'owner',
-            'has_organization', 'story', 'image',
+            'has_organization', 'story.html', 'image',
             'theme',
         ]
 

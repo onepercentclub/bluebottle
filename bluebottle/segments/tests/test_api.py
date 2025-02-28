@@ -185,14 +185,14 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertAttribute('logo')
         self.assertAttribute('cover-image')
 
-    def test_story_escaped(self):
+    def test_story_safe(self):
         self.model.story = '<script>test</script><b>test</b>'
         self.model.save()
 
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertAttribute('story', '&lt;script&gt;test&lt;/script&gt;<b>test</b>')
+        self.assertAttribute('story', '<b>test</b>')
 
     def test_retrieve_closed_site(self):
         with self.closed_site():

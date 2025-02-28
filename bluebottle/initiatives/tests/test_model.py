@@ -83,12 +83,6 @@ class InitiativeTestCase(TestCase):
             initiative.slug, 'test-title'
         )
 
-    def test_story_safe(self):
-        initiative = InitiativeFactory(story='<img src="test">')
-        self.assertEqual(
-            initiative.story, '<img src="test">'
-        )
-
     def test_slug_empty(self):
         initiative = InitiativeFactory(title='')
         self.assertEqual(

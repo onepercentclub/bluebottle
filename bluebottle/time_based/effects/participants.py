@@ -1,7 +1,7 @@
 from datetime import datetime, date
 
 from django.db.models import ObjectDoesNotExist
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
@@ -26,9 +26,15 @@ class CreateTimeContributionEffect(Effect):
         if hasattr(self.instance, "slot") and self.instance.slot:
             contribution_date = self.instance.slot.start
         elif activity.start and activity.start > date.today():
-            contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.start, datetime.min.replace(hour=12).time()),
+                tz
+            )
         elif activity.deadline and activity.deadline < date.today():
-            contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()),
+                tz
+            )
         else:
             contribution_date = now()
 

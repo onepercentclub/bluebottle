@@ -351,7 +351,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['require_office'].checked = True
 
         form.submit()
@@ -361,7 +361,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_require_profile_fields(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['require_address'].checked = True
         form['require_birthdate'].checked = True
         form['require_phone_number'].checked = True
@@ -376,7 +376,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         LocationFactory.create_batch(3)
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['create_initiatives'].checked = True
 
         form.submit()
@@ -386,7 +386,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_fiscal_year(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['fiscal_month_offset'] = '4'
 
         form.submit()
@@ -396,13 +396,13 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
     def test_retention_settings(self):
         self.app.set_user(self.superuser)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         form['retention_anonymize'] = '12'
         form['retention_delete'] = '24'
 
         page = form.submit()
         self.assertContains(page, 'You are about to anonymise/delete user data across the whole platform.')
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
         settings_platform = MemberPlatformSettings.load()
         self.assertEqual(settings_platform.retention_anonymize, 12)
@@ -413,7 +413,7 @@ class MemberPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         self.staff_member.user_permissions.add(permission)
         self.app.set_user(self.staff_member)
         page = self.app.get(reverse('admin:members_memberplatformsettings_change'))
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse('retention_anonymize' in form.fields)
         self.assertFalse('retention_delete' in form.fields)
 
@@ -682,7 +682,7 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
         # Normal user should not have submitted_initiative_notifications checkbox
         page = self.app.get(self.member_admin_url)
         self.assertFalse('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[0]
+        form = page.forms[1]
         form.set('is_staff', True)
         form.submit()
 
@@ -690,7 +690,7 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
         # Should have submitted_initiative_notifications checkbox now
         page = self.app.get(self.member_admin_url)
         self.assertTrue('id_submitted_initiative_notifications' in page.text)
-        form = page.forms[0]
+        form = page.forms[1]
         form.set('submitted_initiative_notifications', True)
         form.submit()
 
@@ -700,7 +700,7 @@ class MemberNotificationsAdminTestCase(BluebottleAdminTestCase):
         # Demote user into normal member
         # Should unset submitted_initiative_notifications boolean
         page = self.app.get(self.member_admin_url)
-        form = page.forms[0]
+        form = page.forms[1]
         form.set('is_staff', False)
         form.submit()
 

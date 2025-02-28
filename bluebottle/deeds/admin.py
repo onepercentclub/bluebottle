@@ -34,7 +34,7 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
-    inlines = ContributorChildAdmin.inlines + [EffortContributionInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin, )
 
 
 class DeedParticipantInline(BaseContributorInline):

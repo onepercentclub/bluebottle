@@ -92,7 +92,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     has_multiple_locations = serializers.SerializerMethodField()
     is_full = serializers.SerializerMethodField()
 
-    type = serializers.SerializerMethodField()
+    activity_type = serializers.SerializerMethodField()
 
     target = MoneySerializer(read_only=True)
     amount_raised = MoneySerializer(read_only=True)
@@ -215,7 +215,7 @@ class ActivityPreviewSerializer(ModelSerializer):
         except IndexError:
             pass
 
-    def get_type(self, obj):
+    def get_activity_type(self, obj):
         return obj.type.replace('activity', '')
 
     def get_location(self, obj):
@@ -346,7 +346,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            'id', 'slug', 'type', 'title', 'theme', 'expertise',
+            'id', 'slug', 'activity_type', 'title', 'theme', 'expertise',
             'initiative', 'image', 'matching_properties', 'target',
             'amount_raised', 'target', 'amount_matching', 'end', 'start',
             'status', 'location', 'team_activity',

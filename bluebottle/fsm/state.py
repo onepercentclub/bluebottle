@@ -109,10 +109,8 @@ class BaseTransition(object):
         return str(self.name or self.field)
 
 
-pre_state_transition = Signal(
-    providing_args=['instance', 'transition', 'kwargs'])
-post_state_transition = Signal(
-    providing_args=['instance', 'transition', 'kwargs'])
+pre_state_transition = Signal()
+post_state_transition = Signal()
 
 
 class Transition(BaseTransition):

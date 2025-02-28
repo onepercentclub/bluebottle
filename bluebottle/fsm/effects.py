@@ -146,6 +146,8 @@ class BaseRelatedTransitionEffect(Effect):
 
         try:
             self.instances = list(relation.all())
+        except ValueError:
+            self.instances = []
         except AttributeError:
             if isinstance(relation, Iterable):
                 self.instances = relation

@@ -35,7 +35,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
 from bluebottle.utils.fields import (
-    SafeField,
+    RichTextField,
     ValidationErrorsField,
     RequiredErrorsField,
     FSMField
@@ -286,7 +286,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         read_only=True
     )
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
 
     errors = ValidationErrorsField()
@@ -402,7 +402,7 @@ class InitiativeListSerializer(ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     activity_managers = ResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')

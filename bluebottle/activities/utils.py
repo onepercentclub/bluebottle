@@ -34,7 +34,7 @@ from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
     SlotParticipant, DateActivitySlot, DateParticipant
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -166,6 +166,7 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
+    description = RichTextField(allow_blank=True, required=False)
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
@@ -195,6 +196,16 @@ class BaseActivitySerializer(ModelSerializer):
         many=True,
         read_only=True
     )
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ('draft', 'needs_work'):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)

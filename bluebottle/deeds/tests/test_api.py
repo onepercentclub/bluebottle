@@ -1,3 +1,4 @@
+import json
 import io
 from datetime import timedelta, date
 
@@ -117,7 +118,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved', owner=owner),
-            'description': 'Some descrpition',
+            'description': json.dumps({'html': 'Some descrpition', 'delta': ''}),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
             'owner': owner
@@ -356,12 +357,15 @@ class DeedsDetailViewAPITestCase(APITestCase):
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
-        self.assertError('title')
-        self.assertError('description')
+        self.assertRequired('title')
+        self.assertRequired('description')
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'
-        self.perform_update({'description': new_description}, user=self.model.initiative.owner)
+        self.perform_update(
+            {'description': new_description},
+            user=self.model.initiative.owner
+        )
 
         self.assertStatus(status.HTTP_200_OK)
 

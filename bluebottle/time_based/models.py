@@ -128,7 +128,7 @@ class TimeBasedActivity(Activity):
     def required_fields(self):
         return super().required_fields + [
             "title",
-            "description",
+            "description.html",
             "review",
         ]
 
@@ -193,7 +193,7 @@ class TimeBasedActivity(Activity):
     def details(self):
         details = unescape(
             u'{}\n{}'.format(
-                to_text.handle(self.description), self.get_absolute_url()
+                to_text.handle(self.description.html), self.get_absolute_url()
             )
         )
         return details
@@ -1832,7 +1832,7 @@ class Slot(models.Model):
         return {
             'uid': f"{connection.tenant.client_name}-{self.id}",
             'summary': title,
-            'description': self.activity.description,
+            'description': self.activity.description.html,
             'organizer': self.organizer.email,
             'url': self.activity.get_absolute_url(),
             'location': location,

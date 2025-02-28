@@ -675,7 +675,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             self.profile_url,
             HTTP_AUTHORIZATION=self.user_1_token
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.user_1.refresh_from_db()
 
         self.assertFalse(self.user_1.is_active)
@@ -951,6 +951,6 @@ class UserSignupTokenApiTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create(is_active=False)
         self.data['data']['attributes']['email'] = user.email
         response = self.client.post(self.url, self.data)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 204)
         data = response.json()
         self.assertEqual(data['data']['id'], str(user.id))

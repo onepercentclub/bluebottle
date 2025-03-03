@@ -357,8 +357,8 @@ class DeedsDetailViewAPITestCase(APITestCase):
         )
 
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
-        self.assertRequired('title')
-        self.assertRequired('description')
+        self.assertError('title')
+        self.assertError('description')
 
     def test_put_initiative_owner(self):
         new_description = 'Test description'

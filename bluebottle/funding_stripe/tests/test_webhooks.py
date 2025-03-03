@@ -857,7 +857,19 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             },
             'routing_number': '110000000',
             'status': 'new',
-            'account': 'acct_1032D82eZvKYlo2C'
+            'account': 'acct_1032D82eZvKYlo2C',
+            "requirements": {
+                "eventually_due": [],
+                "currently_due": [],
+                "past_due": [],
+                "pending_verification": [],
+            },
+            "future_requirements": {
+                "eventually_due": [],
+                "currently_due": [],
+                "past_due": [],
+                "pending_verification": [],
+            },
         }))
 
         external_accounts = stripe.ListObject()
@@ -881,6 +893,12 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                         "past_due": [],
                         "pending_verification": [],
                         "disabled_reason": "",
+                    },
+                    "future_requirements": {
+                        "eventually_due": [],
+                        "currently_due": [],
+                        "past_due": [],
+                        "pending_verification": [],
                     },
                     "individual": {
                         "verification": {
@@ -1032,8 +1050,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         )
         self.assertTrue("/activities/stripe/kyc" in message.body)
 
-    def test_no_individual(self):
-        self.connect_account.individual = None
+    def test_payouts_disabled(self):
+        self.connect_account.payouts_enabled = False
         self.execute_hook()
-
         self.assertEqual(self.payout_account.status, "new")

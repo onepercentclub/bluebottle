@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from datetime import timedelta
 
 from django.db.models import Sum, Q
@@ -567,7 +568,7 @@ class InactiveParticipantAddedNotification(TransitionMessage):
         user = self.obj.user
 
         token = TimestampSigner().sign(user.pk)
-        activity_url = self.obj.activity.get_absolute_url()
+        activity_url = urlparse(self.obj.activity.get_absolute_url()).path[3:]
 
         url = f'/auth/confirm/?token={token}&email={user.email}&url={activity_url}'
         return url

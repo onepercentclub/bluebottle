@@ -23,6 +23,9 @@ class CollectDocument(ActivityDocument):
         }
     )
 
+    realized = fields.IntegerField()
+    collect_target = fields.IntegerField()
+
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
 

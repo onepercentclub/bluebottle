@@ -29,6 +29,7 @@ from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
+from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -222,7 +223,16 @@ class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
-    current_status = CurrentStatusField(source='states.current_state')
+    current_status = serializers.SerializerMethodField()
+
+    def get_current_status(self, obj):
+        state = getattr(ReviewStateMachine, obj.current_status.value)
+
+        return {
+            'value': state.value,
+            'name': state.name,
+            'description': state.description
+        }
 
     def get_image(self, obj):
         if obj.image:

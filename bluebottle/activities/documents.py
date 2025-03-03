@@ -45,7 +45,6 @@ class ActivityDocument(Document):
             'image',
             'initiative__theme',
             'initiative__owner',
-            'initiative__activity_manager',
             'office_location',
             'office_location__country',
             'office_location__subregion',
@@ -54,6 +53,7 @@ class ActivityDocument(Document):
             'segments',
             'segments__segment_type',
             'initiative__categories',
+            'initiative__activity_managers',
             'contributors',
         )
 

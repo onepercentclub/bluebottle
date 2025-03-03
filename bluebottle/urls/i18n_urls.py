@@ -11,6 +11,10 @@ from bluebottle.looker.dashboard_views import LookerEmbedView # noqa This has to
 from bluebottle.analytics.views import PlausibleEmbedView # noqa This has to be imported early so that custom urls will work
 
 from two_factor.urls import urlpatterns as tf_urls
+from two_factor.gateways.twilio.urls import urlpatterns as tf_twilio_urls
+from two_factor.admin import AdminSiteOTPRequired
+
+admin.site.__class__ = AdminSiteOTPRequired
 
 
 admin.autodiscover()
@@ -59,5 +63,6 @@ urlpatterns = [
 
     re_path(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
     re_path(r'^utils/two_factor/', include(tf_urls)),
+    re_path(r'utils/two_factor/twilio', include(tf_twilio_urls)),
     re_path(r'^', HomeView.as_view(), name='home'),
 ]

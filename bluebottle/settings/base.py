@@ -794,3 +794,5 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'

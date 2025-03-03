@@ -165,8 +165,8 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
-    description = RichTextField(allow_blank=True, required=False)
+    title = serializers.CharField()
+    description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))

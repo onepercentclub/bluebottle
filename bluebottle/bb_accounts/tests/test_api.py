@@ -414,7 +414,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
 
         response = self.client.post(reverse('user-logout'), HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_logout_unauthenticated(self):
         """

@@ -54,6 +54,15 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         'is_online': fields.BooleanField(),
     })
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related(
+            'slots',
+            'slots__location',
+            'slots__location__country'
+        )
+        return queryset
+
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
 
@@ -68,11 +77,6 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Django:
         related_models = ActivityDocument.Django.related_models + (DateParticipant, DateActivitySlot)
         model = DateActivity
-
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            'slots'
-        )
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)

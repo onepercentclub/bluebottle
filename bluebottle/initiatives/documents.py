@@ -153,11 +153,24 @@ class InitiativeDocument(Document):
 
     def get_queryset(self):
         return super(InitiativeDocument, self).get_queryset().select_related(
-            'theme', 'place', 'owner', 'promoter', 'reviewer', 'activity_manager',
-            'location'
+            'theme',
+            'place',
+            'owner',
+            'promoter',
+            'reviewer',
+            'activity_manager',
+            'location',
+            'image'
         ).prefetch_related(
-            'activities', 'categories', 'activities__segments', 'activities__segments__segment_type'
+            'activities',
+            'categories',
+            'activities__segments',
+            'activities__segments__segment_type',
+            'activities__office_location',
         )
+
+    def get_indexing_queryset(self):
+        return self.get_queryset()
 
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):

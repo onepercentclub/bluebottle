@@ -414,7 +414,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
 
         response = self.client.post(reverse('user-logout'), HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_logout_unauthenticated(self):
         """
@@ -610,6 +610,36 @@ class UserApiIntegrationTest(BluebottleTestCase):
             {'data': {'attributes': attributes, 'type': 'reset-token-confirmations'}},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_password_reset_rate_limit(self):
+        # Setup: create a user.
+        data = {
+            'data': {
+                'type': 'auth/signup',
+                'attributes': {
+                    'email': 'nijntje27@hetkonijntje.nl',
+                    'password': 'some-password'
+                }
+            }
+        }
+        response = self.client.post(
+            self.user_create_api_url, data
+        )
+
+        for _ in range(12):
+            response = self.client.post(
+                self.user_password_reset_api_url,
+                {
+                    'data': {
+                        'attributes': {
+                            'email': 'nijntje27@hetkonijntje.nl'
+                        },
+                        'type': 'reset-tokens'
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_password_reset_inactive(self):
         # Setup: create a user.

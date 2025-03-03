@@ -362,7 +362,7 @@ class SlotParticipantListView(JsonApiViewMixin, CreateAPIView):
                 except Exception:
                     raise ValidationError(_('Not a valid email address'), code="invalid")
                 member_settings = MemberPlatformSettings.load()
-                if member_settings.closed:
+                if member_settings.closed or member_settings.confirm_signup:
                     try:
                         user = Member.create_by_email(email.strip())
                     except Exception:

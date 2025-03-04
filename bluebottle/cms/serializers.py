@@ -16,7 +16,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
 )
 from bluebottle.cms.models import (
-    HomePage, QuotesContent, Quote,
+    HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
@@ -40,7 +40,18 @@ class QuoteSerializer(serializers.ModelSerializer):
         resource_name = 'pages/blocks/quotes/quotes'
 
 
-class SlideSerializer(serializers.ModelSerializer):
+class PeopleSerializer(ModelSerializer):
+    avatar = SorlImageField('100x100', crop='center')
+
+    class Meta(object):
+        model = Person
+        fields = ('id', 'name', 'role', 'email', 'avatar')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people/persons'
+
+
+class SlideSerializer(ModelSerializer):
     background_image = SorlImageField('1600x674', crop='center')
     small_background_image = SorlImageField('200x84', crop='center', source='background_image')
 
@@ -334,6 +345,23 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class PeopleBlockSerializer(BaseBlockSerializer):
+    persons = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = PeopleContent
+        fields = ('id', 'block_type', 'title', 'sub_title', 'persons')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people'
+        included_resources = [
+            'persons'
+        ]
+
+
 class CategoriesBlockSerializer(BaseBlockSerializer):
     categories = ResourceRelatedField(
         many=True,
@@ -535,6 +563,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         LinksBlockSerializer,
         StatsBlockSerializer,
         QuotesBlockSerializer,
+        PeopleBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,

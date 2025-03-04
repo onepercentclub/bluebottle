@@ -1,4 +1,5 @@
 # coding=utf-8
+import json
 import os
 from builtins import object
 from datetime import timedelta
@@ -537,7 +538,9 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         )
         self.message.set_current_language('en')
         self.message.subject = 'You have been assimilated to {site_name}'
-        self.message.body_html = 'You are no longer {first_name}.<br/><h1>We are borg</h1>'
+        self.message.body_html = json.dumps(
+            {'html': 'You are no longer {first_name}.<br/><h1>We are borg</h1>', 'delta': ''}
+        )
         self.message.body_txt = 'You are no longer {first_name}.\nWe are borg'
         self.message.save()
 
@@ -602,7 +605,9 @@ class AccountMailAdminTest(BluebottleAdminTestCase):
         # Now set BG translations
         self.message.set_current_language('bg')
         self.message.subject = u'Асимилирани сте към {site_name}'
-        self.message.body_html = u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>'
+        self.message.body_html = json.dumps(
+            {'html': u'Ти вече не си {first_name}.<br/><h1>Ние сме Борг</h1>', 'delta': ''}
+        )
         self.message.body_txt = u'Ти вече не си {first_name}.\nНие сме Борг'
         self.message.save()
         mail.outbox = []

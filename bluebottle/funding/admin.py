@@ -16,7 +16,6 @@ from django.template import loader
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin
 from polymorphic.admin import PolymorphicChildModelFilter
@@ -140,9 +139,6 @@ class FundingAdminForm(ActivityForm):
     class Meta(object):
         model = Funding
         fields = '__all__'
-        widgets = {
-            'description': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 @admin.register(Funding)

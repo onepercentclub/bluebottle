@@ -374,7 +374,7 @@ class IcalView(PrivateFileView):
 
     @property
     def details(self):
-        return self.get_object().description
+        return self.get_object().description.html
 
     def get(self, *args, **kwargs):
         instance = self.get_object()

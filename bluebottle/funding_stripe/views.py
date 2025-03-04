@@ -4,8 +4,6 @@ from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
 from moneyed import Money
@@ -107,13 +105,23 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
         }
         init_args['automatic_payment_methods'] = {"enabled": True}
 
-        platform_currency = StripePaymentProvider.objects.first().get_default_currency()[0].lower()
+        payment_provider = StripePaymentProvider.objects.first()
 
-        if platform_currency == 'eur' and connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
-            init_args['on_behalf_of'] = connect_account.account_id
+        platform_currency = payment_provider.get_default_currency()[0].lower()
 
-        if platform_currency == 'usd' and connect_account.country != 'US':
-            init_args['on_behalf_of'] = connect_account.account_id
+        if 'card_payments' in connect_account.account.capabilities:
+            # Only do  on_behalf_of when card_payments are enabled
+            if payment_provider.country != connect_account.country:
+                if payment_provider.country in STRIPE_EUROPEAN_COUNTRY_CODES:
+                    if connect_account.country not in STRIPE_EUROPEAN_COUNTRY_CODES:
+                        # European stripe account and connect account not in Europe
+                        init_args['on_behalf_of'] = connect_account.account_id
+                else:
+                    # Non european stripe account and countries differ
+                    init_args['on_behalf_of'] = connect_account.account_id
+
+            if platform_currency == 'usd' and connect_account.country != 'US':
+                init_args['on_behalf_of'] = connect_account.account_id
 
         stripe = get_stripe()
         intent = stripe.PaymentIntent.create(
@@ -574,10 +582,21 @@ class ConnectWebHookView(View):
                         bank_account.delete()
 
                 for external_account in event.data.object.external_accounts.data:
+                    status = 'new'
+                    if (
+                        account.status == 'verified' and
+                        external_account.requirements.currently_due == [] and
+                        external_account.requirements.past_due == [] and
+                        external_account.requirements.pending_verification == [] and
+                        external_account.future_requirements.currently_due == [] and
+                        external_account.future_requirements.past_due == [] and
+                        external_account.future_requirements.pending_verification == []
+                    ):
+                        status = 'verified'
                     ExternalAccount.objects.get_or_create(
                         connect_account=account,
                         account_id=external_account.id,
-                        defaults={'status': "new"}
+                        defaults={'status': status}
                     )
 
                 account.update(event.data.object)
@@ -599,7 +618,6 @@ class ConnectWebHookView(View):
 class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
     serializer_class = CountrySpecSerializer
 
-    @method_decorator(cache_page(60 * 60 * 24))
     def list(self, request, *args, **kwargs):
         stripe = get_stripe()
         specs = stripe.CountrySpec.list(limit=100)
@@ -608,7 +626,7 @@ class CountrySpecList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
         data.extend(specs2.data)
         serializer = self.get_serializer(data, many=True)
 
-        for spec in specs.data:
+        for spec in data:
             spec.pk = spec.id
 
         return Response(serializer.data)

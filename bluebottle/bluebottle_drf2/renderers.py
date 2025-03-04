@@ -212,6 +212,8 @@ class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
         Builds the resource object (type, id, attributes) and extracts relationships.
         """
         # Determine type from the instance if the underlying model is polymorphic
+
+        resource_instance.pk = resource_instance.meta.id
         if force_type_resolution:
             resource_name = utils.get_resource_type_from_instance(resource_instance)
 
@@ -222,6 +224,8 @@ class ElasticSearchJSONAPIRenderer(BluebottleJSONAPIRenderer):
                 encoding.force_str(resource_instance.meta.id)
             ),
             ("attributes", cls.extract_attributes(fields, resource)),
+            ("relationships", cls.extract_relationships(fields, resource, resource_instance))
+
         ]
 
         meta = cls.extract_meta(serializer, resource)

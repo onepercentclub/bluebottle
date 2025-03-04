@@ -76,7 +76,9 @@ class InitiativeTriggerTestCase(TriggerTestCase):
             initiative=self.model,
             bank_account=ExternalAccountFactory.create(
                 status="verified",
-                connect_account=StripePayoutAccountFactory.create(status="verified"),
+                connect_account=StripePayoutAccountFactory.create(
+                    status="verified", account_id='test-account-id'
+                ),
             ),
         )
 

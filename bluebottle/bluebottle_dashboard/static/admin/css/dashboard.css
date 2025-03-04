@@ -34,9 +34,8 @@ form .aligned p.file-upload + p.help {
 }
 
 .site-title {
-    text-align: right;
-    padding: 0 6px 8px 0;
-    font-size: 1.2rem;
+    padding: 8px;
+    font-size: 1.4rem;
 }
 
 #branding-menu {
@@ -280,8 +279,32 @@ ul#id_method-method li {
 }
 
 .two-factor-back {
+    padding: 16px;
+    display: flex;
+    background: #eee;
+    border-radius: 8px 8px 0 0 ;
+}
+
+.two-factor {
     padding: 8px;
-    position: absolute;
+    position: relative;
+}
+
+.two-factor .form-row {
+    padding: 8px;
+    position: relative;
+}
+
+
+.two-factor-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-factor-actions {
+    justify-content: space-between;
+    display: flex;
+    padding-top: 24px;
 }
 
 #id_understand {

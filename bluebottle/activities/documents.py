@@ -40,6 +40,28 @@ class ActivityDocument(Document):
     resource_name = fields.KeywordField()
     manager = fields.KeywordField()
 
+    def get_queryset(self):
+        return super(ActivityDocument, self).get_queryset().select_related(
+            'initiative',
+            'owner',
+            'image',
+            'initiative__theme',
+            'initiative__owner',
+            'office_location',
+            'office_location__country',
+            'office_location__subregion',
+            'office_location__subregion__region',
+        ).prefetch_related(
+            'segments',
+            'segments__segment_type',
+            'initiative__categories',
+            'initiative__activity_managers',
+            'contributors',
+        )
+
+    def get_indexing_queryset(self):
+        return self.get_queryset()
+
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),
         'label': fields.KeywordField(),
@@ -211,13 +233,6 @@ class ActivityDocument(Document):
         model = Activity
 
     date_field = None
-
-    def get_queryset(self):
-        return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative', 'owner'
-        ).prefetch_related(
-            'contributors'
-        )
 
     @classmethod
     def search(cls, using=None, index=None):

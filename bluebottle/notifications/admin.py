@@ -9,7 +9,6 @@ from django.db import router, transaction
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 from parler.forms import TranslatableModelForm, TranslatedField
 
@@ -105,10 +104,6 @@ class MessageTemplateAdminCreateForm(forms.ModelForm):
 
 class MessageTemplateAdminForm(TranslatableModelForm):
     subject = TranslatedField(widget=TextInput(attrs={'size': 60}))
-    body_html = TranslatedField(
-        form_class=forms.CharField,
-        widget=SummernoteWidget(attrs={'height': 300, 'width': 650})
-    )
     body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
 
     class Meta(object):

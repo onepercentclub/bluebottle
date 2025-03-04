@@ -1,4 +1,3 @@
-from builtins import object
 
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
@@ -6,28 +5,17 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
-
-
-class InitiativeAdminForm(StateMachineModelForm):
-    class Meta(object):
-        model = Initiative
-        fields = '__all__'
-        widgets = {
-            'story': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 class InitiativeReviewerFilter(admin.SimpleListFilter):
@@ -106,8 +94,6 @@ class InitiativeAdmin(
     PolymorphicInlineSupportMixin, NotificationAdminMixin,
     RegionManagerAdminMixin, StateMachineAdmin
 ):
-    form = InitiativeAdminForm
-
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = (

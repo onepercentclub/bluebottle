@@ -3,6 +3,8 @@ import factory.fuzzy
 from moneyed import Money
 from pytz import UTC
 
+from bluebottle.test.factory_models import generate_rich_text
+
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
     PlainPayoutAccount, Payout
@@ -17,7 +19,7 @@ class FundingFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     slug = factory.Faker('slug')
-    description = factory.Faker('text')
+    description = factory.LazyFunction(generate_rich_text)
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)

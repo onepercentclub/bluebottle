@@ -49,7 +49,8 @@ sanitizer = Sanitizer({
     'tags': TAGS,
     'attributes': ATTRIBUTES,
     'empty': EMPTY,
-    'element_preprocessors': []
+    'element_preprocessors': [],
+    'keep_typographic_whitespace': True
 })
 
 

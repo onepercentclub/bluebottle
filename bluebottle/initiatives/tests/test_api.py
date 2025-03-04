@@ -585,10 +585,13 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.data['title'], self.initiative.title)
 
     def test_get_story_safe(self):
-        self.initiative.story = (
-            '<p>Test</p><img src="/media/test.jpg">'
-            '<script type="javascript">alert("bla")</script>'
-        )
+        self.initiative.story = json.dumps({
+            'html': (
+                '<p>Test</p><img src="/media/test.jpg">'
+                '<script type="javascript">alert("bla")</script>'
+            ),
+            'delta': ''
+        })
         self.initiative.save()
 
         response = self.client.get(

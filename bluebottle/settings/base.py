@@ -151,6 +151,7 @@ MIDDLEWARE = (
     'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -440,7 +441,7 @@ TENANT_APPS = (
     'axes',
     'django_recaptcha',
     'colorfield',
-    'django_summernote',
+    'django_quill',
 )
 
 
@@ -728,38 +729,24 @@ def static_url(url):
     return os.path.join(STATIC_URL, url)
 
 
-SUMMERNOTE_CONFIG = {
-    # Using SummernoteWidget - iframe mode
-    'toolbar': [
-        ['style', ['style']],
-        ['style', ['bold', 'italic', 'underline', 'clear']],
-        ['para', ['ul', 'ol']],
-        ['insert', ['link', 'picture']],
-        ['view', ['codeview']],
-    ],
-    'disable_upload': False,
-    'attachment_model': 'projects.ProjectImage',
-    'attachment_upload_to': 'project_images/',
-    'summernote': {
-        'disableResizeImage': True
-    },
-    'default_css': (
-        static_url('rest_framework/css/bootstrap.min.css'),
-        static_url('django_summernote/summernote.css'),
-        static_url('django_summernote/django_summernote.css'),
-    ),
-    'default_js': (
-        static_url('admin/js/vendor/jquery/jquery.min.js'),
-        static_url('rest_framework/js/bootstrap.min.js'),
-        static_url('django_summernote/jquery.ui.widget.js'),
-        static_url('django_summernote/jquery.iframe-transport.js'),
-        static_url('django_summernote/jquery.fileupload.js'),
-        static_url('django_summernote/summernote.min.js'),
-        static_url('django_summernote/ResizeSensor.js'),
-    ),
-
+QUILL_CONFIGS = {
+    'default': {
+        'theme': 'snow',
+        'modules': {
+            'toolbar': [
+                {
+                    "header": [4, 5, False]
+                },
+                'bold',
+                'italic',
+                'image',
+                'link',
+                {"list": 'ordered'},
+                {"list": 'bullet'},
+            ],
+        }
+    }
 }
-SUMMERNOTE_THEME = 'bs5'
 
 HOMEPAGE = {}
 ELASTICSEARCH_DSL = {
@@ -808,3 +795,9 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
+
+TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
+TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
+TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True

@@ -15,7 +15,6 @@ from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
-from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin, PolymorphicParentModelAdmin, \
@@ -24,7 +23,6 @@ from pytz import timezone
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
-    ActivityForm,
     ContributionChildAdmin,
     ContributorChildAdmin, BaseContributorInline, BulkAddMixin,
 )
@@ -167,15 +165,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
     participant_count.short_description = _("Participants")
 
 
-class TimeBasedActivityAdminForm(ActivityForm):
-    class Meta(object):
-        fields = '__all__'
-        model = PeriodicActivity
-        widgets = {
-            'description': SummernoteWidget(attrs={'height': 400})
-        }
-
-
 class DateActivitySlotInline(TabularInlinePaginated):
     model = DateActivitySlot
     per_page = 10
@@ -221,7 +210,6 @@ class DateActivitySlotInline(TabularInlinePaginated):
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
-    form = TimeBasedActivityAdminForm
     inlines = (DateActivitySlotInline, DateParticipantAdminInline) + TimeBasedAdmin.inlines
     readonly_fields = TimeBasedAdmin.readonly_fields + ['team_activity']
     save_as = True
@@ -563,7 +551,6 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]
@@ -643,7 +630,6 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
             fields = tuple(fields) + ("team_activity", "team_registration_warning")
         return fields
 
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]
@@ -852,7 +838,6 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]

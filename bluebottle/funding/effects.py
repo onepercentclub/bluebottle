@@ -1,7 +1,7 @@
 import datetime
 
 from django.utils import timezone
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 from future.utils import python_2_unicode_compatible
 
@@ -97,7 +97,7 @@ class SetDeadlineEffect(Effect):
     def pre_save(self, **kwargs):
         if not self.instance.deadline:
             deadline = timezone.now() + datetime.timedelta(days=self.instance.duration)
-            self.instance.deadline = get_current_timezone().localize(
+            self.instance.deadline = make_aware(
                 datetime.datetime(
                     deadline.year,
                     deadline.month,
@@ -105,7 +105,8 @@ class SetDeadlineEffect(Effect):
                     hour=23,
                     minute=59,
                     second=59
-                )
+                ),
+                get_current_timezone()
             )
 
     def __str__(self):

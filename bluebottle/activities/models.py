@@ -218,7 +218,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def organizer(self):
-        return self.contributors.instance_of(Organizer).first()
+        if self.pk:
+            return self.contributors.instance_of(Organizer).first()
 
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):

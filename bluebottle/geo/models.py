@@ -287,6 +287,7 @@ class Geolocation(models.Model):
         access_token = settings.MAPBOX_API_KEY
         if not access_token:
             return None
+
         [lon, lat] = self.position.coords
         url = f"https://api.mapbox.com/geocoding/v5/mapbox.places/{lon},{lat}.json"
         response = requests.get(url, params={'access_token': access_token})

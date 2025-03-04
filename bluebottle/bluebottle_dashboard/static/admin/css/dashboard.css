@@ -307,6 +307,10 @@ ul#id_method-method li {
     padding-top: 24px;
 }
 
+body.login  .two-factor-actions .submit-row {
+    padding: 0;
+}
+
 #id_understand {
     display: inline;
     width: 20px;

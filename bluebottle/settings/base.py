@@ -151,6 +151,7 @@ MIDDLEWARE = (
     'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -796,3 +797,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
 TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
+
+TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
+TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
+TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True

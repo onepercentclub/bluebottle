@@ -10,9 +10,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fluent_contents', '0002_alter_contentitem_polymorphic_ctype'),
-        ('funding', '0070_auto_20250305_1106'),
-        ('auth', '0012_alter_user_first_name_max_length'),
         ('cms', '0098_auto_20250121_1140'),
     ]
 

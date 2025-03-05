@@ -1,3 +1,4 @@
+import json
 import mimetypes
 import xml.etree.cElementTree as et
 from builtins import object
@@ -131,6 +132,14 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         return tag == '{http://www.w3.org/2000/svg}svg'
 
 
+class RichTextField(serializers.CharField):
+    def to_representation(self, value):
+        return clean_html(super().to_representation(value.html))
+
+    def to_internal_value(self, data):
+        return json.dumps({'html': super().to_internal_value(data), 'delta': ''})
+
+
 class SafeField(serializers.CharField):
     def to_representation(self, value):
         """ Reading / Loading the story field """
@@ -219,7 +228,9 @@ class RequiredErrorsField(serializers.ReadOnlyField):
                 'title': _('This field is required'),
                 'code': 'required',
                 'source': {
-                    'pointer': '/data/attributes/{}'.format(inflection.dasherize(field).replace('.', '/'))
+                    'pointer': '/data/attributes/{}'.format(
+                        inflection.dasherize(field.split('.')[0]).replace('.', '/')
+                    )
                 }
             } for field in value
         ]

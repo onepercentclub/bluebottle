@@ -6,6 +6,7 @@ from django.conf import settings
 from django.http import (
     HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 )
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveDestroyAPIView
 from rest_framework.parsers import FileUploadParser
@@ -44,6 +45,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
 
     authentication_classes = (
         JSONWebTokenAuthentication,
+        SessionAuthentication
     )
 
     prefetch_for_includes = {

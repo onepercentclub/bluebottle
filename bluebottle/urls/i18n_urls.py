@@ -58,7 +58,6 @@ urlpatterns = [
     ),
 
     re_path(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
-    re_path(r'^utils/summernote/', include('django_summernote.urls')),
     re_path(r'^utils/two_factor/', include(tf_urls)),
     re_path(r'^', HomeView.as_view(), name='home'),
 ]

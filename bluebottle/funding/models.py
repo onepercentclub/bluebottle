@@ -189,7 +189,7 @@ class Funding(Activity):
     def required_fields(self):
         fields = super().required_fields + [
             "title",
-            "description",
+            "description.html",
             "target",
             "bank_account",
         ]

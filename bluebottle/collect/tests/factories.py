@@ -3,6 +3,8 @@ from builtins import object
 import factory.fuzzy
 from pytz import UTC
 
+from bluebottle.test.factory_models import generate_rich_text
+
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 
@@ -37,7 +39,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     slug = factory.Faker('slug')
-    description = factory.Faker('text')
+    description = factory.LazyFunction(generate_rich_text)
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)

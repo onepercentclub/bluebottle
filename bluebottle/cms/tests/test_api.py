@@ -1,3 +1,4 @@
+import json
 from builtins import range
 from builtins import str
 
@@ -314,7 +315,11 @@ class HomeTestCase(APITestCase):
 
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.text = json.dumps({
+            'html': "To <b>boldly</b> go were no man has gone before!",
+            'delta': ''
+        })
+
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             block.image = File(f)
             block.save()

@@ -434,14 +434,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(
@@ -473,14 +476,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open",
+            description=json.dumps(
+                {'html': f'description with {text}', 'delta': ''}
+            ),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(

@@ -1,3 +1,4 @@
+import json
 import datetime
 from datetime import timedelta
 
@@ -66,7 +67,7 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         form = page.forms['dateactivity_form']
         form['initiative'] = self.initiative.id
         form['title'] = 'Activity with multiple slots'
-        form['description'] = 'Lorem etc'
+        form['description'] = json.dumps({'html': 'Lorem etc', 'delta': ''})
         form['owner'] = self.owner.id
         form['review'] = 'true'
         page = form.submit().follow()

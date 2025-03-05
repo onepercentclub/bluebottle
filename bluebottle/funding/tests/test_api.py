@@ -408,6 +408,7 @@ class FundingDetailTestCase(BluebottleTestCase):
                 "type": "activities/fundings",
                 "attributes": {
                     "title": "New title",
+                    "deadline": None,
                 },
             }
         }
@@ -671,6 +672,9 @@ class FundingDetailTestCase(BluebottleTestCase):
                         'data': {
                             'id': self.funding.pk,
                             'type': 'activities/fundings',
+                            'attributes': {
+                                'deadline': None,
+                            },
                             'relationships': {
                                 'bank_account': {
                                     'data': {

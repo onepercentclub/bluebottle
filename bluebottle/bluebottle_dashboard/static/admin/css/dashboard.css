@@ -446,3 +446,8 @@ form .form-row .django-quill-widget p {
 .ql-toolbar.ql-snow .ql-picker.ql-header {
     width: 120px;
 }
+
+div.inline.radiolist {
+    display: inline-block;
+}
+

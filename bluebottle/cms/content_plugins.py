@@ -54,7 +54,7 @@ class QuotesBlockPlugin(CMSContentPlugin):
 class PeopleBlockPlugin(CMSContentPlugin):
     model = PeopleContent
     inlines = [PersonInline]
-    category = _('Homepage')
+    category = _('Multimedia')
 
 
 @plugin_pool.register

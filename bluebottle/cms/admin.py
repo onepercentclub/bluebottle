@@ -15,7 +15,7 @@ from solo.admin import SingletonModelAdmin
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Step, Logo, ResultPage, HomePage, ContentLink,
+    Stat, Quote, Person, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
 from bluebottle.statistics.statistics import Statistics
@@ -97,6 +97,11 @@ class StatInline(NestedStackedInline, SortableStackedInline):
 
 class QuoteInline(NestedStackedInline):
     model = Quote
+    extra = 1
+
+
+class PersonInline(NestedStackedInline):
+    model = Person
     extra = 1
 
 

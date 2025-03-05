@@ -217,7 +217,8 @@ class Person(models.Model):
     block = models.ForeignKey('cms.PeopleContent', related_name='persons', on_delete=models.CASCADE)
     name = models.CharField(max_length=60)
     role = models.CharField(max_length=60, null=True, blank=True)
-    email = models.TextField()
+    email = models.CharField(max_length=60, null=True, blank=True)
+
     avatar = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='people_images/',

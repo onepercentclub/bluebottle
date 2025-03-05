@@ -100,6 +100,7 @@ class ConnectAccountSerializer(ModelSerializer):
             "current_status",
             "business_type",
             "tos_accepted",
+            "service_agreement",
         )
         meta_fields = ('current_status',)
 

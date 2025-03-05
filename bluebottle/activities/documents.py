@@ -34,9 +34,33 @@ class ActivityDocument(Document):
     highlight = fields.BooleanField()
     is_upcoming = fields.BooleanField()
     status = fields.KeywordField()
+    created = fields.DateField()
 
     type = fields.KeywordField()
+    resource_name = fields.KeywordField()
     manager = fields.KeywordField()
+
+    def get_queryset(self):
+        return super(ActivityDocument, self).get_queryset().select_related(
+            'initiative',
+            'owner',
+            'image',
+            'initiative__theme',
+            'initiative__owner',
+            'office_location',
+            'office_location__country',
+            'office_location__subregion',
+            'office_location__subregion__region',
+        ).prefetch_related(
+            'segments',
+            'segments__segment_type',
+            'initiative__categories',
+            'initiative__activity_managers',
+            'contributors',
+        )
+
+    def get_indexing_queryset(self):
+        return self.get_queryset()
 
     current_status = fields.NestedField(properties={
         'name': fields.KeywordField(),
@@ -127,14 +151,6 @@ class ActivityDocument(Document):
         }
     )
 
-    office = fields.NestedField(
-        attr='office_location',
-        properties={
-            'id': fields.KeywordField(),
-            'name': fields.KeywordField(),
-        }
-    )
-
     office_subregion = fields.NestedField(
         attr='office_location.subregion',
         properties={
@@ -162,7 +178,8 @@ class ActivityDocument(Document):
     )
 
     contributors = fields.KeywordField()
-    contributor_count = fields.IntegerField()
+    contributor_count = fields.IntegerField(attr='succeeded_contributor_count')
+    capacity = fields.IntegerField()
     donation_count = fields.IntegerField()
     activity_type = fields.KeywordField()
 
@@ -200,13 +217,6 @@ class ActivityDocument(Document):
         model = Activity
 
     date_field = None
-
-    def get_queryset(self):
-        return super(ActivityDocument, self).get_queryset().select_related(
-            'initiative', 'owner'
-        ).prefetch_related(
-            'contributors'
-        )
 
     @classmethod
     def search(cls, using=None, index=None):
@@ -266,6 +276,9 @@ class ActivityDocument(Document):
 
     def prepare_type(self, instance):
         return str(instance.__class__.__name__.lower())
+
+    def prepare_resource_name(self, instance):
+        return str(instance.__class__.JSONAPIMeta.resource_name)
 
     def prepare_activity_type(self, instance):
         mapping = {
@@ -380,3 +393,6 @@ class ActivityDocument(Document):
 
     def prepare_start(self, instance):
         return None
+
+    def prepare_created(self, instance):
+        return instance.created

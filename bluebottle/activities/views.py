@@ -139,6 +139,34 @@ class ActivityPreviewList(JsonApiViewMixin, ListAPIView):
     )
 
 
+class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+    model = Activity
+
+    permission_classes = (
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'location': ['location'],
+        'owner': ['owner'],
+        'contributors': ['contributors']
+    }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            raise PermissionError()
+        return queryset.filter(
+            Q(owner=user) |
+            Q(initiative__onwer=user) |
+            Q(initiative__activity_managers=user)
+        )
+
+
 class ActivityDetail(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateDestroyAPIView):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer

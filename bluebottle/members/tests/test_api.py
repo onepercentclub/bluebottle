@@ -951,7 +951,7 @@ class UserLogoutTest(BluebottleTestCase):
 
     def test_logout(self):
         response = self.client.post(self.logout_url, token=self.user_token)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 201)
 
         response = self.client.get(self.current_user_url, token=self.user_token)
         self.assertEqual(response.status_code, 401)

@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField, ResourceRelatedField
 )
+from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
@@ -24,7 +25,7 @@ def no_nested_replies_validator(value):
         raise serializers.ValidationError('Replies cannot be nested')
 
 
-class UpdateSerializer(serializers.ModelSerializer):
+class UpdateSerializer(ModelSerializer):
     activity = PolymorphicResourceRelatedField(
         ActivitySerializer,
         queryset=Activity.objects.all(),
@@ -126,7 +127,7 @@ IMAGE_SIZES = {
 }
 
 
-class UpdateImageListSerializer(serializers.ModelSerializer):
+class UpdateImageListSerializer(ModelSerializer):
     image = ResourceRelatedField(queryset=Image.objects.all())
     update = ResourceRelatedField(queryset=Update.objects.all())
 

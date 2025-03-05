@@ -1,6 +1,6 @@
 from bluebottle.analytics.models import AnalyticsPlatformSettings
 from django.contrib.auth.decorators import login_required, permission_required
-from django.conf.urls import url
+from django.urls import re_path
 from django.views.generic import DetailView
 from django.utils.decorators import method_decorator
 
@@ -21,5 +21,5 @@ class PlausibleEmbedView(DetailView):
 
 
 urls.register_urls(
-    [url(r"plausible_embed/$", PlausibleEmbedView.as_view(), name="plausible-embed")]
+    [re_path(r"plausible_embed/$", PlausibleEmbedView.as_view(), name="plausible-embed")]
 )

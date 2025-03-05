@@ -14,7 +14,8 @@ from importlib import import_module
 
 import html2text
 
-import bleach
+from html_sanitizer import Sanitizer
+
 import pygeoip
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
@@ -36,12 +37,25 @@ to_text.ignore_emphasis = True
 
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u']
-ATTRIBUTES = {'a': ['target', 'href'], 'img': ['src', 'alt', 'width', 'height', 'align']}
+        'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
+ATTRIBUTES = {
+    'a': ['target', 'href', 'rel'],
+    'img': ['src', 'alt', 'width', 'height', 'align']
+}
+EMPTY = ['hr', 'a', 'br', 'img']
+
+
+sanitizer = Sanitizer({
+    'tags': TAGS,
+    'attributes': ATTRIBUTES,
+    'empty': EMPTY,
+    'element_preprocessors': [],
+    'keep_typographic_whitespace': True
+})
 
 
 def clean_html(content):
-    return bleach.clean(content, tags=TAGS, attributes=ATTRIBUTES)
+    return sanitizer.sanitize(content)
 
 
 def get_languages():

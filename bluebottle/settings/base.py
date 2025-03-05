@@ -271,6 +271,7 @@ AFOM_ENABLED = False
 
 SHARED_APPS = (
     'bluebottle.clients',  # you must list the app where your tenant model resides in
+    'bluebottle.bluebottle_dashboard',
     'tenant_schemas',
     'django_extensions',
     'django_admin_inline_paginator',
@@ -301,7 +302,6 @@ SHARED_APPS = (
 )
 
 TENANT_APPS = (
-    'bluebottle.bluebottle_dashboard',
     'adminsortable',
     'django_otp',
     'django_otp.plugins.otp_static',

@@ -405,7 +405,7 @@ form .form-row .django-quill-widget p {
     margin-top: 0;
     margin-bottom: 16px;
     line-height: 32px;
-
+    letter-spacing: 0;
 }
 
 .django-quill-widget.ql-snow .ql-editor h5 {
@@ -415,6 +415,7 @@ form .form-row .django-quill-widget p {
     margin-top: 0;
     margin-bottom: 8px;
     text-transform: none;
+    letter-spacing: 0;
 }
 
 .ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before {

@@ -90,8 +90,8 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super(LocationAdmin, self).get_queryset(request)
-        if request.user.region_manager:
-            queryset = queryset.filter(subregion=request.user.region_manager)
+        if request.user.subregion_manager:
+            queryset = queryset.filter(subregion__in=request.user.subregion_manager)
         return queryset
 
     def lookup_allowed(self, key, value):

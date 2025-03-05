@@ -107,31 +107,31 @@ def region_manager_filter(queryset, user):
     model = queryset.model
     if user.is_superuser:
         return queryset
-    elif user.region_manager:
+    elif user.subregion_manager.count():
         if model == Initiative:
-            subregion_filter = Q(activities__office_location__subregion=user.region_manager)
-            owner_filter = Q(owner__location__subregion=user.region_manager)
+            subregion_filter = Q(activities__office_location__subregion__in=user.subregion_manager.all())
+            owner_filter = Q(owner__location__subregion__in=user.subregion_manager.all())
             self_filter = Q(owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif issubclass(model, Activity):
-            subregion_filter = Q(office_location__subregion=user.region_manager)
-            owner_filter = Q(owner__location__subregion=user.region_manager)
+            subregion_filter = Q(office_location__subregion__in=user.subregion_manager.all())
+            owner_filter = Q(owner__location__subregion__in=user.subregion_manager.all())
             self_filter = Q(owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == Member:
-            subregion_filter = Q(location__subregion=user.region_manager)
+            subregion_filter = Q(location__subregion__in=user.subregion_manager.all())
             self_filter = Q(id=user.id)
             queryset = queryset.filter(
                 subregion_filter | self_filter
             ).distinct()
         elif issubclass(model, Contribution):
-            subregion_filter = Q(contributor__activity__office_location__subregion=user.region_manager)
-            owner_filter = Q(contributor__activity__owner__location__subregion=user.region_manager)
+            subregion_filter = Q(contributor__activity__office_location__subregion__in=user.subregion_manager.all())
+            owner_filter = Q(contributor__activity__owner__location__subregion__in=user.subregion_manager.all())
             self_filter = Q(contributor__activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif model == TeamMember:
-            subregion_filter = Q(team__activity__office_location__subregion=user.region_manager)
-            owner_filter = Q(team__activity__owner__location__subregion=user.region_manager)
+            subregion_filter = Q(team__activity__office_location__subregion__in=user.subregion_manager.all())
+            owner_filter = Q(team__activity__owner__location__subregion__in=user.subregion_manager.all())
             self_filter = Q(team__activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         elif (
@@ -139,8 +139,8 @@ def region_manager_filter(queryset, user):
             or issubclass(model, Slot)
             or model in [Team, Update, Payout]
         ):
-            subregion_filter = Q(activity__office_location__subregion=user.region_manager)
-            owner_filter = Q(activity__owner__location__subregion=user.region_manager)
+            subregion_filter = Q(activity__office_location__subregion__in=user.subregion_manager.all())
+            owner_filter = Q(activity__owner__location__subregion__in=user.subregion_manager.all())
             self_filter = Q(activity__owner=user)
             queryset = queryset.filter(subregion_filter | owner_filter | self_filter).distinct()
         else:

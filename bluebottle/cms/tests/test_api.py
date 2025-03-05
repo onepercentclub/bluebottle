@@ -10,7 +10,7 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.cms.models import (
-    QuotesContent,
+    QuotesContent, PeopleContent,
     HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
@@ -192,6 +192,36 @@ class HomeTestCase(APITestCase):
         self.assertEqual(
             quote['attributes']['quote'],
             'Leuk! Al zeg ik het zelf.'
+        )
+
+    def test_people(self):
+        block = PeopleContent.objects.create_for_placeholder(self.placeholder)
+        block.persons.create(name='Ik zelf', email="test@example.com", role="developer")
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/people'}
+        )
+
+        quotes_block = get_include(response, 'pages/blocks/people')
+        self.assertEqual(quotes_block['relationships']['persons']['meta']['count'], 1)
+
+        quote = get_include(response, 'pages/blocks/people/persons')
+
+        self.assertEqual(
+            quote['attributes']['name'],
+            'Ik zelf'
+        )
+        self.assertEqual(
+            quote['attributes']['role'],
+            'developer'
+        )
+        self.assertEqual(
+            quote['attributes']['email'],
+            'test@example.com'
         )
 
     def test_logos(self):

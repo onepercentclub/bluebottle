@@ -380,3 +380,68 @@ form .aligned .form-row label+p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
 }
+
+
+form .aligned .django-quill-widget p,
+form .aligned .django-quill-widget ol,
+form .aligned .django-quill-widget ul {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+
+.django-quill-widget.ql-container {
+    height: 200px;
+}
+
+form .form-row .django-quill-widget p {
+    font-size: 14.4px;
+}
+
+
+.django-quill-widget.ql-snow .ql-editor h4 {
+    font-weight: 500;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    line-height: 32px;
+
+}
+
+.django-quill-widget.ql-snow .ql-editor h5 {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-transform: none;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before {
+    content: "Heading"; /* Rename H4 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Heading"; /* Rename H4 */
+    letter-spacing: 0;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before {
+    content: "Sub-heading"; /* Rename H5 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Sub-heading"; /* Rename H5 */
+    letter-spacing: 0;
+}
+
+
+.ql-toolbar.ql-snow .ql-picker.ql-header {
+    width: 120px;
+}

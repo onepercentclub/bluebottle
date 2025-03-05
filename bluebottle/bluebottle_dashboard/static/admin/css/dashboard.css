@@ -346,6 +346,17 @@ fieldset {
     }
 }
 
+fieldset #tabular_permissions {
+    input.checkbox {
+        min-height: 24px;
+        display: none;
+    }
+}
+
+.user-permissions-app-separator {
+    padding: 0
+}
+
 .inline-description {
     margin-top: 24px
 }

@@ -12,6 +12,7 @@ urlpatterns = [
         r'^/transitions$',
         ActivityTransitionList.as_view(),
         name='activity-transition-list'),
+
     re_path(
         r'^/search$',
         ActivityPreviewList.as_view(),

@@ -214,7 +214,7 @@ class DonateButtonBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = DonateButtonContent
-        fields = ('id', 'type', 'title', 'sub_title', 'button_text', 'funding')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'button_text', 'funding')
         included_resources = ['funding']
 
     class JSONAPIMeta:
@@ -499,11 +499,11 @@ class ColumnBlockSerializer(BaseBlockSerializer):
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
         print(instance.__class__)
-        return {'id': instance.pk, 'type': self.JSONAPIMeta.resource_name}
+        return {'id': instance.pk, 'block_type': self.JSONAPIMeta.resource_name}
 
     class Meta(object):
         model = None
-        fields = ('id', 'type',)
+        fields = ('id', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/unknown'
@@ -514,7 +514,7 @@ class OEmbedBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = OEmbedItem
-        fields = ('id', 'title', 'width', 'height', 'html', 'type',)
+        fields = ('id', 'title', 'width', 'height', 'html', 'block_type',)
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/oembed'

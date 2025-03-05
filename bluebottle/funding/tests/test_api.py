@@ -443,7 +443,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['attributes']['description'],
-            self.funding.description
+            self.funding.description.html
         )
         self.assertEqual(
             data['data']['attributes']['title'],

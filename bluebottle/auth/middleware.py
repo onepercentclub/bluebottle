@@ -29,6 +29,7 @@ def isAdminRequest(request):
     base_path = None
     if len(parts) > 2:
         base_path = parts[2]
+
     return request.path.startswith('/downloads') or base_path in ['jet', 'admin', 'jet-dashboard']
 
 

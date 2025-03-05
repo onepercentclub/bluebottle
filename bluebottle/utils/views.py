@@ -10,12 +10,12 @@ import xlsxwriter
 from django.core.paginator import Paginator
 from django.core.signing import TimestampSigner, BadSignature
 from django.db.models import Case, When, IntegerField
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 from django.utils import translation
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
-from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from django.views import View
 from elasticsearch_dsl.utils import AttrList
 from rest_framework import generics
 from rest_framework import views, response
@@ -374,7 +374,7 @@ class IcalView(PrivateFileView):
 
     @property
     def details(self):
-        return self.get_object().description
+        return self.get_object().description.html
 
     def get(self, *args, **kwargs):
         instance = self.get_object()
@@ -448,3 +448,8 @@ class ExportView(PrivateFileView):
         response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
         return response
+
+
+class NoopView(View):
+    def dispatch(self, *args, **kwargs):
+        return HttpResponseNotAllowed([])

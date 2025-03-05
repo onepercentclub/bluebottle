@@ -52,7 +52,7 @@ class Deed(Activity):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + ['title', 'description']
+        fields = super().required_fields + ['title', 'description.html']
 
         if self.enable_impact:
             fields = fields + ['goals', 'target']
@@ -65,7 +65,7 @@ class Deed(Activity):
 
     @property
     def google_calendar_link(self):
-        details = self.description
+        details = self.description.html
         end = self.end + datetime.timedelta(days=1)
         dates = "{}/{}".format(self.start.strftime('%Y%m%d'), end.strftime('%Y%m%d'))
 

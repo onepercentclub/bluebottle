@@ -1,6 +1,8 @@
 from builtins import object
 from django.conf import settings
 from django.db import models
+from django_otp.models import Device
+
 from future.utils import python_2_unicode_compatible
 
 
@@ -33,3 +35,10 @@ class SAMLLog(models.Model):
         return cls.objects.create(
             body=body,
         )
+
+
+class SAMLDevice(Device):
+    """TOTP device that makes sure saml sessions always count as verified"""
+
+    def verify_token(self, token):
+        return True

@@ -23,8 +23,6 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    title = serializers.CharField()
-    description = serializers.CharField()
     review = serializers.BooleanField()
     registration_status = serializers.SerializerMethodField()
 

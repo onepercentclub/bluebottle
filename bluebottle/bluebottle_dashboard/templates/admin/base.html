@@ -21,9 +21,6 @@
     {% if user.is_authenticated %}
         <div class="site-title">
             {{ tenant.name }}
-          {% if user.region_manager %}
-            - {{ user.region_manager.name }}
-          {%  endif %}
         </div>
     {% else %}
         <div class="site-title site-title-login">

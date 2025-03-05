@@ -95,7 +95,7 @@ class LookerSSOEmbed(object):
                 'fiscal_month_offset': member_settings.fiscal_month_offset,
                 'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
-                'region_manager': self.user.region_manager_id,
+                'region_manager': self.user.subregion_manager.value_list('id', flat=True),
             }),
             ('force_logout_login', True),
         ])

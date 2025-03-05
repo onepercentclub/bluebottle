@@ -289,14 +289,14 @@ class Member(BlueBottleBaseUser):
     )
 
     place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)
-    region_manager = models.ForeignKey(
+
+    subregion_manager = models.ManyToManyField(
         OfficeSubRegion,
         help_text=_(
-            "Select a region to filter the user's view to only see data relevant to that region. "
+            "Select one or more regions to filter the user's view to only see data relevant to those regions. "
             "Leave empty for full access to all data."
         ),
-        null=True, blank=True,
-        on_delete=models.SET_NULL
+        blank=True,
     )
 
     matching_options_set = models.DateTimeField(

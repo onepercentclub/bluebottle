@@ -7,9 +7,10 @@ import icalendar
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
 from django.urls import reverse
-from django.utils.timezone import now, utc
+from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
+from pytz import UTC
 
 from bluebottle.files.tests.factories import PrivateDocumentFactory
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -1328,7 +1329,7 @@ class DateActivitySlotDetailAPITestCase(BluebottleTestCase):
         self.slot.online_meeting_url = 'http://example.com'
         self.slot.save()
 
-        self.activity.description = "Test<br>bla"
+        self.activity.description = json.dumps({'html': "Test<br>bla", 'delta': ''})
         self.activity.save()
 
         response = self.client.get(self.url, user=self.activity.owner)
@@ -2574,8 +2575,8 @@ class SlotIcalTestCase(BluebottleTestCase):
                 delta=timedelta(seconds=10)
             )
 
-            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
@@ -2681,8 +2682,8 @@ class DateIcalTestCase(BluebottleTestCase):
                 delta=timedelta(seconds=10)
             )
 
-            self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-            self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+            self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+            self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
             self.assertEqual(str(ical_event['summary']), self.activity.title)
             self.assertEqual(
@@ -2725,8 +2726,8 @@ class DateIcalTestCase(BluebottleTestCase):
             delta=timedelta(seconds=10)
         )
 
-        self.assertEqual(ical_event['dtstart'].dt.tzinfo, utc)
-        self.assertEqual(ical_event['dtend'].dt.tzinfo, utc)
+        self.assertEqual(ical_event['dtstart'].dt.tzinfo, UTC)
+        self.assertEqual(ical_event['dtend'].dt.tzinfo, UTC)
 
         self.assertEqual(str(ical_event['summary']), self.activity.title)
         self.assertEqual(

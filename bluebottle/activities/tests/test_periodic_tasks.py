@@ -3,7 +3,7 @@ from unittest import mock
 
 from django.core import mail
 from django.utils import timezone
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware
 
 from bluebottle.activities.tasks import do_good_hours_reminder
 from bluebottle.members.models import MemberPlatformSettings, Member
@@ -109,50 +109,58 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
     @property
     def next_year(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year + 1, 1, 1)
+        return make_aware(
+            datetime(now().year + 1, 1, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 1, 1)
+        return make_aware(
+            datetime(now().year, 1, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def fiscal_q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 9, 1)
+        return make_aware(
+            datetime(now().year, 9, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def after_q1(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 1, 12)
+        return make_aware(
+            datetime(now().year, 1, 12),
+            timezone.get_current_timezone()
         )
 
     @property
     def after_q2(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 4, 15)
+        return make_aware(
+            datetime(now().year, 4, 15),
+            timezone.get_current_timezone()
         )
 
     @property
     def q2(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 4, 1)
+        return make_aware(
+            datetime(now().year, 4, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q3(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 7, 1)
+        return make_aware(
+            datetime(now().year, 7, 1),
+            timezone.get_current_timezone()
         )
 
     @property
     def q4(self):
-        return timezone.get_current_timezone().localize(
-            datetime(now().year, 10, 1)
+        return make_aware(
+            datetime(now().year, 10, 1),
+            timezone.get_current_timezone()
         )
 
     def test_reminder_q1(self):

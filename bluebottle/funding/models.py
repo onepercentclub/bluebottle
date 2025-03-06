@@ -189,7 +189,7 @@ class Funding(Activity):
     def required_fields(self):
         fields = super().required_fields + [
             "title",
-            "description",
+            "description.html",
             "target",
             "bank_account",
         ]
@@ -251,7 +251,10 @@ class Funding(Activity):
 
     @property
     def donations(self):
-        return self.contributors.instance_of(Donor)
+        if self.pk:
+            return self.contributors.instance_of(Donor)
+        else:
+            return Donor.objects.none()
 
     @property
     def succeeded_contributor_count(self):
@@ -300,7 +303,7 @@ class Funding(Activity):
         return stats
 
     def save(self, *args, **kwargs):
-        if self.target:
+        if self.target and self.pk:
             for reward in self.rewards.all():
                 if reward.amount and not reward.amount.currency == self.target.currency:
                     reward.amount = Money(reward.amount.amount, self.target.currency)
@@ -564,7 +567,7 @@ class Payment(TriggerMixin, PolymorphicModel):
     status = models.CharField(max_length=40)
 
     created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField()
+    updated = models.DateTimeField(default=timezone.now)
 
     donation = models.OneToOneField(Donor, related_name='payment', on_delete=models.CASCADE)
 

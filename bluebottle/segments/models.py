@@ -10,8 +10,10 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
+from django_quill.fields import QuillField
+
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 
 
@@ -120,7 +122,7 @@ class Segment(models.Model):
         )
     )
 
-    story = models.TextField(
+    story = QuillField(
         _('Story'), blank=True, null=True,
         help_text=_(
             'A more detailed story for your segment. This story can be accessed via a link on the page.'
@@ -189,9 +191,6 @@ class Segment(models.Model):
 
         if not self.slug:
             self.slug = slugify(self.name)
-
-        if self.story:
-            self.story = clean_html(self.story)
 
         super().save(*args, **kwargs)
 

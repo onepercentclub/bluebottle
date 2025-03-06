@@ -1,8 +1,8 @@
-dist: bionic
+dist: focal
 sudo: false
 language: python
 addons:
-  postgresql: "10"
+  postgresql: "13"
   apt:
     packages:
       - libxmlsec1
@@ -10,8 +10,8 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
-      - postgresql-client-10
-      - postgresql-10-postgis-2.4
+      - postgresql-client-13
+      - postgresql-13-postgis-2.5
       - postgis
 cache: pip
   - "$HOME/.cache/pip/"
@@ -23,10 +23,14 @@ services:
   - elasticsearch
 env:
   global:
-  - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+    - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
   - "echo 'xpack.security.enabled: false' | sudo tee -a /etc/elasticsearch/elasticsearch.yml"
   - sudo systemctl restart elasticsearch
+  - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/*/main/pg_hba.conf
+  - sudo service postgresql restart
+  - sleep 1
+  - postgres --version
   - createdb test_bluebottle_test
   - psql test_bluebottle_test < testdata.sql
   - psql -c "CREATE USER testuser WITH PASSWORD 'password'"
@@ -45,5 +49,5 @@ notifications:
   slack:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
-- bash post_travis.sh
-- python -m coverage combine; python -m coverage report --omit "**/migrations/**"; coveralls
+  - bash post_travis.sh
+  - python -m coverage combine; python -m coverage report --omit "**/migrations/**"; coveralls

@@ -11,6 +11,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
+from django_quill.fields import QuillField
+
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
@@ -18,7 +20,7 @@ from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.utils.models import ValidatedModelMixin
-from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 from bluebottle.organizations.models import Organization
 
@@ -98,7 +100,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
-    description = models.TextField(
+    description = QuillField(
         _('Description'), blank=True
     )
     team_activity = models.CharField(
@@ -226,8 +228,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         if not self.owner_id:
             self.owner = self.initiative.owner
 
-        self.description = clean_html(self.description)
-
         super(Activity, self).save(**kwargs)
 
         if not self.segments.count():
@@ -247,7 +247,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def organizer(self):
-        return self.contributors.instance_of(Organizer).first()
+        if self.pk:
+            return self.contributors.instance_of(Organizer).first()
 
 
 def NON_POLYMORPHIC_CASCADE(collector, field, sub_objs, using):

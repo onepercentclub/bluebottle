@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.time_based.views import (
     DeadlineTransitionList,
@@ -10,48 +10,72 @@ from bluebottle.time_based.views import (
 )
 
 urlpatterns = [
-    url(r'^$',
+    re_path(
+        r'^$',
         DeadlineActivityListView.as_view(),
-        name='deadline-list'),
-    url(r'^/(?P<pk>\d+)$',
+        name='deadline-list'
+    ),
+    re_path(
+        r'^/(?P<pk>\d+)$',
         DeadlineActivityDetailView.as_view(),
-        name='deadline-detail'),
-    url(r'^/transitions$',
+        name='deadline-detail'
+    ),
+    re_path(
+        r'^/transitions$',
         DeadlineTransitionList.as_view(),
-        name='deadline-transition-list'),
+        name='deadline-transition-list'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/registrations/$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/registrations/$',
         DeadlineRelatedRegistrationList.as_view(),
-        name='related-deadline-registrations'),
-    url(r'^/registrations/$',
+        name='related-deadline-registrations'
+    ),
+    re_path(
+        r'^/registrations/$',
         DeadlineRegistrationList.as_view(),
-        name='deadline-registration-list'),
-    url(r'^/registrations/transitions$',
+        name='deadline-registration-list'
+    ),
+    re_path(
+        r'^/registrations/transitions$',
         DeadlineRegistrationTransitionList.as_view(),
         name='deadline-registration-transitions'),
-    url(r'^/registrations/(?P<pk>\d+)$',
+    re_path(
+        r'^/registrations/(?P<pk>\d+)$',
         DeadlineRegistrationDetail.as_view(),
-        name='deadline-registration-detail'),
-    url(r'^/registrations/(?P<pk>\d+)/document$',
+        name='deadline-registration-detail'
+    ),
+    re_path(
+        r'^/registrations/(?P<pk>\d+)/document$',
         DeadlineRegistrationDocumentDetail.as_view(),
-        name='deadline-registration-document'),
+        name='deadline-registration-document'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/participants$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/participants$',
         DeadlineRelatedParticipantList.as_view(),
-        name='deadline-participants'),
-
-    url(r'^/participants$',
+        name='deadline-participants'
+    ),
+    re_path(
+        r'^/participants$',
         DeadlineParticipantList.as_view(),
-        name='deadline-participant-create'),
+        name='deadline-participant-create'
+    ),
 
-    url(r'^/participants/transitions$',
+    re_path(
+        r'^/participants/transitions$',
         DeadlineParticipantTransitionList.as_view(),
-        name='deadline-participant-transitions'),
-    url(r'^/participants/(?P<pk>\d+)$',
+        name='deadline-participant-transitions'
+    ),
+    re_path(
+        r'^/participants/(?P<pk>\d+)$',
         DeadlineParticipantDetail.as_view(),
-        name='deadline-participant-detail'),
+        name='deadline-participant-detail'
+    ),
 
-    url(r'^/export/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/export/(?P<pk>[\d]+)$',
         DeadlineParticipantExportView.as_view(),
-        name='deadline-participant-export'),
+        name='deadline-participant-export'
+    ),
 ]

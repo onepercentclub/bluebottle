@@ -34,7 +34,7 @@ from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
     SlotParticipant, DateActivitySlot, DateParticipant
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
+from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -165,7 +165,8 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
-    title = serializers.CharField(allow_blank=True, required=False)
+    title = serializers.CharField()
+    description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
@@ -173,8 +174,6 @@ class BaseActivitySerializer(ModelSerializer):
     contributor_count = serializers.SerializerMethodField()
     team_count = serializers.SerializerMethodField()
     is_follower = serializers.SerializerMethodField()
-    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
-    stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, read_only=True)
     slug = serializers.CharField(read_only=True)
     office_restriction = serializers.CharField(required=False)
@@ -197,6 +196,16 @@ class BaseActivitySerializer(ModelSerializer):
         many=True,
         read_only=True
     )
+
+    def __init__(self, instance=None, *args, **kwargs):
+        super().__init__(instance, *args, **kwargs)
+
+        if not instance or instance.status in ('draft', 'needs_work'):
+            for key in self.fields:
+                self.fields[key].allow_blank = True
+                self.fields[key].validators = []
+                self.fields[key].allow_null = True
+                self.fields[key].required = False
 
     def get_segments(self, obj):
         return obj.segments.filter(segment_type__visibility=True)
@@ -255,7 +264,6 @@ class BaseActivitySerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'image',
@@ -332,8 +340,6 @@ class BaseActivityListSerializer(ModelSerializer):
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     owner = ResourceRelatedField(read_only=True)
     is_follower = serializers.SerializerMethodField()
-    type = serializers.CharField(read_only=True, source='JSONAPIMeta.resource_name')
-    stats = serializers.OrderedDict(read_only=True)
     goals = ResourceRelatedField(required=False, many=True, queryset=ImpactGoal.objects.all())
     slug = serializers.CharField(read_only=True)
     matching_properties = MatchingPropertiesField()
@@ -360,7 +366,6 @@ class BaseActivityListSerializer(ModelSerializer):
     class Meta(object):
         model = Activity
         fields = (
-            'type',  # Needed for old style API endpoints like pages / page blocks
             'slug',
             'id',
             'image',

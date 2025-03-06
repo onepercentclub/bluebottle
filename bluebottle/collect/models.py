@@ -114,7 +114,7 @@ class CollectActivity(Activity):
     @property
     def google_calendar_link(self):
 
-        details = self.description
+        details = self.description.html
         details += _('\nCollecting {type}').format(type=self.collect_type)
 
         end = self.end + timedelta(days=1)
@@ -136,7 +136,10 @@ class CollectActivity(Activity):
 
     @property
     def participants(self):
-        return self.contributors.instance_of(CollectContributor)
+        if self.pk:
+            return self.contributors.instance_of(CollectContributor)
+        else:
+            return CollectContributor.objects.none()
 
     @property
     def active_contributors(self):
@@ -151,7 +154,7 @@ class CollectActivity(Activity):
     @property
     def required_fields(self):
         return super().required_fields + [
-            'title', 'description', 'collect_type'
+            'title', 'description.html', 'collect_type'
         ]
 
 

@@ -2,7 +2,7 @@ from builtins import object
 from builtins import str
 from collections import defaultdict
 
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
@@ -221,7 +221,7 @@ class StateMachineAdminMixin(object):
     def get_urls(self):
         urls = super(StateMachineAdminMixin, self).get_urls()
         custom_urls = [
-            url(
+            re_path(
                 r'^(?P<pk>.+)/transition/(?P<field_name>.+)/(?P<transition_name>.+)$',
                 self.admin_site.admin_view(self.transition),
                 name='{}_{}_state_transition'.format(

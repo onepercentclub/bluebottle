@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 from builtins import object
 
+from bluebottle.test.factory_models import generate_rich_text
+
 import factory.fuzzy
 
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -15,7 +17,7 @@ class DeedFactory(factory.DjangoModelFactory):
 
     title = factory.Faker('sentence')
     slug = factory.Faker('slug')
-    description = factory.Faker('text')
+    description = factory.LazyFunction(generate_rich_text)
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     initiative = factory.SubFactory(InitiativeFactory)

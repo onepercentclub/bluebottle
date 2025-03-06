@@ -15,6 +15,8 @@ from multiselectfield import MultiSelectField
 from parler.models import TranslatedFields
 from djchoices import DjangoChoices, ChoiceItem
 
+from django_quill.fields import QuillField
+
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
@@ -25,7 +27,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import SegmentType
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin, \
     SortableTranslatableModel
-from bluebottle.utils.utils import get_current_host, get_current_language, clean_html
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 @python_2_unicode_compatible
@@ -93,7 +95,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
         blank=True
     )
-    story = models.TextField(_('story'), blank=True)
+    story = QuillField(_('story'), blank=True)
 
     theme = models.ForeignKey('initiatives.Theme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
@@ -181,7 +183,7 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
     def required_fields(self):
         fields = [
             'title', 'pitch', 'owner',
-            'has_organization', 'story', 'image',
+            'has_organization', 'story.html', 'image',
             'theme',
         ]
 
@@ -230,8 +232,6 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
         if self.has_organization is False:
             self.organization = None
             self.organization_contact = None
-
-        self.story = clean_html(self.story)
 
         super(Initiative, self).save(**kwargs)
 

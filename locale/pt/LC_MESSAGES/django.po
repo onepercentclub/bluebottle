@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-06 10:36+0100\n"
-"PO-Revision-Date: 2025-03-06 09:37\n"
+"POT-Creation-Date: 2025-03-06 11:47+0100\n"
+"PO-Revision-Date: 2025-03-06 11:08\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -6784,11 +6784,11 @@ msgid "external SCIM id"
 msgstr "ID externo SCIM"
 
 #: bluebottle/members/models.py:295
-msgid "Region manager"
+msgid "Office groups managed"
 msgstr ""
 
 #: bluebottle/members/models.py:297
-msgid "Select one or more regions to filter the user's view to only see data relevant to those regions. Leave empty for full access to all data."
+msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
 msgstr ""
 
 #: bluebottle/members/models.py:304

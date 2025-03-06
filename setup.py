@@ -19,6 +19,7 @@ install_requires = [
     'Babel==2.16.0',
     'Django==4.2.17',
     'Pillow==8.3.0',
+    'PyLD==2.0.4',
     'South==1.0.2',
     'South==1.0.2',
     'Sphinx==4.1.2',

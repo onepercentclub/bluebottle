@@ -163,7 +163,7 @@ MIDDLEWARE = (
     'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_otp.middleware.OTPMiddleware',
+    'bluebottle.auth.middleware.OTPMiddleware',
     'axes.middleware.AxesMiddleware',
 )
 

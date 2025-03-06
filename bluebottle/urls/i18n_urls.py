@@ -4,6 +4,7 @@ from django.contrib.auth.views import PasswordResetDoneView, PasswordResetConfir
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 
+from bluebottle.views import HomeView
 from bluebottle.utils.views import NoopView
 from bluebottle.auth.views import admin_password_reset, admin_logout
 from bluebottle.auth.utils import AdminSiteOTPRequired
@@ -69,5 +70,5 @@ urlpatterns = [
     ),
 
     re_path(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
-
+    re_path(r'^', HomeView.as_view(), name='home'),
 ]

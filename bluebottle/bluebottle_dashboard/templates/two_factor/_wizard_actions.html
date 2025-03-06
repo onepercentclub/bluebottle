@@ -1,14 +1,23 @@
 {% load i18n %}
 
 {% if wizard.steps.prev %}
-  <button name="wizard_goto_step" type="submit"
-          value="{{ wizard.steps.prev }}"
-          class="btn btn-secondary">{% trans "Back" %}</button>
+
+  <button type="submit" class="btn btn-secondary" style="display: none" >
+  <button
+      name="wizard_goto_step"
+      type="submit"
+      value="{{ wizard.steps.prev }}"
+      class="btn btn-secondary"
+  >
+      {% trans "Back" %}
+  </button>
 {% endif %}
-<button type="submit" class="btn btn-primary">
+<span class="submit-row">
+    <button type="submit" class="btn btn-primary">
         {% if wizard.steps.current == 'auth' %}
-                {% trans "Log in with password" %}
+            {% trans "Log in with password" %}
         {% else %}
-                {% trans "Next" %}
+            {% trans "Next" %}
         {% endif %}
-</button>
+    </button>
+</span>

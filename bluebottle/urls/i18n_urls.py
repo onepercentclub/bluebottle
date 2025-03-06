@@ -5,7 +5,9 @@ from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
+from bluebottle.utils.views import NoopView
 from bluebottle.auth.views import admin_password_reset, admin_logout
+from bluebottle.auth.utils import AdminSiteOTPRequired
 from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView # noqa This has to be imported early so that custom urls will work
 from bluebottle.analytics.views import PlausibleEmbedView # noqa This has to be imported early so that custom urls will work
@@ -13,10 +15,20 @@ from bluebottle.analytics.views import PlausibleEmbedView # noqa This has to be 
 from two_factor.urls import urlpatterns as tf_urls
 
 
+admin.site.__class__ = AdminSiteOTPRequired
 admin.autodiscover()
 
 
 urlpatterns = [
+    re_path(
+        '^admin/account/two_factor/disable/',
+        NoopView.as_view(),
+    ),
+    re_path(
+        '^admin/account/two_factor/backup/tokens/',
+        NoopView.as_view(),
+    ),
+    re_path(r'^admin/two_factor/', include(tf_urls)),
 
     # Django JET URLS
     re_path(r'^admin/jet/', include('jet.urls', 'jet')),
@@ -58,6 +70,5 @@ urlpatterns = [
     ),
 
     re_path(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
-    re_path(r'^utils/two_factor/', include(tf_urls)),
     re_path(r'^', HomeView.as_view(), name='home'),
 ]

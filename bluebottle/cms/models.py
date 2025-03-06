@@ -218,6 +218,7 @@ class Person(models.Model):
     name = models.CharField(max_length=60)
     role = models.CharField(max_length=60, null=True, blank=True)
     email = models.CharField(max_length=60, null=True, blank=True)
+    phone_number = models.CharField(max_length=60, null=True, blank=True)
 
     avatar = ImageField(
         _("Image"), max_length=255, blank=True, null=True,

@@ -45,7 +45,7 @@ class PersonSerializer(ModelSerializer):
 
     class Meta(object):
         model = Person
-        fields = ('id', 'name', 'role', 'email', 'avatar')
+        fields = ('id', 'name', 'role', 'email', 'phone_number', 'avatar')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/people/persons'

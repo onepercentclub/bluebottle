@@ -114,9 +114,9 @@ class BluebottleJSONAPIRenderer(JSONRenderer):
                     for position in range(len(serializer_data)):
                         serializer_resource = serializer_data[position]
                         nested_resource_instance = relation_queryset[position]
-
                         resource_type = (
-                            serializer_resource.get('type')
+                            serializer_resource.get('block_type')
+                            or serializer_resource.get('type')
                             or utils.get_resource_type_from_instance(
                                 nested_resource_instance
                             )

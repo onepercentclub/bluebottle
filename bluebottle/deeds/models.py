@@ -11,7 +11,6 @@ from bluebottle.deeds.validators import EndDateValidator
 
 
 class Deed(Activity):
-
     start = models.DateField(blank=True, null=True)
     end = models.DateField(blank=True, null=True)
 
@@ -49,6 +48,11 @@ class Deed(Activity):
         resource_name = 'activities/deeds'
 
     validators = [EndDateValidator]
+
+    def get_activitypub_serializer(self):
+        """Return the ActivityPub serializer for this model"""
+        from .serializers.pub import DeedActivityPubSerializer
+        return DeedActivityPubSerializer
 
     @property
     def required_fields(self):

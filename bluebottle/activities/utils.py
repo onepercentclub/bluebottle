@@ -2,6 +2,7 @@ from builtins import object
 from itertools import groupby
 
 from django.conf import settings
+from django.db import connection
 from django.db.models import Count, Sum, Q
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -30,6 +31,7 @@ from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
+from bluebottle.pub.models import Actor, Platform
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
     SlotParticipant, DateActivitySlot, DateParticipant
@@ -589,8 +591,11 @@ def get_stats_for_activities(activities):
 
     contributor_count += anonymous_donations
 
-    contributor_count += Activity.objects.filter(id__in=ids).\
-        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    contributor_count += Activity.objects.filter(
+        id__in=ids
+    ).aggregate(
+        total=Sum('deleted_successful_contributors')
+    )['total'] or 0
 
     types = CollectType.objects.all()
     collect = (
@@ -626,8 +631,8 @@ def get_stats_for_activities(activities):
 
     impact = []
     for type, goals in groupby(
-        ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
-        lambda goal: goal.type
+            ImpactGoal.objects.filter(activity__in=ids).order_by('type'),
+            lambda goal: goal.type
     ):
         value = sum(goal.realized or goal.realized_from_contributions or 0 for goal in goals)
 
@@ -745,3 +750,46 @@ def bulk_add_participants(activity, emails, send_messages):
         'failed': failed,
         'created': created
     }
+
+
+def publish_to_activitypub(activity):
+    """
+    Publish an activity to ActivityPub.
+    Args:
+        activity: The activity model instance to publish
+    """
+    domain = connection.tenant.domain_url
+    actor = activity.owner.activitypub_account
+    if not actor:
+        # Create Actor for the owner if it doesn't exist
+        platform, _ = Platform.objects.get_or_create(
+            domain=domain
+        )
+
+        actor = Actor.objects.create(
+            user=activity.owner,
+            username=activity.owner.username,
+            platform=platform
+        )
+
+    activity_url = f"{domain}{reverse('deed-detail', args=[activity.id])}"
+
+    note = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        "type": "Create",
+        "actor": actor.actor_uri,
+        "object": {
+            "type": "Note",
+            "content": activity.description,
+            "name": activity.title,
+            "url": activity_url,
+            "attributedTo": actor.actor_uri,
+            "published": activity.created.isoformat(),
+        }
+    }
+
+    # Send to followers
+    for follower in actor.followers.all():
+        follower.send_to_inbox(note)
+
+    return note

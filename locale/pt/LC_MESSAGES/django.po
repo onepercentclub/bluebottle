@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-05 08:29+0100\n"
-"PO-Revision-Date: 2025-03-05 07:44\n"
+"PO-Revision-Date: 2025-03-06 13:34\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -5866,11 +5866,11 @@ msgstr "Iniciativas que estou revisando"
 
 #: bluebottle/initiatives/filters.py:70 bluebottle/initiatives/models.py:258
 msgid "Open initiatives"
-msgstr "Iniciativas abertas"
+msgstr ""
 
 #: bluebottle/initiatives/filters.py:71
 msgid "Closed initiatives"
-msgstr "Iniciativas fechadas"
+msgstr ""
 
 #: bluebottle/initiatives/messages.py:8
 msgid "A new initiative is ready to be reviewed."
@@ -6770,7 +6770,7 @@ msgstr "ID externo SCIM"
 
 #: bluebottle/members/models.py:295
 msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
-msgstr "Selecione uma região para filtrar a visualização do usuário para ver apenas dados relevantes para esta região. Deixe em branco para ter acesso total a todos os dados."
+msgstr ""
 
 #: bluebottle/members/models.py:303
 msgid "When the user updated their matching preferences."
@@ -7321,11 +7321,11 @@ msgstr "Mostrar o título desta página no cabeçalho"
 
 #: bluebottle/projects/models.py:19
 msgid "project image"
-msgstr "imagem do projeto"
+msgstr ""
 
 #: bluebottle/projects/models.py:20
 msgid "project images"
-msgstr "imagens do projeto"
+msgstr ""
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"

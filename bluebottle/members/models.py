@@ -292,6 +292,7 @@ class Member(BlueBottleBaseUser):
 
     subregion_manager = models.ManyToManyField(
         OfficeSubRegion,
+        verbose_name=_("Region manager"),
         help_text=_(
             "Select one or more regions to filter the user's view to only see data relevant to those regions. "
             "Leave empty for full access to all data."

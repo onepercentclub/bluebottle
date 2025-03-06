@@ -77,6 +77,7 @@ class InitiativeDocument(Document):
     })
 
     owner = fields.KeywordField()
+    is_open = fields.BooleanField()
 
     country = fields.NestedField(
         properties={
@@ -136,6 +137,22 @@ class InitiativeDocument(Document):
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'city': fields.TextField(),
+        }
+    )
+
+    office_subregion = fields.NestedField(
+        attr='location.subregion',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    office_region = fields.NestedField(
+        attr='location.subregion.region',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 

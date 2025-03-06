@@ -1,5 +1,6 @@
 from django.utils.timezone import now
 
+from bluebottle.activities.messages import InactiveParticipantAddedNotification
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -23,7 +24,6 @@ from bluebottle.time_based.effects.participants import (
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect,
 )
 from bluebottle.time_based.messages import (
-    ManagerParticipantAddedOwnerNotification,
     ParticipantAddedNotification,
 )
 from bluebottle.time_based.models import (
@@ -59,6 +59,14 @@ def activity_will_be_expired(effect):
         effect.instance.activity.status == "succeeded"
         and effect.instance.activity.active_participants.count() == 1
     )
+
+
+def participant_is_active(effect):
+    return effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not effect.instance.user.is_active
 
 
 class RegistrationParticipantTriggers(ContributorTriggers):
@@ -220,6 +228,12 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             return effect.instance.activity.start < now().date()
         return True
 
+    def is_not_self(self):
+        "Participant is created by other user"
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             ParticipantStateMachine.initiate,
@@ -230,9 +244,7 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
                 CreatePreparationTimeContributionEffect,
                 TransitionEffect(
                     DeadlineParticipantStateMachine.add,
-                    conditions=[
-                        is_admin
-                    ]
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
@@ -262,8 +274,14 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
             DeadlineParticipantStateMachine.add,
             effects=[
                 CreateRegistrationEffect,
-                NotificationEffect(ManagerParticipantAddedOwnerNotification),
-                NotificationEffect(ParticipantAddedNotification),
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
+                ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -588,8 +606,9 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
         return not effect.instance.slot or not effect.instance.slot.end
 
     def is_not_self(self):
+        "Participant is created by other user"
         user = self.options.get('user')
-        return self.instance.user != user and self.instance.activity.owner != user
+        return user and self.instance.user != user
 
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
@@ -600,7 +619,8 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
                 CreateRegistrationEffect,
                 CreateScheduleSlotEffect,
                 TransitionEffect(
-                    ScheduleParticipantStateMachine.add, conditions=[is_admin]
+                    ScheduleParticipantStateMachine.add,
+                    conditions=[is_not_self],
                 ),
                 TransitionEffect(
                     ScheduleParticipantStateMachine.accept,
@@ -632,12 +652,12 @@ class ScheduleParticipantTriggers(RegistrationParticipantTriggers):
             effects=[
                 CreateRegistrationEffect,
                 NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification,
-                    conditions=[is_not_self],
+                    ParticipantAddedNotification,
+                    conditions=[is_not_self, participant_is_active]
                 ),
                 NotificationEffect(
-                    ParticipantAddedNotification,
-                    conditions=[is_not_self],
+                    InactiveParticipantAddedNotification,
+                    conditions=[is_not_self, participant_is_inactive]
                 ),
                 RelatedTransitionEffect(
                     "activity",

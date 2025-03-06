@@ -168,6 +168,17 @@ class Funding(Activity):
 
     activity_type = _('Crowdfunding campaign')
 
+    @property
+    def partner_organization(self):
+        if (
+            self.bank_account
+            and self.bank_account.connect_account
+            and self.bank_account.connect_account.partner_organization
+        ):
+            return self.bank_account.connect_account.partner_organization
+        if self.initiative.organization:
+            return self.initiative.organization
+
     def admin_clean(self):
         for val in self.validators:
             validator = val(self)
@@ -627,9 +638,9 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         on_delete=models.CASCADE
     )
 
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-    reviewed = models.BooleanField(default=False)
+    created = models.DateTimeField(_('created'), default=timezone.now)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
+    reviewed = models.BooleanField(_('reviewed'), default=False)
 
     public = models.BooleanField(
         _('Public payout account'),
@@ -759,9 +770,13 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     public_accounts = models.BooleanField(
-        _('Allow users to select account from list of public accounts'),
+        _('Crowdfunding for verified organisations'),
         default=False,
-        help_text=_('Allow users to select account from list of public accounts')
+        help_text=_(
+            'When enabled, campaign initiators must select from a list of organisations with a '
+            'public payout account that will receive the raised money, rather than providing the '
+            'bank account details themselves.'
+        )
     )
 
     matching_name = models.CharField(

@@ -169,3 +169,20 @@ The BlueBottle test suite can be run completely using:
 #. Run the tests
 
     $ python manage.py test -k
+
+
+Translating
+------------
+
+To push new strings to crowding:
+
+    $ ./locale/push
+
+After checking that master is fully merged in the current branch, this will extract new 
+messages and push them to crowdin. Make sure to commit all found strings.
+
+To pull messages simply do
+    $ crowdin pull
+
+And commit the changes after that command
+

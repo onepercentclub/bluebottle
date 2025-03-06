@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-import regex
-
 from django import http
 from django.conf import settings
 from django.db import connection
@@ -65,12 +63,10 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
                 return new_path
             return http_host + '/' + language + new_path
 
-        redirects = Redirect.objects.all().order_by('fallback_redirect')
+        redirects = Redirect.objects.all()
         for redirect in redirects:
             # Attempt a regular match
             if redirect.old_path == full_path:
-                redirect.nr_times_visited += 1
-                redirect.save()
                 return http.HttpResponsePermanentRedirect(
                     redirect_target(redirect.new_path))
 
@@ -80,31 +76,8 @@ class RedirectFallbackMiddleware(MiddlewareMixin):
                 slashed_full_path = full_path[:path_len] + '/' + full_path[path_len:]
 
                 if redirect.old_path == slashed_full_path:
-                    redirect.nr_times_visited += 1
-                    redirect.save()
                     return http.HttpResponsePermanentRedirect(
                         redirect_target(redirect.new_path))
-
-        # Attempt all regular expression redirects
-        reg_redirects = Redirect.objects.filter(
-            regular_expression=True).order_by('fallback_redirect')
-        for redirect in reg_redirects:
-            try:
-                old_path = regex.compile(redirect.old_path, regex.IGNORECASE)
-            except regex.error:
-                # old_path does not compile into regex,
-                # ignore it and move on to the next one
-                continue
-
-            if regex.match(redirect.old_path, full_path):
-                # Convert $1 into \1 (otherwise users would have
-                # to enter \1 via the admin which would have to be escaped)
-                new_path = redirect.new_path.replace('$', '\\')
-                replaced_path = regex.sub(old_path, new_path, full_path)
-                redirect.nr_times_visited += 1
-                redirect.save()
-                return http.HttpResponsePermanentRedirect(
-                    redirect_target(replaced_path))
 
         # No redirect was found. Return the response.
         return response

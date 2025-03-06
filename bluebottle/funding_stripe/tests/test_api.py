@@ -17,18 +17,19 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
     ExternalAccountFactory,
     StripePaymentProviderFactory,
+    StripePaymentIntentFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
 
-class StripePaymentIntentTestCase(BluebottleTestCase):
+class StripePaymentIntentListTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripePaymentIntentTestCase, self).setUp()
+        super().setUp()
         StripePaymentProvider.objects.all().delete()
-        StripePaymentProviderFactory.create()
+        self.payment_provider = StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()
@@ -42,7 +43,7 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(
             initiative=self.initiative, bank_account=self.bank_account
         )
-        self.donation = DonorFactory.create(activity=self.funding, user=None)
+        self.donation = DonorFactory.create(activity=self.funding, user=self.user)
 
         self.intent_url = reverse("stripe-payment-intent-list")
 
@@ -60,127 +61,208 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
             }
         }
 
-    def test_create_intent(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
+        self.payment_intent = stripe.PaymentIntent("some intent id")
+        self.payment_intent.update(
             {
                 "client_secret": "some client secret",
             }
         )
 
+        self.connect_account = stripe.Account("some connect id")
+        self.connect_account.update(
+            munch.munchify({
+                "capabilities": {
+                    "card_payments": {"requested": True},
+                    "transfers": {"requested": True},
+                },
+                "external_accounts": []
+            })
+        )
+
+    def test_create_intent(self):
         with mock.patch(
-            "stripe.PaymentIntent.create", return_value=payment_intent
+            "stripe.PaymentIntent.create", return_value=self.payment_intent
         ) as create_intent:
-            response = self.client.post(
-                self.intent_url, data=json.dumps(self.data), user=self.user
-            )
-            create_intent.assert_called_with(
-                amount=int(self.donation.amount.amount * 100),
-                currency=str(self.donation.amount.currency),
-                metadata={
-                    "tenant_name": "test",
-                    "activity_id": self.donation.activity.pk,
-                    "activity_title": self.donation.activity.title,
-                    "tenant_domain": "testserver",
-                },
-                statement_descriptor="Test",
-                statement_descriptor_suffix="Test",
-                transfer_data={
-                    "destination": self.bank_account.connect_account.account_id
-                },
-                automatic_payment_methods={"enabled": True},
-            )
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                response = self.client.post(
+                    self.intent_url, data=json.dumps(self.data), user=self.user
+                )
+                create_intent.assert_called_with(
+                    amount=int(self.donation.amount.amount * 100),
+                    currency=str(self.donation.amount.currency),
+                    metadata={
+                        "tenant_name": "test",
+                        "activity_id": self.donation.activity.pk,
+                        "activity_title": self.donation.activity.title,
+                        "tenant_domain": "testserver",
+                    },
+                    statement_descriptor="Test",
+                    statement_descriptor_suffix="Test",
+                    transfer_data={
+                        "destination": self.bank_account.connect_account.account_id
+                    },
+                    automatic_payment_methods={"enabled": True},
+                )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
+        self.assertEqual(data["data"]["attributes"]["intent-id"], self.payment_intent.id)
         self.assertEqual(
-            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
+            data["data"]["attributes"]["client-secret"], self.payment_intent.client_secret
         )
         self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
-    def test_create_intent_us(self):
+    def test_create_intent_different_country(self):
         self.bank_account.connect_account.country = "US"
         self.bank_account.connect_account.save()
 
-        self.donation.user = self.user
-        self.donation.save()
+        with mock.patch(
+            "stripe.PaymentIntent.create", return_value=self.payment_intent
+        ) as create_intent:
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                self.client.post(
+                    self.intent_url, data=json.dumps(self.data), user=self.user
+                )
+                create_intent.assert_called_with(
+                    amount=int(self.donation.amount.amount * 100),
+                    currency=str(self.donation.amount.currency),
+                    metadata={
+                        "tenant_name": "test",
+                        "activity_id": self.donation.activity.pk,
+                        "activity_title": self.donation.activity.title,
+                        "tenant_domain": "testserver",
+                    },
+                    statement_descriptor="Test",
+                    statement_descriptor_suffix="Test",
+                    transfer_data={
+                        "destination": self.bank_account.connect_account.account_id
+                    },
+                    automatic_payment_methods={"enabled": True},
+                    on_behalf_of="account-id"
+                )
 
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
-            {
-                "client_secret": "some client secret",
-            }
-        )
+    def test_create_intent_different_country_only_transfers(self):
+        del self.connect_account.capabilities['card_payments']
+
+        self.bank_account.connect_account.country = "PH"
+        self.bank_account.connect_account.save()
 
         with mock.patch(
-            "stripe.PaymentIntent.create", return_value=payment_intent
+            "stripe.PaymentIntent.create", return_value=self.payment_intent
         ) as create_intent:
-            response = self.client.post(
-                self.intent_url, data=json.dumps(self.data), user=self.user
-            )
-            create_intent.assert_called_with(
-                amount=int(self.donation.amount.amount * 100),
-                currency=str(self.donation.amount.currency),
-                metadata={
-                    "tenant_name": "test",
-                    "activity_id": self.donation.activity.pk,
-                    "activity_title": self.donation.activity.title,
-                    "tenant_domain": "testserver",
-                },
-                statement_descriptor="Test",
-                statement_descriptor_suffix="Test",
-                transfer_data={
-                    "destination": self.bank_account.connect_account.account_id
-                },
-                automatic_payment_methods={"enabled": True},
-            )
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                self.client.post(
+                    self.intent_url, data=json.dumps(self.data), user=self.user
+                )
+                create_intent.assert_called_with(
+                    amount=int(self.donation.amount.amount * 100),
+                    currency=str(self.donation.amount.currency),
+                    metadata={
+                        "tenant_name": "test",
+                        "activity_id": self.donation.activity.pk,
+                        "activity_title": self.donation.activity.title,
+                        "tenant_domain": "testserver",
+                    },
+                    statement_descriptor="Test",
+                    statement_descriptor_suffix="Test",
+                    transfer_data={
+                        "destination": self.bank_account.connect_account.account_id
+                    },
+                    automatic_payment_methods={"enabled": True},
+                )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
+    def test_create_intent_different_country_europe(self):
+        self.bank_account.connect_account.country = "BE"
+        self.bank_account.connect_account.save()
 
-        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
-        self.assertEqual(
-            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
-        )
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
+        with mock.patch(
+            "stripe.PaymentIntent.create", return_value=self.payment_intent
+        ) as create_intent:
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                self.client.post(
+                    self.intent_url, data=json.dumps(self.data), user=self.user
+                )
+                create_intent.assert_called_with(
+                    amount=int(self.donation.amount.amount * 100),
+                    currency=str(self.donation.amount.currency),
+                    metadata={
+                        "tenant_name": "test",
+                        "activity_id": self.donation.activity.pk,
+                        "activity_title": self.donation.activity.title,
+                        "tenant_domain": "testserver",
+                    },
+                    statement_descriptor="Test",
+                    statement_descriptor_suffix="Test",
+                    transfer_data={
+                        "destination": self.bank_account.connect_account.account_id
+                    },
+                    automatic_payment_methods={"enabled": True},
+                )
+
+    def test_create_intent_different_country_europe_from_us(self):
+        self.payment_provider.country = 'US'
+        self.payment_provider.save()
+
+        with mock.patch(
+            "stripe.PaymentIntent.create", return_value=self.payment_intent
+        ) as create_intent:
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                self.client.post(
+                    self.intent_url, data=json.dumps(self.data), user=self.user
+                )
+                create_intent.assert_called_with(
+                    amount=int(self.donation.amount.amount * 100),
+                    currency=str(self.donation.amount.currency),
+                    metadata={
+                        "tenant_name": "test",
+                        "activity_id": self.donation.activity.pk,
+                        "activity_title": self.donation.activity.title,
+                        "tenant_domain": "testserver",
+                    },
+                    statement_descriptor="Test",
+                    statement_descriptor_suffix="Test",
+                    transfer_data={
+                        "destination": self.bank_account.connect_account.account_id
+                    },
+                    automatic_payment_methods={"enabled": True},
+                    on_behalf_of='account-id'
+                )
 
     def test_create_intent_anonymous(self):
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
-            {
-                "client_secret": self.donation.client_secret,
-            }
-        )
+        self.donation.user = None
+        self.donation.save()
 
-        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
-            self.data["data"]["attributes"] = {
-                "client_secret": self.donation.client_secret
-            }
-            response = self.client.post(self.intent_url, data=self.data)
+        with mock.patch("stripe.PaymentIntent.create", return_value=self.payment_intent):
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                self.data["data"]["attributes"] = {
+                    "client_secret": self.donation.client_secret
+                }
+                response = self.client.post(self.intent_url, data=self.data)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = json.loads(response.content)
 
-        self.assertEqual(data["data"]["attributes"]["intent-id"], payment_intent.id)
+        self.assertEqual(data["data"]["attributes"]["intent-id"], self.payment_intent.id)
         self.assertEqual(
-            data["data"]["attributes"]["client-secret"], payment_intent.client_secret
+            data["data"]["attributes"]["client-secret"], self.payment_intent.client_secret
         )
         self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
     def test_create_intent_wrong_token(self):
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
-            {
-                "client_secret": "some client secret",
-            }
-        )
-
-        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
+        with mock.patch("stripe.PaymentIntent.create", return_value=self.payment_intent):
             self.data["data"]["attributes"] = {"client_secret": "wrong secret"}
             response = self.client.post(
                 self.intent_url,
@@ -190,36 +272,27 @@ class StripePaymentIntentTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_intent_other_user(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
-            {
-                "client_secret": "some client secret",
-            }
-        )
-        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
-            response = self.client.post(
-                self.intent_url,
-                data=json.dumps(self.data),
-                user=BlueBottleUserFactory.create(),
-            )
+        with mock.patch("stripe.PaymentIntent.create", return_value=self.payment_intent):
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                response = self.client.post(
+                    self.intent_url,
+                    data=json.dumps(self.data),
+                    user=BlueBottleUserFactory.create(),
+                )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_intent_no_user(self):
-        payment_intent = stripe.PaymentIntent("some intent id")
-        payment_intent.update(
-            {
-                "client_secret": "some client secret",
-            }
-        )
-        with mock.patch("stripe.PaymentIntent.create", return_value=payment_intent):
-            response = self.client.post(
-                self.intent_url,
-                data=json.dumps(self.data),
-            )
+        with mock.patch("stripe.PaymentIntent.create", return_value=self.payment_intent):
+            with mock.patch(
+                "stripe.Account.retrieve", return_value=self.connect_account
+            ):
+                response = self.client.post(
+                    self.intent_url,
+                    data=json.dumps(self.data),
+                )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -323,10 +396,11 @@ class StripeBankTransferTestCase(BluebottleTestCase):
         self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
 
 
-class StripeSourcePaymentTestCase(BluebottleTestCase):
+class StripePaymentIntentDetailTestCase(BluebottleTestCase):
 
     def setUp(self):
-        super(StripeSourcePaymentTestCase, self).setUp()
+        super().setUp()
+        StripePaymentProvider.objects.all().delete()
         StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
@@ -335,83 +409,78 @@ class StripeSourcePaymentTestCase(BluebottleTestCase):
         self.initiative.states.approve(save=True)
 
         self.bank_account = ExternalAccountFactory.create(
-            connect_account=StripePayoutAccountFactory.create(
-                status="verified", account_id="test-account-id"
-            )
+            connect_account=StripePayoutAccountFactory.create(account_id="account-id")
         )
 
         self.funding = FundingFactory.create(
             initiative=self.initiative, bank_account=self.bank_account
         )
-        self.donation = DonorFactory.create(activity=self.funding, user=None)
+        self.donation = DonorFactory.create(activity=self.funding)
+        self.intent = StripePaymentIntentFactory.create(
+            donation=self.donation,
+            client_secret='some-client-secret'
+        )
 
-        self.payment_url = reverse("stripe-source-payment-list")
+        self.intent_url = reverse(
+            "stripe-payment-intent-detail", args=(self.intent.pk, )
+        )
 
-        self.data = {
-            "data": {
-                "type": "payments/stripe-source-payments",
-                "attributes": {
-                    "source-token": "test-token",
-                },
-                "relationships": {
-                    "donation": {
-                        "data": {
-                            "type": "contributors/donations",
-                            "id": self.donation.pk,
-                        }
-                    }
-                },
+        self.payment_intent = stripe.PaymentIntent("some intent id")
+        self.payment_intent.update(
+            {
+                'status': 'succeeded',
+                "client_secret": self.intent.client_secret,
+                "charges": []
             }
-        }
-
-    def test_create_payment(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        with mock.patch("stripe.Source.modify"):
-            response = self.client.post(
-                self.payment_url, data=json.dumps(self.data), user=self.user
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
-
-    def test_create_payment_anonymous(self):
-        with mock.patch("stripe.Source.modify"):
-            response = self.client.post(
-                self.payment_url,
-                data=json.dumps(self.data),
-                HTTP_AUTHORIZATION="Donation {}".format(self.donation.client_secret),
-            )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-
-        self.assertEqual(data["data"]["attributes"]["source-token"], "test-token")
-        self.assertEqual(data["included"][0]["attributes"]["status"], "draft")
-
-    def test_create_intent_other_user(self):
-        self.donation.user = self.user
-        self.donation.save()
-
-        response = self.client.post(
-            self.payment_url,
-            data=json.dumps(self.data),
-            user=BlueBottleUserFactory.create(),
         )
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_get_user(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(self.intent_url, user=self.donation.user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_create_intent_no_user(self):
-        response = self.client.post(
-            self.payment_url,
-            data=json.dumps(self.data),
-        )
+    def test_get_other_user(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url, user=BlueBottleUserFactory.create()
+            )
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_get_anonymous(self):
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(self.intent_url)
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_client_secret(self):
+        self.donation.user = None
+        self.donation.save()
+
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url,
+                HTTP_AUTHORIZATION=f'donation {self.intent.client_secret}'
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_wrong_client_secret(self):
+        self.donation.user = None
+        self.donation.save()
+
+        with mock.patch(
+            "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
+        ):
+            response = self.client.get(
+                self.intent_url, HTTP_AUTHORIZATION='donation some-other-secret'
+            )
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class ConnectAccountDetailsTestCase(BluebottleTestCase):
@@ -476,6 +545,7 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.country_spec = stripe.CountrySpec(country)
         self.country_spec.update(
             {
+                "supported_bank_account_currencies": ['EUR'],
                 "verification_fields": munch.munchify(
                     {
                         "individual": munch.munchify(
@@ -608,6 +678,87 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
             data["data"]["relationships"]["owner"]["data"]["id"], str(self.user.pk)
         )
 
+    def test_create_transfers_only(self):
+        self.connect_account.delete()
+        tenant = connection.tenant
+        tenant.name = "tst"
+        tenant.save()
+
+        connect_account = stripe.Account("some-connect-id")
+        connect_account.update(
+            {
+                "country": self.data["data"]["attributes"]["country"],
+                "business_type": "individual",
+                "charges_enabled": False,
+                "payouts_enabled": False,
+                "individual": munch.munchify(
+                    {
+                        "first_name": "Jhon",
+                        "last_name": "Example",
+                        "email": "jhon@example.com",
+                        "verification": munch.munchify(
+                            {
+                                "status": "pending",
+                            }
+                        ),
+                        "requirements": munch.munchify(
+                            {
+                                "eventually_due": [
+                                    "external_accounts",
+                                    "individual.dob.month",
+                                ],
+                                "currently_due": [],
+                                "past_due": [],
+                            }
+                        ),
+                    }
+                ),
+                "requirements": munch.munchify(
+                    {
+                        "eventually_due": ["external_accounts", "individual.dob.month"],
+                        "disabled": False,
+                    }
+                ),
+                "external_accounts": munch.munchify({"total_count": 0, "data": []}),
+            }
+        )
+        self.country_spec.supported_bank_account_currencies = []
+        with mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
+        ), mock.patch(
+            "stripe.Account.create", return_value=connect_account
+        ) as create_account, mock.patch(
+            "stripe.Account.modify", return_value=connect_account
+        ), mock.patch(
+            "stripe.Account.retrieve", return_value=connect_account
+        ):
+            response = self.client.post(
+                self.account_list_url, data=json.dumps(self.data), user=self.user
+            )
+            call = create_account.call_args.kwargs
+
+            self.assertEqual(
+                call["capabilities"],
+                {
+                    'transfers': {'requested': True}
+                }
+            )
+
+            self.assertEqual(
+                call["tos_acceptance"],
+                {'service_agreement': 'recipient'}
+            )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(
+            data["data"]["attributes"]["country"],
+            self.data["data"]["attributes"]["country"],
+        )
+        self.assertEqual(
+            data["data"]["relationships"]["owner"]["data"]["id"], str(self.user.pk)
+        )
+
     def test_create_no_user(self):
         self.connect_account.delete()
         response = self.client.post(self.account_url, data=json.dumps(self.data))
@@ -615,7 +766,10 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get(self):
-        response = self.client.get(self.account_url, user=self.user)
+        with mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
+        ):
+            response = self.client.get(self.account_url, user=self.user)
 
         data = json.loads(response.content)
 
@@ -703,6 +857,7 @@ class ExternalAccountsTestCase(BluebottleTestCase):
         self.country_spec = stripe.CountrySpec(country)
         self.country_spec.update(
             {
+                "supported_bank_account_currencies": ['EUR'],
                 "verification_fields": munch.munchify(
                     {
                         "individual": munch.munchify(
@@ -747,7 +902,9 @@ class ExternalAccountsTestCase(BluebottleTestCase):
             "stripe.Account.retrieve", return_value=self.stripe_connect_account
         ) as retrieve, mock.patch(
             "stripe.ListObject.retrieve", return_value=self.connect_external_account
-        ) as retrieve:
+        ) as retrieve, mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=self.country_spec
+        ):
             response = self.client.get(self.url, user=self.user)
             retrieve.assert_called_with(self.external_account.account_id)
             self.assertEqual(response.status_code, 200)

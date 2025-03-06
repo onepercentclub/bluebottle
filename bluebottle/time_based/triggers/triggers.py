@@ -3,6 +3,7 @@ from datetime import date
 from django.utils.timezone import now
 
 from bluebottle.activities.messages import (
+    InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.triggers import ContributorTriggers
@@ -29,7 +30,6 @@ from bluebottle.time_based.effects import (
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification,
     ChangedSingleDateNotification,
-    ManagerParticipantAddedOwnerNotification,
     ManagerSlotParticipantRegisteredNotification,
     ManagerSlotParticipantWithdrewNotification,
     ParticipantAcceptedNotification,
@@ -58,6 +58,14 @@ from bluebottle.time_based.states import (
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
+
+
+def participant_is_active(effect):
+    return effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not effect.instance.user.is_active
 
 
 def is_full(effect):
@@ -804,9 +812,11 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
+                    conditions=[participant_is_active]
                 ),
                 NotificationEffect(
-                    ManagerParticipantAddedOwnerNotification
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
                 ),
                 RelatedTransitionEffect(
                     'activity',

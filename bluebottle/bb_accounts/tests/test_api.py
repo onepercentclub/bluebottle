@@ -5,9 +5,6 @@ from builtins import str
 import json
 import re
 import urllib.parse
-import time
-
-import mock
 
 import httmock
 
@@ -18,7 +15,6 @@ from django.test.utils import override_settings
 from django.utils.http import int_to_base36
 from rest_framework import status
 
-from bluebottle.members.tokens import login_token_generator
 from bluebottle.members.models import MemberPlatformSettings, UserSegment
 
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -418,7 +414,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
 
         response = self.client.post(reverse('user-logout'), HTTP_AUTHORIZATION=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_logout_unauthenticated(self):
         """
@@ -615,6 +611,36 @@ class UserApiIntegrationTest(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_password_reset_rate_limit(self):
+        # Setup: create a user.
+        data = {
+            'data': {
+                'type': 'auth/signup',
+                'attributes': {
+                    'email': 'nijntje27@hetkonijntje.nl',
+                    'password': 'some-password'
+                }
+            }
+        }
+        response = self.client.post(
+            self.user_create_api_url, data
+        )
+
+        for _ in range(12):
+            response = self.client.post(
+                self.user_password_reset_api_url,
+                {
+                    'data': {
+                        'attributes': {
+                            'email': 'nijntje27@hetkonijntje.nl'
+                        },
+                        'type': 'reset-tokens'
+                    }
+                }
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_password_reset_inactive(self):
         # Setup: create a user.
         client = JSONAPITestClient()
@@ -775,81 +801,6 @@ class UserVerificationTest(BluebottleTestCase):
             )
 
             self.assertEqual(response.status_code, 403)
-
-
-class TokenLoginApiTest(BluebottleTestCase):
-    def setUp(self):
-        super(TokenLoginApiTest, self).setUp()
-
-        self.user = BlueBottleUserFactory.create()
-        self.other_user = BlueBottleUserFactory.create()
-
-        self.token_login_url = reverse('token-login')
-
-    def test_token_login(self):
-        token = login_token_generator.make_token(self.user)
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': self.user.pk, 'token': token}
-        )
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(list(response.data.keys()), ['token'])
-
-    def test_token_login_twice(self):
-        token = login_token_generator.make_token(self.user)
-        self.client.post(
-            self.token_login_url,
-            data={'user_id': self.user.pk, 'token': token}
-        )
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': self.user.pk, 'token': token}
-        )
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_token_missing_argument(self):
-        token = login_token_generator.make_token(self.user)
-        response = self.client.post(
-            self.token_login_url,
-            data={'token': token}
-        )
-        self.assertEqual(response.status_code, 400)
-
-    def test_token_missing_user(self):
-        token = login_token_generator.make_token(self.user)
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': '1234567890', 'token': token}
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_token_wrong_token(self):
-        token = login_token_generator.make_token(self.user)
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': self.user.pk, 'token': token + '123'}
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_token_wrong_user(self):
-        token = login_token_generator.make_token(self.user)
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': self.other_user.pk, 'token': token}
-        )
-        self.assertEqual(response.status_code, 404)
-
-    def test_token_expired(self):
-        past_time = time.time() - 35
-        with mock.patch('django.core.signing.time.time', return_value=past_time):
-            token = login_token_generator.make_token(self.user)
-
-        response = self.client.post(
-            self.token_login_url,
-            data={'user_id': self.user.pk, 'token': token}
-        )
-        self.assertEqual(response.status_code, 404)
 
 
 class MemberDetailViewAPITestCase(APITestCase):

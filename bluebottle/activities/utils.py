@@ -22,15 +22,17 @@ from bluebottle.activities.models import (
 from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
-from bluebottle.collect.models import CollectType, CollectActivity
+from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
+from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.members.models import Member
+from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot
+from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
+    SlotParticipant, DateActivitySlot, DateParticipant
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -484,6 +486,8 @@ class BaseContributorSerializer(ModelSerializer):
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')
     start = serializers.SerializerMethodField()
+    email = serializers.CharField(write_only=True, required=False)
+    send_messages = serializers.BooleanField(write_only=True, required=False)
 
     def get_start(self, obj):
         if obj.contributions.exists():
@@ -503,7 +507,9 @@ class BaseContributorSerializer(ModelSerializer):
             'activity',
             'status',
             'current_status',
-            'start'
+            'start',
+            'email',
+            'send_messages',
         )
         meta_fields = (
             'transitions',
@@ -667,4 +673,75 @@ class InviteSerializer(ModelSerializer):
     included_serializers = {
         'team': 'bluebottle.activities.utils.TeamSerializer',
         'team.owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+
+def bulk_add_participants(activity, emails, send_messages):
+    created = 0
+    added = 0
+    existing = 0
+    failed = 0
+    Participant = None
+    if isinstance(activity, Deed):
+        Participant = DeedParticipant
+    if isinstance(activity, CollectActivity):
+        Participant = CollectContributor
+    if isinstance(activity, DeadlineActivity):
+        Participant = DeadlineParticipant
+    if isinstance(activity, DateActivitySlot):
+        Participant = SlotParticipant
+
+    if not Participant:
+        raise AttributeError(f'Could not find participant type for {activity}')
+    new = False
+    for email in emails:
+        try:
+            user = Member.objects.filter(email__iexact=email.strip()).first()
+            settings = MemberPlatformSettings.objects.get()
+            if not user:
+                new = True
+                if settings.closed:
+                    email = email.strip()
+                    try:
+                        user = Member.create_by_email(email)
+                        created += 1
+                    except Exception:
+                        failed += 1
+                        continue
+                else:
+                    failed += 1
+                    continue
+            if isinstance(activity, DateActivitySlot):
+                slot = activity
+                participant, _cr = DateParticipant.objects.get_or_create(
+                    user=user,
+                    activity=slot.activity
+                )
+                slot_participant, cr = SlotParticipant.objects.get_or_create(
+                    participant=participant,
+                    slot=slot
+                )
+                if cr:
+                    if not new:
+                        added += 1
+                else:
+                    existing += 1
+            else:
+                if Participant.objects.filter(user=user, activity=activity).exists():
+                    existing += 1
+                else:
+                    if not new:
+                        added += 1
+                    Participant.objects.create(
+                        user=user,
+                        activity=activity,
+                        send_messages=send_messages
+                    )
+        except Exception:
+            failed += 1
+    return {
+        'added': added,
+        'existing': existing,
+        'failed': failed,
+        'created': created
     }

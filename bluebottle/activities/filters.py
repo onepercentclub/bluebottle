@@ -14,6 +14,7 @@ from bluebottle.categories.models import Category
 from bluebottle.geo.models import Place, Location, Country
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.models import Theme
+from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import Skill
 from bluebottle.utils.filters import ElasticSearchFilter, Search, ModelFacet, SegmentFacet
@@ -182,6 +183,31 @@ class MatchingFacet(BooleanFacet):
         if not user.is_authenticated:
             return filters
 
+        if user.location:
+            office = user.location
+            office_filter = Term(
+                office_restriction__restriction='all'
+            ) | (
+                Term(office_restriction__office=office.id) &
+                Term(office_restriction__restriction='office')
+            )
+
+            if office.subregion:
+                office_filter = office_filter | (
+                    Term(office_restriction__subregion=office.subregion.id) &
+                    Term(office_restriction__restriction='office_subregion')
+                )
+
+                if office.subregion.region:
+                    office_filter = office_filter | (
+                        Term(office_restriction__region=office.subregion.region.id) &
+                        Term(office_restriction__restriction='office_region')
+                    )
+            filters = filters & Nested(
+                path='office_restriction',
+                query=office_filter
+            )
+
         if user.search_distance and user.place and not user.any_search_distance:
             place = user.place
             if user.exclude_online:
@@ -243,7 +269,7 @@ class StatusFacet(Facet):
         if filter_values == ['succeeded']:
             return Terms(status=['succeeded', 'partially_funded'])
         if filter_values == ['failed']:
-            return Terms(status=['refunded', 'rejected', 'expired', 'deleted', 'failed', 'cancelled'])
+            return Terms(status=['refunded', 'rejected', 'expired', 'failed', 'cancelled'])
         return MatchNone()
 
 
@@ -309,6 +335,7 @@ class ActivitySearch(Search):
 
     sorting = {
         'date': ['dates.start'],
+        'created': ['created'],
         'distance': ['distance']
     }
     default_sort = "date"
@@ -334,8 +361,10 @@ class ActivitySearch(Search):
             labels={'0': _('In-person'), '1': _('Online/remote')}
         ),
         'team_activity': TeamActivityFacet(field='team_activity'),
-        'office': UntranslatedModelFacet('office', Location),
         'date': ActivityDateRangeFacet(),
+        'office': UntranslatedModelFacet('office', Location),
+        'office_subregion': UntranslatedModelFacet('office_subregion', OfficeSubRegion),
+        'office_region': UntranslatedModelFacet('office_region', OfficeRegion),
     }
 
     possible_facets = {
@@ -349,6 +378,15 @@ class ActivitySearch(Search):
 
     def sort(self, search):
         search = super().sort(search)
+
+        if self._sort == '-created':
+            search = search.sort({
+                "created": {
+                    "order": "desc",
+                }
+            })
+            return search
+
         if self._sort == 'distance':
             request = get_current_request()
             place_id = request.GET.get('place')

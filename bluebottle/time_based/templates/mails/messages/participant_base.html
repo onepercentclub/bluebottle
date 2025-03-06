@@ -18,3 +18,12 @@
   <a href="{% message_url action_link %}"
        class="action-email">{{ action_title }}</a>
 {% endblock %}`
+
+
+{% block end_message %}
+  <div class="info-box">
+      {% blocktrans context 'email' %}
+        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If you are unable to participate, please withdraw in time so we can find a suitable solution.
+      {% endblocktrans %}
+  </div>
+{% endblock %}

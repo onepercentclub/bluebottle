@@ -8,6 +8,7 @@ from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone, now
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.activities.messages import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -620,17 +621,11 @@ class ParticipantTriggerTestCase(object):
         )
         self.assertEqual(participant.status, "accepted")
 
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.assertEqual(
             mail.outbox[0].subject,
             'You have been added to the activity "{}" 🎉'.format(
-                self.review_activity.title
-            ),
-        )
-        self.assertEqual(
-            mail.outbox[1].subject,
-            'A participant has been added to your activity "{}" 🎉'.format(
                 self.review_activity.title
             ),
         )
@@ -1465,6 +1460,25 @@ class RegistrationTriggerTestBase:
         with self.execute(user=self.staff):
             self.assertNotificationEffect(
                 ParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                ManagerParticipantAddedOwnerNotification
+            )
+
+    def test_added_by_staff_is_active(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.model = PeriodicRegistrationFactory.build(
+            activity=self.activity,
+            user=self.user,
+        )
+        with self.execute(user=self.staff):
+            self.assertNoNotificationEffect(
+                ParticipantAddedNotification
+            )
+            self.assertNotificationEffect(
+                InactiveParticipantAddedNotification
             )
             self.assertNotificationEffect(
                 ManagerParticipantAddedOwnerNotification

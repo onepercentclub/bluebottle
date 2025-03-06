@@ -81,6 +81,7 @@ class StripePayment(Payment):
     def update(self):
         stripe = get_stripe()
         intent = self.payment_intent.intent
+
         if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
             self.states.require_action(save=True)
         elif len(intent.charges) == 0 and self.status != self.states.action_needed.value:
@@ -209,6 +210,15 @@ class StripeSourcePayment(Payment):
 
 class StripePaymentProvider(PaymentProvider):
     title = 'Stripe'
+
+    country = models.CharField(
+        max_length=2,
+        default="NL",
+        verbose_name=_('Country of primary stripe account'),
+        help_text=_(
+            'Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. '
+        )
+    )
 
     stripe_publishable_key = models.CharField(
         max_length=200,
@@ -373,18 +383,45 @@ class StripePayoutAccount(PayoutAccount):
                 type="custom",
                 settings=self.account_settings,
                 business_type=self.business_type,
-                capabilities={
-                    "transfers": {"requested": True},
-                    "card_payments": {"requested": True},
-                },
+                capabilities=self.capabilities,
                 business_profile={"url": url, "mcc": "8398"},
                 metadata=self.metadata,
+                tos_acceptance={'service_agreement': self.service_agreement},
             )
 
             self.account_id = account.id
             self.update(account)
 
         super().save(*args, **kwargs)
+
+    _spec = None
+
+    @property
+    def spec(self):
+        stripe = get_stripe()
+
+        if not self._spec or self._spec.id != self.country:
+            self._spec = stripe.CountrySpec.retrieve(id=self.country)
+
+        return self._spec
+
+    @property
+    def service_agreement(self):
+        if 'card_payments' in self.capabilities:
+            return 'full'
+        else:
+            return 'recipient'
+
+    @property
+    def capabilities(self):
+        capabilities = {
+            "transfers": {"requested": True},
+        }
+
+        if self.spec.supported_bank_account_currencies:
+            capabilities['card_payments'] = {"requested": True}
+
+        return capabilities
 
     @property
     def verification_link(self):
@@ -410,9 +447,14 @@ class StripePayoutAccount(PayoutAccount):
         except AttributeError:
             try:
                 self.verified = (
-                    data.company.owners_provided or
-                    data.company.executives_provided or
-                    data.company.directors_provided
+                    data.requirements.currently_due == [] and
+                    data.requirements.past_due == [] and
+                    data.requirements.pending_verification == [] and
+                    data.future_requirements.currently_due == [] and
+                    data.future_requirements.past_due == [] and
+                    data.future_requirements.pending_verification == [] and
+                    data.charges_enabled and
+                    data.payouts_enabled
                 )
             except AttributeError:
                 pass
@@ -428,8 +470,6 @@ class StripePayoutAccount(PayoutAccount):
             stripe = get_stripe()
             account = stripe.Account.retrieve(self.account_id)
         except AuthenticationError:
-            account = {}
-        if not settings.LIVE_PAYMENTS_ENABLED and 'external_accounts' not in account:
             account = {}
         return account
 
@@ -453,6 +493,35 @@ class StripePayoutAccount(PayoutAccount):
         if self.account:
             del self.account
         self.update(self.account)
+        self.set_external_accounts()
+
+    def set_external_accounts(self):
+        external_account_ids = [
+            external_account.id for external_account
+            in self.account.external_accounts.data
+        ]
+        for bank_account in self.external_accounts.all():
+            if bank_account.account_id not in external_account_ids:
+                bank_account.delete()
+
+        for external_account in self.account.external_accounts.data:
+            status = 'new'
+            if (
+                self.status == 'verified' and
+                external_account.requirements.currently_due == [] and
+                external_account.requirements.past_due == [] and
+                external_account.requirements.pending_verification == [] and
+                external_account.future_requirements.currently_due == [] and
+                external_account.future_requirements.past_due == [] and
+                external_account.future_requirements.pending_verification == []
+            ):
+                status = 'verified'
+
+            ExternalAccount.objects.update_or_create(
+                connect_account=self,
+                account_id=external_account.id,
+                defaults={'status': status}
+            )
 
     class Meta(object):
         verbose_name = _('stripe payout account')

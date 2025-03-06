@@ -58,7 +58,7 @@ class TimeBasedActivityListAPITestCase:
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
-        self.defaults['description'] = json.dumps({'html': '', 'delta': ''})
+        self.defaults['description'] = ''
         self.perform_create(user=self.user)
 
         self.assertStatus(status.HTTP_201_CREATED)

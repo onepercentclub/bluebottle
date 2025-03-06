@@ -1,10 +1,10 @@
 from builtins import object
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dateutil.parser import parse
 from django.db import connection
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import get_current_timezone, make_aware
+from django.utils.timezone import get_current_timezone, make_aware, now
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
@@ -193,6 +193,20 @@ class DeadlineField(serializers.DateTimeField):
             self.fail('invalid', format='date')
 
 
+class MaxDeadlineValidator(object):
+    """
+    Validates that the reward activity is the same as the donation activity
+    """
+    message = _('The deadline should not be more then 60 days in the future')
+
+    def __call__(self, data):
+        if (
+            data['deadline'] and
+            data['deadline'] >= now() + timedelta(days=60)
+        ):
+            raise ValidationError({'deadline': self.message})
+
+
 class FundingListSerializer(BaseActivityListSerializer):
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
@@ -292,15 +306,9 @@ class FundingSerializer(BaseActivitySerializer):
         },
     )
 
-    def __init__(self, instance=None, *args, **kwargs):
-        super().__init__(instance, *args, **kwargs)
-
-        if not instance or instance.status in ("draft", "needs_work", "submitted"):
-            for key in self.fields:
-                self.fields[key].allow_blank = True
-                self.fields[key].validators = []
-                self.fields[key].allow_null = True
-                self.fields[key].required = False
+    validators = [
+        MaxDeadlineValidator(),
+    ]
 
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:

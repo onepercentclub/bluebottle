@@ -37,6 +37,9 @@
 
   .paginator {
     text-align: right;
+    a {
+      padding-left: 8px;
+    }
 
     @include for-mobile {
       text-align: left;
@@ -248,7 +251,6 @@
 /* PAGINATOR */
 
 .paginator {
-  display: none;
   line-height: normal;
   padding: 0 !important;
   margin: 0;

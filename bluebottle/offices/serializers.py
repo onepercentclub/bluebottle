@@ -1,11 +1,11 @@
 from builtins import object
 
-from rest_framework import serializers
+from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.offices.models import OfficeSubRegion, OfficeRegion
 
 
-class SubregionSerializer(serializers.ModelSerializer):
+class SubregionSerializer(ModelSerializer):
 
     class Meta(object):
         model = OfficeSubRegion
@@ -22,7 +22,7 @@ class SubregionSerializer(serializers.ModelSerializer):
     }
 
 
-class RegionSerializer(serializers.ModelSerializer):
+class RegionSerializer(ModelSerializer):
 
     class Meta(object):
         model = OfficeRegion

@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.time_based.views import (
     ScheduleTransitionList,
@@ -34,104 +34,141 @@ from bluebottle.time_based.views.slots import (
 )
 
 urlpatterns = [
-    url(r'^$',
+    re_path(
+        r'^$',
         ScheduleActivityListView.as_view(),
-        name='schedule-list'),
-    url(r'^/(?P<pk>\d+)$',
+        name='schedule-list'
+    ),
+    re_path(
+        r'^/(?P<pk>\d+)$',
         ScheduleActivityDetailView.as_view(),
-        name='schedule-detail'),
-    url(r'^/transitions$',
+        name='schedule-detail'
+    ),
+    re_path(
+        r'^/transitions$',
         ScheduleTransitionList.as_view(),
-        name='schedule-transition-list'),
+        name='schedule-transition-list'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/registrations/$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/registrations/$',
         ScheduleRelatedRegistrationList.as_view(),
-        name='related-schedule-registrations'),
-    url(r'^/registrations/$',
+        name='related-schedule-registrations'
+    ),
+    re_path(
+        r'^/registrations/$',
         ScheduleRegistrationList.as_view(),
-        name='schedule-registration-list'),
-    url(r'^/registrations/transitions$',
+        name='schedule-registration-list'
+    ),
+    re_path(
+        r'^/registrations/transitions$',
         ScheduleRegistrationTransitionList.as_view(),
-        name='schedule-registration-transitions'),
-    url(r'^/registrations/(?P<pk>\d+)$',
+        name='schedule-registration-transitions'
+    ),
+    re_path(
+        r'^/registrations/(?P<pk>\d+)$',
         ScheduleRegistrationDetail.as_view(),
-        name='schedule-registration-detail'),
-    url(r'^/registrations/(?P<pk>\d+)/document$',
+        name='schedule-registration-detail'
+    ),
+    re_path(
+        r'^/registrations/(?P<pk>\d+)/document$',
         ScheduleRegistrationDocumentDetail.as_view(),
-        name='schedule-registration-document'),
+        name='schedule-registration-document'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/team-registrations/$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/team-registrations/$',
         TeamScheduleRelatedRegistrationList.as_view(),
-        name='related-team-schedule-registrations'),
-    url(r'^/team-registrations/$',
+        name='related-team-schedule-registrations'
+    ),
+    re_path(
+        r'^/team-registrations/$',
         TeamScheduleRegistrationList.as_view(),
-        name='team-schedule-registration-list'),
-    url(r'^/team-registrations/(?P<pk>\d+)$',
+        name='team-schedule-registration-list'
+    ),
+    re_path(
+        r'^/team-registrations/(?P<pk>\d+)$',
         TeamScheduleRegistrationDetail.as_view(),
-        name='team-schedule-registration-detail'),
-    url(r'^/team-registrations/transitions$',
+        name='team-schedule-registration-detail'
+    ),
+    re_path(
+        r'^/team-registrations/transitions$',
         TeamScheduleRegistrationTransitionList.as_view(),
-        name="team-schedule-registration-transitions"),
-    url(
+        name="team-schedule-registration-transitions"
+    ),
+    re_path(
         r"^/team-registrations/(?P<pk>\d+)/document$",
         TeamScheduleRegistrationDocumentDetail.as_view(),
         name="team-schedule-registration-document",
     ),
-    url(
+    re_path(
         r"^/(?P<activity_id>\d+)/participants$",
         ScheduleRelatedParticipantList.as_view(),
-        name='schedule-participants'),
-    url(r'^/participants/transitions$',
+        name='schedule-participants'
+    ),
+    re_path(
+        r'^/participants/transitions$',
         ScheduleParticipantTransitionList.as_view(),
-        name='schedule-participant-transitions'),
-    url(r'^/participants/(?P<pk>\d+)$',
+        name='schedule-participant-transitions'
+    ),
+    re_path(
+        r'^/participants/(?P<pk>\d+)$',
         ScheduleParticipantDetail.as_view(),
-        name="schedule-participant-detail"),
+        name="schedule-participant-detail"
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/team-participants$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/team-participants$',
         TeamScheduleRelatedParticipantList.as_view(),
-        name='team-schedule-participants'),
-    url(r'^/team-participants/(?P<pk>\d+)$',
+        name='team-schedule-participants'
+    ),
+    re_path(
+        r'^/team-participants/(?P<pk>\d+)$',
         TeamScheduleParticipantDetail.as_view(),
-        name="team-schedule-participant-detail"),
-    url(r'^/team-participants/transitions$',
+        name="team-schedule-participant-detail"
+    ),
+    re_path(
+        r'^/team-participants/transitions$',
         TeamScheduleParticipantTransitionList.as_view(),
-        name='team-schedule-participant-transitions'),
+        name='team-schedule-participant-transitions'
+    ),
 
-    url(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),
-    url(
+    re_path(r"/slots$", ScheduleSlotListView.as_view(), name="schedule-slot-list"),
+    re_path(
         r"^/slots/(?P<pk>\d+)$",
         ScheduleSlotDetailView.as_view(),
         name="schedule-slot-detail",
     ),
-    url(
+    re_path(
         r"^/slots/ical/(?P<pk>\d+)$",
         ScheduleSlotSlotIcalView.as_view(),
         name="schedule-slot-ical",
     ),
 
-    url(r"/team-slots$", TeamScheduleSlotListView.as_view(), name="team-schedule-slot-list"),
-    url(
+    re_path(r"/team-slots$", TeamScheduleSlotListView.as_view(), name="team-schedule-slot-list"),
+    re_path(
         r"^/team-slots/(?P<pk>\d+)$",
         TeamScheduleSlotDetailView.as_view(),
         name="team-schedule-slot-detail",
     ),
-    url(
+    re_path(
         r"^/team-slots/ical/(?P<pk>\d+)$",
         TeamScheduleSlotSlotIcalView.as_view(),
         name="team-schedule-slot-ical",
     ),
 
-    url(r'^/team-slots/(?P<slot_id>\d+)/team-participants$',
+    re_path(
+        r'^/team-slots/(?P<slot_id>\d+)/team-participants$',
         TeamSlotScheduleRelatedParticipantList.as_view(),
-        name='slot-schedule-participants'),
+        name='slot-schedule-participants'
+    ),
 
-    url(
+    re_path(
         r"^/export/(?P<pk>[\d]+)$",
         ScheduleParticipantExportView.as_view(),
         name="schedule-participant-export",
     ),
-    url(
+    re_path(
         r"^/teams/export/(?P<pk>[\d]+)$",
         TeamScheduleParticipantExportView.as_view(),
         name="team-schedule-participant-export",

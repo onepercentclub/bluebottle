@@ -1,4 +1,6 @@
 # coding=utf-8
+import json
+
 import datetime
 from builtins import range
 from builtins import str
@@ -179,20 +181,20 @@ class SegmentDetailAPITestCase(APITestCase):
         self.assertAttribute('slug', self.model.slug)
         self.assertAttribute('email-domains', self.model.email_domains)
         self.assertAttribute('tag-line', self.model.tag_line)
-        self.assertAttribute('story', self.model.story)
+        self.assertAttribute('story', self.model.story.html)
         self.assertAttribute('background-color', self.model.background_color)
         self.assertAttribute('text-color', self.model.text_color)
         self.assertAttribute('logo')
         self.assertAttribute('cover-image')
 
-    def test_story_escaped(self):
-        self.model.story = '<script>test</script><b>test</b>'
+    def test_story_safe(self):
+        self.model.story = json.dumps({'html': '<script>test</script><b>test</b>', 'delta': ''})
         self.model.save()
 
         self.perform_get()
 
         self.assertStatus(status.HTTP_200_OK)
-        self.assertAttribute('story', '&lt;script&gt;test&lt;/script&gt;<b>test</b>')
+        self.assertAttribute('story', '<b>test</b>')
 
     def test_retrieve_closed_site(self):
         with self.closed_site():

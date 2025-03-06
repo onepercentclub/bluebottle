@@ -1,6 +1,8 @@
 from builtins import object
 import factory
 
+from bluebottle.test.factory_models import generate_rich_text
+
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -14,7 +16,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
         model = Initiative
 
     title = factory.Faker('sentence')
-    story = factory.Faker('text')
+    story = factory.LazyFunction(generate_rich_text)
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
     activity_managers = factory.SubFactory(BlueBottleUserFactory)

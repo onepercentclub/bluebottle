@@ -1,3 +1,4 @@
+import json
 from builtins import range
 from builtins import str
 
@@ -165,7 +166,7 @@ class HomeTestCase(APITestCase):
         step = get_include(response, 'pages/blocks/steps/steps')
         self.assertEqual(
             step['attributes']['text'],
-            '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+            'Some text'
         )
 
     def test_quotes(self):
@@ -309,12 +310,16 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To <a>link</a> to the dark side!"
+            'To <a href="#">link</a> to the dark side!'
         )
 
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.text = json.dumps({
+            'html': "To <b>boldly</b> go were no man has gone before!",
+            'delta': ''
+        })
+
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             block.image = File(f)
             block.save()

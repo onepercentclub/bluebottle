@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.collect.views import (
     CollectContributorExportView, CollectContributorTransitionList,
@@ -10,49 +10,67 @@ from bluebottle.collect.views import (
 
 
 urlpatterns = [
-    url(r'^$',
+    re_path(
+        r'^$',
         CollectActivityListView.as_view(),
-        name='collect-activity-list'),
+        name='collect-activity-list'
+    ),
 
-    url(r'^/(?P<pk>\d+)$',
+    re_path(
+        r'^/(?P<pk>\d+)$',
         CollectActivityDetailView.as_view(),
-        name='collect-activity-detail'),
+        name='collect-activity-detail'
+    ),
 
-    url(r'^/transitions$',
+    re_path(
+        r'^/transitions$',
         CollectActivityTransitionList.as_view(),
-        name='collect-activity-transition-list'),
+        name='collect-activity-transition-list'
+    ),
 
-    url(r'^/(?P<activity_id>\d+)/contributors$',
+    re_path(
+        r'^/(?P<activity_id>\d+)/contributors$',
         CollectActivityRelatedCollectContributorList.as_view(),
-        name='related-collect-contributors'),
+        name='related-collect-contributors'
+    ),
 
-    url(r'^/contributors$',
+    re_path(
+        r'^/contributors$',
         CollectContributorList.as_view(),
-        name='collect-contributor-list'),
-    url(r'^/contributors/(?P<pk>\d+)$',
+        name='collect-contributor-list'
+    ),
+    re_path(
+        r'^/contributors/(?P<pk>\d+)$',
         CollectContributorDetail.as_view(),
-        name='collect-contributor-detail'),
-    url(r'^/contributors/transitions$',
+        name='collect-contributor-detail'
+    ),
+    re_path(
+        r'^/contributors/transitions$',
         CollectContributorTransitionList.as_view(),
-        name='collect-contributor-transition-list'),
+        name='collect-contributor-transition-list'
+    ),
 
-    url(r'^/export/(?P<pk>[\d]+)$',
+    re_path(
+        r'^/export/(?P<pk>[\d]+)$',
         CollectContributorExportView.as_view(),
-        name='collect-contributors-export'),
+        name='collect-contributors-export'
+    ),
 
-    url(
+    re_path(
         r'^/types/$',
         CollectTypeList.as_view(),
         name='collect-type-list'
     ),
-    url(
+    re_path(
         r'^/types/(?P<pk>\d+)$',
         CollectTypeDetail.as_view(),
         name='collect-type-detail'
     ),
 
-    url(r'^/ical/(?P<pk>\d+)$',
+    re_path(
+        r'^/ical/(?P<pk>\d+)$',
         CollectIcalView.as_view(),
-        name='collect-ical'),
+        name='collect-ical'
+    ),
 
 ]

@@ -1,24 +1,14 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline, BaseContributorInline
+    ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
 )
 from bluebottle.activities.models import EffortContribution
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import export_as_csv_action, admin_info_box
-
-
-class DeedAdminForm(ActivityForm):
-    class Meta(object):
-        model = Deed
-        fields = '__all__'
-        widgets = {
-            'description': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 class EffortContributionInlineAdmin(admin.TabularInline):
@@ -34,7 +24,7 @@ class DeedParticipantAdmin(ContributorChildAdmin):
     raw_id_fields = ['user', 'activity']
     fields = ['activity', 'user', 'status', 'states'] + readonly_fields
     list_display = ['__str__', 'activity_link', 'status']
-    inlines = ContributorChildAdmin.inlines + [EffortContributionInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + (EffortContributionInlineAdmin, )
 
 
 class DeedParticipantInline(BaseContributorInline):
@@ -46,7 +36,6 @@ class DeedParticipantInline(BaseContributorInline):
 @admin.register(Deed)
 class DeedAdmin(ActivityChildAdmin):
     base_model = Deed
-    form = DeedAdminForm
     inlines = (TeamInline, DeedParticipantInline, UpdateInline, FollowAdminInline)
     list_filter = ['status']
     search_fields = ['title', 'description']

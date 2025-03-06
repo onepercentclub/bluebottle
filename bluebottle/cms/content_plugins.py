@@ -5,8 +5,6 @@ from django.utils.translation import gettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 from fluent_contents.forms import ContentItemForm
 
-from django_summernote.fields import SummernoteWidget
-
 from bluebottle.cms.admin import (
     QuoteInline, StatInline, StepInline, LogoInline, ContentLinkInline,
     GreetingInline
@@ -148,27 +146,10 @@ class PlainTextBlockPlugin(CMSContentPlugin):
     category = _('Homepage')
 
 
-class TextForm(CMSContentItemForm):
-    text = forms.fields.CharField(
-        required=True,
-        widget=SummernoteWidget(
-            attrs={
-                'summernote': {
-                    'toolbar': [
-                        ['style', ['bold', 'italic', 'underline', 'clear']],
-                        ['para', ['ul', 'ol']],
-                    ]
-                }
-            }
-        )
-    )
-
-
 @plugin_pool.register
 class ImagePlainTextBlockPlugin(CMSContentPlugin):
     model = ImagePlainTextItem
     category = _('Multimedia')
-    form = TextForm
 
 
 @plugin_pool.register

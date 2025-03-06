@@ -53,7 +53,7 @@ class DashboardWidgetTestCase(BluebottleAdminTestCase):
         super(DashboardWidgetTestCase, self).setUp()
         self.dashboard = UserDashboardModuleFactory.create(
             title='Links',
-            user=self.superuser.id,
+            user=self.superuser,
             module='jet.dashboard.modules.LinkList'
         )
         self.widget_admin_url = reverse('jet-dashboard:update_module', args=(self.dashboard.id,))

@@ -59,10 +59,6 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         self.token_url = reverse('access-token', kwargs={'backend': 'facebook'})
 
     @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
-    @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
@@ -84,114 +80,80 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                 self.assertEqual(response.data, {})
 
     @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
-    @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
     def test_token_invalid_signed_request(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
-            with mock.patch(
-                    'social_django.utils.BACKENDS',
-                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock):
-                    response = self.client.post(
-                        self.token_url,
-                        {
-                            'signed_request': 'test-invalid',
-                            'access_token': 'test-token'
-                        },
-                        token=self.user_token)
-                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            with httmock.HTTMock(facebook_me_mock):
+                response = self.client.post(
+                    self.token_url,
+                    {
+                        'signed_request': 'test-invalid',
+                        'access_token': 'test-token'
+                    },
+                    token=self.user_token)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
     @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
     def test_token_invalid_secret(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-invalid'):
-            with mock.patch(
-                    'social_django.utils.BACKENDS',
-                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock,
-                                     facebook_access_token):
-                    response = self.client.post(
-                        self.token_url,
-                        {
-                            'signed_request': 'test-signed-request',
-                            'access_token': 'test-token'
-                        },
-                        token=self.user_token)
-                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            with httmock.HTTMock(facebook_me_mock, facebook_access_token):
+                response = self.client.post(
+                    self.token_url,
+                    {
+                        'signed_request': 'test-signed-request',
+                        'access_token': 'test-token'
+                    },
+                    token=self.user_token)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
     @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
     def test_token_invalid_token(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
-            with mock.patch(
-                    'social_django.utils.BACKENDS',
-                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock,
-                                     facebook_access_token,
-                                     facebook_me_permissions_mock):
-                    response = self.client.post(
-                        self.token_url,
-                        {
-                            'signed_request': 'test-signed-request',
-                            'access_token': 'invalid-token'
-                        },
-                        token=self.user_token)
-                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            with httmock.HTTMock(
+                facebook_me_mock,
+                facebook_access_token,
+                facebook_me_permissions_mock
+            ):
+                response = self.client.post(
+                    self.token_url,
+                    {
+                        'signed_request': 'test-signed-request',
+                        'access_token': 'invalid-token'
+                    },
+                    token=self.user_token)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
     @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
     def test_token_unauthenticated(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-invalid'):
-            with mock.patch(
-                    'social_django.utils.BACKENDS',
-                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock):
-                    response = self.client.post(
-                        self.token_url,
-                        {
-                            'signed_request': 'test-signed-request',
-                            'access_token': 'test-token'
-                        }
-                    )
-                    self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            with httmock.HTTMock(facebook_me_mock):
+                response = self.client.post(
+                    self.token_url,
+                    {
+                        'signed_request': 'test-signed-request',
+                        'access_token': 'test-token'
+                    }
+                )
+                self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @mock.patch(
-        'social_django.utils.BACKENDS',
-        ['bluebottle.social.backends.NoStateFacebookOAuth2']
-    )
     @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
     def test_token_no_data(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-invalid'):
-            with mock.patch(
-                    'social_django.utils.BACKENDS',
-                    ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock):
-                    response = self.client.post(self.token_url,
-                                                token=self.user_token)
-                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            with httmock.HTTMock(facebook_me_mock):
+                response = self.client.post(self.token_url,
+                                            token=self.user_token)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

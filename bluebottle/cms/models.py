@@ -215,10 +215,10 @@ class Quote(models.Model):
 
 class Person(models.Model):
     block = models.ForeignKey('cms.PeopleContent', related_name='persons', on_delete=models.CASCADE)
-    name = models.CharField(max_length=60)
-    role = models.CharField(max_length=60, null=True, blank=True)
-    email = models.CharField(max_length=60, null=True, blank=True)
-    phone_number = models.CharField(max_length=60, null=True, blank=True)
+    name = models.CharField(_('Name'), max_length=60)
+    role = models.CharField(_('Role'), max_length=60, null=True, blank=True)
+    email = models.CharField(_('Email'), max_length=60, null=True, blank=True)
+    phone_number = models.CharField(_('Phone number'), max_length=60, null=True, blank=True)
 
     avatar = ImageField(
         _("Image"), max_length=255, blank=True, null=True,

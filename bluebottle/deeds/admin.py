@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
+from django.contrib import messages
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
@@ -9,6 +10,8 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.admin import FollowAdminInline
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import export_as_csv_action, admin_info_box
+from bluebottle.activities.utils import publish_to_activitypub
+from bluebottle.pub.models import Actor, Platform
 
 
 class EffortContributionInlineAdmin(admin.TabularInline):
@@ -85,4 +88,36 @@ class DeedAdmin(ActivityChildAdmin):
         ('end', 'End'),
     )
 
-    actions = [export_as_csv_action(fields=export_as_csv_fields)]
+    actions = [export_as_csv_action(fields=export_as_csv_fields), 'publish_deeds']
+
+    def publish_deeds(self, request, queryset):
+        count = 0
+        for deed in queryset:
+            try:
+                # Ensure owner has an ActivityPub account
+                if not deed.owner.activitypub_account:
+                    platform, _ = Platform.objects.get_or_create(
+                        domain=request.get_host()
+                    )
+                    Actor.objects.create(
+                        user=deed.owner,
+                        username=deed.owner.username,
+                        platform=platform
+                    )
+
+                publish_to_activitypub(deed)
+                count += 1
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f'Could not publish deed: {deed.title}. Error: {str(e)}',
+                    level=messages.ERROR
+                )
+
+        self.message_user(
+            request,
+            f'Successfully published {count} deed(s) to ActivityPub',
+            level=messages.SUCCESS
+        )
+
+    publish_deeds.short_description = "Publish selected deeds to ActivityPub"

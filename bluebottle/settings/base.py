@@ -331,6 +331,7 @@ TENANT_APPS = (
 
     # FB Auth
     'bluebottle.auth',
+    'bluebottle.pub',
 
     'bluebottle.fsm',
     'django.contrib.admin',

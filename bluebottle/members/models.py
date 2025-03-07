@@ -432,6 +432,18 @@ class Member(BlueBottleBaseUser):
             self.submitted_initiative_notifications = False
         super(Member, self).save(*args, **kwargs)
 
+    @property
+    def activitypub_account(self):
+        """
+        Get the ActivityPub account associated with this member.
+        Returns None if no account exists.
+        """
+        from bluebottle.pub.models import Actor
+        try:
+            return Actor.objects.get(user=self)
+        except Actor.DoesNotExist:
+            return None
+
 
 class UserSegment(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)

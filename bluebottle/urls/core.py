@@ -78,6 +78,16 @@ urlpatterns = [
         include('bluebottle.deeds.urls.api')
     ),
     re_path(
+        r'^api/deeds',
+        include('bluebottle.deeds.urls.pub')
+    ),
+
+    re_path(
+        r'^api/pub',
+        include('bluebottle.pub.urls')
+    ),
+
+    re_path(
         r'^api/collect',
         include('bluebottle.collect.urls.api')
     ),

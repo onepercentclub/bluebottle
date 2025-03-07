@@ -1,6 +1,6 @@
 from builtins import object
 from builtins import str
-from collections import Iterable
+from collections.abc import Iterable
 from functools import partial
 
 from django.template.loader import render_to_string

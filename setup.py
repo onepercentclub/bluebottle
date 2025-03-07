@@ -69,7 +69,7 @@ install_requires = [
     'django-tenant-schemas==1.12.0',
     'django-tinymce==4.1.0',
     'django-tools==0.48.3',
-    'django-two-factor-auth[phonenumbers]==1.15.2',
+    'django-two-factor-auth[phonenumbers]==1.17.0',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
     'django_polymorphic==3.1.0',

@@ -123,6 +123,7 @@ install_requires = [
     'surlex==0.2.0',
     'tablib==0.14.0',
     'timezonefinder==3.4.2',
+    'twilio==9.4.6',
     'unicodecsv==0.14.1',
     'wcag-contrast-ratio==0.9',
     'wheel==0.29.0',

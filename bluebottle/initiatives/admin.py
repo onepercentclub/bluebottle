@@ -259,7 +259,8 @@ class InitiativePlatformSettingsAdmin(NonSortableParentAdmin, BasePlatformSettin
                 'enable_open_initiatives',
                 'enable_participant_exports',
                 'enable_matching_emails',
-                'include_full_activities'
+                'include_full_activities',
+                'create_flow'
             )
         }),
     )

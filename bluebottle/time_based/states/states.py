@@ -127,8 +127,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
-    submit = None
-
     publish = Transition(
         [
             ActivityStateMachine.draft,
@@ -176,8 +174,6 @@ class DateStateMachine(TimeBasedStateMachine):
         )
     )
 
-    submit = None
-
 
 @register(PeriodActivity)
 class PeriodActivityStateMachine(TimeBasedStateMachine):
@@ -211,8 +207,6 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
             "The status of the activity will be recalculated."
         ),
     )
-
-    submit = None
 
     publish = Transition(
         [

@@ -22,6 +22,8 @@ from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
+from bluebottle.organizations.models import Organization
+
 
 @python_2_unicode_compatible
 class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
@@ -53,7 +55,24 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     review_status = models.CharField(max_length=40, default='draft')
 
-    initiative = models.ForeignKey(Initiative, related_name='activities', on_delete=models.CASCADE)
+    initiative = models.ForeignKey(
+        Initiative,
+        related_name='activities',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
+    theme = models.ForeignKey(
+        'initiatives.Theme', null=True, blank=True, on_delete=SET_NULL
+    )
+    organization = models.ForeignKey(
+        Organization,
+        null=True,
+        blank=True,
+        on_delete=SET_NULL,
+        related_name='activities'
+    )
 
     office_location = models.ForeignKey(
         'geo.Location', verbose_name=_('Host office'),
@@ -156,6 +175,16 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     auto_approve = True
 
     activity_type = _('Activity')
+
+    @property
+    def owners(self):
+        yield self.owner
+
+        if self.initiative:
+            yield self.initiative.owner
+
+            for manager in self.initiative.activity_managers.all():
+                yield manager
 
     @property
     def succeeded_contributor_count(self):

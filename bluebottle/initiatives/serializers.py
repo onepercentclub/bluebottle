@@ -90,7 +90,8 @@ class MemberSerializer(ModelSerializer):
         fields = (
             'id', 'first_name', 'last_name', 'initials',
             'full_name', 'short_name', 'is_active', 'date_joined',
-            'about_me', 'is_co_financer', 'is_anonymous', 'avatar'
+            'about_me', 'is_co_financer', 'is_anonymous', 'avatar',
+            'is_staff'
         )
 
     class JSONAPIMeta(object):
@@ -566,7 +567,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_participant_exports',
             'enable_open_initiatives',
             'has_locations',
-            'enable_matching_emails'
+            'enable_matching_emails',
+            'create_flow'
         )
 
 

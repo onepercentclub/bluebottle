@@ -217,7 +217,9 @@ class BaseActivitySerializer(ModelSerializer):
             return url
 
     def get_partner_organization(self, obj):
-        if obj.initiative.organization:
+        if obj.organization:
+            return obj.organization
+        elif obj.initiative and obj.initiative.organization:
             return obj.initiative.organization
 
     matching_properties = MatchingPropertiesField()
@@ -229,6 +231,8 @@ class BaseActivitySerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
@@ -286,7 +290,8 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_description',
             'next_step_button_label',
             'admin_url',
-            'partner_organization'
+            'partner_organization',
+            'theme'
         )
 
         meta_fields = (

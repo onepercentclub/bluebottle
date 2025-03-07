@@ -86,9 +86,12 @@ class RegistrationSerializer(ModelSerializer):
 
         user = self.context['request'].user
 
-        privileged_users = [instance.user, instance.activity.owner] + list(
-            instance.activity.initiative.activity_managers.all()
-        )
+        privileged_users = [instance.user, instance.activity.owner]
+        if instance.activity.initiative:
+            privileged_users += list(
+                instance.activity.initiative.activity_managers.all()
+            )
+
         if (
             user not in privileged_users and
             not user.is_staff and

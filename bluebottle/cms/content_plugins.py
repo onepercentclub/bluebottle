@@ -6,11 +6,11 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 from fluent_contents.forms import ContentItemForm
 
 from bluebottle.cms.admin import (
-    QuoteInline, StatInline, StepInline, LogoInline, ContentLinkInline,
+    QuoteInline, PersonInline, StatInline, StepInline, LogoInline, ContentLinkInline,
     GreetingInline
 )
 from bluebottle.cms.models import (
-    QuotesContent, StatsContent, ShareResultsContent, SupporterTotalContent,
+    QuotesContent, PeopleContent, StatsContent, ShareResultsContent, SupporterTotalContent,
     StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent, ProjectsMapContent,
     LinksContent, WelcomeContent, HomepageStatisticsContent,
@@ -46,6 +46,13 @@ class QuotesBlockPlugin(CMSContentPlugin):
     model = QuotesContent
     inlines = [QuoteInline]
     category = _('Homepage')
+
+
+@plugin_pool.register
+class PeopleBlockPlugin(CMSContentPlugin):
+    model = PeopleContent
+    inlines = [PersonInline]
+    category = _('Multimedia')
 
 
 @plugin_pool.register

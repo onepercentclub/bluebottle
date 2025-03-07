@@ -9,7 +9,6 @@ from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
-from future.utils import python_2_unicode_compatible
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
@@ -39,6 +38,7 @@ class ResultPage(TranslatableModel):
     content = PlaceholderField('content', plugins=[
         'ProjectMapBlockPlugin',
         'QuotesBlockPlugin',
+        'PeopleBlockPlugin',
         'ActivitiesBlockPlugin',
         'ShareResultsBlockPlugin',
         'StatsBlockPlugin',
@@ -74,6 +74,7 @@ class HomePage(SingletonModel, TranslatableModel):
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
         'QuotesBlockPlugin',
+        'PeopleBlockPlugin',
         'DonateButtonBlockPlugin'
     ])
     translations = TranslatedFields()
@@ -87,7 +88,6 @@ class HomePage(SingletonModel, TranslatableModel):
         )
 
 
-@python_2_unicode_compatible
 class LinkPermission(models.Model):
     permission = models.CharField(max_length=255, null=False,
                                   help_text=_('A dot separated app name and permission codename.'))
@@ -98,7 +98,6 @@ class LinkPermission(models.Model):
         return u"{0} - {1}".format(self.permission, self.present)
 
 
-@python_2_unicode_compatible
 class SiteLinks(models.Model):
     language = models.OneToOneField('utils.Language', null=False, on_delete=models.CASCADE)
     has_copyright = models.BooleanField(null=False, default=True)
@@ -216,6 +215,29 @@ class Quote(models.Model):
         resource_name = 'pages/blocks/quotes/quotes'
 
 
+class Person(models.Model):
+    block = models.ForeignKey('cms.PeopleContent', related_name='persons', on_delete=models.CASCADE)
+    name = models.CharField(_('Name'), max_length=60)
+    role = models.CharField(_('Role'), max_length=60, null=True, blank=True)
+    email = models.CharField(_('Email'), max_length=60, null=True, blank=True)
+    phone_number = models.CharField(_('Phone number'), max_length=60, null=True, blank=True)
+
+    avatar = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='people_images/',
+
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people/persons'
+
+
 class TitledContent(ContentItem):
     title = models.CharField(max_length=50, blank=True, null=True)
     sub_title = models.CharField(max_length=400, blank=True, null=True)
@@ -226,7 +248,6 @@ class TitledContent(ContentItem):
         abstract = True
 
 
-@python_2_unicode_compatible
 class QuotesContent(TitledContent):
     type = 'quotes'
     preview_template = 'admin/cms/preview/quotes.html'
@@ -245,7 +266,24 @@ class QuotesContent(TitledContent):
         return self.quotes
 
 
-@python_2_unicode_compatible
+class PeopleContent(TitledContent):
+    type = 'people'
+    preview_template = 'admin/cms/preview/people.html'
+
+    class Meta:
+        verbose_name = _('Persons')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people'
+
+    def __str__(self):
+        return str(self.persons)
+
+    @property
+    def items(self):
+        return self.persons
+
+
 class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
@@ -262,7 +300,6 @@ class StatsContent(TitledContent):
         return str(self.stats)
 
 
-@python_2_unicode_compatible
 class HomepageStatisticsContent(TitledContent):
     type = 'homepage-statistics'
     preview_template = 'admin/cms/preview/homepage-statistics.html'
@@ -290,7 +327,6 @@ class HomepageStatisticsContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class ActivitiesContent(TitledContent):
     type = 'activities'
 
@@ -328,7 +364,6 @@ class ActivitiesContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class DonateButtonContent(TitledContent):
     type = 'donate'
 
@@ -350,7 +385,6 @@ class DonateButtonContent(TitledContent):
         return str(self.funding.title)
 
 
-@python_2_unicode_compatible
 class ProjectsContent(TitledContent):
     type = 'projects'
     action_text = models.CharField(max_length=80,
@@ -370,7 +404,6 @@ class ProjectsContent(TitledContent):
         return str(self.title)
 
 
-@python_2_unicode_compatible
 class ShareResultsContent(TitledContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
@@ -389,7 +422,6 @@ class ShareResultsContent(TitledContent):
         return 'Share results block'
 
 
-@python_2_unicode_compatible
 class ProjectsMapContent(TitledContent):
 
     type = 'projects-map'
@@ -416,7 +448,6 @@ class ProjectsMapContent(TitledContent):
         return 'Projects Map'
 
 
-@python_2_unicode_compatible
 class SupporterTotalContent(TitledContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
@@ -430,7 +461,6 @@ class SupporterTotalContent(TitledContent):
         return 'Supporter total'
 
 
-@python_2_unicode_compatible
 class SlidesContent(TitledContent):
     type = 'slides'
 
@@ -477,7 +507,6 @@ class Step(SortableMixin, models.Model):
         resource_name = 'pages/blocks/steps/steps'
 
 
-@python_2_unicode_compatible
 class StepsContent(TitledContent):
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
@@ -501,7 +530,6 @@ class StepsContent(TitledContent):
         return self.steps
 
 
-@python_2_unicode_compatible
 class LocationsContent(TitledContent):
     type = 'locations'
     locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
@@ -513,7 +541,6 @@ class LocationsContent(TitledContent):
         return str(_('Locations'))
 
 
-@python_2_unicode_compatible
 class CategoriesContent(TitledContent):
     type = 'categories'
     categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
@@ -553,7 +580,6 @@ class Logo(SortableMixin, models.Model):
         resource_name = 'pages/blocks/logos/logos'
 
 
-@python_2_unicode_compatible
 class LogosContent(TitledContent):
     type = 'logos'
 
@@ -594,7 +620,6 @@ class ContentLink(SortableMixin, models.Model):
         resource_name = 'pages/blocks/links/links'
 
 
-@python_2_unicode_compatible
 class LinksContent(TitledContent):
     type = 'links'
 
@@ -613,7 +638,6 @@ class Greeting(models.Model):
     text = models.TextField()
 
 
-@python_2_unicode_compatible
 class WelcomeContent(ContentItem):
     type = 'welcome'
     preview_template = 'admin/cms/preview/default.html'

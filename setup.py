@@ -18,7 +18,7 @@ changes = ''
 install_requires = [
     'Babel==2.16.0',
     'Django==4.2.17',
-    'Pillow==8.3.0',
+    'Pillow==10.4.0',
     'South==1.0.2',
     'South==1.0.2',
     'Sphinx==4.1.2',
@@ -119,7 +119,7 @@ install_requires = [
     'social-auth-app-django==5.4.2',
     'sorl-thumbnail==12.11.0',
     'staticmaps-signature==0.2.0',
-    'stripe==10.2.0',
+    'stripe==10.2.0', 
     'surlex==0.2.0',
     'tablib==0.14.0',
     'timezonefinder==3.4.2',

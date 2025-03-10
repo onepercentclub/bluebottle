@@ -99,7 +99,7 @@ class ReviewStateMachine(ModelStateMachine):
         return InitiativePlatformSettings.load().enable_reviewing
 
     def no_review_needed(self):
-        return InitiativePlatformSettings.load().enable_reviewing
+        return not InitiativePlatformSettings.load().enable_reviewing
 
     initiate = Transition(
         EmptyState(),

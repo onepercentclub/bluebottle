@@ -45,8 +45,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
+    published = models.DateTimeField(
+        _('Published date'),
+        help_text=_('Date that the activity went online.'),
+        null=True, blank=True
+    )
     transition_date = models.DateTimeField(
-        _('transition date'),
+        _('Transition date'),
         help_text=_('Date of the last transition.'),
         null=True, blank=True
     )

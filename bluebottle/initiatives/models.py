@@ -86,6 +86,11 @@ class Initiative(TriggerMixin, ValidatedModelMixin, models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    published = models.DateTimeField(
+        _('Published date'),
+        help_text=_('Date that the initiative went online.'),
+        null=True, blank=True
+    )
 
     has_deleted_data = models.BooleanField(default=False)
 

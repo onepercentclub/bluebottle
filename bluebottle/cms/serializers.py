@@ -16,7 +16,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
 )
 from bluebottle.cms.models import (
-    HomePage, QuotesContent, Quote,
+    HomePage, QuotesContent, Quote, PeopleContent, Person,
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
@@ -38,6 +38,17 @@ class QuoteSerializer(ModelSerializer):
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/quotes/quotes'
+
+
+class PersonSerializer(ModelSerializer):
+    avatar = SorlImageField('100x100', crop='center')
+
+    class Meta(object):
+        model = Person
+        fields = ('id', 'name', 'role', 'email', 'phone_number', 'avatar')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people/persons'
 
 
 class SlideSerializer(ModelSerializer):
@@ -334,6 +345,23 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class PeopleBlockSerializer(BaseBlockSerializer):
+    persons = ResourceRelatedField(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(object):
+        model = PeopleContent
+        fields = ('id', 'block_type', 'title', 'sub_title', 'persons')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/people'
+        included_resources = [
+            'persons'
+        ]
+
+
 class CategoriesBlockSerializer(BaseBlockSerializer):
     categories = ResourceRelatedField(
         many=True,
@@ -535,6 +563,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         LinksBlockSerializer,
         StatsBlockSerializer,
         QuotesBlockSerializer,
+        PeopleBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
@@ -571,7 +600,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page'
+            'full_page', 'persons',
 
         ]
 
@@ -580,8 +609,8 @@ class BlockSerializer(PolymorphicModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
-
         'logos': 'bluebottle.cms.serializers.LogoSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
     }
@@ -610,6 +639,7 @@ class BaseCMSSerializer(ModelSerializer):
             'blocks.links',
             'blocks.slides',
             'blocks.quotes',
+            'blocks.persons',
             'blocks.funding',
             'blocks.funding.image',
             'blocks.logos',
@@ -622,6 +652,7 @@ class BaseCMSSerializer(ModelSerializer):
         'links': 'bluebottle.cms.serializers.LinkSerializer',
         'slides': 'bluebottle.cms.serializers.SlideSerializer',
         'quotes': 'bluebottle.cms.serializers.QuoteSerializer',
+        'persons': 'bluebottle.cms.serializers.PersonSerializer',
         'funding': 'bluebottle.funding.serializers.FundingSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'logos': 'bluebottle.cms.serializers.LogoSerializer',

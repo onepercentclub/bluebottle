@@ -104,6 +104,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
@@ -175,6 +177,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }
@@ -245,6 +249,8 @@ class TestPageAdmin(BluebottleAdminTestCase):
                 "imagetextrounditem-INITIAL_FORMS": "0",
                 "columnsitem-TOTAL_FORMS": "0",
                 "columnsitem-INITIAL_FORMS": "0",
+                "peoplecontent-TOTAL_FORMS": "0",
+                "peoplecontent-INITIAL_FORMS": "0",
 
                 '_continue': 'Save and continue editing',
             }

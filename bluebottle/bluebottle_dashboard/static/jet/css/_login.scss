@@ -70,12 +70,15 @@ body.login {
         content: '';
       }
     }
-
-    input {
+    input:not([type="radio"]):not([type="checkbox"]) {
       clear: both;
       padding: 6px;
       width: 100%;
       box-sizing: border-box;
+    }
+
+    input[type="checkbox"] {
+      display: block;
     }
   }
 

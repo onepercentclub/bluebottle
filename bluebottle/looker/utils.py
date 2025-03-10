@@ -78,6 +78,8 @@ class LookerSSOEmbed(object):
         analytics_settings = AnalyticsPlatformSettings.objects.get()
         member_settings = MemberPlatformSettings.objects.get()
 
+        subregions = list(self.user.subregion_manager.values_list('id', flat=True))
+
         params = OrderedDict([
             ('nonce', self.nonce.decode()),
             ('time', self.time),
@@ -95,7 +97,7 @@ class LookerSSOEmbed(object):
                 'fiscal_month_offset': member_settings.fiscal_month_offset,
                 'user_base': analytics_settings.user_base,
                 'language': properties.LANGUAGE_CODE,
-                'region_manager': self.user.region_manager_id,
+                'region_manager': subregions,
             }),
             ('force_logout_login', True),
         ])

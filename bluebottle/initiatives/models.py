@@ -284,6 +284,10 @@ INITIATIVE_SEARCH_FILTERS = (
     ("country", _("Country")),
     ("theme", _("Theme")),
     ("category", _("Category")),
+    ("open", _("Open initiatives")),
+    ("office", _("Office")),
+    ("office_subregion", _("Office group")),
+    ("office_region", _("Office region")),
 )
 
 

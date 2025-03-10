@@ -125,7 +125,8 @@ class OfficeAdminTest(BluebottleAdminTestCase):
 
     def test_office_filters_region_manager(self):
         request = MockRequest()
-        request.user = BlueBottleUserFactory.create(region_manager=self.subregions[0])
+        request.user = BlueBottleUserFactory.create()
+        request.user.subregion_manager.add(self.subregions[0])
         initiative_settings = InitiativePlatformSettings.objects.get()
         initiative_settings.enable_office_regions = True
         initiative_settings.save()
@@ -205,8 +206,8 @@ class RegionManagerAdminTest(BluebottleAdminTestCase):
         self.office = LocationFactory.create(subregion=self.subregion)
         self.region_manager = BlueBottleUserFactory.create(
             is_staff=True,
-            region_manager=self.subregion
         )
+        self.region_manager.subregion_manager.add(self.subregion)
         region_manager_group = Group.objects.get(name='Region Manager')
         region_manager_group.user_set.add(self.region_manager)
         self.app.set_user(self.region_manager)

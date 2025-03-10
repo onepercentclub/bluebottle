@@ -1,5 +1,6 @@
 from bluebottle.activities.effects import (
-    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect, )
+    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
+    SetPublishedDateEffect, )
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
@@ -9,15 +10,19 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
 )
+from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.time_based.states import ParticipantStateMachine
 
 
-def initiative_is_approved(effect):
-    """
-    The initiative is approved
-    """
-    return effect.instance.initiative and effect.instance.initiative.status == 'approved'
+def should_approve_instantly(effect):
+    if isinstance(effect.instance, Funding):
+        return False
+    review = InitiativePlatformSettings.load().enable_reviewing
+    if effect.instance.initiative is None:
+        return not review
+    return effect.instance.initiative.status == 'approved'
 
 
 def has_organizer(effect):
@@ -41,7 +46,7 @@ class ActivityTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     ActivityStateMachine.auto_approve,
-                    conditions=[initiative_is_approved]
+                    conditions=[should_approve_instantly]
                 )
             ]
         ),
@@ -51,7 +56,7 @@ class ActivityTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     ActivityStateMachine.auto_approve,
-                    conditions=[initiative_is_approved]
+                    conditions=[should_approve_instantly]
                 )
             ]
         ),
@@ -70,6 +75,7 @@ class ActivityTriggers(TriggerManager):
         TransitionTrigger(
             ActivityStateMachine.auto_approve,
             effects=[
+                SetPublishedDateEffect,
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,

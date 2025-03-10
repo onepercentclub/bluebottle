@@ -1,3 +1,4 @@
+from bluebottle.activities.effects import SetPublishedDateEffect
 from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.fsm.effects import RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register, ModelChangedTrigger
@@ -27,8 +28,16 @@ class InitiativeTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            ReviewStateMachine.publish,
+            effects=[
+                SetPublishedDateEffect,
+            ]
+        ),
+
+        TransitionTrigger(
             ReviewStateMachine.approve,
             effects=[
+                SetPublishedDateEffect,
                 RelatedTransitionEffect(
                     'activities',
                     ActivityStateMachine.auto_approve,

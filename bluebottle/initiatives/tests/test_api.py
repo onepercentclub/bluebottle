@@ -100,6 +100,46 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             str(initiative.theme.pk)
         )
         self.assertEqual(len(response_data['included']), 2)
+        transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
+        self.assertTrue('submit' in transitions)
+
+    def test_create_no_review(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_reviewing = False
+        initiative_settings.save()
+        data = {
+            'data': {
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title',
+                    'description': "About that initiative"
+                },
+                'relationships': {
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk
+                        },
+                    },
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': 12
+                        }
+                    }
+                }
+            }
+        }
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        response_data = json.loads(response.content)
+        transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
+        print(transitions)
+        self.assertTrue('publish' in transitions)
 
     def test_create_special_chars(self):
         data = {

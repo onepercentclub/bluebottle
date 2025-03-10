@@ -400,9 +400,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_reviewing = models.BooleanField(
         _("Enable reviewing"),
         default=True,
-        help_text=_(
-            "Enable reviewing of initiatives and activities before they can be published."
-        ),
+        help_text=_("Review initiatives and activities before they can be published."),
     )
 
     create_flow = models.CharField(

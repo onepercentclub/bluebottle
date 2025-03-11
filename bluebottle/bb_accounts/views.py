@@ -55,6 +55,7 @@ from bluebottle.utils.views import (
     RetrieveAPIView, JsonApiViewMixin, CreateAPIView, RetrieveUpdateDestroyAPIView
 )
 
+
 USER_MODEL = get_user_model()
 
 

@@ -32,3 +32,14 @@ class ModelPeriodicTask(object):
 
     def __str__(self):
         return str(_("Periodic task") + ": " + self.__class__.__name__)
+
+
+def execute_tasks(model):
+    from bluebottle.clients.models import Client
+    from bluebottle.clients.utils import LocalTenant
+
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in model.get_periodic_tasks():
+                print(tenant, task)
+                task.execute()

@@ -153,7 +153,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(

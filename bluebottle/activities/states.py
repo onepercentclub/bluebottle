@@ -110,7 +110,7 @@ class ActivityStateMachine(ModelStateMachine):
             return False
         if not self.instance.initiative_id:
             return True
-        if self.instance.initiative.status == 'submitted':
+        if self.instance.initiative.status in ['submitted', 'approved']:
             return True
         return False
 
@@ -212,6 +212,7 @@ class ActivityStateMachine(ModelStateMachine):
         conditions=[
             is_complete,
             is_valid,
+            should_auto_approve
         ],
     )
 
@@ -224,6 +225,8 @@ class ActivityStateMachine(ModelStateMachine):
         name=_('Approve'),
         automatic=True,
         conditions=[
+            is_complete,
+            is_valid,
             should_auto_approve
         ],
         description=_(

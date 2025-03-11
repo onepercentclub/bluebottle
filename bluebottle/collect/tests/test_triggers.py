@@ -188,7 +188,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             'user': self.user
 
         }
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         super().setUp()
 

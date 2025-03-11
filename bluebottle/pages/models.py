@@ -232,6 +232,7 @@ class Page(PublishableModel):
         'RawHtmlPlugin',
         'PicturePlugin',
         'DocumentPlugin',
+        'PeopleBlockPlugin',
         'ImagePlainTextBlockPlugin',
     ])
     # This should not be nessecary, but fixes deletion of some pages

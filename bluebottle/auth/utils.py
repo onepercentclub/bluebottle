@@ -1,9 +1,15 @@
 from requests import request, HTTPError
 
+
+from django.shortcuts import redirect
+
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
+from two_factor.admin import AdminSiteOTPRequired as BaseAdminSiteOTPRequired
+
 from bluebottle.utils.models import get_languages
+
 
 USER_MODEL = get_user_model()
 
@@ -71,3 +77,15 @@ def get_extra_facebook_data(strategy, user, response, details,
         user.last_name = response.get('last_name', '')
 
     user.save()
+
+
+class AdminSiteOTPRequired(BaseAdminSiteOTPRequired):
+    def login(self, request, extra_context=None):
+
+        if request.user.is_authenticated and not request.user.is_verified():
+            next = request.GET.get('next')
+            if next:
+                request.session['next'] = next
+            return redirect('two_factor:setup')
+
+        return super().login(request, extra_context)

@@ -1,0 +1,7 @@
+<dl>
+{% for person in instance.people.items.all %}
+    <dt>{{ person.name }}</dt>
+    <dd>{{ person.email }}<dd>
+    <dd>{{ person.role }}<dd>
+{% endfor %}
+</dl>

@@ -9,6 +9,7 @@ from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
 )
 from bluebottle.initiatives.messages import InitiativeSubmittedStaffMessage
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
@@ -53,6 +54,18 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         self.model.states.submit()
         with self.execute():
             self.assertNotificationEffect(InitiativeSubmittedStaffMessage)
+        self.model.save()
+        self.assertEqual(self.model.published, None)
+        self.assertStatus(self.model, 'submitted')
+
+    def test_publish(self):
+        initiative_settings = InitiativePlatformSettings.load()
+        initiative_settings.enable_reviewing = False
+        initiative_settings.save()
+        self.create()
+        self.model.states.publish(save=True)
+        self.assertNotEqual(self.model.published, None)
+        self.assertStatus(self.model, 'approved')
 
     def test_auto_submit_activity(self):
         self.create()

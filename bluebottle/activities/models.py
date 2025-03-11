@@ -177,9 +177,9 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    auto_approve = True
-
     activity_type = _('Activity')
+
+    auto_approve = True
 
     @property
     def owners(self):

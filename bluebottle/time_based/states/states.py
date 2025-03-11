@@ -127,39 +127,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_("Publish"),
-        passed_label=_("published"),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
-    )
-
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
@@ -206,40 +173,6 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
             "The date of the activity has been changed to a date in the future. "
             "The status of the activity will be recalculated."
         ),
-    )
-
-    publish = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        passed_label=_('published'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
     )
 
 

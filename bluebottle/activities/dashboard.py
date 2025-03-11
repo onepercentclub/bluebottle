@@ -23,9 +23,9 @@ class UnPublishedActivities(DashboardModule):
         self.children = activities[:self.limit]
 
 
-class RecentActivities(DashboardModule):
+class RecentlySubmittedActivities(DashboardModule):
     title = _('Recently submitted activities')
-    title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:activities_activity_changelist'))
+    title_url = "{}?status[]=submitted".format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/recent_activities.html'
     limit = 5
     column = 0
@@ -33,6 +33,21 @@ class RecentActivities(DashboardModule):
     def init_with_context(self, context):
         # Temporary fix until we ge rid of PeriodActivity
         activities = Activity.objects.not_instance_of(PeriodActivity).filter(status='submitted').order_by('-created')
+        user = context.request.user
+        activities = region_manager_filter(activities, user)
+        self.children = activities[:self.limit]
+
+I
+class RecentlyPublishedActivities(DashboardModule):
+    title = _('Recently published activities')
+    title_url = "{}?status[]=open".format(reverse('admin:activities_activity_changelist'))
+    template = 'dashboard/recent_activities.html'
+    limit = 5
+    column = 0
+
+    def init_with_context(self, context):
+        # Temporary fix until we ge rid of PeriodActivity
+        activities = Activity.objects.not_instance_of(PeriodActivity).filter(status='open').order_by('-created')
         user = context.request.user
         activities = region_manager_filter(activities, user)
         self.children = activities[:self.limit]

@@ -511,7 +511,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                             [
                                 'matching_options_set',
                                 'search_distance', 'any_search_distance', 'exclude_online',
-                                'place', 'favourite_themes', 'skills', 'subscribed',
+                                'place', 'favourite_themes', 'skills', 
                             ]
                     }
                 ],
@@ -532,6 +532,8 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
 
             if obj and (obj.is_staff or obj.is_superuser):
                 fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
+
+            fieldsets[1][1]['fields'].append('subscribed')
 
             if SegmentType.objects.count():
                 extra = (

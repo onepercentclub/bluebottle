@@ -2,7 +2,6 @@ from builtins import str
 from builtins import object
 from django.utils.translation import gettext_lazy as _
 from future.utils import python_2_unicode_compatible
-from bluebottle.celery import app
 
 
 @python_2_unicode_compatible
@@ -35,7 +34,6 @@ class ModelPeriodicTask(object):
         return str(_("Periodic task") + ": " + self.__class__.__name__)
 
 
-@app.task
 def execute_tasks(model):
     from bluebottle.clients.models import Client
     from bluebottle.clients.utils import LocalTenant

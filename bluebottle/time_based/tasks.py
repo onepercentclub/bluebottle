@@ -17,45 +17,99 @@ from bluebottle.time_based.models import (
 )
 
 
+@app.task
+def date_activity_tasks(sender, **kwargs):
+    execute_tasks(DateActivity)
+
+
+@app.task
+def date_activity_slot_tasks(sender, **kwargs):
+    execute_tasks(DateActivitySlot)
+
+
+@app.task
+def date_participant_tasks(sender, **kwargs):
+    execute_tasks(DateParticipant)
+
+
+@app.task
+def time_contribution_tasks(sender, **kwargs):
+    execute_tasks(TimeContribution)
+
+
+@app.task
+def deadline_activity_tasks(sender, **kwargs):
+    execute_tasks(DeadlineActivity)
+
+
+@app.task
+def periodic_activity_tasks(sender, **kwargs):
+    execute_tasks(PeriodicActivity)
+
+
+@app.task
+def periodic_slot_tasks(sender, **kwargs):
+    execute_tasks(PeriodicSlot)
+
+
+@app.task
+def schedule_activity_tasks(sender, **kwargs):
+    execute_tasks(ScheduleActivity)
+
+
+@app.task
+def schedule_slot_tasks(sender, **kwargs):
+    execute_tasks(ScheduleSlot)
+
+
+@app.task
+def team_schedule_slot_tasks(sender, **kwargs):
+    execute_tasks(TeamScheduleSlot)
+
+
 @app.on_after_finalize.connect
-def schedule_tasks(sender, **kwargs):
+def schedule(sender, **kwargs):
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(DateActivity)
+        date_activity_tasks.s()
     )
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(DateActivitySlot)
+        date_activity_slot_tasks.s()
     )
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(DateParticipant)
+        date_participant_tasks.s()
     )
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(TimeContribution)
+        time_contribution_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        deadline_activity_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        periodic_activity_tasks.s()
     )
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(DeadlineActivity)
+        periodic_slot_tasks.s()
+    )
+
+    sender.add_periodic_task(
+        crontab(minute='*/15'),
+        schedule_activity_tasks.s()
     )
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(PeriodicActivity)
+        schedule_slot_tasks.s()
     )
+
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(ScheduleActivity)
-    )
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        execute_tasks.s(PeriodicSlot)
-    )
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        execute_tasks.s(ScheduleSlot)
-    )
-    sender.add_periodic_task(
-        crontab(minute='*/15'),
-        execute_tasks.s(TeamScheduleSlot)
+        team_schedule_slot_tasks.s()
     )

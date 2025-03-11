@@ -5,9 +5,14 @@ from bluebottle.collect.models import CollectActivity
 from bluebottle.fsm.periodic_tasks import execute_tasks
 
 
+@app.task
+def collect_tasks():
+    execute_tasks(CollectActivity)
+
+
 @app.on_after_finalize.connect
-def schedule_tasks(sender, **kwargs):
+def schedule(sender, **kwargs):
     sender.add_periodic_task(
         crontab(minute='*/15'),
-        execute_tasks.s(CollectActivity)
+        collect_tasks.s()
     )

@@ -183,8 +183,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def owners(self):
-        yield self.owner
-
+        if self.owner_id:
+            yield self.owner
         if self.initiative:
             yield self.initiative.owner
 

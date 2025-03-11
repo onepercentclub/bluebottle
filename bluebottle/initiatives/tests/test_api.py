@@ -14,6 +14,7 @@ from rest_framework import status
 
 from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
 from bluebottle.impact.models import ImpactType
 from bluebottle.impact.tests.factories import ImpactGoalFactory
@@ -59,14 +60,15 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
     def setUp(self):
         super(InitiativeListAPITestCase, self).setUp()
         self.theme = ThemeFactory.create()
+        self.image = ImageFactory.create()
         self.url = reverse('initiative-list')
-
-    def test_create(self):
-        data = {
+        self.data = {
             'data': {
                 'type': 'initiatives',
                 'attributes': {
-                    'title': 'Some title'
+                    'title': 'Some title',
+                    'story': "About that initiative",
+                    'pitch': "A pitch",
                 },
                 'relationships': {
                     'theme': {
@@ -74,13 +76,21 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
                             'type': 'themes',
                             'id': self.theme.pk
                         },
+                    },
+                    'image': {
+                        'data': {
+                            'type': 'images',
+                            'id': str(self.image.id)
+                        }
                     }
                 }
             }
         }
+
+    def test_create(self):
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -99,7 +109,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             response_data['data']['relationships']['theme']['data']['id'],
             str(initiative.theme.pk)
         )
-        self.assertEqual(len(response_data['included']), 2)
+        self.assertEqual(len(response_data['included']), 3)
         transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
         self.assertTrue('submit' in transitions)
 
@@ -107,60 +117,21 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         initiative_settings = InitiativePlatformSettings.load()
         initiative_settings.enable_reviewing = False
         initiative_settings.save()
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title',
-                    'description': "About that initiative"
-                },
-                'relationships': {
-                    'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
-                    },
-                    'image': {
-                        'data': {
-                            'type': 'images',
-                            'id': 12
-                        }
-                    }
-                }
-            }
-        }
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_data = json.loads(response.content)
         transitions = [t['name'] for t in response_data['data']['meta']['transitions']]
-        print(transitions)
         self.assertTrue('publish' in transitions)
 
     def test_create_special_chars(self):
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': ':)'
-                },
-                'relationships': {
-                    'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
-                    }
-                }
-            }
-        }
+        self.data['data']['attributes']['title'] = ':)'
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -168,7 +139,7 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response_data['data']['attributes']['title'], ':)')
         self.assertNotEqual(response_data['data']['attributes']['slug'], '')
 
-    def test_create_missing_iamge(self):
+    def test_create_missing_image(self):
         data = {
             'data': {
                 'type': 'initiatives',
@@ -199,25 +170,9 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
     def test_create_duplicate_title(self):
         InitiativeFactory.create(title='Some title', status='approved')
-        data = {
-            'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                },
-                'relationships': {
-                    'theme': {
-                        'data': {
-                            'type': 'themes',
-                            'id': self.theme.pk
-                        },
-                    }
-                }
-            }
-        }
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -229,25 +184,16 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
 
     def test_create_with_location(self):
         geolocation = GeolocationFactory.create(position=Point(23.6851594, 43.0579025))
-        data = {
+        self.data['data']['relationships']['place'] = {
             'data': {
-                'type': 'initiatives',
-                'attributes': {
-                    'title': 'Some title'
-                },
-                'relationships': {
-                    'place': {
-                        'data': {
-                            'type': 'geolocations',
-                            'id': geolocation.id
-                        },
-                    }
-                }
-            }
+                'type': 'geolocations',
+                'id': geolocation.id
+            },
         }
+
         response = self.client.post(
             self.url,
-            json.dumps(data),
+            json.dumps(self.data),
             user=self.owner
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -477,11 +423,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=now() - datetime.timedelta(weeks=1),
         )
         for participant in DateParticipantFactory.create_batch(
-            3, activity=date_activity
+                3, activity=date_activity
         ):
             SlotParticipantFactory.create(participant=participant, slot=slot)
         for participant in DateParticipantFactory.create_batch(
-            3, activity=date_activity, status="rejected"
+                3, activity=date_activity, status="rejected"
         ):
             SlotParticipantFactory.create(participant=participant, slot=slot)
 

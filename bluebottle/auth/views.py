@@ -1,3 +1,4 @@
+from django import forms
 from django.shortcuts import resolve_url
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -7,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.forms import PasswordResetForm
 from django.db import connection
+from django.utils.safestring import mark_safe
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -16,6 +18,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import parsers, renderers
+
+from two_factor.views import SetupView
 
 from social_django.utils import psa, get_strategy, STORAGE
 from social.exceptions import AuthCanceled
@@ -141,3 +145,48 @@ def admin_logout(request, extra_context=None):
         },
     }
     return LogoutView.as_view(**defaults)(request)
+
+
+class MethodForm(forms.Form):
+    method = forms.ChoiceField(
+        label=_("Authentication method"),
+        widget=forms.RadioSelect
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        method = self.fields['method']
+        method.choices = [
+            (
+                'generator',
+                mark_safe(
+                    _(
+                        '<b>Authentication app</b>'
+                        '<p style="padding-top: 0px; padding-left: 24px;">'
+                        'Generate secure codes using an app like Google Authenticator or Authy.'
+                        '</p>'
+                    )
+                ),
+            )
+            (
+                'sms',
+                mark_safe(
+                    _(
+                        '<b>Text Message (SMS)</b>'
+                        '<p style="padding-top: 0px; padding-left: 24px;">'
+                        'enter your phone number and receive verification codes via SMS.'
+                        '</p>'
+                    )
+                )
+            ),
+        ]
+        method.initial = method.choices[0][0]
+
+
+class TwoFactorSetupView(SetupView):
+    form_list = (
+        ('welcome', forms.Form),
+        ('method', MethodForm),
+        # Other forms are dynamically added in get_form_list()
+    )

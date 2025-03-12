@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-07 09:35+0100\n"
-"PO-Revision-Date: 2025-03-07 08:38\n"
+"POT-Creation-Date: 2025-03-12 09:11+0100\n"
+"PO-Revision-Date: 2025-03-12 08:19\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -632,12 +632,12 @@ msgstr "Doorstuur omschrijving"
 msgid "A description to explain what the next step is"
 msgstr "Leg hier uit wat er van de deelnemer wordt verwacht op de website waar die naartoe wordt gestuurd"
 
-#: bluebottle/activities/models.py:146 bluebottle/members/models.py:309
+#: bluebottle/activities/models.py:146 bluebottle/members/models.py:308
 msgid "Segment"
 msgstr "Segment"
 
 #: bluebottle/activities/models.py:183
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:75
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:78
 #: bluebottle/cms/models.py:358 bluebottle/segments/admin.py:108
 msgid "Activities"
 msgstr "Activiteiten"
@@ -1740,13 +1740,25 @@ msgstr "Bedankt voor het gebruik van onze website!"
 msgid "The %(site_name)s team"
 msgstr "Het %(site_name)s team"
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:52
 msgid "No result for token"
 msgstr "Geen resultaat voor token"
 
-#: bluebottle/auth/views.py:69
+#: bluebottle/auth/views.py:73
 msgid "This user account is disabled, please contact us if you want to re-activate."
 msgstr "Dit account is geblokkeerd, neem contact met ons op als je deze weer wilt activeren."
+
+#: bluebottle/auth/views.py:152
+msgid "Authentication method"
+msgstr "Authenticatiemethode"
+
+#: bluebottle/auth/views.py:165
+msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
+msgstr "<b>Authenticatie app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Genereer veilige codes met behulp van een app zoals Google Authenticator of Authy.</p>"
+
+#: bluebottle/auth/views.py:176
+msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
+msgstr "<b>Tekstbericht (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">voer je telefoonnummer in en ontvang verificatiecodes via SMS.</p>"
 
 #: bluebottle/bb_accounts/models.py:101
 msgid "Male"
@@ -2003,15 +2015,15 @@ msgstr "Wijzig wachtwoord"
 msgid "Password reset for %(site_name)s"
 msgstr "Wijzig wachtwoord voor %(site_name)s"
 
-#: bluebottle/bb_accounts/views.py:273
+#: bluebottle/bb_accounts/views.py:274
 msgid "The link to activate your account has already been used."
 msgstr "De link om je account te activeren is al gebruikt."
 
-#: bluebottle/bb_accounts/views.py:276
+#: bluebottle/bb_accounts/views.py:277
 msgid "The link to activate your account has expired. Please sign up again."
 msgstr "De link om je account te activeren is verlopen. Meld je opnieuw aan."
 
-#: bluebottle/bb_accounts/views.py:278
+#: bluebottle/bb_accounts/views.py:279
 msgid "Something went wrong on our side. Please sign up again."
 msgstr "Er is iets misgegaan aan onze kant. Meld je opnieuw aan."
 
@@ -2079,39 +2091,39 @@ msgstr "Recente acties"
 msgid "Welcome,"
 msgstr "Welkom,"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:44
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
 msgid "View site"
 msgstr "Bekijk site"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
 msgid "Change password"
 msgstr "Wachtwoord aanpassen"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:53
 msgid "Two factor authentication"
 msgstr "Tweestapsverificatie"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:52
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
 msgid "Enable two factor authentication"
 msgstr "Schakel tweestapsverificatie in"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:58
 msgid "Log out"
 msgstr "Uitloggen"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:63
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:66
 #: bluebottle/settings/admin_dashboard.py:128
 msgid "Users"
 msgstr "Gebruikers"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:69
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:72
 #: bluebottle/initiatives/admin.py:278 bluebottle/initiatives/models.py:154
 #: bluebottle/members/admin.py:187 bluebottle/members/admin.py:710
 #: bluebottle/settings/admin_dashboard.py:13
 msgid "Initiatives"
 msgstr "Initiatieven"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:84
 msgid "Support Centre"
 msgstr "Supporter centrum"
 
@@ -2279,33 +2291,33 @@ msgstr "We hebben een token naar je telefoonnummer gestuurd. Voer het token in d
 msgid "Enable Two-Factor Authentication"
 msgstr "Activeer tweefactorverificatie"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:12
-msgid "You are about to take your account security to the next level. Follow the steps in this wizard to enable two-factor authentication."
-msgstr "Je staat op het punt je accountbeveiliging naar een hoger niveau te tillen. Volg de stappen in deze wizard om tweestapsverificatie in te schakelen."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:13
+msgid "This extra layer of protection helps keep your account safe from unauthorised access."
+msgstr "Deze extra beveiligingslaag helpt jouw account te beschermen tegen ongeautoriseerde toegang."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:16
-msgid "Please select which authentication method you would like to use."
-msgstr "Selecteer welke authenticatiemethode u wilt gebruiken."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:17
+msgid "Which two-factor authentication method would you like to use?"
+msgstr "Welke two-factor authenticatie methode wil je gebruiken?"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:19
-msgid "To start using a token generator, please use your smartphone to scan the QR code below. For example, use Google Authenticator."
-msgstr "Om te beginnen met het gebruiken van een token generator, gebruik uw smartphone om de QR-code hieronder te scannen. Gebruik bijvoorbeeld Google Authenticator."
-
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:23
-msgid "Alternatively you can use the following secret to setup TOTP in your authenticator or password manager manually."
-msgstr "U kunt ook het volgende geheim gebruiken om TOTP handmatig in uw authenticator of wachtwoordbeheerder in te stellen."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:21
+msgid "Scan the QR Code using an authentication app (e.g., Google Authenticator, Authy)."
+msgstr "Scan de QR Code met behulp van een authenticatie-app (bijv. Google Authenticator, Authy)."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:25
-msgid "TOTP Secret:"
-msgstr "TOTP-geheim:"
+msgid "If you are unable to scan the QR code you can manually enter the key below into your app"
+msgstr "Als je de QR-code niet kunt scannen, kun je de onderstaande sleutel handmatig invoeren in je app"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:26
-msgid "Then, enter the token generated by the app."
-msgstr "Voer vervolgens het token in dat gegenereerd is door de app."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:27
+msgid "Secret key:"
+msgstr "Geheime sleutel:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:29
-msgid "Please enter the phone number you wish to receive the text messages on. This number will be validated in the next step."
-msgstr "Voer het telefoonnummer in waarop u de tekstberichten wilt ontvangen. Dit nummer zal in de volgende stap worden gevalideerd."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:28
+msgid "Your app will generate a verification code. Enter the code below to complete the setup."
+msgstr "Jouw app zal een verificatiecode genereren. Voer de code hieronder in om de configuratie te voltooien."
+
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:31
+msgid "Please enter a phone number to receive the verification codes via text message."
+msgstr "Voer een telefoonnummer in om de verificatiecodes via Sms te ontvangen."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:33
 msgid "Please enter the phone number you wish to be called on. This number will be validated in the next step."
@@ -2316,14 +2328,14 @@ msgid "We are calling your phone right now, please enter the digits you hear."
 msgstr "We bellen je telefoon op dit moment, vul alstublieft de cijfers in die je hoort."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:41
-msgid "We sent you a text message, please enter the tokens we sent."
-msgstr "We hebben je een sms gestuurd, voer de tokens in die we hebben verzonden."
+msgid "A text message with your verification code has been sent to you. Please enter the code below."
+msgstr "Er is een sms met jou verificatiecode naar jouw telefoon gestuurd. Voer de code hieronder in."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:45
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:44
 msgid "We've encountered an issue with the selected authentication method. Please go back and verify that you entered your information correctly, try again, or use a different authentication method instead. If the issue persists, contact the site administrator."
 msgstr "Er is een probleem opgetreden met de geselecteerde verificatiemethode. Ga terug en controleer of u uw gegevens correct hebt ingevoerd, probeer het opnieuw of gebruik in plaats daarvan een andere authenticatiemethode. Neem contact op met de beheerder van de site."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:52
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:51
 msgid "To identify and verify your YubiKey, please insert a token in the field below. Your YubiKey will be linked to your account."
 msgstr "Om jou YubiKey te identificeren en te verifiëren, dien je een token in het onderstaande veld in te voeren. Jou YubiKey wordt gekoppeld aan jou account."
 
@@ -6913,22 +6925,18 @@ msgid "external SCIM id"
 msgstr "externe SCIM id"
 
 #: bluebottle/members/models.py:295
-msgid "Office groups managed"
-msgstr "Office groepen beheerd"
+msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
+msgstr "Kies een regio om alleen gegevens uit die regio te zien. Laat het veld leeg voor toegang tot alle gegevens."
 
-#: bluebottle/members/models.py:297
-msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
-msgstr "Selecteer een of meer groepen waarop je op wilt filteren. De gebruiker ziet alleen de gegevens gerelateerd aan de geselecteerde groepen. Laat leeg om alle gegevens te tonen."
-
-#: bluebottle/members/models.py:304
+#: bluebottle/members/models.py:303
 msgid "When the user updated their matching preferences."
 msgstr "Wanneer de matching voorkeuren zijn opgegeven."
 
-#: bluebottle/members/models.py:449
+#: bluebottle/members/models.py:448
 msgid "User activity"
 msgstr "Gebruikersactiviteit"
 
-#: bluebottle/members/models.py:450
+#: bluebottle/members/models.py:449
 msgid "User activities"
 msgstr "Gebruikersactiviteiten"
 
@@ -11619,4 +11627,15 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Seconden"
+
+#: tenants/crowdfunding-010/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/purpose-in-action/settings.py:26
+#: tenants/voor-apeldoorn/settings.py:26
+msgid "Dutch"
+msgstr "Nederlands"
+
+#: tenants/do-good-up/settings.py:27 tenants/purpose-in-action/settings.py:27
+#: tenants/shell-disaster-relief/settings.py:26
+msgid "English"
+msgstr "Engels"
 

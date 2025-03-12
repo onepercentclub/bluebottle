@@ -201,7 +201,7 @@ class OrganizerAdmin(ContributorChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created',]
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
     date_hierarchy = 'created'
 

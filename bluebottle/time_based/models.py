@@ -12,7 +12,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Team
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation

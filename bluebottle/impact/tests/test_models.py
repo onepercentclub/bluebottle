@@ -1,7 +1,6 @@
 from django.test import TestCase
 
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
 from bluebottle.impact.tests.factories import ImpactGoalFactory
 
 

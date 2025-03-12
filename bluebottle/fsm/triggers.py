@@ -11,8 +11,6 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
 
-from django_tools.middlewares.ThreadLocal import get_current_user
-
 from bluebottle.fsm.state import pre_state_transition, EmptyState, TRANSITION
 
 
@@ -251,7 +249,7 @@ class TriggerMixin(object):
         current_user = get_current_user()
         if current_user and current_user.is_authenticated:
             for transition in self._transitions:
-                if EmptyState() not in transition.sources: 
+                if EmptyState() not in transition.sources:
                     LogEntry.objects.log_action(
                         current_user.pk if current_user else None,
                         get_content_type_for_model(self).pk,

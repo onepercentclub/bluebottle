@@ -197,8 +197,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         default=True
     )
     submitted_initiative_notifications = models.BooleanField(
-        _('Submitted initiatives'),
-        help_text=_('Staff member receives a notification when an initiative is submitted an ready to be reviewed.'),
+        _('New activities/initiatives notification'),
+        help_text=_(
+            'User receives a notification via email when new activities and initiatives get submitted '
+            'or published. This depends on the review setting of the platform.'
+        ),
         default=False
     )
 

@@ -4,8 +4,6 @@ from collections import defaultdict
 
 from django.urls import re_path
 from django.contrib import admin, messages
-from django.contrib.admin.models import CHANGE, LogEntry
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -16,7 +14,6 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
-
 
 
 def get_effects(effects):

@@ -17,7 +17,7 @@ from bluebottle.test.factory_models.geo import (
     CountryFactory, GeolocationFactory, LocationFactory, PlaceFactory
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
-from bluebottle.time_based.tests.factories import DateActivityFactory, PeriodActivityFactory, DateActivitySlotFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DeadlineActivityFactory, DateActivitySlotFactory
 
 
 class GeoTestCase(BluebottleTestCase):
@@ -112,7 +112,7 @@ class UsedCountryListTestCase(GeoTestCase):
             location=location_bg
         )
 
-        PeriodActivityFactory.create(
+        DeadlineActivityFactory.create(
             status='draft',
             location=location_de
         )

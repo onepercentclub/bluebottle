@@ -131,9 +131,9 @@ class ReviewStateMachine(ModelStateMachine):
         approved,
         name=_("Approve"),
         description=_(
-            "The initiative will be visible in the frontend and "
-            "all completed activities will be open for contributions. "
-            "Crowdfunding activities have to be reviewed separately."
+            "The initiative will be published and visible in the frontend. "
+            "All completed activities will be open for contributions. "
+            "Crowdfunding campaigns require a separate review."
         ),
         conditions=[is_complete, is_valid],
         automatic=False,
@@ -204,7 +204,6 @@ class ReviewStateMachine(ModelStateMachine):
         name=_("Restore"),
         description=_(
             "The status of the initiative is set to 'needs work'. "
-            "The initiator can edit and submit the initiative again."
         ),
         automatic=False,
         permission=is_staff,

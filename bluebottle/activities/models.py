@@ -45,11 +45,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
-    transition_date = models.DateTimeField(
-        _('transition date'),
-        help_text=_('Date of the last transition.'),
-        null=True, blank=True
-    )
 
     status = models.CharField(max_length=40)
 
@@ -264,7 +259,6 @@ class Contributor(TriggerMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
-    transition_date = models.DateTimeField(null=True, blank=True)
     contributor_date = models.DateTimeField(null=True, blank=True)
 
     activity = models.ForeignKey(

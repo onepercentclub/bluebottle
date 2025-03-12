@@ -13,7 +13,3 @@ class ImpactGoalModelTestCase(TestCase):
 
     def test_required_deed(self):
         self.assertEqual(list(self.model.required), ['target'])
-
-    def test_required_period(self):
-        self.model.activity = PeriodActivityFactory.create()
-        self.assertEqual(list(self.model.required), [])

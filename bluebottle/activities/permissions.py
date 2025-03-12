@@ -17,7 +17,7 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
 
 class RelatedActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
-        return user in obj.activity.owner
+        return user in obj.activity.owners
 
 
 class ActivityTypePermission(ResourcePermission):

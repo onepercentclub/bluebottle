@@ -2,23 +2,13 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from parler.admin import TranslatableAdmin
 
 from bluebottle.activities.admin import (
-    ActivityChildAdmin, ContributorChildAdmin, ActivityForm, TeamInline, BaseContributorInline
+    ActivityChildAdmin, ContributorChildAdmin, TeamInline, BaseContributorInline
 )
 from bluebottle.collect.models import CollectContributor, CollectActivity, CollectType, CollectContribution
 from bluebottle.utils.admin import export_as_csv_action
-
-
-class CollectAdminForm(ActivityForm):
-    class Meta(object):
-        model = CollectActivity
-        fields = '__all__'
-        widgets = {
-            'description': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 class CollectContributionInline(admin.TabularInline):
@@ -49,7 +39,6 @@ class CollectContributorInline(BaseContributorInline):
 @admin.register(CollectActivity)
 class CollectActivityAdmin(ActivityChildAdmin):
     base_model = CollectActivity
-    form = CollectAdminForm
     inlines = (TeamInline, CollectContributorInline,) + ActivityChildAdmin.inlines
     list_filter = ['status', 'collect_type']
     search_fields = ['title', 'description']

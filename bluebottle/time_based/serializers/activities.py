@@ -23,8 +23,6 @@ from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class TimeBasedBaseSerializer(BaseActivitySerializer):
-    title = serializers.CharField()
-    description = serializers.CharField()
     review = serializers.BooleanField()
     registration_status = serializers.SerializerMethodField()
 
@@ -84,7 +82,7 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
         ]
 
     included_serializers = dict(
-        BaseActivitySerializer.included_serializers,
+        BaseActivitySerializer.included_serializers.serializers,
         **{
             'expertise': 'bluebottle.time_based.serializers.SkillSerializer',
         }
@@ -220,7 +218,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         ]
 
     included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers,
+        TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
@@ -298,7 +296,7 @@ class ScheduleActivitySerializer(TimeBasedBaseSerializer):
         ]
 
     included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers,
+        TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
@@ -361,7 +359,7 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
         ]
 
     included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers,
+        TimeBasedBaseSerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }

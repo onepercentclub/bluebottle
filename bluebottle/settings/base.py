@@ -143,14 +143,15 @@ MIDDLEWARE = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
+    'bluebottle.utils.middleware.TenantLocaleMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
-    'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
     'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -162,7 +163,7 @@ MIDDLEWARE = (
     'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_otp.middleware.OTPMiddleware',
+    'bluebottle.auth.middleware.OTPMiddleware',
     'axes.middleware.AxesMiddleware',
 )
 
@@ -223,7 +224,6 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.SHA1PasswordHasher',
     'django.contrib.auth.hashers.MD5PasswordHasher',
     'django.contrib.auth.hashers.CryptPasswordHasher',
-    'hashers_passlib.phpass',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -272,6 +272,7 @@ AFOM_ENABLED = False
 
 SHARED_APPS = (
     'bluebottle.clients',  # you must list the app where your tenant model resides in
+    'bluebottle.bluebottle_dashboard',
     'tenant_schemas',
     'django_extensions',
     'django_admin_inline_paginator',
@@ -293,22 +294,21 @@ SHARED_APPS = (
     'corsheaders',
     'parler',
     'daterange_filter',
-    'adminsortable',
     'solo',
     'django_filters',
     'multiselectfield',
 
     'djmoney.contrib.exchange',
+
 )
 
 TENANT_APPS = (
-    'bluebottle.bluebottle_dashboard',
+    'adminsortable',
     'django_otp',
     'django_otp.plugins.otp_static',
     'django_otp.plugins.otp_totp',
     'two_factor',
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
-
 
     'django.contrib.contenttypes',
     'polymorphic',
@@ -424,8 +424,8 @@ TENANT_APPS = (
     'fluent_contents.plugins.text',
     'fluent_contents.plugins.oembeditem',
     'fluent_contents.plugins.rawhtml',
-    'django_wysiwyg',
     'tinymce',
+    'django_wysiwyg',
     'django.contrib.humanize',
     'django_tools',
     'taggit',
@@ -436,12 +436,12 @@ TENANT_APPS = (
     'djmoney',
     'solo',
     'nested_inline',
-    'permissions_widget',
+    'tabular_permissions',
     'django.forms',
     'axes',
-    'captcha',
+    'django_recaptcha',
     'colorfield',
-    'django_summernote',
+    'django_quill',
 )
 
 
@@ -625,6 +625,7 @@ SEND_MAIL = False
 
 DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
+
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)
 # This fixes it
@@ -728,38 +729,24 @@ def static_url(url):
     return os.path.join(STATIC_URL, url)
 
 
-SUMMERNOTE_CONFIG = {
-    # Using SummernoteWidget - iframe mode
-    'toolbar': [
-        ['style', ['style']],
-        ['style', ['bold', 'italic', 'underline', 'clear']],
-        ['para', ['ul', 'ol']],
-        ['insert', ['link', 'picture']],
-        ['view', ['codeview']],
-    ],
-    'disable_upload': False,
-    'attachment_model': 'projects.ProjectImage',
-    'attachment_upload_to': 'project_images/',
-    'summernote': {
-        'disableResizeImage': True
-    },
-    'default_css': (
-        static_url('rest_framework/css/bootstrap.min.css'),
-        static_url('django_summernote/summernote.css'),
-        static_url('django_summernote/django_summernote.css'),
-    ),
-    'default_js': (
-        static_url('admin/js/vendor/jquery/jquery.min.js'),
-        static_url('rest_framework/js/bootstrap.min.js'),
-        static_url('django_summernote/jquery.ui.widget.js'),
-        static_url('django_summernote/jquery.iframe-transport.js'),
-        static_url('django_summernote/jquery.fileupload.js'),
-        static_url('django_summernote/summernote.min.js'),
-        static_url('django_summernote/ResizeSensor.js'),
-    ),
-
+QUILL_CONFIGS = {
+    'default': {
+        'theme': 'snow',
+        'modules': {
+            'toolbar': [
+                {
+                    "header": [4, 5, False]
+                },
+                'bold',
+                'italic',
+                'image',
+                'link',
+                {"list": 'ordered'},
+                {"list": 'bullet'},
+            ],
+        }
+    }
 }
-SUMMERNOTE_THEME = 'bs5'
 
 HOMEPAGE = {}
 ELASTICSEARCH_DSL = {
@@ -781,7 +768,7 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'captcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10
@@ -808,3 +795,9 @@ MATCHING_DISTANCE = 50
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+TWO_FACTOR_SMS_GATEWAY = 'two_factor.gateways.twilio.gateway.Twilio'
+
+TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
+TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
+TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True

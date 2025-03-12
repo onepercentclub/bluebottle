@@ -82,8 +82,12 @@ class InitProjectDataMixin(object):
             LanguageFactory.create(**language)
 
 
+import mock
+
+
 class ApiClient(RestAPIClient):
-    tm = TenantMiddleware()
+    get_response = mock.MagicMock()
+    tm = TenantMiddleware(get_response)
     renderer_classes_list = api_settings.TEST_REQUEST_RENDERER_CLASSES
     default_format = api_settings.TEST_REQUEST_DEFAULT_FORMAT
 
@@ -640,9 +644,8 @@ class APITestCase(BluebottleTestCase):
 
             if isinstance(self.serializer().get_fields()[field], RelatedField) and value:
                 try:
-                    serializer_name = self.serializer.included_serializers[field]
-                    (module, cls_name) = serializer_name.rsplit('.', 1)
-                    resource_name = getattr(import_module(module), cls_name).JSONAPIMeta.resource_name
+                    serializer = self.serializer.included_serializers[field]
+                    resource_name = serializer.JSONAPIMeta.resource_name
                 except (KeyError, AttributeError):
                     resource_name = value.JSONAPIMeta.resource_name
 

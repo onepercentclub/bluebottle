@@ -212,7 +212,7 @@ class FundingPlatformSettingsAdminTestCase(BluebottleAdminTestCase):
         url = reverse('admin:funding_fundingplatformsettings_change')
         page = self.app.get(url)
         page = page.click('Funding settings')
-        form = page.forms[0]
+        form = page.forms[1]
         form["anonymous_donations"] = True
         form.submit()
 

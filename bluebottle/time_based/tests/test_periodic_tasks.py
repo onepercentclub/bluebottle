@@ -7,7 +7,7 @@ from django.core import mail
 from django.db import connection
 from django.template import defaultfilters
 from django.utils import timezone
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now, get_current_timezone, make_aware
 from pytz import UTC
 from tenant_extras.utils import TenantLanguage
 
@@ -119,22 +119,24 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
     @property
     def before(self):
-        return timezone.get_current_timezone().localize(
+        return make_aware(
             datetime(
                 self.activity.registration_deadline.year,
                 self.activity.registration_deadline.month,
                 self.activity.registration_deadline.day
-            ) - timedelta(days=1)
+            ) - timedelta(days=1),
+            timezone.get_current_timezone()
         )
 
     @property
     def after_registration_deadline(self):
-        return timezone.get_current_timezone().localize(
+        return make_aware(
             datetime(
                 self.activity.registration_deadline.year,
                 self.activity.registration_deadline.month,
                 self.activity.registration_deadline.day
-            ) + timedelta(days=1)
+            ) + timedelta(days=1),
+            timezone.get_current_timezone()
         )
 
     def test_reminder_single_date(self):
@@ -611,8 +613,9 @@ class PeriodicActivityPeriodicTaskTestCase(BluebottleTestCase):
         with mock.patch.object(
             timezone,
             'now',
-            return_value=tz.localize(
-                datetime.combine(when, datetime.min.time())
+            return_value=make_aware(
+                datetime.combine(when, datetime.min.time()),
+                tz
             )
         ):
             with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:

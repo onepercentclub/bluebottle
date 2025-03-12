@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.db.models import F
 from django.template.loader import render_to_string
-from django.utils.timezone import get_current_timezone, now
+from django.utils.timezone import get_current_timezone, now, make_aware
 from django.utils.translation import gettext as _
 
 from bluebottle.follow.models import unfollow
@@ -118,9 +118,15 @@ class CreateOverallTimeContributionEffect(Effect):
         activity = self.instance.activity
         tz = get_current_timezone()
         if activity.start and activity.start > date.today():
-            contribution_date = tz.localize(datetime.combine(activity.start, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.start, datetime.min.replace(hour=12).time()),
+                tz
+            )
         elif activity.deadline and activity.deadline < date.today():
-            contribution_date = tz.localize(datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()))
+            contribution_date = make_aware(
+                datetime.combine(activity.deadline, datetime.min.replace(hour=12).time()),
+                tz
+            )
         else:
             contribution_date = now()
 
@@ -165,12 +171,18 @@ class RescheduleOverallPeriodActivityDurationsEffect(Effect):
             tz = get_current_timezone()
 
             if self.instance.start:
-                start = tz.localize(datetime.combine(self.instance.start, datetime.min.time()))
+                start = make_aware(
+                    datetime.combine(self.instance.start, datetime.min.time()),
+                    tz
+                )
             else:
                 start = F('start')
 
             if self.instance.deadline:
-                end = tz.localize(datetime.combine(self.instance.deadline, datetime.min.time()))
+                end = make_aware(
+                    datetime.combine(self.instance.deadline, datetime.min.time()),
+                    tz
+                )
             else:
                 end = None
 
@@ -306,8 +318,9 @@ class CreateFirstSlotEffect(Effect):
 
     def post_save(self):
         tz = get_current_timezone()
-        start = tz.localize(
-            datetime.combine(self.instance.start, datetime.min.time())
+        start = make_aware(
+            datetime.combine(self.instance.start, datetime.min.time()),
+            tz
         ) if self.instance.start else now()
 
         PeriodicSlot.objects.create(

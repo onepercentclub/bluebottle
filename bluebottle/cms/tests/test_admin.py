@@ -78,7 +78,7 @@ class SiteLinkAdminTestCase(BluebottleAdminTestCase):
             language=self.link_group.site_links.language.code
         )
         page = self.app.get(url)
-        form = page.forms[0]
+        form = page.forms[1]
         form['links-0-title'] = 'Some page'
         form['links-0-link'] = '/pages/some'
         form.submit()

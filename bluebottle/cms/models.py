@@ -12,6 +12,8 @@ from fluent_contents.models import PlaceholderField, ContentItem, ContentItemMan
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
 
+from django_quill.fields import QuillField
+
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
 from bluebottle.utils.fields import ImageField
@@ -813,7 +815,7 @@ class ImagePlainTextItem(TitledContent):
     """
     A snippet of HTML text to display on a page.
     """
-    text = models.TextField()
+    text = QuillField()
     image = PluginImageField(
         _("Image"),
         upload_to='pages',

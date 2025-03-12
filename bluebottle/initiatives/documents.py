@@ -59,7 +59,7 @@ class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
-    story = fields.TextField()
+    story = fields.TextField(attr='story.html')
 
     pitch = fields.TextField()
     status = fields.KeywordField()

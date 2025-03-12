@@ -20,18 +20,14 @@ class AvailableTransitionsField(ReadOnlyField):
         user = self.context['request'].user
         transitions = getattr(value, self.source)
 
-        return (
+        return tuple(
             {
                 'name': transition.name,
-                'target': transition.target,
+                'target': transition.target.value,
                 'available': True,
             }
-            for transition in transitions.all_transitions
-            if (
-                transition.is_possible(value.transitions) and
-                (user and transition.is_allowed(transitions, user)) and
-                not transition.options.get('automatic')
-            )
+            for transition in transitions.possible_transitions(user=user)
+            if not transition.options.get('automatic')
         )
 
     def get_attribute(self, instance):

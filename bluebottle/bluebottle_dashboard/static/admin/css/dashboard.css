@@ -496,6 +496,12 @@ div.inline.radiolist {
     padding: 0;
 }
 
+
+.colM .aligned .vLargeTextField {
+    padding: 0;
+}
+
+
 #login-form {
     margin-top: 24px;
 }

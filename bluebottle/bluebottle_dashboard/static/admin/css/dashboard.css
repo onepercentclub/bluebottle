@@ -491,3 +491,20 @@ form .form-row .django-quill-widget p {
 div.inline.radiolist {
     display: inline-block;
 }
+
+.form-row.vLargeTextField {
+    padding: 0;
+}
+
+#login-form {
+    margin-top: 24px;
+}
+
+#login-form input {
+    float: right
+}
+
+#login-form .password-reset-link {
+    padding-top: 24px;
+    clear: both
+}

@@ -125,6 +125,19 @@ class CollectActivityTriggers(ActivityTriggers):
         ),
 
         TransitionTrigger(
+            CollectActivityStateMachine.publish,
+            effects=[
+                TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(
+                    CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]
+                ),
+                TransitionEffect(
+                    CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
             CollectActivityStateMachine.expire,
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),

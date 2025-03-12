@@ -85,6 +85,18 @@ class ActivityTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            ActivityStateMachine.publish,
+            effects=[
+                SetPublishedDateEffect,
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                    conditions=[has_organizer]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
             ActivityStateMachine.cancel,
             effects=[
                 RelatedTransitionEffect(

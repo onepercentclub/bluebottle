@@ -187,7 +187,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             yield self.owner
         if self.initiative:
             yield self.initiative.owner
-
             for manager in self.initiative.activity_managers.all():
                 yield manager
 

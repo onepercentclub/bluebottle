@@ -460,7 +460,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         collect_activity.realized = 100
-        collect_activity.states.submit(save=True)
+        collect_activity.states.publish(save=True)
 
         CollectContributorFactory.create_batch(3, activity=collect_activity)
         CollectContributorFactory.create_batch(3, activity=collect_activity, status='withdrawn')
@@ -470,7 +470,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             start=datetime.date.today() - datetime.timedelta(weeks=2),
         )
         other_collect_activity.realized = 200
-        other_collect_activity.states.submit(save=True)
+        other_collect_activity.states.publish(save=True)
 
         CollectContributorFactory.create_batch(3, activity=other_collect_activity)
 

@@ -1,33 +1,31 @@
 from __future__ import print_function
-from builtins import str
+
 import logging
 import re
+from builtins import str
+
 import dkim
-
 import premailer
-
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
-from django.utils import translation
-from django.template.loader import get_template
 from django.template import Context
-
+from django.template.loader import get_template
+from django.utils import translation
 from django_tools.middlewares import ThreadLocal
+from tenant_extras.utils import TenantLanguage
 
-from bluebottle.cms.models import SitePlatformSettings
-
+from bluebottle.clients import properties
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.utils.utils import to_text
-
-from tenant_extras.utils import TenantLanguage
 
 logger = logging.getLogger(__name__)
 
 try:
     import cssutils
+
     cssutils.log.setLevel(logging.CRITICAL)
 except ModuleNotFoundError:
     pass
@@ -35,22 +33,29 @@ except ModuleNotFoundError:
 
 class TenantAwareBackend(EmailBackend):
     """
-        Support per-tenant smtp configuration and optionally
-        sign the message with a DKIM key, if present.
+    Support per-tenant smtp configuration and optionally
+    sign the message with a DKIM key, if present.
     """
 
     def open(self):
-        tenant_mail_config = getattr(properties, 'MAIL_CONFIG', None)
+        import socket
+
+        logger.info(f"System FQDN: {socket.getfqdn()}")
+        logger.info(f"System hostname: {socket.gethostname()}")
+        tenant_mail_config = getattr(properties, "MAIL_CONFIG", None)
 
         if tenant_mail_config:
             # clear everything that was initialized from settings in __init__
             # that is, use the same defaults as django
-            self.host = tenant_mail_config.get('HOST', 'localhost')
-            self.port = tenant_mail_config.get('PORT', 25)
-            self.username = tenant_mail_config.get('USERNAME', '')
-            self.password = tenant_mail_config.get('PASSWORD', '')
-            self.use_tls = tenant_mail_config.get('TLS', False)
-            self.use_ssl = tenant_mail_config.get('SSL', False)
+            self.host = tenant_mail_config.get("HOST", "localhost")
+            self.port = tenant_mail_config.get("PORT", 25)
+            self.username = tenant_mail_config.get("USERNAME", "")
+            self.password = tenant_mail_config.get("PASSWORD", "")
+            self.use_tls = tenant_mail_config.get("TLS", False)
+            self.use_ssl = tenant_mail_config.get("SSL", False)
+            self.local_hostname = tenant_mail_config.get(
+                "LOCAL_HOSTNAME", properties.DKIM_DOMAIN
+            )
 
         return super(TenantAwareBackend, self).open()
 
@@ -62,16 +67,20 @@ class TenantAwareBackend(EmailBackend):
             message_string = email_message.message().as_bytes()
             signature = b""
             try:
-                signature = dkim.sign(message_string,
-                                      properties.DKIM_SELECTOR,
-                                      properties.DKIM_DOMAIN,
-                                      properties.DKIM_PRIVATE_KEY)
+                signature = dkim.sign(
+                    message_string,
+                    properties.DKIM_SELECTOR,
+                    properties.DKIM_DOMAIN,
+                    properties.DKIM_PRIVATE_KEY,
+                )
             except AttributeError:
                 pass
 
             self.connection.sendmail(
-                email_message.from_email, email_message.recipients(),
-                signature + message_string)
+                email_message.from_email,
+                email_message.recipients(),
+                signature + message_string,
+            )
         except Exception:
             if not self.fail_silently:
                 raise
@@ -84,7 +93,7 @@ DKIMBackend = TenantAwareBackend
 
 class TestMailBackend(EmailBackend):
     def _send(self, email_message):
-        """ Force recipient to the current user."""
+        """Force recipient to the current user."""
         request = ThreadLocal.get_current_request()
 
         try:
@@ -92,16 +101,16 @@ class TestMailBackend(EmailBackend):
             recipient = request.user.email
         except Exception:
             recipient = str(email_message.recipients()[0])
-            if '+test' not in recipient:
+            if "+test" not in recipient:
                 return False
 
         try:
-            email_message.subject += ' || To: ' + \
-                                     str(email_message.recipients()[0])
+            email_message.subject += " || To: " + str(email_message.recipients()[0])
             message_string = email_message.message().as_string()
 
             self.connection.sendmail(
-                email_message.from_email, recipient, message_string)
+                email_message.from_email, recipient, message_string
+            )
         except Exception:
             if not self.fail_silently:
                 raise
@@ -109,44 +118,49 @@ class TestMailBackend(EmailBackend):
         return True
 
 
-def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
-                   from_email=None, reply_to=None, attachments=None, **kwargs):
+def create_message(
+    template_name=None,
+    to=None,
+    subject=None,
+    cc=None,
+    bcc=None,
+    from_email=None,
+    reply_to=None,
+    attachments=None,
+    **kwargs,
+):
 
-    if hasattr(to, 'primary_language') and to.primary_language:
+    if hasattr(to, "primary_language") and to.primary_language:
         language = to.primary_language
     else:
         language = properties.LANGUAGE_CODE
 
     # This is an exception to handle a Bookingcares.com language which
     # contains more languages than the rest of the platform
-    if 'language' in kwargs:
-        language = kwargs['language']
+    if "language" in kwargs:
+        language = kwargs["language"]
 
     with TenantLanguage(language):
         ctx = Context(kwargs)
-        ctx['to'] = to  # Add the recipient to the context
+        ctx["to"] = to  # Add the recipient to the context
         html_content = premailer.transform(
-            get_template(
-                '{0}.html'.format(template_name)
-            ).render(
-                ctx.flatten()
-            ),
-            base_url=tenant_url()
+            get_template("{0}.html".format(template_name)).render(ctx.flatten()),
+            base_url=tenant_url(),
         )
         text_content = to_text.handle(html_content)
 
         args = dict(subject=subject, body=text_content, to=[to.email])
 
         if cc:
-            args['cc'] = cc
+            args["cc"] = cc
         if bcc:
-            args['bcc'] = bcc
+            args["bcc"] = bcc
         if reply_to:
-            args['reply_to'] = [reply_to]
+            args["reply_to"] = [reply_to]
 
         # even if it's None
-        args['from_email'] = from_email
-        args['attachments'] = attachments
+        args["from_email"] = from_email
+        args["attachments"] = attachments
 
         # Calling force_unicode on the subject below in case the subject
         # is being translated using ugettext_lazy.
@@ -166,30 +180,37 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
         return
 
     # Simple check if email address is valid
-    regex = r'[^@]+@[^@]+\.[^@]+'
+    regex = r"[^@]+@[^@]+\.[^@]+"
     if not re.match(regex, to.email):
-        logger.error("Trying to send email to invalid email address: {0}"
-                     .format(to.email))
+        logger.error(
+            "Trying to send email to invalid email address: {0}".format(to.email)
+        )
         return
 
-    if not kwargs.get('site'):
-        kwargs.update({
-            'site': tenant_url(),
-            'tenant': connection.tenant.client_name,
-            'tenant_name': connection.tenant.name
-        })
+    if not kwargs.get("site"):
+        kwargs.update(
+            {
+                "site": tenant_url(),
+                "tenant": connection.tenant.client_name,
+                "tenant_name": connection.tenant.name,
+            }
+        )
 
-    kwargs.update({
-        'settings': MailPlatformSettings.load(),
-        'content': SitePlatformSettings.objects.get(),
-    })
+    kwargs.update(
+        {
+            "settings": MailPlatformSettings.load(),
+            "content": SitePlatformSettings.objects.get(),
+        }
+    )
 
     try:
-        msg = create_message(template_name=template_name,
-                             to=to,
-                             subject=subject,
-                             attachments=attachments,
-                             **kwargs)
+        msg = create_message(
+            template_name=template_name,
+            to=to,
+            subject=subject,
+            attachments=attachments,
+            **kwargs,
+        )
     except Exception as e:
         msg = None
         print("Exception while rendering email template: {0}".format(e))

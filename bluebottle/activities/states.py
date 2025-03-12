@@ -110,7 +110,7 @@ class ActivityStateMachine(ModelStateMachine):
             return False
         if not self.instance.initiative_id:
             return True
-        if self.instance.initiative.status in ['submitted', 'approved']:
+        if self.instance.initiative.status in ['submitted']:
             return True
         return False
 

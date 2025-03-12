@@ -186,6 +186,7 @@ class MethodForm(forms.Form):
 
 
 class TwoFactorSetupView(SetupView):
+    success_url = 'admin:index'
     form_list = (
         ('welcome', forms.Form),
         ('method', MethodForm),

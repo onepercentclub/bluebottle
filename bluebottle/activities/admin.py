@@ -538,7 +538,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
     readonly_fields = [
         'created',
         'updated',
-        'published',
         'has_deleted_data',
         'valid',
         'stats_data',

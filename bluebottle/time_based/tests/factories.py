@@ -4,10 +4,9 @@ import factory.fuzzy
 from django.utils import timezone
 from django.utils.timezone import now, make_aware
 
-from bluebottle.test.factory_models import generate_rich_text
-
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.time_based.models import (
@@ -17,16 +16,13 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     DeadlineRegistration,
-    PeriodActivity,
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
     PeriodicSlot,
-    PeriodParticipant,
     ScheduleSlot,
     Skill,
     SlotParticipant,
-    TimeContribution,
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
@@ -91,20 +87,6 @@ class DateActivityFactory(TimeBasedFactory):
     )
 
 
-class PeriodActivityFactory(TimeBasedFactory):
-    class Meta:
-        model = PeriodActivity
-
-    deadline = date.today() + timedelta(weeks=4)
-    duration = timedelta(hours=20)
-    duration_period = 'overall'
-    is_online = False
-    location = factory.SubFactory(GeolocationFactory)
-    expertise = factory.SubFactory(SkillFactory)
-
-    start = (now() + timedelta(weeks=2)).date()
-
-
 class DeadlineActivityFactory(TimeBasedFactory):
     class Meta:
         model = DeadlineActivity
@@ -159,26 +141,6 @@ class DateParticipantFactory(FSMModelFactory):
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
-
-
-class PeriodParticipantFactory(FSMModelFactory):
-    class Meta(object):
-        model = PeriodParticipant
-
-    activity = factory.SubFactory(PeriodActivityFactory)
-    user = factory.SubFactory(BlueBottleUserFactory)
-
-
-class ParticipationFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = TimeContribution
-
-    contributor = factory.SubFactory(PeriodParticipantFactory)
-
-    value = timedelta(hours=20)
-
-    start = now() + timedelta(weeks=2)
-    end = now() + timedelta(weeks=3)
 
 
 class SlotParticipantFactory(FSMModelFactory):

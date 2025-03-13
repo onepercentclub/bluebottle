@@ -424,6 +424,10 @@ class DateActivitySlot(ActivitySlot):
     duration = models.DurationField(_('duration'), null=True, blank=True)
 
     @property
+    def owners(self):
+        return self.activity.owners
+
+    @property
     def required_fields(self):
         fields = super().required_fields + [
             'start',

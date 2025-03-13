@@ -28,7 +28,7 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     TeamScheduleRegistration,
     Team,
-    TeamMember,
+    TeamMember, TimeContribution,
 )
 from bluebottle.utils.models import Language
 
@@ -141,6 +141,18 @@ class DateParticipantFactory(FSMModelFactory):
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TimeContributionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TimeContribution
+
+    contributor = factory.SubFactory(DateParticipantFactory)
+
+    value = timedelta(hours=20)
+
+    start = now() + timedelta(weeks=2)
+    end = now() + timedelta(weeks=3)
 
 
 class SlotParticipantFactory(FSMModelFactory):

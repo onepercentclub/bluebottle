@@ -28,7 +28,7 @@ from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
     DeadlineParticipantFactory,
-    ParticipationFactory,
+    TimeContributionFactory,
 )
 from bluebottle.utils.models import Language
 
@@ -436,17 +436,17 @@ class MemberAdminExportTest(BluebottleTestCase):
     def test_member_export(self):
         member = BlueBottleUserFactory.create()
 
-        ParticipationFactory.create(
+        TimeContributionFactory.create(
             value=timedelta(hours=5),
             contributor=DateParticipantFactory(user=member, status='accepted'),
             status='succeeded'
         )
-        ParticipationFactory.create(
+        TimeContributionFactory.create(
             value=timedelta(hours=12),
             contributor=DeadlineParticipantFactory(user=member, status="accepted"),
             status="succeeded",
         )
-        ParticipationFactory.create_batch(
+        TimeContributionFactory.create_batch(
             3,
             value=timedelta(hours=10),
             contributor=DateParticipantFactory(user=member, status='accepted'),

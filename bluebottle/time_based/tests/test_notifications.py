@@ -1,4 +1,3 @@
-
 from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
     ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -6,17 +5,16 @@ from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
     ParticipantRemovedNotification, ParticipantFinishedNotification,
     ParticipantWithdrewNotification, NewParticipantNotification, ManagerParticipantAddedOwnerNotification,
-    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification, ParticipantAppliedNotification,
+    ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     SlotCancelledNotification, ParticipantAddedNotification,
     ParticipantSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantRegisteredNotification, ParticipantCreatedNotification
+    ManagerSlotParticipantRegisteredNotification
 )
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory,
-    SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
+    DateActivitySlotFactory, SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
 )
 
 
@@ -208,57 +206,6 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'Go to the activity page to see the times in your own timezone and add them to your calendar.'
         )
-
-
-class PeriodParticipantNotificationTestCase(NotificationTestCase):
-
-    def setUp(self):
-        self.supporter = BlueBottleUserFactory.create(
-            first_name='Frans',
-            last_name='Beckenbauer'
-        )
-        self.owner = BlueBottleUserFactory.create()
-        self.activity = PeriodActivityFactory.create(
-            title="Save the world!",
-            owner=self.owner,
-            duration='1:30:00',
-            duration_period='overall',
-            review=False
-        )
-        self.obj = PeriodParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter
-        )
-
-    def test_participant_joined_notification(self):
-        self.message_class = ParticipantJoinedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have joined the activity "Save the world!"')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-        self.assertBodyNotContains(
-            'Go to the activity page to see the times in your own timezone and add them to your calendar.'
-        )
-
-    def test_new_participant_notification(self):
-        self.message_class = ParticipantAppliedNotification
-        self.create()
-        self.assertRecipients([self.supporter])
-        self.assertSubject('You have applied to the activity "Save the world!"')
-        self.assertActionLink(self.activity.get_absolute_url())
-        self.assertActionTitle('View activity')
-
-    def test_someone_applied_to_manager(self):
-        self.activity.review_title = 'What is your favorite color?'
-        self.obj.motivation = 'Vermilion'
-        self.message_class = ParticipantCreatedNotification
-        self.create()
-        self.assertRecipients([self.activity.owner])
-        self.assertSubject('You have a new participant for your activity "Save the world!" 🎉')
-        self.assertBodyContains('Review the application and decide if this person is the right fit.')
-        self.assertBodyContains('What is your favorite color?')
-        self.assertBodyContains('Vermilion')
 
 
 class DateSlotNotificationTestCase(NotificationTestCase):

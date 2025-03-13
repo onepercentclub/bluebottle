@@ -6,7 +6,7 @@ from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.utils.views import NoopView
-from bluebottle.auth.views import admin_password_reset, admin_logout
+from bluebottle.auth.views import admin_password_reset, admin_logout, TwoFactorSetupView
 from bluebottle.auth.utils import AdminSiteOTPRequired
 from bluebottle.bluebottle_dashboard.views import locked_out
 from bluebottle.looker.dashboard_views import LookerEmbedView # noqa This has to be imported early so that custom urls will work
@@ -28,7 +28,13 @@ urlpatterns = [
         '^admin/account/two_factor/backup/tokens/',
         NoopView.as_view(),
     ),
-    re_path(r'^admin/two_factor/', include(tf_urls)),
+
+    re_path(
+        '^admin/account/two_factor/setup/',
+        TwoFactorSetupView.as_view(),
+        name='setup',
+    ),
+    re_path(r'^admin/', include(tf_urls)),
 
     # Django JET URLS
     re_path(r'^admin/jet/', include('jet.urls', 'jet')),

@@ -2,6 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.fsm.state import ModelStateMachine, State, EmptyState, AllStates, Transition, register
+from bluebottle.initiatives.models import InitiativePlatformSettings
 
 
 class ActivityStateMachine(ModelStateMachine):
@@ -84,7 +85,34 @@ class ActivityStateMachine(ModelStateMachine):
 
     def initiative_is_not_approved(self):
         """the initiative has not yet been approved"""
-        return self.initiative_is_approved()
+        return not self.initiative_is_approved()
+
+    def can_publish(self):
+        """the activity can be published"""
+        if not self.instance.initiative_id:
+            return True
+        if self.instance.initiative.status == 'approved':
+            return True
+        if not InitiativePlatformSettings.load().enable_reviewing:
+            return True
+        return False
+
+    def can_submit(self):
+        """the activity can be submitted"""
+        from bluebottle.funding.models import Funding
+        if isinstance(self.instance, Funding):
+            if not self.instance.initiative_id:
+                return True
+            if self.instance.initiative.status == 'approved' or self.instance.initiative.status == 'submitted':
+                return True
+            return False
+        if not InitiativePlatformSettings.load().enable_reviewing:
+            return False
+        if not self.instance.initiative_id:
+            return True
+        if self.instance.initiative.status in ['submitted']:
+            return True
+        return False
 
     def is_staff(self, user):
         """user is a staff member"""
@@ -114,6 +142,19 @@ class ActivityStateMachine(ModelStateMachine):
         description=_('The activity will be created.'),
     )
 
+    submit = Transition(
+        [
+            draft,
+            needs_work,
+        ],
+        submitted,
+        description=_('Submit the activity for approval.'),
+        automatic=False,
+        name=_('Submit'),
+        permission=is_owner,
+        conditions=[is_complete, is_valid, can_submit],
+    )
+
     auto_submit = Transition(
         [
             draft,
@@ -139,20 +180,40 @@ class ActivityStateMachine(ModelStateMachine):
         permission=is_staff,
     )
 
-    submit = Transition(
+    publish = Transition(
         [
+            submitted,
             draft,
             needs_work,
         ],
-        submitted,
-        description=_((
-            'After submitting your activity, it will be reviewed by a platform administrator.'
-            'You cannot make changes until this process has completed.'
-        )),
+        open,
+        description=_("Your activity will be open to contributions."),
         automatic=False,
-        name=_('Submit'),
+        name=_('Publish'),
+        passed_label=_('published'),
         permission=is_owner,
-        conditions=[is_complete, is_valid, initiative_is_submitted],
+        conditions=[
+            is_complete,
+            is_valid,
+            can_publish
+        ],
+    )
+
+    auto_publish = Transition(
+        [
+            submitted,
+            draft,
+            needs_work,
+        ],
+        open,
+        description=_('Automatically publish activity when initiative is approved'),
+        automatic=True,
+        name=_('Auto-publish'),
+        conditions=[
+            is_complete,
+            is_valid,
+            should_auto_approve
+        ],
     )
 
     auto_approve = Transition(
@@ -163,7 +224,11 @@ class ActivityStateMachine(ModelStateMachine):
         open,
         name=_('Approve'),
         automatic=True,
-        conditions=[should_auto_approve],
+        conditions=[
+            is_complete,
+            is_valid,
+            should_auto_approve
+        ],
         description=_(
             "The activity will be visible in the frontend and people can apply to "
             "the activity."

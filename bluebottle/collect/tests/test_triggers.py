@@ -43,38 +43,41 @@ class CollectTriggersTestCase(TriggerTestCase):
 
     def test_submit(self):
         self.create()
-        self.model.states.submit()
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
 
-    def test_submit_started(self):
+    def test_publish_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.assertStatus(self.model, 'draft')
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+        self.model.save()
+        self.assertStatus(self.model, 'open')
 
-    def test_submit_finished(self):
+    def test_publish_finished(self):
         self.defaults['start'] = date.today() - timedelta(days=2)
         self.defaults['end'] = date.today() - timedelta(days=1)
         self.create()
-        self.model.states.submit()
+        self.assertStatus(self.model, 'draft')
+        self.model.states.publish()
 
         with self.execute():
-            self.assertTransitionEffect(CollectActivityStateMachine.auto_approve)
-            self.assertTransitionEffect(CollectActivityStateMachine.expire)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertTransitionEffect(CollectActivityStateMachine.expire)
+        self.model.save()
+        self.assertStatus(self.model, 'expired')
 
     def test_reject(self):
         self.create()
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.states.reject()
 
         with self.execute():
@@ -83,7 +86,7 @@ class CollectTriggersTestCase(TriggerTestCase):
 
     def test_cancel(self):
         self.create()
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.states.cancel()
 
         with self.execute():
@@ -144,7 +147,7 @@ class CollectTriggersTestCase(TriggerTestCase):
     def test_expire(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         self.model.end = date.today() - timedelta(days=1)
 
         with self.execute():
@@ -160,7 +163,7 @@ class CollectTriggersTestCase(TriggerTestCase):
     def test_set_end_date(self):
         self.create()
 
-        self.model.states.submit(save=True)
+        self.model.states.publish(save=True)
         CollectContributorFactory.create(activity=self.model)
 
         self.model.end = date.today() - timedelta(days=1)
@@ -188,7 +191,7 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             'user': self.user
 
         }
-        self.defaults['activity'].states.submit(save=True)
+        self.defaults['activity'].states.publish(save=True)
 
         super().setUp()
 

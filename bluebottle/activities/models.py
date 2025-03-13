@@ -45,8 +45,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
+    published = models.DateTimeField(
+        _('Published date'),
+        help_text=_('Date that the activity went online.'),
+        null=True, blank=True
+    )
     transition_date = models.DateTimeField(
-        _('transition date'),
+        _('Transition date'),
         help_text=_('Date of the last transition.'),
         null=True, blank=True
     )
@@ -172,17 +177,16 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    auto_approve = True
-
     activity_type = _('Activity')
+
+    auto_approve = True
 
     @property
     def owners(self):
-        yield self.owner
-
+        if self.owner_id:
+            yield self.owner
         if self.initiative:
             yield self.initiative.owner
-
             for manager in self.initiative.activity_managers.all():
                 yield manager
 

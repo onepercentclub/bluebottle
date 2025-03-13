@@ -149,7 +149,6 @@ class ContributorChildAdmin(
 
     readonly_fields = [
         "activity",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -161,7 +160,6 @@ class ContributorChildAdmin(
         "user",
         "states",
         "status",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -203,7 +201,7 @@ class OrganizerAdmin(ContributorChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
     date_hierarchy = 'created'
 
@@ -543,7 +541,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'published',
         'has_deleted_data',
         'valid',
-        'transition_date',
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
@@ -794,7 +791,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
         PeriodicActivity,
         ScheduleActivity
     )
-    date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 

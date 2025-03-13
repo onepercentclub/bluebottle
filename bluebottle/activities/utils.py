@@ -19,8 +19,6 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
-from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -31,58 +29,11 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
+from bluebottle.time_based.models import TimeContribution, DeadlineActivity, DeadlineParticipant, \
     SlotParticipant, DateActivitySlot, DateParticipant
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
-
-
-class TeamSerializer(ModelSerializer):
-    status = FSMField(read_only=True)
-    transitions = AvailableTransitionsField(source='states')
-
-    members = HyperlinkedRelatedField(
-        read_only=True,
-        many=True,
-        related_link_view_name='team-members',
-        related_link_url_kwarg='team_id'
-    )
-
-    participants_export_url = PrivateFileSerializer(
-        'team-members-export',
-        url_args=('pk',),
-        filename='participants.csv',
-        permission=CanExportTeamParticipantsPermission,
-        read_only=True
-    )
-    slot = ResourceRelatedField(queryset=TeamSlot.objects)
-
-    class Meta(object):
-        model = Team
-        fields = ('owner', 'slot', 'members')
-        meta_fields = (
-            'status',
-            'transitions',
-            'created',
-            'participants_export_url',
-
-        )
-
-    class JSONAPIMeta(object):
-        included_resources = [
-            'owner',
-            'slot',
-            'slot.location',
-        ]
-
-        resource_name = 'activities/teams'
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
-        'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):

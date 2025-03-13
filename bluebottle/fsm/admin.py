@@ -4,8 +4,6 @@ from collections import defaultdict
 
 from django.urls import re_path
 from django.contrib import admin, messages
-from django.contrib.admin.models import CHANGE, LogEntry
-from django.contrib.contenttypes.models import ContentType
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -16,17 +14,6 @@ from bluebottle.fsm.state import TransitionNotPossible
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.notifications.effects import BaseNotificationEffect
 from bluebottle.utils.forms import TransitionConfirmationForm
-
-
-def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
-    LogEntry.objects.log_action(
-        user_id=user.id,
-        content_type_id=ContentType.objects.get_for_model(obj).pk,
-        object_id=obj.pk,
-        object_repr=str(obj),
-        action_flag=action_flag,
-        change_message=change_message
-    )
 
 
 def get_effects(effects):
@@ -174,12 +161,6 @@ class StateMachineAdminMixin(object):
                     instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
-
-                log_action(
-                    instance,
-                    request.user,
-                    'Changed status to {}'.format(transition.target.value)
-                )
 
                 return HttpResponseRedirect(link)
 

@@ -26,21 +26,19 @@ class ReviewStateMachine(ModelStateMachine):
         _("The initiative has been submitted and is ready to be reviewed."),
     )
     needs_work = State(
-        _("Needs work"),
-        "needs_work",
-        _(
-            "The initiative has been submitted but needs adjustments in order to be approved."
-        ),
+        _('Needs work'),
+        'needs_work',
+        _('The initiative needs changes before it can be approved.')
     )
     rejected = State(
-        _("Rejected"),
-        "rejected",
+        _('Rejected'),
+        'rejected',
         _(
-            "The initiative doesn't fit the program or the rules of the game. "
-            "The initiative won't show up on the search page in the front end, "
-            "but does count in the reporting. "
-            "The initiative cannot be edited by the initiator."
-        ),
+            "The initiative does not align with your program or guidelines. "
+            "The initiator will not be able to edit or resubmit it, "
+            "and it will not appear on the search page in the front end. "
+            "The initiative will still be available in the back office and appear in your reporting."
+        )
     )
     cancelled = State(
         _("Cancelled"),
@@ -132,9 +130,9 @@ class ReviewStateMachine(ModelStateMachine):
         approved,
         name=_("Approve"),
         description=_(
-            "The initiative will be visible in the frontend and "
-            "all completed activities will be open for contributions. "
-            "Crowdfunding activities have to be reviewed separately."
+            "The initiative will be published and visible in the frontend. "
+            "All completed activities will be open for contributions. "
+            "Crowdfunding campaigns require a separate review."
         ),
         conditions=[is_complete, is_valid],
         automatic=False,
@@ -144,11 +142,11 @@ class ReviewStateMachine(ModelStateMachine):
     request_changes = Transition(
         submitted,
         needs_work,
-        name=_("Needs work"),
+        name=_('Needs work'),
         description=_(
-            "The status of the initiative is set to 'Needs work'. "
-            "The initiator can edit and resubmit the initiative. "
-            "Don't forget to inform the initiator of the necessary adjustments."
+            "The initiative needs changes before it can be approved. "
+            "Inform the initiator of the changes required. "
+            "The initiator will then be able to edit and resubmit the initiative."
         ),
         conditions=[],
         automatic=False,
@@ -162,12 +160,12 @@ class ReviewStateMachine(ModelStateMachine):
             needs_work,
         ],
         rejected,
-        name=_("Reject"),
+        name=_('Reject'),
         description=_(
-            "Reject in case this initiative doesn't fit your program or the rules of the game. "
-            "The initiator will not be able to edit the initiative and "
-            "it won't show up on the search page in the front end. "
-            "The initiative will still be available in the back office and appear in your reporting. "
+            "Reject if the initiative does not align with your program or guidelines. "
+            "The initiator will not be able to edit or resubmit it, "
+            "and it will not appear on the search page in the front end. "
+            "The initiative will still be available in the back office and appear in your reporting."
         ),
         automatic=False,
         permission=is_staff,
@@ -202,10 +200,10 @@ class ReviewStateMachine(ModelStateMachine):
     restore = Transition(
         [rejected, cancelled, deleted],
         needs_work,
-        name=_("Restore"),
+        name=_('Restore'),
         description=_(
             "The status of the initiative is set to 'needs work'. "
-            "The initiator can edit and submit the initiative again."
+            "The initiator can edit and submit the initiative again"
         ),
         automatic=False,
         permission=is_staff,

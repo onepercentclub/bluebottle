@@ -2,7 +2,7 @@ from builtins import object
 import factory.fuzzy
 
 from bluebottle.impact.models import ImpactType, ImpactGoal
-from bluebottle.time_based.tests.factories import PeriodActivityFactory
+from bluebottle.time_based.tests.factories import DeadlineActivityFactory
 
 
 class ImpactTypeFactory(factory.DjangoModelFactory):
@@ -30,4 +30,4 @@ class ImpactGoalFactory(factory.DjangoModelFactory):
     realized = factory.fuzzy.FuzzyInteger(0, 15)
 
     type = factory.SubFactory(ImpactTypeFactory)
-    activity = factory.SubFactory(PeriodActivityFactory, status='succeeded')
+    activity = factory.SubFactory(DeadlineActivityFactory, status='succeeded')

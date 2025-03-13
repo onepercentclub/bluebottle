@@ -12,7 +12,6 @@ from bluebottle.time_based.models import (
     SlotParticipant,
     DeadlineActivity,
     PeriodicActivity,
-    PeriodActivity,
     ScheduleActivity,
 )
 from bluebottle.time_based.states.slots import DateActivitySlotStateMachine
@@ -140,12 +139,6 @@ class DateStateMachine(TimeBasedStateMachine):
             "The activity is reopened because the start date changed."
         )
     )
-
-
-@register(PeriodActivity)
-class PeriodActivityStateMachine(TimeBasedStateMachine):
-    # Keep this while we still have PeriodActivity, so we don't break things
-    pass
 
 
 class RegistrationActivityStateMachine(TimeBasedStateMachine):

@@ -167,17 +167,16 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     follows = GenericRelation(Follow, object_id_field='instance_id')
 
-    auto_approve = True
-
     activity_type = _('Activity')
+
+    auto_approve = True
 
     @property
     def owners(self):
-        yield self.owner
-
+        if self.owner_id:
+            yield self.owner
         if self.initiative:
             yield self.initiative.owner
-
             for manager in self.initiative.activity_managers.all():
                 yield manager
 

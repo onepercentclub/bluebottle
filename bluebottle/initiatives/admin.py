@@ -143,7 +143,7 @@ class InitiativeAdmin(
         "owner__email",
     ]
 
-    readonly_fields = ["link", "created", "updated", "has_deleted_data", "valid"]
+    readonly_fields = ["link", "created", "updated", "published", "has_deleted_data", "valid"]
 
     ordering = ("-created",)
 
@@ -209,6 +209,7 @@ class InitiativeAdmin(
                         "states",
                         "created",
                         "updated",
+                        "published",
                         "has_deleted_data",
                     )
                 },

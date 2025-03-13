@@ -18,24 +18,6 @@ class DeedStateMachine(ActivityStateMachine):
 
     submit = None
 
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        passed_label=_("published"),
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
     succeed = Transition(
         [
             ActivityStateMachine.open,

@@ -10,14 +10,20 @@ class ActivityOwnerPermission(ResourceOwnerPermission):
         is_owner = user in obj.owners
 
         if action == 'POST':
-            return is_owner or (obj.initiative.status == 'approved' and obj.initiative.is_open)
+            if is_owner:
+                return True
+            if obj.initiative:
+                if obj.initiative.status == 'approved' and obj.initiative.is_open:
+                    return True
+            elif not obj.id:
+                return True
         else:
             return is_owner
 
 
 class RelatedActivityOwnerPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
-        return user in obj.activity.owner
+        return user in obj.activity.owners
 
 
 class ActivityTypePermission(ResourcePermission):

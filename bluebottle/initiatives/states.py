@@ -91,6 +91,7 @@ class ReviewStateMachine(ModelStateMachine):
         return not list(self.instance.errors)
 
     def is_staff(self, user):
+        """Check if the user is a staff member"""
         return user.is_staff
 
     def review_needed(self):

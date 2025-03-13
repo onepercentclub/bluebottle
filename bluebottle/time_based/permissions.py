@@ -13,23 +13,20 @@ from bluebottle.utils.permissions import (
 class TeamMemberPermission(ResourceOwnerPermission):
     def has_object_action_permission(self, action, user, obj):
         try:
-            owner = obj.team.owner
+            captain = obj.team.owner
         except Team.owner.RelatedObjectDoesNotExist:
-            owner = None
+            captain = None
 
         try:
-            activity_owner = obj.team.activity.owner
+            activity_owners = obj.team.activity.owners
         except Activity.owner.RelatedObjectDoesNotExist:
-            activity_owner = None
+            activity_owners = []
 
         return (
-            user
-            in [
-                owner,
-                activity_owner,
-                obj.team.activity.initiative.owner,
-            ]
-            or user in obj.team.activity.initiative.activity_managers.all()
+            user == captain or
+            user in activity_owners or
+            user.is_staff or
+            user.is_superuser
         )
 
 
@@ -67,9 +64,7 @@ class DateSlotActivityStatusPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         return (
             action not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            obj.activity.owner == user or
-            user in obj.activity.initiative.activity_managers.all() or
-            obj.activity.initiative.owner == user or
+            user in obj.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -81,9 +76,7 @@ class DateSlotActivityStatusPermission(BasePermission):
         user = request.user
         return (
             request.method not in ('POST', 'DELETE', 'PATCH', 'PUT') or
-            obj.activity.owner == user or
-            user in obj.activity.initiative.activity_managers.all() or
-            obj.activity.initiative.owner == user or
+            user in obj.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -95,11 +88,7 @@ class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
         if not obj:
             return True
         if obj and (
-            request.user in [
-                obj.user,
-                obj.activity.owner,
-            ] or
-            request.user in obj.activity.initiative.activity_managers.all()
+            request.user in obj.activity.owners
         ):
             return True
         return False
@@ -110,9 +99,7 @@ class CanExportParticipantsPermission(IsOwner):
 
     def has_object_action_permission(self, action, user, obj):
         return (
-            obj.owner == user or
-            user in obj.initiative.activity_managers.all() or
-            obj.initiative.owner == user or
+            user in obj.owners or
             user.is_staff or
             user.is_superuser
         ) and InitiativePlatformSettings.load().enable_participant_exports

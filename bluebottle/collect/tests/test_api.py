@@ -56,7 +56,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertPermission('PUT', True)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
@@ -153,7 +153,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -288,7 +288,7 @@ class CollectActivityTransitionListViewAPITestCase(APITestCase):
 
         self.defaults = {
             'resource': self.activity,
-            'transition': 'submit',
+            'transition': 'publish',
         }
 
         self.fields = ['resource', 'transition', ]

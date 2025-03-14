@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-12 09:11+0100\n"
-"PO-Revision-Date: 2025-03-12 08:19\n"
+"POT-Creation-Date: 2025-03-14 10:14+0100\n"
+"PO-Revision-Date: 2025-03-14 09:20\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -537,11 +537,11 @@ msgstr "Resaltar esta actividad para mostrarla en la página de inicio"
 
 #: bluebottle/activities/models.py:47
 msgid "transition date"
-msgstr "fecha de transición"
+msgstr ""
 
 #: bluebottle/activities/models.py:48
 msgid "Date of the last transition."
-msgstr "Fecha de la última transición."
+msgstr ""
 
 #: bluebottle/activities/models.py:59
 msgid "Host office"
@@ -1742,11 +1742,11 @@ msgstr "Esta cuenta de usuario está desactivada, por favor contáctenos si quie
 msgid "Authentication method"
 msgstr ""
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:166
 msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr ""
 
-#: bluebottle/auth/views.py:176
+#: bluebottle/auth/views.py:177
 msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr ""
 
@@ -1931,11 +1931,11 @@ msgstr "Actualizaciones de iniciativas y actividades que esta persona sigue"
 
 #: bluebottle/bb_accounts/models.py:200
 msgid "Submitted initiatives"
-msgstr "Iniciativas enviadas"
+msgstr ""
 
 #: bluebottle/bb_accounts/models.py:201
 msgid "Staff member receives a notification when an initiative is submitted an ready to be reviewed."
-msgstr "El miembro del personal recibe una notificación cuando se envía una iniciativa lista para ser revisada."
+msgstr ""
 
 #: bluebottle/bb_accounts/models.py:205 bluebottle/organizations/models.py:32
 msgid "website"
@@ -5911,11 +5911,11 @@ msgstr "Iniciativas que estoy revisando"
 
 #: bluebottle/initiatives/filters.py:70 bluebottle/initiatives/models.py:258
 msgid "Open initiatives"
-msgstr ""
+msgstr "Iniciativas abiertas"
 
 #: bluebottle/initiatives/filters.py:71
 msgid "Closed initiatives"
-msgstr ""
+msgstr "Iniciativas cerradas"
 
 #: bluebottle/initiatives/messages.py:8
 msgid "A new initiative is ready to be reviewed."
@@ -6166,7 +6166,7 @@ msgstr "La iniciativa ha sido presentada y está lista para ser revisada."
 
 #: bluebottle/initiatives/states.py:25
 msgid "The initiative has been submitted but needs adjustments in order to be approved."
-msgstr "La iniciativa ha sido presentada, pero necesita ajustes para ser aprobada."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:28
 #: bluebottle/time_based/states/participants.py:27
@@ -6179,7 +6179,7 @@ msgstr "Rechazado"
 
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
-msgstr "La iniciativa no se ajusta al programa ni a las reglas del juego. La iniciativa no aparecerá en la página de búsqueda en la parte frontal, pero sí cuenta en los informes. La iniciativa no puede ser editada por el iniciador."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:36
 #: bluebottle/time_based/states/participants.py:42
@@ -6219,15 +6219,15 @@ msgstr "La iniciativa se someterá a revisión."
 
 #: bluebottle/initiatives/states.py:98
 msgid "The initiative will be visible in the frontend and all completed activities will be open for contributions. Crowdfunding activities have to be reviewed separately."
-msgstr "La iniciativa será visible en la parte frontal y todas las actividades completadas estarán abiertas a las contribuciones, y las actividades de financiación de Crowdfunding tendrán que revisarse por separado."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:111
 msgid "The status of the initiative is set to 'Needs work'. The initiator can edit and resubmit the initiative. Don't forget to inform the initiator of the necessary adjustments."
-msgstr "El estado de la iniciativa se establece en 'Necesita trabajo', el iniciador puede editar y volver a presentar la iniciativa. No olvide informar al iniciador de los ajustes necesarios."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:127
 msgid "Reject in case this initiative doesn't fit your program or the rules of the game. The initiator will not be able to edit the initiative and it won't show up on the search page in the front end. The initiative will still be available in the back office and appear in your reporting. "
-msgstr "Rechazar en caso de que esta iniciativa no se ajuste a su programa o a las reglas del juego. El iniciador no podrá editar la iniciativa y no aparecerá en la página de búsqueda en el front-end. La iniciativa seguirá estando disponible en el back office y aparecerá en sus informes. "
+msgstr ""
 
 #: bluebottle/initiatives/states.py:139
 msgid "Cancel if the initiative will not be executed. The initiator will not be able to edit the initiative and it won't show up on the search page in the front end. The initiative will still be available in the back office and appear in your reporting."
@@ -6239,7 +6239,7 @@ msgstr "Elimine la iniciativa si no desea que aparezca en sus informes. La inici
 
 #: bluebottle/initiatives/states.py:165
 msgid "The status of the initiative is set to 'needs work'. The initiator can edit and submit the initiative again."
-msgstr "El estado de la iniciativa se establece como \"necesita trabajo\". El iniciador puede editar y enviar la iniciativa de nuevo."
+msgstr ""
 
 #: bluebottle/initiatives/templates/dashboard/recent_initiatives.html:14
 #: bluebottle/looker/templates/looker.html:19
@@ -6798,7 +6798,7 @@ msgstr "Id SCIM externo"
 
 #: bluebottle/members/models.py:295
 msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
-msgstr ""
+msgstr "Seleccione una región para filtrar la vista del usuario para ver sólo los datos relevantes para esa región. Deje en blanco para acceso completo a todos los datos."
 
 #: bluebottle/members/models.py:303
 msgid "When the user updated their matching preferences."
@@ -8465,11 +8465,11 @@ msgstr "Fecha de inicio"
 
 #: bluebottle/time_based/models.py:531
 msgid "The first moment participants can start."
-msgstr "El primer momento en que los participantes pueden comenzar."
+msgstr ""
 
 #: bluebottle/time_based/models.py:538
 msgid "Participants can contribute until this date."
-msgstr "Los participantes pueden contribuir hasta esta fecha."
+msgstr ""
 
 #: bluebottle/time_based/models.py:544 bluebottle/time_based/models.py:809
 #: bluebottle/time_based/models.py:880 bluebottle/time_based/models.py:955
@@ -8483,15 +8483,15 @@ msgstr "¿Cuánto tiempo contribuirá un participante?"
 
 #: bluebottle/time_based/models.py:551
 msgid "Recurring period"
-msgstr "Periodo recurrente"
+msgstr ""
 
 #: bluebottle/time_based/models.py:559
 msgid "Max iterations"
-msgstr "Número máximo de iteraciones"
+msgstr ""
 
 #: bluebottle/time_based/models.py:560
 msgid "How many weeks/months will a participant contribute to this activity?"
-msgstr "¿Cuántas semanas/meses contribuirá un participante a esta actividad?"
+msgstr ""
 
 #: bluebottle/time_based/models.py:578 bluebottle/time_based/models.py:760
 msgid "Online Meeting URL"
@@ -8499,7 +8499,7 @@ msgstr "URL de la reunión en línea"
 
 #: bluebottle/time_based/models.py:593
 msgid "Activities during a period"
-msgstr "Actividades durante un período"
+msgstr ""
 
 #: bluebottle/time_based/models.py:629 bluebottle/time_based/models.py:1850
 msgid "end date and time"
@@ -8507,23 +8507,23 @@ msgstr "fecha y hora de fin"
 
 #: bluebottle/time_based/models.py:632
 msgid "period activity slot"
-msgstr "franja de actividad del período"
+msgstr ""
 
 #: bluebottle/time_based/models.py:633
 msgid "period activity slots"
-msgstr "ranuras de actividad del período"
+msgstr ""
 
 #: bluebottle/time_based/models.py:672
 msgid "team slot"
-msgstr "ranura de equipo"
+msgstr ""
 
 #: bluebottle/time_based/models.py:673
 msgid "team slots"
-msgstr "ranuras de equipo"
+msgstr ""
 
 #: bluebottle/time_based/models.py:687
 msgid "Time slot for {}"
-msgstr "Intervalo de tiempo para {}"
+msgstr ""
 
 #: bluebottle/time_based/models.py:734
 msgid "You can enter a specific address, city or wider region."
@@ -11392,15 +11392,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Segundo"
 msgstr[1] "Segundos"
-
-#: tenants/crowdfunding-010/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/purpose-in-action/settings.py:26
-#: tenants/voor-apeldoorn/settings.py:26
-msgid "Dutch"
-msgstr ""
-
-#: tenants/do-good-up/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
-msgid "English"
-msgstr ""
 

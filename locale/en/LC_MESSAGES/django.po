@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-12 09:11+0100\n"
+"POT-Creation-Date: 2025-03-14 10:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1819,13 +1819,13 @@ msgstr ""
 msgid "Authentication method"
 msgstr ""
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:166
 msgid ""
 "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;"
 "\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr ""
 
-#: bluebottle/auth/views.py:176
+#: bluebottle/auth/views.py:177
 msgid ""
 "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;"
 "\">enter your phone number and receive verification codes via SMS.</p>"
@@ -11947,14 +11947,3 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] ""
 msgstr[1] ""
-
-#: tenants/crowdfunding-010/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/purpose-in-action/settings.py:26
-#: tenants/voor-apeldoorn/settings.py:26
-msgid "Dutch"
-msgstr ""
-
-#: tenants/do-good-up/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
-msgid "English"
-msgstr ""

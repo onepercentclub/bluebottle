@@ -32,11 +32,10 @@ class TimeBasedActivityStatesTestCase():
         self.assertEqual(
             self.activity.status, 'draft'
         )
-        if self.activity.states.submit:
-            self.assertTrue(
-                TimeBasedStateMachine.submit in
-                self.activity.states.possible_transitions()
-            )
+        self.assertTrue(
+            TimeBasedStateMachine.publish in
+            self.activity.states.possible_transitions()
+        )
 
         self.assertTrue(
             TimeBasedStateMachine.delete in

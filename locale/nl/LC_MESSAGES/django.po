@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-12 09:11+0100\n"
-"PO-Revision-Date: 2025-03-12 08:19\n"
+"POT-Creation-Date: 2025-03-14 10:14+0100\n"
+"PO-Revision-Date: 2025-03-14 09:20\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -1752,11 +1752,11 @@ msgstr "Dit account is geblokkeerd, neem contact met ons op als je deze weer wil
 msgid "Authentication method"
 msgstr "Authenticatiemethode"
 
-#: bluebottle/auth/views.py:165
+#: bluebottle/auth/views.py:166
 msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
 msgstr "<b>Authenticatie app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Genereer veilige codes met behulp van een app zoals Google Authenticator of Authy.</p>"
 
-#: bluebottle/auth/views.py:176
+#: bluebottle/auth/views.py:177
 msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr "<b>Tekstbericht (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">voer je telefoonnummer in en ontvang verificatiecodes via SMS.</p>"
 
@@ -6298,7 +6298,7 @@ msgstr "Afgewezen"
 
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
-msgstr "Het initiatief past niet in het programma of voldoet niet aan de regels. Het initiatief komt niet voor in de zoekresultaten maar telt wel mee in rapporten. Het initiatief kan niet worden aangepast door de initiator."
+msgstr "Het initiatief past niet in het programma of voldoet niet aan de regels. Het initiatief komt niet voor in de zoekresultaten maar telt wel mee in raporten. Het initiatief kan niet worden aangepast door de initiator."
 
 #: bluebottle/initiatives/states.py:36
 #: bluebottle/time_based/states/participants.py:42
@@ -8625,11 +8625,11 @@ msgstr "Hoeveel tijd zal een deelnemer bijdragen?"
 
 #: bluebottle/time_based/models.py:551
 msgid "Recurring period"
-msgstr "Terugkerende periode"
+msgstr "Herhalende periode"
 
 #: bluebottle/time_based/models.py:559
 msgid "Max iterations"
-msgstr "Max iteraties"
+msgstr "Maximaal aantal herhalingen"
 
 #: bluebottle/time_based/models.py:560
 msgid "How many weeks/months will a participant contribute to this activity?"
@@ -8649,11 +8649,11 @@ msgstr "einddatum en -tijd"
 
 #: bluebottle/time_based/models.py:632
 msgid "period activity slot"
-msgstr "periode activiteit slot"
+msgstr "periode activiteit tijdsblok"
 
 #: bluebottle/time_based/models.py:633
 msgid "period activity slots"
-msgstr "periode activiteit slots"
+msgstr "periode activiteit tijdsblokken"
 
 #: bluebottle/time_based/models.py:672
 msgid "team slot"
@@ -11627,15 +11627,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Seconden"
-
-#: tenants/crowdfunding-010/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/purpose-in-action/settings.py:26
-#: tenants/voor-apeldoorn/settings.py:26
-msgid "Dutch"
-msgstr "Nederlands"
-
-#: tenants/do-good-up/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
-msgid "English"
-msgstr "Engels"
 

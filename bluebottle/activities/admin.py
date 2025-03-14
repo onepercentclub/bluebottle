@@ -700,10 +700,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(
+                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))

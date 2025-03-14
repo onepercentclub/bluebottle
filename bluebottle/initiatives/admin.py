@@ -232,15 +232,16 @@ class InitiativeAdmin(
     link.short_description = _("Show on site")
 
     def valid(self, obj):
+        if not obj or not obj.id:
+            return '-'
         errors = list(obj.errors)
         required = list(obj.required)
         if not errors and not required:
             return "-"
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(_("{} is required").format(obj._meta.get_field(field).verbose_name.title()))
 
         return format_html(
             "<ul class='validation-error-list'>{}</ul>",

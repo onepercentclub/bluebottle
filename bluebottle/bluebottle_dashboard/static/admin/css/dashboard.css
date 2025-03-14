@@ -36,6 +36,7 @@ form .aligned p.file-upload+p.help {
 .site-title {
     padding: 8px 0;
     font-size: 1.2rem;
+    text-align: right;
 }
 
 #branding-menu {

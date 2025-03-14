@@ -131,13 +131,18 @@ class UpdateImageListSerializer(ModelSerializer):
     image = ResourceRelatedField(queryset=Image.objects.all())
     update = ResourceRelatedField(queryset=Update.objects.all())
 
+    filename = serializers.SerializerMethodField()
+
     class JSONAPIMeta(object):
         resource_name = 'updates/images'
 
     class Meta(object):
         model = UpdateImage
-        fields = ('id', 'update', 'image')
+        fields = ('id', 'update', 'image', 'filename')
         meta_fields = ['filename']
+
+    def get_filename(self, instance):
+        return os.path.basename(instance.image.file.name)
 
 
 class UpdateImageSerializer(ImageSerializer):

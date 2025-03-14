@@ -85,10 +85,15 @@ class DateSlotActivityStatusPermission(BasePermission):
 class ParticipantDocumentPermission(permissions.DjangoModelPermissions):
 
     def has_object_permission(self, request, view, obj):
+        user = request.user
         if not obj:
             return True
         if obj and (
-            request.user in obj.activity.owners
+            user == obj.user or
+            user in obj.activity.owners or
+            user.is_staff or
+            user.is_superuser
+
         ):
             return True
         return False

@@ -54,7 +54,7 @@ label+div {
     display: inline-block;
 }
 
-.aligned label+div label {
+.aligned label+div input[type=checkbox]+label {
     width: 30px;
 }
 

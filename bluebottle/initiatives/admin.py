@@ -3,7 +3,7 @@ from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
@@ -194,22 +194,24 @@ class InitiativeAdmin(
 
     link.short_description = _("Show on site")
 
+    @admin.display(description=_('Steps to complete initiative'), ordering="id", boolean=False)
     def valid(self, obj):
+        if not obj or not obj.id:
+            return '-'
         errors = list(obj.errors)
         required = list(obj.required)
         if not errors and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(_("{} is required").format(obj._meta.get_field(field).verbose_name.title()))
 
-        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
+        return format_html(
+            "<ul class='validation-error-list'>{}</ul>",
+            format_html_join("", "<li>{}</li>", ((value,) for value in errors))
+        )
 
-    valid.short_description = _('Steps to complete initiative')
     autocomplete_fields = ['activity_managers']
 
 

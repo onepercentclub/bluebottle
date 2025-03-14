@@ -1195,7 +1195,7 @@ class TimeContribution(Contribution):
     )
 
     class JSONAPIMeta:
-        resource_name = 'contributions/time-contribution'
+        resource_name = 'contributions/time-contributions'
 
     class Meta:
         verbose_name = _("Time contribution")

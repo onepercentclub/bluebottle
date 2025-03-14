@@ -34,8 +34,8 @@ form .aligned p.file-upload+p.help {
 }
 
 .site-title {
-    padding: 8px;
-    font-size: 1.4rem;
+    padding: 8px 0;
+    font-size: 1.2rem;
 }
 
 #branding-menu {

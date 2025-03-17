@@ -90,10 +90,10 @@ class ActivityStateMachine(ModelStateMachine):
     def can_publish(self):
         """the activity can be published"""
         if not self.instance.initiative_id:
-            return True
+            if not InitiativePlatformSettings.load().enable_reviewing:
+                return True
+            return False
         if self.instance.initiative.status == 'approved':
-            return True
-        if not InitiativePlatformSettings.load().enable_reviewing:
             return True
         return False
 

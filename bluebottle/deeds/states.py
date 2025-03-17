@@ -16,8 +16,6 @@ class DeedStateMachine(ActivityStateMachine):
     def can_succeed(self):
         return len(self.instance.participants) > 0
 
-    submit = None
-
     succeed = Transition(
         [
             ActivityStateMachine.open,

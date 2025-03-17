@@ -313,7 +313,6 @@ class InitiativePlatformSettingsAdmin(
                     "enable_participant_exports",
                     "enable_matching_emails",
                     "include_full_activities",
-                    "create_flow",
                     "enable_reviewing",
                 )
             },

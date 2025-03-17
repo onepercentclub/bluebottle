@@ -266,6 +266,7 @@ class BaseActivitySerializer(ModelSerializer):
             'owner.avatar',
             'image',
             'initiative',
+            'theme',
             'goals',
             'goals.impact_type',
             'initiative.owner',

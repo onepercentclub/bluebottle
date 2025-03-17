@@ -103,7 +103,6 @@ class FileContentView(RetrieveAPIView):
 
 
 class ImageContentView(FileContentView):
-    cropbox = True
 
     def get_random_image_url(self):
         if 'x' in self.kwargs['size']:

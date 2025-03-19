@@ -3,56 +3,76 @@ from datetime import datetime, timedelta
 
 from dateutil.parser import parse
 from django.db import connection
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, make_aware, now
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField
+    PolymorphicResourceRelatedField,
+    ResourceRelatedField,
+    SerializerMethodResourceRelatedField,
 )
-from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import (
-    ModelSerializer, ValidationError, IntegerField,
-    PolymorphicModelSerializer
+    IntegerField,
+    ModelSerializer,
+    PolymorphicModelSerializer,
+    ValidationError,
 )
 
 from bluebottle.activities.utils import (
-    BaseContributorSerializer, BaseContributorListSerializer,
-    BaseActivityListSerializer, BaseActivitySerializer,
-    BaseTinyActivitySerializer
+    BaseActivityListSerializer,
+    BaseActivitySerializer,
+    BaseContributorListSerializer,
+    BaseContributorSerializer,
+    BaseTinyActivitySerializer,
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.files.serializers import PrivateDocumentField
-from bluebottle.files.serializers import PrivateDocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentField, PrivateDocumentSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import (
-    Funding, Donor, Reward, BudgetLine, PaymentMethod,
-    BankAccount, PayoutAccount, PaymentProvider,
-    Payout, FundingPlatformSettings)
-from bluebottle.funding.models import PlainPayoutAccount
+    BankAccount,
+    BudgetLine,
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    PaymentMethod,
+    PaymentProvider,
+    Payout,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Reward,
+)
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
-    FlutterwaveBankAccountSerializer, PayoutFlutterwaveBankAccountSerializer
+    FlutterwaveBankAccountSerializer,
+    PayoutFlutterwaveBankAccountSerializer,
 )
 from bluebottle.funding_lipisha.serializers import (
-    LipishaBankAccountSerializer, PayoutLipishaBankAccountSerializer
+    LipishaBankAccountSerializer,
+    PayoutLipishaBankAccountSerializer,
 )
 from bluebottle.funding_pledge.serializers import (
-    PledgeBankAccountSerializer, PayoutPledgeBankAccountSerializer
+    PayoutPledgeBankAccountSerializer,
+    PledgeBankAccountSerializer,
 )
 from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.funding_stripe.serializers import (
-    ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
+    ConnectAccountSerializer,
+    ExternalAccountSerializer,
+    PayoutStripeBankSerializer,
 )
-from bluebottle.funding_telesom.serializers import PayoutTelesomBankAccountSerializer, TelesomBankAccountSerializer
+from bluebottle.funding_telesom.serializers import (
+    PayoutTelesomBankAccountSerializer,
+    TelesomBankAccountSerializer,
+)
 from bluebottle.funding_vitepay.serializers import (
-    VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
+    PayoutVitepayBankAccountSerializer,
+    VitepayBankAccountSerializer,
 )
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import (
-    MoneySerializer, ResourcePermissionField, )
+from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
+from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
 
 
 class FundingCurrencyValidator(object):
@@ -201,8 +221,9 @@ class MaxDeadlineValidator(object):
 
     def __call__(self, data):
         if (
-            data['deadline'] and
-            data['deadline'] >= now() + timedelta(days=60)
+            "deadline" in data
+            and data["deadline"]
+            and data["deadline"] >= now() + timedelta(days=60)
         ):
             raise ValidationError({'deadline': self.message})
 
@@ -320,11 +341,7 @@ class FundingSerializer(BaseActivitySerializer):
         user = self.context["request"].user
         if (
             self.instance
-            and user not in [
-                self.instance.owner,
-                self.instance.initiative.owner,
-            ]
-            and user not in self.instance.initiative.activity_managers.all()
+            and user in self.instance.owners
             and not user.is_staff
             and not user.is_superuser
         ):

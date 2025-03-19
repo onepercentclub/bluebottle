@@ -115,4 +115,3 @@ def recent_log_entries():
     return LogEntry.objects.filter(
         action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
     ).values('action_time')[:1]
-

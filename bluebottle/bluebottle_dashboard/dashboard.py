@@ -5,10 +5,11 @@ from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 
 from bluebottle.activities.dashboard import (
-    RecentlySubmittedActivities, 
+    RecentlySubmittedActivities,
     RecentlyPublishedActivities,
-    RecentContributors, 
+    RecentContributors,
     UnPublishedActivities
+)
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import (
     MyReviewingInitiatives, RecentlyPublishedInitiatives, RecentlySubmittedInitiatives

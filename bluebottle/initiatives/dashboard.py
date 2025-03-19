@@ -9,6 +9,7 @@ from bluebottle.bluebottle_dashboard.utils import recent_log_entries
 from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.admin import region_manager_filter
 
+
 class RecentlySubmittedInitiatives(DashboardModule):
     title = _('Recently submitted initiatives')
     title_url = "{}?status[]=draft&status[]=needs_work".format(
@@ -64,5 +65,6 @@ class AppIndexDashboard(DefaultAppIndexDashboard):
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
-        self.children.append(RecentInitiatives())
+        self.children.append(RecentlySubmittedInitiatives())
+        self.children.append(RecentlyPublishedInitiatives())
         self.children.append(MyReviewingInitiatives())

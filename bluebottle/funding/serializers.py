@@ -341,11 +341,7 @@ class FundingSerializer(BaseActivitySerializer):
         user = self.context["request"].user
         if (
             self.instance
-            and user not in [
-                self.instance.owner,
-                self.instance.initiative.owner,
-            ]
-            and user not in self.instance.initiative.activity_managers.all()
+            and user in self.instance.owners
             and not user.is_staff
             and not user.is_superuser
         ):

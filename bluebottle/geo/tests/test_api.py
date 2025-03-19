@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 from rest_framework import status
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
@@ -188,6 +189,15 @@ class LocationListTestCase(GeoTestCase):
         self.assertTrue(
             'center=10' in static_map_url
         )
+
+    def test_api_location_closed_platform(self):
+        site_settings = SitePlatformSettings.load()
+        site_settings.closed = True
+        site_settings.save()
+
+        location = self.locations[0]
+        response = self.client.get(reverse('office-detail', args=(location.id, )))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class GeolocationCreateTestCase(GeoTestCase):

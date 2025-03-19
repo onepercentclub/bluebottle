@@ -67,6 +67,9 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
 class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = OfficeSerializer
     queryset = Location.objects.all()
+    permission_classes = [
+        IsAuthenticated
+    ]
 
 
 # Remove this after we deployed json-api office locations

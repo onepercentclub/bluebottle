@@ -5,11 +5,11 @@ from rest_framework.generics import (
     ListAPIView, RetrieveAPIView, CreateAPIView,
     RetrieveUpdateAPIView
 )
-from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.geo.models import Location, Country, Geolocation, Place
+from bluebottle.geo.permissions import IsConnectedToProfile
 from bluebottle.geo.serializers import (
     GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
     InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
@@ -92,7 +92,7 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
     serializer_class = PlaceSerializer
     permission_classes = [
-        IsAuthenticated
+        IsAuthenticatedOrOpenPermission
     ]
 
     def perform_create(self, serializer):
@@ -110,7 +110,8 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
     permission_classes = [
-        IsAuthenticatedOrOpenPermission
+        IsAuthenticatedOrOpenPermission,
+        IsConnectedToProfile
     ]
     serializer_class = PlaceSerializer
 

@@ -4,9 +4,15 @@ from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 
-from bluebottle.activities.dashboard import RecentActivities, RecentContributors, UnPublishedActivities
+from bluebottle.activities.dashboard import (
+    RecentlySubmittedActivities, 
+    RecentlyPublishedActivities,
+    RecentContributors, 
+    UnPublishedActivities
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
-from bluebottle.initiatives.dashboard import MyReviewingInitiatives, RecentInitiatives
+from bluebottle.initiatives.dashboard import (
+    MyReviewingInitiatives, RecentlyPublishedInitiatives, RecentlySubmittedInitiatives
+)
 from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.updates.dashboard import RecentUpdates
 
@@ -19,11 +25,13 @@ class CustomIndexDashboard(Dashboard):
 
         # Initiatives
         self.children.append(MyReviewingInitiatives())
-        self.children.append(RecentInitiatives())
+        self.children.append(RecentlySubmittedInitiatives())
+        self.children.append(RecentlyPublishedInitiatives())
         self.children.append(UnPublishedActivities())
 
         # Activities
-        self.children.append(RecentActivities())
+        self.children.append(RecentlySubmittedActivities())
+        self.children.append(RecentlyPublishedActivities())
         self.children.append(RecentFunding())
         self.children.append(RecentContributors())
 

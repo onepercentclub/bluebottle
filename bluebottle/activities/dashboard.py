@@ -1,11 +1,11 @@
-from django.contrib.admin.models import LogEntry
-from django.db.models import OuterRef, CharField, functions, Subquery
+from django.db.models import Subquery
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
+from bluebottle.bluebottle_dashboard.utils import recent_log_entries
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.offices.admin import region_manager_filter
 
@@ -24,7 +24,7 @@ class UnPublishedActivities(DashboardModule):
         self.children = activities[:self.limit]
 
 
-class RecentActivities(DashboardModule):
+class RecentlySubmittedActivities(DashboardModule):
     title = _('Recently submitted activities')
     title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/recent_activities.html'
@@ -32,14 +32,10 @@ class RecentActivities(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        log_entries = LogEntry.objects.filter(
-            action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
-        ).values('action_time')[:1]
-
         activities = Activity.objects.filter(
             status='submitted'
         ).annotate(
-            transition_date=Subquery(log_entries)
+            transition_date=Subquery(recent_log_entries())
         ).order_by('transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
@@ -54,14 +50,10 @@ class RecentlyPublishedActivities(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        log_entries = LogEntry.objects.filter(
-            action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
-        ).values('action_time')[:1]
-
         activities = Activity.objects.filter(
             status='open'
         ).annotate(
-            transition_date=Subquery(log_entries)
+            transition_date=Subquery(recent_log_entries())
         ).order_by('transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)

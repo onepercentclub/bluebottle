@@ -1,7 +1,11 @@
 from django import template
 from django.apps import apps
 from django.conf import settings
+from django.contrib.admin.models import LogEntry
+from django.db.models import OuterRef, CharField, functions
+
 from django.urls import reverse
+
 from jet.utils import get_menu_items as jet_get_menu_items
 
 from bluebottle.analytics.models import AnalyticsPlatformSettings
@@ -105,3 +109,10 @@ def get_menu_items(context):
                 if 'hide' in item:
                     group['items'].remove(item)
     return groups
+
+
+def recent_log_entries():
+    return LogEntry.objects.filter(
+        action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
+    ).values('action_time')[:1]
+

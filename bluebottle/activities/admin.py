@@ -531,6 +531,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
 
         if segments:
             obj.segments.set(segments)
+        else:
+            obj.segments.set([])
 
     show_in_index = True
     date_hierarchy = 'created'

@@ -1,12 +1,13 @@
 import factory
 
+from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.segments.models import Segment, SegmentType
 
 
 class SegmentTypeFactory(factory.DjangoModelFactory):
-
     class Meta():
         model = SegmentType
+
     name = factory.Faker('sentence')
     is_active = True
 
@@ -27,7 +28,7 @@ class SegmentFactory(factory.DjangoModelFactory):
     email_domains = ['example.com']
 
     tag_line = factory.Faker('sentence')
-    story = factory.Faker('paragraph')
+    story = factory.LazyFunction(generate_rich_text)
     background_color = factory.Faker('color')
 
     logo = factory.django.ImageField(color='blue')

@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -10,7 +10,7 @@ class AdminMergeMixin:
         urls = super().get_urls()
 
         extra_urls = [
-            url(
+            re_path(
                 r"^(?P<pk>\d+)/merge/$",
                 self.admin_site.admin_view(self.merge),
                 name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_merge",

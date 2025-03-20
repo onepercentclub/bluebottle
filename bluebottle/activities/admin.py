@@ -1,7 +1,7 @@
 import re
 
 from django import forms
-from django.conf.urls import url
+from django.urls import re_path
 from django.contrib import admin, messages
 from django.db import connection
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
@@ -400,12 +400,14 @@ class BulkAddMixin(object):
         urls = super(BulkAddMixin, self).get_urls()
 
         extra_urls = [
-            url(r'^(?P<pk>\d+)/bulk_add/$',
+            re_path(
+                r'^(?P<pk>\d+)/bulk_add/$',
                 self.admin_site.admin_view(self.bulk_add_participants),
                 name='{}_{}_bulk_add'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
-                )),
+                )
+            ),
         ]
         return extra_urls + urls
 
@@ -529,6 +531,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
 
         if segments:
             obj.segments.set(segments)
+        else:
+            obj.segments.set([])
 
     show_in_index = True
     date_hierarchy = 'created'
@@ -701,10 +705,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(
+                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
@@ -720,7 +725,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         urls = super(ActivityChildAdmin, self).get_urls()
 
         extra_urls = [
-            url(
+            re_path(
                 r'^send-impact-reminder-message/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(

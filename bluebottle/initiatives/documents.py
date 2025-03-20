@@ -59,7 +59,7 @@ class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
-    story = fields.TextField()
+    story = fields.TextField(attr='story.html')
 
     pitch = fields.TextField()
     status = fields.KeywordField()
@@ -77,6 +77,7 @@ class InitiativeDocument(Document):
     })
 
     owner = fields.KeywordField()
+    is_open = fields.BooleanField()
 
     country = fields.NestedField(
         properties={
@@ -136,6 +137,22 @@ class InitiativeDocument(Document):
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
             'city': fields.TextField(),
+        }
+    )
+
+    office_subregion = fields.NestedField(
+        attr='location.subregion',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    office_region = fields.NestedField(
+        attr='location.subregion.region',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
         }
     )
 

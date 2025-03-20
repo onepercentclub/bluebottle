@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, date
 import jwt
 import mock
 from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
-from captcha import client
+from django_recaptcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
 from django.db import connection

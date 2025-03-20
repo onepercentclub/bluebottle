@@ -116,7 +116,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
                 'minAmount': 5
             },
             {
-                'symbol': 'CFA',
+                'symbol': 'F\u202fCFA',
                 'code': 'XOF',
                 'name': 'West African CFA Franc',
                 'rate': Decimal(1000.0),

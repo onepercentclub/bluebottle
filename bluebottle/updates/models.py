@@ -85,3 +85,6 @@ class UpdateImage(models.Model):
         related_name='images',
         on_delete=models.CASCADE
     )
+
+    class JSONAPIMeta():
+        resource_name = 'updates/images'

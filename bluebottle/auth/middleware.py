@@ -1,3 +1,5 @@
+import functools
+
 import json
 import logging
 from calendar import timegm
@@ -14,6 +16,11 @@ from django.utils.deprecation import MiddlewareMixin
 from lockdown import settings as lockdown_settings
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  compile_url_exceptions, get_lockdown_form)
+
+from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.middleware import OTPMiddleware as BaseOTPMiddleware, is_verified
+
+from django.conf import settings
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
@@ -29,6 +36,7 @@ def isAdminRequest(request):
     base_path = None
     if len(parts) > 2:
         base_path = parts[2]
+
     return request.path.startswith('/downloads') or base_path in ['jet', 'admin', 'jet-dashboard']
 
 
@@ -319,3 +327,34 @@ class LogAuthFailureMiddleWare(MiddlewareMixin):
             authorization_logger.error(error)
 
         return response
+
+
+class OTPMiddleware(BaseOTPMiddleware):
+    def _verify_user(self, request, user):
+        """
+        Sets OTP-related fields on an authenticated user.
+        """
+        user.otp_device = None
+
+        if getattr(settings, 'DISABLE_TWO_FACTOR', False):
+            user.is_verified = lambda: True
+        else:
+            user.is_verified = functools.partial(is_verified, user)
+
+        if user.is_authenticated:
+            persistent_id = request.session.get(DEVICE_ID_SESSION_KEY)
+            device = (
+                self._device_from_persistent_id(persistent_id)
+                if persistent_id
+                else None
+            )
+
+            if (device is not None) and (device.user_id != user.pk):
+                device = None
+
+            if (device is None) and (DEVICE_ID_SESSION_KEY in request.session):
+                del request.session[DEVICE_ID_SESSION_KEY]
+
+            user.otp_device = device
+
+        return user

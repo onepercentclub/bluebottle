@@ -2,6 +2,7 @@ from builtins import object
 
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer
 
 
 from bluebottle.fsm.serializers import CurrentStatusField
@@ -14,7 +15,7 @@ from bluebottle.funding_stripe.models import StripeSourcePayment, PaymentIntent
 from bluebottle.funding_stripe.utils import get_stripe
 
 
-class PaymentIntentSerializer(serializers.ModelSerializer):
+class PaymentIntentSerializer(ModelSerializer):
     intent_id = serializers.CharField(read_only=True)
     client_secret = serializers.CharField(read_only=True)
 
@@ -71,7 +72,7 @@ class StripePaymentSerializer(PaymentSerializer):
         resource_name = 'payments/stripe-payments'
 
 
-class ConnectAccountSerializer(serializers.ModelSerializer):
+class ConnectAccountSerializer(ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
     owner = ResourceRelatedField(read_only=True)
     external_accounts = ResourceRelatedField(read_only=True, many=True)
@@ -181,7 +182,7 @@ class ExternalAccountSerializer(BaseBankAccountSerializer):
         included_resources = ['connect_account', 'connect_account.partner_organization']
 
 
-class PayoutStripeBankSerializer(serializers.ModelSerializer):
+class PayoutStripeBankSerializer(ModelSerializer):
     account_id = serializers.CharField(source='connect_account.account_id')
     external_account_id = serializers.CharField(source='account_id')
     currency = serializers.CharField(read_only=True, source='account.currency')
@@ -198,10 +199,10 @@ class PayoutStripeBankSerializer(serializers.ModelSerializer):
 
 class CountrySpecSerializer(serializers.Serializer):
     default_currency = serializers.CharField()
-    supported_bank_account_currencies = serializers.ListField(serializers.CharField)
-    supported_payment_currencies = serializers.ListField(serializers.CharField)
-    supported_payment_methods = serializers.ListField(serializers.CharField)
-    supported_transfer_countries = serializers.ListField(serializers.CharField)
+    supported_bank_account_currencies = serializers.ListField(child=serializers.CharField())
+    supported_payment_currencies = serializers.ListField(child=serializers.CharField())
+    supported_payment_methods = serializers.ListField(child=serializers.CharField())
+    supported_transfer_countries = serializers.ListField(child=serializers.CharField())
     verification_fields = serializers.SerializerMethodField()
 
     def get_verification_fields(self, obj):

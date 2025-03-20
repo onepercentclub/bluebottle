@@ -4,10 +4,9 @@ from builtins import object
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
 from django import forms
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import default_token_generator
 from django.db import connection
 from django.db import models
@@ -18,12 +17,11 @@ from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import reverse, NoReverseMatch
+from django.urls import reverse, NoReverseMatch, re_path
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
-from permissions_widget.forms import PermissionSelectMultipleField
 from rest_framework.authtoken.models import Token
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -832,18 +830,21 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<pk>\d+)/$',
+            re_path(
+                r'^login-as/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.login_as),
                 name='members_member_login_as'
-                ),
-            url(r'^password-reset/(?P<pk>\d+)/$',
+            ),
+            re_path(
+                r'^password-reset/(?P<pk>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
-                ),
-            url(r'^resend_welcome_email/(?P<pk>\d+)/$',
+            ),
+            re_path(
+                r'^resend_welcome_email/(?P<pk>\d+)/$',
                 self.resend_welcome_email,
                 name='auth_user_resend_welcome_mail'
-                )
+            )
         ]
         return extra_urls + urls
 
@@ -923,11 +924,7 @@ admin.site.register(Member, MemberAdmin)
 
 
 class NewGroupChangeForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        # Dynamically set permission widget to make it Tenant aware
-        super(NewGroupChangeForm, self).__init__(*args, **kwargs)
-        permissions = Permission.objects.all()
-        self.fields['permissions'] = PermissionSelectMultipleField(queryset=permissions, required=False)
+    pass
 
 
 class GroupsAdmin(GroupAdmin):

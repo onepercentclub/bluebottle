@@ -4,7 +4,7 @@ from bluebottle.categories.models import Category
 
 from bluebottle.geo.models import Location
 from django.contrib.auth.decorators import login_required, permission_required
-from django.conf.urls import url
+from django.urls import re_path
 from django.views.generic import DetailView
 from django.utils.decorators import method_decorator
 
@@ -59,7 +59,7 @@ class LookerEmbedView(DetailView):
 
 
 urls.register_urls([
-    url(
+    re_path(
         r'looker_embed/(?P<pk>[0-9]+)/$',
         LookerEmbedView.as_view(),
         name='looker-embed'

@@ -1,6 +1,7 @@
 import re
 
-from bluebottle.clients import properties
+import django_otp
+
 
 from django.conf import settings
 from django.contrib.auth import login
@@ -8,8 +9,10 @@ from django.http.response import HttpResponseRedirect, HttpResponse
 from django.template import loader
 from django.views.generic.base import View, TemplateView
 
+from bluebottle.clients import properties
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
+from bluebottle.token_auth.models import SAMLDevice
 
 
 def get_auth(request, settings, saml_request=None):
@@ -55,6 +58,10 @@ class SAMLLoginView(View):
             # Admin login:
             # Log user in using cookies and redirect directly
             login(request, user)
+
+            (device, _created) = SAMLDevice.objects.get_or_create(user=user)
+            django_otp.login(request, device)
+
             return HttpResponseRedirect(target_url)
 
         template = loader.get_template('utils/login_with.html')

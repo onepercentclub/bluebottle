@@ -12,6 +12,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
 from bluebottle.geo.tests.test_admin import mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import (
     CountryFactory, GeolocationFactory, LocationFactory, PlaceFactory
@@ -172,7 +173,6 @@ class LocationListTestCase(GeoTestCase):
     def test_api_location_detail_endpoint(self):
         location = self.locations[0]
         response = self.client.get(reverse('office-detail', args=(location.id, )))
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(data['attributes']['name'], self.locations[0].name)
@@ -188,6 +188,15 @@ class LocationListTestCase(GeoTestCase):
         self.assertTrue(
             'center=10' in static_map_url
         )
+
+    def test_api_location_closed_platform(self):
+        member_settings = MemberPlatformSettings.objects.get()
+        member_settings.closed = True
+        member_settings.save()
+
+        location = self.locations[0]
+        response = self.client.get(reverse('office-detail', args=(location.id, )))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class GeolocationCreateTestCase(GeoTestCase):

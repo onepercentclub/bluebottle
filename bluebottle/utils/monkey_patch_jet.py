@@ -49,4 +49,4 @@ ModelAdmin.formfield_for_manytomany = formfield_for_manytomany
 jet.utils.get_menu_items = get_menu_items
 
 # Change this to bust the cached JS/CSS builds
-jet.__version__ = jet.__version__ + 'goodup-1'
+jet.VERSION = jet.VERSION + 'goodup-1'

@@ -1,33 +1,21 @@
-from builtins import object
 
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
-from django_summernote.widgets import SummernoteWidget
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
-from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import BasePlatformSettingsAdmin, export_as_csv_action, TranslatableAdminOrderingMixin
-
-
-class InitiativeAdminForm(StateMachineModelForm):
-    class Meta(object):
-        model = Initiative
-        fields = '__all__'
-        widgets = {
-            'story': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 class InitiativeReviewerFilter(admin.SimpleListFilter):
@@ -106,8 +94,6 @@ class InitiativeAdmin(
     PolymorphicInlineSupportMixin, NotificationAdminMixin,
     RegionManagerAdminMixin, StateMachineAdmin
 ):
-    form = InitiativeAdminForm
-
     prepopulated_fields = {"slug": ("title",)}
 
     raw_id_fields = (
@@ -208,22 +194,24 @@ class InitiativeAdmin(
 
     link.short_description = _("Show on site")
 
+    @admin.display(description=_('Steps to complete initiative'), ordering="id", boolean=False)
     def valid(self, obj):
+        if not obj or not obj.id:
+            return '-'
         errors = list(obj.errors)
         required = list(obj.required)
         if not errors and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(_("{} is required").format(obj._meta.get_field(field).verbose_name.title()))
 
-        return format_html("<ul class='validation-error-list'>{}</ul>", format_html("".join([
-            format_html(u"<li>{}</li>", value) for value in errors
-        ])))
+        return format_html(
+            "<ul class='validation-error-list'>{}</ul>",
+            format_html_join("", "<li>{}</li>", ((value,) for value in errors))
+        )
 
-    valid.short_description = _('Steps to complete initiative')
     autocomplete_fields = ['activity_managers']
 
 

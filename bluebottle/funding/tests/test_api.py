@@ -408,6 +408,7 @@ class FundingDetailTestCase(BluebottleTestCase):
                 "type": "activities/fundings",
                 "attributes": {
                     "title": "New title",
+                    "deadline": None,
                 },
             }
         }
@@ -443,7 +444,7 @@ class FundingDetailTestCase(BluebottleTestCase):
 
         self.assertEqual(
             data['data']['attributes']['description'],
-            self.funding.description
+            self.funding.description.html
         )
         self.assertEqual(
             data['data']['attributes']['title'],
@@ -471,7 +472,7 @@ class FundingDetailTestCase(BluebottleTestCase):
             5
         )
 
-        co_financers = response.json()['data']['relationships']['co-financers']
+        co_financers = response.json()['data']['relationships']['co-financers']['data']
         self.assertEqual(len(co_financers), 1)
 
         # Test that geolocation is included too
@@ -671,6 +672,9 @@ class FundingDetailTestCase(BluebottleTestCase):
                         'data': {
                             'id': self.funding.pk,
                             'type': 'activities/fundings',
+                            'attributes': {
+                                'deadline': None,
+                            },
                             'relationships': {
                                 'bank_account': {
                                     'data': {
@@ -827,16 +831,20 @@ class FundingTestCase(BluebottleTestCase):
             len(data['data']['meta']['required']),
             0
         )
+
         funding.states.submit(save=True)
         funding.states.approve(save=True)
         data['data']['attributes'] = {
             'deadline': now() + timedelta(days=80),
         }
-        response = self.client.put(update_url, data, user=self.user)
+        response = self.client.patch(update_url, data, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         data = response.json()
+
         self.assertEqual(
-            data['data']['meta']['errors'][0]['title'],
-            'The deadline should not be more then 60 days in the future'
+            data['errors'][0]['source']['pointer'],
+            '/data/attributes/deadline'
         )
 
 

@@ -34,8 +34,9 @@ form .aligned p.file-upload+p.help {
 }
 
 .site-title {
-    padding: 8px;
-    font-size: 1.4rem;
+    padding: 8px 0;
+    font-size: 1.2rem;
+    text-align: right;
 }
 
 #branding-menu {
@@ -53,7 +54,7 @@ label+div {
     display: inline-block;
 }
 
-.aligned label+div label {
+.aligned label+div input[type=checkbox]+label {
     width: 30px;
 }
 
@@ -490,4 +491,27 @@ form .form-row .django-quill-widget p {
 
 div.inline.radiolist {
     display: inline-block;
+}
+
+.form-row.vLargeTextField {
+    padding: 0;
+}
+
+
+.colM .aligned .vLargeTextField {
+    padding: 0;
+}
+
+
+#login-form {
+    margin-top: 24px;
+}
+
+#login-form input {
+    float: right
+}
+
+#login-form .password-reset-link {
+    padding-top: 24px;
+    clear: both
 }

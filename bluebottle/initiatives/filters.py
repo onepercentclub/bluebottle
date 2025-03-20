@@ -45,7 +45,7 @@ class StatusFacet(Facet):
 
     def add_filter(self, filter_values):
         if filter_values == ['draft']:
-            return Terms(status=['draft', 'needs_work'])
+            return Terms(status=['draft', 'needs_work', 'submitted'])
         if filter_values == ['open']:
             return Terms(status=['approved'])
         if filter_values == ['failed']:

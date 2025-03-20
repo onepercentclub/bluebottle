@@ -1,3 +1,5 @@
+from django.contrib.admin.models import LogEntry
+from django.db.models import OuterRef, CharField, functions, Subquery
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
@@ -6,7 +8,6 @@ from jet.dashboard.modules import DashboardModule
 
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.offices.admin import region_manager_filter
-from bluebottle.time_based.models import PeriodActivity
 
 
 class UnPublishedActivities(DashboardModule):
@@ -31,8 +32,37 @@ class RecentActivities(DashboardModule):
     column = 0
 
     def init_with_context(self, context):
-        # Temporary fix until we ge rid of PeriodActivity
-        activities = Activity.objects.not_instance_of(PeriodActivity).filter(status='submitted').order_by('-created')
+        log_entries = LogEntry.objects.filter(
+            action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
+        ).values('action_time')[:1]
+
+        activities = Activity.objects.filter(
+            status='submitted'
+        ).annotate(
+            transition_date=Subquery(log_entries)
+        ).order_by('transition_date')
+        user = context.request.user
+        activities = region_manager_filter(activities, user)
+        self.children = activities[:self.limit]
+
+
+class RecentlyPublishedActivities(DashboardModule):
+    title = _('Recently published activities')
+    title_url = "{}?status[]=open".format(reverse('admin:activities_activity_changelist'))
+    template = 'dashboard/recent_activities.html'
+    limit = 5
+    column = 0
+
+    def init_with_context(self, context):
+        log_entries = LogEntry.objects.filter(
+            action_flag=9, object_id=functions.Cast(OuterRef('id'), output_field=CharField())
+        ).values('action_time')[:1]
+
+        activities = Activity.objects.filter(
+            status='open'
+        ).annotate(
+            transition_date=Subquery(log_entries)
+        ).order_by('transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
         self.children = activities[:self.limit]

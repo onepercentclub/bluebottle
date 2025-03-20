@@ -149,7 +149,6 @@ class ContributorChildAdmin(
 
     readonly_fields = [
         "activity",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -161,7 +160,6 @@ class ContributorChildAdmin(
         "user",
         "states",
         "status",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -203,7 +201,7 @@ class OrganizerAdmin(ContributorChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
     date_hierarchy = 'created'
 
@@ -542,7 +540,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'updated',
         'has_deleted_data',
         'valid',
-        'transition_date',
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
@@ -703,10 +700,11 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        errors += [
-            _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            for field in required
-        ]
+        for field in required:
+            field = field.split('.')[0]
+            errors.append(
+                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+            )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
@@ -793,7 +791,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
         PeriodicActivity,
         ScheduleActivity
     )
-    date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 

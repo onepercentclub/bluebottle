@@ -201,6 +201,7 @@ class MaxDeadlineValidator(object):
 
     def __call__(self, data):
         if (
+            'deadline' in data and
             data['deadline'] and
             data['deadline'] >= now() + timedelta(days=60)
         ):

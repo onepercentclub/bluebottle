@@ -221,9 +221,9 @@ class MaxDeadlineValidator(object):
 
     def __call__(self, data):
         if (
-            "deadline" in data
-            and data["deadline"]
-            and data["deadline"] >= now() + timedelta(days=60)
+            'deadline' in data and
+            data['deadline'] and
+            data['deadline'] >= now() + timedelta(days=60)
         ):
             raise ValidationError({'deadline': self.message})
 

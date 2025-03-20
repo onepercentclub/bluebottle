@@ -11,8 +11,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
-from django_quill.fields import QuillField
-
+from bluebottle.bluebottle_dashboard.quill import RichTextField
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
@@ -81,7 +80,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     title = models.CharField(_('Title'), max_length=255)
     slug = models.SlugField(_('Slug'), max_length=100, default='new')
-    description = QuillField(
+    description = RichTextField(
         _('Description'), blank=True
     )
     team_activity = models.CharField(

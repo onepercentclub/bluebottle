@@ -10,8 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 
-from django_quill.fields import QuillField
-
+from bluebottle.bluebottle_dashboard.quill import RichTextField
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import get_current_host, get_current_language
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
@@ -122,7 +121,7 @@ class Segment(models.Model):
         )
     )
 
-    story = QuillField(
+    story = RichTextField(
         _('Story'), blank=True, null=True,
         help_text=_(
             'A more detailed story for your segment. This story can be accessed via a link on the page.'

@@ -9,8 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from multiselectfield import MultiSelectField
 from parler.models import TranslatableModel, TranslatedFields
 
-from django_quill.fields import QuillField
-
+from bluebottle.bluebottle_dashboard.quill import RichTextField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import get_class
 
@@ -95,6 +94,6 @@ class MessageTemplate(TranslatableModel):
 
     translations = TranslatedFields(
         subject=models.CharField(_('Subject'), max_length=200),
-        body_html=QuillField(_('Body (html)'), blank=True),
+        body_html=RichTextField(_('Body (html)'), blank=True),
         body_txt=models.TextField(_('Body (text)'), blank=True)
     )

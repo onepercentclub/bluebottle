@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-03-14 10:14+0100\n"
-"PO-Revision-Date: 2025-03-14 09:20\n"
+"PO-Revision-Date: 2025-03-20 14:51\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -6298,7 +6298,7 @@ msgstr "Afgewezen"
 
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
-msgstr "Het initiatief past niet in het programma of voldoet niet aan de regels. Het initiatief komt niet voor in de zoekresultaten maar telt wel mee in raporten. Het initiatief kan niet worden aangepast door de initiator."
+msgstr "Het initiatief past niet in het programma of voldoet niet aan de regels. Het initiatief komt niet voor in de zoekresultaten maar telt wel mee in rapporten. Het initiatief kan niet worden aangepast door de initiator."
 
 #: bluebottle/initiatives/states.py:36
 #: bluebottle/time_based/states/participants.py:42
@@ -8657,15 +8657,15 @@ msgstr "periode activiteit tijdsblokken"
 
 #: bluebottle/time_based/models.py:672
 msgid "team slot"
-msgstr "team slot"
+msgstr "team tijdsblok"
 
 #: bluebottle/time_based/models.py:673
 msgid "team slots"
-msgstr "team slots"
+msgstr "team tijdsblokken"
 
 #: bluebottle/time_based/models.py:687
 msgid "Time slot for {}"
-msgstr "Tijdsslot voor {}"
+msgstr "Tijdsblok voor {}"
 
 #: bluebottle/time_based/models.py:734
 msgid "You can enter a specific address, city or wider region."

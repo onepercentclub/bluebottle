@@ -353,7 +353,7 @@ class PeopleBlockSerializer(BaseBlockSerializer):
 
     class Meta(object):
         model = PeopleContent
-        fields = ('id', 'type', 'title', 'sub_title', 'persons')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'persons')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/people'

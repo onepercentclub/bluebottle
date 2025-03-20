@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-07 09:35+0100\n"
-"PO-Revision-Date: 2025-03-07 08:38\n"
+"POT-Creation-Date: 2025-03-14 10:14+0100\n"
+"PO-Revision-Date: 2025-03-14 09:20\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -537,11 +537,11 @@ msgstr "Destaque esta atividade para mostrá-la na página inicial"
 
 #: bluebottle/activities/models.py:47
 msgid "transition date"
-msgstr "data de transição"
+msgstr ""
 
 #: bluebottle/activities/models.py:48
 msgid "Date of the last transition."
-msgstr "Data da última transição."
+msgstr ""
 
 #: bluebottle/activities/models.py:59
 msgid "Host office"
@@ -632,12 +632,12 @@ msgstr "Descrição da etapa de redirecionamento"
 msgid "A description to explain what the next step is"
 msgstr "Uma descrição para explicar o que é o próximo passo"
 
-#: bluebottle/activities/models.py:146 bluebottle/members/models.py:309
+#: bluebottle/activities/models.py:146 bluebottle/members/models.py:308
 msgid "Segment"
 msgstr "Segmento"
 
 #: bluebottle/activities/models.py:183
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:75
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:78
 #: bluebottle/cms/models.py:358 bluebottle/segments/admin.py:108
 msgid "Activities"
 msgstr "Atividades"
@@ -1717,13 +1717,25 @@ msgstr "Obrigado por usar o nosso site!"
 msgid "The %(site_name)s team"
 msgstr "Equipe do %(site_name)s"
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:52
 msgid "No result for token"
 msgstr "Nenhum resultado para o token"
 
-#: bluebottle/auth/views.py:69
+#: bluebottle/auth/views.py:73
 msgid "This user account is disabled, please contact us if you want to re-activate."
 msgstr "Esta conta de usuário está desativada, entre em contato conosco se você deseja reativá-la."
+
+#: bluebottle/auth/views.py:152
+msgid "Authentication method"
+msgstr "Método de autenticação"
+
+#: bluebottle/auth/views.py:166
+msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
+msgstr "Aplicativo de autenticação <b></b><p style=\"padding-top: 0px; padding-left: 24px;\">Gere códigos seguros usando um aplicativo como o Google Authenticator ou Authy.</p>"
+
+#: bluebottle/auth/views.py:177
+msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
+msgstr "<b>Mensagem de Texto (A)</b><p style=\"padding-top: 0px; padding-left: 24px;\">digite o seu número de telefone e receba códigos de verificação via SMS.</p>"
 
 #: bluebottle/bb_accounts/models.py:101
 msgid "Male"
@@ -1906,11 +1918,11 @@ msgstr "Atualizações de iniciativas e atividades que esta pessoa segue"
 
 #: bluebottle/bb_accounts/models.py:200
 msgid "Submitted initiatives"
-msgstr "Iniciativas apresentadas"
+msgstr ""
 
 #: bluebottle/bb_accounts/models.py:201
 msgid "Staff member receives a notification when an initiative is submitted an ready to be reviewed."
-msgstr "O membro da equipe recebe uma notificação quando uma iniciativa é enviada e pronto para ser revisado."
+msgstr ""
 
 #: bluebottle/bb_accounts/models.py:205 bluebottle/organizations/models.py:32
 msgid "website"
@@ -1983,15 +1995,15 @@ msgstr "Redefinir senha"
 msgid "Password reset for %(site_name)s"
 msgstr "Redefinição de senha para %(site_name)s"
 
-#: bluebottle/bb_accounts/views.py:273
+#: bluebottle/bb_accounts/views.py:274
 msgid "The link to activate your account has already been used."
 msgstr "O link para ativar sua conta já foi usado."
 
-#: bluebottle/bb_accounts/views.py:276
+#: bluebottle/bb_accounts/views.py:277
 msgid "The link to activate your account has expired. Please sign up again."
 msgstr "O link para ativar sua conta expirou. Por favor, cadastre-se novamente."
 
-#: bluebottle/bb_accounts/views.py:278
+#: bluebottle/bb_accounts/views.py:279
 msgid "Something went wrong on our side. Please sign up again."
 msgstr "Algo deu errado do nosso lado. Por favor, registre-se novamente."
 
@@ -2059,39 +2071,39 @@ msgstr "Ações Recentes"
 msgid "Welcome,"
 msgstr "Bem-vindo,"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:44
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
 msgid "View site"
 msgstr "Ver site"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
 msgid "Change password"
 msgstr "Mudar Senha"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:53
 msgid "Two factor authentication"
 msgstr "Autenticação de dois fatores"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:52
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
 msgid "Enable two factor authentication"
 msgstr "Habilitar autenticação em duas etapas"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:58
 msgid "Log out"
 msgstr "Efetuar logout"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:63
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:66
 #: bluebottle/settings/admin_dashboard.py:128
 msgid "Users"
 msgstr "Utilizadores"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:69
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:72
 #: bluebottle/initiatives/admin.py:278 bluebottle/initiatives/models.py:154
 #: bluebottle/members/admin.py:187 bluebottle/members/admin.py:710
 #: bluebottle/settings/admin_dashboard.py:13
 msgid "Initiatives"
 msgstr "Iniciativas"
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:84
 msgid "Support Centre"
 msgstr "Centro de Suporte"
 
@@ -2241,15 +2253,15 @@ msgstr "Usar token do backup"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/phone_register.html:5
 msgid "Add Backup Phone"
-msgstr ""
+msgstr "Adicionar Telefone de Backup"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/phone_register.html:8
 msgid "You'll be adding a backup phone number to your account. This number will be used if your primary method of registration is not available."
-msgstr ""
+msgstr "Você vai adicionar um número de telefone de backup na sua conta. Este número será usado se o seu método principal de registro não estiver disponível."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/phone_register.html:12
 msgid "We've sent a token to your phone number. Please enter the token you've received."
-msgstr ""
+msgstr "Enviamos um token para seu número de telefone. Digite o token que você recebeu."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:10
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:5
@@ -2257,33 +2269,33 @@ msgstr ""
 msgid "Enable Two-Factor Authentication"
 msgstr "Ativar autenticação dupla"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:12
-msgid "You are about to take your account security to the next level. Follow the steps in this wizard to enable two-factor authentication."
-msgstr "Você está prestes a levar a segurança da sua conta para o próximo nível. Siga as etapas neste assistente para ativar a autenticação de dois fatores."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:13
+msgid "This extra layer of protection helps keep your account safe from unauthorised access."
+msgstr "Essa camada extra de proteção ajuda a manter sua conta segura de acesso não autorizado."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:16
-msgid "Please select which authentication method you would like to use."
-msgstr "Por favor selecione qual método de autenticação você gostaria de usar."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:17
+msgid "Which two-factor authentication method would you like to use?"
+msgstr "Qual método de autenticação de dois fatores você gostaria de usar?"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:19
-msgid "To start using a token generator, please use your smartphone to scan the QR code below. For example, use Google Authenticator."
-msgstr "Para começar a usar um gerador de token, use seu smartphone para escanear o código QR abaixo. Por exemplo, use o Autenticador Google."
-
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:23
-msgid "Alternatively you can use the following secret to setup TOTP in your authenticator or password manager manually."
-msgstr "Como alternativa, você pode usar o seguinte segredo para configurar o TOTP no seu autenticador ou gerenciador de senhas manualmente."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:21
+msgid "Scan the QR Code using an authentication app (e.g., Google Authenticator, Authy)."
+msgstr "Escaneie o Código QR usando um aplicativo de autenticação (ex.: Autenticador do Google, Autoridade)."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:25
-msgid "TOTP Secret:"
-msgstr "Chave TOTP:"
+msgid "If you are unable to scan the QR code you can manually enter the key below into your app"
+msgstr "Se você não conseguir ler o código QR, você pode inserir manualmente a chave abaixo no seu aplicativo"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:26
-msgid "Then, enter the token generated by the app."
-msgstr "Em seguida, insira o token gerado pelo aplicativo."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:27
+msgid "Secret key:"
+msgstr "Chave secreta:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:29
-msgid "Please enter the phone number you wish to receive the text messages on. This number will be validated in the next step."
-msgstr "Por favor, digite o número de telefone que você deseja receber as mensagens de texto. Este número será validado na próxima etapa."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:28
+msgid "Your app will generate a verification code. Enter the code below to complete the setup."
+msgstr "Seu aplicativo irá gerar um código de verificação. Digite o código abaixo para concluir a configuração."
+
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:31
+msgid "Please enter a phone number to receive the verification codes via text message."
+msgstr "Por favor, insira um número de telefone para receber os códigos de verificação por mensagem de texto."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:33
 msgid "Please enter the phone number you wish to be called on. This number will be validated in the next step."
@@ -2294,34 +2306,34 @@ msgid "We are calling your phone right now, please enter the digits you hear."
 msgstr "Estamos ligando para o seu telefone agora, por favor, insira os dígitos que você escuta."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:41
-msgid "We sent you a text message, please enter the tokens we sent."
-msgstr "Nós lhe enviamos uma mensagem de texto, por favor, insira os tokens que enviamos."
+msgid "A text message with your verification code has been sent to you. Please enter the code below."
+msgstr "Uma mensagem de texto com seu código de verificação foi enviada para você. Por favor, insira o código abaixo."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:45
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:44
 msgid "We've encountered an issue with the selected authentication method. Please go back and verify that you entered your information correctly, try again, or use a different authentication method instead. If the issue persists, contact the site administrator."
 msgstr "Encontramos um problema com o método de autenticação selecionado. Por favor, volte e verifique se você digitou suas informações corretamente, tente novamente ou use um método de autenticação diferente. Se o problema persistir, contate o administrador do site."
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:52
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:51
 msgid "To identify and verify your YubiKey, please insert a token in the field below. Your YubiKey will be linked to your account."
 msgstr "Para identificar e verificar sua YubiKey, insira um token abaixo. Sua YubiKey será vinculada à sua conta."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:7
 msgid "Congratulations, you've successfully enabled two-factor authentication."
-msgstr ""
+msgstr "Parabéns, você habilitou com sucesso a autenticação de dois fatores."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:12
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:19
 msgid "Back to Account Security"
-msgstr ""
+msgstr "Voltar para Segurança da Conta"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:14
 msgid "However, it might happen that you don't have access to your primary token device. To enable account recovery, add a phone number."
-msgstr ""
+msgstr "No entanto, pode acontecer que você não tenha acesso ao seu dispositivo de token principal. Para ativar a recuperação de conta, adicione um número de telefone."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup_complete.html:21
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:31
 msgid "Add Phone Number"
-msgstr ""
+msgstr "Adicionar número de telefone"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/disable.html:5
 msgid "Disable Two-factor Authentication"
@@ -2338,20 +2350,20 @@ msgstr "Desligado"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:6
 msgid "Account Security"
-msgstr ""
+msgstr "Segurança da conta"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:9
 #, python-format
 msgid "Primary method: %(primary)s"
-msgstr ""
+msgstr "Método principal: %(primary)s"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:12
 msgid "Backup Phone Numbers"
-msgstr ""
+msgstr "Backup números de telefone"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:13
 msgid "If your primary method is not available, we are able to send backup tokens to the phone numbers listed below."
-msgstr ""
+msgstr "Se o seu método primário não estiver disponível, podemos enviar tokens de backup para os números listados abaixo."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:21
 #: bluebottle/members/admin.py:290 bluebottle/notifications/admin.py:80
@@ -2360,16 +2372,16 @@ msgstr "Você tem certeza?"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:24
 msgid "Unregister"
-msgstr ""
+msgstr "Desregistrar"
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/profile/profile.html:35
 msgid "Two-factor authentication is not enabled for your account. Enable two-factor authentication for enhanced account security."
-msgstr ""
+msgstr "A autenticação de dois fatores não está habilitada em sua conta. Ative a autenticação de dois fatores para segurança aprimorada da conta."
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/twilio/sms_message.html:2
 #, python-format
 msgid "Your verification code is %(token)s"
-msgstr ""
+msgstr "Seu código de verificação é %(token)s"
 
 #: bluebottle/categories/admin.py:47
 msgid "initiatives"
@@ -2701,7 +2713,7 @@ msgstr "Nome:"
 
 #: bluebottle/cms/models.py:221
 msgid "Role"
-msgstr ""
+msgstr "Funções"
 
 #: bluebottle/cms/models.py:222 bluebottle/contact/models.py:32
 #: bluebottle/notifications/models.py:61
@@ -2719,7 +2731,7 @@ msgstr "Cotações"
 
 #: bluebottle/cms/models.py:274
 msgid "Persons"
-msgstr ""
+msgstr "Pessoas"
 
 #: bluebottle/cms/models.py:293
 msgid "Platform Statistics"
@@ -5963,11 +5975,11 @@ msgstr "Iniciativas que estou revisando"
 
 #: bluebottle/initiatives/filters.py:70 bluebottle/initiatives/models.py:258
 msgid "Open initiatives"
-msgstr ""
+msgstr "Iniciativas abertas"
 
 #: bluebottle/initiatives/filters.py:71
 msgid "Closed initiatives"
-msgstr ""
+msgstr "Iniciativas fechadas"
 
 #: bluebottle/initiatives/messages.py:8
 msgid "A new initiative is ready to be reviewed."
@@ -6218,7 +6230,7 @@ msgstr "A iniciativa foi apresentada e está pronta para ser revista."
 
 #: bluebottle/initiatives/states.py:25
 msgid "The initiative has been submitted but needs adjustments in order to be approved."
-msgstr "A iniciativa foi apresentada, mas necessita de ajustamentos para poder ser aprovada."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:28
 #: bluebottle/time_based/states/participants.py:27
@@ -6231,7 +6243,7 @@ msgstr "Rejeitados"
 
 #: bluebottle/initiatives/states.py:30
 msgid "The initiative doesn't fit the program or the rules of the game. The initiative won't show up on the search page in the front end, but does count in the reporting. The initiative cannot be edited by the initiator."
-msgstr "A iniciativa não se encaixa no programa nem nas regras do jogo. A iniciativa não aparecerá na página de busca no front-end, mas conta no relatório. A iniciativa não pode ser editada pelo iniciador."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:36
 #: bluebottle/time_based/states/participants.py:42
@@ -6271,15 +6283,15 @@ msgstr "A iniciativa será submetida a revisão."
 
 #: bluebottle/initiatives/states.py:98
 msgid "The initiative will be visible in the frontend and all completed activities will be open for contributions. Crowdfunding activities have to be reviewed separately."
-msgstr "A iniciativa será visível no frontend e todas as atividades concluídas estarão abertas para contribuições. Atividades de Crowdfunding precisam ser revisadas separadamente."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:111
 msgid "The status of the initiative is set to 'Needs work'. The initiator can edit and resubmit the initiative. Don't forget to inform the initiator of the necessary adjustments."
-msgstr "O estado da iniciativa está definido como \"Precisa de funcionamento\". O iniciador pode editar e reenviar a iniciativa. Não se esqueça de informar o iniciador dos ajustes necessários."
+msgstr ""
 
 #: bluebottle/initiatives/states.py:127
 msgid "Reject in case this initiative doesn't fit your program or the rules of the game. The initiator will not be able to edit the initiative and it won't show up on the search page in the front end. The initiative will still be available in the back office and appear in your reporting. "
-msgstr "Rejeitar caso esta iniciativa não se encaixe no seu programa ou nas regras do jogo. O iniciador não será capaz de editar a iniciativa e ela não aparecerá na página de busca no front-end. A iniciativa ainda estará disponível na área administrativa e aparecerá nos seus relatórios. "
+msgstr ""
 
 #: bluebottle/initiatives/states.py:139
 msgid "Cancel if the initiative will not be executed. The initiator will not be able to edit the initiative and it won't show up on the search page in the front end. The initiative will still be available in the back office and appear in your reporting."
@@ -6291,7 +6303,7 @@ msgstr "Exclua a iniciativa se você não quiser que ela apareça em seu relató
 
 #: bluebottle/initiatives/states.py:165
 msgid "The status of the initiative is set to 'needs work'. The initiator can edit and submit the initiative again."
-msgstr "O status da iniciativa está definido para \"necessita de trabalho\". O iniciador pode editar e submeter a iniciativa novamente."
+msgstr ""
 
 #: bluebottle/initiatives/templates/dashboard/recent_initiatives.html:14
 #: bluebottle/looker/templates/looker.html:19
@@ -6858,22 +6870,18 @@ msgid "external SCIM id"
 msgstr "ID externo SCIM"
 
 #: bluebottle/members/models.py:295
-msgid "Office groups managed"
-msgstr ""
+msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
+msgstr "Selecione uma região para filtrar a visualização do usuário para ver apenas dados relevantes para esta região. Deixe em branco para ter acesso total a todos os dados."
 
-#: bluebottle/members/models.py:297
-msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
-msgstr ""
-
-#: bluebottle/members/models.py:304
+#: bluebottle/members/models.py:303
 msgid "When the user updated their matching preferences."
 msgstr "Quando o usuário atualizou suas preferências correspondentes."
 
-#: bluebottle/members/models.py:449
+#: bluebottle/members/models.py:448
 msgid "User activity"
 msgstr "Atividade do usuário"
 
-#: bluebottle/members/models.py:450
+#: bluebottle/members/models.py:449
 msgid "User activities"
 msgstr "Atividades do usuário"
 
@@ -8532,11 +8540,11 @@ msgstr "Data de início"
 
 #: bluebottle/time_based/models.py:531
 msgid "The first moment participants can start."
-msgstr "No primeiro momento os participantes podem começar."
+msgstr ""
 
 #: bluebottle/time_based/models.py:538
 msgid "Participants can contribute until this date."
-msgstr "Os participantes podem contribuir até esta data."
+msgstr ""
 
 #: bluebottle/time_based/models.py:544 bluebottle/time_based/models.py:809
 #: bluebottle/time_based/models.py:880 bluebottle/time_based/models.py:955
@@ -8550,15 +8558,15 @@ msgstr "Quanto tempo um usuário vai contribuir?"
 
 #: bluebottle/time_based/models.py:551
 msgid "Recurring period"
-msgstr "Período recorrente"
+msgstr ""
 
 #: bluebottle/time_based/models.py:559
 msgid "Max iterations"
-msgstr "Máximo de iterações"
+msgstr ""
 
 #: bluebottle/time_based/models.py:560
 msgid "How many weeks/months will a participant contribute to this activity?"
-msgstr "Quantas semanas/meses um participante contribuirá para esta atividade?"
+msgstr ""
 
 #: bluebottle/time_based/models.py:578 bluebottle/time_based/models.py:760
 msgid "Online Meeting URL"
@@ -8566,7 +8574,7 @@ msgstr "URL da Reunião Online"
 
 #: bluebottle/time_based/models.py:593
 msgid "Activities during a period"
-msgstr "Atividades durante um período"
+msgstr ""
 
 #: bluebottle/time_based/models.py:629 bluebottle/time_based/models.py:1850
 msgid "end date and time"
@@ -8574,23 +8582,23 @@ msgstr "data e hora final"
 
 #: bluebottle/time_based/models.py:632
 msgid "period activity slot"
-msgstr "intervalo de atividade"
+msgstr ""
 
 #: bluebottle/time_based/models.py:633
 msgid "period activity slots"
-msgstr "slots de atividade do período"
+msgstr ""
 
 #: bluebottle/time_based/models.py:672
 msgid "team slot"
-msgstr "espaço na equipe"
+msgstr ""
 
 #: bluebottle/time_based/models.py:673
 msgid "team slots"
-msgstr "espaços da equipe"
+msgstr ""
 
 #: bluebottle/time_based/models.py:687
 msgid "Time slot for {}"
-msgstr "Intervalo de tempo para {}"
+msgstr ""
 
 #: bluebottle/time_based/models.py:734
 msgid "You can enter a specific address, city or wider region."

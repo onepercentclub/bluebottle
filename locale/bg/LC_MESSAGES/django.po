@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-07 09:35+0100\n"
-"PO-Revision-Date: 2025-03-07 08:38\n"
+"POT-Creation-Date: 2025-03-14 10:14+0100\n"
+"PO-Revision-Date: 2025-03-14 09:20\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -632,12 +632,12 @@ msgstr ""
 msgid "A description to explain what the next step is"
 msgstr ""
 
-#: bluebottle/activities/models.py:146 bluebottle/members/models.py:309
+#: bluebottle/activities/models.py:146 bluebottle/members/models.py:308
 msgid "Segment"
 msgstr ""
 
 #: bluebottle/activities/models.py:183
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:75
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:78
 #: bluebottle/cms/models.py:358 bluebottle/segments/admin.py:108
 msgid "Activities"
 msgstr ""
@@ -1680,12 +1680,24 @@ msgstr ""
 msgid "The %(site_name)s team"
 msgstr ""
 
-#: bluebottle/auth/views.py:48
+#: bluebottle/auth/views.py:52
 msgid "No result for token"
 msgstr ""
 
-#: bluebottle/auth/views.py:69
+#: bluebottle/auth/views.py:73
 msgid "This user account is disabled, please contact us if you want to re-activate."
+msgstr ""
+
+#: bluebottle/auth/views.py:152
+msgid "Authentication method"
+msgstr ""
+
+#: bluebottle/auth/views.py:166
+msgid "<b>Authentication app</b><p style=\"padding-top: 0px; padding-left: 24px;\">Generate secure codes using an app like Google Authenticator or Authy.</p>"
+msgstr ""
+
+#: bluebottle/auth/views.py:177
+msgid "<b>Text Message (SMS)</b><p style=\"padding-top: 0px; padding-left: 24px;\">enter your phone number and receive verification codes via SMS.</p>"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:101
@@ -1938,15 +1950,15 @@ msgstr ""
 msgid "Password reset for %(site_name)s"
 msgstr ""
 
-#: bluebottle/bb_accounts/views.py:273
+#: bluebottle/bb_accounts/views.py:274
 msgid "The link to activate your account has already been used."
 msgstr ""
 
-#: bluebottle/bb_accounts/views.py:276
+#: bluebottle/bb_accounts/views.py:277
 msgid "The link to activate your account has expired. Please sign up again."
 msgstr ""
 
-#: bluebottle/bb_accounts/views.py:278
+#: bluebottle/bb_accounts/views.py:279
 msgid "Something went wrong on our side. Please sign up again."
 msgstr ""
 
@@ -1998,39 +2010,39 @@ msgstr ""
 msgid "Welcome,"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:44
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
 msgid "View site"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:47
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
 msgid "Change password"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:50
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:53
 msgid "Two factor authentication"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:52
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
 msgid "Enable two factor authentication"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:55
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:58
 msgid "Log out"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:63
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:66
 #: bluebottle/settings/admin_dashboard.py:128
 msgid "Users"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:69
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:72
 #: bluebottle/initiatives/admin.py:278 bluebottle/initiatives/models.py:154
 #: bluebottle/members/admin.py:187 bluebottle/members/admin.py:710
 #: bluebottle/settings/admin_dashboard.py:13
 msgid "Initiatives"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/admin/base.html:81
+#: bluebottle/bluebottle_dashboard/templates/admin/base.html:84
 msgid "Support Centre"
 msgstr ""
 
@@ -2192,32 +2204,32 @@ msgstr ""
 msgid "Enable Two-Factor Authentication"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:12
-msgid "You are about to take your account security to the next level. Follow the steps in this wizard to enable two-factor authentication."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:13
+msgid "This extra layer of protection helps keep your account safe from unauthorised access."
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:16
-msgid "Please select which authentication method you would like to use."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:17
+msgid "Which two-factor authentication method would you like to use?"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:19
-msgid "To start using a token generator, please use your smartphone to scan the QR code below. For example, use Google Authenticator."
-msgstr ""
-
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:23
-msgid "Alternatively you can use the following secret to setup TOTP in your authenticator or password manager manually."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:21
+msgid "Scan the QR Code using an authentication app (e.g., Google Authenticator, Authy)."
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:25
-msgid "TOTP Secret:"
+msgid "If you are unable to scan the QR code you can manually enter the key below into your app"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:26
-msgid "Then, enter the token generated by the app."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:27
+msgid "Secret key:"
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:29
-msgid "Please enter the phone number you wish to receive the text messages on. This number will be validated in the next step."
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:28
+msgid "Your app will generate a verification code. Enter the code below to complete the setup."
+msgstr ""
+
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:31
+msgid "Please enter a phone number to receive the verification codes via text message."
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:33
@@ -2229,14 +2241,14 @@ msgid "We are calling your phone right now, please enter the digits you hear."
 msgstr ""
 
 #: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:41
-msgid "We sent you a text message, please enter the tokens we sent."
+msgid "A text message with your verification code has been sent to you. Please enter the code below."
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:45
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:44
 msgid "We've encountered an issue with the selected authentication method. Please go back and verify that you entered your information correctly, try again, or use a different authentication method instead. If the issue persists, contact the site administrator."
 msgstr ""
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:52
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/setup.html:51
 msgid "To identify and verify your YubiKey, please insert a token in the field below. Your YubiKey will be linked to your account."
 msgstr ""
 
@@ -6647,22 +6659,18 @@ msgid "external SCIM id"
 msgstr ""
 
 #: bluebottle/members/models.py:295
-msgid "Office groups managed"
+msgid "Select a region to filter the user's view to only see data relevant to that region. Leave empty for full access to all data."
 msgstr ""
 
-#: bluebottle/members/models.py:297
-msgid "Select one or more groups to filter on. The user will only see data related to those selected groups. Leave empty to show all data."
-msgstr ""
-
-#: bluebottle/members/models.py:304
+#: bluebottle/members/models.py:303
 msgid "When the user updated their matching preferences."
 msgstr ""
 
-#: bluebottle/members/models.py:449
+#: bluebottle/members/models.py:448
 msgid "User activity"
 msgstr ""
 
-#: bluebottle/members/models.py:450
+#: bluebottle/members/models.py:449
 msgid "User activities"
 msgstr ""
 

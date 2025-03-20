@@ -210,7 +210,9 @@ class Segment(models.Model):
 
     @property
     def text_color(self):
-        rgb_background_color = [c / 256.0 for c in ImageColor.getcolor(self.background_color, 'RGB')]
+        rgb_background_color = [
+            c / 256.0 for c in ImageColor.getcolor(self.background_color or '#ffffff', 'RGB')
+        ]
         white = (1, 1, 1)
 
         contrast_with_white = contrast.rgb(rgb_background_color, white)

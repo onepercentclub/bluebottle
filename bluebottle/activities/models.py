@@ -58,6 +58,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     theme = models.ForeignKey(
         "initiatives.Theme", null=True, blank=True, on_delete=SET_NULL
     )
+    categories = models.ManyToManyField("categories.Category", blank=True)
+
     organization = models.ForeignKey(
         Organization,
         null=True,

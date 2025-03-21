@@ -32,14 +32,14 @@ class ReviewerNotificationTestCase(NotificationTestCase):
         current_region = BlueBottleUserFactory.create(
             is_staff=True,
             submitted_initiative_notifications=True,
-            region_manager=region,
         )
+        current_region.subregion_manager.add(region)
 
-        BlueBottleUserFactory.create(
+        another = BlueBottleUserFactory.create(
             is_staff=True,
             submitted_initiative_notifications=True,
-            region_manager=OfficeSubRegionFactory.create(),
         )
+        another.subregion_manager.add(OfficeSubRegionFactory.create())
 
         no_region = BlueBottleUserFactory.create(
             is_staff=True,

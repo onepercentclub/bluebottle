@@ -18,4 +18,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(migrate_region_managers, migrations.RunPython.noop)
     ]

@@ -17,6 +17,7 @@ from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.updates.models import Update, UpdateImage
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -50,6 +51,8 @@ class UpdateSerializer(ModelSerializer):
         polymorphic_serializer=ContributorSerializer
     )
 
+    message = RichTextField()
+
     permissions = ResourcePermissionField('update-detail', view_args=('pk',))
 
     def to_representation(self, instance):
@@ -62,7 +65,6 @@ class UpdateSerializer(ModelSerializer):
             data['author'] = None
         if instance.contribution and instance.contribution.anonymous:
             data['author'] = None
-
         return data
 
     def validate(self, value):
@@ -124,7 +126,7 @@ IMAGE_SIZES = {
     'small': '150x150',
     'medium': '800x450',
     'large': '1600x900',
-    'full': '1600',
+    'full': '1600x1600',
 }
 
 

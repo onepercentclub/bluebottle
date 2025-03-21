@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 
 from bluebottle.activities.models import Activity
 from bluebottle.files.fields import ImageField
@@ -44,7 +45,7 @@ class Update(TriggerMixin, models.Model):
         null=True
     )
 
-    message = models.TextField(_('message'), blank=True, null=True)
+    message = QuillField(_('message'), blank=True, null=True)
     image = ImageField(blank=True, null=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 

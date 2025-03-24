@@ -212,8 +212,6 @@ class InitiativeAdmin(
             format_html_join("", "<li>{}</li>", ((value,) for value in errors))
         )
 
-    autocomplete_fields = ['activity_managers']
-
 
 class ActivitySearchFilterInline(SortableTabularInline):
     model = ActivitySearchFilter

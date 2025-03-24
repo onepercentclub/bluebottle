@@ -115,7 +115,6 @@ class StepsBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class CategoriesBlockPlugin(CMSContentPlugin):
     model = CategoriesContent
-    autocomplete_fields = ('categories',)
     category = _('Homepage')
 
 

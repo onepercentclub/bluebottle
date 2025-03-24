@@ -18,6 +18,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 
 
@@ -33,6 +34,7 @@ class DeedsListViewAPITestCase(APITestCase):
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'theme': ThemeFactory.create()
         }
 
         self.fields = ['initiative', 'start', 'end', 'title', 'description']

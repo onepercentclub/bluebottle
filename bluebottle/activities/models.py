@@ -198,14 +198,13 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def required_fields(self):
-        fields = []
+        fields = ['theme']
         if Location.objects.count():
             fields.append("office_location")
             if InitiativePlatformSettings.load().enable_office_regions:
                 fields.append("office_restriction")
         if not self.initiative_id:
             fields.append("image")
-            fields.append("theme")
         return fields
 
     class Meta(object):

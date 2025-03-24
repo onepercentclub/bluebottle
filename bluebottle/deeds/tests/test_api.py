@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.deeds.serializers import (
-    DeedListSerializer, DeedSerializer, DeedTransitionSerializer,
+    DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
@@ -27,7 +27,7 @@ class DeedsListViewAPITestCase(APITestCase):
         super().setUp()
 
         self.url = reverse('deed-list')
-        self.serializer = DeedListSerializer
+        self.serializer = DeedSerializer
         self.factory = DeedFactory
 
         self.defaults = {
@@ -37,7 +37,7 @@ class DeedsListViewAPITestCase(APITestCase):
             'theme': ThemeFactory.create()
         }
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description']
+        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'theme']
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append('deed')

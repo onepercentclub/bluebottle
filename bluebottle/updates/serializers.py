@@ -124,6 +124,7 @@ IMAGE_SIZES = {
     'small': '150x150',
     'medium': '800x450',
     'large': '1600x900',
+    'full': '1600',
 }
 
 

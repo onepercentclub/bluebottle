@@ -51,11 +51,6 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
         if 'office_location__subregion' in params:
             queryset = queryset.filter(office_location__subregion__id=params['office_location__subregion'])
 
-        if 'office_location__subregion__region' in params:
-            queryset = queryset.filter(
-                office_location__subregion__region__id=params['office_location__subregion__region']
-            )
-
         queryset = queryset.filter(status__in=("succeeded", "open", "full", "running"))
 
         collects = [

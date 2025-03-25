@@ -307,15 +307,14 @@ class HomepageStatisticsContent(TitledContent):
 
     class StatTypeChoices(DjangoChoices):
         all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group "))
-        office_region = ChoiceItem('office_region', label=_("Office region"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
 
     stat_type = models.CharField(
-        _("Default filter"),
+        _("Stat type"),
         max_length=100,
         choices=StatTypeChoices.choices,
         default=StatTypeChoices.all,
-        help_text=_('Default filter selected for this group')
+        help_text=_('Stats will show all data or only activities from the user\'s office group')
     )
 
     class Meta:
@@ -429,15 +428,14 @@ class ProjectsMapContent(TitledContent):
 
     class MapTypeChoices(DjangoChoices):
         all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group "))
-        office_region = ChoiceItem('office_region', label=_("Office region"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
 
     map_type = models.CharField(
-        _("Default filter"),
+        _("Map type"),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,
-        help_text=_('Default filter that will be selected on the map')
+        help_text=_('The map will show all activities or only from the user\'s office group')
     )
 
     class Meta:

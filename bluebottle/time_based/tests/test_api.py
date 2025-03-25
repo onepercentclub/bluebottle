@@ -19,12 +19,12 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory, PlaceFactory, GeolocationFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import (
     APITestCase
 )
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, get_first_included_by_type
 from bluebottle.time_based.models import SlotParticipant, Skill
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
@@ -58,7 +58,12 @@ class TimeBasedListAPIViewTestCase():
                 'relationships': {
                     'initiative': {
                         'data': {
-                            'type': 'initiatives', 'id': self.initiative.id
+                            'type': 'initiatives', 'id': self.initiative.pk
+                        },
+                    },
+                    'theme': {
+                        'data': {
+                            'type': 'themes', 'id': ThemeFactory.create().pk
                         },
                     },
                 }

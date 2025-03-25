@@ -9,6 +9,8 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
+
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -60,6 +62,7 @@ class TimeBasedFactory(factory.DjangoModelFactory):
 
     expertise = factory.SubFactory(SkillFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DateActivitySlotFactory(factory.DjangoModelFactory):

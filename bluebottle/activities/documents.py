@@ -45,7 +45,6 @@ class ActivityDocument(Document):
             'initiative',
             'owner',
             'image',
-            'initiative__theme',
             'initiative__owner',
             'office_location',
             'office_location__country',
@@ -93,7 +92,7 @@ class ActivityDocument(Document):
     })
 
     theme = fields.NestedField(
-        attr='initiative.theme',
+        attr='theme',
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
@@ -102,7 +101,7 @@ class ActivityDocument(Document):
     )
 
     categories = fields.NestedField(
-        attr='initiative.categories',
+        attr='categories',
         properties={
             'id': fields.KeywordField(),
             'title': fields.KeywordField(),
@@ -370,14 +369,14 @@ class ActivityDocument(Document):
             return get_translated_list(instance.expertise)
 
     def prepare_theme(self, instance):
-        if instance.initiative and hasattr(instance.initiative, 'theme') and instance.initiative.theme:
-            return get_translated_list(instance.initiative.theme)
+        if instance.theme:
+            return get_translated_list(instance.theme)
 
     def prepare_categories(self, instance):
         categories = []
-        if instance.initiative:
-            for category in instance.initiative.categories.all():
-                categories += get_translated_list(category, 'title')
+        for category in instance.categories.all():
+            categories += get_translated_list(category, 'title')
+
         return categories
 
     def prepare_segments(self, instance):

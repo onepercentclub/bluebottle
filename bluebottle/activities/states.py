@@ -103,8 +103,10 @@ class ActivityStateMachine(ModelStateMachine):
             if not InitiativePlatformSettings.load().enable_reviewing:
                 return True
             return False
+
         if self.instance.initiative.status == "approved":
             return True
+
         return False
 
     def can_submit(self):

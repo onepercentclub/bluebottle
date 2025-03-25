@@ -636,12 +636,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
     ]
 
     def initiative_link(self, obj):
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
-            obj.initiative
-        )
-
+        if obj.initiative:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
+                obj.initiative
+            )
     initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):

@@ -249,6 +249,20 @@ class ActivityStateMachine(ModelStateMachine):
         ),
     )
 
+    request_changes = Transition(
+        submitted,
+        needs_work,
+        name=_('Request changes'),
+        description=_(
+            "The activity needs changes before it can be approved. "
+            "Inform the activity manager of the changes required. "
+            "The activity manager will then be able to edit and resubmit the activity."
+        ),
+        conditions=[],
+        automatic=False,
+        permission=is_staff,
+    )
+
     cancel = Transition(
         [
             open,

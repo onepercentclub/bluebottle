@@ -79,7 +79,7 @@ class LookerSSOEmbed(object):
         member_settings = MemberPlatformSettings.objects.get()
 
         subregions = list(self.user.subregion_manager.values_list('id', flat=True))
-        subregions = ";".join(subregions)
+        subregions = ";".join(map(str, subregions))
 
         params = OrderedDict([
             ('nonce', self.nonce.decode()),

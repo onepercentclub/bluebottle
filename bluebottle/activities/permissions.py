@@ -43,7 +43,7 @@ class ActivityStatusPermission(ResourcePermission):
     def has_object_action_permission(self, action, user, obj):
         if (
             action in ('PATCH', 'PUT') and
-            obj.status in ('rejected', 'deleted')
+            obj.status in ('rejected', 'deleted', 'submitted')
         ):
             return False
         else:

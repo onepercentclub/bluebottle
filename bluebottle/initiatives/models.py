@@ -410,7 +410,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         _("Enable reviewing"),
         default=True,
         help_text=_(
-            "Enable reviewing of initiatives and activities before they can be published."
+            "Review initiatives and activities. Activities created within an initiative will not "
+            "need to be reviewed. Crowdfunding activities will always need to be reviewed"
         ),
     )
 

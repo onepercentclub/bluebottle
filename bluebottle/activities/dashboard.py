@@ -25,7 +25,7 @@ class UnPublishedActivities(DashboardModule):
 
 
 class RecentlySubmittedActivities(DashboardModule):
-    title = _('Recently submitted activities')
+    title = _('Activities that need to be reviewed')
     title_url = "{}?status[]=draft&status[]=open".format(reverse('admin:activities_activity_changelist'))
     template = 'dashboard/recent_activities.html'
     limit = 5

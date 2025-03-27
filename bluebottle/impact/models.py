@@ -94,6 +94,9 @@ class ImpactType(SortableTranslatableModel):
         verbose_name = _('impact type')
         verbose_name_plural = _('impact types')
 
+    class JSONAPIMeta(object):
+        resource_name = "activities/impact-types"
+
 
 class ImpactGoal(ValidatedModelMixin, models.Model):
     type = models.ForeignKey(
@@ -155,6 +158,9 @@ class ImpactGoal(ValidatedModelMixin, models.Model):
     class Meta(object):
         verbose_name = _('impact goal')
         verbose_name_plural = _('impact goals')
+
+    class JSONAPIMeta(object):
+        resource_name = "activities/impact-goals"
 
     @property
     def required_fields(self):

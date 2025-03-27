@@ -7,6 +7,7 @@ from bluebottle.notifications.messages import TransitionMessage
 class ReviewerActivityNotification(TransitionMessage):
     context = {
         "title": "title",
+        "owner_name": "owner.full_name",
     }
 
     @property
@@ -23,16 +24,15 @@ class ReviewerActivityNotification(TransitionMessage):
             Q(is_staff=True) | Q(is_superuser=True)
         ).filter(submitted_initiative_notifications=True)
 
-        if self.obj.location and self.obj.location.subregion:
+        if self.obj.office_location and self.obj.office_location.subregion:
             recipients = recipients.filter(
-                Q(subregion_manager=self.obj.location.subregion)
+                Q(subregion_manager=self.obj.office_location.subregion)
                 | Q(subregion_manager__isnull=True)
             )
-
         return list(recipients)
 
 
-class ActivitySubmittedNotification(ReviewerActivityNotification):
+class ActivitySubmittedReviewerNotification(ReviewerActivityNotification):
 
-    subject = pgettext("email", "Activity submitted for review")
+    subject = pgettext("email", "A new activity is ready to be reviewed on {site_name}")
     template = "messages/reviewer/activity_submitted"

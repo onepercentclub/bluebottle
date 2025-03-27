@@ -1,6 +1,7 @@
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
     SetPublishedDateEffect, )
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
@@ -13,6 +14,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.states import ParticipantStateMachine
 
 
@@ -47,7 +49,8 @@ class ActivityTriggers(TriggerManager):
                 TransitionEffect(
                     ActivityStateMachine.auto_approve,
                     conditions=[should_approve_instantly]
-                )
+                ),
+                NotificationEffect(ActivitySubmittedReviewerNotification)
             ]
         ),
 

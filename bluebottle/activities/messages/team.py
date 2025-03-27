@@ -1,9 +1,9 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
-from bluebottle.activities.messages import OwnerActivityNotification, ActivityNotification
+from bluebottle.notifications.messages import TransitionMessage
 
 
-class TeamNotification(OwnerActivityNotification):
+class TeamNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'team_captain_email': 'owner.email',
@@ -112,7 +112,7 @@ class TeamReopenedMessage(TeamNotification):
         return [contributor.user for contributor in self.obj.members.all()]
 
 
-class TeamMemberAddedMessage(ActivityNotification):
+class TeamMemberAddedMessage(TeamNotification):
     subject = pgettext('email', 'Someone has joined your team for "{title}"')
     template = 'messages/team_member_added'
 
@@ -134,7 +134,7 @@ class TeamMemberAddedMessage(ActivityNotification):
             return []
 
 
-class TeamMemberWithdrewMessage(ActivityNotification):
+class TeamMemberWithdrewMessage(TeamNotification):
     subject = pgettext('email', 'A participant has withdrawn from your team for "{title}"')
     template = 'messages/team_member_withdrew'
 
@@ -156,7 +156,7 @@ class TeamMemberWithdrewMessage(ActivityNotification):
             return []
 
 
-class TeamMemberRemovedMessage(ActivityNotification):
+class TeamMemberRemovedMessage(TeamNotification):
     subject = pgettext('email', "Team member removed for ‘{title}’")
     template = 'messages/team_member_removed'
 

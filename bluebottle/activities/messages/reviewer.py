@@ -7,7 +7,7 @@ from bluebottle.notifications.messages import TransitionMessage
 class ReviewerActivityNotification(TransitionMessage):
     context = {
         "title": "title",
-        "owner_name": "owner.full_name",
+        "initiator_name": "owner.full_name",
     }
 
     @property

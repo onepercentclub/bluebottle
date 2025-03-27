@@ -10,6 +10,7 @@ from bluebottle.activities.messages import (
     DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification,
     DoGoodHoursReminderQ4Notification
 )
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -26,6 +27,19 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.obj = DateActivityFactory.create(
             title="Save the world!"
         )
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+    def test_activity_submitted_notification(self):
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity is ready to be reviewed on [site name]')
+        self.assertBodyContains('Please take a moment to review this activity')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
 
     def test_activity_rejected_notification(self):
         self.message_class = ActivityRejectedNotification

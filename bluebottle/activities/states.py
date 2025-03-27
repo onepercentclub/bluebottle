@@ -23,13 +23,13 @@ class ActivityStateMachine(ModelStateMachine):
     submitted = State(
         _("submitted"),
         "submitted",
-        _("The activity is ready to go online once the initiative has been approved."),
+        _("The activity has been submitted and is ready to be reviewed."),
     )
     needs_work = State(
         _("needs work"),
         "needs_work",
         _(
-            "The activity has been submitted but needs adjustments in order to be approved."
+            "The activity needs changes before it can be approved."
         ),
     )
     rejected = State(
@@ -165,7 +165,7 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         submitted,
-        description=_("Submit the activity for approval."),
+        description=_("The activity will be submitted for review."),
         automatic=False,
         name=_("Submit"),
         permission=is_owner,
@@ -189,9 +189,10 @@ class ActivityStateMachine(ModelStateMachine):
         rejected,
         name=_("Reject"),
         description=_(
-            "Reject the activity if it does not fit the programme or "
-            "if it does not comply with the rules. "
-            "The activity manager can no longer edit the activity."
+            "Reject if the activity does not align with your program or guidelines "
+            "The activity manager will not be able to edit or resubmit it, and it will "
+            "not appear on the search page in the frontend. The activity will still "
+            "be available in the back office and appear in your reporting"
         ),
         automatic=False,
         permission=is_staff,
@@ -244,8 +245,7 @@ class ActivityStateMachine(ModelStateMachine):
         automatic=False,
         permissions=[is_staff],
         description=_(
-            "The activity will be visible in the frontend and people can apply to "
-            "the activity."
+            "The activity will be published and visible in the frontend for people to contribute to,"
         ),
     )
 
@@ -272,10 +272,10 @@ class ActivityStateMachine(ModelStateMachine):
         name=_("Cancel"),
         description=_(
             "Cancel if the activity will not be executed. "
-            "An activity manager can no longer edit the activity "
-            "and it will no longer be visible on the platform. "
+            "An activity manager will no longer be able edit the activity "
+            "and it won't show up on the search page in the frontend. "
             "The activity will still be visible in the back office "
-            "and will continue to count in the reporting."
+            "and appear in your reporting."
         ),
         description_front_end=_(
             "The activity ends and people no longer register. All current participants will fail too."

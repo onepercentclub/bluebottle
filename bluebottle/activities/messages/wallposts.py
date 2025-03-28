@@ -5,7 +5,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
     subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_owner'
+    template = 'messages/wallposts/activity_wallpost_owner'
 
     context = {
         'title': 'content_object.title'
@@ -21,7 +21,7 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
 
 class ActivityWallpostReactionMessage(TransitionMessage):
     subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_reaction'
+    template = 'messages/wallposts/activity_wallpost_reaction'
 
     context = {
         'title': 'wallpost.content_object.title'
@@ -35,7 +35,7 @@ class ActivityWallpostReactionMessage(TransitionMessage):
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
     subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_owner_reaction'
+    template = 'messages/wallposts/activity_wallpost_owner_reaction'
 
     context = {
         'title': 'wallpost.content_object.title'
@@ -51,7 +51,7 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
 
 class ActivityWallpostFollowerMessage(TransitionMessage):
     subject = pgettext('email', "Update from '{title}'")
-    template = 'messages/activity_wallpost_follower'
+    template = 'messages/wallposts/activity_wallpost_follower'
     context = {
         'title': 'content_object.title'
     }

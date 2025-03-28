@@ -19,6 +19,8 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
+from bluebottle.categories.models import Category
+
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -120,6 +122,7 @@ class BaseActivitySerializer(ModelSerializer):
     description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
+    categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()

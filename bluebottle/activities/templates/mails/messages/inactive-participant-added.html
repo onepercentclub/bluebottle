@@ -2,9 +2,15 @@
 {% load i18n %}
 {% load message_url %}
 
-{% block message %}{% blocktrans context 'email' %}
+{% block message %}
+{% blocktrans context 'email' %}
 <p>You have been added to an activity on {{site_name}}</p>
-{% endblocktrans %}{% endblock %}
+{% endblocktrans %}
+
+{% blocktrans context 'email' %}
+<p>View the activity to learn more about what’s planned and what to expect. We'll ask you to activate your account to stay updated which will make it easier to join future activities.</p>
+{% endblocktrans %}
+{% endblock %}
 
 <p>{{ title }}</p>
 

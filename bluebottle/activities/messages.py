@@ -571,24 +571,24 @@ class PublishActivityReminderNotification(TransitionMessage):
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext("email", "It’s a new year, let's make some impact!")
-    template = "messages/do-good-hours/reminder-q1"
+    template = "messages/matching/reminder-q1"
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext("email", "Haven’t joined an activity yet? Let’s get started!")
-    template = "messages/do-good-hours/reminder-q2"
+    template = "messages/matching/reminder-q2"
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext(
         "email", "Half way through the year and still plenty of activities to join"
     )
-    template = "messages/do-good-hours/reminder-q3"
+    template = "messages/matching/reminder-q3"
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext("email", "Make use of your {do_good_hours} hours of impact!")
-    template = "messages/do-good-hours/reminder-q4"
+    template = "messages/matching/reminder-q4"
 
 
 class InactiveParticipantAddedNotification(TransitionMessage):

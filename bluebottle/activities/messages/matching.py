@@ -7,32 +7,9 @@ from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
-from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.utils.utils import get_current_host, get_current_language
-
-
-class ActivityNotification(TransitionMessage):
-    context = {
-        'title': 'title',
-    }
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    action_title = pgettext('email', 'Open your activity')
-
-    def get_context(self, recipient):
-        context = super().get_context(recipient)
-        context['impact'] = InitiativePlatformSettings.load().enable_impact
-
-        return context
-
-    def get_recipients(self):
-        """activity owner"""
-        return [self.obj.owner]
 
 
 class MatchingActivitiesNotification(TransitionMessage):
@@ -43,7 +20,7 @@ class MatchingActivitiesNotification(TransitionMessage):
         'email',
         '{first_name}, there are {count} activities on {site_name} matching your profile'
     )
-    template = 'messages/matching_activities'
+    template = 'messages/matching/matching_activities'
 
     @property
     def action_link(self):
@@ -202,19 +179,19 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "It’s a new year, let's make some impact!")
-    template = 'messages/do-good-hours/reminder-q1'
+    template = 'messages/matching/reminder-q1'
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
-    template = 'messages/do-good-hours/reminder-q2'
+    template = 'messages/matching/reminder-q2'
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "Half way through the year and still plenty of activities to join")
-    template = 'messages/do-good-hours/reminder-q3'
+    template = 'messages/matching/reminder-q3'
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
     subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
-    template = 'messages/do-good-hours/reminder-q4'
+    template = 'messages/matching/reminder-q4'

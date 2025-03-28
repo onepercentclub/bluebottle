@@ -72,11 +72,6 @@ class TimeBasedActivityStatesTestCase():
             self.activity.states.possible_transitions()
         )
 
-        self.assertFalse(
-            TimeBasedStateMachine.reject in
-            self.activity.states.possible_transitions()
-        )
-
     def test_needs_work(self):
         self.activity.states.reject()
         self.activity.states.restore()

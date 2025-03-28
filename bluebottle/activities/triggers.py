@@ -1,6 +1,7 @@
 from bluebottle.activities.effects import (
-    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
-    SetPublishedDateEffect, )
+    CreateOrganizer, CopyCategories, CreateOrganizerContribution, SetContributionDateEffect,
+    DeleteRelatedContributionsEffect, SetPublishedDateEffect,
+)
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
@@ -37,7 +38,8 @@ class ActivityTriggers(TriggerManager):
         TransitionTrigger(
             ActivityStateMachine.initiate,
             effects=[
-                CreateOrganizer
+                CreateOrganizer,
+                CopyCategories
             ]
         ),
 

@@ -225,7 +225,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             else:
                 self.slug = "new"
 
-        if not self.owner_id:
+        if not self.owner_id and self.initiative:
             self.owner = self.initiative.owner
 
         super(Activity, self).save(**kwargs)

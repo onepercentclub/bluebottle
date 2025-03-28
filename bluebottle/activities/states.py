@@ -192,7 +192,7 @@ class ActivityStateMachine(ModelStateMachine):
             "Reject if the activity does not align with your program or guidelines "
             "The activity manager will not be able to edit or resubmit it, and it will "
             "not appear on the search page in the frontend. The activity will still "
-            "be available in the back office and appear in your reporting"
+            "be available in the back office and appear in your reporting."
         ),
         automatic=False,
         permission=is_staff,

@@ -6,7 +6,7 @@ from bluebottle.activities.messages import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification, ActivityPublishedReviewerNotification, ActivitySubmittedNotification,
-    ActivityPublishedNotification
+    ActivityPublishedNotification, ActivityApprovedNotification, ActivityNeedsWorkNotification
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
@@ -60,6 +60,24 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertNotificationEffect(ActivitySubmittedReviewerNotification)
             self.assertNotificationEffect(ActivitySubmittedNotification)
+
+    def test_approve(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+
+        with self.execute():
+            self.assertNotificationEffect(ActivityApprovedNotification)
+
+    def test_needs_work(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.request_changes()
+
+        with self.execute():
+            self.assertNotificationEffect(ActivityNeedsWorkNotification)
 
     def test_publish(self):
         self.create()

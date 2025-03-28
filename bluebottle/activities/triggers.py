@@ -1,7 +1,8 @@
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
     SetPublishedDateEffect, )
-from bluebottle.activities.messages import ActivityPublishedNotification, ActivitySubmittedNotification
+from bluebottle.activities.messages import ActivityPublishedNotification, ActivitySubmittedNotification, \
+    ActivityApprovedNotification, ActivityNeedsWorkNotification
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
     ActivityPublishedReviewerNotification
 from bluebottle.activities.models import Organizer, EffortContribution
@@ -29,11 +30,27 @@ def should_approve_instantly(effect):
     return effect.instance.initiative.status == 'approved'
 
 
+def should_review(effect):
+    if isinstance(effect.instance, Funding):
+        return True
+    review = InitiativePlatformSettings.load().enable_reviewing
+    if effect.instance.initiative is None:
+        return review
+    return effect.instance.initiative.status != 'approved'
+
+
 def has_organizer(effect):
     """
     Has an organizer
     """
     return getattr(effect.instance, 'organizer', False)
+
+
+def is_not_funding(effect):
+    """
+    Is not a funding activity
+    """
+    return not isinstance(effect.instance, Funding)
 
 
 class ActivityTriggers(TriggerManager):
@@ -52,8 +69,14 @@ class ActivityTriggers(TriggerManager):
                     ActivityStateMachine.auto_approve,
                     conditions=[should_approve_instantly]
                 ),
-                NotificationEffect(ActivitySubmittedReviewerNotification),
-                NotificationEffect(ActivitySubmittedNotification)
+                NotificationEffect(
+                    ActivitySubmittedReviewerNotification,
+                    conditions=[should_review]
+                ),
+                NotificationEffect(
+                    ActivitySubmittedNotification,
+                    conditions=[should_review]
+                )
             ]
         ),
 
@@ -63,6 +86,25 @@ class ActivityTriggers(TriggerManager):
                 TransitionEffect(
                     ActivityStateMachine.auto_approve,
                     conditions=[should_approve_instantly]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ActivityStateMachine.approve,
+            effects=[
+                NotificationEffect(
+                    ActivityApprovedNotification,
+                    conditions=[is_not_funding]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            ActivityStateMachine.request_changes,
+            effects=[
+                NotificationEffect(
+                    ActivityNeedsWorkNotification,
                 )
             ]
         ),

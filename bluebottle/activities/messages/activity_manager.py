@@ -83,6 +83,22 @@ class ActivitySubmittedNotification(OwnerActivityNotification):
     template = 'messages/activity_manager/activity_published'
 
 
+class ActivityApprovedNotification(OwnerActivityNotification):
+    """
+    The activity was approved
+    """
+    subject = pgettext('email', "Your activity on {site_name} has been approved!")
+    template = 'messages/activity_manager/activity_approved'
+
+
+class ActivityNeedsWorkNotification(OwnerActivityNotification):
+    """
+    The activity needs work
+    """
+    subject = pgettext('email', "The activity you submitted on {site_name} needs work")
+    template = 'messages/activity_manager/activity_needs_work'
+
+
 class PublishActivityReminderNotification(OwnerActivityNotification):
     subject = pgettext('email', 'Publish your activity "{title}"')
     template = 'messages/activity_manager/publish_activity_reminder'

@@ -1,10 +1,8 @@
 {% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block content %}
+{% block message %}
 {% blocktrans context 'email' %}
-Hi {{ recipient_name }},<br>
-<br>
 Your activity <i>{{ title }}</i> has been submitted on {{ site_name }}.<br>
 <br>
 <b>What’s next?</b>

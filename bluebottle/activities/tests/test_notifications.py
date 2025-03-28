@@ -8,7 +8,8 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification,
     DoGoodHoursReminderQ1Notification,
     DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification,
-    DoGoodHoursReminderQ4Notification, ActivitySubmittedNotification, ActivityPublishedNotification
+    DoGoodHoursReminderQ4Notification, ActivitySubmittedNotification, ActivityPublishedNotification,
+    ActivityApprovedNotification, ActivityNeedsWorkNotification
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
     ActivityPublishedReviewerNotification
@@ -64,6 +65,22 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity on [site name] has been published!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_approved_notification(self):
+        self.message_class = ActivityApprovedNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your activity on [site name] has been approved!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_needs_work_notification(self):
+        self.message_class = ActivityNeedsWorkNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('The activity you submitted on [site name] needs work')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 

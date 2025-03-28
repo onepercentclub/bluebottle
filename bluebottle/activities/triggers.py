@@ -1,7 +1,9 @@
 from bluebottle.activities.effects import (
     CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
     SetPublishedDateEffect, )
-from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
+from bluebottle.activities.messages import ActivityPublishedNotification, ActivitySubmittedNotification
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
+    ActivityPublishedReviewerNotification
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,
@@ -50,7 +52,8 @@ class ActivityTriggers(TriggerManager):
                     ActivityStateMachine.auto_approve,
                     conditions=[should_approve_instantly]
                 ),
-                NotificationEffect(ActivitySubmittedReviewerNotification)
+                NotificationEffect(ActivitySubmittedReviewerNotification),
+                NotificationEffect(ActivitySubmittedNotification)
             ]
         ),
 
@@ -96,6 +99,8 @@ class ActivityTriggers(TriggerManager):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
+                NotificationEffect(ActivityPublishedReviewerNotification),
+                NotificationEffect(ActivityPublishedNotification)
             ]
         ),
 

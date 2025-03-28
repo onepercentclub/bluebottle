@@ -5,7 +5,8 @@ from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivityRestoredNotification, InactiveParticipantAddedNotification,
-    ParticipantWithdrewConfirmationNotification
+    ParticipantWithdrewConfirmationNotification, ActivityPublishedReviewerNotification, ActivitySubmittedNotification,
+    ActivityPublishedNotification
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
@@ -58,6 +59,7 @@ class DeedTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNotificationEffect(ActivitySubmittedReviewerNotification)
+            self.assertNotificationEffect(ActivitySubmittedNotification)
 
     def test_publish(self):
         self.create()
@@ -66,6 +68,8 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertNotificationEffect(ActivityPublishedReviewerNotification)
+            self.assertNotificationEffect(ActivityPublishedNotification)
 
     def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)

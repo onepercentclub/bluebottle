@@ -67,6 +67,22 @@ class ActivityExpiredNotification(OwnerActivityNotification):
     template = 'messages/activity_manager/activity_expired'
 
 
+class ActivityPublishedNotification(OwnerActivityNotification):
+    """
+    The activity was published
+    """
+    subject = pgettext('email', "Your activity on {site_name} has been published!")
+    template = 'messages/activity_manager/activity_published'
+
+
+class ActivitySubmittedNotification(OwnerActivityNotification):
+    """
+    The activity was submitted
+    """
+    subject = pgettext('email', "You submitted an activity on {site_name}")
+    template = 'messages/activity_manager/activity_published'
+
+
 class PublishActivityReminderNotification(OwnerActivityNotification):
     subject = pgettext('email', 'Publish your activity "{title}"')
     template = 'messages/activity_manager/publish_activity_reminder'

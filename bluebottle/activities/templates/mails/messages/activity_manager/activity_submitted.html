@@ -1,0 +1,23 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans context 'email' %}
+Hi {{ recipient_name }},<br>
+<br>
+Your activity <i>{{ title }}</i> has been submitted on {{ site_name }}.<br>
+<br>
+<b>What’s next?</b>
+<ul>
+    <li>
+        The platform manager will review your activity.
+    </li>
+    <li>
+        If no changes are needed, it will be approved and made visible on the platform and people can contribute.
+    </li>
+    <li>
+        If any changes are needed, you’ll receive an email with suggested improvements.
+    </li>
+</ul>
+{% endblocktrans %}
+{% endblock %}

@@ -3,7 +3,6 @@ from urllib.parse import urlparse
 from django.core.signing import TimestampSigner
 from django.utils.translation import pgettext_lazy as pgettext
 
-from bluebottle.activities.messages import OwnerActivityNotification
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -30,7 +29,7 @@ class InactiveParticipantAddedNotification(TransitionMessage):
         return [self.obj.user]
 
 
-class ParticipantWithdrewConfirmationNotification(OwnerActivityNotification):
+class ParticipantWithdrewConfirmationNotification(TransitionMessage):
     """
     The participant withdrew from the activity
     """
@@ -44,3 +43,9 @@ class ParticipantWithdrewConfirmationNotification(OwnerActivityNotification):
 
     subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participant/participant_withdrew_confirmation'
+
+    action_title = pgettext('email', 'Open your activity')
+
+    def get_recipients(self):
+        """activity owner"""
+        return [self.obj.user]

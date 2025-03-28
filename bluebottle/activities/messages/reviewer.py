@@ -36,3 +36,9 @@ class ActivitySubmittedReviewerNotification(ReviewerActivityNotification):
 
     subject = pgettext("email", "A new activity is ready to be reviewed on {site_name}")
     template = "messages/reviewer/activity_submitted"
+
+
+class ActivityPublishedReviewerNotification(ReviewerActivityNotification):
+
+    subject = pgettext("email", "A new activity has been published on {site_name}")
+    template = "messages/reviewer/activity_published"

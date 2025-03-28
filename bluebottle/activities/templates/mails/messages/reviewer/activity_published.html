@@ -1,0 +1,11 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans context 'email' %}
+Hi {{ recipient_name }},<br>
+<br>
+The activity <i>{{ title }}</i> has been successfully published
+and is now live on {{ site_name }} for people to contribute to.
+{% endblocktrans %}
+{% endblock %}

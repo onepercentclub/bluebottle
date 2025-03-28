@@ -19,8 +19,6 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
-from bluebottle.categories.models import Category
-
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant

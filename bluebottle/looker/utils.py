@@ -3,22 +3,22 @@ from future import standard_library
 from bluebottle.members.models import MemberPlatformSettings
 
 standard_library.install_aliases()
-from builtins import object
-import binascii
-from collections import OrderedDict
-import json
-import hmac
 import base64
-from hashlib import sha1
-import time
+import binascii
+import hmac
+import json
 import os
-from urllib.parse import urlencode, quote_plus
+import time
+from builtins import object
+from collections import OrderedDict
+from hashlib import sha1
+from urllib.parse import quote_plus, urlencode
 
-from django.db import connection
 from django.conf import settings
+from django.db import connection
 
-from bluebottle.clients import properties
 from bluebottle.analytics.models import AnalyticsPlatformSettings
+from bluebottle.clients import properties
 from bluebottle.utils.utils import get_current_host
 
 
@@ -79,6 +79,7 @@ class LookerSSOEmbed(object):
         member_settings = MemberPlatformSettings.objects.get()
 
         subregions = list(self.user.subregion_manager.values_list('id', flat=True))
+        subregions = ";".join(map(str, subregions))
 
         params = OrderedDict([
             ('nonce', self.nonce.decode()),

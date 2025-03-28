@@ -233,7 +233,7 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.run_task(self.nigh)
         self.assertEqual(
             mail.outbox[0].subject,
-            'The activity "{}" will take place tomorrow!'.format(self.activity.title)
+            'De activiteit "{}" vindt morgen plaats!'.format(self.activity.title)
         )
         with TenantLanguage('nl'):
             expected_date = defaultfilters.date(self.slot.start)

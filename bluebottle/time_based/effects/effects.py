@@ -317,12 +317,13 @@ class CreateFirstSlotEffect(Effect):
         return self.instance.slots.count() == 0
 
     def post_save(self):
+        if self.instance.slots.count():
+            return
         tz = get_current_timezone()
         start = make_aware(
             datetime.combine(self.instance.start, datetime.min.time()),
             tz
         ) if self.instance.start else now()
-
         PeriodicSlot.objects.create(
             activity=self.instance,
             start=start,

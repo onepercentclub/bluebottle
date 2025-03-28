@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.collect.models import CollectActivity, CollectContributor, CollectType
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.utils.models import Language
 
 
@@ -47,6 +48,7 @@ class CollectActivityFactory(factory.DjangoModelFactory):
     location = factory.SubFactory(GeolocationFactory)
     start = factory.Faker('future_date', end_date="+20d", tzinfo=UTC)
     end = factory.Faker('future_date', end_date="+2d", tzinfo=UTC)
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class CollectContributorFactory(FSMModelFactory):

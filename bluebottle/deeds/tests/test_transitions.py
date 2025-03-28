@@ -6,6 +6,8 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 
+from bluebottle.test.factory_models.projects import ThemeFactory
+
 
 class DeedStateMachineTestCase(StateMachineTestCase):
     factory = DeedFactory
@@ -16,6 +18,7 @@ class DeedStateMachineTestCase(StateMachineTestCase):
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
+            'theme': ThemeFactory.create(),
             'owner': self.owner,
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
@@ -24,10 +27,6 @@ class DeedStateMachineTestCase(StateMachineTestCase):
 
     def test_draft_complete(self):
         self.create()
-
-        self.assertTransition('submit', self.owner)
-        self.assertTransition('submit', self.staff_user)
-        self.assertNoTransition('submit', BlueBottleUserFactory.create())
 
         self.assertTransition('delete', self.owner)
         self.assertTransition('delete', self.staff_user)

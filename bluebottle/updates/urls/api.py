@@ -10,7 +10,7 @@ urlpatterns = [
 
 
     re_path(
-        r'^(?P<pk>\d+)/image/(?P<size>\d+x\d+)$',
+        r'^(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         UpdateImageContent.as_view(),
         name='update-image'
     ),

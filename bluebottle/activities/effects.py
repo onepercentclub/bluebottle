@@ -209,3 +209,15 @@ class DeleteRelatedContributionsEffect(Effect):
 
     def __str__(self):
         return str(_('Delete related contributions'))
+
+
+class SetPublishedDateEffect(Effect):
+    "Set de published date"
+
+    display = False
+
+    def post_save(self, **kwargs):
+        self.instance.published = now()
+
+    def __str__(self):
+        return str(_('Set the published date'))

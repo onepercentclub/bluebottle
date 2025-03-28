@@ -23,8 +23,8 @@ class InitiativeSubmittedStaffMessage(TransitionMessage):
 
         if self.obj.location and self.obj.location.subregion:
             recipients = recipients.filter(
-                Q(region_manager=self.obj.location.subregion)
-                | Q(region_manager__isnull=True)
+                Q(subregion_manager=self.obj.location.subregion)
+                | Q(subregion_manager__isnull=True)
             )
 
         return list(recipients)

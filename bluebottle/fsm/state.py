@@ -5,6 +5,8 @@ from django.dispatch import Signal
 from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
 
+TRANSITION = 9
+
 
 class TransitionNotPossible(Exception):
     pass
@@ -125,7 +127,6 @@ class Transition(BaseTransition):
             raise TransitionNotPossible(
                 _('You are not allowed to perform this transition')
             )
-            return result and (not user or self.permission(machine, user))
         else:
             return result
 

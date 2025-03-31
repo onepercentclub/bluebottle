@@ -35,12 +35,22 @@ class BaseStatisticSerializer(ModelSerializer):
             start = datetime.datetime(year, 1, 1, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
             end = datetime.datetime(year, 12, 31, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
 
-        if 'office_location__subregion' in params:
-            subregion = params['office_location__subregion']
-        if user:
-            value = obj.get_live_value(start, end, subregion, user)
+        current_user = get_current_user()
+
+        if 'filter[type]' in params and current_user:
+            if params['filter[type]'] == 'office_region':
+                region = current_user.location.subregion.region
+                value = obj.get_value(start, end, region=region)
+            elif params['filter[type]'] == 'office_subregion':
+                subregion = current_user.location.subregion
+                value = obj.get_value(start, end, subregion=subregion)
+            else:
+                value = obj.get_value(start, end)
         else:
-            value = obj.get_value(start, end, subregion, user)
+            if user:
+                value = obj.get_live_value(start, end, user=user)
+            else:
+                value = obj.get_value(start, end)
 
         try:
             return {

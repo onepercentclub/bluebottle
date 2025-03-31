@@ -307,14 +307,17 @@ class HomepageStatisticsContent(TitledContent):
 
     class StatTypeChoices(DjangoChoices):
         all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
+        office_region = ChoiceItem('office_region', label=_("Region"))
 
     stat_type = models.CharField(
-        _("Stat type"),
+        _("Default filter"),
         max_length=100,
         choices=StatTypeChoices.choices,
         default=StatTypeChoices.all,
-        help_text=_('Stats will show all data or only activities from the user\'s office group')
+        help_text=_(
+            'Set the default statistics view. Users will see this first but can switch views anytime.'
+        )
     )
 
     class Meta:
@@ -423,19 +426,23 @@ class ShareResultsContent(TitledContent):
 
 
 class ProjectsMapContent(TitledContent):
-
     type = 'projects-map'
 
     class MapTypeChoices(DjangoChoices):
+
         all = ChoiceItem('all', label=_("Global"))
-        office_subregion = ChoiceItem('office_subregion', label=_("Office group (based on user office)"))
+        office_subregion = ChoiceItem('office_subregion', label=_("Group"))
+        office_region = ChoiceItem('office_region', label=_("Region"))
 
     map_type = models.CharField(
-        _("Map type"),
+        _("Default filter"),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,
-        help_text=_('The map will show all activities or only from the user\'s office group')
+        help_text=_(
+            'Set the default map view that shows where all activities are taking place. '
+            'Users will see this first but can switch views anytime.'
+        )
     )
 
     class Meta:

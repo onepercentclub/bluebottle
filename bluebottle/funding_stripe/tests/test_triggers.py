@@ -1,6 +1,6 @@
 from django.test.utils import override_settings
 
-from bluebottle.funding.messages import (
+from bluebottle.funding.messages.messages import (
     PayoutAccountMarkedIncomplete,
     LivePayoutAccountMarkedIncomplete,
 )

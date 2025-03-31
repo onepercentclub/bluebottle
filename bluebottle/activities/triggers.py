@@ -75,7 +75,10 @@ class ActivityTriggers(TriggerManager):
                 ),
                 NotificationEffect(
                     ActivitySubmittedNotification,
-                    conditions=[should_review]
+                    conditions=[
+                        should_review,
+                        is_not_funding
+                    ]
                 )
             ]
         ),
@@ -105,6 +108,7 @@ class ActivityTriggers(TriggerManager):
             effects=[
                 NotificationEffect(
                     ActivityNeedsWorkNotification,
+                    conditions=[is_not_funding]
                 )
             ]
         ),

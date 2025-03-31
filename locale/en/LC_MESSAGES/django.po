@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-31 12:44+0200\n"
+"POT-Creation-Date: 2025-03-31 15:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -314,8 +314,6 @@ msgstr ""
 #: bluebottle/activities/messages/wallposts.py:29
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_owner_reaction.html:14
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_reaction.html:14
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.html:14
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.html:14
 msgctxt "email"
 msgid "View response"
 msgstr ""
@@ -1636,7 +1634,6 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_follower.html:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:5
 #, python-format
 msgctxt "email"
 msgid ""
@@ -1651,7 +1648,6 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_follower.html:17
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:17
 msgctxt "email"
 msgid "View update"
 msgstr ""
@@ -1675,7 +1671,6 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_owner.html:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.html:5
 #, python-format
 msgctxt "email"
 msgid ""
@@ -1688,13 +1683,11 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_owner.html:15
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner.html:15
 msgctxt "email"
 msgid "View comment"
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_owner_reaction.html:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_owner_reaction.html:5
 #, python-format
 msgctxt "email"
 msgid ""
@@ -1706,7 +1699,6 @@ msgid ""
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/wallposts/activity_wallpost_reaction.html:5
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_reaction.html:5
 #, python-format
 msgctxt "email"
 msgid ""
@@ -6222,44 +6214,55 @@ msgstr ""
 msgid "Closed initiatives"
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:8
-msgid "A new initiative is ready to be reviewed."
+#: bluebottle/initiatives/messages/initiator.py:15
+#: bluebottle/initiatives/messages/reviewer.py:18
+msgctxt "email"
+msgid "View initiative"
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:34
+#: bluebottle/initiatives/messages/initiator.py:23
 #, python-brace-format
-msgid "Your initiative \"{title}\" has been approved!"
+msgid "You submitted an initiative on {site_name}"
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:46
+#: bluebottle/initiatives/messages/initiator.py:28
 #, python-brace-format
-msgid "Your initiative \"{title}\" needs work"
+msgid "Your initiative on {site_name} has been approved!"
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:58
+#: bluebottle/initiatives/messages/initiator.py:33
 #, python-brace-format
-msgid "Your initiative \"{title}\" has been rejected."
+msgid "Your initiative on {site_name} has been published!"
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:70
+#: bluebottle/initiatives/messages/initiator.py:38
+#, python-brace-format
+msgid "The initiative you submitted on {site_name} needs work"
+msgstr ""
+
+#: bluebottle/initiatives/messages/initiator.py:43
+#, python-brace-format
+msgid "Your initiative on {site_name} has been rejected"
+msgstr ""
+
+#: bluebottle/initiatives/messages/initiator.py:48
 #, python-brace-format
 msgid "The initiative \"{title}\" has been cancelled."
 msgstr ""
 
-#: bluebottle/initiatives/messages.py:82
+#: bluebottle/initiatives/messages/reviewer.py:38
+#, python-brace-format
+msgid "A new initiative is ready to be reviewed on {site_name}"
+msgstr ""
+
+#: bluebottle/initiatives/messages/reviewer.py:43
+#, python-brace-format
+msgid "A new initiative has been published on {site_name}!"
+msgstr ""
+
+#: bluebottle/initiatives/messages/reviewer.py:52
 #, python-brace-format
 msgid "You are assigned to review \"{title}\"."
-msgstr ""
-
-#: bluebottle/initiatives/messages.py:97 bluebottle/initiatives/messages.py:113
-#: bluebottle/initiatives/messages.py:126
-#, python-brace-format
-msgid "You have a new post on '{title}'"
-msgstr ""
-
-#: bluebottle/initiatives/messages.py:142
-#, python-brace-format
-msgid "Update from '{title}'"
 msgstr ""
 
 #: bluebottle/initiatives/models.py:50
@@ -6626,31 +6629,20 @@ msgstr ""
 msgid "Reviewer:"
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/assigned_reviewer.html:5
+#: bluebottle/initiatives/templates/mails/messages/initiative_base.html:6
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        Hi %(recipient_name)s,<br>\n"
-"        You are assigned as reviewer for <i>%(title)s</i>.\n"
-"        If you have any questions please contact %(contact_email)s\n"
+"        Hi %(recipient_name)s,\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/assigned_reviewer.html:14
-#: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.html:15
-#: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.html:13
-#: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.html:13
-msgctxt "email"
-msgid "View initiative"
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/initiative_approved_owner.html:5
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_approved.html:5
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        Hi %(recipient_name)s,<br>\n"
 "        Good news, your initiative <i>%(title)s</i> has been approved!\n"
 "        People can now join your activities. No activities yet? This is the "
 "perfect\n"
@@ -6659,56 +6651,109 @@ msgid ""
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_cancelled_owner.html:5
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_cancelled.html:5
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        Hi %(recipient_name)s,<br>\n"
 "        Unfortunately, the initiative \"%(title)s\" has been cancelled.\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_rejected_owner.html:5
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_needs_work.html:5
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        Hi %(recipient_name)s,<br>\n"
-"        Unfortunately, your initiative \"%(title)s\" has been rejected.\n"
+"        Your initiative \"%(title)s\" has been reviewed and needs work.\n"
+"        The platform manager will be in contact to help you make some "
+"changes to your initiative.\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.html:5
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_published.html:4
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        Hi %(recipient_name)s,<br>\n"
-"        The initiative <i>%(title)s</i> has been submitted by "
-"%(initiator_name)s and is waiting for a review.\n"
+"        Nice work! Your initiative \"%(title)s\" is now live on "
+"%(site_name)s for people to view,\n"
+"        and contribute to the activities you add to it.\n"
+"        <br><br>\n"
+"        Share your initiative far and wide to inspire support and attract "
+"contributions!\n"
 "    "
 msgstr ""
 
-#: bluebottle/initiatives/templates/mails/messages/initiative_submitted_staff.html:13
-msgctxt "email"
-msgid "View the initiative"
-msgstr ""
-
-#: bluebottle/initiatives/templates/mails/messages/initiative_wallpost_follower.html:21
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_rejected.html:5
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"        <p>\n"
-"            You received this email because you support %(title)s.\n"
-"            Don't want to receive initiative updates anymore?\n"
-"        </p>\n"
-"        <p>\n"
-"            <a href=\"%(site)s/member/profile\">\n"
-"                Unsubscribe\n"
-"            </a> via your account page\n"
-"        </p>\n"
+"        Unfortunately your initiative \"%(title)s\" has been rejected.\n"
+"        If you have any questions, you can contact the platform manager at "
+"%(contact_email)s.\n"
+"    "
+msgstr ""
+
+#: bluebottle/initiatives/templates/mails/messages/initiator/initiative_submitted.html:5
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"        Your initiative \"%(title)s\" has been submitted on %(site_name)s.\n"
+"        <br><br>\n"
+"        <b>What’s next?</b><br>\n"
+"        <ul>\n"
+"            <li>\n"
+"                The platform manager will review your initiative.\n"
+"            </li>\n"
+"            <li>\n"
+"                If no changes are needed, it will be approved and made "
+"visible on the platform. Any activities within this initiative will be open "
+"for people to contribute.\n"
+"            </li>\n"
+"            <li>\n"
+"                If any changes are needed, you’ll receive an email with "
+"suggested improvements.\n"
+"            </li>\n"
+"        </ul>\n"
+"    "
+msgstr ""
+
+#: bluebottle/initiatives/templates/mails/messages/reviewer/assigned_reviewer.html:5
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"        You are assigned as reviewer for <i>%(title)s</i>.\n"
+"        If you have any questions please contact %(contact_email)s\n"
+"    "
+msgstr ""
+
+#: bluebottle/initiatives/templates/mails/messages/reviewer/initiative_published.html:6
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"        The initiative \"%(title)s\" has been successfully published and is "
+"now live on %(site_name)s together\n"
+"        with its completed activities for people to contribute to.\n"
+"    "
+msgstr ""
+
+#: bluebottle/initiatives/templates/mails/messages/reviewer/initiative_submitted.html:5
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"        The initiative \"%(title)s\" has been submitted by "
+"%(initiator_name)s.\n"
+"        Please take a moment to review this initiative and decide if it's "
+"right for your platform.\n"
+"        <br><br>\n"
+"        %(initiator_name)s will be waiting for your review, so please "
+"respond promptly.\n"
 "    "
 msgstr ""
 

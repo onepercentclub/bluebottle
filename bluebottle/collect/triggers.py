@@ -251,11 +251,13 @@ class CollectContributionTriggers(ContributionTriggers):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return settings.closed or effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 @register(CollectContributor)

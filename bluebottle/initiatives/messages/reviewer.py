@@ -48,15 +48,11 @@ class InitiativePublishedReviewerMessage(InitiativeReviewerMessage):
         return self.obj.get_absolute_url()
 
 
-class AssignedReviewerMessage(TransitionMessage):
+class AssignedReviewerMessage(InitiativeReviewerMessage):
     subject = _('You are assigned to review "{title}".')
     template = 'messages/reviewer/assigned_reviewer'
 
     send_once = True
-
-    context = {
-        'title': 'title'
-    }
 
     def get_recipients(self):
         """the reviewer"""

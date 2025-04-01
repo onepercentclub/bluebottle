@@ -125,7 +125,7 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_filter_by_year(self):
-        response = self.client.get(self.url + '?year=' + str(now().year))
+        response = self.client.get(self.url + '?filter[year]=' + str(now().year))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.json()['data']), 3)
 
@@ -211,7 +211,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.money.save()
 
     def test_filter_by_year_2020(self):
-        response = self.client.get(self.url + '?year=2020')
+        response = self.client.get(self.url + '?filter[year]=2020')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -221,7 +221,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         self.assertEqual(data[3]['attributes']['value'], {'amount': 70.0, 'currency': 'EUR'})
 
     def test_filter_by_year_2021(self):
-        response = self.client.get(self.url + '?year=2021')
+        response = self.client.get(self.url + '?filter[year]=2021')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -234,7 +234,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = 4
         settings.save()
-        response = self.client.get(self.url + '?year=2020')
+        response = self.client.get(self.url + '?filter[year]=2020')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)
@@ -247,7 +247,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = -4
         settings.save()
-        response = self.client.get(self.url + '?year=2021')
+        response = self.client.get(self.url + '?year=filter[2021]')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)

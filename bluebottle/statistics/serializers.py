@@ -29,8 +29,8 @@ class BaseStatisticSerializer(ModelSerializer):
         subregion = None
         user = self.get_user()
 
-        if 'year' in params:
-            year = int(params['year'])
+        if 'filter[year]' in params:
+            year = int(params['filter[year]'])
             settings = MemberPlatformSettings.load()
             start = datetime.datetime(year, 1, 1, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)
             end = datetime.datetime(year, 12, 31, tzinfo=tz) + relativedelta(months=settings.fiscal_month_offset)

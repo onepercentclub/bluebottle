@@ -1,6 +1,5 @@
-from bluebottle.activities.effects import (
-    CreateOrganizer, CreateOrganizerContribution, SetContributionDateEffect, DeleteRelatedContributionsEffect,
-    SetPublishedDateEffect, )
+from bluebottle.activities.effects import CreateOrganizer, CopyCategories, SetPublishedDateEffect, \
+    DeleteRelatedContributionsEffect, CreateOrganizerContribution, SetContributionDateEffect
 from bluebottle.activities.messages import ActivityPublishedNotification, ActivitySubmittedNotification, \
     ActivityApprovedNotification, ActivityNeedsWorkNotification
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
@@ -58,7 +57,8 @@ class ActivityTriggers(TriggerManager):
         TransitionTrigger(
             ActivityStateMachine.initiate,
             effects=[
-                CreateOrganizer
+                CreateOrganizer,
+                CopyCategories
             ]
         ),
 

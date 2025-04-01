@@ -120,6 +120,7 @@ class BaseActivitySerializer(ModelSerializer):
     description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
+    categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()

@@ -247,7 +247,7 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         settings = MemberPlatformSettings.load()
         settings.fiscal_month_offset = -4
         settings.save()
-        response = self.client.get(self.url + '?year=filter[2021]')
+        response = self.client.get(self.url + '?filter[year]=2021')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(len(data), 4)

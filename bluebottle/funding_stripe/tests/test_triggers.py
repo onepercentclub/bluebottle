@@ -1,6 +1,6 @@
 from django.test.utils import override_settings
 
-from bluebottle.funding.messages import PayoutAccountMarkedIncomplete
+from bluebottle.funding.messages.activity_manager import PayoutAccountMarkedIncomplete
 from bluebottle.funding.messages.platform_manager import LivePayoutAccountMarkedIncomplete
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory

@@ -1,6 +1,6 @@
 import datetime
 
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, make_aware
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory
@@ -19,7 +19,7 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         )
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
-            start=tz.localize(datetime.datetime(2022, 5, 15, 10, 0)),
+            start=make_aware(datetime.datetime(2022, 5, 15, 10, 0), tz),
             status='cancelled'
         )
 
@@ -48,7 +48,7 @@ class DuplicateSlotTestCase(BluebottleTestCase):
         )
 
     def test_duplicate_every_day_end_dst(self):
-        self.slot.start = tz.localize(datetime.datetime(2022, 10, 27, 10, 0))
+        self.slot.start = make_aware(datetime.datetime(2022, 10, 27, 10, 0), tz)
         self.slot.save()
 
         end = datetime.date(2022, 11, 2)

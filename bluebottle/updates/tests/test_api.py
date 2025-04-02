@@ -48,6 +48,11 @@ class UpdateListTestCase(APITestCase):
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_400_BAD_REQUEST)
 
+    def test_create_no_rate_limit(self):
+        for i in range(12):
+            self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+
     def test_create_without_message_with_video(self):
         mail.outbox = []
         self.defaults['message'] = ''
@@ -83,6 +88,14 @@ class UpdateListTestCase(APITestCase):
         self.assertEqual(len(mail.outbox), 2)
         title = self.defaults['activity'].title
         self.assertEqual(mail.outbox[0].subject, f"New update from '{title}'")
+
+    def test_create_notify_rate_limit(self):
+        self.defaults['notify'] = True
+
+        for i in range(12):
+            self.perform_create(user=self.user)
+
+        self.assertStatus(status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_create_notify_not_owner(self):
         self.defaults['notify'] = True

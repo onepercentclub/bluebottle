@@ -59,7 +59,7 @@ class InitiativeDocument(Document):
     title_keyword = fields.KeywordField(attr='title')
     title = fields.TextField(fielddata=True)
     slug = fields.KeywordField()
-    story = fields.TextField()
+    story = fields.TextField(attr='story.html')
 
     pitch = fields.TextField()
     status = fields.KeywordField()
@@ -77,6 +77,7 @@ class InitiativeDocument(Document):
     })
 
     owner = fields.KeywordField()
+    is_open = fields.BooleanField()
 
     country = fields.NestedField(
         properties={
@@ -139,6 +140,22 @@ class InitiativeDocument(Document):
         }
     )
 
+    office_subregion = fields.NestedField(
+        attr='location.subregion',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
+    office_region = fields.NestedField(
+        attr='location.subregion.region',
+        properties={
+            'id': fields.KeywordField(),
+            'name': fields.KeywordField(),
+        }
+    )
+
     class Django:
         model = Initiative
         related_models = (
@@ -153,11 +170,27 @@ class InitiativeDocument(Document):
 
     def get_queryset(self):
         return super(InitiativeDocument, self).get_queryset().select_related(
-            'theme', 'place', 'owner', 'promoter', 'reviewer', 'activity_manager',
-            'location'
+            'theme',
+            'owner',
+            'promoter',
+            'reviewer',
+            'place',
+            'place__country',
+            'location',
+            'location__country',
+            'image',
         ).prefetch_related(
-            'activities', 'categories', 'activities__segments', 'activities__segments__segment_type'
+            'activity_managers',
+            'categories',
+            'activities',
+            'activities__segments',
+            'activities__segments__segment_type',
+            'activities__office_location',
+            'activities__office_location__country',
         )
+
+    def get_indexing_queryset(self):
+        return self.get_queryset()
 
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):

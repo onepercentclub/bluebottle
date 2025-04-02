@@ -24,7 +24,7 @@ SCORE_MAP = {
 }
 
 
-class TimeBasedActivityDocument:
+class TimeBasedActivityDocument(ActivityDocument):
 
     def prepare_status_score(self, instance):
         return SCORE_MAP.get(instance.status, 0)
@@ -36,7 +36,7 @@ def deduplicate(items):
 
 @registry.register_document
 @activity.document
-class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
+class DateActivityDocument(TimeBasedActivityDocument):
     contribution_duration = fields.NestedField(properties={
         'value': fields.FloatField()
     })
@@ -54,6 +54,15 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         'is_online': fields.BooleanField(),
     })
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related(
+            'slots',
+            'slots__location',
+            'slots__location__country'
+        )
+        return queryset
+
     def get_instances_from_related(self, related_instance):
         result = super().get_instances_from_related(related_instance)
 
@@ -68,11 +77,6 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
     class Django:
         related_models = ActivityDocument.Django.related_models + (DateParticipant, DateActivitySlot)
         model = DateActivity
-
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related(
-            'slots'
-        )
 
     def prepare_location(self, instance):
         locations = super(DateActivityDocument, self).prepare_location(instance)
@@ -145,7 +149,7 @@ class DateActivityDocument(TimeBasedActivityDocument, ActivityDocument):
         return any(slot.is_online for slot in instance.slots.all())
 
 
-class RegistrationActivityDocument(ActivityDocument):
+class RegistrationActivityDocument(TimeBasedActivityDocument):
 
     contribution_duration = fields.NestedField(properties={
         'period': fields.KeywordField(),
@@ -199,7 +203,7 @@ class RegistrationActivityDocument(ActivityDocument):
 
 @registry.register_document
 @activity.doc_type
-class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class DeadlineActivityDocument(RegistrationActivityDocument):
     participant_class = DeadlineParticipant
 
     def prepare_contribution_duration(self, instance):
@@ -212,14 +216,13 @@ class DeadlineActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
             ]
 
     class Django:
-
         related_models = ActivityDocument.Django.related_models + (DeadlineParticipant,)
         model = DeadlineActivity
 
 
 @registry.register_document
 @activity.doc_type
-class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class PeriodicActivityDocument(RegistrationActivityDocument):
     participant_class = PeriodicParticipant
 
     def prepare_contribution_duration(self, instance):
@@ -239,7 +242,7 @@ class PeriodicActivityDocument(TimeBasedActivityDocument, RegistrationActivityDo
 
 @registry.register_document
 @activity.doc_type
-class ScheduleActivityDocument(TimeBasedActivityDocument, RegistrationActivityDocument):
+class ScheduleActivityDocument(RegistrationActivityDocument):
     participant_class = ScheduleParticipant
 
     def prepare_contribution_duration(self, instance):

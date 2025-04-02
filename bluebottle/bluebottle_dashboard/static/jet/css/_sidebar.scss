@@ -431,18 +431,19 @@
     background-color: $sidebar-popup-background-color;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    top: 410px;
+    top: 0;
+    padding-top: 0;
 
     @media (max-height: 900px) {
-      top: 250px;
+      padding-top: 0;
    }
 
     @media (max-height: 700px) {
-      top: 0;
+      padding-top: 0;
    }
 
     @include for-mobile {
-      top: 360px;
+      padding-top: 0;
       width: 200px;
       body.menu-pinned & {
         left: 200px;

@@ -7,7 +7,9 @@ from rest_framework.generics import (
 )
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.geo.models import Location, Country, Geolocation, Place
+from bluebottle.geo.permissions import IsConnectedToProfile
 from bluebottle.geo.serializers import (
     GeolocationSerializer, OfficeSerializer, OfficeListSerializer,
     InitiativeCountrySerializer, PlaceSerializer, CountrySerializer
@@ -57,11 +59,17 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
     queryset = Location.objects.all()
 
     pagination_class = None
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission
+    ]
 
 
 class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = OfficeSerializer
     queryset = Location.objects.all()
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission
+    ]
 
 
 # Remove this after we deployed json-api office locations
@@ -83,6 +91,9 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
     queryset = Place.objects.all()
 
     serializer_class = PlaceSerializer
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission
+    ]
 
     def perform_create(self, serializer):
         try:
@@ -98,8 +109,10 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
-
-    permission_classes = []
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission,
+        IsConnectedToProfile
+    ]
     serializer_class = PlaceSerializer
 
 

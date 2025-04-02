@@ -12,6 +12,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import InitiativeCountrySerializer, PlaceSerializer
 from bluebottle.geo.tests.test_admin import mapbox_response
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import (
     CountryFactory, GeolocationFactory, LocationFactory, PlaceFactory
@@ -140,7 +141,7 @@ class UsedCountryListTestCase(GeoTestCase):
         self.assertEqual(len(countries), 3)
 
     def test_api_used_country_list_endpoint_with_offices(self):
-        ireland = Country.objects.get(translations__name="Ireland")
+        ireland = Country.objects.filter(translations__name="Ireland").first()
         office = LocationFactory.create(country=ireland)
         InitiativeFactory.create(location=office, status='approved', place=None)
         response = self.client.get(reverse('country-list'), {'filter[used]': True, '_': now()})
@@ -172,7 +173,6 @@ class LocationListTestCase(GeoTestCase):
     def test_api_location_detail_endpoint(self):
         location = self.locations[0]
         response = self.client.get(reverse('office-detail', args=(location.id, )))
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()['data']
         self.assertEqual(data['attributes']['name'], self.locations[0].name)
@@ -188,6 +188,15 @@ class LocationListTestCase(GeoTestCase):
         self.assertTrue(
             'center=10' in static_map_url
         )
+
+    def test_api_location_closed_platform(self):
+        member_settings = MemberPlatformSettings.objects.get()
+        member_settings.closed = True
+        member_settings.save()
+
+        location = self.locations[0]
+        response = self.client.get(reverse('office-detail', args=(location.id, )))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class GeolocationCreateTestCase(GeoTestCase):
@@ -281,9 +290,9 @@ class PlaceDetailTestCase(APITestCase):
     def test_get_anonymous(self):
         self.perform_get()
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_get_other_user(self):
         self.perform_get(user=BlueBottleUserFactory.create())
         # Share places
-        self.assertStatus(status.HTTP_200_OK)
+        self.assertStatus(status.HTTP_403_FORBIDDEN)

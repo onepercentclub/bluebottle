@@ -3,7 +3,7 @@ from datetime import date
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, ParticipantWithdrewConfirmationNotification,
+    ActivityRestoredNotification, InactiveParticipantAddedNotification, ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine
@@ -269,6 +269,14 @@ def contributor_is_active(effect):
     return effect.instance.status == DeedParticipantStateMachine.new.value
 
 
+def participant_is_active(effect):
+    return effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not effect.instance.user.is_active
+
+
 @register(DeedParticipant)
 class DeedParticipantTriggers(ContributorTriggers):
     triggers = ContributorTriggers.triggers + [
@@ -286,7 +294,11 @@ class DeedParticipantTriggers(ContributorTriggers):
                 ),
                 NotificationEffect(
                     ParticipantAddedNotification,
-                    conditions=[is_not_user]
+                    conditions=[is_not_user, participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[is_not_user, participant_is_inactive]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,

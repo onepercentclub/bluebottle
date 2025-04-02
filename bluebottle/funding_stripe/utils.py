@@ -16,6 +16,7 @@ def get_stripe():
     provider = StripePaymentProvider.objects.first()
     if not provider:
         raise ImproperlyConfigured('Stripe not enabled for this tenant')
+
     stripe.api_key = provider.stripe_secret or settings.STRIPE['api_key']
     stripe.api_version = '2019-09-09'
     stripe.webhook_secret_sources = provider.webhook_secret_sources or settings.STRIPE['webhook_secret_sources']

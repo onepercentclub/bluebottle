@@ -295,7 +295,8 @@ class DonorStateMachine(ContributorStateMachine):
             ContributorStateMachine.new,
             ContributorStateMachine.failed,
             pending,
-            expired
+            expired,
+            refunded
         ],
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
@@ -335,7 +336,10 @@ class DonorStateMachine(ContributorStateMachine):
     )
 
     activity_refund = Transition(
-        ContributorStateMachine.succeeded,
+        [
+            ContributorStateMachine.succeeded,
+            activity_refunded
+        ],
         activity_refunded,
         name=_('Activity refund'),
         description=_(

@@ -17,7 +17,9 @@ from bluebottle.time_based.effects.effects import (
 from bluebottle.time_based.effects.slots import (
     CreateTeamSlotParticipantsEffect, SetContributionsStartEffect
 )
-from bluebottle.time_based.messages import ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
+from bluebottle.time_based.messages import (
+    ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
+)
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.notifications.teams import UserTeamDetailsChangedNotification
 from bluebottle.time_based.states import (
@@ -265,8 +267,10 @@ def has_accepted_participants(effect):
 def has_one_slot(effect):
     return effect.instance.activity.active_slots.count() == 1
 
+
 def has_multiple_slots(effect):
     return effect.instance.activity.active_slots.count() > 1
+
 
 def slot_is_started(effect):
     """

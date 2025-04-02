@@ -3,28 +3,20 @@ from datetime import date
 from django.utils.timezone import now
 
 from bluebottle.activities.messages import (
+    InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import (
-    ModelChangedTrigger,
-    ModelDeletedTrigger,
     TransitionTrigger,
-    TriggerManager,
-    register,
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import (
-    RescheduleSlotDurationsEffect,
-    ActiveTimeContributionsTransitionEffect,
     CreatePreparationTimeContributionEffect,
-    RescheduleDateSlotContributions,
 )
 from bluebottle.time_based.messages import (
-    ChangedMultipleDateNotification,
-    ChangedSingleDateNotification,
     ParticipantAcceptedNotification,
     ParticipantAddedNotification,
     ParticipantAppliedNotification,
@@ -33,20 +25,24 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedNotification,
     ParticipantRemovedOwnerNotification,
     ParticipantWithdrewNotification,
-    SlotCancelledNotification,
 )
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
 )
 from bluebottle.time_based.states import (
-    DateActivitySlotStateMachine,
-    DateStateMachine,
     ParticipantStateMachine,
-    DateParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
 )
+
+
+def participant_is_active(effect):
+    return effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not effect.instance.user.is_active
 
 
 def is_full(effect):
@@ -309,7 +305,6 @@ def activity_has_accepted_participants(effect):
     return effect.instance.activity.accepted_participants.count() > 0
 
 
-
 def is_not_user(effect):
     """
     User is not the participant
@@ -458,6 +453,11 @@ class ParticipantTriggers(ContributorTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
                 ),
                 RelatedTransitionEffect(
                     'activity',

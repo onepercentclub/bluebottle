@@ -29,13 +29,14 @@ from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
     InitiativeSearchFilter
+from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
 from bluebottle.utils.fields import (
-    SafeField,
+    RichTextField,
     ValidationErrorsField,
     RequiredErrorsField,
     FSMField
@@ -113,7 +114,7 @@ class MemberSerializer(ModelSerializer):
             not user.is_staff and
             not user.is_superuser
         ):
-            del representation['last_name']
+            representation['last_name'] = None
             representation['full_name'] = representation['first_name']
 
         return representation
@@ -222,7 +223,16 @@ class InitiativePreviewSerializer(ModelSerializer):
     image = serializers.SerializerMethodField()
     theme = serializers.SerializerMethodField()
     activity_count = serializers.SerializerMethodField()
-    current_status = CurrentStatusField(source='states.current_state')
+    current_status = serializers.SerializerMethodField()
+
+    def get_current_status(self, obj):
+        state = getattr(ReviewStateMachine, obj.current_status.value)
+
+        return {
+            'value': state.value,
+            'name': state.name,
+            'description': state.description
+        }
 
     def get_image(self, obj):
         if obj.image:
@@ -286,7 +296,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
         read_only=True
     )
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
 
     errors = ValidationErrorsField()
@@ -402,7 +412,7 @@ class InitiativeListSerializer(ModelSerializer):
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     activity_managers = ResourceRelatedField(read_only=True, many=True)
     slug = serializers.CharField(read_only=True)
-    story = SafeField(required=False, allow_blank=True, allow_null=True)
+    story = RichTextField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True)
     transitions = AvailableTransitionsField(source='states')
     current_status = CurrentStatusField(source='states.current_state')

@@ -15,27 +15,35 @@ from pytz import UTC
 from rest_framework import status
 
 from bluebottle.activities.models import Activity
-from bluebottle.collect.tests.factories import CollectActivityFactory, CollectContributorFactory
+from bluebottle.collect.tests.factories import (
+    CollectActivityFactory,
+    CollectContributorFactory,
+)
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonorFactory
-from bluebottle.initiatives.models import InitiativePlatformSettings, ActivitySearchFilter
+from bluebottle.funding.tests.factories import DonorFactory, FundingFactory
+from bluebottle.initiatives.models import (
+    ActivitySearchFilter,
+    InitiativePlatformSettings,
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory
-from bluebottle.segments.tests.factories import SegmentFactory
-from bluebottle.segments.tests.factories import SegmentTypeFactory
+from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.geo import (
-    LocationFactory, GeolocationFactory, PlaceFactory, CountryFactory
+    CountryFactory,
+    GeolocationFactory,
+    LocationFactory,
+    PlaceFactory,
 )
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
-    DeadlineActivityFactory,
-    DateParticipantFactory,
-    DeadlineParticipantFactory,
     DateActivitySlotFactory,
+    DateParticipantFactory,
+    DeadlineActivityFactory,
+    DeadlineParticipantFactory,
     SkillFactory,
     SlotParticipantFactory,
 )
@@ -434,14 +442,17 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open", description=json.dumps({'html': f'description with {text}', 'delta': ''}),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(
@@ -473,14 +484,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             status="open", title=f'title with {text}',
         )
         description = DeadlineActivityFactory.create(
-            status="open", description=f'description with {text}',
+            status="open",
+            description=json.dumps(
+                {'html': f'description with {text}', 'delta': ''}
+            ),
         )
 
         initiative_title = DeadlineActivityFactory.create(
             status="open", initiative=InitiativeFactory.create(title=f'title with {text}'),
         )
         initiative_story = DeadlineActivityFactory.create(
-            status="open", initiative=InitiativeFactory.create(story=f'story with {text}'),
+            status="open",
+            initiative=InitiativeFactory.create(
+                story=json.dumps({'html': f'story with {text}', 'delta': ''})
+            ),
         )
 
         initiative_pitch = DeadlineActivityFactory.create(
@@ -1185,6 +1202,35 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             }
         )
         self.assertFound(matching)
+
+    def test_office_facet(self):
+        madrid = LocationFactory.create(name='Madrid')
+
+        DeadlineActivityFactory.create_batch(
+            2,
+            office_location=madrid,
+            status="open",
+        )
+
+        ltyutidol = LocationFactory.create(name='Лютидол')
+
+        DeadlineActivityFactory.create_batch(
+            3,
+            office_location=ltyutidol,
+            status="open",
+        )
+
+        self.search({
+            'office': madrid.id
+        })
+
+        self.assertFacets(
+            "office",
+            {
+                str(madrid.pk): (madrid.name, 2),
+                str(ltyutidol.pk): (ltyutidol.name, 3)
+            }
+        )
 
     def test_filter_country(self):
         settings = InitiativePlatformSettings.objects.create()

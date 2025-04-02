@@ -1,0 +1,27 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+{% load message_url %}
+
+{% block message %}{% blocktrans context 'email' %}
+<p>You have been added to an activity on {{site_name}}</p>
+{% endblocktrans %}{% endblock %}
+
+<p>{{ title }}</p>
+
+{% block action %}
+  <a href="{% message_url action_link %}" class="action-email">
+        {% blocktrans context 'email' %}
+            View activity 
+        {% endblocktrans %}
+    </a>
+{% endblock %}`
+
+{% block end_message %}
+  <p>
+    <i>
+      {% blocktrans context 'email' %}
+        If you are unable to participate, please withdraw via the activity page so that others can take your place.
+      {% endblocktrans %}
+    </i>
+  </p>
+{% endblock %}

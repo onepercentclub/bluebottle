@@ -1,3 +1,4 @@
+from bluebottle.activities.messages import InactiveParticipantAddedNotification
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
@@ -80,6 +81,14 @@ def is_admin(effect):
     return (
         user and effect.instance.user != user and (user.is_staff or user.is_superuser)
     )
+
+
+def participant_is_active(effect):
+    return effect.instance.user.is_active
+
+
+def participant_is_inactive(effect):
+    return not effect.instance.user.is_active
 
 
 class RegistrationTriggers(TriggerManager):
@@ -179,6 +188,11 @@ class DeadlineRegistrationTriggers(RegistrationTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
@@ -263,6 +277,11 @@ class PeriodicRegistrationTriggers(RegistrationTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,
@@ -390,6 +409,11 @@ class ScheduleRegistrationTriggers(RegistrationTriggers):
             effects=[
                 NotificationEffect(
                     ParticipantAddedNotification,
+                    conditions=[participant_is_active]
+                ),
+                NotificationEffect(
+                    InactiveParticipantAddedNotification,
+                    conditions=[participant_is_inactive]
                 ),
                 NotificationEffect(
                     ManagerParticipantAddedOwnerNotification,

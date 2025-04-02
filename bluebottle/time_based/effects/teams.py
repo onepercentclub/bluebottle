@@ -35,7 +35,7 @@ class CreateCaptainTeamMemberEffect(Effect):
     template = 'admin/create_captain_team_member.html'
 
     def without_team_members(self):
-        return not self.instance.team_members.exists()
+        return not self.instance.pk or not self.instance.team_members.exists()
 
     def post_save(self, **kwargs):
         TeamMember.objects.create(
@@ -53,7 +53,7 @@ class CreateTeamSlotEffect(Effect):
     template = 'admin/create_team_slot.html'
 
     def without_slot(self):
-        return not self.instance.slots.exists()
+        return not self.instance.pk or not self.instance.slots.exists()
 
     def get_slot_model(self):
         if isinstance(self.instance.activity, ScheduleActivity):

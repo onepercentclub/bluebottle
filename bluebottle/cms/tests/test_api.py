@@ -1,3 +1,4 @@
+import json
 from builtins import range
 from builtins import str
 
@@ -10,7 +11,7 @@ from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.cms.models import (
-    QuotesContent,
+    QuotesContent, PeopleContent,
     HomePage, SlidesContent, SitePlatformSettings,
     LinksContent, StepsContent, HomepageStatisticsContent, LogosContent,
     CategoriesContent, PlainTextItem, ImagePlainTextItem, ImageItem
@@ -165,7 +166,7 @@ class HomeTestCase(APITestCase):
         step = get_include(response, 'pages/blocks/steps/steps')
         self.assertEqual(
             step['attributes']['text'],
-            '&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+            'Some text'
         )
 
     def test_quotes(self):
@@ -192,6 +193,36 @@ class HomeTestCase(APITestCase):
         self.assertEqual(
             quote['attributes']['quote'],
             'Leuk! Al zeg ik het zelf.'
+        )
+
+    def test_people(self):
+        block = PeopleContent.objects.create_for_placeholder(self.placeholder)
+        block.persons.create(name='Ik zelf', email="test@example.com", role="developer")
+        block.save()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['relationships']['blocks']['data'][0],
+            {'id': str(block.pk), 'type': 'pages/blocks/people'}
+        )
+
+        quotes_block = get_include(response, 'pages/blocks/people')
+        self.assertEqual(quotes_block['relationships']['persons']['meta']['count'], 1)
+
+        quote = get_include(response, 'pages/blocks/people/persons')
+
+        self.assertEqual(
+            quote['attributes']['name'],
+            'Ik zelf'
+        )
+        self.assertEqual(
+            quote['attributes']['role'],
+            'developer'
+        )
+        self.assertEqual(
+            quote['attributes']['email'],
+            'test@example.com'
         )
 
     def test_logos(self):
@@ -309,12 +340,16 @@ class HomeTestCase(APITestCase):
 
         self.assertEqual(
             text_block['attributes']['text'],
-            "To <a>link</a> to the dark side!"
+            'To <a href="#">link</a> to the dark side!'
         )
 
     def test_plain_text_image(self):
         block = ImagePlainTextItem.objects.create_for_placeholder(self.placeholder)
-        block.text = "To <b>boldly</b> go were no man has gone before!"
+        block.text = json.dumps({
+            'html': "To <b>boldly</b> go were no man has gone before!",
+            'delta': ''
+        })
+
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
             block.image = File(f)
             block.save()

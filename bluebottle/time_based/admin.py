@@ -1,11 +1,10 @@
 from urllib.parse import urlencode
 
 from django import forms
-from django.conf.urls import url
-from django.contrib import admin
+from django.urls import re_path
+from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, widgets, StackedInline
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
-from django.contrib import messages
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
@@ -16,7 +15,6 @@ from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
-from django_summernote.widgets import SummernoteWidget
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin, PolymorphicParentModelAdmin, \
@@ -25,7 +23,6 @@ from pytz import timezone
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
-    ActivityForm,
     ContributionChildAdmin,
     ContributorChildAdmin, BaseContributorInline, BulkAddMixin,
 )
@@ -169,15 +166,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         return obj.registrations.count()
 
     participant_count.short_description = _("Participants")
-
-
-class TimeBasedActivityAdminForm(ActivityForm):
-    class Meta(object):
-        fields = '__all__'
-        model = PeriodicActivity
-        widgets = {
-            'description': SummernoteWidget(attrs={'height': 400})
-        }
 
 
 class DateActivitySlotInline(TabularInlinePaginated):
@@ -535,7 +523,6 @@ class PeriodicRegistrationAdminInline(BaseRegistrationAdminInline):
 @admin.register(DateActivity)
 class DateActivityAdmin(TimeBasedAdmin):
     base_model = DateActivity
-    form = TimeBasedActivityAdminForm
     inlines = (
         DateActivitySlotInline,
         DateRegistrationAdminInline,
@@ -575,7 +562,6 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
     inlines = (DeadlineParticipantAdminInline,) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]
@@ -655,7 +641,6 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
             fields = tuple(fields) + ("team_activity", "team_registration_warning")
         return fields
 
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]
@@ -864,7 +849,6 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
     inlines = (PeriodicRegistrationAdminInline, PeriodicSlotAdminInline) + TimeBasedAdmin.inlines
     raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
     readonly_fields = TimeBasedAdmin.readonly_fields
-    form = TimeBasedActivityAdminForm
     list_filter = TimeBasedAdmin.list_filter + [
         ('expertise', SortedRelatedFieldListFilter)
     ]
@@ -1203,10 +1187,11 @@ class DateSlotAdmin(BulkAddMixin, SlotAdmin):
         urls = super(DateSlotAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^(?P<pk>\d+)/duplicate/$',
+            re_path(
+                r'^(?P<pk>\d+)/duplicate/$',
                 self.admin_site.admin_view(self.duplicate_slot),
                 name='time_based_dateactivityslot_duplicate'
-                ),
+            )
         ]
         return extra_urls + urls
 
@@ -1378,9 +1363,9 @@ class DateParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
-        TimeContributionInlineAdmin
-    ]
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
     raw_id_fields = ContributorChildAdmin.raw_id_fields + ('slot',)
     fields = ContributorChildAdmin.fields + ['registration_info', 'slot']
     list_display = ['__str__', 'email', 'activity_link', 'status']
@@ -1438,9 +1423,9 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
-        TimeContributionInlineAdmin
-    ]
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
     fields = ContributorChildAdmin.fields + ['registration_info']
     pending_fields = ['activity', 'user', 'registration_info', 'created', 'updated']
 
@@ -1487,9 +1472,9 @@ class PeriodicParticipantAdmin(ContributorChildAdmin):
             inline.parent_object = obj
         return inlines
 
-    inlines = ContributorChildAdmin.inlines + [
-        TimeContributionInlineAdmin
-    ]
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
 
     fields = ContributorChildAdmin.fields + ["registration_info", "slot_info", "slot"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]
@@ -1584,7 +1569,7 @@ class SlotForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
 @admin.register(ScheduleParticipant)
 class ScheduleParticipantAdmin(ContributorChildAdmin):
 
-    inlines = ContributorChildAdmin.inlines + [TimeContributionInlineAdmin]
+    inlines = ContributorChildAdmin.inlines + (TimeContributionInlineAdmin, )
 
     fields = ContributorChildAdmin.fields + ["registration_info", "slot_info"]
     pending_fields = ["activity", "user", "registration_info", "created", "updated"]

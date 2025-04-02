@@ -1,51 +1,66 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from bluebottle.activities.views import (
     ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
     RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
-    InviteDetailView, ContributionList
+    InviteDetailView, ContributionList, ActivityList
 )
 
 urlpatterns = [
-    url(
+    re_path(
         r'^/transitions$',
         ActivityTransitionList.as_view(),
         name='activity-transition-list'),
-    url(r'^/search$',
+
+    re_path(
+        r'^/search$',
         ActivityPreviewList.as_view(),
-        name='activity-preview-list'),
+        name='activity-preview-list'
+    ),
 
-    url(r'^/contributions$',
+    re_path(
+        r'^/contributions$',
         ContributionList.as_view(),
-        name='contribution-list'),
+        name='contribution-list'
+    ),
 
-    url(r'^/(?P<pk>\d+)$',
+    re_path(
+        r'^/(?P<pk>\d+)$',
         ActivityDetail.as_view(),
-        name='activity-detail'),
+        name='activity-detail'
+    ),
 
-    url(
+    re_path(
+        r'^/$',
+        ActivityList.as_view(),
+        name='activity-list'
+    ),
+
+    re_path(
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         ActivityImage.as_view(),
         name='activity-image'
     ),
 
-    url(r'^/related-images$',
+    re_path(
+        r'^/related-images$',
         RelatedActivityImageList.as_view(),
-        name='related-activity-image-list'),
-    url(
+        name='related-activity-image-list'
+    ),
+    re_path(
         r'^/(?P<pk>\d+)/related-image/(?P<size>\d+(x\d+)?)$',
         RelatedActivityImageContent.as_view(),
         name='related-activity-image-content'
     ),
 
-    url(
+    re_path(
         r'^/invites/(?P<pk>[\w\-]+)/$',
         InviteDetailView.as_view(),
         name='invite-detail'
     ),
 
-    url(
+    re_path(
         r'^/locations/$',
         ActivityLocationList.as_view(),
         name='activity-location-list'

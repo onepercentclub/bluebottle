@@ -3,7 +3,8 @@ from datetime import timedelta, date
 from bluebottle.activities.effects import SetContributionDateEffect
 from bluebottle.activities.messages import (
     ActivityExpiredNotification, ActivitySucceededNotification,
-    ActivityRejectedNotification, ActivityCancelledNotification, ActivityRestoredNotification,
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivityRestoredNotification, InactiveParticipantAddedNotification,
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import OrganizerStateMachine
@@ -261,6 +262,27 @@ class CollectContributorTriggerTestCase(TriggerTestCase):
             contribution = self.model.contributions.first()
             self.assertStatus(contribution, 'succeeded')
             self.assertNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
+
+            self.assertNoNotificationEffect(ParticipantJoinedNotification)
+            self.assertNoNotificationEffect(NewParticipantNotification)
+
+    def test_initiate_other_user_inactive(self):
+        self.user.is_active = False
+        self.user.save()
+
+        self.defaults['activity'].start = date.today() - timedelta(days=10)
+        self.defaults['activity'].save()
+        self.model = self.factory.build(**self.defaults)
+        with self.execute(user=BlueBottleUserFactory.create()):
+            self.assertEffect(CreateCollectContribution)
+
+            self.assertTransitionEffect(CollectContributorStateMachine.succeed)
+            self.model.save()
+            contribution = self.model.contributions.first()
+            self.assertStatus(contribution, 'succeeded')
+            self.assertNoNotificationEffect(ParticipantAddedNotification)
+            self.assertNotificationEffect(InactiveParticipantAddedNotification)
             self.assertNotificationEffect(ManagerParticipantAddedOwnerNotification)
 
             self.assertNoNotificationEffect(ParticipantJoinedNotification)

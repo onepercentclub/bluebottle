@@ -7,7 +7,6 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-from django_summernote.widgets import SummernoteWidget
 from bluebottle.bluebottle_dashboard.admin import AdminMergeMixin
 
 from bluebottle.fsm.forms import StateMachineModelFormMetaClass
@@ -47,15 +46,6 @@ class SegmentInline(TabularInlinePaginated):
     extra = 0
 
 
-class SegmentAdminForm(forms.ModelForm):
-    class Meta(object):
-        model = Segment
-        fields = '__all__'
-        widgets = {
-            'story': SummernoteWidget(attrs={'height': 400})
-        }
-
-
 class SegmentMergeForm(forms.Form):
     to = forms.ModelChoiceField(
         label=_("Merge with"),
@@ -78,7 +68,6 @@ class SegmentMergeForm(forms.Form):
 @admin.register(Segment)
 class SegmentAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
     model = Segment
-    form = SegmentAdminForm
 
     readonly_fields = ('text_color', 'activities_link', 'members_link', 'type_link')
 

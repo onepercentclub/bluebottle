@@ -18,12 +18,12 @@
     clear: both;
 }
 
-form .aligned strong + p.help {
+form .aligned strong+p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
 
-form .aligned p.file-upload + p.help {
+form .aligned p.file-upload+p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
@@ -34,9 +34,9 @@ form .aligned p.file-upload + p.help {
 }
 
 .site-title {
-    text-align: right;
-    padding: 0 6px 8px 0;
+    padding: 8px 0;
     font-size: 1.2rem;
+    text-align: right;
 }
 
 #branding-menu {
@@ -49,6 +49,15 @@ form .aligned p.file-upload + p.help {
 #branding-menu:before {
     content: ''
 }
+
+label+div {
+    display: inline-block;
+}
+
+.aligned label+div input[type=checkbox]+label {
+    width: 30px;
+}
+
 
 .video-container {
     position: relative;
@@ -261,7 +270,7 @@ form .aligned p.file-upload + p.help {
 
 
 /* For 2fa settings */
-#container #content > h1 {
+#container #content>h1 {
     display: block;
 }
 
@@ -280,8 +289,36 @@ ul#id_method-method li {
 }
 
 .two-factor-back {
+    padding: 16px;
+    display: flex;
+    background: #eee;
+    border-radius: 8px 8px 0 0;
+}
+
+.two-factor {
     padding: 8px;
-    position: absolute;
+    position: relative;
+}
+
+.two-factor .form-row {
+    padding: 8px;
+    position: relative;
+}
+
+
+.two-factor-footer {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-factor-actions {
+    justify-content: space-between;
+    display: flex;
+    padding-top: 24px;
+}
+
+body.login .two-factor-actions .submit-row {
+    padding: 0;
 }
 
 #id_understand {
@@ -314,9 +351,21 @@ fieldset {
         min-height: 24px;
         display: block;
     }
+
     .field-box {
         float: none
     }
+}
+
+fieldset #tabular_permissions {
+    input.checkbox {
+        min-height: 24px;
+        display: none;
+    }
+}
+
+.user-permissions-app-separator {
+    padding: 0
 }
 
 .inline-description {
@@ -368,4 +417,101 @@ html {
 form .aligned .form-row label+p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
+}
+
+
+form .aligned .django-quill-widget p,
+form .aligned .django-quill-widget ol,
+form .aligned .django-quill-widget ul {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+
+.django-quill-widget.ql-container {
+    height: 200px;
+}
+
+form .form-row .django-quill-widget p {
+    font-size: 14.4px;
+}
+
+
+.django-quill-widget.ql-snow .ql-editor h4 {
+    font-weight: 500;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 16px;
+    line-height: 32px;
+    letter-spacing: 0;
+}
+
+.django-quill-widget.ql-snow .ql-editor h5 {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before {
+    content: "Heading";
+    /* Rename H4 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Heading";
+    /* Rename H4 */
+    letter-spacing: 0;
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before {
+    content: "Sub-heading";
+    /* Rename H5 */
+}
+
+.ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 32px;
+    content: "Sub-heading";
+    /* Rename H5 */
+    letter-spacing: 0;
+}
+
+
+.ql-toolbar.ql-snow .ql-picker.ql-header {
+    width: 120px;
+}
+
+div.inline.radiolist {
+    display: inline-block;
+}
+
+.form-row.vLargeTextField {
+    padding: 0;
+}
+
+
+.colM .aligned .vLargeTextField {
+    padding: 0;
+}
+
+
+#login-form {
+    margin-top: 24px;
+}
+
+#login-form input {
+    float: right
+}
+
+#login-form .password-reset-link {
+    padding-top: 24px;
+    clear: both
 }

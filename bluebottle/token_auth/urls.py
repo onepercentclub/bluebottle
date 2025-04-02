@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from bluebottle.token_auth.views import (
     MetadataView, TokenLogoutView,
     TokenRedirectView, UserSAMLLoginView, SupportSAMLLoginView,
@@ -7,19 +7,19 @@ from bluebottle.token_auth.views import (
 
 
 urlpatterns = [
-    url(
+    re_path(
         r'^redirect/$', TokenRedirectView.as_view(),
         name='token-redirect'
     ),
-    url(
+    re_path(
         r'^login/$', UserSAMLLoginView.as_view(),
         name='token-login'
     ),
-    url(
+    re_path(
         r'^support-login/$', SupportSAMLLoginView.as_view(),
         name='support-token-login'
     ),
-    url(r'^logout/$', TokenLogoutView.as_view(), name='token-logout'),
-    url(r'^error/$', TokenErrorView.as_view(), name='token-error'),
-    url(r'^metadata/$', MetadataView.as_view(), name='token-metadata'),
+    re_path(r'^logout/$', TokenLogoutView.as_view(), name='token-logout'),
+    re_path(r'^error/$', TokenErrorView.as_view(), name='token-error'),
+    re_path(r'^metadata/$', MetadataView.as_view(), name='token-metadata'),
 ]

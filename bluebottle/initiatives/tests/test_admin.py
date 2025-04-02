@@ -188,7 +188,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         form.set('reviewer', reviewer.id)
         page = form.submit()
         self.assertTrue('<h3>Send email</h3>' in page.text)
-        form = page.forms[0]
+        form = page.forms[1]
         form.submit()
 
         # Should send out one mail that contains admin url and contact email
@@ -235,7 +235,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
-        self.assertFalse('is_open' in page.forms[0].fields)
+        self.assertFalse('is_open' in page.forms[1].fields)
 
     def test_admin_open_initiative_enabled(self):
         InitiativePlatformSettingsFactory.create(
@@ -245,7 +245,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
         self.app.set_user(self.staff_member)
         page = self.app.get(url)
-        self.assertTrue('is_open' in page.forms[0].fields)
+        self.assertTrue('is_open' in page.forms[1].fields)
 
     def test_paginated_activities(self):
         self.app.set_user(self.staff_member)
@@ -292,7 +292,7 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiativeplatformsettings_changelist')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse(form['enable_open_initiatives'].checked)
         form['enable_open_initiatives'].checked = True
         page = form.submit().follow()
@@ -306,7 +306,7 @@ class TestInitiativePlatformSettingsAdmin(BluebottleAdminTestCase):
         url = reverse('admin:initiatives_initiativeplatformsettings_change')
         self.app.set_user(self.superuser)
         page = self.app.get(url)
-        form = page.forms[0]
+        form = page.forms[1]
         self.assertFalse(form['team_activities'].checked)
         form['team_activities'].checked = True
         page = form.submit().follow()

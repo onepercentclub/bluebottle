@@ -12,14 +12,11 @@ from bluebottle.time_based.models import (
     TimeContribution,
     DateActivitySlot, Skill, DateRegistration
 )
-from bluebottle.time_based.permissions import (
-    DateParticipantPermission
-)
 from bluebottle.time_based.serializers import (
     DateTransitionSerializer,
     TimeContributionSerializer,
     DateParticipantSerializer,
-    DateParticipantTransitionSerializer, SkillSerializer, DateSlotTransitionSerializer, DateRegistrationSerializer,
+    SkillSerializer, DateSlotTransitionSerializer, DateRegistrationSerializer,
 )
 from bluebottle.time_based.views import RelatedRegistrationListView
 from bluebottle.time_based.views.mixins import BaseSlotIcalView
@@ -28,7 +25,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
 )
 from bluebottle.utils.views import (
-    RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateAPIView,
     ListAPIView, JsonApiViewMixin,
     RelatedPermissionMixin,
     PrivateFileView, ExportView, TranslatedApiViewMixin, RetrieveAPIView, JsonApiPagination
@@ -99,18 +96,6 @@ class TimeContributionDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = TimeContribution.objects.all()
     serializer_class = TimeContributionSerializer
     permission_classes = [ContributionPermission]
-
-
-class SlotParticipantDetailView(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = [DateParticipantPermission]
-
-    queryset = DateParticipant.objects.all()
-    serializer_class = DateParticipantSerializer
-
-
-class SlotParticipantTransitionList(TransitionList):
-    serializer_class = DateParticipantTransitionSerializer
-    queryset = DateParticipant.objects.all()
 
 
 class DateActivityIcalView(PrivateFileView):

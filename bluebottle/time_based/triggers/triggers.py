@@ -420,6 +420,13 @@ class ActivitySlotTriggers(TriggerManager):
     ]
 
 
+def activity_is_open(effect):
+    """
+    activity is open
+    """
+    return effect.instance.activity.status == 'open'
+
+
 def all_slots_finished(effect):
     """
     all slots have finished
@@ -543,7 +550,8 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                     TimeBasedStateMachine.succeed,
                     conditions=[
                         all_slots_finished,
-                        activity_has_accepted_participants
+                        activity_has_accepted_participants,
+                        activity_is_open
                     ]
                 ),
                 RelatedTransitionEffect(
@@ -557,6 +565,9 @@ class DateActivitySlotTriggers(ActivitySlotTriggers):
                 RelatedTransitionEffect(
                     'accepted_participants',
                     SlotParticipantStateMachine.succeed,
+                    conditions=[
+                        all_slots_finished,
+                    ]
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed)
             ]

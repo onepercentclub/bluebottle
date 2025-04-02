@@ -63,14 +63,14 @@ class TimeBasedActivityTriggerTestCase():
     def test_reject(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
-        self.activity.states.publish()
+        self.activity.states.publish(save=True)
+        mail.outbox = []
 
         self.activity.states.reject(save=True)
         organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
-
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[0].subject,
             'Your activity "{}" has been rejected'.format(self.activity.title)
         )
 

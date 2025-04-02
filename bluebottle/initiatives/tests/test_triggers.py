@@ -8,7 +8,10 @@ from bluebottle.funding_stripe.tests.factories import (
     ExternalAccountFactory,
     StripePayoutAccountFactory,
 )
-from bluebottle.initiatives.messages import InitiativeSubmittedStaffMessage
+from bluebottle.initiatives.messages.initiator import InitiativeSubmittedInitiatorMessage, \
+    InitiativePublishedInitiatorMessage, InitiativeRejectedInitiatorMessage, InitiativeApprovedInitiatorMessage
+from bluebottle.initiatives.messages.reviewer import InitiativeSubmittedReviewerMessage, \
+    InitiativePublishedReviewerMessage
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -53,7 +56,8 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         self.create()
         self.model.states.submit()
         with self.execute():
-            self.assertNotificationEffect(InitiativeSubmittedStaffMessage)
+            self.assertNotificationEffect(InitiativeSubmittedReviewerMessage)
+            self.assertNotificationEffect(InitiativeSubmittedInitiatorMessage)
         self.model.save()
         self.assertEqual(self.model.published, None)
         self.assertStatus(self.model, 'submitted')
@@ -63,9 +67,26 @@ class InitiativeTriggerTestCase(TriggerTestCase):
         initiative_settings.enable_reviewing = False
         initiative_settings.save()
         self.create()
-        self.model.states.publish(save=True)
-        self.assertNotEqual(self.model.published, None)
+        self.model.states.publish()
+        with self.execute():
+            self.assertNotificationEffect(InitiativePublishedInitiatorMessage)
+            self.assertNotificationEffect(InitiativePublishedReviewerMessage)
+        self.model.save()
         self.assertStatus(self.model, 'approved')
+
+    def test_reject(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.reject()
+        with self.execute():
+            self.assertNotificationEffect(InitiativeRejectedInitiatorMessage)
+
+    def test_approve(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+        with self.execute():
+            self.assertNotificationEffect(InitiativeApprovedInitiatorMessage)
 
     def test_auto_submit_activity(self):
         self.create()

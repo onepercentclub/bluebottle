@@ -1,4 +1,8 @@
-from bluebottle.initiatives.messages import InitiativeSubmittedStaffMessage
+from bluebottle.initiatives.messages.initiator import InitiativeSubmittedInitiatorMessage, \
+    InitiativeNeedsWorkInitiatorMessage, InitiativeRejectedInitiatorMessage, InitiativeApprovedInitiatorMessage, \
+    InitiativePublishedInitiatorMessage
+from bluebottle.initiatives.messages.reviewer import InitiativeSubmittedReviewerMessage, \
+    InitiativePublishedReviewerMessage
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.offices.tests.factories import LocationFactory, OfficeSubRegionFactory
 
@@ -7,7 +11,7 @@ from bluebottle.test.utils import NotificationTestCase
 
 
 class ReviewerNotificationTestCase(NotificationTestCase):
-    message_class = InitiativeSubmittedStaffMessage
+    message_class = InitiativeSubmittedReviewerMessage
 
     def test_submitted_notification_staff(self):
         staff = BlueBottleUserFactory.create(
@@ -22,10 +26,10 @@ class ReviewerNotificationTestCase(NotificationTestCase):
         self.create()
 
         self.assertRecipients([staff])
-        self.assertSubject('A new initiative is ready to be reviewed.')
-        self.assertBodyContains('has been submitted by Henk and is waiting for a review')
+        self.assertSubject('A new initiative is ready to be reviewed on [site name]')
+        self.assertBodyContains('has been submitted by Henk qui Penk')
         self.assertActionLink(self.obj.get_admin_url())
-        self.assertActionTitle('View the initiative')
+        self.assertActionTitle('View initiative')
 
     def test_submitted_notification_region(self):
         region = OfficeSubRegionFactory.create()
@@ -58,9 +62,82 @@ class ReviewerNotificationTestCase(NotificationTestCase):
         self.obj.states.submit(save=True)
         self.create()
         self.assertRecipients([current_region, no_region])
-        self.assertSubject("A new initiative is ready to be reviewed.")
-        self.assertBodyContains(
-            "has been submitted by Henk and is waiting for a review"
-        )
+        self.assertSubject("A new initiative is ready to be reviewed on [site name]")
+        self.assertBodyContains('has been submitted by Henk qui Penk')
         self.assertActionLink(self.obj.get_admin_url())
-        self.assertActionTitle("View the initiative")
+        self.assertActionTitle("View initiative")
+
+
+class InitiativeNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.obj = InitiativeFactory.create()
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+    def test_initiative_submitted_reviewer_message(self):
+        self.message_class = InitiativeSubmittedReviewerMessage
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new initiative is ready to be reviewed on [site name]')
+        self.assertBodyContains('Please take a moment to review this initiative')
+        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_published_reviewer_message(self):
+        self.message_class = InitiativePublishedReviewerMessage
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new initiative has been published on [site name]!')
+        self.assertBodyContains('has been successfully published')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_submitted_initiator_message(self):
+        self.message_class = InitiativeSubmittedInitiatorMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('You submitted an initiative on [site name]')
+        self.assertBodyContains('The platform manager will review your initiative')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_published_initiator_message(self):
+        self.message_class = InitiativePublishedInitiatorMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your initiative on [site name] has been published!')
+        self.assertBodyContains('Nice work! Your initiative')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_approved_initiator_message(self):
+        self.message_class = InitiativeApprovedInitiatorMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your initiative on [site name] has been approved!')
+        self.assertBodyContains('Good news, your initiative')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_needs_work_initiator_message(self):
+        self.message_class = InitiativeNeedsWorkInitiatorMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('The initiative you submitted on [site name] needs work')
+        self.assertBodyContains(
+            'The platform manager will be in contact to help you make some changes to your initiative'
+        )
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')
+
+    def test_initiative_rejected_initiator_message(self):
+        self.message_class = InitiativeRejectedInitiatorMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your initiative on [site name] has been rejected')
+        self.assertBodyContains('Unfortunately your initiative')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View initiative')

@@ -1,6 +1,6 @@
 from django.utils.translation import pgettext
 
-from bluebottle.activities.messages import ReviewerActivityNotification
+from bluebottle.activities.messages.reviewer import ReviewerActivityNotification
 
 
 class FundingSubmittedReviewerMessage(ReviewerActivityNotification):

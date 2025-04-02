@@ -1,9 +1,16 @@
-from bluebottle.activities.effects import CreateOrganizer, CopyCategories, SetPublishedDateEffect, \
-    DeleteRelatedContributionsEffect, CreateOrganizerContribution, SetContributionDateEffect
-from bluebottle.activities.messages import ActivityPublishedNotification, ActivitySubmittedNotification, \
+from bluebottle.activities.effects import (
+    CreateOrganizer, CopyCategories, SetPublishedDateEffect,
+    DeleteRelatedContributionsEffect, CreateOrganizerContribution,
+    SetContributionDateEffect
+)
+from bluebottle.activities.messages.activity_manager import (
+    ActivityPublishedNotification, ActivitySubmittedNotification,
     ActivityApprovedNotification, ActivityNeedsWorkNotification
-from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
+)
+from bluebottle.activities.messages.reviewer import (
+    ActivitySubmittedReviewerNotification,
     ActivityPublishedReviewerNotification
+)
 from bluebottle.activities.models import Organizer, EffortContribution
 from bluebottle.activities.states import (
     ActivityStateMachine, OrganizerStateMachine,

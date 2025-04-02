@@ -17,7 +17,6 @@ from bluebottle.funding.effects import (
     ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect,
     RemoveAnonymousRewardEffect
 )
-from bluebottle.funding.messages import FundingSubmittedMessage, FundingNeedsWorkMessage
 from bluebottle.funding.messages.activity_manager import (
     DonationSuccessActivityManagerMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
@@ -25,6 +24,7 @@ from bluebottle.funding.messages.activity_manager import (
     FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
     FundingCancelledMessage, FundingApprovedMessage
 )
+from bluebottle.funding.messages.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
 from bluebottle.funding.messages.contributor import (
     DonationSuccessDonorMessage,
     DonationRefundedDonorMessage,

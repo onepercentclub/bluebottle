@@ -2,14 +2,18 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivitySucceededNotification, ActivityRestoredNotification,
     ActivityExpiredNotification,
-    DoGoodHoursReminderQ1Notification,
-    DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification,
-    DoGoodHoursReminderQ4Notification, ActivitySubmittedNotification, ActivityPublishedNotification,
+    ActivitySubmittedNotification, ActivityPublishedNotification,
     ActivityApprovedNotification, ActivityNeedsWorkNotification
+)
+from bluebottle.activities.messages.matching import (
+    DoGoodHoursReminderQ1Notification,
+    DoGoodHoursReminderQ2Notification,
+    DoGoodHoursReminderQ3Notification,
+    DoGoodHoursReminderQ4Notification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
     ActivityPublishedReviewerNotification

@@ -6,7 +6,7 @@ from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone, now, make_aware
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,

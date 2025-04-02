@@ -132,7 +132,16 @@ class ImageContentView(FileContentView):
 
         size = self.kwargs['size']
 
-        cropbox = image.cropbox if self.kwargs['size'] != ORIGINAL_SIZE else None
+        cropbox = None
+        if self.kwargs['size'] != ORIGINAL_SIZE and image.cropbox:
+            left, upper, right, lower = image.cropbox
+
+            # Ensure correct coordinate order
+            if right <= left:
+                left, right = min(left, right), max(left, right)  # Swap if needed
+            if lower <= upper:
+                upper, lower = min(upper, lower), max(upper, lower)  # Swap if needed
+            cropbox = (left, upper, right, lower)
 
         try:
             width, height = size.split('x')

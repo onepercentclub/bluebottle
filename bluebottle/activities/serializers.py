@@ -567,8 +567,6 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'contributions': 'bluebottle.activities.serializers.MoneySerializer',
-        'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-        'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
     }
 
@@ -675,7 +673,6 @@ class ContributionSerializer(ModelSerializer):
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
-        'slot_participant': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.PolymorphicSlotSerializer',
     }
 

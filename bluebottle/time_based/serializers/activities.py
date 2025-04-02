@@ -372,7 +372,42 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
-class DateActivitySlotInfoMixin():
+class DateActivitySerializer(TimeBasedBaseSerializer):
+    detail_view_name = 'date-detail'
+    export_view_name = 'date-participant-export'
+
+    date_info = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+
+    contributors = RelatedLinkFieldByStatus(
+        read_only=True,
+        source="participants",
+        related_link_view_name="date-participants",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
+    )
+    registrations = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="related-date-registrations",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "new": ["new"],
+            "accepted": ["accepted"],
+            "rejected": ["rejected", "stopped", "removed"],
+        },
+    )
+
+    def get_contributor_count(self, instance):
+        return (
+            instance.deleted_successful_contributors
+            + instance.contributors.not_instance_of(Organizer)
+            .filter(status__in=["accepted", "participating"])
+            .count()
+        )
+
     def get_filtered_slots(self, obj, only_upcoming=False):
 
         start = self.context['request'].GET.get('filter[start]')
@@ -493,57 +528,25 @@ class DateActivitySlotInfoMixin():
             'location_hint': slot.location_hint,
         }
 
-
-class DateActivitySerializer(DateActivitySlotInfoMixin, TimeBasedBaseSerializer):
-    detail_view_name = 'date-detail'
-    export_view_name = 'date-participant-export'
-
-    contributors = RelatedLinkFieldByStatus(
-        read_only=True,
-        source="participants",
-        related_link_view_name="date-participants",
-        related_link_url_kwarg="activity_id",
-        statuses={
-            "active": ["new", "succeeded"],
-            "failed": ["rejected", "withdrawn", "removed"],
-        },
-    )
-    registrations = RelatedLinkFieldByStatus(
-        read_only=True,
-        related_link_view_name="related-date-registrations",
-        related_link_url_kwarg="activity_id",
-        statuses={
-            "new": ["new"],
-            "accepted": ["accepted"],
-            "rejected": ["rejected", "stopped", "removed"],
-        },
-    )
-
-    def get_contributor_count(self, instance):
-        return (
-            instance.deleted_successful_contributors
-            + instance.contributors.not_instance_of(Organizer)
-            .filter(status__in=["accepted", "participating"])
-            .count()
-        )
-
     class Meta(TimeBasedBaseSerializer.Meta):
-        model = PeriodicActivity
+        model = DateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
-            'location',
-            'location_hint',
+            'slots',
+            'date_info',
+            'location_info',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/periodics'
         included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
-            'location',
+            'slots.location', 'slots'
         ]
 
     included_serializers = dict(
         TimeBasedBaseSerializer.included_serializers.serializers,
         **{
-            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
+            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 

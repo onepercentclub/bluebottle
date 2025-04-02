@@ -213,7 +213,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     def get_admin_url(self, obj):
         user = get_current_user()
-        if user.is_authenticated and (user.is_staff or user.is_superuser):
+        if user and user.is_authenticated and (user.is_staff or user.is_superuser):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url
 

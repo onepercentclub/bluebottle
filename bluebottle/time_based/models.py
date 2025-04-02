@@ -366,7 +366,7 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def accepted_participants(self):
         if self.pk:
             return self.participants.filter(
-                status__in=['registered', 'new', 'succeeded'],
+                status__in=['accepted', 'new', 'succeeded'],
                 registration__status='accepted'
             )
         else:

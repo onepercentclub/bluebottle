@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 import icalendar
 from datetime import date, timedelta
 from django.utils.timezone import now
@@ -52,7 +53,7 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
 
     defaults = {
         'title': 'Test title',
-        'description': 'Test description',
+        'description': json.dumps({'html': 'Test description', 'delta': ''}),
         'review': False,
     }
 
@@ -126,7 +127,7 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
 
     defaults = {
         'title': 'Test title',
-        'description': 'Test description',
+        'description': json.dumps({'html': 'Test description', 'delta': ''}),
         'review': False,
     }
 
@@ -141,7 +142,7 @@ class DateActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITe
     fields = ['resource', 'transition']
     defaults = {
         'title': 'Test title',
-        'description': 'Test description',
+        'description': json.dumps({'html': 'Test description', 'delta': ''}),
         'review': False,
     }
 
@@ -183,7 +184,7 @@ class DateRegistrationTransitionListAPITestCase(TimeBasedRegistrationTransitionL
 
 
 class DateParticipantRelatedListAPITestCase(TimeBasedParticipantRelatedListAPITestCase, APITestCase):
-    url_name = 'date-related-participants'
+    url_name = 'date-participants'
     serializer = DateParticipantSerializer
     factory = DateParticipantFactory
 

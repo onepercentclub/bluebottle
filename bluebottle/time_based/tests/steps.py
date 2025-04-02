@@ -180,7 +180,7 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
         request_user = supporter
     test.data = {
         'data': {
-            'type': 'contributors/time-based/slot-participants',
+            'type': 'contributors/time-based/participants',
             'relationships': {
                 'slot': {
                     'data': {
@@ -191,7 +191,7 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
             }
         }
     }
-    url = reverse('slot-participant-list')
+    url = reverse('date-participant-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
     test.assertEqual(response.status_code, status_code, msg)
 

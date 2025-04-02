@@ -23,6 +23,7 @@ from bluebottle.time_based.messages import (
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.notifications.teams import UserTeamDetailsChangedNotification
 from bluebottle.time_based.states import (
+    DateStateMachine,
     DateActivitySlotStateMachine,
     ScheduleSlotStateMachine,
     PeriodicParticipantStateMachine,
@@ -64,6 +65,7 @@ def slot_is_finished(effect):
 
 
 def slot_is_not_finished(effect):
+    print('is finshed', effect.instance.end and effect.instance.end > now())
     return effect.instance.end and effect.instance.end > now()
 
 
@@ -244,12 +246,27 @@ def slot_is_full(effect):
     Slot is full. Capacity is filled by participants.
     """
     participant_count = effect.instance.participants.filter(
-        registration__status='accepted',
-        status__in=['registered', 'succeeded']
+        status__in=['accepted', 'succeeded']
     ).count()
     if effect.instance.capacity and participant_count >= effect.instance.capacity:
         return True
     return False
+
+
+def slot_has_participants(effect):
+    """
+    Slot is full. Capacity is filled by participants.
+    """
+    return effect.instance.participants.filter(
+        status__in=['accepted', 'succeeded']
+    ).count() > 0
+
+
+def slot_has_no_participants(effect):
+    """
+    Slot is full. Capacity is filled by participants.
+    """
+    return not slot_has_participants(effect)
 
 
 def slot_is_not_full(effect):
@@ -286,6 +303,28 @@ def slot_is_not_started(effect):
     return not slot_is_started(effect)
 
 
+def activity_has_no_open_slot(effect):
+    return len(
+        effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='open')
+    ) == 0
+
+
+def activity_has_finished_slot(effect):
+    return len(
+        effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='finished')
+    ) > 0
+
+
+def activity_is_finished(effect):
+    return len(
+        effect.instance.activity.slots.exclude(
+            pk=effect.instance.pk
+        ).filter(
+            status__in=['open', 'full']
+        )
+    ) == 0
+
+
 @register(DateActivitySlot)
 class DateActivitySlotTriggers(TriggerManager):
 
@@ -303,6 +342,39 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
             ],
         ),
+
+        TransitionTrigger(
+            DateActivitySlotStateMachine.mark_complete,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.reopen,
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            DateActivitySlotStateMachine.lock,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.lock,
+                    conditions=[activity_has_no_open_slot]
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
+            DateActivitySlotStateMachine.start,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.lock,
+                    conditions=[activity_has_no_open_slot]
+                ),
+            ],
+        ),
+
         ModelChangedTrigger(
             "start",
             effects=[
@@ -326,6 +398,16 @@ class DateActivitySlotTriggers(TriggerManager):
                     "participants",
                     DateParticipantStateMachine.succeed,
                 ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.succeed,
+                    conditions=[activity_is_finished, slot_has_participants]
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.expire,
+                    conditions=[activity_is_finished, slot_has_no_participants]
+                ),
             ],
         ),
         TransitionTrigger(
@@ -337,6 +419,24 @@ class DateActivitySlotTriggers(TriggerManager):
                     "participants",
                     DateParticipantStateMachine.cancel,
                 ),
+
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.lock,
+                    conditions=[activity_has_no_open_slot]
+                ),
+
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.succeed,
+                    conditions=[activity_has_finished_slot]
+                ),
+
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.cancel,
+                    conditions=[activity_is_finished, ]
+                ),
             ],
         ),
         TransitionTrigger(
@@ -345,6 +445,14 @@ class DateActivitySlotTriggers(TriggerManager):
                 TransitionEffect(
                     DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
+                ),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[slot_is_full]
+                ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.unlock
                 ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
             ],
@@ -361,6 +469,10 @@ class DateActivitySlotTriggers(TriggerManager):
                     DateActivitySlotStateMachine.lock,
                     conditions=[slot_is_full]
                 ),
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.reopen
+                )
             ],
         ),
         ModelChangedTrigger(

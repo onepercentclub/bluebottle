@@ -61,13 +61,13 @@ urlpatterns = [
     re_path(
         r'^/(?P<activity_id>\d+)/participants$',
         DateRelatedParticipantList.as_view(),
-        name='date-related-participants'
+        name='date-participants'
     ),
 
     re_path(
         r'^/participants$',
         DateParticipantList.as_view(),
-        name='date-participant-create'
+        name='date-participant-list'
     ),
 
     re_path(

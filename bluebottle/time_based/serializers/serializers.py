@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
-    SerializerMethodResourceRelatedField, ResourceRelatedField,
+    ResourceRelatedField,
     HyperlinkedRelatedField, SerializerMethodHyperlinkedRelatedField
 
 )
@@ -10,7 +10,7 @@ from bluebottle.activities.utils import BaseContributionSerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import DateParticipant, TimeContribution, DateActivitySlot, Skill
+from bluebottle.time_based.models import TimeContribution, DateActivitySlot, Skill
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -38,11 +38,6 @@ class ActivitySlotSerializer(ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
     timezone = serializers.SerializerMethodField()
 
-    my_contributor = SerializerMethodResourceRelatedField(
-        model=DateParticipant,
-        read_only=True,
-    )
-
     participants_export_url = PrivateFileSerializer(
         'date-participant-export',
         url_args=('pk',),
@@ -56,11 +51,6 @@ class ActivitySlotSerializer(ModelSerializer):
         has_location = getattr(instance, 'location', False)
         return instance.location.timezone if not is_online and has_location else None
 
-    def get_my_contributor(self, instance):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return instance.participants.filter(user=user).first()
-
     class Meta:
         fields = (
             'id',
@@ -72,7 +62,6 @@ class ActivitySlotSerializer(ModelSerializer):
             'timezone',
             'location_hint',
             'online_meeting_url',
-            'my_contributor',
             'location',
             'participants_export_url'
         )
@@ -98,7 +87,6 @@ class ActivitySlotSerializer(ModelSerializer):
     included_serializers = {
         'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
-        'my_contributor': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
     }
 
 

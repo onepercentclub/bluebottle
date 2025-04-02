@@ -733,13 +733,17 @@ class MemberProfileSerializer(ModelSerializer):
     class JSONAPIMeta():
         resource_name = 'member/profile'
         included_resources = [
-            'location', 'place.country', 'place', 'segments', 'avatar'
+            'location', 'location.subregion', 'location.subregion.region',
+            'place.country', 'place', 'segments', 'avatar'
         ]
 
     included_serializers = {
         'place': 'bluebottle.geo.serializers.PlaceSerializer',
         'place.country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
         'location': 'bluebottle.geo.serializers.OfficeSerializer',
+        'location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
+        'location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
+
         'segments': 'bluebottle.segments.serializers.SegmentListSerializer',
         'avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
     }

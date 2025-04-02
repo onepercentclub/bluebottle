@@ -47,9 +47,19 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        params = self.request.query_params
-        if 'office_location__subregion' in params:
-            queryset = queryset.filter(office_location__subregion__id=params['office_location__subregion'])
+
+        if self.request.user:
+            type_filter = self.request.query_params.get('filter[type]')
+            if type_filter == 'office_subregion':
+                subregion = self.request.user.location.subregion
+                queryset = queryset.filter(
+                    office_location__subregion=subregion
+                )
+            elif type_filter == 'office_region':
+                region = self.request.user.location.subregion.region
+                queryset = queryset.filter(
+                    office_location__subregion__region=region
+                )
 
         queryset = queryset.filter(status__in=("succeeded", "open", "full", "running"))
 

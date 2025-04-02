@@ -13,7 +13,7 @@ from rest_framework_json_api.relations import ResourceRelatedField, SerializerMe
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer, SorlImageField, CustomHyperlinkRelatedSerializer
+    ImageSerializer, SorlImageField
 )
 from bluebottle.cms.models import (
     HomePage, QuotesContent, Quote, PeopleContent, Person,
@@ -140,34 +140,22 @@ class LinksBlockSerializer(BaseBlockSerializer):
 
 
 class ProjectsMapBlockSerializer(BaseBlockSerializer):
+    links = serializers.SerializerMethodField()
 
-    subregion = serializers.SerializerMethodField()
+    def get_links(self, obj):
+        links = {}
+        base_url = reverse('activity-location-list')
+        for type, _ in ProjectsMapContent.MapTypeChoices.choices:
+            links[type] = f'{base_url}?filter[type]={type}'
 
-    def get_subregion(self, obj):
-        if obj.map_type == 'office_subregion':
-            user = get_current_user()
-            if user and not user.is_anonymous and user.location and user.location.subregion:
-                return user.location.subregion.name
-
-    activities = CustomHyperlinkRelatedSerializer(
-        link="/api/activities/locations"
-    )
-
-    activities_url = serializers.SerializerMethodField()
-
-    def get_activities_url(self, obj):
-        url = reverse('activity-location-list')
-        if obj.map_type == 'office_subregion':
-            user = get_current_user()
-            if user and user.location and user.location.subregion:
-                url += f'?office_location__subregion={user.location.subregion.pk}'
-        return url
+        return links
 
     class Meta(object):
         model = ProjectsMapContent
         fields = BaseBlockSerializer.Meta.fields + (
-            'activities', 'activities_url', 'map_type', 'activities_url', 'subregion'
+            'map_type', 'links'
         )
+        meta_fields = ['links']
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/map'
@@ -287,42 +275,26 @@ class StepsBlockSerializer(BaseBlockSerializer):
     }
 
 
-class StatsLinkSerializer(CustomHyperlinkRelatedSerializer):
-
-    def get_links(self, *args, **kwargs):
-        url = reverse('statistics')
-        obj = args[0]
-
-        url = url + '?'
-
-        if obj.stat_type == 'office_subregion':
-            user = get_current_user()
-            if user and user.location and user.location.subregion:
-                url += f'office_location__subregion={user.location.subregion.pk}'
-
-        if obj.year:
-            url += f'&year={obj.year}'
-        return {
-            'related': url
-        }
-
-
 class StatsBlockSerializer(BaseBlockSerializer):
     title = serializers.CharField()
     sub_title = serializers.CharField()
     year = serializers.IntegerField()
-    stats = StatsLinkSerializer()
-    subregion = serializers.SerializerMethodField()
+    links = serializers.SerializerMethodField()
 
-    def get_subregion(self, obj):
-        if obj.stat_type == 'office_subregion':
-            user = get_current_user()
-            if user and not user.is_anonymous and user.location and user.location.subregion:
-                return user.location.subregion.name
+    def get_links(self, obj):
+        links = {}
+        base_url = reverse('statistics')
+        for type, _ in HomepageStatisticsContent.StatTypeChoices.choices:
+            if obj.year:
+                links[type] = f'{base_url}?filter[type]={type}&filter[year]={obj.year}'
+            else:
+                links[type] = f'{base_url}?filter[type]={type}'
+
+        return links
 
     class Meta(object):
         model = HomepageStatisticsContent
-        fields = ('id', 'block_type', 'title', 'sub_title', 'year', 'stats', 'stat_type', 'subregion')
+        fields = ('id', 'block_type', 'title', 'sub_title', 'year', 'stat_type', 'links')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/stats'

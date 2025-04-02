@@ -1776,8 +1776,36 @@ class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 
     def setUp(self):
+        self.user = BlueBottleUserFactory.create(
+            location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
+        )
+
         CollectActivityFactory.create(status='succeeded')
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
         DeadlineActivityFactory.create(status='succeeded')
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
 
         date_activity = DateActivityFactory.create(status="succeeded")
         slot = date_activity.slots.first()
@@ -1789,9 +1817,32 @@ class ActivityLocationAPITestCase(APITestCase):
         self.url = reverse('activity-location-list')
 
     def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_anon(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(3)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_region(self):
+        self.url += '?filter[type]=office_region'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_subregion(self):
+        self.url += '?filter[type]=office_subregion'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 

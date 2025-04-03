@@ -61,7 +61,8 @@ class RelatedDateSlotListView(JsonApiViewMixin, ListAPIView):
     filter_backends = [filters.OrderingFilter]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        activity_id = self.kwargs['activity_id']
+        queryset = super().get_queryset().filter(activity_id=activity_id)
         tz = get_current_timezone()
 
         start = self.request.GET.get('start')

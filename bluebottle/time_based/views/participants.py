@@ -117,9 +117,9 @@ class SlotRelatedParticipantListView(
 
         if self.request.user.is_authenticated:
             if self.request.user.is_staff:
-                queryset = self.queryset
+                queryset = queryset
             else:
-                queryset = self.queryset.filter(
+                queryset = queryset.filter(
                     Q(user=self.request.user) |
                     Q(slot__activity__owner=self.request.user) |
                     Q(slot__activity__initiative__activity_manager=self.request.user) |

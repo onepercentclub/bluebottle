@@ -387,6 +387,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             "failed": ["rejected", "withdrawn", "removed"],
         },
     )
+
     registrations = RelatedLinkFieldByStatus(
         read_only=True,
         related_link_view_name="related-date-registrations",
@@ -394,7 +395,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "new": ["new"],
             "accepted": ["accepted"],
-            "rejected": ["rejected", "stopped", "removed"],
+            "rejected": ["rejected", "removed", "withdrawn"]
         },
     )
 
@@ -406,6 +407,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         statuses={
             "upcoming": ["open", "full", "running"],
             "passed": ["failed", "succeeded", "expired", "cancelled"],
+            "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled"],
         },
     )
 

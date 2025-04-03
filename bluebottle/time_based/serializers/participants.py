@@ -16,7 +16,7 @@ from bluebottle.time_based.models import (
     ScheduleRegistration,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
-    DateActivitySlot
+    DateActivitySlot, DateActivity
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -55,6 +55,11 @@ class DateParticipantSerializer(ParticipantSerializer):
     registration = ResourceRelatedField(queryset=DateRegistration.objects.all(), required=False)
 
     slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
+    activity = ResourceRelatedField(
+        source='registration.activity',
+        queryset=DateActivity.objects.all(),
+        required=False,
+    )
 
     def validate(self, data):
         email = data.get('email', None)

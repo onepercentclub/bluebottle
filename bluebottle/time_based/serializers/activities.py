@@ -73,10 +73,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review_document_enabled',
             'contributors',
             'registration_flow',
-            'review_link',
-            'review_title',
-            'review_description',
-            'review_document_enabled',
             'permissions',
             'registrations'
         )
@@ -400,6 +396,22 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         },
     )
 
+    slots = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="related-date-slots",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "upcoming": ["open", "full", "running"],
+            "passed": ["failed", "succeeded", "expired", "cancelled"],
+        },
+    )
+    slots = HyperlinkedRelatedField(
+        many=True,
+        read_only=True,
+        related_link_view_name='related-date-slots',
+        related_link_url_kwarg='activity_id',
+    )
+
     def get_contributor_count(self, instance):
         return (
             instance.deleted_successful_contributors
@@ -538,17 +550,6 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
         resource_name = 'activities/time-based/dates'
-        included_resources = TimeBasedBaseSerializer.JSONAPIMeta.included_resources + [
-            'slots.location', 'slots'
-        ]
-
-    included_serializers = dict(
-        TimeBasedBaseSerializer.included_serializers.serializers,
-        **{
-            'slots': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
-            'slots.location': 'bluebottle.geo.serializers.GeolocationSerializer',
-        }
-    )
 
 
 class DeadlineTransitionSerializer(TransitionSerializer):

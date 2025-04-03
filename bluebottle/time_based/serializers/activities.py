@@ -126,12 +126,13 @@ class PeriodActivitySerializer(ModelSerializer):
 class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
     model = DeadlineParticipant
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, include_my=True, *args, **kwargs):
         self.statuses = kwargs.pop("statuses") or {}
         self.related_link_team_view_name = kwargs.pop(
             "related_link_team_view_name",
             None
         )
+        self.include_my = include_my
         super().__init__(*args, **kwargs)
 
     def get_links(self, obj=None, lookup_field="pk"):
@@ -155,21 +156,22 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 "meta": {"count": queryset.filter(status__in=statuses).count()},
             }
 
-        if self.context['request'].user.is_authenticated:
-            return_data['my'] = {
-                'href': url + '?filter[my]=true',
-                'meta': {
-                    'count': queryset.filter(user=self.context['request'].user).count()
+        if self.include_my:
+            if self.context['request'].user.is_authenticated:
+                return_data['my'] = {
+                    'href': url + '?filter[my]=true',
+                    'meta': {
+                        'count': queryset.filter(user=self.context['request'].user).count()
+                    }
                 }
-            }
-        else:
-            return_data['my'] = {
-                'href': url + '?filter[my]=true',
-                'meta': {
-                    'count': 0
-                }
+            else:
+                return_data['my'] = {
+                    'href': url + '?filter[my]=true',
+                    'meta': {
+                        'count': 0
+                    }
 
-            }
+                }
 
         return_data['related'] = url
 
@@ -400,16 +402,11 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         read_only=True,
         related_link_view_name="related-date-slots",
         related_link_url_kwarg="activity_id",
+        include_my=False,
         statuses={
             "upcoming": ["open", "full", "running"],
             "passed": ["failed", "succeeded", "expired", "cancelled"],
         },
-    )
-    slots = HyperlinkedRelatedField(
-        many=True,
-        read_only=True,
-        related_link_view_name='related-date-slots',
-        related_link_url_kwarg='activity_id',
     )
 
     def get_contributor_count(self, instance):

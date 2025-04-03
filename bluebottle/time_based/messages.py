@@ -9,7 +9,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, DateActivitySlot, PeriodActivity, DateRegistration
+    DateParticipant, PeriodParticipant, DateActivitySlot, PeriodActivity
 )
 
 
@@ -543,25 +543,8 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    @property
-    def task_id(self):
-        return f'{self.__class__.__name__}-{self.obj.registration.id}'
-
     def get_recipients(self):
         """participant"""
-        joined_message = ParticipantJoinedNotification(self.obj.registration)
-        applied_message = ParticipantAppliedNotification(self.obj.registration)
-        changed_message = ParticipantChangedNotification(self.obj)
-
-        registration = DateRegistration.objects.get(pk=self.obj.registration.pk)
-
-        if (
-            registration.status == 'withdrawn' or
-            joined_message.is_delayed or
-            changed_message.is_delayed or applied_message.is_delayed
-        ):
-            return []
-
         return [self.obj.user]
 
 
@@ -851,7 +834,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
 
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ManagerParticipantAddedOwnerNotification(TransitionMessage):

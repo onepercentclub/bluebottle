@@ -143,6 +143,12 @@ def api_user_joins_activity(test, activity, supporter,
                         'type': 'activities/time-based/dates',
                         'id': activity.pk
                     }
+                },
+                'slot': {
+                    'data': {
+                        'type': 'activities/time-based/date-slots',
+                        'id': activity.slots.first().pk
+                    }
                 }
             }
         }
@@ -180,8 +186,14 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
         request_user = supporter
     test.data = {
         'data': {
-            'type': 'contributors/time-based/participants',
+            'type': 'contributors/time-based/date-participants',
             'relationships': {
+                'activity': {
+                    'data': {
+                        'type': 'activities/time-based/dates',
+                        'id': slot.activity.pk
+                    }
+                },
                 'slot': {
                     'data': {
                         'type': 'activities/time-based/date-slots',
@@ -196,11 +208,42 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
     test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_participant_transition(test, activity, supporter, transition,
-                               request_user=None, status_code=201, msg=None):
+def api_registration_transition(
+    test, activity, supporter, transition,
+    request_user=None, status_code=201, msg=None
+):
     if not request_user:
         request_user = supporter
-    participant = activity.contributors.filter(user=supporter).get()
+    registration = activity.registrations.filter(user=supporter).get()
+
+    test.data = {
+        'data': {
+            'type': 'contributors/time-based/date-registration-transitions',
+            'attributes': {
+                'transition': transition
+            },
+            'relationships': {
+                'resource': {
+                    'data': {
+                        'type': 'contributors/time-based/date-registrations',
+                        'id': registration.pk
+                    }
+                }
+            }
+        }
+    }
+    url = reverse('date-registration-transitions')
+    response = test.client.post(url, json.dumps(test.data), user=request_user)
+    test.assertEqual(response.status_code, status_code, msg)
+
+
+def api_participant_transition(
+    test, slot, supporter, transition,
+    request_user=None, status_code=201, msg=None
+):
+    if not request_user:
+        request_user = supporter
+    participant = slot.participants.filter(user=supporter).get()
     test.data = {
         'data': {
             'type': 'contributors/time-based/date-participant-transitions',
@@ -217,45 +260,19 @@ def api_participant_transition(test, activity, supporter, transition,
             }
         }
     }
-    url = reverse('date-participant-transition-list')
+    url = reverse('date-participant-transitions')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
     test.assertEqual(response.status_code, status_code, msg)
 
 
-def api_slot_participant_transition(test, slot, supporter, transition,
-                                    request_user=None, status_code=201, msg=None):
-    if not request_user:
-        request_user = supporter
-    slot_participant = slot.slot_participants.filter(participant__user=supporter).get()
-    test.data = {
-        'data': {
-            'type': 'contributors/time-based/slot-participant-transitions',
-            'attributes': {
-                'transition': transition
-            },
-            'relationships': {
-                'resource': {
-                    'data': {
-                        'type': 'contributors/time-based/slot-participants',
-                        'id': slot_participant.pk
-                    }
-                }
-            }
-        }
-    }
-    url = reverse('slot-participant-transition-list')
-    response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code, msg)
-
-
-def assert_participant_status(test, activity, supporter, status, msg=None):
-    participant = activity.contributors.filter(user=supporter).first()
+def assert_participant_status(test, slot, supporter, status, msg=None):
+    participant = slot.participants.filter(user=supporter).first()
     return test.assertEqual(participant.status, status, msg)
 
 
-def assert_slot_participant_status(test, slot, supporter, status, msg=None):
-    slot_participant = slot.slot_participants.filter(participant__user=supporter).first()
-    return test.assertEqual(slot_participant.status, status, msg)
+def assert_registration_status(test, activity, supporter, status, msg=None):
+    registration = activity.registrations.filter(user=supporter).first()
+    return test.assertEqual(registration.status, status, msg)
 
 
 def assert_not_participant(test, activity, supporter, msg=None):

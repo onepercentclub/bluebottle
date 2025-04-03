@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant, ScheduleSlot, DateRegistration
+    ScheduleParticipant, ScheduleSlot, DateRegistration,
 )
 
 
@@ -127,19 +127,17 @@ class CreateDateRegistrationEffect(Effect):
     template = 'admin/create_date_registration.html'
 
     def without_registration(self):
-        return not self.instance.registration
+        return not self.instance.activity.registrations.filter(user=self.instance.user).first()
+
+    def pre_save(self, **kwargs):
+        self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):
-        registration = DateRegistration.objects.filter(
+        self.instance.registration = DateRegistration.objects.create(
             activity=self.instance.activity,
-            user=self.instance.user
-        ).first()
-        if not registration:
-            registration = DateRegistration.objects.create(
-                activity=self.instance.activity,
-                user=self.instance.user,
-            )
-        self.instance.registration = registration
+            user=self.instance.user,
+        )
+
         self.instance.save()
 
     conditions = [

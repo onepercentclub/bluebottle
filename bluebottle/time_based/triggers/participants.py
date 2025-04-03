@@ -1127,7 +1127,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         if (
                 effect.instance.slot.capacity and
                 effect.instance.status == 'accepted' and
-                effect.instance.registration.status == 'accepted' and
                 participant_count + 1 >= effect.instance.slot.capacity
         ):
             return True
@@ -1158,6 +1157,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             and effect.instance.registration.status == "accepted"
         )
 
+    def review_disabled(effect):
+        """Review not needed"""
+        return not effect.instance.activity.review
+
     triggers = [
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
@@ -1170,7 +1173,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.accept,
-                    conditions=[registration_is_accepted],
+                    conditions=[review_disabled],
                 ),
                 RelatedTransitionEffect(
                     'slot',
@@ -1260,6 +1263,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.reapply,
             effects=[
                 CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.reset,

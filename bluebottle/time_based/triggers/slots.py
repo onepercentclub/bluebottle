@@ -65,7 +65,6 @@ def slot_is_finished(effect):
 
 
 def slot_is_not_finished(effect):
-    print('is finshed', effect.instance.end and effect.instance.end > now())
     return effect.instance.end and effect.instance.end > now()
 
 
@@ -257,7 +256,7 @@ def slot_has_participants(effect):
     """
     Slot is full. Capacity is filled by participants.
     """
-    return effect.instance.participants.filter(
+    return effect.instance.pk and effect.instance.participants.filter(
         status__in=['accepted', 'succeeded']
     ).count() > 0
 

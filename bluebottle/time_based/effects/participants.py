@@ -123,26 +123,20 @@ class CreateRegistrationEffect(Effect):
 
 
 class CreateDateRegistrationEffect(Effect):
-    title = _('Create registration for this participant')
+    title = _('Create or assign registration for this participant')
     template = 'admin/create_date_registration.html'
-
-    def without_registration(self):
-        return not self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def pre_save(self, **kwargs):
         self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):
-        self.instance.registration = DateRegistration.objects.create(
-            activity=self.instance.activity,
-            user=self.instance.user,
-        )
+        if not self.instance.registration:
+            self.instance.registration = DateRegistration.objects.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+            )
 
-        self.instance.save()
-
-    conditions = [
-        without_registration
-    ]
+            self.instance.save()
 
 
 class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipantsEffect):

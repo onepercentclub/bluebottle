@@ -364,6 +364,16 @@ class DateActivitySlotTriggers(TriggerManager):
         ),
 
         TransitionTrigger(
+            DateActivitySlotStateMachine.unlock,
+            effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.reopen,
+                ),
+            ],
+        ),
+
+        TransitionTrigger(
             DateActivitySlotStateMachine.start,
             effects=[
                 RelatedTransitionEffect(

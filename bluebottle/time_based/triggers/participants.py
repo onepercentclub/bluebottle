@@ -97,7 +97,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 FollowActivityEffect,
                 RelatedTransitionEffect(
                     "activity",
-                    DeadlineActivityStateMachine.succeed,
+                    RegistrationActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 ),
             ],
@@ -112,7 +112,7 @@ class RegistrationParticipantTriggers(ContributorTriggers):
                 ),
                 RelatedTransitionEffect(
                     "activity",
-                    DeadlineActivityStateMachine.expire,
+                    RegistrationActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
             ],
@@ -1236,6 +1236,23 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 NotificationEffect(ParticipantChangedNotification),
                 FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.reject,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                SlotParticipantUnFollowActivityEffect,
             ],
         ),
 

@@ -16,7 +16,6 @@ from bluebottle.time_based.tests.factories import (
     DateActivitySlotFactory,
 )
 from bluebottle.time_based.tests.steps import (
-    api_user_joins_activity,
     assert_participant_status,
     api_participant_transition,
     assert_status,
@@ -129,7 +128,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.activity.review = True
         self.activity.save()
 
-        api_user_joins_activity(self, self.activity, self.supporter)
+        api_user_joins_slot(self, self.slot1, self.supporter)
 
         assert_participant_status(self, self.activity, self.supporter, status='new')
         api_registration_transition(
@@ -153,7 +152,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
 
     def test_user_withdraws_from_activity(self):
         slot = self.activity.slots.first()
-        api_user_joins_activity(self, self.activity, self.supporter)
+        api_user_joins_slot(self, slot, self.supporter)
 
         assert_participant_status(self, slot, self.supporter, status='accepted')
         api_participant_transition(self, slot, self.supporter, transition='withdraw')
@@ -167,7 +166,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         self.activity.review = True
         self.activity.save()
 
-        api_user_joins_activity(self, self.activity, self.supporter)
+        api_user_joins_slot(self, slot, self.supporter)
         assert_participant_status(self, slot, self.supporter, status='new')
         api_participant_transition(self, slot, self.supporter, transition='withdraw')
         assert_participant_status(self, slot, self.supporter, status='withdrawn')
@@ -353,7 +352,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         )
         assert_status(self, self.slot2, 'full')
         api_registration_transition(self, self.activity, supporter2, 'reject', request_user=self.owner)
-        assert_participant_status(self, self.slot2, supporter2, 'accepted')
+        assert_participant_status(self, self.slot2, supporter2, 'rejected')
         assert_status(
             self, self.slot2, 'open',
             'Slot2 should now be open'

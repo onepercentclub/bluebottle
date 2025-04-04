@@ -130,34 +130,6 @@ def api_update_date_slot(test, slot, attributes,
     return DateActivitySlot.objects.get(id=response.data['id'])
 
 
-def api_user_joins_activity(test, activity, supporter,
-                            request_user=None, status_code=201, msg=None):
-    if not request_user:
-        request_user = supporter
-    test.data = {
-        'data': {
-            'type': 'contributors/time-based/date-participants',
-            'relationships': {
-                'activity': {
-                    'data': {
-                        'type': 'activities/time-based/dates',
-                        'id': activity.pk
-                    }
-                },
-                'slot': {
-                    'data': {
-                        'type': 'activities/time-based/date-slots',
-                        'id': activity.slots.first().pk
-                    }
-                }
-            }
-        }
-    }
-    url = reverse('date-participant-list')
-    response = test.client.post(url, json.dumps(test.data), user=request_user)
-    test.assertEqual(response.status_code, status_code, msg)
-
-
 def api_user_joins_period_activity(
         test, activity, supporter,
         request_user=None, status_code=201, msg=None):

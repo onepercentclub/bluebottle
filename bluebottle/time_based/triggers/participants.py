@@ -13,7 +13,8 @@ from bluebottle.fsm.triggers import (
     ModelChangedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
-from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect
+from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect, CreateSlotTimeContributionEffect, \
+    CheckPreparationTimeContributionEffect, SlotParticipantUnFollowActivityEffect
 from bluebottle.time_based.effects.effects import (
     CreateSchedulePreparationTimeContributionEffect,
 )
@@ -21,14 +22,16 @@ from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
-    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect,
+    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
 )
 from bluebottle.time_based.messages import (
-    ParticipantAddedNotification,
+    ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
+    ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
+    ManagerSlotParticipantWithdrewNotification,
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant,
 )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
@@ -44,7 +47,8 @@ from bluebottle.time_based.states import (
     PeriodicParticipantStateMachine,
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
-    TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine
+    TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
+    DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine
 )
 
 
@@ -1092,6 +1096,200 @@ class TeamScheduleParticipantTriggers(ContributorTriggers):
                     ScheduleActivityStateMachine.expire,
                     conditions=[activity_will_be_expired],
                 ),
+            ],
+        ),
+    ]
+
+
+@register(DateParticipant)
+class DateParticipantTriggers(RegistrationParticipantTriggers):
+
+    def participant_slot_is_finished(effect):
+        """
+        Slot end date/time has passed
+        """
+        if effect.instance.id:
+            return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+
+    def applicant_is_accepted(effect):
+        return effect.instance.registration and effect.instance.registration.status == 'accepted'
+
+    def is_participant(effect):
+        if 'user' not in effect.options:
+            return False
+        return effect.instance.user == effect.options['user']
+
+    def participant_slot_will_be_full(effect):
+        """
+        the slot will be filled
+        """
+        participant_count = effect.instance.slot.participants.filter(
+            status="accepted",
+            registration__status="accepted"
+        ).count()
+        if (
+                effect.instance.slot.capacity and
+                effect.instance.status == 'accepted' and
+                participant_count + 1 >= effect.instance.slot.capacity
+        ):
+            return True
+        return False
+
+    def participant_slot_will_be_not_full(effect):
+        """
+        the slot will be unfilled
+        """
+        participant_count = effect.instance.slot.participants.filter(
+            status='accepted',
+            registration__status='accepted'
+        ).count()
+        if effect.instance.slot.capacity and participant_count - 1 < effect.instance.slot.capacity:
+            return True
+        return False
+
+    def is_not_self(self):
+        "Participant is created by other user"
+        user = self.options.get('user')
+
+        return user and self.instance.user != user
+
+    def registration_is_accepted(effect):
+        """Review needed"""
+        return (
+            effect.instance.registration
+            and effect.instance.registration.status == "accepted"
+        )
+
+    def review_disabled(effect):
+        """Review not needed"""
+        return not effect.instance.activity.review
+
+    triggers = [
+        TransitionTrigger(
+            DateParticipantStateMachine.initiate,
+            effects=[
+                CreateDateRegistrationEffect,
+                CreateSlotTimeContributionEffect,
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.add,
+                    conditions=[is_not_self],
+                ),
+                TransitionEffect(
+                    DeadlineParticipantStateMachine.accept,
+                    conditions=[review_disabled],
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
+                ),
+                NotificationEffect(
+                    ParticipantSlotParticipantRegisteredNotification,
+                    conditions=[
+                        applicant_is_accepted,
+                        is_participant
+                    ]
+                )
+            ]
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.remove,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                SlotParticipantUnFollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.accept,
+            effects=[
+                TransitionEffect(
+                    DateParticipantStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+
+                ),
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.withdraw,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                NotificationEffect(
+                    ManagerSlotParticipantWithdrewNotification,
+                ),
+                SlotParticipantUnFollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.reapply,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
             ],
         ),
     ]

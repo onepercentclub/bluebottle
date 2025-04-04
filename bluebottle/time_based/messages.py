@@ -9,8 +9,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, SlotParticipant,
-    PeriodParticipant, DateActivitySlot, PeriodActivity
+    DateParticipant, PeriodParticipant, DateActivitySlot, PeriodActivity
 )
 
 
@@ -47,8 +46,6 @@ class TimeBasedInfoMixin(object):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.filter(user=recipient).first()
-        elif isinstance(self.obj, SlotParticipant):
-            participant = self.obj.participant
         else:
             participant = self.obj.participants.get(user=recipient)
 
@@ -236,7 +233,7 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.activity.accepted_participants
+            participant.user for participant in self.obj.accepted_participants
         ]
 
 
@@ -267,12 +264,8 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participants that signed up"""
         return [
-            slot_participant.participant.user for slot_participant
-            in self.obj.slot_participants.all()
-            if (
-                slot_participant.status == 'registered' and
-                slot_participant.participant.status == 'accepted'
-            )
+            participant.user for participant
+            in self.obj.accepted_participants
         ]
 
 
@@ -550,26 +543,9 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    @property
-    def task_id(self):
-        return f'{self.__class__.__name__}-{self.obj.participant.id}'
-
     def get_recipients(self):
         """participant"""
-        joined_message = ParticipantJoinedNotification(self.obj.participant)
-        applied_message = ParticipantAppliedNotification(self.obj.participant)
-        changed_message = ParticipantChangedNotification(self.obj)
-
-        participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
-
-        if (
-                participant.status == 'withdrawn' or
-                joined_message.is_delayed or
-                changed_message.is_delayed or applied_message.is_delayed
-        ):
-            return []
-
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
@@ -858,7 +834,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
 
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ManagerParticipantAddedOwnerNotification(TransitionMessage):

@@ -21,6 +21,7 @@ class TimeBasedActivityListAPITestCase:
     attributes = ['start', 'title', 'description', 'review']
     relationships = ['initiative', 'owner']
     included = ['initiative', 'owner']
+    defaults = {}
 
     @property
     def model_name(self):
@@ -28,17 +29,17 @@ class TimeBasedActivityListAPITestCase:
 
     def setUp(self):
         self.url = reverse(self.url_name)
-        self.defaults = {
-            'description': json.dumps({'html': 'test description', 'delta': ''})
-        }
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append(self.model_name)
         settings.save()
+
+        self.defaults['initiative'] = InitiativeFactory.create(status='approved')
+
         super().setUp()
 
     def test_create_complete(self):
-        self.perform_create(user=self.user)
+        self.perform_create(user=self.defaults['initiative'].owner)
         self.assertStatus(status.HTTP_201_CREATED)
 
         for relationship in self.relationships:
@@ -59,7 +60,7 @@ class TimeBasedActivityListAPITestCase:
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''
-        self.perform_create(user=self.user)
+        self.perform_create(user=self.defaults['initiative'].owner)
 
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertRequired('description')
@@ -696,13 +697,17 @@ class TimeBasedRegistrationDetailAPITestCase:
 class TimeBasedRegistrationTransitionListAPITestCase:
     fields = ["resource", "transition", "send_email", "message"]
 
+    activity_defaults = {
+        'start': date.today() + timedelta(days=10),
+        'deadline': date.today() + timedelta(days=20),
+    }
+
     def setUp(self):
         self.activity = self.activity_factory.create(
             initiative=InitiativeFactory.create(status='approved'),
             status='draft',
-            start=date.today() + timedelta(days=10),
-            deadline=date.today() + timedelta(days=20),
-            review=True
+            review=True,
+            **self.activity_defaults
         )
         self.activity.states.publish(save=True)
         self.registration = self.factory.create(activity=self.activity)
@@ -946,8 +951,8 @@ class TimeBasedParticipantTransitionListAPITestCase:
             review=False,
             **self.activity_defaults
         )
-        self.participant = self.factory.create(activity=self.activity)
         self.url = reverse(self.url_name)
+        self.participant = self.factory.create(activity=self.activity)
 
         self.defaults = {
             'resource': self.participant,
@@ -955,6 +960,7 @@ class TimeBasedParticipantTransitionListAPITestCase:
         }
 
         self.initial_status = self.participant.status
+
         super().setUp()
 
     def test_transition(self):

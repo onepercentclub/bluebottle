@@ -14,9 +14,9 @@ from bluebottle.time_based.messages import (
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory,
+    DateActivityFactory, DateParticipantFactory, DateRegistrationFactory,
     DateActivitySlotFactory, PeriodActivityFactory, PeriodParticipantFactory,
-    SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
+    DeadlineActivityFactory, DeadlineRegistrationFactory
 )
 
 
@@ -90,15 +90,19 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             3,
             activity=self.activity
         )
-        self.obj = DateParticipantFactory.create(
+        self.registration = DateRegistrationFactory.create(
             activity=self.activity,
             user=self.supporter
         )
 
-    def test_participant_registered_notification(self):
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter,
+            slot=self.slots[0]
         )
+
+    def test_participant_registered_notification(self):
+        self.obj = self.registration
         self.message_class = ParticipantSlotParticipantRegisteredNotification
         self.create()
         self.assertRecipients([self.supporter])
@@ -110,10 +114,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
-        self.obj.save()
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.registration.answer = 'Par-bleu yellow'
+        self.registration.save()
+
+        self.obj = DateParticipantFactory.create(
+            registration=self.registration, slot=self.obj.activity.slots.first()
         )
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
@@ -126,7 +131,12 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
+        self.registration.answer = 'Par-bleu yellow'
+        self.registration.save()
+
+        self.obj = DateParticipantFactory.create(
+            registration=self.registration, slot=self.obj.activity.slots.first()
+        )
         self.message_class = NewParticipantNotification
         self.create()
         self.assertRecipients([self.owner])
@@ -175,10 +185,6 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
 
     def test_participant_added_notification(self):
         self.message_class = ParticipantAddedNotification
-        self.obj = DateParticipantFactory.create(
-            activity=self.activity,
-            user=self.supporter,
-        )
         self.create()
         self.assertRecipients([self.supporter])
         self.assertSubject('You have been added to the activity "Save the world!" 🎉')
@@ -195,8 +201,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_participant_joined_notification(self):
-        SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        registration = DateRegistrationFactory.create(
+            activity=self.activity,
+        )
+        self.obj = DateParticipantFactory.create(
+            registration=registration, slot=self.activity.slots.first()
         )
 
         self.message_class = ParticipantJoinedNotification
@@ -280,20 +289,9 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_slot_cancelled_with_participant(self):
-        participant = DateParticipantFactory.create(activity=self.activity, status='accepted')
-        SlotParticipantFactory.create(
-            status='registered', slot=self.obj, participant=participant
-        )
-        SlotParticipantFactory.create(
-            status='rejected',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='accepted')
-        )
-
-        SlotParticipantFactory.create(
-            status='registered',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='rejected')
+        registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        participant = DateParticipantFactory.create(
+            status='registered', slot=self.obj, registration=registration
         )
 
         self.message_class = SlotCancelledNotification

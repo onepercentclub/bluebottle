@@ -7,23 +7,23 @@ from django.utils.timezone import now
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.time_based.serializers import DateActivityListSerializer
+from bluebottle.time_based.serializers import DateActivitySerializer
 from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, \
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory
 
 
-class DateActivityListSerializerTestCase(BluebottleTestCase):
+class DateActivitySerializerTestCase(BluebottleTestCase):
     def setUp(self):
         self.activity = DateActivityFactory.create(slots=[])
 
-        self.serializer = DateActivityListSerializer()
+        self.serializer = DateActivitySerializer()
         self.request_factory = RequestFactory()
 
     def assertAttribute(self, attr, value, params=None, user=None):
         request = self.request_factory.get('/', params or None)
         request.user = user or AnonymousUser()
         request.query_params = {}
-        serializer = DateActivityListSerializer(context={'request': request})
+        serializer = DateActivitySerializer(context={'request': request})
         data = serializer.to_representation(instance=self.activity)
 
         self.assertEqual(data[attr], value)
@@ -189,15 +189,14 @@ class DateActivityListSerializerTestCase(BluebottleTestCase):
         )
 
     def test_location_info_all_online_participant(self):
-        slots = DateActivitySlotFactory.create_batch(
+        DateActivitySlotFactory.create_batch(
             3,
             activity=self.activity, is_online=True,
             location=None, online_meeting_url='http://meet.up'
         )
 
         user = BlueBottleUserFactory.create()
-        participant = DateParticipantFactory.create(user=user, activity=self.activity, status='accepted')
-        SlotParticipantFactory.create(participant=participant, slot=slots[0])
+        DateParticipantFactory.create(user=user, activity=self.activity, status='accepted')
         self.assertAttribute(
             'location_info',
             {

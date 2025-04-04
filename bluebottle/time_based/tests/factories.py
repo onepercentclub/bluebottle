@@ -25,14 +25,13 @@ from bluebottle.time_based.models import (
     PeriodParticipant,
     ScheduleSlot,
     Skill,
-    SlotParticipant,
     TimeContribution,
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
     TeamScheduleRegistration,
     Team,
-    TeamMember,
+    TeamMember, DateRegistration,
 )
 from bluebottle.utils.models import Language
 
@@ -153,14 +152,6 @@ class PeriodicSlotFactory(factory.DjangoModelFactory):
         model = PeriodicSlot
 
 
-class DateParticipantFactory(FSMModelFactory):
-    class Meta(object):
-        model = DateParticipant
-
-    activity = factory.SubFactory(DateActivityFactory)
-    user = factory.SubFactory(BlueBottleUserFactory)
-
-
 class PeriodParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = PeriodParticipant
@@ -181,14 +172,6 @@ class ParticipationFactory(factory.DjangoModelFactory):
     end = now() + timedelta(weeks=3)
 
 
-class SlotParticipantFactory(FSMModelFactory):
-    class Meta(object):
-        model = SlotParticipant
-
-    slot = factory.SubFactory(DateActivitySlotFactory)
-    participant = factory.SubFactory(DateParticipantFactory)
-
-
 class TeamFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Team
@@ -202,6 +185,14 @@ class TeamMemberFactory(factory.DjangoModelFactory):
 
     user = factory.SubFactory(BlueBottleUserFactory)
     team = factory.SubFactory(TeamFactory)
+
+
+class DateRegistrationFactory(FSMModelFactory):
+    class Meta(object):
+        model = DateRegistration
+
+    activity = factory.SubFactory(DateActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
 
 
 class DeadlineRegistrationFactory(FSMModelFactory):
@@ -233,6 +224,26 @@ class TeamScheduleRegistrationFactory(FSMModelFactory):
         model = TeamScheduleRegistration
 
     activity = factory.SubFactory(ScheduleActivityFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class DateParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = DateParticipant
+
+    @classmethod
+    def create(cls, *args, **kwargs):
+        if 'slot' not in kwargs:
+            activity = kwargs.get('activity') or DateActivityFactory.create()
+            kwargs['slot'] = DateActivitySlotFactory.create(
+                activity=activity,
+            )
+
+        return super().create(*args, **kwargs)
+
+    activity = factory.SubFactory(DateActivityFactory)
+    registration = factory.SubFactory(DateRegistrationFactory)
+    slot = factory.SubFactory(DateActivitySlotFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 

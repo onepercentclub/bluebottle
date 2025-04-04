@@ -14,7 +14,7 @@ from bluebottle.time_based.admin import SkillAdmin
 from bluebottle.time_based.models import DateActivity, Skill
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateRegistrationFactory
 )
 
 
@@ -96,35 +96,35 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)
 
-    def test_add_slot_participants(self):
+    def test_add_participants(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
         DateActivitySlotFactory.create_batch(2, activity=activity)
-        participant = DateParticipantFactory.create(activity=activity)
-        self.assertEqual(len(participant.slot_participants.all()), 0)
+        registration = DateRegistrationFactory.create(activity=activity)
+        self.assertEqual(len(registration.participants.all()), 0)
 
-        url = reverse('admin:time_based_dateparticipant_change', args=(participant.pk,))
+        url = reverse('admin:time_based_dateregistration_change', args=(registration.pk,))
 
         page = self.app.get(url)
         form = page.forms['dateparticipant_form']
 
-        form.fields['slot_participants-0-checked'][0].checked = True
-        form.fields['slot_participants-1-checked'][0].checked = True
-        form.fields['slot_participants-2-checked'][0].checked = True
+        form.fields['participants-0-checked'][0].checked = True
+        form.fields['participants-1-checked'][0].checked = True
+        form.fields['participants-2-checked'][0].checked = True
 
         form.submit()
 
-        self.assertEqual(len(participant.slot_participants.all()), 3)
+        self.assertEqual(len(registration.participants.all()), 3)
 
-    def test_add_participants(self):
+    def test_add_registrations(self):
         activity = DateActivityFactory.create(
             initiative=self.initiative,
             status='open'
         )
-        DateParticipantFactory.create(activity=activity)
+        DateRegistrationFactory.create(activity=activity)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
         self.assertTrue(
-            'Add another Participant' in
+            'Add another registration' in
             page.text
         )
 
@@ -138,10 +138,10 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         super().setUp()
         self.app.set_user(self.staff_member)
         self.supporter = BlueBottleUserFactory.create()
-        self.participant = DateParticipantFactory.create(status='participant')
-        slot = self.participant.activity.slots.first()
-        SlotParticipantFactory.create(
-            participant=self.participant,
+        self.registration = DateRegistrationFactory.create(status='accepted')
+        slot = self.registration.activity.slots.first()
+        self.participant = DateParticipantFactory.create(
+            registration=self.registration,
             slot=slot
         )
 
@@ -160,14 +160,14 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.participant.document = PrivateDocumentFactory.create()
         self.participant.save()
 
-        self.url = reverse('admin:time_based_dateparticipant_change', args=(self.participant.id,))
+        self.url = reverse('admin:time_based_dateregistration_change', args=(self.registration.id,))
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
 
         link = page.html.find("a", {'class': 'private-document-link'})
         self.assertTrue(
             link.attrs['href'].startswith(
-                reverse('date-participant-document', args=(self.participant.pk, ))
+                reverse('date-registration-document', args=(self.registration.pk, ))
             )
         )
 

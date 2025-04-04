@@ -16,14 +16,17 @@ from bluebottle.utils.views import PrivateFileView
 class AnonimizeMembersMixin:
     @property
     def owners(self):
-        return []
+        if 'activity_id' in self.kwargs:
+            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+            return [activity.owner] + list(activity.initiative.activity_managers.all())
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
+        context['owners'] = self.owners
         context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
 
         if self.request.user and self.request.user.is_authenticated and (
-                self.request.user in self.owners or
+                self.request.user in context['owners'] or
                 self.request.user.is_staff or
                 self.request.user.is_superuser
         ):

@@ -529,6 +529,7 @@ class APITestCase(BluebottleTestCase):
         """
         Assert that an attriubte `attr` has `value`
         """
+        attr = attr.replace('_', '-')
         data = self.response.json()['data']
         if isinstance(data, (tuple, list)):
             for resource in data:

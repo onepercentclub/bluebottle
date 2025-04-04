@@ -31,8 +31,9 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
-from bluebottle.time_based.models import TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, \
-    SlotParticipant, DateActivitySlot, DateParticipant
+from bluebottle.time_based.models import (
+    TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant
+)
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -212,7 +213,7 @@ class BaseActivitySerializer(ModelSerializer):
 
     def get_admin_url(self, obj):
         user = get_current_user()
-        if user.is_authenticated and (user.is_staff or user.is_superuser):
+        if user and user.is_authenticated and (user.is_staff or user.is_superuser):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url
 
@@ -689,7 +690,7 @@ def bulk_add_participants(activity, emails, send_messages):
     if isinstance(activity, DeadlineActivity):
         Participant = DeadlineParticipant
     if isinstance(activity, DateActivitySlot):
-        Participant = SlotParticipant
+        Participant = DateParticipant
 
     if not Participant:
         raise AttributeError(f'Could not find participant type for {activity}')
@@ -717,7 +718,7 @@ def bulk_add_participants(activity, emails, send_messages):
                     user=user,
                     activity=slot.activity
                 )
-                slot_participant, cr = SlotParticipant.objects.get_or_create(
+                slot_participant, cr = DateParticipant.objects.get_or_create(
                     participant=participant,
                     slot=slot
                 )

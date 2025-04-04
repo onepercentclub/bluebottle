@@ -180,7 +180,7 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
             self.slot.status, 'cancelled'
         )
         self.assertTrue(
-            DateActivitySlotStateMachine.reopen in
+            DateActivitySlotStateMachine.restore in
             self.slot.states.possible_transitions()
         )
 

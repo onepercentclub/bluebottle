@@ -33,15 +33,15 @@ class TeamMemberPermission(ResourceOwnerPermission):
         )
 
 
-class SlotParticipantPermission(IsOwner):
+class DateParticipantPermission(IsOwner):
     def has_object_action_permission(self, action, user, obj):
-        return not obj.participant or user == obj.participant.user
+        return user == obj.user
 
     def has_action_permission(self, action, user, model_cls):
         return True
 
     def has_object_permission(self, request, view, obj):
-        return not obj.participant or request.user == obj.participant.user
+        return request.user == obj.user
 
 
 class CreateByEmailPermission(IsOwner):

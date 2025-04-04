@@ -30,14 +30,12 @@ from bluebottle.funding.serializers import (
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import TimeContribution, DateParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration, SlotParticipant
+    TeamScheduleParticipant, PeriodicParticipant, Slot, Registration
 from bluebottle.time_based.serializers import (
-    DateActivityListSerializer,
     DeadlineActivitySerializer,
     PeriodicActivitySerializer,
     DateActivitySerializer,
     DateParticipantSerializer,
-    DateParticipantListSerializer,
     DeadlineParticipantSerializer,
     PeriodicParticipantSerializer,
     ScheduleActivitySerializer,
@@ -465,7 +463,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         FundingListSerializer,
         DeedListSerializer,
         CollectActivityListSerializer,
-        DateActivityListSerializer,
+        DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer
@@ -509,7 +507,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
 class TinyActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TinyFundingSerializer,
-        DateActivityListSerializer,
+        DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
     ]
@@ -556,7 +554,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
 class PolymorphicContributorSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         DonorListSerializer,
-        DateParticipantListSerializer,
+        DateParticipantSerializer,
         DeadlineParticipantSerializer,
         PeriodicParticipantSerializer,
         DeedParticipantListSerializer,
@@ -569,8 +567,6 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
         'activity': 'bluebottle.activities.serializers.ActivitySerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
         'contributions': 'bluebottle.activities.serializers.MoneySerializer',
-        'slots': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
-        'slots.slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
     }
 
@@ -596,8 +592,8 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
 
 class ContributionSerializer(ModelSerializer):
     contributor = PolymorphicResourceRelatedField(ContributorSerializer, queryset=Contributor.objects.all())
-    slot_participant = SerializerMethodResourceRelatedField(
-        model=SlotParticipant,
+    participant = SerializerMethodResourceRelatedField(
+        model=DateParticipant,
         read_only=True,
         source='get_slot_participant'
     )
@@ -677,7 +673,6 @@ class ContributionSerializer(ModelSerializer):
         'contributor.activity.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'contributor.activity.initiative.image': 'bluebottle.activities.serializers.ActivityImageSerializer',
         'registration': 'bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer',
-        'slot_participant': 'bluebottle.time_based.serializers.SlotParticipantSerializer',
         'slot': 'bluebottle.time_based.serializers.PolymorphicSlotSerializer',
     }
 

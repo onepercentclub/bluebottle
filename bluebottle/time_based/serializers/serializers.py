@@ -12,6 +12,7 @@ from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransition
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import TimeContribution, DateActivitySlot, Skill
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
@@ -91,11 +92,15 @@ class ActivitySlotSerializer(ModelSerializer):
 
 
 class DateActivitySlotSerializer(ActivitySlotSerializer):
-    participants = HyperlinkedRelatedField(
+    participants = RelatedLinkFieldByStatus(
         read_only=True,
-        many=True,
         related_link_view_name='date-slot-related-participants',
         related_link_url_kwarg='slot_id',
+        include_my=True,
+        statuses={
+            "active": ["accepted", "succeeded", "running"],
+            "failed": ["failed", "rejected", "expired", "cancelled"],
+        },
     )
 
     errors = ValidationErrorsField()

@@ -1,10 +1,12 @@
 from datetime import date
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, InactiveParticipantAddedNotification, ParticipantWithdrewConfirmationNotification,
+    ActivityRestoredNotification
 )
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification, \
+    ParticipantWithdrewConfirmationNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, ContributionTriggers
@@ -113,6 +115,19 @@ class CollectActivityTriggers(ActivityTriggers):
 
         TransitionTrigger(
             CollectActivityStateMachine.auto_approve,
+            effects=[
+                TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
+                TransitionEffect(
+                    CollectActivityStateMachine.succeed, conditions=[is_finished, has_contributors]
+                ),
+                TransitionEffect(
+                    CollectActivityStateMachine.expire, conditions=[is_finished, has_no_contributors]
+                ),
+            ]
+        ),
+
+        TransitionTrigger(
+            CollectActivityStateMachine.publish,
             effects=[
                 TransitionEffect(CollectActivityStateMachine.reopen, conditions=[is_not_finished]),
                 TransitionEffect(
@@ -251,11 +266,13 @@ class CollectContributionTriggers(ContributionTriggers):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return settings.closed or effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 @register(CollectContributor)

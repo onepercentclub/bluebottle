@@ -16,7 +16,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class TimeBasedActivityListAPITestCase:
-    fields = ['initiative', 'start', 'title', 'description', 'review']
+    fields = ['initiative', 'start', 'title', 'description', 'review', 'theme']
 
     attributes = ['start', 'title', 'description', 'review']
     relationships = ['initiative', 'owner']
@@ -29,7 +29,7 @@ class TimeBasedActivityListAPITestCase:
     def setUp(self):
         self.url = reverse(self.url_name)
         self.defaults = {
-            'description': json.dumps({'html': 'test description', 'delta': ''})
+            'description': json.dumps({'html': 'test description', 'delta': ''}),
         }
 
         settings = InitiativePlatformSettings.objects.get()

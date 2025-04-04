@@ -16,26 +16,6 @@ class DeedStateMachine(ActivityStateMachine):
     def can_succeed(self):
         return len(self.instance.participants) > 0
 
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        passed_label=_("published"),
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
     succeed = Transition(
         [
             ActivityStateMachine.open,
@@ -145,10 +125,9 @@ class DeedParticipantStateMachine(ContributorStateMachine):
     def is_owner(self, user):
         """is participant"""
         return (
-            self.instance.activity.owner == user or
-            self.instance.activity.initiative.owner == user or
-            user in self.instance.activity.initiative.activity_managers.all() or
-            user.is_staff
+            user in self.instance.activity.owners or
+            user.is_staff or
+            user.is_superuser
         )
 
     def activity_is_open(self):

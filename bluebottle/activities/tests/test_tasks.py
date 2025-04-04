@@ -11,7 +11,7 @@ from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -85,9 +85,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 status="open",
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and no skill
@@ -96,9 +94,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=None,
                 is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching theme, skill, online
@@ -107,9 +103,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=self.user.skills.first(),
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and skill
@@ -118,9 +112,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 is_online=False,
                 expertise=self.user.skills.first(),
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
         ]

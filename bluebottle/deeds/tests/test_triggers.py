@@ -1,12 +1,20 @@
 from datetime import timedelta, date
 
 from bluebottle.activities.effects import SetContributionDateEffect
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, InactiveParticipantAddedNotification,
-    ParticipantWithdrewConfirmationNotification
+    ActivityRestoredNotification, ActivitySubmittedNotification,
+    ActivityPublishedNotification, ActivityApprovedNotification, ActivityNeedsWorkNotification
 )
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
+    ParticipantWithdrewConfirmationNotification,
+)
+from bluebottle.activities.messages.reviewer import (
+    ActivityPublishedReviewerNotification,
+)
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine
 from bluebottle.deeds.effects import RescheduleEffortsEffect, CreateEffortContribution, SetEndDateEffect
 from bluebottle.deeds.messages import (
@@ -14,6 +22,7 @@ from bluebottle.deeds.messages import (
 )
 from bluebottle.deeds.states import DeedStateMachine, DeedParticipantStateMachine
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory, EffortContributionFactory
+from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.impact.effects import UpdateImpactGoalsForActivityEffect
 from bluebottle.impact.tests.factories import ImpactGoalFactory
@@ -31,15 +40,50 @@ class DeedTriggersTestCase(TriggerTestCase):
 
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
-        self.staff_user = BlueBottleUserFactory.create(is_staff=True)
+        self.staff_user = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+        image = ImageFactory()
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved'),
             'owner': self.owner,
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
+            'title': 'Yeah',
+            'image': image
+
         }
         super().setUp()
+
+    def test_submit(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit()
+
+        with self.execute():
+            self.assertNotificationEffect(ActivitySubmittedReviewerNotification)
+            self.assertNotificationEffect(ActivitySubmittedNotification)
+
+    def test_approve(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+
+        with self.execute():
+            self.assertNotificationEffect(ActivityApprovedNotification)
+
+    def test_needs_work(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.request_changes()
+
+        with self.execute():
+            self.assertNotificationEffect(ActivityNeedsWorkNotification)
 
     def test_publish(self):
         self.create()
@@ -48,6 +92,8 @@ class DeedTriggersTestCase(TriggerTestCase):
         with self.execute():
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
             self.assertEffect(SetContributionDateEffect, self.model.organizer.contributions.first())
+            self.assertNotificationEffect(ActivityPublishedReviewerNotification)
+            self.assertNotificationEffect(ActivityPublishedNotification)
 
     def test_started(self):
         self.defaults['start'] = date.today() - timedelta(days=1)

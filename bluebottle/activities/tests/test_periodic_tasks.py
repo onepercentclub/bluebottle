@@ -101,7 +101,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
 
     def run_task(self, when):
-        with mock.patch('bluebottle.activities.messages.now', return_value=when):
+        with mock.patch('bluebottle.activities.messages.matching.now', return_value=when):
             with mock.patch('bluebottle.activities.tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)

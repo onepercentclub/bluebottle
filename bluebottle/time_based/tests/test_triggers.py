@@ -6,7 +6,7 @@ from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone, now, make_aware
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -62,15 +62,15 @@ class TimeBasedActivityTriggerTestCase():
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
-        if self.activity.states.submit:
-            self.activity.states.publish()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+        mail.outbox = []
 
         self.activity.states.reject(save=True)
         organizer = self.activity.contributors.instance_of(Organizer).get()
         self.assertEqual(organizer.status, 'failed')
-
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[0].subject,
             'Your activity "{}" has been rejected'.format(self.activity.title)
         )
 
@@ -80,15 +80,12 @@ class TimeBasedActivityTriggerTestCase():
 
         self.assertEqual(self.activity.status, 'submitted')
 
-    def test_submit_initiative_already_approved(self):
+    def test_publish_initiative_already_approved(self):
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
 
         activity = self.factory.create(initiative=self.initiative)
-        if activity.states.submit:
-            activity.states.publish(save=True)
-        else:
-            activity.states.publish(save=True)
+        activity.states.publish(save=True)
 
         self.assertEqual(activity.status, 'open')
 
@@ -97,7 +94,7 @@ class TimeBasedActivityTriggerTestCase():
 
         activity = self.factory.create(initiative=self.initiative)
         if self.activity.states.submit:
-            activity.states.publish(save=True)
+            activity.states.submit(save=True)
 
             self.assertEqual(activity.status, 'submitted')
 

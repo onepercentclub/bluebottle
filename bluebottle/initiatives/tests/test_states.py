@@ -165,13 +165,14 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
 
     def test_approve(self):
-        self.initiative.states.submit()
+        self.initiative.states.submit(save=True)
+        mail.outbox = []
         self.initiative.states.approve(save=True)
         self.assertEqual(
             self.initiative.status, ReviewStateMachine.approved.value
         )
         self.assertEqual(len(mail.outbox), 1)
-        subject = 'Your initiative "{}" has been approved!'.format(self.initiative.title)
+        subject = 'Your initiative on Test has been approved!'
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)
 
@@ -207,7 +208,7 @@ class InitiativeReviewStateMachineTests(BluebottleTestCase):
         )
         self.assertEqual(len(mail.outbox), 1)
 
-        subject = 'Your initiative "{}" has been rejected.'.format(self.initiative.title)
+        subject = 'Your initiative on Test has been rejected'
 
         self.assertEqual(mail.outbox[0].subject, subject)
         self.assertTrue('Hi Bart' in mail.outbox[0].body)

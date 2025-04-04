@@ -6,7 +6,8 @@
     <p>
         {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
     </p>
-{% block message %}{% endblock %}
+    {% block message %}
+    {% endblock %}
 {% endblock %}
 
 {% block action %}

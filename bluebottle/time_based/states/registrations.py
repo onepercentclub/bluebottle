@@ -27,14 +27,18 @@ class RegistrationStateMachine(ModelStateMachine):
 
     def can_accept_registration(self, user):
         """can accept participant"""
+        owners = [
+            self.instance.activity.owner
+        ]
+
+        if self.instance.activity.initiative:
+            owners.append(self.instance.activity.initiative.owner)
+            owners += self.instance.activity.initiative.activity_managers.all()
+
         return (
-            user in [
-                self.instance.activity.owner,
-                self.instance.activity.initiative.owner
-            ] or
+            user in owners or
             user.is_superuser or
-            user.is_staff or
-            user in self.instance.activity.initiative.activity_managers.all()
+            user.is_staff
         )
 
     initiate = Transition(

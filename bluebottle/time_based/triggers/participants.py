@@ -1,6 +1,6 @@
 from django.utils.timezone import now
 
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers

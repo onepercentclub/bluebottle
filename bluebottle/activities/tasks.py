@@ -11,8 +11,13 @@ from elasticsearch_dsl.query import (
 )
 
 from bluebottle.activities.documents import activity
-from bluebottle.activities.messages import MatchingActivitiesNotification, DoGoodHoursReminderQ1Notification, \
-    DoGoodHoursReminderQ4Notification, DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification
+from bluebottle.activities.messages.matching import (
+    MatchingActivitiesNotification,
+    DoGoodHoursReminderQ1Notification,
+    DoGoodHoursReminderQ4Notification,
+    DoGoodHoursReminderQ3Notification,
+    DoGoodHoursReminderQ2Notification
+)
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant

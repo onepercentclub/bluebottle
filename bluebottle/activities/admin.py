@@ -17,7 +17,7 @@ from polymorphic.admin import (
 from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
-from bluebottle.activities.messages import ImpactReminderMessage
+from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
     Activity, Contributor, Organizer, Contribution, EffortContribution, Team
 )

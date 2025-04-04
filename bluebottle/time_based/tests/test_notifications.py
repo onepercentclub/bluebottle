@@ -1,5 +1,8 @@
-from bluebottle.activities.messages import ActivityRejectedNotification, ActivityCancelledNotification, \
-    ActivitySucceededNotification, ActivityRestoredNotification, ActivityExpiredNotification
+from bluebottle.activities.messages.activity_manager import (
+    ActivityRejectedNotification, ActivityCancelledNotification,
+    ActivitySucceededNotification, ActivityRestoredNotification,
+    ActivityExpiredNotification
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (

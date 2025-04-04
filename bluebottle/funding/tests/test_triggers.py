@@ -5,15 +5,17 @@ import stripe
 from django.utils.timezone import now
 from djmoney.money import Money
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivitySubmittedNotification,
     ActivityApprovedNotification, ActivityNeedsWorkNotification
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.funding.messages import FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage, \
+from bluebottle.funding.messages.activity_manager import (
+    FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
     FundingRejectedMessage
+)
 from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.states import FundingStateMachine

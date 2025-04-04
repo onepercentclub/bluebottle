@@ -1,12 +1,18 @@
 from datetime import timedelta, date
 
 from bluebottle.activities.effects import SetContributionDateEffect
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, InactiveParticipantAddedNotification,
-    ParticipantWithdrewConfirmationNotification, ActivityPublishedReviewerNotification, ActivitySubmittedNotification,
+    ActivityRestoredNotification, ActivitySubmittedNotification,
     ActivityPublishedNotification, ActivityApprovedNotification, ActivityNeedsWorkNotification
+)
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
+    ParticipantWithdrewConfirmationNotification,
+)
+from bluebottle.activities.messages.reviewer import (
+    ActivityPublishedReviewerNotification,
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine, EffortContributionStateMachine

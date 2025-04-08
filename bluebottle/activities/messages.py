@@ -121,6 +121,7 @@ class ActivitySucceededNotification(ActivityNotification):
     """
     subject = pgettext('email', 'Your activity "{title}" has succeeded 🎉')
     template = 'messages/activity_succeeded'
+    send_once = True
 
 
 class ActivityRestoredNotification(ActivityNotification):

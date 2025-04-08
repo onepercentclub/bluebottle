@@ -230,7 +230,9 @@ class TimeBasedTriggers(ActivityTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.succeed,
             effects=[
-                NotificationEffect(ActivitySucceededNotification),
+                NotificationEffect(
+                    ActivitySucceededNotification
+                ),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
             ]
         ),

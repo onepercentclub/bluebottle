@@ -5,19 +5,34 @@ import stripe
 from django.utils.timezone import now
 from djmoney.money import Money
 
+from bluebottle.activities.messages.activity_manager import (
+    ActivityRejectedNotification, ActivitySubmittedNotification,
+    ActivityApprovedNotification, ActivityNeedsWorkNotification
+)
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
+from bluebottle.activities.states import OrganizerStateMachine
+from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.funding.messages.activity_manager import (
+    FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
+    FundingRejectedMessage
+)
+from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.states import FundingStateMachine
-from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory, RewardFactory
+from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory, RewardFactory, \
+    BankAccountFactory, PlainPayoutAccountFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import (
     StripePaymentFactory,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.funding.models import FundingPlatformSettings
+from bluebottle.test.utils import TriggerTestCase
 
 
-class FundingTriggerTests(BluebottleTestCase):
+class PlainFundingTriggerTests(BluebottleTestCase):
     def setUp(self):
         self.initiative = InitiativeFactory.create()
         self.initiative.states.submit()
@@ -166,3 +181,80 @@ class DonorTriggerTests(BluebottleTestCase):
 
         self.donor.refresh_from_db()
         self.assertEqual(self.donor.status, 'activity_refunded')
+
+
+class FundingTriggersTestCase(TriggerTestCase):
+    factory = FundingFactory
+
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create()
+        self.staff_user = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+        image = ImageFactory()
+        payout_account = PlainPayoutAccountFactory.create(
+            status='verified'
+        )
+        bank_acount = BankAccountFactory.create(
+            status='verified',
+            connect_account=payout_account
+        )
+
+        self.defaults = {
+            'initiative': InitiativeFactory.create(status='approved'),
+            'owner': self.owner,
+            'deadline': now() + timedelta(days=20),
+            'target': Money(1000, 'EUR'),
+            'title': 'Yeah',
+            'image': image,
+            'bank_account': bank_acount,
+
+        }
+        super().setUp()
+
+    def create(self):
+        self.model = self.factory.create(**self.defaults)
+        BudgetLineFactory.create(activity=self.model)
+
+    def test_submit(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit()
+
+        with self.execute():
+            self.assertNotificationEffect(FundingSubmittedReviewerMessage)
+            self.assertNotificationEffect(FundingSubmittedMessage)
+            self.assertNoNotificationEffect(ActivitySubmittedReviewerNotification)
+            self.assertNoNotificationEffect(ActivitySubmittedNotification)
+
+    def test_approve(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+
+        with self.execute():
+            self.assertNotificationEffect(FundingApprovedMessage)
+            self.assertNoNotificationEffect(ActivityApprovedNotification)
+
+    def test_needs_work(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.request_changes()
+
+        with self.execute():
+            self.assertNotificationEffect(FundingNeedsWorkMessage)
+            self.assertNoNotificationEffect(ActivityNeedsWorkNotification)
+
+    def test_reject(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.reject()
+
+        with self.execute():
+            self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+            self.assertNotificationEffect(FundingRejectedMessage)
+            self.assertNoNotificationEffect(ActivityRejectedNotification)

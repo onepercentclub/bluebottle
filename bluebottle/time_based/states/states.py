@@ -11,7 +11,6 @@ from bluebottle.time_based.models import (
     TimeContribution,
     DeadlineActivity,
     PeriodicActivity,
-    PeriodActivity,
     ScheduleActivity,
 )
 
@@ -125,41 +124,6 @@ class TimeBasedStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_("Publish"),
-        passed_label=_("published"),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
-    )
-
 
 @register(DateActivity)
 class DateStateMachine(TimeBasedStateMachine):
@@ -173,14 +137,6 @@ class DateStateMachine(TimeBasedStateMachine):
             "The activity is reopened because the start date changed."
         )
     )
-
-    submit = None
-
-
-@register(PeriodActivity)
-class PeriodActivityStateMachine(TimeBasedStateMachine):
-    # Keep this while we still have PeriodActivity, so we don't break things
-    pass
 
 
 class RegistrationActivityStateMachine(TimeBasedStateMachine):
@@ -208,42 +164,6 @@ class RegistrationActivityStateMachine(TimeBasedStateMachine):
             "The date of the activity has been changed to a date in the future. "
             "The status of the activity will be recalculated."
         ),
-    )
-
-    submit = None
-
-    publish = Transition(
-        [
-            ActivityStateMachine.submitted,
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_("Your activity will be open to contributions."),
-        automatic=False,
-        name=_('Publish'),
-        passed_label=_('published'),
-        permission=ActivityStateMachine.is_owner,
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-            ActivityStateMachine.initiative_is_approved
-        ],
-    )
-
-    auto_publish = Transition(
-        [
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-        ],
-        ActivityStateMachine.open,
-        description=_('Automatically publish activity when initiative is approved'),
-        automatic=True,
-        name=_('Auto-publish'),
-        conditions=[
-            ActivityStateMachine.is_complete,
-            ActivityStateMachine.is_valid,
-        ],
     )
 
 

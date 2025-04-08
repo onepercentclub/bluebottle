@@ -17,21 +17,29 @@ from bluebottle.funding.effects import (
     ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect,
     RemoveAnonymousRewardEffect
 )
-from bluebottle.funding.messages import (
-    DonationSuccessActivityManagerMessage, DonationSuccessDonorMessage,
+from bluebottle.funding.messages.activity_manager import (
+    DonationSuccessActivityManagerMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
     PayoutAccountVerified, PayoutAccountRejected,
-    DonationRefundedDonorMessage, DonationActivityRefundedDonorMessage,
     FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
     FundingCancelledMessage, FundingApprovedMessage
-
 )
-from bluebottle.funding.models import Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount, \
+from bluebottle.funding.messages.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
+from bluebottle.funding.messages.contributor import (
+    DonationSuccessDonorMessage,
+    DonationRefundedDonorMessage,
+    DonationActivityRefundedDonorMessage,
+)
+from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.models import (
+    Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount,
     MoneyContribution
+)
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -79,9 +87,32 @@ def no_donations(effect):
     return not effect.instance.donations.filter(status='succeeded').count()
 
 
+def should_review(effect):
+    if isinstance(effect.instance, Funding):
+        return True
+    review = InitiativePlatformSettings.load().enable_reviewing
+    if effect.instance.initiative is None:
+        return review
+    return effect.instance.initiative.status != 'approved'
+
+
 @register(Funding)
 class FundingTriggers(ActivityTriggers):
     triggers = ActivityTriggers.triggers + [
+
+        TransitionTrigger(
+            FundingStateMachine.submit,
+            effects=[
+                NotificationEffect(
+                    FundingSubmittedReviewerMessage,
+                    conditions=[should_review]
+                ),
+                NotificationEffect(
+                    FundingSubmittedMessage,
+                    conditions=[should_review]
+                )
+            ]
+        ),
 
         TransitionTrigger(
             FundingStateMachine.approve,
@@ -110,6 +141,13 @@ class FundingTriggers(ActivityTriggers):
             effects=[
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
                 NotificationEffect(FundingRejectedMessage)
+            ]
+        ),
+
+        TransitionTrigger(
+            FundingStateMachine.request_changes,
+            effects=[
+                NotificationEffect(FundingNeedsWorkMessage)
             ]
         ),
 

@@ -19,8 +19,6 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
 )
-from bluebottle.activities.permissions import CanExportTeamParticipantsPermission
-from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -32,58 +30,11 @@ from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
-    TimeContribution, TeamSlot, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant
+    TimeContribution, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
-
-
-class TeamSerializer(ModelSerializer):
-    status = FSMField(read_only=True)
-    transitions = AvailableTransitionsField(source='states')
-
-    members = HyperlinkedRelatedField(
-        read_only=True,
-        many=True,
-        related_link_view_name='team-members',
-        related_link_url_kwarg='team_id'
-    )
-
-    participants_export_url = PrivateFileSerializer(
-        'team-members-export',
-        url_args=('pk',),
-        filename='participants.csv',
-        permission=CanExportTeamParticipantsPermission,
-        read_only=True
-    )
-    slot = ResourceRelatedField(queryset=TeamSlot.objects)
-
-    class Meta(object):
-        model = Team
-        fields = ('owner', 'slot', 'members')
-        meta_fields = (
-            'status',
-            'transitions',
-            'created',
-            'participants_export_url',
-
-        )
-
-    class JSONAPIMeta(object):
-        included_resources = [
-            'owner',
-            'slot',
-            'slot.location',
-        ]
-
-        resource_name = 'activities/teams'
-
-    included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'slot': 'bluebottle.time_based.serializers.TeamSlotSerializer',
-        'slot.location': 'bluebottle.geo.serializers.GeolocationSerializer',
-    }
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -170,6 +121,7 @@ class BaseActivitySerializer(ModelSerializer):
     description = RichTextField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
+    categories = ResourceRelatedField(many=True, read_only=True)
     permissions = ResourcePermissionField('activity-detail', view_args=('pk',))
     transitions = AvailableTransitionsField(source='states')
     contributor_count = serializers.SerializerMethodField()
@@ -218,7 +170,9 @@ class BaseActivitySerializer(ModelSerializer):
             return url
 
     def get_partner_organization(self, obj):
-        if obj.initiative.organization:
+        if obj.organization:
+            return obj.organization
+        elif obj.initiative and obj.initiative.organization:
             return obj.initiative.organization
 
     matching_properties = MatchingPropertiesField()
@@ -230,6 +184,8 @@ class BaseActivitySerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'owner.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'initiative': 'bluebottle.initiatives.serializers.InitiativeSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'goals': 'bluebottle.impact.serializers.ImpactGoalSerializer',
         'goals.impact_type': 'bluebottle.impact.serializers.ImpactTypeSerializer',
         'image': 'bluebottle.activities.serializers.ActivityImageSerializer',
@@ -237,7 +193,7 @@ class BaseActivitySerializer(ModelSerializer):
         'segments.segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer',
         'initiative.image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'initiative.categories': 'bluebottle.categories.serializers.CategorySerializer',
-        'initiative.theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'categories': 'bluebottle.categories.serializers.CategorySerializer',
         'initiative.activity_managers': 'bluebottle.initiatives.serializers.MemberSerializer',
         'initiative.promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'office_location': 'bluebottle.geo.serializers.OfficeSerializer',
@@ -266,6 +222,7 @@ class BaseActivitySerializer(ModelSerializer):
             'image',
             'video_url',
             'initiative',
+            'categories',
             'goals',
             'owner',
             'title',
@@ -287,7 +244,8 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_description',
             'next_step_button_label',
             'admin_url',
-            'partner_organization'
+            'partner_organization',
+            'theme'
         )
 
         meta_fields = (
@@ -311,6 +269,7 @@ class BaseActivitySerializer(ModelSerializer):
             'owner.avatar',
             'image',
             'initiative',
+            'theme',
             'goals',
             'goals.impact_type',
             'initiative.owner',
@@ -319,8 +278,8 @@ class BaseActivitySerializer(ModelSerializer):
             'initiative.activity_managers',
             'initiative.promoter',
             'initiative.image',
+            'categories',
             'initiative.categories',
-            'initiative.theme',
             'segments',
             'segments.segment_type',
             'office_location',

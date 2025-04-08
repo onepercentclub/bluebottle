@@ -611,6 +611,84 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(user.first_name, data['name']['givenName'])
         self.assertEqual(user.last_name, data['name']['familyName'])
 
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_email(self):
+        """
+        Test creating a user twice request
+        """
+        user = BlueBottleUserFactory.create(
+            email='test@example.com', remote_id=None, scim_external_id=None
+        )
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': 'some-remote-id',
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user.refresh_from_db()
+        self.assertEqual(user.scim_external_id, data['externalId'])
+        self.assertEqual(user.email, data['emails'][0]['value'])
+        self.assertEqual(user.first_name, data['name']['givenName'])
+        self.assertEqual(user.last_name, data['name']['familyName'])
+
+    @override_settings(SEND_WELCOME_MAIL=True)
+    def test_post_existing_email_diffent_case(self):
+        """
+        Test creating a user twice request
+        """
+        user = BlueBottleUserFactory.create(
+            email='Test@example.com', remote_id=None, scim_external_id=None
+        )
+
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'active': True,
+            'userName': 'some-remote-id',
+            'externalId': 'some-external-id',
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': 'test@example.com'
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        user.refresh_from_db()
+        self.assertEqual(user.scim_external_id, data['externalId'])
+        self.assertEqual(user.email, data['emails'][0]['value'])
+        self.assertEqual(user.first_name, data['name']['givenName'])
+        self.assertEqual(user.last_name, data['name']['familyName'])
+
     def test_post_location(self):
         """
         Create a user with a location

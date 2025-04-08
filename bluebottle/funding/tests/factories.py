@@ -9,6 +9,7 @@ from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
     PlainPayoutAccount, Payout
 )
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -26,6 +27,7 @@ class FundingFactory(factory.DjangoModelFactory):
     deadline = factory.Faker('future_datetime', tzinfo=UTC)
     target = Money(5000, 'EUR')
     amount_matching = Money(0, 'EUR')
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DonorFactory(factory.DjangoModelFactory):

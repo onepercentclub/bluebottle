@@ -4,12 +4,12 @@ import factory.fuzzy
 from django.utils import timezone
 from django.utils.timezone import now, make_aware
 
-from bluebottle.test.factory_models import generate_rich_text
-
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -17,20 +17,18 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     DeadlineRegistration,
-    PeriodActivity,
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
     PeriodicSlot,
-    PeriodParticipant,
     ScheduleSlot,
     Skill,
-    TimeContribution,
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
     TeamScheduleRegistration,
     Team,
+    TimeContribution,
     TeamMember, DateRegistration,
 )
 from bluebottle.utils.models import Language
@@ -63,6 +61,7 @@ class TimeBasedFactory(factory.DjangoModelFactory):
 
     expertise = factory.SubFactory(SkillFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DateActivitySlotFactory(factory.DjangoModelFactory):
@@ -88,20 +87,6 @@ class DateActivityFactory(TimeBasedFactory):
         DateActivitySlotFactory,
         factory_related_name='activity'
     )
-
-
-class PeriodActivityFactory(TimeBasedFactory):
-    class Meta:
-        model = PeriodActivity
-
-    deadline = date.today() + timedelta(weeks=4)
-    duration = timedelta(hours=20)
-    duration_period = 'overall'
-    is_online = False
-    location = factory.SubFactory(GeolocationFactory)
-    expertise = factory.SubFactory(SkillFactory)
-
-    start = (now() + timedelta(weeks=2)).date()
 
 
 class DeadlineActivityFactory(TimeBasedFactory):
@@ -152,19 +137,19 @@ class PeriodicSlotFactory(factory.DjangoModelFactory):
         model = PeriodicSlot
 
 
-class PeriodParticipantFactory(FSMModelFactory):
+class DateParticipantFactory(FSMModelFactory):
     class Meta(object):
-        model = PeriodParticipant
+        model = DateParticipant
 
-    activity = factory.SubFactory(PeriodActivityFactory)
+    activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
-class ParticipationFactory(factory.DjangoModelFactory):
+class TimeContributionFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = TimeContribution
 
-    contributor = factory.SubFactory(PeriodParticipantFactory)
+    contributor = factory.SubFactory(DateParticipantFactory)
 
     value = timedelta(hours=20)
 

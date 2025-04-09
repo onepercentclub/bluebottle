@@ -13,6 +13,7 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration, DateRegistration
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -106,20 +107,26 @@ class RegistrationSerializer(ModelSerializer):
 
 class DateRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('date-registration-detail', view_args=('pk',))
-    participants = ResourceRelatedField(many=True, read_only=True)
+    participants = RelatedLinkFieldByStatus(
+        many=True,
+        read_only=True,
+        related_link_view_name="date-registration-related-participants",
+        related_link_url_kwarg="registration_id",
+        statuses={"upcoming": ["new", "accepted", "running"], "passed": ["succeeded"]},
+    )
 
     class Meta(RegistrationSerializer.Meta):
         model = DateRegistration
 
     class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/date-registrations'
+        included_resources = ['user', 'document', 'activity']
 
     included_serializers = dict(
         RegistrationSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
             'document': 'bluebottle.time_based.serializers.registrations.DateRegistrationDocumentSerializer',
-            'participants': 'bluebottle.time_based.serializers.DateParticipantSerializer'
         }
     )
 

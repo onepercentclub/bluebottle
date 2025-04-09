@@ -20,7 +20,7 @@ from bluebottle.time_based.serializers import (
     TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer
 )
 from bluebottle.time_based.views.mixins import (
-    AnonimizeMembersMixin, FilterRelatedUserMixin,
+    AnonymizeMembersMixin, FilterRelatedUserMixin,
     RequiredQuestionsMixin
 )
 from bluebottle.transitions.views import TransitionList
@@ -78,7 +78,7 @@ class PeriodicRegistrationList(RegistrationList):
 
 
 class RelatedRegistrationListView(
-    RelatedContributorListView, ListAPIView, AnonimizeMembersMixin, FilterRelatedUserMixin
+    RelatedContributorListView, ListAPIView, AnonymizeMembersMixin, FilterRelatedUserMixin
 ):
     @property
     def owners(self):

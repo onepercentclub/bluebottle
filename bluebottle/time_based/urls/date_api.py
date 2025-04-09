@@ -12,7 +12,7 @@ from bluebottle.time_based.views import (
     DateActivityIcalView,
     DateSlotDetailView, DateSlotListView,
     ActivitySlotIcalView,
-    RelatedDateSlotListView
+    RelatedDateSlotListView, DateRegistrationRelatedParticipantView
 )
 
 urlpatterns = [
@@ -56,6 +56,11 @@ urlpatterns = [
         r'^/registrations/(?P<pk>\d+)/document$',
         DateRegistrationDocumentDetail.as_view(),
         name='date-registration-document'
+    ),
+    re_path(
+        r'^/registrations/(?P<registration_id>\d+)/participants$',
+        DateRegistrationRelatedParticipantView.as_view(),
+        name='date-registration-related-participants'
     ),
 
     re_path(

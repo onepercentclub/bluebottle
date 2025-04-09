@@ -16,7 +16,7 @@ from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantTransitionSerializer,
 )
 from bluebottle.time_based.views.mixins import (
-    AnonimizeMembersMixin,
+    AnonymizeMembersMixin,
     CreatePermissionMixin,
     FilterRelatedUserMixin,
 )
@@ -30,7 +30,7 @@ from bluebottle.utils.views import (
     CreateAPIView,
     JsonApiViewMixin,
     ListAPIView,
-    RetrieveUpdateAPIView,
+    RetrieveUpdateAPIView, JsonApiPagination,
 )
 
 
@@ -96,7 +96,7 @@ class PeriodicParticipantDetail(ParticipantDetail):
 
 
 class RelatedParticipantListView(
-    FilterRelatedUserMixin, AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView
+    FilterRelatedUserMixin, AnonymizeMembersMixin, JsonApiViewMixin, ListAPIView
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -109,7 +109,7 @@ class RelatedParticipantListView(
 
 
 class SlotRelatedParticipantListView(
-    AnonimizeMembersMixin, JsonApiViewMixin, ListAPIView,
+    AnonymizeMembersMixin, JsonApiViewMixin, ListAPIView,
 ):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
@@ -153,6 +153,45 @@ class DateSlotRelatedParticipantView(SlotRelatedParticipantListView):
         'user', 'activity'
     )
     serializer_class = DateParticipantSerializer
+
+
+class MySlotPagination(JsonApiPagination):
+    page_size = 3
+
+
+class DateRegistrationRelatedParticipantView(
+    AnonymizeMembersMixin, JsonApiViewMixin, ListAPIView
+):
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
+    pagination_class = MySlotPagination
+
+    queryset = DateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = DateParticipantSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            if self.request.user.is_staff or self.request.user.is_superuser:
+                queryset = self.queryset
+            else:
+                queryset = self.queryset.filter(
+                    Q(user=self.request.user) |
+                    Q(status__in=('accepted', 'succeeded',))
+                ).order_by('-id')
+        else:
+            queryset = self.queryset.filter(
+                status__in=('accepted', 'succeeded',)
+            ).order_by('-id')
+
+        status_filter = self.request.query_params.get('filter[status]')
+        if status_filter:
+            status_values = status_filter.split(',')
+            queryset = queryset.filter(status__in=status_values)
+
+        return queryset.filter(registration_id=self.kwargs["registration_id"])
 
 
 class DeadlineRelatedParticipantList(RelatedParticipantListView):

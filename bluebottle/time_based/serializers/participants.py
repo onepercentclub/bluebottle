@@ -56,7 +56,6 @@ class DateParticipantSerializer(ParticipantSerializer):
 
     slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
     activity = ResourceRelatedField(
-        source='registration.activity',
         queryset=DateActivity.objects.all(),
         required=False,
     )

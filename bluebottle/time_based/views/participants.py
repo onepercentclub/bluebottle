@@ -3,7 +3,7 @@ from django.db.models import Q
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant, DateActivity
+    TeamScheduleParticipant, DateParticipant, DateActivity, DateRegistration
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
@@ -46,6 +46,14 @@ class DateParticipantList(ParticipantList):
         'user', 'activity'
     )
     serializer_class = DateParticipantSerializer
+
+    def perform_create(self, serializer):
+        activity = serializer.validated_data['activity']
+        registration, _created = DateRegistration.objects.get_or_create(
+            user=self.request.user,
+            activity=activity
+        )
+        serializer.save(user=self.request.user, registration=registration)
 
 
 class DeadlineParticipantList(ParticipantList):

@@ -118,10 +118,11 @@ class SlotRelatedParticipantListView(
     @property
     def owners(self):
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
-        return [activity.owner] + list(activity.initiative.activity_managers.all())
+        return [activity.owner] + list(activity.owners)
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
+        activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
 
         if self.request.user.is_authenticated:
             if self.request.user.is_staff:
@@ -129,8 +130,7 @@ class SlotRelatedParticipantListView(
             else:
                 queryset = queryset.filter(
                     Q(user=self.request.user) |
-                    Q(slot__activity__owner=self.request.user) |
-                    Q(slot__activity__initiative__activity_manager=self.request.user) |
+                    Q(user_id__in=[u.id for u in activity.owners]) |
                     Q(status__in=('accepted', 'succeeded',))
                 ).order_by('-id')
         else:

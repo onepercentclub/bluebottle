@@ -1171,12 +1171,19 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
-                    DeadlineParticipantStateMachine.add,
+                    DateParticipantStateMachine.add,
                     conditions=[is_not_self],
                 ),
                 TransitionEffect(
-                    DeadlineParticipantStateMachine.accept,
+                    DateParticipantStateMachine.accept,
                     conditions=[review_disabled],
+                ),
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[
+                        is_participant,
+                        registration_is_accepted
+                    ],
                 ),
                 RelatedTransitionEffect(
                     'slot',
@@ -1264,6 +1271,37 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
 
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.readd,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(

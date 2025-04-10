@@ -515,3 +515,7 @@ div.inline.radiolist {
     padding-top: 24px;
     clear: both
 }
+
+#participants-group .field-checked .inline-deletelink {
+    display: none !important;
+}

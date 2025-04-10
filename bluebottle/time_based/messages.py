@@ -485,7 +485,7 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     delay = 60
 
-    def get_context(self, recipient)
+    def get_context(self, recipient):
         context = super().get_context(recipient)
 
         slots = self.obj.activity.slots.filter(

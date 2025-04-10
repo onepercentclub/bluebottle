@@ -112,7 +112,11 @@ class DateRegistrationSerializer(RegistrationSerializer):
         read_only=True,
         related_link_view_name="date-registration-related-participants",
         related_link_url_kwarg="registration_id",
-        statuses={"upcoming": ["new", "accepted", "running"], "passed": ["succeeded"]},
+        statuses={
+            "upcoming": ["new", "accepted", "running"],
+            "passed": ["succeeded"],
+            "total": ["new", "accepted", "running", "withdrawn", "succeeded", "failed"]
+        },
     )
 
     class Meta(RegistrationSerializer.Meta):

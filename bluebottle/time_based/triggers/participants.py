@@ -1,6 +1,6 @@
 from django.utils.timezone import now
 
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.states import ContributionStateMachine
 from bluebottle.activities.triggers import (
     ContributorTriggers
@@ -66,11 +66,14 @@ def activity_will_be_expired(effect):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+
+    settings = MemberPlatformSettings.load()
+    return (not settings.closed) and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 class RegistrationParticipantTriggers(ContributorTriggers):
@@ -1176,6 +1179,13 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     DateParticipantStateMachine.accept,
                     conditions=[review_disabled],
                 ),
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[
+                        is_participant,
+                        registration_is_accepted
+                    ],
+                ),
                 RelatedTransitionEffect(
                     'slot',
                     DateActivitySlotStateMachine.lock,
@@ -1278,6 +1288,37 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
 
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
+                ),
+                NotificationEffect(ParticipantChangedNotification),
+                NotificationEffect(
+                    ManagerSlotParticipantRegisteredNotification,
+                    conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.readd,
             effects=[
                 CheckPreparationTimeContributionEffect,
                 TransitionEffect(

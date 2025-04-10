@@ -632,7 +632,6 @@ class StatisticsDateTest(BluebottleTestCase):
 
             activity = DateActivityFactory(
                 initiative=initiative,
-                transition_date=past_date,
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )

@@ -1,7 +1,7 @@
 from builtins import str
 from django.core import mail
 
-from bluebottle.activities.messages import ActivityRejectedNotification
+from bluebottle.activities.messages.activity_manager import ActivityRejectedNotification
 from bluebottle.time_based.tests.factories import DateActivityFactory
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

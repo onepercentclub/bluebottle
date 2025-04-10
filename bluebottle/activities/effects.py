@@ -23,6 +23,20 @@ class CreateOrganizer(Effect):
         return str(_('Create organizer'))
 
 
+class CopyCategories(Effect):
+    "Copy categories from initiative to activity"
+
+    display = False
+
+    def post_save(self, **kwargs):
+        if self.instance.initiative:
+            for category in self.instance.initiative.categories.all():
+                self.instance.categories.add(category)
+
+    def __str__(self):
+        return str(_('Copy categories'))
+
+
 class CreateOrganizerContribution(Effect):
     "Create an effort contribution for the organizer or participant of the activity"
 
@@ -209,3 +223,15 @@ class DeleteRelatedContributionsEffect(Effect):
 
     def __str__(self):
         return str(_('Delete related contributions'))
+
+
+class SetPublishedDateEffect(Effect):
+    "Set de published date"
+
+    display = False
+
+    def post_save(self, **kwargs):
+        self.instance.published = now()
+
+    def __str__(self):
+        return str(_('Set the published date'))

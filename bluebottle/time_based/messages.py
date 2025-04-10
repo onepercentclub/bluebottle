@@ -9,7 +9,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, DateActivitySlot, PeriodActivity
+    DateParticipant, PeriodParticipant, DateActivitySlot
 )
 
 
@@ -485,8 +485,9 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     delay = 60
 
-    def get_context(self, recipient):
+    def get_context(self, recipient)
         context = super().get_context(recipient)
+
         slots = self.obj.activity.slots.filter(
             participants__user=recipient,
             participants__status='accepted',
@@ -636,9 +637,6 @@ class ParticipantAcceptedNotification(TimeBasedInfoMixin, TransitionMessage):
     action_title = pgettext('email', 'View activity')
 
     def get_event_data(self, recipient=None):
-        if isinstance(self.obj.activity, PeriodActivity):
-            # TODO: Come up with calendar events once we've added slots to period activities too
-            return []
         return [slot_participant.slot.event_data for slot_participant in self.obj.slot_participants.all()]
 
     def get_recipients(self):

@@ -17,7 +17,7 @@ from polymorphic.admin import (
 from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
-from bluebottle.activities.messages import ImpactReminderMessage
+from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
     Activity, Contributor, Organizer, Contribution, EffortContribution, Team
 )
@@ -149,7 +149,6 @@ class ContributorChildAdmin(
 
     readonly_fields = [
         "activity",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -160,7 +159,6 @@ class ContributorChildAdmin(
         "user",
         "states",
         "status",
-        "transition_date",
         "contributor_date",
         "created",
         "updated",
@@ -199,7 +197,7 @@ class OrganizerAdmin(ContributorChildAdmin):
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
 
-    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', 'transition_date']
+    readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
     date_hierarchy = 'created'
 
@@ -540,7 +538,6 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'updated',
         'has_deleted_data',
         'valid',
-        'transition_date',
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
@@ -635,12 +632,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
     ]
 
     def initiative_link(self, obj):
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
-            obj.initiative
-        )
-
+        if obj.initiative:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
+                obj.initiative
+            )
     initiative_link.short_description = _('Initiative')
 
     def get_fieldsets(self, request, obj=None):
@@ -792,7 +789,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
         PeriodicActivity,
         ScheduleActivity
     )
-    date_hierarchy = 'transition_date'
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 

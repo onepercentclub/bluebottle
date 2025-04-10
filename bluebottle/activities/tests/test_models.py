@@ -1,9 +1,34 @@
 from django.test import TestCase
 
+from bluebottle.deeds.models import Deed
+from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.offices.tests.factories import LocationFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.time_based.tests.factories import DeadlineActivityFactory
+
+
+class ActivityModelTestCase(TestCase):
+    def setUp(self):
+        self.initiative = InitiativeFactory.create()
+
+        for category in CategoryFactory.create_batch(3):
+            self.initiative.categories.add(category)
+
+    def test_categories(self):
+        deed = Deed.objects.create(initiative=self.initiative)
+        self.assertEqual(
+            len(deed.categories.all()),
+            3
+        )
+
+    def test_categories_no_initiatve(self):
+        deed = Deed.objects.create(owner=BlueBottleUserFactory.create())
+        self.assertEqual(
+            len(deed.categories.all()),
+            0
+        )
 
 
 class ActivitySegmentsTestCase(TestCase):

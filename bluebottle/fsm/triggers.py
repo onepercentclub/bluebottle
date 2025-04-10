@@ -1,13 +1,16 @@
 from builtins import object
 from builtins import str
 
+from django.contrib.admin.options import get_content_type_for_model
+from django.contrib.admin.models import LogEntry
+
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_user
 from future.utils import python_2_unicode_compatible
 
-from bluebottle.fsm.state import pre_state_transition
+from bluebottle.fsm.state import pre_state_transition, EmptyState, TRANSITION
 
 
 class TriggerManager(object):
@@ -117,10 +120,12 @@ class TransitionTrigger(Trigger):
 
 @receiver(pre_state_transition)
 def transition_trigger(sender, instance, transition, **kwargs):
-    if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
-        for trigger in instance.triggers.triggers:
-            if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
-                instance._triggers.append(BoundTrigger(instance, trigger))
+    if issubclass(sender, TriggerMixin):
+        instance._transitions.append(transition)
+        if hasattr(instance, 'triggers'):
+            for trigger in instance.triggers.triggers:
+                if isinstance(trigger, TransitionTrigger) and trigger.transition == transition:
+                    instance._triggers.append(BoundTrigger(instance, trigger))
 
 
 def register(model_cls):
@@ -236,7 +241,23 @@ class TriggerMixin(object):
 
             self._postponed_effects = []
 
-        self._initial_values = {}
-        for field in self._meta.fields:
-            field_name = f'{field.name}_id' if field.is_relation else field.name
-            self._initial_values[field_name] = getattr(self, field_name)
+        self._initial_values = dict(
+            (field.name, getattr(self, field.name))
+            for field in self._meta.fields
+            if not field.is_relation
+        )
+
+        current_user = get_current_user()
+        if current_user and current_user.is_authenticated:
+            for transition in self._transitions:
+                if EmptyState() not in transition.sources:
+                    LogEntry.objects.log_action(
+                        current_user.pk if current_user else None,
+                        get_content_type_for_model(self).pk,
+                        self.pk,
+                        str(self),
+                        TRANSITION,
+                        f"Changed status to {transition.target.name}"
+                    )
+
+        self._transitions = []

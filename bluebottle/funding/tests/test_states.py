@@ -116,15 +116,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" is approved and is now open for donations 💸'.format(
-                self.funding.title
-            )
-        )
-        self.assertTrue(
-            u'Congratulations! Your campaign “{}” has been approved.'.format(
-                self.funding.title
-            )
-            in mail.outbox[0].body
+            'Your crowdfunding campaign on Test has been approved!'
         )
 
     def test_cancel(self):
@@ -136,15 +128,9 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" has been cancelled'.format(
+            u'Your crowdfunding campaign "{}" has been cancelled'.format(
                 self.funding.title
             )
-        )
-        self.assertTrue(
-            u'Unfortunately your campaign “{}” has been cancelled.'.format(
-                self.funding.title
-            )
-            in mail.outbox[0].body
         )
 
     def test_approve_organizer_succeed(self):
@@ -212,7 +198,7 @@ class FundingStateMachineTests(BluebottleTestCase):
 
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your campaign "{}" is open for new donations 💸'.format(
+            u'Your crowdfunding campaign "{}" is open for new donations 💸'.format(
                 self.funding.title
             )
         )
@@ -312,7 +298,8 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_reject(self):
         mail.outbox = []
-        self.funding.states.submit()
+        self.funding.states.submit(save=True)
+        mail.outbox = []
         self.funding.states.reject(save=True)
         self.assertEqual(self.funding.status, 'rejected')
         organizer = self.funding.contributors.get()
@@ -320,7 +307,7 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(
             mail.outbox[0].subject,
-            u'Your crowdfunding campaign has been rejected.'
+            u'Your crowdfunding campaign on Test has been rejected'
         )
 
     def test_close_with_donations(self):

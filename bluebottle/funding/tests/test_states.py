@@ -31,6 +31,12 @@ class FundingStateMachineTests(BluebottleTestCase):
         self.funding.save()
 
     def test_submit(self):
+        with self.assertRaisesMessage(
+            TransitionNotPossible,
+            'Conditions not met for transition'
+        ):
+            self.funding.states.publish(save=True)
+
         self.funding.states.submit()
         self.assertEqual(self.funding.status, 'submitted')
 
@@ -111,6 +117,13 @@ class FundingStateMachineTests(BluebottleTestCase):
     def test_approve(self):
         self.funding.states.submit()
         mail.outbox = []
+
+        with self.assertRaisesMessage(
+            TransitionNotPossible,
+            'Conditions not met for transition'
+        ):
+            self.funding.states.publish(save=True)
+
         self.funding.states.approve(save=True)
         self.assertEqual(self.funding.status, 'open')
 

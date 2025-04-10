@@ -98,7 +98,13 @@ class ActivityStateMachine(ModelStateMachine):
         return not self.initiative_is_approved()
 
     def can_publish(self):
-        """the activity can be published"""
+        """the activity can be published. Activities can be published if they are reviewed or if reviewing is disabled.
+        Funding activities cannot be publised"""
+        from bluebottle.funding.models import Funding
+
+        if isinstance(self.instance, Funding):
+            return False
+
         if not self.instance.initiative_id:
             if not InitiativePlatformSettings.load().enable_reviewing:
                 return True

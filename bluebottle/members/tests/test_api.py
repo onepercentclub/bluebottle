@@ -28,7 +28,7 @@ from bluebottle.test.factory_models.geo import PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    SlotParticipantFactory
+    DateRegistrationFactory
 )
 
 
@@ -1273,18 +1273,18 @@ class UserAPITestCase(BluebottleTestCase):
             duration=timedelta(hours=2)
         )
 
-        participant = DateParticipantFactory.create(
+        registration = DateRegistrationFactory.create(
             activity=activity,
             user=self.user
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot1
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot2
         )
 

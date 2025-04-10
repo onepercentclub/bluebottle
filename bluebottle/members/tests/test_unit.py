@@ -15,7 +15,7 @@ from bluebottle.test.utils import override_properties
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    SlotParticipantFactory
+    DateRegistrationFactory
 )
 
 
@@ -79,18 +79,18 @@ class MemberTestCase(BluebottleTestCase):
             duration=timedelta(hours=2)
         )
 
-        participant = DateParticipantFactory.create(
+        registration = DateRegistrationFactory.create(
             activity=activity,
             user=self.user
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot1
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot2
         )
 
@@ -150,33 +150,33 @@ class MemberTestCase(BluebottleTestCase):
             duration=timedelta(hours=20)
         )
 
-        participant = DateParticipantFactory.create(
+        registration = DateRegistrationFactory.create(
             activity=activity,
             user=self.user
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot1
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot2
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot3
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot4
         )
 
-        SlotParticipantFactory.create(
-            participant=participant,
+        DateParticipantFactory.create(
+            registration=registration,
             slot=slot5
         )
 

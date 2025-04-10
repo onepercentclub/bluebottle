@@ -21,7 +21,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory
 )
 
 
@@ -144,11 +144,11 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        participant = DateParticipantFactory.create(
-            activity=self.activity, user=self.other_user
+        registration = DateRegistrationFactory.create(
+            user=self.other_user, activity=self.activity, status="accepted"
         )
-        SlotParticipantFactory.create(
-            slot=self.activity.slots.get(), participant=participant
+        DateParticipantFactory.create(
+            registration=registration, slot=self.activity.slots.get()
         )
         self.activity.states.succeed(save=True)
 
@@ -641,11 +641,12 @@ class StatisticsDateTest(BluebottleTestCase):
                 duration=datetime.timedelta(minutes=60),
             )
 
-            participant = DateParticipantFactory.create(
-                activity=activity,
-                user=other_user
+            registration = DateRegistrationFactory.create(
+                user=other_user, activity=self.activity, status="accepted"
             )
-            SlotParticipantFactory.create(participant=participant, slot=slot)
+            DateParticipantFactory.create(
+                registration=registration, slot=slot
+            )
             activity.states.publish(save=True)
 
     def test_all(self):

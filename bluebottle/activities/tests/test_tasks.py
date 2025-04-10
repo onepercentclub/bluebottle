@@ -28,7 +28,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory, ScheduleParticipantFactory,
+    ScheduleParticipantFactory,
 )
 
 
@@ -348,13 +348,10 @@ class ContributorDataRetentionTest(BluebottleTestCase):
             contributor = factory.create(activity=activity)
             contributor.created = date
             contributor.save()
-            if isinstance(contributor, DateParticipant):
-                SlotParticipantFactory.create(
-                    slot=activity.slots.get(), participant=contributor
-                )
-            if isinstance(contributor, ScheduleParticipant):
+            if isinstance(contributor, (ScheduleParticipant, DateParticipant)):
                 contributor.slot.start = date
                 contributor.slot.save()
+
             contributor.contributions.update(status='succeeded')
 
             registration = getattr(contributor, 'registration', None)

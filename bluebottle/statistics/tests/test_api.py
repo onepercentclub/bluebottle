@@ -23,7 +23,7 @@ from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -162,13 +162,13 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
         slot2.duration = datetime.timedelta(hours=8)
         slot2.save()
 
-        participants = DateParticipantFactory.create_batch(3, activity=activity1)
-        for participant in participants:
-            SlotParticipantFactory.create(participant=participant, slot=slot1)
+        registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
+        for registration in registrations:
+            DateParticipantFactory.create(registration=registration, slot=slot1)
 
-        participants = DateParticipantFactory.create_batch(2, activity=activity2)
-        for participant in participants:
-            SlotParticipantFactory.create(participant=participant, slot=slot2)
+        registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
+        for registration in registrations:
+            DateParticipantFactory.create(registration=registration, slot=slot2)
 
         self.impact_type = ImpactTypeFactory.create()
 
@@ -295,8 +295,8 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         slot.start = timezone.now() - datetime.timedelta(days=8)
         slot.duration = datetime.timedelta(hours=6)
         slot.save()
-        part = DateParticipantFactory.create(activity=activity, user=self.user)
-        SlotParticipantFactory.create(participant=part, slot=slot)
+        registration = DateRegistrationFactory.create(activity=activity, user=self.user)
+        DateParticipantFactory.create(registration=registration, slot=slot)
 
         donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
         for donation in donations:

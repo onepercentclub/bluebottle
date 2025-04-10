@@ -674,8 +674,7 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
         "activity": "bluebottle.activities.serializers.ActivitySerializer",
         "user": "bluebottle.initiatives.serializers.MemberSerializer",
         "contributions": "bluebottle.activities.serializers.MoneySerializer",
-        "slots": "bluebottle.time_based.serializers.SlotParticipantSerializer",
-        "slots.slot": "bluebottle.time_based.serializers.DateActivitySlotSerializer",
+        "slot": "bluebottle.time_based.serializers.DateActivitySlotSerializer",
         "registration": "bluebottle.time_based.serializers.registrations.PolymorphicRegistrationSerializer",
     }
 

@@ -23,7 +23,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateRegistrationFactory
 )
 
 
@@ -167,39 +167,39 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        part1 = DateParticipantFactory.create(
+        registration1 = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=registration1,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=registration1,
             slot=slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        part2 = DateParticipantFactory.create(
+        registration2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=registration2,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=registration2,
             slot=old_slot
         )
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        part3 = DateParticipantFactory.create(
+        registration3 = DateRegistrationFactory.create(
             user=self.passive_user,
             activity=activity
         )
 
-        SlotParticipantFactory.create(
-            participant=part3,
+        DateParticipantFactory.create(
+            registration=registration3,
             slot=old_slot
         )
 

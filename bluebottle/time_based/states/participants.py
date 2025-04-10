@@ -422,7 +422,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
             ParticipantStateMachine.cancelled
         ],
         ParticipantStateMachine.succeeded,
-        name=_("Schedule"),
+        name=_("Succeed"),
         description=_("Succeed this participant for the Activity."),
         passed_label=_("succeeded"),
         automatic=True,
@@ -493,6 +493,14 @@ class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
 
 @register(DateParticipant)
 class DateParticipantStateMachine(RegistrationParticipantStateMachine):
+
+    finish = Transition(
+        RegistrationParticipantStateMachine.accepted,
+        RegistrationParticipantStateMachine.succeeded,
+        automatic=True,
+        name=_('Finish'),
+        description="Slot has finished"
+    )
 
     def activity_is_open(self):
         """task is open"""

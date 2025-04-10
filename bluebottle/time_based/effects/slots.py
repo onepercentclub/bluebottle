@@ -28,3 +28,18 @@ class SetContributionsStartEffect(Effect):
         if not self.instance.start:
             for participant in self.instance.participants.all():
                 participant.contributions.update(start=now())
+
+
+class LockActivityEffect(Effect):
+    title = _('Lock activity')
+    display = False
+
+    def is_valid(self):
+        return True
+
+    def post_save(self, **kwargs):
+        if (
+            all(slot.status == 'full' for slot in self.instance.activity.slots.all()) and
+            self.instance.activity.status != 'full'
+        ):
+            self.instance.activity.states.lock(save=True)

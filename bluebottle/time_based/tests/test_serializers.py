@@ -196,7 +196,10 @@ class DateActivitySerializerTestCase(BluebottleTestCase):
         )
 
         user = BlueBottleUserFactory.create()
-        DateParticipantFactory.create(user=user, activity=self.activity, status='accepted')
+        DateParticipantFactory.create(
+            user=user, activity=self.activity, status='accepted', slot=self.activity.slots.first()
+        )
+
         self.assertAttribute(
             'location_info',
             {

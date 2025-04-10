@@ -233,6 +233,13 @@ class DateParticipantFactory(FSMModelFactory):
 
     @classmethod
     def create(cls, *args, **kwargs):
+        if 'registration' in kwargs:
+            if 'user' not in kwargs:
+                kwargs['user'] = kwargs['registration'].user
+
+            if 'activity' not in kwargs:
+                kwargs['activity'] = kwargs['registration'].activity
+
         if 'slot' not in kwargs:
             activity = kwargs.get('activity') or DateActivityFactory.create()
             kwargs['slot'] = DateActivitySlotFactory.create(

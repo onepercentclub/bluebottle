@@ -1124,6 +1124,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             status="accepted",
             registration__status="accepted"
         ).count()
+
         if (
                 effect.instance.slot.capacity and
                 effect.instance.status == 'accepted' and
@@ -1168,11 +1169,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 CreateDateRegistrationEffect,
                 CreateSlotTimeContributionEffect,
                 TransitionEffect(
-                    DeadlineParticipantStateMachine.add,
+                    DateParticipantStateMachine.add,
                     conditions=[is_not_self],
                 ),
                 TransitionEffect(
-                    DeadlineParticipantStateMachine.accept,
+                    DateParticipantStateMachine.accept,
                     conditions=[review_disabled],
                 ),
                 RelatedTransitionEffect(
@@ -1234,7 +1235,6 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     DateActivitySlotStateMachine.lock,
                     conditions=[participant_slot_will_be_full]
                 ),
-                NotificationEffect(ParticipantChangedNotification),
                 FollowActivityEffect,
             ],
         ),

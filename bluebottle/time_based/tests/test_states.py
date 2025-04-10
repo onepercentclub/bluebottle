@@ -186,7 +186,7 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
 
     def test_reopen(self):
         self.test_cancel()
-        self.slot.states.reopen(save=True)
+        self.slot.states.restore(save=True)
         self.assertEqual(
             self.slot.status, 'open'
         )

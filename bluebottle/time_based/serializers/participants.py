@@ -16,7 +16,7 @@ from bluebottle.time_based.models import (
     ScheduleRegistration,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
-    DateActivitySlot, DateActivity
+    DateActivitySlot
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 

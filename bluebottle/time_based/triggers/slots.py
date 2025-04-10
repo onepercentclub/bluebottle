@@ -15,7 +15,7 @@ from bluebottle.time_based.effects.effects import (
     RescheduleScheduleSlotContributions,
 )
 from bluebottle.time_based.effects.slots import (
-    CreateTeamSlotParticipantsEffect, SetContributionsStartEffect
+    CreateTeamSlotParticipantsEffect, SetContributionsStartEffect, LockActivityEffect
 )
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
@@ -360,6 +360,7 @@ class DateActivitySlotTriggers(TriggerManager):
                     DateStateMachine.lock,
                     conditions=[activity_has_no_open_slot]
                 ),
+                LockActivityEffect
             ],
         ),
 
@@ -405,7 +406,7 @@ class DateActivitySlotTriggers(TriggerManager):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
                 RelatedTransitionEffect(
                     "participants",
-                    DateParticipantStateMachine.succeed,
+                    DateParticipantStateMachine.finish
                 ),
                 RelatedTransitionEffect(
                     "activity",

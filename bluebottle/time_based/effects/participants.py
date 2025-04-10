@@ -127,6 +127,10 @@ class CreateDateRegistrationEffect(Effect):
     template = 'admin/create_date_registration.html'
 
     def pre_save(self, **kwargs):
+
+        if not self.instance.activity_id:
+            # we need this for inline admin, so we can add users to a slot
+            self.instance.activity = self.instance.slot.activity
         self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
 
     def post_save(self, **kwargs):

@@ -137,24 +137,12 @@ class PeriodicSlotFactory(factory.DjangoModelFactory):
         model = PeriodicSlot
 
 
-class DateParticipantFactory(FSMModelFactory):
+class DateRegistrationFactory(FSMModelFactory):
     class Meta(object):
-        model = DateParticipant
+        model = DateRegistration
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
-
-
-class TimeContributionFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = TimeContribution
-
-    contributor = factory.SubFactory(DateParticipantFactory)
-
-    value = timedelta(hours=20)
-
-    start = now() + timedelta(weeks=2)
-    end = now() + timedelta(weeks=3)
 
 
 class TeamFactory(factory.DjangoModelFactory):
@@ -170,14 +158,6 @@ class TeamMemberFactory(factory.DjangoModelFactory):
 
     user = factory.SubFactory(BlueBottleUserFactory)
     team = factory.SubFactory(TeamFactory)
-
-
-class DateRegistrationFactory(FSMModelFactory):
-    class Meta(object):
-        model = DateRegistration
-
-    activity = factory.SubFactory(DateActivityFactory)
-    user = factory.SubFactory(BlueBottleUserFactory)
 
 
 class DeadlineRegistrationFactory(FSMModelFactory):
@@ -245,6 +225,18 @@ class ScheduleParticipantFactory(FSMModelFactory):
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TimeContributionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TimeContribution
+
+    contributor = factory.SubFactory(DateParticipantFactory)
+
+    value = timedelta(hours=20)
+
+    start = now() + timedelta(weeks=2)
+    end = now() + timedelta(weeks=3)
 
 
 class PeriodicRegistrationFactory(FSMModelFactory):

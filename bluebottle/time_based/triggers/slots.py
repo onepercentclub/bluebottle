@@ -403,10 +403,9 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.finish,
             effects=[
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.succeed),
                 RelatedTransitionEffect(
                     "participants",
-                    DateParticipantStateMachine.finish
+                    DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
                     "activity",

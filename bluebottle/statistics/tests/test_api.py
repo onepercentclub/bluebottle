@@ -303,18 +303,20 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         )
         initiative.states.submit(save=True)
         initiative.states.approve(save=True)
-        activity.states.publish(save=True)
 
+        activity.states.publish(save=True)
         slot = activity.slots.get()
-        slot.start = timezone.now() - datetime.timedelta(days=8)
-        slot.duration = datetime.timedelta(hours=6)
-        slot.save()
+
         registration = DateRegistrationFactory.create(activity=activity, user=self.user)
         DateParticipantFactory.create(
             registration=registration,
             activity=activity,
-            slot=slot
+            slot=slot,
+            user=self.user
         )
+        slot.start = timezone.now() - datetime.timedelta(days=8)
+        slot.duration = datetime.timedelta(hours=6)
+        slot.save()
 
         donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
         for donation in donations:

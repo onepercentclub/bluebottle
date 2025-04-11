@@ -370,10 +370,6 @@ class DeadlineParticipantTriggers(RegistrationParticipantTriggers):
         TransitionTrigger(
             DeadlineParticipantStateMachine.reapply,
             effects=[
-                RelatedTransitionEffect(
-                    "contributions",
-                    ContributionStateMachine.succeed,
-                ),
                 TransitionEffect(
                     DeadlineParticipantStateMachine.succeed,
                     conditions=[
@@ -1108,8 +1104,8 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """
         Slot end date/time has passed
         """
-        if effect.instance.id:
-            return effect.instance.slot.is_complete and effect.instance.slot.end < now()
+        if effect.instance.slot:
+            return effect.instance.slot.status == 'finished'
 
     def applicant_is_accepted(effect):
         return effect.instance.registration and effect.instance.registration.status == 'accepted'
@@ -1230,16 +1226,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
             DateParticipantStateMachine.accept,
             effects=[
                 TransitionEffect(
-                    DateParticipantStateMachine.succeed,
+                    RegistrationParticipantStateMachine.succeed,
                     conditions=[participant_slot_is_finished]
 
                 ),
                 CheckPreparationTimeContributionEffect,
-                RelatedTransitionEffect(
-                    'contributions',
-                    TimeContributionStateMachine.succeed,
-                    conditions=[participant_slot_is_finished]
-                ),
                 RelatedTransitionEffect(
                     'slot',
                     DateActivitySlotStateMachine.lock,

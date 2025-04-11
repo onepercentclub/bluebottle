@@ -310,7 +310,11 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         slot.duration = datetime.timedelta(hours=6)
         slot.save()
         registration = DateRegistrationFactory.create(activity=activity, user=self.user)
-        DateParticipantFactory.create(registration=registration, activity=activity, slot=slot)
+        DateParticipantFactory.create(
+            registration=registration,
+            activity=activity,
+            slot=slot
+        )
 
         donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
         for donation in donations:

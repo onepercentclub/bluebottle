@@ -631,6 +631,7 @@ class StatisticsDateTest(BluebottleTestCase):
         for diff in (10, 5, 1):
             initiative = InitiativeFactory.create(owner=user)
             past_date = timezone.now() - datetime.timedelta(days=diff)
+            future_date = timezone.now() + datetime.timedelta(days=5)
             initiative.created = past_date
             initiative.save()
             initiative.states.submit()
@@ -641,19 +642,28 @@ class StatisticsDateTest(BluebottleTestCase):
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )
+
             slot = DateActivitySlotFactory.create(
                 activity=activity,
-                start=past_date,
+                start=future_date,
                 duration=datetime.timedelta(minutes=60),
             )
+            activity.states.publish(save=True)
 
             registration = DateRegistrationFactory.create(
-                user=other_user, activity=activity, status="accepted"
+                user=other_user,
+                activity=activity,
             )
+
             DateParticipantFactory.create(
-                registration=registration, slot=slot
+                activity=activity,
+                user=other_user,
+                registration=registration,
+                slot=slot
             )
-            activity.states.publish(save=True)
+
+            slot.start = past_date
+            slot.save()
 
     def test_all(self):
         stats = Statistics()

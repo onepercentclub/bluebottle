@@ -430,7 +430,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         for registration in DateRegistrationFactory.create_batch(
                 3, activity=date_activity, status="rejected"
         ):
-            DateParticipantFactory.create(registration=registration, slot=slot)
+            DateParticipantFactory.create(registration=registration, slot=slot, status='rejected')
 
         funding = FundingFactory.create(
             initiative=self.initiative,

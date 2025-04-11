@@ -170,11 +170,19 @@ class StatisticYearFilterListAPITestCase(BluebottleTestCase):
 
         registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
         for registration in registrations:
-            DateParticipantFactory.create(registration=registration, slot=slot1)
+            DateParticipantFactory.create(
+                activity=activity1,
+                registration=registration,
+                slot=slot1
+            )
 
-        registrations = DateRegistrationFactory.create_batch(3, activity=activity1)
+        registrations = DateRegistrationFactory.create_batch(2, activity=activity1)
         for registration in registrations:
-            DateParticipantFactory.create(registration=registration, slot=slot2)
+            DateParticipantFactory.create(
+                activity=activity1,
+                registration=registration,
+                slot=slot2
+            )
 
         self.impact_type = ImpactTypeFactory.create()
 

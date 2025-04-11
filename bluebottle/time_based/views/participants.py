@@ -3,7 +3,7 @@ from django.db.models import Q
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant, DateActivity, DateRegistration
+    TeamScheduleParticipant, DateParticipant, DateActivity
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
@@ -43,17 +43,9 @@ class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, C
 
 class DateParticipantList(ParticipantList):
     queryset = DateParticipant.objects.prefetch_related(
-        'user', 'activity'
+        'user', 'activity', 'slot'
     )
     serializer_class = DateParticipantSerializer
-
-    def perform_create(self, serializer):
-        activity = serializer.validated_data['activity']
-        registration, _created = DateRegistration.objects.get_or_create(
-            user=self.request.user,
-            activity=activity
-        )
-        serializer.save(user=self.request.user, registration=registration)
 
 
 class DeadlineParticipantList(ParticipantList):

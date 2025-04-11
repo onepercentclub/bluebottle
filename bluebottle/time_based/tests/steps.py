@@ -184,6 +184,7 @@ def api_user_joins_slot(test, slot, supporter, request_user=None, status_code=20
     }
     url = reverse('date-participant-list')
     response = test.client.post(url, json.dumps(test.data), user=request_user)
+
     test.assertEqual(response.status_code, status_code, msg)
 
 

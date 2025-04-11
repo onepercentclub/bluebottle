@@ -648,7 +648,7 @@ class StatisticsDateTest(BluebottleTestCase):
             )
 
             registration = DateRegistrationFactory.create(
-                user=other_user, activity=self.activity, status="accepted"
+                user=other_user, activity=activity, status="accepted"
             )
             DateParticipantFactory.create(
                 registration=registration, slot=slot

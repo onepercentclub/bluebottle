@@ -56,7 +56,13 @@ class StatisticListListAPITestCase(BluebottleTestCase):
         slot.duration = datetime.timedelta(minutes=6)
         slot.save()
 
-        DateParticipantFactory.create_batch(5, activity=activity)
+        registrations = DateRegistrationFactory.create_batch(5, activity=activity)
+        for registration in registrations:
+            DateParticipantFactory.create(
+                registration=registration,
+                activity=activity,
+                slot=slot
+            )
 
         self.impact_type = ImpactTypeFactory.create()
 
@@ -296,7 +302,7 @@ class UserStatisticListListAPITestCase(BluebottleTestCase):
         slot.duration = datetime.timedelta(hours=6)
         slot.save()
         registration = DateRegistrationFactory.create(activity=activity, user=self.user)
-        DateParticipantFactory.create(registration=registration, slot=slot)
+        DateParticipantFactory.create(registration=registration, activity=activity, slot=slot)
 
         donations = DonorFactory.create_batch(3, user=self.user, created=now() - datetime.timedelta(days=1))
         for donation in donations:

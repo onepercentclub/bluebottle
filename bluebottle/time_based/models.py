@@ -228,9 +228,7 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_durations(self):
-        # TODO Fix this
         return self.durations.filter(
-            slot_participant__status__in=("registered", "succeeded"),
             contributor__status__in=('new', 'accepted')
         )
 

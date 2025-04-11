@@ -172,7 +172,10 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_withdrawn(self):
-        contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity, user=self.other_user
+        )
+        contribution = DateParticipantFactory.create(registration=registration)
         contribution.states.withdraw(save=True)
         self.activity.states.succeed(save=True)
 
@@ -196,7 +199,10 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_noshow(self):
-        participant = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity, user=self.other_user
+        )
+        participant = DateParticipantFactory.create(registration=registration)
         self.activity.states.succeed(save=True)
         participant.states.remove(save=True)
         self.assertEqual(

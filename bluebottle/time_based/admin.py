@@ -899,20 +899,17 @@ class PeriodicActivityAdmin(TimeBasedAdmin):
 class DateParticipantInline(admin.TabularInline):
     model = DateParticipant
     readonly_fields = ['participant_link', 'smart_status', 'registration_status']
-    fields = readonly_fields
+    fields = ['participant_link', 'user', 'smart_status', 'registration_status']
 
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    raw_id_fields = ['user']
+    extra = 0
 
     verbose_name = _('Participant')
     verbose_name_plural = _('Participants')
 
     def participant_link(self, obj):
         url = reverse('admin:time_based_dateparticipant_change', args=(obj.id,))
-        return format_html('<a href="{}">{}</a>', url, obj)
+        return format_html('<a href="{}">{}</a>', url, _('Edit'))
     participant_link.short_description = _('Edit')
 
     def smart_status(self, obj):
@@ -1283,7 +1280,7 @@ class ParticipantSlotForm(ModelForm):
         if instance:
             slot = instance.slot
             sm = DateParticipantStateMachine
-            self.fields['checked'].initial = instance.status in [sm.registered.value, sm.succeeded.value]
+            self.fields['checked'].initial = instance.status in [sm.accepted.value, sm.new.value, sm.succeeded.value]
         self.fields['slot'].label = _('Slot')
         self.fields['slot'].widget = SlotWidget(attrs={'slot': slot})
 
@@ -1305,7 +1302,7 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
         if 'data' not in kwargs:
             instance = kwargs['instance']
             new = []
-            for slot in instance.activity.slots.exclude(slot_participants__participant=instance).all():
+            for slot in instance.activity.slots.exclude(participants__registration=instance).all():
                 new.append({
                     'slot': slot,
                     'checked': False
@@ -1322,13 +1319,21 @@ class ParticipantSlotFormSet(BaseInlineFormSet):
             extra_forms = [form for form in extra_forms if form.cleaned_data['checked']]
         return extra_forms
 
+    def save_new(self, form, commit=True):
+        form.instance.execute_triggers(send_messages=False)
+        form.instance.activity = self.instance.activity
+        form.instance.user = self.instance.user
+        form.instance.registration = self.instance
+        return form.save(commit=commit)
+
     def save_existing(self, form, instance, commit=True):
         """Transition the slot participant as needed before saving"""
         sm = DateParticipantStateMachine
         checked = form.cleaned_data['checked']
         form.instance.execute_triggers(send_messages=False)
-        if form.instance.status in [sm.registered.value, sm.succeeded.value] and not checked:
-            form.instance.states.remove(save=commit)
+        if form.instance.status in [sm.new.value, sm.accepted.value, sm.succeeded.value] and not checked:
+            form.instance.delete()
+            return
         elif checked and form.instance.status in [sm.removed.value, sm.withdrawn.value, sm.cancelled.value]:
             form.instance.states.accept(save=commit)
         return form.save(commit=commit)
@@ -1341,14 +1346,15 @@ class ParticipantSlotInline(admin.TabularInline):
     form = ParticipantSlotForm
 
     def get_extra(self, request, obj=None, **kwargs):
-        ids = [sp.slot_id for sp in self.parent_object.slot_participants.all()]
-        return self.parent_object.activity.slots.exclude(id__in=ids).count()
+        ids = [sp.slot_id for sp in obj.participants.all()]
+        return obj.activity.slots.exclude(id__in=ids).count()
 
-    readonly_fields = ['status']
-    fields = ['slot', 'checked', 'status']
+    fields = ['slot', 'checked']
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+    can_delete = False
 
     verbose_name = _('slot')
     verbose_name_plural = _('slots')
@@ -1678,7 +1684,7 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
 
 @admin.register(DateRegistration)
 class DateRegistrationAdmin(RegistrationChildAdmin):
-    inlines = [DateParticipantAdminInline]
+    inlines = [ParticipantSlotInline]
 
 
 @admin.register(DeadlineRegistration)

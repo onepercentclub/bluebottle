@@ -196,7 +196,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
     def test_reminder_q2(self):
         DateParticipantFactory.create(
-            participant=self.registration3,
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -209,7 +209,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
     def test_reminder_q3(self):
         DateParticipantFactory.create(
-            participant=self.registration3,
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -218,7 +218,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
 
     def test_reminder_q4(self):
         DateParticipantFactory.create(
-            participant=self.registration3,
+            registration=self.registration3,
             slot=self.slot3
         )
         self.registration3.states.reject(save=True)

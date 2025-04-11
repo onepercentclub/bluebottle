@@ -241,7 +241,8 @@ class PolymorphicRegistrationSerializer(PolymorphicModelSerializer):
         DeadlineRegistrationSerializer,
         ScheduleRegistrationSerializer,
         TeamScheduleRegistrationSerializer,
-        PeriodicRegistrationSerializer
+        PeriodicRegistrationSerializer,
+        DateRegistrationSerializer
     ]
 
     class Meta(object):

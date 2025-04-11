@@ -12,7 +12,6 @@ from geopy.distance import distance, lonlat
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
     PolymorphicResourceRelatedField,
-    SerializerMethodResourceRelatedField,
 )
 from rest_framework_json_api.serializers import (
     ModelSerializer,
@@ -694,11 +693,6 @@ class PolymorphicContributorSerializer(PolymorphicModelSerializer):
 
 class ContributionSerializer(ModelSerializer):
     contributor = PolymorphicResourceRelatedField(ContributorSerializer, queryset=Contributor.objects.all())
-    participant = SerializerMethodResourceRelatedField(
-        model=DateParticipant,
-        read_only=True,
-        source='get_slot_participant'
-    )
     current_status = CurrentStatusField(source="states.current_state")
     value = serializers.SerializerMethodField()
 
@@ -734,9 +728,6 @@ class ContributionSerializer(ModelSerializer):
     def get_registration(self, obj):
         return getattr(obj.contributor, "registration", None)
 
-    def get_slot_participant(self, obj):
-        return getattr(obj, "slot_participant", None)
-
     class JSONAPIMeta(object):
         resource_name = "contributions"
         included_resources = [
@@ -746,7 +737,6 @@ class ContributionSerializer(ModelSerializer):
             "contributor.activity.segments",
             "contributor.activity.initiative.image",
             "registration",
-            "slot_participant",
             "slot",
         ]
 
@@ -759,7 +749,6 @@ class ContributionSerializer(ModelSerializer):
             "value",
             "slot",
             "registration",
-            "slot_participant",
         )
         meta_fields = ("start", "current_status")
 

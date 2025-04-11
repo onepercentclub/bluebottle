@@ -347,8 +347,13 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         for date in dates:
             contributor = factory.create(activity=activity)
             contributor.created = date
+            if isinstance(contributor, DateParticipant):
+                contributor.slot = DateActivitySlotFactory.create(
+                    activity=activity,
+                    start=date
+                )
             contributor.save()
-            if isinstance(contributor, (ScheduleParticipant, DateParticipant)):
+            if isinstance(contributor, ScheduleParticipant):
                 contributor.slot.start = date
                 contributor.slot.save()
 
@@ -356,12 +361,13 @@ class ContributorDataRetentionTest(BluebottleTestCase):
 
             registration = getattr(contributor, 'registration', None)
             if registration:
+                registration.user = contributor.user
                 registration.created = date
                 registration.save()
 
     def setUp(self):
         super(ContributorDataRetentionTest, self).setUp()
-        months_ago_12 = now() - relativedelta(months=12)
+        months_ago_12 = now() - relativedelta(months=14)
         months_ago_8 = now() - relativedelta(months=8)
         months_ago_2 = now() - relativedelta(months=2)
 
@@ -387,29 +393,29 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.task = data_retention_contribution_task
 
     def test_data_retention_dont_delete_without_settings(self):
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
-        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 8)
+        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
         self.activity1.refresh_from_db()
-        self.assertEqual(self.activity1.deleted_successful_contributors, 1)
+        self.assertEqual(self.activity1.deleted_successful_contributors, 0)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Contributor.objects.count(), 9)
-        self.assertEqual(Registration.objects.count(), 1)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Contributor.objects.count(), 10)
+        self.assertEqual(Registration.objects.count(), 3)

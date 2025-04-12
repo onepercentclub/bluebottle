@@ -171,7 +171,7 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         link = page.html.find("a", {'class': 'private-document-link'})
         self.assertTrue(
             link.attrs['href'].startswith(
-                reverse('date-registration-document', args=(self.registration.pk, ))
+                reverse('registration-document', args=(self.registration.pk, ))
             )
         )
 

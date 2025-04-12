@@ -200,30 +200,18 @@ class PrivateFileView(DetailView):
             field = getattr(self.get_object(), self.field)
 
         filename = os.path.basename(field.name)
-
+        content_type = mimetypes.guess_type(filename)[0]
+        response = HttpResponse()
+        response['X-Accel-Redirect'] = field.url
+        response['Content-Type'] = content_type
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            field.name
+        )
         try:
-            content_type = mime.from_file(field.path)
+            response['Content-Type'] = mime.from_file(field.path)
         except IOError:
-            content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            pass
 
-        from django.conf import settings
-
-        if settings.DEBUG:
-            # Direct file serving in debug mode
-            try:
-                with field.open('rb') as f:
-                    file_content = f.read()
-            except IOError:
-                raise Http404("File not found")
-
-            response = HttpResponse(file_content, content_type=content_type)
-        else:
-            # Use X-Accel-Redirect in production
-            response = HttpResponse()
-            response['X-Accel-Redirect'] = field.url
-            response['Content-Type'] = content_type
-
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
 

@@ -210,3 +210,23 @@ class RegistrationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
     relation = 'document'
     field = 'file'
+
+
+class DateRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = DateRegistration.objects
+
+
+class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = DeadlineRegistration.objects
+
+
+class ScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = ScheduleRegistration.objects
+
+
+class TeamScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = TeamScheduleRegistration.objects
+
+
+class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = PeriodicRegistration.objects

@@ -7,7 +7,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration, DateRegistration,
+    TeamScheduleRegistration, DateRegistration, Registration,
 )
 from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
@@ -210,3 +210,4 @@ class RegistrationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
     relation = 'document'
     field = 'file'
+    queryset = Registration.objects

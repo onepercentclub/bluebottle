@@ -193,12 +193,21 @@ class BaseRelatedTransitionEffect(Effect):
 
     def to_html(self):
         if self.conditions:
+            conditions = []
+            for c in self.conditions:
+                try:
+                    conditions.append(c.__doc__)
+                except TypeError:
+                    conditions.append(str(c))
             return _('{transition} related {object} if {conditions}').format(
                 transition=self.transition_effect_class.transition.name,
                 object=str(self.relation),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
+                conditions=" and ".join(conditions)
             )
-        return str(self)
+        return _('{transition} related {object}').format(
+            transition=self.transition_effect_class.transition.name,
+            object=str(self.relation),
+        )
 
 
 def RelatedTransitionEffect(

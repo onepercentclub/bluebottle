@@ -281,10 +281,16 @@ def has_accepted_participants(effect):
 
 
 def has_one_slot(effect):
+    """
+    Has only one slot
+    """
     return effect.instance.activity.active_slots.count() == 1
 
 
 def has_multiple_slots(effect):
+    """
+    Has multiple slots
+    """
     return effect.instance.activity.active_slots.count() > 1
 
 
@@ -303,18 +309,27 @@ def slot_is_not_started(effect):
 
 
 def activity_has_no_open_slot(effect):
+    """
+    activity has no open slots. All slots are either finished or full
+    """
     return len(
         effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='open')
     ) == 0
 
 
 def activity_has_finished_slot(effect):
+    """
+    activity has finished slots. All slots are either finished or full
+    """
     return len(
         effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='finished')
     ) > 0
 
 
 def activity_is_finished(effect):
+    """
+    activity is finished. All slots are either finished or full
+    """
     return len(
         effect.instance.activity.slots.exclude(
             pk=effect.instance.pk

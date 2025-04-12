@@ -96,21 +96,41 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
         activity = DateActivity.objects.get(title='Activity with multiple slots')
         self.assertEqual(activity.slots.count(), 2)
 
-    def test_add_participants(self):
+    def test_add_registration(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
-        DateActivitySlotFactory.create_batch(2, activity=activity)
+        DateActivitySlotFactory.create(activity=activity)
 
-        self.assertEqual(len(activity.participants.all()), 0)
-
+        self.assertEqual(activity.registrations.count(), 0)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
         page = self.app.get(url)
-
         form = page.forms['dateactivity_form']
-
-        form.fields['registrations-0-user'] = BlueBottleUserFactory.create().pk
+        self.admin_add_inline_form_entry(form, 'registrations')
+        form['registrations-0-user'] = BlueBottleUserFactory.create().pk
+        form['registrations-0-activity'] = activity.pk
+        page = form.submit()
+        form = page.forms['confirm']
         form.submit()
 
-        self.assertEqual(len(activity.participants.all()), 1)
+        self.assertEqual(activity.registrations.count(), 1)
+
+    def test_add_participant(self):
+        activity = DateActivityFactory.create(initiative=self.initiative)
+        slot = DateActivitySlotFactory.create(activity=activity)
+
+        self.assertEqual(slot.participants.count(), 0)
+
+        url = reverse('admin:time_based_dateactivityslot_change', args=(slot.pk,))
+        page = self.app.get(url)
+        form = page.forms['dateactivityslot_form']
+
+        self.admin_add_inline_form_entry(form, 'participants')
+        form['participants-0-user'] = BlueBottleUserFactory.create().pk
+        form['participants-0-slot'] = slot.pk
+        page = form.submit()
+        form = page.forms['confirm']
+        form.submit()
+
+        self.assertEqual(slot.participants.count(), 1)
 
 
 class DateParticipantAdminTestCase(BluebottleAdminTestCase):

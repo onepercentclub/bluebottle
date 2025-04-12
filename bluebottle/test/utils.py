@@ -901,10 +901,10 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
 
     def admin_add_inline_form_entry(self, form, inlines):
         fields = [field for field in form.fields.items()]
-        number = form['{}-TOTAL_FORMS'.format(inlines)].value
-        form['{}-TOTAL_FORMS'.format(inlines)] = int(number) + 1
+        number = form[f'{inlines}-TOTAL_FORMS'].value
+        form[f'{inlines}-TOTAL_FORMS'] = int(number) + 1
         for field in fields:
-            if field[0].startswith('{}-__prefix__-'.format(inlines)):
+            if field[0].startswith(f'{inlines}-__prefix__-'):
                 name = field[0].replace('__prefix__', str(number))
                 new = Text(form, 'input', name, len(form.fields))
                 form.fields[name] = [new]

@@ -17,7 +17,8 @@ from bluebottle.time_based.serializers import (
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
     TeamScheduleRegistrationSerializer,
-    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer
+    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer,
+    RegistrationDocumentSerializer
 )
 from bluebottle.time_based.views.mixins import (
     AnonymizeMembersMixin, FilterRelatedUserMixin,
@@ -211,3 +212,4 @@ class RegistrationDocumentDetail(PrivateFileView):
     relation = 'document'
     field = 'file'
     queryset = Registration.objects
+    serializer_class = RegistrationDocumentSerializer

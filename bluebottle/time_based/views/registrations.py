@@ -213,3 +213,23 @@ class RegistrationDocumentDetail(PrivateFileView):
     field = 'file'
     queryset = Registration.objects
     serializer_class = RegistrationDocumentSerializer
+
+
+class DateRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = DateRegistration.objects
+
+
+class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = DeadlineRegistration.objects
+
+
+class ScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = ScheduleRegistration.objects
+
+
+class TeamScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = TeamScheduleRegistration.objects
+
+
+class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):
+    queryset = PeriodicRegistration.objects

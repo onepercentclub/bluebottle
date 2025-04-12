@@ -3,9 +3,9 @@ from django.urls import re_path
 from bluebottle.time_based.views import (
     PeriodicTransitionList,
     PeriodicActivityListView, PeriodicActivityDetailView,
-    PeriodicRegistrationList, PeriodicRegistrationTransitionList,
+    PeriodicRelatedRegistrationList, PeriodicRegistrationList, PeriodicRegistrationTransitionList,
     PeriodicRegistrationDetail,
-    PeriodicParticipantTransitionList, PeriodicParticipantExportView,
+    PeriodicRegistrationDocumentDetail, PeriodicParticipantTransitionList, PeriodicParticipantExportView,
     PeriodicRelatedParticipantList, PeriodicParticipantDetail
 )
 
@@ -25,6 +25,12 @@ urlpatterns = [
         PeriodicTransitionList.as_view(),
         name='periodic-transition-list'
     ),
+
+    re_path(
+        r'^/(?P<activity_id>\d+)/registrations/$',
+        PeriodicRelatedRegistrationList.as_view(),
+        name='related-periodic-registrations'
+    ),
     re_path(
         r'^/registrations/$',
         PeriodicRegistrationList.as_view(),
@@ -39,6 +45,11 @@ urlpatterns = [
         r'^/registrations/(?P<pk>\d+)$',
         PeriodicRegistrationDetail.as_view(),
         name='periodic-registration-detail'
+    ),
+    re_path(
+        r'^/registrations/(?P<pk>\d+)/document$',
+        PeriodicRegistrationDocumentDetail.as_view(),
+        name='periodic-registration-document'
     ),
 
     re_path(

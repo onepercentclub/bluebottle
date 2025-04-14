@@ -116,18 +116,21 @@ class SlotRelatedParticipantListView(
         queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
 
+        statuses = ('accepted', 'succeeded',)
+        if self.request.user.is_staff or self.request.user.is_superuser or self.request.user in activity.owners:
+            statuses = ('accepted', 'succeeded', 'rejected', 'withdrawn', 'cancelled')
+
         if self.request.user.is_authenticated:
             if self.request.user.is_staff:
                 queryset = queryset
             else:
                 queryset = queryset.filter(
                     Q(user=self.request.user) |
-                    Q(user_id__in=[u.id for u in activity.owners]) |
-                    Q(status__in=('accepted', 'succeeded',))
+                    Q(status__in=statuses)
                 ).order_by('-id')
         else:
             queryset = self.queryset.filter(
-                status__in=('accepted', 'succeeded',)
+                status__in=statuses
             ).order_by('-id')
 
         return queryset

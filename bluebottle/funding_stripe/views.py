@@ -61,7 +61,7 @@ class StripeSourcePaymentList(PaymentList):
     permission_classes = (PaymentPermission,)
 
 
-def get_init_args(donation,):
+def get_init_args(donation, ):
     statement_descriptor = connection.tenant.name[:22]
 
     intent_args = dict(
@@ -239,11 +239,16 @@ class StripeBankTransferList(PaymentList):
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-
-        serializer.save(
+        intent = serializer.save(
             intent_id=intent.id,
             client_secret=intent.client_secret,
             instructions=intent.next_action
+        )
+        donation.payment_intent = intent
+        donation.save()
+        StripePayment.objects.create(
+            payment_intent=intent,
+            donation=donation,
         )
 
 

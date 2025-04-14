@@ -466,7 +466,6 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                         'fields': [
                             'email',
                             'remote_id',
-                            'username',
                             'first_name',
                             'last_name',
                             'phone_number',

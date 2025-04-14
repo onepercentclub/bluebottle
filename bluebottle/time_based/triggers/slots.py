@@ -420,7 +420,7 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    DateParticipantStateMachine.succeed
+                    DateParticipantStateMachine.finish
                 ),
                 RelatedTransitionEffect(
                     "activity",

@@ -270,11 +270,13 @@ def contributor_is_active(effect):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return (not settings.closed) and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 @register(DeedParticipant)

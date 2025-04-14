@@ -7,7 +7,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration,
     ScheduleRegistration,
-    TeamScheduleRegistration, DateRegistration,
+    TeamScheduleRegistration, DateRegistration, Registration,
 )
 from bluebottle.time_based.serializers import (
     DeadlineRegistrationSerializer,
@@ -17,7 +17,8 @@ from bluebottle.time_based.serializers import (
     ScheduleRegistrationSerializer,
     ScheduleRegistrationTransitionSerializer,
     TeamScheduleRegistrationSerializer,
-    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer
+    TeamScheduleRegistrationTransitionSerializer, DateRegistrationSerializer, DateRegistrationTransitionSerializer,
+    RegistrationDocumentSerializer
 )
 from bluebottle.time_based.views.mixins import (
     AnonymizeMembersMixin, FilterRelatedUserMixin,
@@ -210,23 +211,5 @@ class RegistrationDocumentDetail(PrivateFileView):
     max_age = 15 * 60  # 15 minutes
     relation = 'document'
     field = 'file'
-
-
-class DateRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = DateRegistration.objects
-
-
-class DeadlineRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = DeadlineRegistration.objects
-
-
-class ScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = ScheduleRegistration.objects
-
-
-class TeamScheduleRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = TeamScheduleRegistration.objects
-
-
-class PeriodicRegistrationDocumentDetail(RegistrationDocumentDetail):
-    queryset = PeriodicRegistration.objects
+    queryset = Registration.objects
+    serializer_class = RegistrationDocumentSerializer

@@ -4,7 +4,7 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     SkillList,
     SkillDetail,
-    SlotParticipantExportView, PeriodActivityDetailView
+    SlotParticipantExportView, PeriodActivityDetailView, RegistrationDocumentDetail
 )
 
 urlpatterns = [
@@ -36,6 +36,13 @@ urlpatterns = [
         PeriodActivityDetailView.as_view(),
         name="period-detail",
     ),
+
+    re_path(
+        r'^/registrations/(?P<pk>\d+)/document$',
+        RegistrationDocumentDetail.as_view(),
+        name='registration-document'
+    ),
+
     re_path(r"^/date", include("bluebottle.time_based.urls.date_api")),
     re_path(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
     re_path(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),

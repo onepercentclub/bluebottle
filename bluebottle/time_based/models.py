@@ -995,7 +995,11 @@ class Skill(TranslatableModel):
 
 class Registration(TriggerMixin, PolymorphicModel):
     answer = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
+    document = PrivateDocumentField(
+        blank=True,
+        null=True,
+        view_name='registration-document'
+    )
 
     activity = models.ForeignKey(
         Activity, related_name="registrations", on_delete=models.CASCADE

@@ -26,8 +26,8 @@ from bluebottle.activities.admin import (
     ContributionChildAdmin,
     ContributorChildAdmin, BaseContributorInline, BulkAddMixin,
 )
-from bluebottle.files.fields import PrivateDocumentModelChoiceField
-from bluebottle.files.widgets import DocumentWidget
+from bluebottle.files.fields import PrivateDocumentField
+from bluebottle.files.widgets import PrivateDocumentWidget
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
@@ -1668,7 +1668,9 @@ class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildMode
     fields = readonly_fields + ["answer", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
 
-    formfield_overrides = {PrivateDocumentModelChoiceField: {"widget": DocumentWidget}}
+    formfield_overrides = {
+        PrivateDocumentField: {"widget": PrivateDocumentWidget}
+    }
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)

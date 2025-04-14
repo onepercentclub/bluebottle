@@ -161,14 +161,15 @@ class DateParticipantAdminTestCase(BluebottleAdminTestCase):
         self.assertTrue('This field is required.' in page.text)
 
     def test_document(self):
-        self.participant.document = PrivateDocumentFactory.create()
-        self.participant.save()
+        self.registration.document = PrivateDocumentFactory.create()
+        self.registration.save()
 
         self.url = reverse('admin:time_based_dateregistration_change', args=(self.registration.id,))
         page = self.app.get(self.url)
         self.assertEqual(page.status, '200 OK')
 
         link = page.html.find("a", {'class': 'private-document-link'})
+
         self.assertTrue(
             link.attrs['href'].startswith(
                 reverse('registration-document', args=(self.registration.pk, ))

@@ -1664,12 +1664,14 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
     raw_id_fields = ("user",)
-    readonly_fields = ["document", "created", "activity"]
-    fields = readonly_fields + ["answer", "status", "states"]
+    readonly_fields = ["created", "activity"]
+    fields = readonly_fields + ["answer", "document", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
 
     formfield_overrides = {
-        PrivateDocumentField: {"widget": PrivateDocumentWidget}
+        PrivateDocumentField: {
+            "widget": PrivateDocumentWidget
+        }
     }
 
     def get_fieldsets(self, request, obj=None):

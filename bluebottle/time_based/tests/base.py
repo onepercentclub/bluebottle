@@ -13,14 +13,15 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.segments.tests.factories import SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class TimeBasedActivityListAPITestCase:
     fields = ['initiative', 'start', 'title', 'description', 'review', 'theme']
 
     attributes = ['start', 'title', 'description', 'review']
-    relationships = ['initiative', 'owner']
-    included = ['initiative', 'owner']
+    relationships = ['initiative', 'owner', 'theme']
+    included = ['initiative', 'owner', 'theme']
     defaults = {}
 
     @property
@@ -29,15 +30,17 @@ class TimeBasedActivityListAPITestCase:
 
     def setUp(self):
         self.url = reverse(self.url_name)
-        self.defaults = {
-            'description': json.dumps({'html': 'test description', 'delta': ''}),
-        }
+        if self.defaults == {}:
+            self.defaults = {
+                'description': json.dumps({'html': 'test description', 'delta': ''}),
+            }
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append(self.model_name)
         settings.save()
 
         self.defaults['initiative'] = InitiativeFactory.create(status='approved')
+        self.defaults['theme'] = ThemeFactory.create()
 
         super().setUp()
 

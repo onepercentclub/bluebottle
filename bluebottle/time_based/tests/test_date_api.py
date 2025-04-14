@@ -1,16 +1,15 @@
-from io import BytesIO
 import json
-import icalendar
 from datetime import date, timedelta
-from django.utils.timezone import now
+from io import BytesIO
 
+import icalendar
 from django.urls import reverse
+from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
-from bluebottle.members.models import MemberPlatformSettings
-
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
@@ -48,8 +47,10 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
     serializer = DateActivitySerializer
     factory = DateActivityFactory
 
-    fields = ['initiative', 'title', 'description', 'review']
+    fields = ['initiative', 'title', 'description', 'review', 'theme']
+    relationships = ['initiative', 'owner', 'theme']
     attributes = ['title', 'description', 'review']
+    included = ['initiative', 'owner', 'theme']
 
     defaults = {
         'title': 'Test title',
@@ -90,7 +91,7 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
                     'attributes': {
                         'start': '2026-01-01 10:00:00',
                         'duration': '01:00',
-                        'is-online': True
+                        'is-online': True,
                     },
                     'relationships': {
                         'activity': {

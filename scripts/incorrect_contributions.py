@@ -1,26 +1,27 @@
 
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
-    PeriodicActivity
+    PeriodicActivity, DateRegistration, DateParticipant
 )
 
 
 def run(*args):
     fix = 'fix' in args
     total_errors = False
-    for client in Client.objects.all():
+    for client in Client.objects.filter(schema_name='deloitte_uk').all():
         with (LocalTenant(client)):
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',
-                slot_participant_id__isnull=False
+                contributor__dateparticipant__isnull=False,
+                contributor__user__isnull=False
             ).exclude(
-                Q(slot_participant__status__in=('registered', 'succeeded')) &
-                Q(contributor__status__in=('accepted', 'new', )) &
+                Q(contributor__dateparticipant__registration__status__in=('accepted', 'new')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_periodic_contributions = TimeContribution.objects.filter(
@@ -70,9 +71,10 @@ def run(*args):
 
             failed_date_contributions = TimeContribution.objects.filter(
                 status='failed',
-                slot_participant_id__isnull=False,
-                contributor__status__in=('accepted',),
-                slot_participant__status__in=('registered', 'succeeded'),
+                contributor__dateparticipant__isnull=False,
+                contributor__user__isnull=False,
+                contributor__status__in=('accepted', 'registered', 'succeeded'),
+                contributor__dateparticipant__registration__status__in=('accepted',),
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
             )
 
@@ -124,7 +126,7 @@ def run(*args):
 
             failed_date_contributions_new = TimeContribution.objects.filter(
                 status='failed',
-                slot_participant_id__isnull=False,
+                contributor__dateparticipant__isnull=False,
                 contributor__status__in=('new',),
                 slot_participant__status__in=('registered',),
                 contributor__activity__status__in=('open', 'succeeded', 'full',)
@@ -174,22 +176,52 @@ def run(*args):
                 failed_schedule_contributions_new |
                 failed_schedule_team_contributions_new
             )
+
+            registrations_without_participant = DateRegistration.objects.filter(
+                status='accepted',
+                participants__isnull=True,
+            ).annotate(
+                slot_count=Count('activity__timebasedactivity__dateactivity__slots', distinct=True),
+            ).filter(
+                slot_count=1
+            )
+
+            registrations_without_participant_multi_slot = DateRegistration.objects.filter(
+                status='accepted',
+                participants__isnull=True,
+            ).annotate(
+                slot_count=Count('activity__timebasedactivity__dateactivity__slots', distinct=True),
+            ).filter(
+                slot_count__gt=1
+            )
+
             errors = (
                 failed_contributions.count() or
                 succeeded_contributions.count() or
-                failed_contributions_new.count()
+                failed_contributions_new.count() or
+                registrations_without_participant.count() or
+                registrations_without_participant_multi_slot.count()
             )
             if errors:
                 total_errors = True
 
                 print("### Tenant {}:".format(client.name))
-                print(f'failed but should be succeeded: {failed_contributions.count()}')
-                print(f'failed but should be new: {failed_contributions_new.count()}')
-                print(f'succeeded but should be failed: {succeeded_contributions.count()}')
+                if failed_contributions.count():
+                    print(f'failed but should be succeeded: {failed_contributions.count()}')
+                if failed_contributions_new.count():
+                    print(f'failed but should be new: {failed_contributions_new.count()}')
+                if succeeded_contributions.count():
+                    print(f'succeeded but should be failed: {succeeded_contributions.count()}')
+                if registrations_without_participant.count():
+                    print(f'registrations without participant (single slot): '
+                          f'{registrations_without_participant.count()}')
+                if registrations_without_participant_multi_slot.count():
+                    print(f'registrations without participant (multiple slots): '
+                          f'{registrations_without_participant_multi_slot.count()}')
+
                 print('\n')
                 if fix:
                     DeadlineParticipant.objects.filter(status='stopped').update(status='succeeded')
-
                     for participant in DeadlineParticipant.objects.filter(registration__isnull=True):
                         if participant.user:
                             participant.registration = DeadlineRegistration.objects.create(
@@ -228,6 +260,15 @@ def run(*args):
                     succeeded_contributions.update(status='failed')
                     failed_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
+                    for registration in registrations_without_participant.all():
+                        slot = registration.activity.objects.slot().last()
+                        participant = DateParticipant(
+                            slot=slot,
+                            registration=registration,
+                            activity=registration.activity,
+                            user=registration.user
+                        )
+                        participant.save(send_messages=False)
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

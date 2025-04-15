@@ -1,57 +1,81 @@
 from urllib.parse import urlencode
 
 from django import forms
-from django.urls import re_path
 from django.contrib import admin, messages
-from django.contrib.admin import SimpleListFilter, widgets, StackedInline
+from django.contrib.admin import SimpleListFilter, StackedInline, widgets
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.db import models
 from django.forms import BaseInlineFormSet, BooleanField, ModelForm, Textarea, TextInput
 from django.http import HttpResponseRedirect
 from django.template import defaultfilters, loader
 from django.template.response import TemplateResponse
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.timezone import get_current_timezone, now
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from inflection import ordinalize
 from parler.admin import SortedRelatedFieldListFilter, TranslatableAdmin
-from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicInlineSupportMixin, PolymorphicParentModelAdmin, \
-    PolymorphicChildModelFilter
+from polymorphic.admin import (
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+)
 from pytz import timezone
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
+    BaseContributorInline,
+    BulkAddMixin,
     ContributionChildAdmin,
-    ContributorChildAdmin, BaseContributorInline, BulkAddMixin,
+    ContributorChildAdmin,
 )
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.files.widgets import PrivateDocumentWidget
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter, StateMachineAdminMixin
+from bluebottle.fsm.admin import (
+    StateMachineAdmin,
+    StateMachineAdminMixin,
+    StateMachineFilter,
+)
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.time_based.models import (
+    ActivitySlot,
+    BaseScheduleSlot,
     DateActivity,
     DateActivitySlot,
     DateParticipant,
+    DateRegistration,
     DeadlineActivity,
     DeadlineParticipant,
     DeadlineRegistration,
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
+    PeriodicSlot,
+    Registration,
+    ScheduleActivity,
+    ScheduleParticipant,
+    ScheduleRegistration,
     ScheduleSlot,
-    BaseScheduleSlot,
     Skill,
-    TimeContribution, Registration, PeriodicSlot, ScheduleActivity, ScheduleParticipant, ScheduleRegistration,
-    TeamScheduleRegistration, TeamScheduleParticipant, TeamScheduleSlot, Team, TeamMember, ActivitySlot,
-    DateRegistration, )
+    Team,
+    TeamMember,
+    TeamScheduleParticipant,
+    TeamScheduleRegistration,
+    TeamScheduleSlot,
+    TimeContribution,
+)
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
 from bluebottle.updates.admin import UpdateInline
-from bluebottle.utils.admin import TranslatableAdminOrderingMixin, export_as_csv_action, admin_info_box
+from bluebottle.utils.admin import (
+    TranslatableAdminOrderingMixin,
+    admin_info_box,
+    export_as_csv_action,
+)
 from bluebottle.utils.widgets import TimeDurationWidget, get_human_readable_duration
 
 
@@ -506,6 +530,19 @@ class BaseRegistrationAdminInline(TabularInlinePaginated):
 
 class DateRegistrationAdminInline(BaseRegistrationAdminInline):
     model = DateRegistration
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj.slots.count() > 1:
+            formset.info_message = _(
+                "This activity has multiple time slots. If you want to add participants "
+                "to this activity, you need to add them to a specific time slot."
+            )
+
+        return formset
+
+    def has_add_permission(self, request, obj):
+        return obj.slots.count() <= 1
 
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):

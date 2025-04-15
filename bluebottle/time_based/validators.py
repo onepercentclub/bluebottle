@@ -60,10 +60,10 @@ class PeriodActivityStartDeadlineValidator(Validator):
 class CompletedSlotsValidator(Validator):
     field = 'slots'
     code = 'slots'
-    message = _('All time slots should have all required fields filled out.')
+    message = _('At least one time slot should have all required fields filled out.')
 
     def is_valid(self):
-        return not self.instance.pk or len([slot for slot in self.instance.slots.all() if not slot.is_complete]) == 0
+        return not self.instance.pk or len([slot for slot in self.instance.slots.all() if slot.is_complete]) > 0
 
 
 class HasSlotValidator(Validator):

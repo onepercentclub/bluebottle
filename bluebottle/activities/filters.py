@@ -12,7 +12,9 @@ from elasticsearch_dsl.query import (
     MatchNone,
     Nested,
     Range,
+    Exists,
     Term,
+    Bool,
     Terms,
 )
 from pytz import UTC
@@ -418,7 +420,7 @@ class ActivitySearch(Search):
                 and self.filter_values["upcoming"][0] == "1"
             ):
                 start = now()
-                end = datetime.max
+                end = None
 
                 if "date" in self.filter_values:
                     start, end = self.filter_values["date"][0].split(",")
@@ -427,21 +429,15 @@ class ActivitySearch(Search):
                     {
                         "dates.end": {
                             "order": "asc",
+                            "missing": "_last",
                             "nested": {
                                 "path": "dates",
                                 "filter": (
-                                    Range(**{"dates.start": {"lte": start}})
-                                    & Range(**{"dates.end": {"gte": start}})
-                                ),
-                            },
-                        },
-                        "dates.start": {
-                            "order": "asc",
-                            "nested": {
-                                "path": "dates",
-                                "filter": (
-                                    Range(**{"dates.start": {"lte": end}})
-                                    & Range(**{"dates.end": {"gte": start}})
+                                    Range(**{"dates.end": {"lte": end}}) &
+                                    (
+                                        Range(**{"dates.start": {"gte": start}}) |
+                                        Bool(must_not=Exists(field='dates.start'))
+                                    )
                                 ),
                             },
                         },

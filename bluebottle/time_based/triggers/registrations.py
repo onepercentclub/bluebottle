@@ -7,7 +7,7 @@ from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect
+    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -611,6 +611,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.add,
             effects=[
+                CreateSlotParticipantEffect,
                 NotificationEffect(
                     ParticipantAddedNotification,
                 ),
@@ -622,6 +623,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.accept,
             effects=[
+                CreateSlotParticipantEffect,
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -630,6 +632,7 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
+                CreateSlotParticipantEffect,
                 LockFilledSlotsEffect,
             ],
         ),

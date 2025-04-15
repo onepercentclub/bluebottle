@@ -21,6 +21,24 @@ class CreateParticipantEffect(Effect):
         return not self.instance.participants.exists()
 
 
+class CreateSlotParticipantEffect(Effect):
+    title = _('Create slot participant for this registration')
+    template = 'admin/create_participant.html'
+
+    def post_save(self, **kwargs):
+        if self.instance.activity.slots.count() == 1:
+            slot = self.instance.activity.slots.first()
+            self.instance.participants.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+                slot=slot,
+                registration=self.instance,
+            )
+
+    def is_valid(self):
+        return not self.instance.activity.slots.count() == 1
+
+
 class CreateTeamMemberParticipantEffect(Effect):
     title = _('Create participant for this team member')
     template = 'admin/create_participant.html'

@@ -13,7 +13,7 @@ from bluebottle.time_based.models import (
 def run(*args):
     fix = 'fix' in args
     total_errors = False
-    for client in Client.objects.filter(schema_name='deloitte_uk').all():
+    for client in Client.objects.filter(schema_name='dll').all():
         with (LocalTenant(client)):
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',
@@ -261,14 +261,42 @@ def run(*args):
                     failed_contributions.update(status='succeeded')
                     failed_contributions_new.update(status='new')
                     for registration in registrations_without_participant.all():
-                        slot = registration.activity.objects.slot().last()
+                        slot = registration.activity.slots.last()
                         participant = DateParticipant(
+                            send_messages=False,
                             slot=slot,
                             registration=registration,
                             activity=registration.activity,
                             user=registration.user
                         )
-                        participant.save(send_messages=False)
+                        participant.save()
+
+                    def add_participant_to_registration(registration):
+                        # Check for double registration
+                        regs = registration.activity.registrations.filter(
+                            user=registration.user
+                        ).exclude(id=registration.id)
+                        if regs.count() > 0:
+                            print(f"Double registration found for {registration.user} "
+                                  f"on {registration.activity} removing incomplete one.")
+                            registration.delete()
+                            return
+                        slot = registration.activity.slots.filter(status__in=['open', 'finished']).last()
+                        if not slot:
+                            slot = registration.activity.slots.last()
+                        participant = DateParticipant(
+                            send_messages=False,
+                            slot=slot,
+                            registration=registration,
+                            activity=registration.activity,
+                            user=registration.user
+                        )
+                        participant.save()
+
+                    for registration in registrations_without_participant.all():
+                        add_participant_to_registration(registration)
+                    for registration in registrations_without_participant_multi_slot.all():
+                        add_participant_to_registration(registration)
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

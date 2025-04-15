@@ -623,7 +623,6 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.accept,
             effects=[
-                CreateSlotParticipantEffect,
                 NotificationEffect(
                     UserRegistrationAcceptedNotification,
                 ),
@@ -632,7 +631,6 @@ class DateRegistrationTriggers(RegistrationTriggers):
         TransitionTrigger(
             RegistrationStateMachine.auto_accept,
             effects=[
-                CreateSlotParticipantEffect,
                 LockFilledSlotsEffect,
             ],
         ),

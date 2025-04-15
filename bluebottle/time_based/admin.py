@@ -1700,8 +1700,7 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    raw_id_fields = ("user",)
-    readonly_fields = ["created", "activity"]
+    readonly_fields = ["created", "activity", "user"]
     fields = readonly_fields + ["answer", "document", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
 

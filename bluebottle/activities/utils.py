@@ -30,7 +30,7 @@ from bluebottle.members.models import Member, MemberPlatformSettings
 from bluebottle.organizations.models import Organization
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.models import (
-    TimeContribution, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant, DateRegistration
+    TimeContribution, DeadlineActivity, DeadlineParticipant, DateActivitySlot, DateParticipant
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
@@ -673,12 +673,7 @@ def bulk_add_participants(activity, emails, send_messages):
                     continue
             if isinstance(activity, DateActivitySlot):
                 slot = activity
-                registration, _cr = DateRegistration.objects.get_or_create(
-                    user=user,
-                    activity=slot.activity
-                )
                 participant, cr = DateParticipant.objects.get_or_create(
-                    registration=registration,
                     user=user,
                     activity=slot.activity,
                     slot=slot

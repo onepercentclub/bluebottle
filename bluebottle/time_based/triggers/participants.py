@@ -1241,6 +1241,19 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         ),
 
         TransitionTrigger(
+            DateParticipantStateMachine.add,
+            effects=[
+                TransitionEffect(
+                    RegistrationParticipantStateMachine.succeed,
+                    conditions=[participant_slot_is_finished]
+
+                ),
+                CheckPreparationTimeContributionEffect,
+                FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
             DateParticipantStateMachine.reject,
             effects=[
                 CheckPreparationTimeContributionEffect,

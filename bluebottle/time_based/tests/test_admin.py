@@ -249,6 +249,7 @@ class DateActivitySlotAdminTestCase(BluebottleAdminTestCase):
 
 class DuplicateSlotAdminTestCase(BluebottleAdminTestCase):
     extra_environ = {}
+
     csrf_checks = False
     setup_auth = True
 

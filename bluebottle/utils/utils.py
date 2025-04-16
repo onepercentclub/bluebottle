@@ -40,7 +40,8 @@ TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul',
         'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
 ATTRIBUTES = {
     'a': ['target', 'href', 'rel'],
-    'img': ['src', 'alt', 'width', 'height', 'align']
+    'img': ['src', 'alt', 'width', 'height', 'align'],
+    'li': ['data-list']
 }
 EMPTY = ['hr', 'a', 'br', 'img']
 

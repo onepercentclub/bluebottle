@@ -533,7 +533,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
-        if obj.slots.count() > 1:
+        if obj and obj.slots.count() > 1:
             formset.info_message = _(
                 "This activity has multiple time slots. If you want to add participants "
                 "to this activity, you need to add them to a specific time slot."
@@ -542,7 +542,7 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
         return formset
 
     def has_add_permission(self, request, obj):
-        return obj.slots.count() <= 1
+        return obj and obj.id and obj.slots.count() <= 1
 
 
 class DeadlineRegistrationAdminInline(BaseRegistrationAdminInline):

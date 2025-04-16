@@ -98,7 +98,6 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
     def test_add_registration(self):
         activity = DateActivityFactory.create(initiative=self.initiative)
-        DateActivitySlotFactory.create(activity=activity)
 
         self.assertEqual(activity.registrations.count(), 0)
         url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))

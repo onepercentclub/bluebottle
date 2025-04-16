@@ -2,21 +2,28 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivityCancelledNotification,
     ActivitySucceededNotification, ActivityRestoredNotification,
     ActivityExpiredNotification,
-    DoGoodHoursReminderQ1Notification,
-    DoGoodHoursReminderQ3Notification, DoGoodHoursReminderQ2Notification,
-    DoGoodHoursReminderQ4Notification
+    ActivitySubmittedNotification, ActivityPublishedNotification,
+    ActivityApprovedNotification, ActivityNeedsWorkNotification
 )
+from bluebottle.activities.messages.matching import (
+    DoGoodHoursReminderQ1Notification,
+    DoGoodHoursReminderQ2Notification,
+    DoGoodHoursReminderQ3Notification,
+    DoGoodHoursReminderQ4Notification,
+)
+from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification, \
+    ActivityPublishedReviewerNotification
 from bluebottle.members.models import MemberPlatformSettings, Member
 from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateRegistrationFactory
 )
 
 
@@ -26,6 +33,60 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.obj = DateActivityFactory.create(
             title="Save the world!"
         )
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+    def test_activity_submitted_reviewer_notification(self):
+        self.message_class = ActivitySubmittedReviewerNotification
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity is ready to be reviewed on [site name]')
+        self.assertBodyContains('Please take a moment to review this activity')
+        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_published_reviewer_notification(self):
+        self.message_class = ActivityPublishedReviewerNotification
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity has been published on [site name]')
+        self.assertBodyContains('has been successfully published')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_submitted_notification(self):
+        self.message_class = ActivitySubmittedNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('You submitted an activity on [site name]')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_published_notification(self):
+        self.message_class = ActivityPublishedNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your activity on [site name] has been published!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_approved_notification(self):
+        self.message_class = ActivityApprovedNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your activity on [site name] has been approved!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+    def test_activity_needs_work_notification(self):
+        self.message_class = ActivityNeedsWorkNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('The activity you submitted on [site name] needs work')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_activity_rejected_notification(self):
         self.message_class = ActivityRejectedNotification
@@ -106,39 +167,39 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        part1 = DateParticipantFactory.create(
+        registration1 = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=registration1,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=registration1,
             slot=slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        part2 = DateParticipantFactory.create(
+        registration2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=registration2,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=registration2,
             slot=old_slot
         )
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        part3 = DateParticipantFactory.create(
+        registration3 = DateRegistrationFactory.create(
             user=self.passive_user,
             activity=activity
         )
 
-        SlotParticipantFactory.create(
-            participant=part3,
+        DateParticipantFactory.create(
+            registration=registration3,
             slot=old_slot
         )
 

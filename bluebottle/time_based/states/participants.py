@@ -56,14 +56,16 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def can_accept_participant(self, user):
         """can accept participant"""
+        owners = [self.instance.activity.owner]
+
+        if self.instance.activity.initiative:
+            owners += [self.instance.activity.initiative.owner]
+            owners += self.instance.activity.initiative.activity_managers.all()
+
         return (
-            user in [
-                self.instance.activity.owner,
-                self.instance.activity.initiative.owner
-            ] or
+            user in owners or
             user.is_staff or
-            user.is_superuser or
-            user in self.instance.activity.initiative.activity_managers.all()
+            user.is_superuser
         )
 
     def activity_is_open(self):
@@ -201,22 +203,6 @@ class ParticipantStateMachine(ContributorStateMachine):
         name=_('Restore'),
         passed_label=_('restored'),
         description=_("Restore the participant, because the activity was restored."),
-        automatic=True,
-    )
-
-
-@register(DateParticipant)
-class DateParticipantStateMachine(ParticipantStateMachine):
-    succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
-            ParticipantStateMachine.rejected,
-            ParticipantStateMachine.accepted
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
         automatic=True,
     )
 
@@ -438,7 +424,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
             ParticipantStateMachine.cancelled
         ],
         ParticipantStateMachine.succeeded,
-        name=_("Schedule"),
+        name=_("Succeed"),
         description=_("Succeed this participant for the Activity."),
         passed_label=_("succeeded"),
         automatic=True,
@@ -505,3 +491,22 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     pass
+
+
+@register(DateParticipant)
+class DateParticipantStateMachine(RegistrationParticipantStateMachine):
+
+    finish = Transition(
+        RegistrationParticipantStateMachine.accepted,
+        RegistrationParticipantStateMachine.succeeded,
+        automatic=True,
+        name=_('Finish'),
+        description="Slot has finished"
+    )
+
+    def activity_is_open(self):
+        """task is open"""
+        return self.instance.slot_id and self.instance.slot.status in (
+            'open',
+            'running',
+        )

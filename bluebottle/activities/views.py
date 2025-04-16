@@ -279,7 +279,7 @@ class ParticipantCreateMixin:
             if self.request.user.required:
                 raise ValidationError('Required fields', code="required")
 
-        if self.queryset.filter(user=user, activity=serializer.validated_data['activity']).exists():
+        if self.queryset.filter(user=user, **serializer.validated_data).exists():
             raise ValidationError(_('Already participating'), code="exists")
 
         serializer.save(user=user, send_messages=send_messages)
@@ -351,7 +351,9 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
 
         activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-        context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+        context['owners'] = [activity.owner]
+        if activity.initiative:
+            context['owners'] += list(activity.initiative.activity_managers.all())
 
         if self.request.user and self.request.user.is_authenticated and (
                 self.request.user in context['owners'] or

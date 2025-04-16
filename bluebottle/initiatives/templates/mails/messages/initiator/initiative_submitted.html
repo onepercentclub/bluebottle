@@ -1,0 +1,21 @@
+{% extends "mails/messages/initiative_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        Your initiative "{{ title }}" has been submitted on {{ site_name }}.
+        <br><br>
+        <b>What’s next?</b><br>
+        <ul>
+            <li>
+                The platform manager will review your initiative.
+            </li>
+            <li>
+                If no changes are needed, it will be approved and made visible on the platform. Any activities within this initiative will be open for people to contribute.
+            </li>
+            <li>
+                If any changes are needed, you’ll receive an email with suggested improvements.
+            </li>
+        </ul>
+    {% endblocktrans %}
+{% endblock %}

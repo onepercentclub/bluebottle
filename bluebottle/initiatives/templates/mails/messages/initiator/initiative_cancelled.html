@@ -1,0 +1,8 @@
+{% extends "mails/messages/initiative_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with recipient_name=to.first_name context 'email' %}
+        Unfortunately, the initiative "{{ title }}" has been cancelled.
+    {% endblocktrans %}
+{% endblock %}

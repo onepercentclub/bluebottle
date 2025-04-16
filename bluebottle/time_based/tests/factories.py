@@ -4,12 +4,12 @@ import factory.fuzzy
 from django.utils import timezone
 from django.utils.timezone import now, make_aware
 
-from bluebottle.test.factory_models import generate_rich_text
-
 from bluebottle.fsm.factory import FSMModelFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -17,22 +17,19 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     DeadlineParticipant,
     DeadlineRegistration,
-    PeriodActivity,
     PeriodicActivity,
     PeriodicParticipant,
     PeriodicRegistration,
     PeriodicSlot,
-    PeriodParticipant,
     ScheduleSlot,
     Skill,
-    SlotParticipant,
-    TimeContribution,
     ScheduleActivity,
     ScheduleRegistration,
     ScheduleParticipant,
     TeamScheduleRegistration,
     Team,
-    TeamMember,
+    TimeContribution,
+    TeamMember, DateRegistration,
 )
 from bluebottle.utils.models import Language
 
@@ -64,6 +61,7 @@ class TimeBasedFactory(factory.DjangoModelFactory):
 
     expertise = factory.SubFactory(SkillFactory)
     registration_deadline = (now() + timedelta(weeks=1)).date()
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DateActivitySlotFactory(factory.DjangoModelFactory):
@@ -89,20 +87,6 @@ class DateActivityFactory(TimeBasedFactory):
         DateActivitySlotFactory,
         factory_related_name='activity'
     )
-
-
-class PeriodActivityFactory(TimeBasedFactory):
-    class Meta:
-        model = PeriodActivity
-
-    deadline = date.today() + timedelta(weeks=4)
-    duration = timedelta(hours=20)
-    duration_period = 'overall'
-    is_online = False
-    location = factory.SubFactory(GeolocationFactory)
-    expertise = factory.SubFactory(SkillFactory)
-
-    start = (now() + timedelta(weeks=2)).date()
 
 
 class DeadlineActivityFactory(TimeBasedFactory):
@@ -153,40 +137,12 @@ class PeriodicSlotFactory(factory.DjangoModelFactory):
         model = PeriodicSlot
 
 
-class DateParticipantFactory(FSMModelFactory):
+class DateRegistrationFactory(FSMModelFactory):
     class Meta(object):
-        model = DateParticipant
+        model = DateRegistration
 
     activity = factory.SubFactory(DateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
-
-
-class PeriodParticipantFactory(FSMModelFactory):
-    class Meta(object):
-        model = PeriodParticipant
-
-    activity = factory.SubFactory(PeriodActivityFactory)
-    user = factory.SubFactory(BlueBottleUserFactory)
-
-
-class ParticipationFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = TimeContribution
-
-    contributor = factory.SubFactory(PeriodParticipantFactory)
-
-    value = timedelta(hours=20)
-
-    start = now() + timedelta(weeks=2)
-    end = now() + timedelta(weeks=3)
-
-
-class SlotParticipantFactory(FSMModelFactory):
-    class Meta(object):
-        model = SlotParticipant
-
-    slot = factory.SubFactory(DateActivitySlotFactory)
-    participant = factory.SubFactory(DateParticipantFactory)
 
 
 class TeamFactory(factory.DjangoModelFactory):
@@ -236,12 +192,51 @@ class TeamScheduleRegistrationFactory(FSMModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
 
 
+class DateParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = DateParticipant
+
+    @classmethod
+    def create(cls, *args, **kwargs):
+        if 'registration' in kwargs:
+            if 'user' not in kwargs:
+                kwargs['user'] = kwargs['registration'].user
+
+            if 'activity' not in kwargs:
+                kwargs['activity'] = kwargs['registration'].activity
+
+        if 'slot' not in kwargs:
+            activity = kwargs.get('activity') or DateActivityFactory.create()
+            kwargs['slot'] = DateActivitySlotFactory.create(
+                activity=activity,
+            )
+
+        return super().create(*args, **kwargs)
+
+    activity = factory.SubFactory(DateActivityFactory)
+    registration = factory.SubFactory(DateRegistrationFactory)
+    slot = factory.SubFactory(DateActivitySlotFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
 class ScheduleParticipantFactory(FSMModelFactory):
     class Meta(object):
         model = ScheduleParticipant
 
     activity = factory.SubFactory(ScheduleActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class TimeContributionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TimeContribution
+
+    contributor = factory.SubFactory(DateParticipantFactory)
+
+    value = timedelta(hours=20)
+
+    start = now() + timedelta(weeks=2)
+    end = now() + timedelta(weeks=3)
 
 
 class PeriodicRegistrationFactory(FSMModelFactory):

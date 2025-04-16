@@ -2,7 +2,7 @@ from datetime import date
 
 from django.utils.timezone import now
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityCancelledNotification,
     ActivityExpiredNotification,
     ActivityRejectedNotification,
@@ -33,6 +33,7 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
+    DateParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -339,6 +340,16 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.succeed
+                )
             ]
         ),
     ]

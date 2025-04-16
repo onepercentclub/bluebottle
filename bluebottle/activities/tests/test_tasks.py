@@ -11,7 +11,7 @@ from bluebottle.activities.tasks import (
     recommend, get_matching_activities, data_retention_contribution_task
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
+from bluebottle.initiatives.tests.factories import InitiativePlatformSettingsFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory, OfficeRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory
@@ -28,7 +28,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory, ScheduleParticipantFactory,
+    ScheduleParticipantFactory,
 )
 
 
@@ -85,9 +85,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 status="open",
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and no skill
@@ -96,9 +94,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=None,
                 is_online=False,
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching theme, skill, online
@@ -107,9 +103,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 expertise=self.user.skills.first(),
                 location=None,
                 is_online=True,
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
             # Matching place, theme and skill
@@ -118,9 +112,7 @@ class RecommendTaskTestCase(ESTestCase, BluebottleTestCase):
                 is_online=False,
                 expertise=self.user.skills.first(),
                 location=GeolocationFactory.create(position=self.close_to_amsterdam),
-                initiative=InitiativeFactory.create(
-                    theme=self.user.favourite_themes.first()
-                )
+                theme=self.user.favourite_themes.first()
             ),
 
         ]
@@ -355,24 +347,27 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         for date in dates:
             contributor = factory.create(activity=activity)
             contributor.created = date
-            contributor.save()
             if isinstance(contributor, DateParticipant):
-                SlotParticipantFactory.create(
-                    slot=activity.slots.get(), participant=contributor
+                contributor.slot = DateActivitySlotFactory.create(
+                    activity=activity,
+                    start=date
                 )
+            contributor.save()
             if isinstance(contributor, ScheduleParticipant):
                 contributor.slot.start = date
                 contributor.slot.save()
+
             contributor.contributions.update(status='succeeded')
 
             registration = getattr(contributor, 'registration', None)
             if registration:
+                registration.user = contributor.user
                 registration.created = date
                 registration.save()
 
     def setUp(self):
         super(ContributorDataRetentionTest, self).setUp()
-        months_ago_12 = now() - relativedelta(months=12)
+        months_ago_12 = now() - relativedelta(months=14)
         months_ago_8 = now() - relativedelta(months=8)
         months_ago_2 = now() - relativedelta(months=2)
 
@@ -398,29 +393,29 @@ class ContributorDataRetentionTest(BluebottleTestCase):
         self.task = data_retention_contribution_task
 
     def test_data_retention_dont_delete_without_settings(self):
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
 
     def test_data_retention_clean_up(self):
         member_settings = MemberPlatformSettings.load()
         member_settings.retention_delete = 10
         member_settings.retention_anonymize = 6
         member_settings.save()
-        self.assertEqual(Contributor.objects.count(), 12)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Registration.objects.count(), 4)
+        self.assertEqual(Contributor.objects.count(), 14)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Registration.objects.count(), 8)
         self.task()
-        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 6)
-        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 3)
+        self.assertEqual(Contributor.objects.filter(user__isnull=False).count(), 8)
+        self.assertEqual(Contributor.objects.filter(user__isnull=True).count(), 2)
         self.activity1.refresh_from_db()
-        self.assertEqual(self.activity1.deleted_successful_contributors, 1)
+        self.assertEqual(self.activity1.deleted_successful_contributors, 0)
         self.activity2.refresh_from_db()
         self.assertEqual(self.activity2.deleted_successful_contributors, 1)
-        self.assertEqual(Contribution.objects.count(), 12)
-        self.assertEqual(Contributor.objects.count(), 9)
-        self.assertEqual(Registration.objects.count(), 1)
+        self.assertEqual(Contribution.objects.count(), 14)
+        self.assertEqual(Contributor.objects.count(), 10)
+        self.assertEqual(Registration.objects.count(), 3)

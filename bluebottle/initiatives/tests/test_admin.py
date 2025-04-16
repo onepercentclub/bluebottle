@@ -86,6 +86,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative_send_mail(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.approve_url)
+        mail.outbox = []
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -102,6 +103,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
     def test_review_initiative_send_no_mail(self):
         self.client.force_login(self.superuser)
+        mail.outbox = []
         response = self.client.get(self.approve_url)
 
         # Should show confirmation page
@@ -183,6 +185,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)
@@ -203,6 +206,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(self.initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)
@@ -214,11 +218,12 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.initiative.refresh_from_db()
         self.assertNotEqual(self.initiative.reviewer, reviewer)
 
-    def test_add_reviewer_without_titlte(self):
+    def test_add_reviewer_without_title(self):
         initiative = InitiativeFactory.create(title='')
         self.app.set_user(self.staff_member)
         reviewer = BlueBottleUserFactory.create()
         admin_url = reverse('admin:initiatives_initiative_change', args=(initiative.id,))
+        mail.outbox = []
         page = self.app.get(admin_url)
         form = page.forms['initiative_form']
         form.set('reviewer', reviewer.id)

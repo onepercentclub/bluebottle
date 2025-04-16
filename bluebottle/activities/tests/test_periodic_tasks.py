@@ -11,7 +11,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
-    SlotParticipantFactory
+    DateRegistrationFactory
 )
 
 
@@ -53,39 +53,39 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        self.part1 = DateParticipantFactory.create(
+        self.registration = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part1,
+        DateParticipantFactory.create(
+            registration=self.registration,
             slot=self.slot1
         )
-        SlotParticipantFactory.create(
-            participant=self.part1,
+        DateParticipantFactory.create(
+            registration=self.registration,
             slot=self.slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        self.part2 = DateParticipantFactory.create(
+        self.registration2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part2,
+        DateParticipantFactory.create(
+            registration=self.registration2,
             slot=self.slot1
         )
-        SlotParticipantFactory.create(
-            participant=self.part2,
+        DateParticipantFactory.create(
+            registration=self.registration2,
             slot=old_slot
         )
 
         self.tempted_user = BlueBottleUserFactory.create(first_name='Tempted')
-        self.part3 = DateParticipantFactory.create(
+        self.registration3 = DateRegistrationFactory.create(
             user=self.tempted_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=old_slot
         )
 
@@ -101,7 +101,7 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         mail.outbox = []
 
     def run_task(self, when):
-        with mock.patch('bluebottle.activities.messages.now', return_value=when):
+        with mock.patch('bluebottle.activities.messages.matching.now', return_value=when):
             with mock.patch('bluebottle.activities.tasks.date') as mock_date:
                 mock_date.today.return_value = when.date()
                 mock_date.side_effect = lambda *args, **kwargs: date(*args, **kwargs)
@@ -195,8 +195,8 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reminder_q2(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -208,8 +208,8 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertFalse(self.tempted_user.email in recipients, "Tempted user should not receive email")
 
     def test_reminder_q3(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
         mail.outbox = []
@@ -217,11 +217,11 @@ class DoGoodHoursReminderPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 0, 'Q3 mails should be disabled')
 
     def test_reminder_q4(self):
-        SlotParticipantFactory.create(
-            participant=self.part3,
+        DateParticipantFactory.create(
+            registration=self.registration3,
             slot=self.slot3
         )
-        self.part3.states.withdraw(save=True)
+        self.registration3.states.reject(save=True)
         mail.outbox = []
         self.run_task(self.q4)
         self.assertEqual(len(mail.outbox), 3)

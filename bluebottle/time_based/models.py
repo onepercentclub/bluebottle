@@ -12,7 +12,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
 from timezonefinder import TimezoneFinder
 
-from bluebottle.activities.models import Activity, Contributor, Contribution, Team
+from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Geolocation
@@ -229,7 +229,6 @@ class DateActivity(TimeBasedActivity):
     @property
     def active_durations(self):
         return self.durations.filter(
-            slot_participant__status__in=("registered", "succeeded"),
             contributor__status__in=('new', 'accepted')
         )
 
@@ -364,9 +363,9 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     @property
     def accepted_participants(self):
         if self.pk:
-            return self.slot_participants.filter(
-                status__in=['registered', 'new', 'succeeded'],
-                participant__status='accepted'
+            return self.participants.filter(
+                status__in=['accepted', 'new', 'succeeded'],
+                registration__status='accepted'
             )
         else:
             return []
@@ -374,14 +373,13 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     @property
     def durations(self):
         return TimeContribution.objects.filter(
-            slot_participant__slot=self
+            contributor__dateparticipant__slot=self
         )
 
     @property
     def active_durations(self):
         return self.durations.filter(
-            slot_participant__status__in=("registered", "succeeded"),
-            contributor__status__in=("new", "accepted"),
+            contributor__status__in=("new", "accepted", 'succeeded'),
         )
 
     @property
@@ -424,6 +422,10 @@ class DateActivitySlot(ActivitySlot):
     duration = models.DurationField(_('duration'), null=True, blank=True)
 
     @property
+    def owners(self):
+        return self.activity.owners
+
+    @property
     def required_fields(self):
         fields = super().required_fields + [
             'start',
@@ -450,9 +452,7 @@ class DateActivitySlot(ActivitySlot):
 
     @property
     def contributor_count(self):
-        return self.slot_participants.filter(
-            status__in=['registered', 'succeeded']
-        ).filter(participant__status__in=['accepted']).count()
+        return self.participants.filter(status__in=['accepted', 'succeeded']).count()
 
     @property
     def local_timezone(self):
@@ -508,215 +508,6 @@ class DurationPeriodChoices(DjangoChoices):
     days = ChoiceItem('days', label=_("per day"))
     weeks = ChoiceItem('weeks', label=_("per week"))
     months = ChoiceItem('months', label=_("per month"))
-
-
-class PeriodActivity(TimeBasedActivity):
-
-    ONLINE_CHOICES = (
-        (None, 'Not set yet'),
-        (True, 'Yes, participants can join from anywhere or online'),
-        (False, 'No, enter a location')
-    )
-
-    is_online = models.BooleanField(_('is online'), choices=ONLINE_CHOICES, null=True, default=None)
-
-    location = models.ForeignKey(
-        Geolocation, verbose_name=_('location'),
-        null=True, blank=True, on_delete=models.SET_NULL
-    )
-    location_hint = models.TextField(_('location hint'), null=True, blank=True)
-
-    start = models.DateField(
-        _('Start date'),
-        help_text=_('The first moment participants can start.'),
-        null=True,
-        blank=True
-    )
-
-    deadline = models.DateField(
-        _('End date'),
-        help_text=_('Participants can contribute until this date.'),
-        null=True,
-        blank=True
-    )
-
-    duration = models.DurationField(
-        _('Activity duration'),
-        help_text=_('How much time will a participant contribute?'),
-        null=True,
-        blank=True
-    )
-
-    duration_period = models.CharField(
-        _('Recurring period'),
-        max_length=20,
-        blank=True,
-        null=True,
-        choices=DurationPeriodChoices.choices,
-    )
-
-    max_iterations = models.PositiveIntegerField(
-        _('Max iterations'),
-        help_text=_('How many weeks/months will a participant contribute to this activity?'),
-        null=True,
-        blank=True
-    )
-
-    @property
-    def duration_human_readable(self):
-        if self.duration:
-            return get_human_readable_duration(str(self.duration)).lower()
-        return None
-
-    @property
-    def duration_period_human_readable(self):
-        if self.duration_period:
-            return DurationPeriodChoices.get_choice(self.duration_period).label
-        return None
-
-    online_meeting_url = models.TextField(
-        _('Online Meeting URL'),
-        blank=True,
-        default=''
-    )
-
-    validators = [
-        PeriodActivityRegistrationDeadlineValidator
-    ]
-
-    @property
-    def activity_date(self):
-        return self.deadline or self.start
-
-    class Meta:
-        verbose_name = _("Activity during a period")
-        verbose_name_plural = _("Activities during a period")
-        permissions = (
-            ('api_read_periodactivity', 'Can view during a period activities through the API'),
-            ('api_add_periodactivity', 'Can add during a period activities through the API'),
-            ('api_change_periodactivity', 'Can change during a period activities through the API'),
-            ('api_delete_periodactivity', 'Can delete during a period activities through the API'),
-
-            ('api_read_own_periodactivity', 'Can view own during a period activities through the API'),
-            ('api_add_own_periodactivity', 'Can add own during a period activities through the API'),
-            ('api_change_own_periodactivity', 'Can change own during a period activities through the API'),
-            ('api_delete_own_periodactivity', 'Can delete own during a period activities through the API'),
-        )
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/periods'
-
-    def get_absolute_url(self):
-        domain = get_current_host()
-        language = get_current_language()
-        return u"{}/{}/initiatives/activities/details/time-based/period/{}/{}".format(
-            domain, language,
-            self.pk,
-            self.slug
-        )
-
-    @property
-    def required_fields(self):
-        fields = super().required_fields
-        if not self.is_online:
-            fields.append('location')
-        return fields + ['duration', 'is_online', 'duration_period']
-
-
-class PeriodActivitySlot(ActivitySlot):
-    activity = models.ForeignKey(PeriodActivity, related_name='slots', on_delete=models.CASCADE)
-    start = models.DateTimeField(_('start date and time'), null=True, blank=True)
-    end = models.DateTimeField(_('end date and time'), null=True, blank=True)
-
-    class Meta:
-        verbose_name = _('period activity slot')
-        verbose_name_plural = _('period activity slots')
-        permissions = (
-            ('api_read_periodactivityslot', 'Can view over a period activity slots through the API'),
-            ('api_add_periodactivityslot', 'Can add over a period activity slots through the API'),
-            ('api_change_periodactivityslot', 'Can change over a period activity slots through the API'),
-            ('api_delete_periodactivityslot', 'Can delete over a period activity slots through the API'),
-
-            ('api_read_own_periodactivityslot', 'Can view own over a period activity slots through the API'),
-            ('api_add_own_periodactivityslot', 'Can add own over a period activity slots through the API'),
-            ('api_change_own_periodactivityslot', 'Can change own over a period activity slots through the API'),
-            ('api_delete_own_periodactivityslot', 'Can delete own over a period activity slots through the API'),
-        )
-
-
-class TeamSlot(ActivitySlot):
-    activity = models.ForeignKey(PeriodActivity, related_name='team_slots', on_delete=models.CASCADE)
-    start = models.DateTimeField(_('start date and time'))
-    duration = models.DurationField(_('duration'))
-    team = models.OneToOneField(Team, related_name='slot', on_delete=models.CASCADE)
-
-    @property
-    def end(self):
-        if self.start and self.duration:
-            return self.start + self.duration
-
-    @property
-    def timezone(self):
-        if self.start:
-            return self.start.strftime("%Z %z")
-
-    @property
-    def is_complete(self):
-        return self.start and self.duration
-
-    @property
-    def organizer(self):
-        return self.team.owner
-
-    class Meta:
-        verbose_name = _('team slot')
-        verbose_name_plural = _('team slots')
-        permissions = (
-            ('api_read_teamslot', 'Can view over a team slots through the API'),
-            ('api_add_teamslot', 'Can add over a team slots through the API'),
-            ('api_change_teamslot', 'Can change over a team slots through the API'),
-            ('api_delete_teamslot', 'Can delete over a team slots through the API'),
-
-            ('api_read_own_teamslot', 'Can view own over a team slots through the API'),
-            ('api_add_own_teamslot', 'Can add own over a team slots through the API'),
-            ('api_change_own_teamslot', 'Can change own over a team slots through the API'),
-            ('api_delete_own_teamslot', 'Can delete own over a team slots through the API'),
-        )
-
-    def __str__(self):
-        return str(_('Time slot for {}')).format(self.team)
-
-    class JSONAPIMeta:
-        resource_name = 'activities/time-based/team-slots'
-
-    @property
-    def accepted_participants(self):
-        return self.team.members.filter(status='accepted')
-
-    @property
-    def event_data(self):
-        if self.end < now() or self.status not in ['open', 'full']:
-            return None
-        title = self.activity.title
-        if self.team.name:
-            title += f" - {self.team.name}"
-        location = ''
-        if self.is_online:
-            location = _('Anywhere/Online')
-        elif self.location:
-            location = self.location.locality
-            if self.location_hint:
-                location += f" {self.location_hint}"
-        return {
-            'uid': self.uid,
-            'summary': title,
-            'description': self.activity.description,
-            'organizer': self.activity.owner.email,
-            'url': self.activity.get_absolute_url(),
-            'location': location,
-            'start_time': self.start,
-            'end_time': self.end,
-        }
 
 
 ONLINE_CHOICES = (
@@ -1061,14 +852,30 @@ class Participant(Contributor):
 
 
 class DateParticipant(Participant):
+    registration = models.ForeignKey(
+        'time_based.DateRegistration',
+        related_name='participants',
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True
+    )
+
+    slot = models.ForeignKey(
+        "time_based.DateActivitySlot",
+        related_name="participants",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
     motivation = models.TextField(blank=True, null=True)
     document = PrivateDocumentField(
         blank=True, null=True, view_name="date-participant-document"
     )
 
     class Meta:
-        verbose_name = _("Participant to date activities")
-        verbose_name_plural = _("Participants to date activities")
+        verbose_name = _("Participant to date activity slot")
+        verbose_name_plural = _("Participants to date activity slot")
         permissions = (
             ("api_read_dateparticipant", "Can view participant through the API"),
             ("api_add_dateparticipant", "Can add participant through the API"),
@@ -1118,60 +925,6 @@ class PeriodParticipant(Participant, Contributor):
         resource_name = 'contributors/time-based/period-participants'
 
 
-class SlotParticipant(TriggerMixin, models.Model):
-
-    slot = models.ForeignKey(
-        DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
-    )
-    participant = models.ForeignKey(
-        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE,
-        blank=True, null=True
-    )
-
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-
-    status = models.CharField(max_length=40)
-    auto_approve = True
-
-    def __str__(self):
-        return '{name} / {slot}'.format(name=self.participant.user, slot=self.slot)
-
-    @property
-    def user(self):
-        return self.participant.user
-
-    @property
-    def activity(self):
-        return self.slot.activity
-
-    @property
-    def calculated_status(self):
-        if self.participant.status != 'accepted':
-            return str(self.participant.states.current_state.name)
-        return str(self.states.current_state.name)
-
-    class Meta():
-        verbose_name = _("Slot participant")
-        verbose_name_plural = _("Slot participants")
-        permissions = (
-            ('api_read_slotparticipant', 'Can view slot participant through the API'),
-            ('api_add_slotparticipant', 'Can add slot participant through the API'),
-            ('api_change_slotparticipant', 'Can change slot participant through the API'),
-            ('api_delete_slotparticipant', 'Can delete slot participant through the API'),
-
-            ('api_read_own_slotparticipant', 'Can view own slot participant through the API'),
-            ('api_add_own_slotparticipant', 'Can add own slot participant through the API'),
-            ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
-            ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
-        )
-        unique_together = ['slot', 'participant']
-        ordering = ['slot__start']
-
-    class JSONAPIMeta:
-        resource_name = 'contributors/time-based/slot-participants'
-
-
 class ContributionTypeChoices(DjangoChoices):
     date = ChoiceItem('date', label=_("activity on a date"))
     period = ChoiceItem('period', label=_("activity over a period"))
@@ -1191,7 +944,10 @@ class TimeContribution(Contribution):
     )
 
     slot_participant = models.ForeignKey(
-        SlotParticipant, null=True, blank=True, related_name='contributions', on_delete=models.SET_NULL
+        'time_based.OldSlotParticipant',
+        null=True, blank=True,
+        related_name='contributions',
+        on_delete=models.SET_NULL
     )
 
     class JSONAPIMeta:
@@ -1239,7 +995,11 @@ class Skill(TranslatableModel):
 
 class Registration(TriggerMixin, PolymorphicModel):
     answer = models.TextField(blank=True, null=True)
-    document = PrivateDocumentField(blank=True, null=True, view_name='registration-document')
+    document = PrivateDocumentField(
+        blank=True,
+        null=True,
+        view_name='registration-document'
+    )
 
     activity = models.ForeignKey(
         Activity, related_name="registrations", on_delete=models.CASCADE
@@ -1270,6 +1030,48 @@ class Registration(TriggerMixin, PolymorphicModel):
     class Meta:
         verbose_name = _("Candidate")
         verbose_name_plural = _("Candidates")
+
+
+class DateRegistration(Registration):
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/date-registrations'
+
+    @property
+    def participants(self):
+        return self.dateparticipant_set.all()
+
+    class Meta:
+        verbose_name = _("Candidate for date activities")
+        verbose_name_plural = _("Candidates for date activities")
+
+        permissions = (
+            ("api_read_dateregistration", "Can view registration through the API"),
+            ("api_add_dateregistration", "Can add registration through the API"),
+            (
+                "api_change_dateregistration",
+                "Can change candidates through the API",
+            ),
+            (
+                "api_delete_dateregistration",
+                "Can delete candidates through the API",
+            ),
+            (
+                "api_read_own_dateregistration",
+                "Can view own candidates through the API",
+            ),
+            (
+                "api_add_own_dateregistration",
+                "Can add own candidates through the API",
+            ),
+            (
+                "api_change_own_dateregistration",
+                "Can change own candidates through the API",
+            ),
+            (
+                "api_delete_own_dateregistration",
+                "Can delete own candidates through the API",
+            ),
+        )
 
 
 class DeadlineRegistration(Registration):
@@ -1768,6 +1570,64 @@ class TeamScheduleParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-participants'
+
+
+class OldSlotParticipant(TriggerMixin, models.Model):
+
+    slot = models.ForeignKey(
+        DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
+    )
+    participant = models.ForeignKey(
+        DateParticipant, related_name='slot_participants', on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+    registration = models.ForeignKey(
+        DateRegistration, related_name='slot_participants', on_delete=models.CASCADE,
+        blank=True, null=True
+    )
+
+    created = models.DateTimeField(default=timezone.now)
+    updated = models.DateTimeField(auto_now=True)
+
+    status = models.CharField(max_length=40)
+    auto_approve = True
+
+    def __str__(self):
+        return '{name} / {slot}'.format(name=self.participant.user, slot=self.slot)
+
+    @property
+    def user(self):
+        return self.participant.user
+
+    @property
+    def activity(self):
+        return self.slot.activity
+
+    @property
+    def calculated_status(self):
+        if self.participant.status != 'accepted':
+            return str(self.participant.states.current_state.name)
+        return str(self.states.current_state.name)
+
+    class Meta():
+        verbose_name = _("Slot participant")
+        verbose_name_plural = _("Slot participants")
+        permissions = (
+            ('api_read_slotparticipant', 'Can view slot participant through the API'),
+            ('api_add_slotparticipant', 'Can add slot participant through the API'),
+            ('api_change_slotparticipant', 'Can change slot participant through the API'),
+            ('api_delete_slotparticipant', 'Can delete slot participant through the API'),
+
+            ('api_read_own_slotparticipant', 'Can view own slot participant through the API'),
+            ('api_add_own_slotparticipant', 'Can add own slot participant through the API'),
+            ('api_change_own_slotparticipant', 'Can change own slot participant through the API'),
+            ('api_delete_own_slotparticipant', 'Can delete own slot participant through the API'),
+        )
+        unique_together = ['slot', 'participant']
+        ordering = ['slot__start']
+
+    class JSONAPIMeta:
+        resource_name = 'contributors/time-based/slot-participants'
 
 
 class Slot(models.Model):

@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.core import mail
+from django.utils.timezone import now
 
 from bluebottle.initiatives.tests.factories import (
     InitiativeFactory,
@@ -13,7 +16,8 @@ from bluebottle.time_based.tests.factories import (
     PeriodicRegistrationFactory,
     ScheduleActivityFactory,
     ScheduleRegistrationFactory,
-    TeamScheduleRegistrationFactory,
+    TeamScheduleRegistrationFactory, DateActivityFactory, DateRegistrationFactory, DateParticipantFactory,
+    DateActivitySlotFactory,
 )
 
 
@@ -51,13 +55,13 @@ class RegistrationTriggerTestCase:
         self.assertEqual(self.registration.status, "accepted")
 
         self.assertEqual(
-            mail.outbox[-2].subject,
+            mail.outbox[0].subject,
             'You have a new participant for your activity "{}" 🎉'.format(
                 self.activity.title
             ),
         )
         self.assertEqual(
-            mail.outbox[-1].subject,
+            mail.outbox[1].subject,
             'You have joined the activity "{}"'.format(self.activity.title),
         )
 
@@ -66,7 +70,13 @@ class RegistrationTriggerTestCase:
         self.activity.save()
 
         self.create()
+
         self.assertEqual(self.registration.status, "new")
+
+        self.assertEqual(
+            len(mail.outbox),
+            2,
+        )
 
         self.assertEqual(
             mail.outbox[-2].subject,
@@ -125,6 +135,104 @@ class RegistrationTriggerTestCase:
                 self.activity.title
             ),
         )
+
+
+class DateRegistrationTriggerTestCase(
+    RegistrationTriggerTestCase, BluebottleTestCase
+):
+    activity_factory = DateActivityFactory
+    factory = DateRegistrationFactory
+
+    def setUp(self):
+        super().setUp()
+
+        self.slot = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=2)
+        )
+
+    def create(self):
+        self.registration = self.factory.create(
+            activity=self.activity,
+            user=self.user,
+            as_user=self.user,
+        )
+
+        self.participant = DateParticipantFactory.create(
+            user=self.user,
+            registration=self.registration,
+            slot=self.slot,
+            activity=self.activity
+        )
+
+    def test_initial(self):
+        super().test_initial()
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "accepted")
+
+    def test_initial_review(self):
+        super().test_initial_review()
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertStatus(self.registration, "new")
+        self.assertStatus(self.participant, "new")
+
+    def test_initial_past(self):
+        super().test_initial()
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "succeeded")
+
+    def test_initial_review_past(self):
+        super().test_initial_review()
+        self.slot.start = now() - timedelta(days=3)
+
+        self.slot.save()
+        self.assertEqual(self.registration.participants.count(), 1)
+        self.assertStatus(self.registration, "new")
+        self.assertStatus(self.participant, "new")
+
+    def test_accept_past(self):
+        super().test_accept()
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "succeeded")
+
+    def test_reject(self):
+        super().test_reject()
+        self.assertStatus(self.registration, "rejected")
+        self.assertStatus(self.participant, "rejected")
+
+    def test_fill(self):
+        self.slot.capacity = 1
+        self.slot.save()
+
+        super().test_initial()
+
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.slot, "full")
+
+    def test_fill_accept(self):
+        super().test_initial_review()
+
+        self.slot.capacity = 1
+        self.slot.save()
+
+        self.registration.states.accept(save=True)
+
+        self.assertStatus(self.registration, "accepted")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.slot, "full")
+
+    def test_reject_then_accept(self):
+        super().test_reject()
+        self.registration.states.accept(save=True)
+
+        self.assertEqual(self.registration.participants.get().status, "accepted")
 
 
 class DeadlineRegistrationTriggerTestCase(

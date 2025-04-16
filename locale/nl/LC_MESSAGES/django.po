@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-16 11:56+0200\n"
-"PO-Revision-Date: 2025-04-16 09:58\n"
+"POT-Creation-Date: 2025-04-16 13:22+0200\n"
+"PO-Revision-Date: 2025-04-16 11:24\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -51,7 +51,7 @@ msgstr "Super admin"
 
 #: bluebottle/activities/admin.py:194 bluebottle/activities/models.py:158
 #: bluebottle/activities/models.py:182 bluebottle/collect/admin.py:97
-#: bluebottle/funding/models.py:329 bluebottle/time_based/admin.py:943
+#: bluebottle/funding/models.py:340 bluebottle/time_based/admin.py:943
 #: bluebottle/updates/models.py:22
 msgid "Activity"
 msgstr "Activiteit"
@@ -565,7 +565,7 @@ msgstr "Aantal succesvolle bijdragers verwijderd"
 
 #: bluebottle/activities/models.py:82 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:123 bluebottle/cms/models.py:140
-#: bluebottle/funding/models.py:326 bluebottle/news/models.py:21
+#: bluebottle/funding/models.py:337 bluebottle/news/models.py:21
 #: bluebottle/pages/models.py:205 bluebottle/slides/models.py:46
 #: bluebottle/statistics/models.py:229
 msgid "Title"
@@ -578,7 +578,7 @@ msgid "Slug"
 msgstr "Slug"
 
 #: bluebottle/activities/models.py:85 bluebottle/cms/models.py:51
-#: bluebottle/funding/models.py:327
+#: bluebottle/funding/models.py:338
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
 #: bluebottle/initiatives/admin.py:161
 msgid "Description"
@@ -660,7 +660,7 @@ msgid "Contribution"
 msgstr "Bijdrage"
 
 #: bluebottle/activities/models.py:278 bluebottle/activities/models.py:341
-#: bluebottle/funding/models.py:562 bluebottle/time_based/models.py:1202
+#: bluebottle/funding/models.py:573 bluebottle/time_based/models.py:1202
 msgid "Contributions"
 msgstr "Bijdragen"
 
@@ -1143,7 +1143,7 @@ msgid "committed hours"
 msgstr "ingediende uren"
 
 #: bluebottle/activities/templates/admin/activity-stats.html:29
-#: bluebottle/funding/models.py:409
+#: bluebottle/funding/models.py:420
 msgid "amount"
 msgstr "bedrag"
 
@@ -1833,7 +1833,7 @@ msgid "date joined"
 msgstr "datum registratie"
 
 #: bluebottle/bb_accounts/models.py:128 bluebottle/clients/models.py:13
-#: bluebottle/funding/models.py:645 bluebottle/organizations/models.py:26
+#: bluebottle/funding/models.py:656 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:80 bluebottle/terms/models.py:14
 msgid "updated"
 msgstr "aangepast"
@@ -1974,7 +1974,7 @@ msgstr "skype profiel"
 msgid "Users that are connected to a partner organisation will skip the organisation step in initiative create."
 msgstr "Gebruikers die gekoppeld zijn aan een partner organisatie, slaan de organisatie stap tijdens het aanmaken van een initiatief over."
 
-#: bluebottle/bb_accounts/models.py:216 bluebottle/funding/models.py:662
+#: bluebottle/bb_accounts/models.py:216 bluebottle/funding/models.py:673
 msgid "Partner organisation"
 msgstr "Partnerorganisatie"
 
@@ -2454,7 +2454,7 @@ msgid "name"
 msgstr "naam"
 
 #: bluebottle/categories/models.py:48 bluebottle/categories/models.py:92
-#: bluebottle/funding/models.py:374 bluebottle/funding/models.py:405
+#: bluebottle/funding/models.py:385 bluebottle/funding/models.py:416
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
 #: bluebottle/initiatives/models.py:432 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:23
@@ -2470,7 +2470,7 @@ msgstr "categorie"
 msgid "categories"
 msgstr "categorieën"
 
-#: bluebottle/categories/models.py:87 bluebottle/funding/models.py:404
+#: bluebottle/categories/models.py:87 bluebottle/funding/models.py:415
 #: bluebottle/initiatives/models.py:36 bluebottle/pages/models.py:60
 #: bluebottle/time_based/models.py:283
 msgid "title"
@@ -2511,7 +2511,7 @@ msgid "content blocks"
 msgstr "content blokken"
 
 #: bluebottle/clients/models.py:12 bluebottle/files/models.py:26
-#: bluebottle/funding/models.py:644 bluebottle/organizations/models.py:25
+#: bluebottle/funding/models.py:655 bluebottle/organizations/models.py:25
 #: bluebottle/organizations/models.py:79 bluebottle/terms/models.py:13
 #: bluebottle/updates/models.py:53
 msgid "created"
@@ -2686,7 +2686,7 @@ msgid "Funding activities online"
 msgstr "Crowdfunding campagnes online"
 
 #: bluebottle/cms/models.py:169 bluebottle/funding/admin.py:269
-#: bluebottle/funding/models.py:549 bluebottle/statistics/models.py:94
+#: bluebottle/funding/models.py:560 bluebottle/statistics/models.py:94
 msgid "Donations"
 msgstr "Donaties"
 
@@ -3812,7 +3812,7 @@ msgstr "gedoneerd bedrag"
 msgid "donations"
 msgstr "donaties"
 
-#: bluebottle/funding/admin.py:359 bluebottle/funding/models.py:325
+#: bluebottle/funding/admin.py:359 bluebottle/funding/models.py:336
 #: bluebottle/funding/templates/dashboard/payouts_ready_for_approval.html:14
 msgid "Amount"
 msgstr "Bedrag"
@@ -4098,166 +4098,166 @@ msgstr "Betalingsvaluta"
 msgid "Payment currencies"
 msgstr "Betalingsvaluta's"
 
-#: bluebottle/funding/models.py:131 bluebottle/funding/models.py:410
+#: bluebottle/funding/models.py:142 bluebottle/funding/models.py:421
 msgid "deadline"
 msgstr "uiterste aanmelddatum"
 
-#: bluebottle/funding/models.py:134
+#: bluebottle/funding/models.py:145
 msgid "If you enter a deadline, leave the duration field empty. This will override the duration."
 msgstr "Als je een deadline opgeeft, laat dan het veld voor looptijd leeg."
 
-#: bluebottle/funding/models.py:138 bluebottle/time_based/models.py:424
+#: bluebottle/funding/models.py:149 bluebottle/time_based/models.py:424
 #: bluebottle/time_based/models.py:650 bluebottle/time_based/models.py:1849
 #: bluebottle/time_based/models.py:1877
 msgid "duration"
 msgstr "looptijd"
 
-#: bluebottle/funding/models.py:141
+#: bluebottle/funding/models.py:152
 msgid "If you enter a duration, leave the deadline field empty for it to be automatically calculated."
 msgstr "Als je een looptijd opgeeft, laat dan het veld voor deadline leeg."
 
-#: bluebottle/funding/models.py:152 bluebottle/funding/models.py:456
+#: bluebottle/funding/models.py:163 bluebottle/funding/models.py:467
 #: bluebottle/funding/states.py:487
 msgid "started"
 msgstr "gestart"
 
-#: bluebottle/funding/models.py:169
+#: bluebottle/funding/models.py:180
 msgid "Crowdfunding campaign"
 msgstr "Crowdfunding campagne"
 
-#: bluebottle/funding/models.py:206 bluebottle/impact/models.py:28
+#: bluebottle/funding/models.py:217 bluebottle/impact/models.py:28
 #: bluebottle/initiatives/models.py:274
 #: bluebottle/settings/admin_dashboard.py:109
 msgid "Funding"
 msgstr "Crowdfunding"
 
-#: bluebottle/funding/models.py:207
+#: bluebottle/funding/models.py:218
 msgid "Funding Activities"
 msgstr "Crowdfunding campagnes"
 
-#: bluebottle/funding/models.py:332
+#: bluebottle/funding/models.py:343
 msgid "Limit"
 msgstr "Limiet"
 
-#: bluebottle/funding/models.py:335
+#: bluebottle/funding/models.py:346
 msgid "How many of this rewards are available"
 msgstr "Hoeveel van deze giften zijn er beschikbaar"
 
-#: bluebottle/funding/models.py:353
+#: bluebottle/funding/models.py:364
 msgid "Gift"
 msgstr "Gift"
 
-#: bluebottle/funding/models.py:354
+#: bluebottle/funding/models.py:365
 msgid "Gifts"
 msgstr "Giften"
 
-#: bluebottle/funding/models.py:361
+#: bluebottle/funding/models.py:372
 msgid "Not allowed to delete a reward with successful donations."
 msgstr "Niet toegestaan om een beloning te verwijderen met succesvolle donaties."
 
-#: bluebottle/funding/models.py:385
+#: bluebottle/funding/models.py:396
 msgid "budget line"
 msgstr "budget item"
 
-#: bluebottle/funding/models.py:386
+#: bluebottle/funding/models.py:397
 msgid "budget lines"
 msgstr "budget items"
 
-#: bluebottle/funding/models.py:399 bluebottle/funding/models.py:446
+#: bluebottle/funding/models.py:410 bluebottle/funding/models.py:457
 #: bluebottle/impact/models.py:111
 msgid "activity"
 msgstr "activiteit"
 
-#: bluebottle/funding/models.py:438
+#: bluebottle/funding/models.py:449
 msgid "fundraiser"
 msgstr "fundraiser"
 
-#: bluebottle/funding/models.py:439
+#: bluebottle/funding/models.py:450
 msgid "fundraisers"
 msgstr "fundraisers"
 
-#: bluebottle/funding/models.py:455 bluebottle/funding/states.py:477
+#: bluebottle/funding/models.py:466 bluebottle/funding/states.py:477
 #: bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "goedgekeurd"
 
-#: bluebottle/funding/models.py:457
+#: bluebottle/funding/models.py:468
 msgid "completed"
 msgstr "gerealiseerd"
 
-#: bluebottle/funding/models.py:497
+#: bluebottle/funding/models.py:508
 msgid "payout"
 msgstr "uitbetaling"
 
-#: bluebottle/funding/models.py:498
+#: bluebottle/funding/models.py:509
 msgid "payouts"
 msgstr "uitbetalingen"
 
-#: bluebottle/funding/models.py:501
+#: bluebottle/funding/models.py:512
 msgid "Payout"
 msgstr "Uitbetaling"
 
-#: bluebottle/funding/models.py:516
+#: bluebottle/funding/models.py:527
 msgid "Fake name"
 msgstr "Aangepaste naam"
 
-#: bluebottle/funding/models.py:517
+#: bluebottle/funding/models.py:528
 msgid "Override donor name / Name for guest donation"
 msgstr "Naam donor/naam voor gastdonatie overschrijven"
 
-#: bluebottle/funding/models.py:518
+#: bluebottle/funding/models.py:529
 msgid "anonymous"
 msgstr "anoniem"
 
-#: bluebottle/funding/models.py:548 bluebottle/funding/models.py:561
+#: bluebottle/funding/models.py:559 bluebottle/funding/models.py:572
 msgid "Donation"
 msgstr "Donatie"
 
-#: bluebottle/funding/models.py:646
+#: bluebottle/funding/models.py:657
 msgid "reviewed"
 msgstr "beoordelaar"
 
-#: bluebottle/funding/models.py:649
+#: bluebottle/funding/models.py:660
 msgid "Public payout account"
 msgstr "Openbare uitbetaling account"
 
-#: bluebottle/funding/models.py:681
+#: bluebottle/funding/models.py:692
 msgid "IP address"
 msgstr "IP adres"
 
-#: bluebottle/funding/models.py:688
+#: bluebottle/funding/models.py:699
 msgid "Plain KYC account"
 msgstr "Standaard KYC account"
 
-#: bluebottle/funding/models.py:689
+#: bluebottle/funding/models.py:700
 msgid "Plain KYC accounts"
 msgstr "Standaard KYC accounts"
 
-#: bluebottle/funding/models.py:769
+#: bluebottle/funding/models.py:780
 msgid "Hide names from all donations"
 msgstr "Verberg namen voor alle donaties"
 
-#: bluebottle/funding/models.py:772
+#: bluebottle/funding/models.py:783
 msgid "Allow guests to donate rewards"
 msgstr "Sta gasten toe om giften te doneren"
 
-#: bluebottle/funding/models.py:776
+#: bluebottle/funding/models.py:787
 msgid "Crowdfunding for verified organisations"
 msgstr "Crowdfunding voor geverifieerde organisaties"
 
-#: bluebottle/funding/models.py:779
+#: bluebottle/funding/models.py:790
 msgid "When enabled, campaign initiators must select from a list of organisations with a public payout account that will receive the raised money, rather than providing the bank account details themselves."
 msgstr "Wanneer ingeschakeld, moeten campagne-initiators kiezen uit een lijst van organisaties met een publieke uitbetalingsaccount die het ingezamelde geld ontvangt, in plaats van zelf de bankgegevens te verstrekken."
 
-#: bluebottle/funding/models.py:786
+#: bluebottle/funding/models.py:797
 msgid "Name to use for match funding"
 msgstr "Naam om te gebruiken voor match funding"
 
-#: bluebottle/funding/models.py:790
+#: bluebottle/funding/models.py:801
 msgid "Change this if you want to use something else then the platform name for matching amounts."
 msgstr "Verander dit als je iets anders wilt gebruiken dan de platformnaam voor match funding."
 
-#: bluebottle/funding/models.py:801 bluebottle/funding/models.py:802
+#: bluebottle/funding/models.py:812 bluebottle/funding/models.py:813
 msgid "funding settings"
 msgstr "crowdfunding instellingen"
 
@@ -4266,29 +4266,39 @@ msgstr "crowdfunding instellingen"
 msgid "Campaign deadline has passed."
 msgstr "Crowdfunding deadline is verstreken."
 
-#: bluebottle/funding/serializers.py:62
+#: bluebottle/funding/serializers.py:82
 msgid "Currency does not match any of the activities currencies"
 msgstr "Valuta komt niet overeen met de valuta's van de activiteiten"
 
-#: bluebottle/funding/serializers.py:200 bluebottle/funding/validators.py:47
+#: bluebottle/funding/serializers.py:220 bluebottle/funding/validators.py:47
 msgid "The deadline should not be more then 60 days in the future"
 msgstr "De deadline mag niet langer zijn dan 60 dagen in de toekomst"
 
-#: bluebottle/funding/serializers.py:399 bluebottle/funding/serializers.py:564
+#: bluebottle/funding/serializers.py:419 bluebottle/funding/serializers.py:584
 msgid "Pledge"
 msgstr "Co-financiering"
 
-#: bluebottle/funding/serializers.py:434
+#: bluebottle/funding/serializers.py:454
 msgid "The selected reward is not related to this activity"
 msgstr "De geselecteerde beloning is niet gerelateerd aan deze activiteit"
 
-#: bluebottle/funding/serializers.py:450
+#: bluebottle/funding/serializers.py:470
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Het bedrag moet gelijk zijn of hoger dan het bedrag van de beloning."
 
-#: bluebottle/funding/serializers.py:459
+#: bluebottle/funding/serializers.py:479
 msgid "User can only be set, not changed."
 msgstr "Gebruiker kan alleen worden ingesteld, niet gewijzigd."
+
+#: bluebottle/funding/serializers.py:623
+#, python-brace-format
+msgid "Amount must be at least {amount} {currency}"
+msgstr "Het bedrag moet minstens {amount} {currency} zijn"
+
+#: bluebottle/funding/serializers.py:630
+#, python-brace-format
+msgid "Amount cannot exceed {amount} {currency}"
+msgstr "Bedrag mag niet hoger zijn dan {amount} {currency}"
 
 #: bluebottle/funding/states.py:12
 msgid "partially funded"
@@ -11363,8 +11373,8 @@ msgid "Deadline should be after start date"
 msgstr "De deadline moet na de startdatum liggen"
 
 #: bluebottle/time_based/validators.py:63
-msgid "All time slots should have all required fields filled out."
-msgstr "Vul alle verplichte velden in voor alle tijdsblokken."
+msgid "At least one time slot should have all required fields filled out."
+msgstr "Ten minste één tijdslot moet volledig ingevuld zijn."
 
 #: bluebottle/time_based/validators.py:72
 msgid "Should have at least one time slot."

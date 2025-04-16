@@ -14,6 +14,11 @@
      <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
    {% endif %}
    {{ inline_admin_formset.formset.non_form_errors }}
+    {% if inline_admin_formset.formset.info_message %}
+        <div class="description">
+            {{ inline_admin_formset.formset.info_message }}
+        </div>
+    {% endif %}
    <table>
      <thead><tr>
        <th class="original"></th>

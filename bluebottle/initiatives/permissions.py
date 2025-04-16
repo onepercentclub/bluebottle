@@ -21,6 +21,6 @@ class InitiativeOwnerPermission(ResourceOwnerPermission):
         return (
             super().has_object_action_permission(action, user, obj) or
             user in obj.activity_managers.all() or
-            user.is_staff
-
+            user.is_staff or
+            user.is_superuser
         )

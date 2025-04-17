@@ -80,7 +80,7 @@ class ActivitySubmittedNotification(OwnerActivityNotification):
     The activity was submitted
     """
     subject = pgettext('email', "You submitted an activity on {site_name}")
-    template = 'messages/activity_manager/activity_published'
+    template = 'messages/activity_manager/activity_submitted'
 
 
 class ActivityApprovedNotification(OwnerActivityNotification):

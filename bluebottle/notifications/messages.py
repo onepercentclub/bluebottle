@@ -18,7 +18,7 @@ from future.utils import python_2_unicode_compatible
 from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
-from bluebottle.utils.utils import get_current_language, to_text
+from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class TransitionMessage(object):
         context = {
             'obj': self.obj,
             'site': 'https://[site domain]',
-            'site_name': '[site name]',
+            'site_name': get_tenant_name(),
             'language': language,
             'contact_email': '[platform manager email]',
             'recipient_name': '[first name]',

@@ -26,7 +26,7 @@ class ReviewerNotificationTestCase(NotificationTestCase):
         self.create()
 
         self.assertRecipients([staff])
-        self.assertSubject('A new initiative is ready to be reviewed on [site name]')
+        self.assertSubject('A new initiative is ready to be reviewed on Test')
         self.assertBodyContains('has been submitted by Henk qui Penk')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View initiative')
@@ -62,7 +62,7 @@ class ReviewerNotificationTestCase(NotificationTestCase):
         self.obj.states.submit(save=True)
         self.create()
         self.assertRecipients([current_region, no_region])
-        self.assertSubject("A new initiative is ready to be reviewed on [site name]")
+        self.assertSubject("A new initiative is ready to be reviewed on Test")
         self.assertBodyContains('has been submitted by Henk qui Penk')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle("View initiative")
@@ -81,7 +81,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativeSubmittedReviewerMessage
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new initiative is ready to be reviewed on [site name]')
+        self.assertSubject('A new initiative is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this initiative')
         self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View initiative')
@@ -90,7 +90,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativePublishedReviewerMessage
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new initiative has been published on [site name]!')
+        self.assertSubject('A new initiative has been published on Test!')
         self.assertBodyContains('has been successfully published')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View initiative')
@@ -99,7 +99,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativeSubmittedInitiatorMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('You submitted an initiative on [site name]')
+        self.assertSubject('You submitted an initiative on Test')
         self.assertBodyContains('The platform manager will review your initiative')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View initiative')
@@ -108,7 +108,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativePublishedInitiatorMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your initiative on [site name] has been published!')
+        self.assertSubject('Your initiative on Test has been published!')
         self.assertBodyContains('Nice work! Your initiative')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View initiative')
@@ -117,7 +117,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativeApprovedInitiatorMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your initiative on [site name] has been approved!')
+        self.assertSubject('Your initiative on Test has been approved!')
         self.assertBodyContains('Good news, your initiative')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View initiative')
@@ -126,7 +126,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativeNeedsWorkInitiatorMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('The initiative you submitted on [site name] needs work')
+        self.assertSubject('The initiative you submitted on Test needs work')
         self.assertBodyContains(
             'The platform manager will be in contact to help you make some changes to your initiative'
         )
@@ -137,7 +137,7 @@ class InitiativeNotificationTestCase(NotificationTestCase):
         self.message_class = InitiativeRejectedInitiatorMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your initiative on [site name] has been rejected')
+        self.assertSubject('Your initiative on Test has been rejected')
         self.assertBodyContains('Unfortunately your initiative')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View initiative')

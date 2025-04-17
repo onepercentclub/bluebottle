@@ -42,7 +42,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivitySubmittedReviewerNotification
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new activity is ready to be reviewed on [site name]')
+        self.assertSubject('A new activity is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this activity')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View this activity')
@@ -51,7 +51,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityPublishedReviewerNotification
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new activity has been published on [site name]')
+        self.assertSubject('A new activity has been published on Test')
         self.assertBodyContains('has been successfully published')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View this activity')
@@ -60,7 +60,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivitySubmittedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('You submitted an activity on [site name]')
+        self.assertSubject('You submitted an activity on Test')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -68,7 +68,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityPublishedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your activity on [site name] has been published!')
+        self.assertSubject('Your activity on Test has been published!')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -76,7 +76,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityApprovedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your activity on [site name] has been approved!')
+        self.assertSubject('Your activity on Test has been approved!')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -84,7 +84,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityNeedsWorkNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('The activity you submitted on [site name] needs work')
+        self.assertSubject('The activity you submitted on Test needs work')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 

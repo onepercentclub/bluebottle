@@ -311,7 +311,7 @@ class HomepageStatisticsContent(TitledContent):
         office_region = ChoiceItem('office_region', label=_("Region"))
 
     stat_type = models.CharField(
-        _("Default filter"),
+        _("Statistics view"),
         max_length=100,
         choices=StatTypeChoices.choices,
         default=StatTypeChoices.all,
@@ -435,7 +435,7 @@ class ProjectsMapContent(TitledContent):
         office_region = ChoiceItem('office_region', label=_("Region"))
 
     map_type = models.CharField(
-        _("Default filter"),
+        _("Map view"),
         max_length=100,
         choices=MapTypeChoices.choices,
         default=MapTypeChoices.all,

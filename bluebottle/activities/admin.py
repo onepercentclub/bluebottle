@@ -487,7 +487,7 @@ class BulkAddMixin(object):
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
     base_model = Activity
-    raw_id_fields = ['owner', 'initiative', 'office_location']
+    raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
     inlines = (UpdateInline,)
     form = ActivityForm
 
@@ -555,7 +555,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'title',
         'description',
         'image',
-        'video_url'
+        'video_url',
+        'organization'
     )
 
     status_fields = (

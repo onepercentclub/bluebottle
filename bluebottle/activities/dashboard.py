@@ -36,7 +36,7 @@ class RecentlySubmittedActivities(DashboardModule):
             status='submitted'
         ).annotate(
             transition_date=Subquery(recent_log_entries())
-        ).order_by('transition_date')
+        ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
         self.children = activities[:self.limit]
@@ -54,7 +54,7 @@ class RecentlyPublishedActivities(DashboardModule):
             status='open'
         ).annotate(
             transition_date=Subquery(recent_log_entries())
-        ).order_by('transition_date')
+        ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
         self.children = activities[:self.limit]

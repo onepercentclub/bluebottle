@@ -62,6 +62,7 @@ class CollectActivityAdmin(ActivityChildAdmin):
         'target',
         'realized',
         'location',
+        'location_hint',
         'start',
         'end',
     )

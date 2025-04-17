@@ -89,6 +89,17 @@ class PaymentProvider(PolymorphicModel):
                         currencies.append(currency)
         return currencies
 
+    def get_currency_settings(self, code):
+        """
+        Return the settings for a currency
+        """
+        if self.pk:
+            try:
+                return self.paymentcurrency_set.get(code=code)
+            except PaymentCurrency.DoesNotExist:
+                pass
+        return None
+
     @classmethod
     def get_default_currency(cls):
         if len(cls.get_currency_choices()):

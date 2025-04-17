@@ -69,6 +69,7 @@ from bluebottle.funding_vitepay.serializers import (
     PayoutVitepayBankAccountSerializer,
     VitepayBankAccountSerializer,
 )
+from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
@@ -276,6 +277,12 @@ class FundingSerializer(BaseActivitySerializer):
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
+    impact_location = ResourceRelatedField(
+        queryset=Geolocation.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -374,6 +381,7 @@ class FundingSerializer(BaseActivitySerializer):
             "supporters_export_url",
             "psp",
             "donations",
+            "impact_location"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -385,6 +393,7 @@ class FundingSerializer(BaseActivitySerializer):
             'co_financers',
             'co_financers.user',
             'partner_organization',
+            'impact_location'
         ]
         resource_name = 'activities/fundings'
 
@@ -396,6 +405,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+            'impact_location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 

@@ -851,7 +851,6 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = response.json()
-
         self.assertEqual(
             data['errors'][0]['source']['pointer'],
             '/data/attributes/deadline'

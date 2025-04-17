@@ -134,6 +134,8 @@ class BaseActivitySerializer(ModelSerializer):
     partner_organization = ResourceRelatedField(
         source='organization',
         queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     updates = HyperlinkedRelatedField(

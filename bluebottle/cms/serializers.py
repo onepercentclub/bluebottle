@@ -236,11 +236,11 @@ class SlidesBlockSerializer(BaseBlockSerializer):
         if user and isinstance(user, Member) and user.location and user.location.subregion:
             return Slide.objects.published().filter(
                 language=obj.language_code
-            ).filter(Q(sub_region__isnull=True) | Q(sub_region=user.location.subregion))
+            ).filter(Q(sub_regions__isnull=True) | Q(sub_regions=user.location.subregion))
         else:
             return Slide.objects.published().filter(
                 language=obj.language_code
-            ).filter(Q(sub_region__isnull=True))
+            ).filter(Q(sub_regions__isnull=True))
 
     class Meta(object):
         model = SlidesContent

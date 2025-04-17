@@ -569,6 +569,15 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(stats['impact'][1]['name'], 'water saved')
         self.assertEqual(stats['impact'][1]['value'], 1250.0)
 
+    def test_get_staff(self):
+        response = self.client.get(
+            self.url,
+            user=BlueBottleUserFactory.create(is_staff=True)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], self.initiative.title)
+        self.assertTrue(response.json()['data']['meta']['permissions']['PUT'])
+
     def test_get_other(self):
         response = self.client.get(
             self.url,

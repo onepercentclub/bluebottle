@@ -279,6 +279,8 @@ class FundingSerializer(BaseActivitySerializer):
 
     impact_location = ResourceRelatedField(
         queryset=Geolocation.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     rewards = ResourceRelatedField(

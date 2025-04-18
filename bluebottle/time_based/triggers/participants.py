@@ -23,6 +23,7 @@ from bluebottle.time_based.effects.participants import (
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
+    CreateRegisteredTimeContributionEffect,
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
@@ -31,7 +32,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant,
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, RegisteredDateParticipant,
 )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
@@ -48,7 +49,8 @@ from bluebottle.time_based.states import (
     ScheduleParticipantStateMachine,
     ScheduleActivityStateMachine,
     TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
-    DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine
+    DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine,
+    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine
 )
 
 
@@ -1351,4 +1353,61 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 FollowActivityEffect,
             ],
         ),
+    ]
+
+
+@register(RegisteredDateParticipant)
+class RegisteredDateParticipantTriggers(ContributorTriggers):
+
+    def activity_is_succeeded(effect):
+        """Slot has status finished"""
+        return effect.instance.activity and effect.instance.activity.status == "succeeded"
+
+    def activity_is_not_succeeded(effect):
+        """Slot has status finished"""
+        return effect.instance.activity and effect.instance.activity.status != "succeeded"
+
+    def activity_is_expired(effect):
+        """Slot has status finished"""
+        return effect.instance.activity and effect.instance.activity.status == "expired"
+
+    triggers = ContributorTriggers.triggers + [
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.initiate,
+            effects=[
+                FollowActivityEffect,
+                CreateRegisteredTimeContributionEffect,
+                TransitionEffect(
+                    RegisteredDateParticipantStateMachine.succeed,
+                    conditions=[activity_is_succeeded],
+                ),
+                TransitionEffect(
+                    RegisteredDateParticipantStateMachine.accept,
+                    conditions=[activity_is_not_succeeded]
+                )
+            ],
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.accept,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        activity_is_expired
+                    ]
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.readd,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateParticipantStateMachine.succeed,
+                    conditions=[
+                        activity_is_succeeded
+                    ]
+                )
+            ]
+        )
     ]

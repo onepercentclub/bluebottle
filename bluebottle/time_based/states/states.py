@@ -55,6 +55,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         name=_("Reopen"),
         passed_label=_('reopened'),
         automatic=True,
+        hide_from_admin=True,
         description=_(
             "The number of participants has fallen below the required number or new slots have been added. "
             "People can sign up again for the task."
@@ -62,7 +63,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        [ActivityStateMachine.expired, ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
         passed_label=_('reopened'),
@@ -184,10 +185,27 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
 
 
 @register(RegisteredDateActivity)
-class RegisteredDateStateMachine(ActivityStateMachine):
+class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
+
+    planned = State(
+        _('Planned'),
+        'planned',
+        _('The activity is planned. The activity manager will register participants.')
+    )
+
+    succeed = ActivityStateMachine.succeed.extend(
+        sources=[planned, ActivityStateMachine.expired],
+    )
 
     approve = ActivityStateMachine.approve.extend(
-        description=_('Approve activity, so it will be registered on the platform.'),
+        description=_('Approve activity, so it will be planned on the platform.'),
+        target=planned,
+    )
+
+    reopen = TimeBasedStateMachine.reopen.extend(
+        target=planned,
+        name=_("Reopen"),
+        description=_('Reopen activity, so it will be planned on the platform.'),
     )
 
 

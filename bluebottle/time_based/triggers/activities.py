@@ -20,20 +20,20 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffect
 from bluebottle.time_based.effects.contributions import (
-    RescheduleActivityDurationsEffect,
+    RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
     DeadlineActivity,
-    PeriodicActivity, ScheduleActivity,
+    PeriodicActivity, ScheduleActivity, RegisteredDateActivity,
 )
 from bluebottle.time_based.states import (
     DateStateMachine,
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    DateParticipantStateMachine
+    DateParticipantStateMachine, RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -153,7 +153,17 @@ def start_is_not_passed(effect):
     """
     return (
         effect.instance.start is None or
-        effect.instance.start > date.today()
+        effect.instance.start > now()
+    )
+
+
+def start_has_passed(effect):
+    """
+    start date has passed
+    """
+    return (
+        effect.instance.start is None or
+        effect.instance.start <= now()
     )
 
 
@@ -552,4 +562,56 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+    ]
+
+
+@register(RegisteredDateActivity)
+class RegisteredDateActivityTriggers(ActivityTriggers):
+
+    triggers = ActivityTriggers.triggers + [
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.approve,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.succeed
+                )
+            ]
+        ),
+        ModelChangedTrigger(
+            'start',
+            effects=[
+                RescheduleRelatedTimeContributionsEffect,
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.reopen,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed,
+                    ]
+                ),
+            ]
+        ),
+        ModelChangedTrigger(
+            'duration',
+            effects=[
+                RescheduleRelatedTimeContributionsEffect,
+            ]
+        )
+
     ]

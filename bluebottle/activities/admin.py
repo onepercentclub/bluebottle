@@ -46,7 +46,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
-    PeriodicParticipant,
+    PeriodicParticipant, RegisteredDateActivity, RegisteredDateParticipant,
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
@@ -66,6 +66,7 @@ class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, Sta
         ScheduleParticipant,
         TeamScheduleParticipant,
         PeriodicParticipant,
+        RegisteredDateParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -787,7 +788,8 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
         CollectActivity,
         DeadlineActivity,
         PeriodicActivity,
-        ScheduleActivity
+        ScheduleActivity,
+        RegisteredDateActivity
     )
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]

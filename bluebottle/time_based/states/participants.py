@@ -285,7 +285,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.removed,
             ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.new,
+        ParticipantStateMachine.accepted,
         name=_("Re-add"),
         passed_label=_("re-added"),
         description=_("Re-add this person as a participant of this activity"),

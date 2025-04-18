@@ -157,6 +157,7 @@ class MethodForm(forms.Form):
         super().__init__(**kwargs)
 
         method = self.fields['method']
+
         method.choices = [
             (
                 'generator',
@@ -168,7 +169,7 @@ class MethodForm(forms.Form):
                         '</p>'
                     )
                 ),
-            )
+            ),
             (
                 'sms',
                 mark_safe(
@@ -185,6 +186,7 @@ class MethodForm(forms.Form):
 
 
 class TwoFactorSetupView(SetupView):
+    success_url = 'admin:index'
     form_list = (
         ('welcome', forms.Form),
         ('method', MethodForm),

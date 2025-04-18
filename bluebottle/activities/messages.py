@@ -18,12 +18,10 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 
 
 class ActivityWallpostOwnerMessage(TransitionMessage):
-    subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_owner'
+    subject = pgettext("email", "You have a new post on '{title}'")
+    template = "messages/activity_wallpost_owner"
 
-    context = {
-        'title': 'content_object.title'
-    }
+    context = {"title": "content_object.title"}
 
     def get_recipients(self):
         """activity organizer"""
@@ -34,13 +32,11 @@ class ActivityWallpostOwnerMessage(TransitionMessage):
 
 
 class ActivityWallpostReactionMessage(TransitionMessage):
-    subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_reaction'
+    subject = pgettext("email", "You have a new post on '{title}'")
+    template = "messages/activity_wallpost_reaction"
 
-    context = {
-        'title': 'wallpost.content_object.title'
-    }
-    action_title = pgettext('email', 'View response')
+    context = {"title": "wallpost.content_object.title"}
+    action_title = pgettext("email", "View response")
 
     def get_recipients(self):
         """wallpost author"""
@@ -48,12 +44,10 @@ class ActivityWallpostReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostOwnerReactionMessage(TransitionMessage):
-    subject = pgettext('email', "You have a new post on '{title}'")
-    template = 'messages/activity_wallpost_owner_reaction'
+    subject = pgettext("email", "You have a new post on '{title}'")
+    template = "messages/activity_wallpost_owner_reaction"
 
-    context = {
-        'title': 'wallpost.content_object.title'
-    }
+    context = {"title": "wallpost.content_object.title"}
 
     def get_recipients(self):
         """activity organizer"""
@@ -64,18 +58,14 @@ class ActivityWallpostOwnerReactionMessage(TransitionMessage):
 
 
 class ActivityWallpostFollowerMessage(TransitionMessage):
-    subject = pgettext('email', "Update from '{title}'")
-    template = 'messages/activity_wallpost_follower'
-    context = {
-        'title': 'content_object.title'
-    }
+    subject = pgettext("email", "Update from '{title}'")
+    template = "messages/activity_wallpost_follower"
+    context = {"title": "content_object.title"}
 
     def get_recipients(self):
         """followers of the activity"""
         activity = self.obj.content_object
-        follows = activity.follows.filter(
-            user__campaign_notifications=True
-        ).exclude(
+        follows = activity.follows.filter(user__campaign_notifications=True).exclude(
             user__in=(self.obj.author, self.obj.content_object.owner)
         )
 
@@ -84,18 +74,18 @@ class ActivityWallpostFollowerMessage(TransitionMessage):
 
 class ActivityNotification(TransitionMessage):
     context = {
-        'title': 'title',
+        "title": "title",
     }
 
     @property
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    action_title = pgettext("email", "Open your activity")
 
     def get_context(self, recipient):
         context = super().get_context(recipient)
-        context['impact'] = InitiativePlatformSettings.load().enable_impact
+        context["impact"] = InitiativePlatformSettings.load().enable_impact
 
         return context
 
@@ -105,11 +95,11 @@ class ActivityNotification(TransitionMessage):
 
 
 class ImpactReminderMessage(ActivityNotification):
-    subject = pgettext('email', 'Please share the impact results for your activity "{title}".')
-    template = 'messages/activity_impact_reminder'
-    context = {
-        'title': 'title'
-    }
+    subject = pgettext(
+        "email", 'Please share the impact results for your activity "{title}".'
+    )
+    template = "messages/activity_impact_reminder"
+    context = {"title": "title"}
 
     def get_recipients(self):
         return [self.obj.owner]
@@ -119,56 +109,73 @@ class ActivitySucceededNotification(ActivityNotification):
     """
     The activity succeeded
     """
-    subject = pgettext('email', 'Your activity "{title}" has succeeded 🎉')
-    template = 'messages/activity_succeeded'
+
+    subject = pgettext("email", 'Your activity "{title}" has succeeded 🎉')
+    template = "messages/activity_succeeded"
 
 
 class ActivityRestoredNotification(ActivityNotification):
     """
     The activity was restored
     """
-    subject = pgettext('email', 'The activity "{title}" has been restored')
-    template = 'messages/activity_restored'
+
+    subject = pgettext("email", 'The activity "{title}" has been restored')
+    template = "messages/activity_restored"
 
 
 class ActivityRejectedNotification(ActivityNotification):
     """
     The activity was rejected
     """
-    subject = pgettext('email', 'Your activity "{title}" has been rejected')
-    template = 'messages/activity_rejected'
+
+    subject = pgettext("email", 'Your activity "{title}" has been rejected')
+    template = "messages/activity_rejected"
+
+
+class ActivitySubmittedNotification(ActivityNotification):
+    """
+    The activity was submitted
+    """
+
+    subject = pgettext("email", 'Your activity "{title}" has been rejected')
+    template = "messages/activity_rejected"
 
 
 class ActivityCancelledNotification(ActivityNotification):
     """
     The activity got cancelled
     """
-    subject = pgettext('email', 'Your activity "{title}" has been cancelled')
-    template = 'messages/activity_cancelled'
+
+    subject = pgettext("email", 'Your activity "{title}" has been cancelled')
+    template = "messages/activity_cancelled"
 
 
 class ActivityExpiredNotification(ActivityNotification):
     """
     The activity expired (no sign-ups before registration deadline or start date)
     """
-    subject = pgettext('email', 'The registration deadline for your activity "{title}" has expired')
-    template = 'messages/activity_expired'
+
+    subject = pgettext(
+        "email", 'The registration deadline for your activity "{title}" has expired'
+    )
+    template = "messages/activity_expired"
 
 
 class ParticipantWithdrewConfirmationNotification(ActivityNotification):
     """
     The participant withdrew from the activity
     """
+
     context = {
-        'title': 'activity.title',
+        "title": "activity.title",
     }
 
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
-    template = 'messages/participant_withdrew_confirmation'
+    subject = pgettext("email", 'You have withdrawn from the activity "{title}"')
+    template = "messages/participant_withdrew_confirmation"
 
     def get_recipients(self):
         """wallpost author"""
@@ -179,21 +186,20 @@ class MatchingActivitiesNotification(TransitionMessage):
     """
     Send a list of matching initiaives to user
     """
+
     subject = pgettext(
-        'email',
-        '{first_name}, there are {count} activities on {site_name} matching your profile'
+        "email",
+        "{first_name}, there are {count} activities on {site_name} matching your profile",
     )
-    template = 'messages/matching_activities'
+    template = "messages/matching_activities"
 
     @property
     def action_link(self):
         domain = get_current_host()
         language = get_current_language()
-        return u"{}/{}/initiatives/activities/list".format(
-            domain, language
-        )
+        return "{}/{}/initiatives/activities/list".format(domain, language)
 
-    action_title = pgettext('email', 'View more activities')
+    action_title = pgettext("email", "View more activities")
 
     def get_recipients(self):
         """user"""
@@ -212,23 +218,21 @@ class MatchingActivitiesNotification(TransitionMessage):
                     "initiative-image", args=(activity.initiative.pk, "200x200")
                 )
             ),
-            'expertise': activity.expertise.name if activity.expertise else None,
-            'theme': activity.initiative.theme.name,
+            "expertise": activity.expertise.name if activity.expertise else None,
+            "theme": activity.initiative.theme.name,
         }
         if isinstance(activity, DateActivity):
-            slots = activity.slots.filter(status='open')
-            context['is_online'] = all(
-                slot.is_online for slot in slots
-            )
-            if not context['is_online']:
+            slots = activity.slots.filter(status="open")
+            context["is_online"] = all(slot.is_online for slot in slots)
+            if not context["is_online"]:
                 locations = set(str(slot.location) for slot in slots)
                 if len(locations) == 1:
-                    context['location'] = locations[0]
+                    context["location"] = locations[0]
                 else:
-                    context['location'] = pgettext('email', 'Multiple locations')
+                    context["location"] = pgettext("email", "Multiple locations")
 
             if len(slots) > 1:
-                context['when'] = pgettext('email', 'Mutliple time slots')
+                context["when"] = pgettext("email", "Mutliple time slots")
             else:
                 slot = slots[0]
 
@@ -237,62 +241,78 @@ class MatchingActivitiesNotification(TransitionMessage):
                 else:
                     tz = get_current_timezone()
 
-                start = '{} {}'.format(
-                    date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))
-                ) if slot.start else pgettext('email', 'Starts immediately')
-                end = '{} {}'.format(
-                    date(slot.end.astimezone(tz)), time(slot.end)
-                ) if slot.end else pgettext('email', 'runs indefinitely')
-                context['when'] = '{start_date} {start_time} - {end_time} ({timezone})'.format(
-                    start_date=date(slot.start.astimezone(tz)),
-                    start_time=time(slot.start.astimezone(tz)),
-                    end_time=time(slot.end.astimezone(tz)),
-                    timezone=start.strftime('%Z')
+                start = (
+                    "{} {}".format(
+                        date(slot.start.astimezone(tz)), time(slot.start.astimezone(tz))
+                    )
+                    if slot.start
+                    else pgettext("email", "Starts immediately")
+                )
+                end = (
+                    "{} {}".format(date(slot.end.astimezone(tz)), time(slot.end))
+                    if slot.end
+                    else pgettext("email", "runs indefinitely")
+                )
+                context["when"] = (
+                    "{start_date} {start_time} - {end_time} ({timezone})".format(
+                        start_date=date(slot.start.astimezone(tz)),
+                        start_time=time(slot.start.astimezone(tz)),
+                        end_time=time(slot.end.astimezone(tz)),
+                        timezone=start.strftime("%Z"),
+                    )
                 )
 
-                context['when'] = '{} - {}'.format(start, end)
+                context["when"] = "{} - {}".format(start, end)
         else:
             if activity.is_online:
-                context['is_online'] = True
+                context["is_online"] = True
             else:
-                context['location'] = activity.location
+                context["location"] = activity.location
 
-            start = date(activity.start) if activity.start else pgettext('email', 'starts immediately')
-            end = date(activity.deadline) if activity.deadline else pgettext('email', 'runs indefinitely')
+            start = (
+                date(activity.start)
+                if activity.start
+                else pgettext("email", "starts immediately")
+            )
+            end = (
+                date(activity.deadline)
+                if activity.deadline
+                else pgettext("email", "runs indefinitely")
+            )
 
-            context['when'] = '{} - {}'.format(start, end)
+            context["when"] = "{} - {}".format(start, end)
 
         return context
 
     def get_context(self, recipient, activities=None):
         context = super().get_context(recipient)
-        context['profile_incomplete'] = (
-            not (len(recipient.favourite_themes.all())) or
-            not (len(recipient.skills.all())) or
-            not (recipient.place or recipient.location)
+        context["profile_incomplete"] = (
+            not (len(recipient.favourite_themes.all()))
+            or not (len(recipient.skills.all()))
+            or not (recipient.place or recipient.location)
         )
         if activities:
-            context['activities'] = [
+            context["activities"] = [
                 self.get_activity_context(activity) for activity in activities[:3]
             ]
-            context['count'] = len(activities)
+            context["count"] = len(activities)
 
         return context
 
 
 class TeamNotification(ActivityNotification):
     context = {
-        'title': 'activity.title',
-        'team_captain_email': 'owner.email',
-        'team_name': 'name',
-        'team_captain_name': 'owner.full_name'
+        "title": "activity.title",
+        "team_captain_email": "owner.email",
+        "team_name": "name",
+        "team_captain_name": "owner.full_name",
     }
 
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext("email", "View activity")
 
     def get_recipients(self):
         """activity manager"""
@@ -300,23 +320,23 @@ class TeamNotification(ActivityNotification):
 
 
 class TeamAddedMessage(TeamNotification):
-    subject = pgettext('email', 'A new team has joined "{title}"')
-    template = 'messages/team_added'
+    subject = pgettext("email", 'A new team has joined "{title}"')
+    template = "messages/team_added"
 
 
 class TeamAppliedMessage(TeamNotification):
-    subject = pgettext('email', 'A new team has applied to "{title}"')
-    template = 'messages/team_applied'
+    subject = pgettext("email", 'A new team has applied to "{title}"')
+    template = "messages/team_applied"
 
 
 class TeamCaptainAcceptedMessage(TeamNotification):
-    subject = pgettext('email', 'Your team has been accepted for "{title}"')
-    template = 'messages/team_captain_accepted'
+    subject = pgettext("email", 'Your team has been accepted for "{title}"')
+    template = "messages/team_captain_accepted"
 
     context = {
-        'title': 'activity.title',
-        'team_captain_email': 'team.owner.email',
-        'team_name': 'team.name'
+        "title": "activity.title",
+        "team_captain_email": "team.owner.email",
+        "team_name": "team.name",
     }
 
     def get_recipients(self):
@@ -325,24 +345,26 @@ class TeamCaptainAcceptedMessage(TeamNotification):
 
 
 class TeamCancelledMessage(TeamNotification):
-    subject = pgettext('email', "Team cancellation for '{title}'")
-    template = 'messages/team_cancelled'
+    subject = pgettext("email", "Team cancellation for '{title}'")
+    template = "messages/team_cancelled"
 
     def get_recipients(self):
         """team participants"""
         return [
-            contributor.user for contributor in self.obj.members.all() if not contributor.user == self.obj.owner
+            contributor.user
+            for contributor in self.obj.members.all()
+            if not contributor.user == self.obj.owner
         ]
 
 
 class TeamCancelledTeamCaptainMessage(TeamNotification):
-    subject = pgettext('email', 'Your team has been rejected for "{title}"')
-    template = 'messages/team_cancelled_team_captain'
+    subject = pgettext("email", 'Your team has been rejected for "{title}"')
+    template = "messages/team_cancelled_team_captain"
 
     context = {
-        'title': 'activity.title',
-        'team_captain_email': 'team.owner.email',
-        'team_name': 'team.name'
+        "title": "activity.title",
+        "team_captain_email": "team.owner.email",
+        "team_name": "team.name",
     }
 
     def get_recipients(self):
@@ -351,8 +373,8 @@ class TeamCancelledTeamCaptainMessage(TeamNotification):
 
 
 class TeamWithdrawnMessage(TeamNotification):
-    subject = pgettext('email', "Team cancellation for '{title}'")
-    template = 'messages/team_withdrawn'
+    subject = pgettext("email", "Team cancellation for '{title}'")
+    template = "messages/team_withdrawn"
 
     def get_recipients(self):
         """team participants"""
@@ -360,20 +382,21 @@ class TeamWithdrawnMessage(TeamNotification):
 
 
 class TeamReappliedMessage(TeamNotification):
-    subject = pgettext('email', "You’re added to a team for '{title}'")
-    template = 'messages/team_reapplied'
+    subject = pgettext("email", "You’re added to a team for '{title}'")
+    template = "messages/team_reapplied"
 
     def get_recipients(self):
         """team participants"""
         return [
-            contributor.user for contributor in self.obj.members.all()
+            contributor.user
+            for contributor in self.obj.members.all()
             if contributor.user != contributor.team.owner
         ]
 
 
 class TeamWithdrawnActivityOwnerMessage(TeamNotification):
-    subject = pgettext('email', "Team cancellation for '{title}'")
-    template = 'messages/team_withdrawn_activity_owner'
+    subject = pgettext("email", "Team cancellation for '{title}'")
+    template = "messages/team_withdrawn_activity_owner"
 
     def get_recipients(self):
         """team participants"""
@@ -381,8 +404,8 @@ class TeamWithdrawnActivityOwnerMessage(TeamNotification):
 
 
 class TeamReopenedMessage(TeamNotification):
-    subject = pgettext('email', "Your team was accepted again")
-    template = 'messages/team_reopened'
+    subject = pgettext("email", "Your team was accepted again")
+    template = "messages/team_reopened"
 
     def get_recipients(self):
         """team participants"""
@@ -390,14 +413,14 @@ class TeamReopenedMessage(TeamNotification):
 
 
 class TeamMemberAddedMessage(ActivityNotification):
-    subject = pgettext('email', 'Someone has joined your team for "{title}"')
-    template = 'messages/team_member_added'
+    subject = pgettext("email", 'Someone has joined your team for "{title}"')
+    template = "messages/team_member_added"
 
     context = {
-        'name': 'user.full_name',
-        'title': 'activity.title',
+        "name": "user.full_name",
+        "title": "activity.title",
     }
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext("email", "View activity")
 
     @property
     def action_link(self):
@@ -412,14 +435,16 @@ class TeamMemberAddedMessage(ActivityNotification):
 
 
 class TeamMemberWithdrewMessage(ActivityNotification):
-    subject = pgettext('email', 'A participant has withdrawn from your team for "{title}"')
-    template = 'messages/team_member_withdrew'
+    subject = pgettext(
+        "email", 'A participant has withdrawn from your team for "{title}"'
+    )
+    template = "messages/team_member_withdrew"
 
     context = {
-        'name': 'user.full_name',
-        'title': 'activity.title',
+        "name": "user.full_name",
+        "title": "activity.title",
     }
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext("email", "View activity")
 
     @property
     def action_link(self):
@@ -434,14 +459,14 @@ class TeamMemberWithdrewMessage(ActivityNotification):
 
 
 class TeamMemberRemovedMessage(ActivityNotification):
-    subject = pgettext('email', "Team member removed for ‘{title}’")
-    template = 'messages/team_member_removed'
+    subject = pgettext("email", "Team member removed for ‘{title}’")
+    template = "messages/team_member_removed"
 
     context = {
-        'name': 'user.full_name',
-        'title': 'activity.title',
+        "name": "user.full_name",
+        "title": "activity.title",
     }
-    action_title = pgettext('email', 'View activity')
+    action_title = pgettext("email", "View activity")
 
     @property
     def action_link(self):
@@ -460,9 +485,10 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
     @property
     def action_link(self):
         from bluebottle.clients.utils import tenant_url
-        return tenant_url('/initiatives/activities/list')
 
-    action_title = pgettext('email', 'Find activities')
+        return tenant_url("/initiatives/activities/list")
+
+    action_title = pgettext("email", "Find activities")
 
     send_once = True
 
@@ -470,26 +496,30 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         from bluebottle.members.models import MemberPlatformSettings
         from bluebottle.clients.utils import tenant_url
 
-        context = super(BaseDoGoodHoursReminderNotification, self).get_context(recipient)
+        context = super(BaseDoGoodHoursReminderNotification, self).get_context(
+            recipient
+        )
         settings = MemberPlatformSettings.load()
-        context['do_good_hours'] = settings.do_good_hours
-        context['opt_out_link'] = tenant_url('/member/profile')
+        context["do_good_hours"] = settings.do_good_hours
+        context["opt_out_link"] = tenant_url("/member/profile")
         return context
 
     @property
     def generic_subject(self):
         from bluebottle.members.models import MemberPlatformSettings
+
         settings = MemberPlatformSettings.load()
         context = self.get_generic_context()
-        context['do_good_hours'] = settings.do_good_hours
+        context["do_good_hours"] = settings.do_good_hours
         return str(self.subject.format(**context))
 
     def already_send(self, recipient):
-        return Message.objects.filter(
-            template=self.get_template(),
-            recipient=recipient,
-            sent__year=now().year
-        ).count() > 0
+        return (
+            Message.objects.filter(
+                template=self.get_template(), recipient=recipient, sent__year=now().year
+            ).count()
+            > 0
+        )
 
     def get_recipients(self):
         """members with do good hours"""
@@ -499,36 +529,40 @@ class BaseDoGoodHoursReminderNotification(TransitionMessage):
         year = now().year
         do_good_hours = timedelta(hours=MemberPlatformSettings.load().do_good_hours)
 
-        members = Member.objects.annotate(
-            hours=Sum(
-                'contributor__contributions__timecontribution__value',
-                filter=(
-                    Q(contributor__contributions__start__year=year) &
-                    Q(contributor__contributions__status__in=['new', 'succeeded'])
-                )
-            ),
-        ).filter(
-            Q(hours__lt=do_good_hours) | Q(hours__isnull=True),
-            is_active=True,
-            receive_reminder_emails=True
-        ).distinct()
+        members = (
+            Member.objects.annotate(
+                hours=Sum(
+                    "contributor__contributions__timecontribution__value",
+                    filter=(
+                        Q(contributor__contributions__start__year=year)
+                        & Q(contributor__contributions__status__in=["new", "succeeded"])
+                    ),
+                ),
+            )
+            .filter(
+                Q(hours__lt=do_good_hours) | Q(hours__isnull=True),
+                is_active=True,
+                receive_reminder_emails=True,
+            )
+            .distinct()
+        )
         return members
 
 
 class PublishActivityReminderNotification(TransitionMessage):
-    subject = pgettext('email', 'Publish your activity "{title}"')
-    template = 'messages/publish_activity_reminder'
+    subject = pgettext("email", 'Publish your activity "{title}"')
+    template = "messages/publish_activity_reminder"
     send_once = True
 
     context = {
-        'title': 'title',
+        "title": "title",
     }
 
     @property
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'Publish your activity')
+    action_title = pgettext("email", "Publish your activity")
 
     def get_recipients(self):
         """activity owner"""
@@ -536,31 +570,33 @@ class PublishActivityReminderNotification(TransitionMessage):
 
 
 class DoGoodHoursReminderQ1Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "It’s a new year, let's make some impact!")
-    template = 'messages/do-good-hours/reminder-q1'
+    subject = pgettext("email", "It’s a new year, let's make some impact!")
+    template = "messages/matching/reminder-q1"
 
 
 class DoGoodHoursReminderQ2Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Haven’t joined an activity yet? Let’s get started!")
-    template = 'messages/do-good-hours/reminder-q2'
+    subject = pgettext("email", "Haven’t joined an activity yet? Let’s get started!")
+    template = "messages/matching/reminder-q2"
 
 
 class DoGoodHoursReminderQ3Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Half way through the year and still plenty of activities to join")
-    template = 'messages/do-good-hours/reminder-q3'
+    subject = pgettext(
+        "email", "Half way through the year and still plenty of activities to join"
+    )
+    template = "messages/matching/reminder-q3"
 
 
 class DoGoodHoursReminderQ4Notification(BaseDoGoodHoursReminderNotification):
-    subject = pgettext('email', "Make use of your {do_good_hours} hours of impact!")
-    template = 'messages/do-good-hours/reminder-q4'
+    subject = pgettext("email", "Make use of your {do_good_hours} hours of impact!")
+    template = "messages/matching/reminder-q4"
 
 
 class InactiveParticipantAddedNotification(TransitionMessage):
-    subject = pgettext('email', "You have been added to the activity {title}")
-    template = 'messages/inactive-participant-added'
+    subject = pgettext("email", "You have been added to the activity {title}")
+    template = "messages/inactive-participant-added"
 
     context = {
-        'title': 'activity.title',
+        "title": "activity.title",
     }
 
     @property
@@ -570,7 +606,7 @@ class InactiveParticipantAddedNotification(TransitionMessage):
         token = TimestampSigner().sign(user.pk)
         activity_url = urlparse(self.obj.activity.get_absolute_url()).path[3:]
 
-        url = f'/auth/confirm/?token={token}&email={user.email}&url={activity_url}'
+        url = f"/auth/confirm/?token={token}&email={user.email}&url={activity_url}"
         return url
 
     def get_recipients(self):

@@ -4,7 +4,7 @@ from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
 )
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.participant import (
     ParticipantWithdrewConfirmationNotification
 )
 from bluebottle.deeds.tests.factories import DeedFactory, DeedParticipantFactory

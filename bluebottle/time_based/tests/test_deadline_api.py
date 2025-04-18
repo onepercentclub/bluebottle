@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     DeadlineActivitySerializer,
@@ -44,6 +45,7 @@ class DeadlineActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestC
         self.defaults = {
             'review': False,
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
+            'theme': ThemeFactory.create(),
             'is_online': True,
             'duration': '02:00',
             'start': date.today() + timedelta(days=10),

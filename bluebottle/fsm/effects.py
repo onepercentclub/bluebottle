@@ -99,17 +99,24 @@ class BaseTransitionEffect(Effect):
             )
         return str(self.transition.target)
 
-    @ property
+    @property
     def help(self):
         return _('{}: {}').format(self.instance.__class__._meta.verbose_name, self.instance)
 
     def to_html(self):
         if self.conditions:
-            return _('{transition} {object} if {conditions}').format(
-                transition=self.transition.name,
-                object=str(self.instance),
-                conditions=" and ".join([c.__doc__ for c in self.conditions])
-            )
+            try:
+                return _('{transition} {object} if {conditions}').format(
+                    transition=self.transition.name,
+                    object=str(self.instance),
+                    conditions=" and ".join([c.__doc__ for c in self.conditions])
+                )
+            except TypeError:
+                return _('{transition} {object} if {conditions}').format(
+                    transition=self.transition.name,
+                    object=str(self.instance),
+                    conditions=" and ".join([str(c) for c in self.conditions])
+                )
         return _('{transition} {object}').format(
             transition=self.transition.name,
             object=str(self.instance)
@@ -195,7 +202,7 @@ class BaseRelatedTransitionEffect(Effect):
 
 
 def RelatedTransitionEffect(
-    _relation, transition, field='states', conditions=None, description=None, display=True
+        _relation, transition, field='states', conditions=None, description=None, display=True
 ):
     _transition = transition
     _conditions = conditions or []

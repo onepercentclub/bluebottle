@@ -197,7 +197,12 @@ class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
                     scim_external_id__isnull=True
                 )
         except Member.DoesNotExist:
-            pass
+            try:
+                serializer.instance = Member.objects.get(
+                    email__iexact=serializer.validated_data['email']
+                )
+            except Member.DoesNotExist:
+                pass
 
         return super().perform_create(serializer)
 

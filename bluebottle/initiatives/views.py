@@ -5,11 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
 from django.db import connection
+from django.db.models import Q
+
 from rest_framework import generics, response
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_json_api.views import AutoPrefetchMixin
+
 
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
@@ -22,7 +25,7 @@ from bluebottle.initiatives.permissions import (
     InitiativeStatusPermission, InitiativeOwnerPermission
 )
 from bluebottle.initiatives.serializers import (
-    InitiativeSerializer, InitiativeListSerializer, InitiativeReviewTransitionSerializer,
+    InitiativeSerializer, InitiativeReviewTransitionSerializer,
     InitiativeMapSerializer, InitiativePreviewSerializer, InitiativeRedirectSerializer,
     RelatedInitiativeImageSerializer, ThemeSerializer,
     RelatedInitiativeImageContentSerializer,
@@ -34,21 +37,24 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     RetrieveUpdateAPIView, JsonApiViewMixin,
-    CreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
+    CreateAPIView, ListCreateAPIView, ListAPIView, TranslatedApiViewMixin, RetrieveAPIView, NoPagination,
     JsonApiElasticSearchPagination,
 )
 
 
-class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):
+class InitiativeList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.prefetch_related(
         'place', 'location', 'owner', 'activity_managers', 'image', 'categories', 'theme'
     )
 
-    def get_serializer_class(self):
-        if self.request.method == 'POST' or self.request.GET.get('filter[owner.id]'):
-            return InitiativeSerializer
-        else:
-            return InitiativeListSerializer
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(
+            Q(is_open=True) | Q(owner=self.request.user)
+        )
+
+        return queryset
+
+    serializer_class = InitiativeSerializer
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

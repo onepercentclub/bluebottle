@@ -5,10 +5,8 @@ from django.conf.urls.i18n import is_language_prefix_patterns_used
 from django.middleware.locale import LocaleMiddleware
 from django.conf import settings
 from django.contrib.sessions import middleware
-from django.db import connection
 from django.utils import translation
 
-from tenant_extras.middleware import tenant_translation
 from tenant_extras.utils import get_tenant_properties
 
 from bluebottle.utils.models import get_languages, get_default_language
@@ -36,10 +34,6 @@ class APILanguageMiddleware(middleware.SessionMiddleware):
                 language = get_default_language()
 
             translation.activate(language)
-
-            translation._trans._active.value = tenant_translation(
-                language, connection.tenant.client_name
-            )
             request.LANGUAGE_CODE = translation.get_language()
 
 

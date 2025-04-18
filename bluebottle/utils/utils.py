@@ -40,7 +40,8 @@ TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul',
         'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
 ATTRIBUTES = {
     'a': ['target', 'href', 'rel'],
-    'img': ['src', 'alt', 'width', 'height', 'align']
+    'img': ['src', 'alt', 'width', 'height', 'align'],
+    'li': ['data-list']
 }
 EMPTY = ['hr', 'a', 'br', 'img']
 
@@ -152,6 +153,11 @@ def get_current_host(include_scheme=True):
         return '{0}://{1}'.format(scheme, host)
     else:
         return host
+
+
+def get_tenant_name():
+    tenant = connection.tenant
+    return tenant.name or '[site name]'
 
 
 def get_current_language():

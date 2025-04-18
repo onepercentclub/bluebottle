@@ -150,7 +150,7 @@ class FundingAdmin(ActivityChildAdmin):
     list_filter = [StateMachineFilter, CurrencyFilter]
 
     search_fields = ['title', 'slug', 'description']
-    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
     detail_fields = ("title", "description", "image", "video_url")
 
@@ -171,6 +171,7 @@ class FundingAdmin(ActivityChildAdmin):
         'duration',
         'deadline',
         'target',
+        'impact_location',
         'amount_matching',
         'amount_donated',
         'amount_raised',

@@ -1,0 +1,11 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p>
+        {% blocktrans context 'email' %}
+        Unfortunately your activity "{{ title }}" has been rejected. 
+        If you have any questions, you can contact the platform manager at {{contact_email}}.
+        {% endblocktrans %}
+    </p>
+{% endblock %}

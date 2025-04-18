@@ -32,6 +32,7 @@ from bluebottle.funding_lipisha.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
@@ -735,6 +736,8 @@ class FundingTestCase(BluebottleTestCase):
         settings.activity_types.append('funding')
         settings.save()
 
+        self.theme = ThemeFactory.create()
+
         self.bank_account = PledgeBankAccountFactory.create(
             status="verified",
             connect_account=PlainPayoutAccountFactory.create(status="verified"),
@@ -756,6 +759,13 @@ class FundingTestCase(BluebottleTestCase):
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
+                        },
+                    },
+
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk,
                         },
                     },
                 }
@@ -841,7 +851,6 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = response.json()
-
         self.assertEqual(
             data['errors'][0]['source']['pointer'],
             '/data/attributes/deadline'

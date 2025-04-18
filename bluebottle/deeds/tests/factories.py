@@ -9,6 +9,7 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.activities.models import EffortContribution
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class DeedFactory(factory.DjangoModelFactory):
@@ -30,6 +31,8 @@ class DeedFactory(factory.DjangoModelFactory):
         date.today() + timedelta(days=3),
         date.today() + timedelta(days=20)
     )
+
+    theme = factory.SubFactory(ThemeFactory)
 
 
 class DeedParticipantFactory(factory.DjangoModelFactory):

@@ -5,11 +5,13 @@ from bluebottle.fsm.triggers import (
     register,
     TriggerManager,
 )
-from bluebottle.funding.messages import (
+from bluebottle.funding.messages.activity_manager import (
     PayoutAccountVerified,
     PayoutAccountMarkedIncomplete,
-    LivePayoutAccountMarkedIncomplete,
     PublicPayoutAccountMarkedIncomplete,
+)
+from bluebottle.funding.messages.platform_manager import (
+    LivePayoutAccountMarkedIncomplete,
     LivePublicPayoutAccountMarkedIncomplete
 )
 from bluebottle.funding.models import Funding

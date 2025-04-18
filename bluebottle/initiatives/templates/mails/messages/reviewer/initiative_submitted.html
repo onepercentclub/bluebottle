@@ -1,0 +1,11 @@
+{% extends "mails/messages/initiative_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        The initiative "{{ title }}" has been submitted by {{ initiator_name }}.
+        Please take a moment to review this initiative and decide if it's right for your platform.
+        <br><br>
+        {{ initiator_name }} will be waiting for your review, so please respond promptly.
+    {% endblocktrans %}
+{% endblock %}

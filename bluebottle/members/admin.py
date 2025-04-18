@@ -250,8 +250,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
         if not request.user.is_superuser:
             read_only_fields += ('retention_anonymize', 'retention_delete')
 
-        if request.user.region_manager and not request.user.is_superuser:
-            read_only_fields += ("region_manager",)
+        if request.user.subregion_manager and not request.user.is_superuser:
+            read_only_fields += ("subregion_manager",)
 
         return read_only_fields
 
@@ -442,7 +442,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
         if OfficeSubRegion.objects.count():
-            fields.insert(4, 'region_manager')
+            fields.insert(4, 'subregion_manager')
         return fields
 
     def get_fieldsets(self, request, obj=None):
@@ -466,7 +466,6 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                         'fields': [
                             'email',
                             'remote_id',
-                            'username',
                             'first_name',
                             'last_name',
                             'phone_number',
@@ -511,7 +510,7 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
                             [
                                 'matching_options_set',
                                 'search_distance', 'any_search_distance', 'exclude_online',
-                                'place', 'favourite_themes', 'skills', 'subscribed',
+                                'place', 'favourite_themes', 'skills',
                             ]
                     }
                 ],
@@ -532,6 +531,8 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
 
             if obj and (obj.is_staff or obj.is_superuser):
                 fieldsets[1][1]['fields'].append('submitted_initiative_notifications')
+
+            fieldsets[1][1]['fields'].append('subscribed')
 
             if SegmentType.objects.count():
                 extra = (

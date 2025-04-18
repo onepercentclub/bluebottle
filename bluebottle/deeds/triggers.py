@@ -1,9 +1,13 @@
 from datetime import date
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, InactiveParticipantAddedNotification, ParticipantWithdrewConfirmationNotification,
+    ActivityRestoredNotification
+)
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
+    ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine
@@ -270,11 +274,13 @@ def contributor_is_active(effect):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return (not settings.closed) and effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 @register(DeedParticipant)

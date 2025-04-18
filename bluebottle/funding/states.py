@@ -55,7 +55,7 @@ class FundingStateMachine(ActivityStateMachine):
 
     def without_approved_payouts(self):
         """hasn't got approved payouts"""
-        return not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
+        return self.instance.pk and not self.instance.payouts.exclude(status__in=['new', 'failed']).count()
 
     def can_approve(self, user):
         """user has the permission to approve (staff member)"""
@@ -63,7 +63,8 @@ class FundingStateMachine(ActivityStateMachine):
 
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
-        return self.instance.bank_account and \
+        return self.instance.pk and \
+            self.instance.bank_account and \
             self.instance.bank_account.provider_class and \
             self.instance.bank_account.provider_class.refund_enabled
 

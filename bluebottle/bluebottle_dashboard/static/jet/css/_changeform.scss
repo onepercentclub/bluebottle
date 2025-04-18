@@ -211,9 +211,12 @@ form .aligned {
   }
 
   div.transition-option {
-    margin-left: 180px;
     margin-bottom: 24px;
     vertical-align: middle;
+  }
+
+  div.transition-option + div.transition-option {
+    padding-left: 180px;
   }
 }
 
@@ -655,6 +658,10 @@ body.popup .submit-row {
         margin: 0;
         background: transparent;
       }
+    }
+
+    p.help {
+      margin-left: 0px !important;
     }
   }
 }

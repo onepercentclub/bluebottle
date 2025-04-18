@@ -1,5 +1,5 @@
-from builtins import object
-from builtins import str
+from builtins import object, str
+from copy import deepcopy
 
 from django.dispatch import Signal
 from django.utils.translation import gettext_lazy as _
@@ -118,9 +118,10 @@ post_state_transition = Signal()
 class Transition(BaseTransition):
 
     def extend(self, **kwargs):
+        transition = deepcopy(self)
         for kwarg in kwargs:
-            setattr(self, kwarg, kwargs[kwarg])
-        return self
+            setattr(transition, kwarg, kwargs[kwarg])
+        return transition
 
     def __init__(self, sources, target, *args, **kwargs):
         self.permission = kwargs.get('permission')

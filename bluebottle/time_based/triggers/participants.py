@@ -1400,6 +1400,15 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
             ]
         ),
         TransitionTrigger(
+            RegisteredDateParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                )
+            ]
+        ),
+        TransitionTrigger(
             RegisteredDateParticipantStateMachine.readd,
             effects=[
                 TransitionEffect(
@@ -1409,5 +1418,32 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     ]
                 )
             ]
-        )
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.remove,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateParticipantStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                )
+            ]
+        ),
     ]

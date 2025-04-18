@@ -245,7 +245,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [submitted, rejected],
+        [submitted, needs_work, draft],
         open,
         name=_("Approve"),
         automatic=False,

@@ -212,11 +212,12 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
-            ParticipantStateMachine.removed
+            ParticipantStateMachine.removed,
+            ParticipantStateMachine.succeeded,
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
-        description=_("Accept this person as a participant of this Activity."),
+        description=_("Accept this person as a participant of this activity."),
         passed_label=_("accepted"),
         automatic=True,
     )

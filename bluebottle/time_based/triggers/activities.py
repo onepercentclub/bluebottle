@@ -589,6 +589,33 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
                 )
             ]
         ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.reopen,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.accept
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.cancel
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.restore,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.restore
+                )
+            ]
+        ),
         ModelChangedTrigger(
             'start',
             effects=[

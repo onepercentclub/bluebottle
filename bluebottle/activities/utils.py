@@ -131,8 +131,11 @@ class BaseActivitySerializer(ModelSerializer):
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')
     admin_url = serializers.SerializerMethodField()
-    partner_organization = SerializerMethodResourceRelatedField(
-        read_only=True, source='get_partner_organization', model=Organization
+    partner_organization = ResourceRelatedField(
+        source='organization',
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     updates = HyperlinkedRelatedField(
@@ -167,12 +170,6 @@ class BaseActivitySerializer(ModelSerializer):
         if user.is_authenticated and (user.is_staff or user.is_superuser):
             url = reverse('admin:%s_%s_change' % (obj._meta.app_label, obj._meta.model_name), args=[obj.id])
             return url
-
-    def get_partner_organization(self, obj):
-        if obj.organization:
-            return obj.organization
-        elif obj.initiative and obj.initiative.organization:
-            return obj.initiative.organization
 
     matching_properties = MatchingPropertiesField()
 

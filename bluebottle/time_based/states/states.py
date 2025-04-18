@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine,
 )
@@ -139,11 +140,6 @@ class DateStateMachine(TimeBasedStateMachine):
     )
 
 
-@register(RegisteredDateActivity)
-class RegisteredDateStateMachine(TimeBasedStateMachine):
-    pass
-
-
 class RegistrationActivityStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
@@ -185,6 +181,14 @@ class ScheduleActivityStateMachine(RegistrationActivityStateMachine):
 @register(PeriodicActivity)
 class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
     pass
+
+
+@register(RegisteredDateActivity)
+class RegisteredDateStateMachine(ActivityStateMachine):
+
+    approve = ActivityStateMachine.approve.extend(
+        description=_('Approve activity, so it will be registered on the platform.'),
+    )
 
 
 @register(TimeContribution)

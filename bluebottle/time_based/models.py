@@ -831,35 +831,35 @@ class RegisteredDateActivity(TimeBasedActivity):
 
         permissions = (
             (
-                "api_read_registereddate",
+                "api_read_registereddateactivity",
                 "Can view on a registered date activities through the API",
             ),
             (
-                "api_add_registereddate",
+                "api_add_registereddateactivity",
                 "Can add on a registered date activities through the API",
             ),
             (
-                "api_change_registereddate",
+                "api_change_registereddateactivity",
                 "Can change on a registered date activities through the API",
             ),
             (
-                "api_delete_registereddate",
+                "api_delete_registereddateactivity",
                 "Can delete on a registered date activities through the API",
             ),
             (
-                "api_read_own_registereddate",
+                "api_read_own_registereddateactivity",
                 "Can view own on a registered date activities through the API",
             ),
             (
-                "api_add_own_registereddate",
+                "api_add_own_registereddateactivity",
                 "Can add own on a registered date activities through the API",
             ),
             (
-                "api_change_own_registereddate",
+                "api_change_own_registereddateactivity",
                 "Can change own on a registered date activities through the API",
             ),
             (
-                "api_delete_own_registereddate",
+                "api_delete_own_registereddateactivity",
                 "Can delete own on a registered date activities through the API",
             ),
         )

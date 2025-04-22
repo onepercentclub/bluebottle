@@ -3,17 +3,18 @@ from django.db.models import Q
 from bluebottle.activities.permissions import ContributorPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant, DateActivity
+    TeamScheduleParticipant, DateParticipant, DateActivity, RegisteredDateParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
     DateParticipantTransitionSerializer,
     ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer
+    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer,
+    RegisteredDateParticipantSerializer
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
-    PeriodicParticipantTransitionSerializer,
+    PeriodicParticipantTransitionSerializer, RegisteredDateParticipantTransitionSerializer,
 )
 from bluebottle.time_based.views.mixins import (
     AnonymizeMembersMixin,
@@ -55,6 +56,13 @@ class DeadlineParticipantList(ParticipantList):
     serializer_class = DeadlineParticipantSerializer
 
 
+class RegisteredDateParticipantList(ParticipantList):
+    queryset = RegisteredDateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = RegisteredDateParticipantSerializer
+
+
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
@@ -69,6 +77,11 @@ class DateParticipantDetail(ParticipantDetail):
 class DeadlineParticipantDetail(ParticipantDetail):
     queryset = DeadlineParticipant.objects.all()
     serializer_class = DeadlineParticipantSerializer
+
+
+class RegisteredDateParticipantDetail(ParticipantDetail):
+    queryset = RegisteredDateParticipant.objects.all()
+    serializer_class = RegisteredDateParticipantSerializer
 
 
 class ScheduleParticipantDetail(ParticipantDetail):
@@ -196,6 +209,13 @@ class DeadlineRelatedParticipantList(RelatedParticipantListView):
     serializer_class = DeadlineParticipantSerializer
 
 
+class RegisteredDateRelatedParticipantList(RelatedParticipantListView):
+    queryset = RegisteredDateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = RegisteredDateParticipantSerializer
+
+
 class ScheduleRelatedParticipantList(RelatedParticipantListView):
     queryset = ScheduleParticipant.objects.prefetch_related(
         'user', 'activity'
@@ -250,6 +270,11 @@ class DateParticipantTransitionList(TransitionList):
 class DeadlineParticipantTransitionList(TransitionList):
     serializer_class = DeadlineParticipantTransitionSerializer
     queryset = DeadlineParticipant.objects.all()
+
+
+class RegisteredDateParticipantTransitionList(TransitionList):
+    serializer_class = RegisteredDateParticipantTransitionSerializer
+    queryset = RegisteredDateParticipant.objects.all()
 
 
 class ScheduleParticipantTransitionList(TransitionList):

@@ -16,7 +16,7 @@ from bluebottle.time_based.models import (
     ScheduleRegistration,
     TeamScheduleParticipant,
     TeamScheduleRegistration,
-    DateActivitySlot
+    DateActivitySlot, RegisteredDateParticipant
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -96,6 +96,24 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
             "registration": "bluebottle.time_based.serializers.DeadlineRegistrationSerializer",
+        }
+    )
+
+
+class RegisteredDateParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('registered-date-participant-detail', view_args=('pk',))
+
+    class Meta(ParticipantSerializer.Meta):
+        model = DeadlineParticipant
+        fields = ParticipantSerializer.Meta.fields + ("contributions",)
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = "contributors/time-based/registered-date-participants"
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers.serializers,
+        **{
+            "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
         }
     )
 
@@ -212,6 +230,17 @@ class DeadlineParticipantTransitionSerializer(ParticipantTransitionSerializer):
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-participant-transitions'
+
+
+class RegisteredDateParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=RegisteredDateParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.RegisteredDateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/registered-date-participant-transitions'
 
 
 class ScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):

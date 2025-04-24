@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from bluebottle.activities.permissions import ContributorPermission
+from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
     TeamScheduleParticipant, DateParticipant, DateActivity, RegisteredDateParticipant
@@ -38,7 +38,11 @@ from bluebottle.utils.views import (
 class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            ActivityManagerPermission
+        ),
     )
 
 
@@ -58,7 +62,8 @@ class DeadlineParticipantList(ParticipantList):
 
 class RegisteredDateParticipantList(ParticipantList):
     queryset = RegisteredDateParticipant.objects.prefetch_related(
-        'user', 'activity'
+        'user',
+        'activity'
     )
     serializer_class = RegisteredDateParticipantSerializer
 

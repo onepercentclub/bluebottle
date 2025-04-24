@@ -64,7 +64,7 @@ from bluebottle.time_based.serializers import (
     PolymorphicSlotSerializer,
     ScheduleActivitySerializer,
     ScheduleParticipantSerializer,
-    TeamScheduleParticipantSerializer,
+    TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
@@ -108,6 +108,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     def get_segments(self, obj):
@@ -566,6 +567,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     included_serializers = {
@@ -609,6 +611,9 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer,
+        CollectActivitySerializer
     ]
 
     class Meta(object):

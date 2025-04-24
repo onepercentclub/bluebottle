@@ -104,6 +104,15 @@ class ContributionPermission(ResourcePermission):
         return user in obj.contributor.activity.owners
 
 
+class ActivityManagerPermission(ResourcePermission):
+
+    def has_action_permission(self, action, user, model_cls):
+        return True
+
+    def has_object_action_permission(self, action, user, obj):
+        return user in obj.activity.owners
+
+
 class IsAdminPermission(ResourcePermission):
 
     def has_action_permission(self, action, user, model_cls):

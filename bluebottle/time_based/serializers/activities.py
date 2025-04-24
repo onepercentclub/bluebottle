@@ -601,7 +601,7 @@ class RegisteredDateTransitionSerializer(TransitionSerializer):
     }
 
     class JSONAPIMeta(object):
-        resource_name = 'activities/time-based/regsitered-date-transitions'
+        resource_name = 'activities/time-based/registered-date-transitions'
         included_resources = ['resource', ]
 
 

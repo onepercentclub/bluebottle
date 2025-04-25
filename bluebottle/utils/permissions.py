@@ -32,8 +32,7 @@ class IsActivityManager(permissions.BasePermission):
         """
         return (
             obj.owner == request.user or
-            obj.initiative.owner == request.user or
-            request.user in obj.initiative.activity_managers.all() or
+            request.user in obj.initiative.owners or
             request.user.is_superuser or
             request.user.is_staff
         )

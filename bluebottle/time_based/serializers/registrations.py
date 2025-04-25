@@ -31,9 +31,7 @@ class ContactEmailField(serializers.CharField):
         if user.is_authenticated and (
             user.is_staff or
             user.is_superuser or
-            user == activity.owner or
-            user == activity.initiative.owner or
-            user in activity.initiative.activity_managers.all()
+            user in activity.owners
         ):
             return super().to_representation(value)
 

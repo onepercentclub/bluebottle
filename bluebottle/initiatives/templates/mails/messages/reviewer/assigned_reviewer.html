@@ -1,0 +1,9 @@
+{% extends "mails/messages/initiative_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        You are assigned as reviewer for <i>{{ title }}</i>.
+        If you have any questions please contact {{ contact_email }}
+    {% endblocktrans %}
+{% endblock %}

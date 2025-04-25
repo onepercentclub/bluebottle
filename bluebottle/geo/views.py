@@ -5,9 +5,9 @@ from rest_framework.generics import (
     ListAPIView, RetrieveAPIView, CreateAPIView,
     RetrieveUpdateAPIView
 )
-from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
 
+from bluebottle.bb_accounts.permissions import IsAuthenticatedOrOpenPermission
 from bluebottle.geo.models import Location, Country, Geolocation, Place
 from bluebottle.geo.permissions import IsConnectedToProfile
 from bluebottle.geo.serializers import (
@@ -36,7 +36,7 @@ class CountryList(TranslatedApiViewMixin, ListAPIView):
             qs = qs.filter(
                 Q(location__initiative__status='approved') |
                 Q(geolocation__initiative__status='approved') |
-                Q(geolocation__periodactivity__status__in=self.public_statuses) |
+                Q(geolocation__periodicactivity__status__in=self.public_statuses) |
                 (
                     Q(geolocation__dateactivityslot__activity__status__in=self.public_statuses) &
                     Q(geolocation__dateactivityslot__status__in=self.public_statuses)
@@ -60,13 +60,16 @@ class OfficeList(JsonApiViewMixin, ListAPIView):
 
     pagination_class = None
     permission_classes = [
-        IsAuthenticated
+        IsAuthenticatedOrOpenPermission
     ]
 
 
 class OfficeDetail(JsonApiViewMixin, RetrieveAPIView):
     serializer_class = OfficeSerializer
     queryset = Location.objects.all()
+    permission_classes = [
+        IsAuthenticatedOrOpenPermission
+    ]
 
 
 # Remove this after we deployed json-api office locations
@@ -89,7 +92,7 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 
     serializer_class = PlaceSerializer
     permission_classes = [
-        IsAuthenticated
+        IsAuthenticatedOrOpenPermission
     ]
 
     def perform_create(self, serializer):
@@ -107,7 +110,7 @@ class PlaceList(JsonApiViewMixin, CreateAPIView):
 class PlaceDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Place.objects.all()
     permission_classes = [
-        IsAuthenticated,
+        IsAuthenticatedOrOpenPermission,
         IsConnectedToProfile
     ]
     serializer_class = PlaceSerializer

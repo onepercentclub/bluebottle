@@ -1,4 +1,4 @@
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
@@ -83,11 +83,13 @@ def is_admin(effect):
 
 
 def participant_is_active(effect):
-    return effect.instance.user.is_active
+    from bluebottle.members.models import MemberPlatformSettings
+    settings = MemberPlatformSettings.load()
+    return settings.closed or effect.instance.user.is_active
 
 
 def participant_is_inactive(effect):
-    return not effect.instance.user.is_active
+    return not participant_is_active(effect)
 
 
 class RegistrationTriggers(TriggerManager):

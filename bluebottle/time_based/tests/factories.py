@@ -29,7 +29,8 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     Team,
     TimeContribution,
-    TeamMember, DateRegistration,
+    TeamMember,
+    DateRegistration,
 )
 from bluebottle.utils.models import Language
 

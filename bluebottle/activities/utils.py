@@ -132,8 +132,11 @@ class BaseActivitySerializer(ModelSerializer):
     office_restriction = serializers.CharField(required=False)
     current_status = CurrentStatusField(source='states.current_state')
     admin_url = serializers.SerializerMethodField()
-    partner_organization = SerializerMethodResourceRelatedField(
-        read_only=True, source='get_partner_organization', model=Organization
+    partner_organization = ResourceRelatedField(
+        source='organization',
+        queryset=Organization.objects.all(),
+        required=False,
+        allow_null=True,
     )
 
     updates = HyperlinkedRelatedField(

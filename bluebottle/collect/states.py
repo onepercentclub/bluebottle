@@ -112,19 +112,17 @@ class CollectContributorStateMachine(ContributorStateMachine):
         """is contributor"""
         return (
             self.instance.user == user or
-            self.instance.activity.owner == user or
-            self.instance.activity.initiative.owner == user or
-            user in self.instance.activity.initiative.activity_managers.all() or
-            user.is_staff
+            user in self.instance.activity.owners or
+            user.is_staff or
+            user.is_superuser
         )
 
     def is_owner(self, user):
         """is contributor"""
         return (
-            self.instance.activity.owner == user or
-            self.instance.activity.initiative.owner == user or
-            user in self.instance.activity.initiative.activity_managers.all() or
-            user.is_staff
+            user in self.instance.activity.owners or
+            user.is_staff or
+            user.is_superuser
         )
 
     def activity_is_open(self):

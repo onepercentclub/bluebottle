@@ -45,7 +45,6 @@ class ActivityDocument(Document):
             'initiative',
             'owner',
             'image',
-            'initiative__theme',
             'initiative__owner',
             'office_location',
             'office_location__country',
@@ -93,7 +92,7 @@ class ActivityDocument(Document):
     })
 
     theme = fields.NestedField(
-        attr='initiative.theme',
+        attr='theme',
         properties={
             'id': fields.KeywordField(),
             'name': fields.KeywordField(),
@@ -102,7 +101,7 @@ class ActivityDocument(Document):
     )
 
     categories = fields.NestedField(
-        attr='initiative.categories',
+        attr='categories',
         properties={
             'id': fields.KeywordField(),
             'title': fields.KeywordField(),
@@ -251,7 +250,7 @@ class ActivityDocument(Document):
                 'file': instance.image.file.name,
                 'type': 'activity'
             }
-        elif instance.initiative.image:
+        elif instance.initiative and instance.initiative.image:
             return {
                 'id': instance.initiative.pk,
                 'file': instance.initiative.image.file.name,
@@ -261,12 +260,17 @@ class ActivityDocument(Document):
     def prepare_manager(self, instance):
         managers = [
             instance.owner.pk,
-            instance.initiative.owner.pk
         ]
-        for manager in instance.initiative.activity_managers.all():
-            managers.append(manager.pk)
-        if instance.initiative.promoter:
-            managers.append(instance.initiative.promoter.pk)
+        if instance.initiative:
+            managers.append(
+                instance.initiative.owner.pk
+            )
+
+            for manager in instance.initiative.activity_managers.all():
+                managers.append(manager.pk)
+            if instance.initiative.promoter:
+                managers.append(instance.initiative.promoter.pk)
+
         return managers
 
     def prepare_contributors(self, instance):
@@ -306,7 +310,7 @@ class ActivityDocument(Document):
             countries += get_translated_list(instance.office_location.country)
         if hasattr(instance, 'place') and instance.place and instance.place.country:
             countries += get_translated_list(instance.place.country)
-        if instance.initiative.place and instance.initiative.place.country:
+        if instance.initiative and instance.initiative.place and instance.initiative.place.country:
             countries += get_translated_list(instance.initiative.place.country)
         return deduplicate(countries)
 
@@ -336,7 +340,7 @@ class ActivityDocument(Document):
                 ),
                 'type': 'office'
             })
-        elif instance.initiative.place:
+        elif instance.initiative and instance.initiative.place:
             if instance.initiative.place.country:
                 locations.append({
                     'locality': instance.initiative.place.locality,
@@ -365,14 +369,14 @@ class ActivityDocument(Document):
             return get_translated_list(instance.expertise)
 
     def prepare_theme(self, instance):
-        if hasattr(instance.initiative, 'theme') and instance.initiative.theme:
-            return get_translated_list(instance.initiative.theme)
+        if instance.theme:
+            return get_translated_list(instance.theme)
 
     def prepare_categories(self, instance):
         categories = []
-        if instance.initiative:
-            for category in instance.initiative.categories.all():
-                categories += get_translated_list(category, 'title')
+        for category in instance.categories.all():
+            categories += get_translated_list(category, 'title')
+
         return categories
 
     def prepare_segments(self, instance):

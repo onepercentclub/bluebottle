@@ -86,11 +86,11 @@ class TestPayoutApi(BluebottleTestCase):
         """
         # Possible statuses from Dorado
         statuses = [
-            ('reset', 'new'),
             ('new', 'scheduled'),
-            ('scheduled', 'scheduled'),
             ('started', 'started'),
+            ('scheduled', 'scheduled'),
             ('success', 'succeeded'),
+            ('reset', 'new'),
             ('confirmed', 'succeeded'),
             ('failed', 'failed'),
         ]

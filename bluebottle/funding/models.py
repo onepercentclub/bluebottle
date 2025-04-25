@@ -157,6 +157,13 @@ class Funding(Activity):
     amount_donated = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_pledged = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
+    impact_location = models.ForeignKey(
+        'geo.Geolocation',
+        null=True, blank=True,
+        related_name='funding_activities',
+        on_delete=models.SET_NULL
+    )
+
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
     started = models.DateTimeField(

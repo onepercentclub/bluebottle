@@ -155,6 +155,11 @@ def get_current_host(include_scheme=True):
         return host
 
 
+def get_tenant_name():
+    tenant = connection.tenant
+    return tenant.name or '[site name]'
+
+
 def get_current_language():
     """
     Get the current language from request

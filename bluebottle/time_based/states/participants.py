@@ -59,8 +59,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         owners = [self.instance.activity.owner]
 
         if self.instance.activity.initiative:
-            owners += [self.instance.activity.initiative.owner]
-            owners += self.instance.activity.initiative.activity_managers.all()
+            owners += list(self.instance.activity.initiative.owners)
 
         return (
             user in owners or

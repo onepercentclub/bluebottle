@@ -147,8 +147,7 @@ class ActivityStateMachine(ModelStateMachine):
             or (
                 self.instance.initiative
                 and (
-                    user == self.instance.initiative.owner
-                    or user in self.instance.initiative.activity_managers.all()
+                    user in self.instance.initiative.owners
                 )
             )
             or user.is_staff

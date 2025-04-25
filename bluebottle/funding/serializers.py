@@ -55,7 +55,7 @@ from bluebottle.funding_pledge.serializers import (
     PayoutPledgeBankAccountSerializer,
     PledgeBankAccountSerializer,
 )
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     ExternalAccountSerializer,
@@ -615,6 +615,31 @@ class DonorCreateSerializer(DonorSerializer):
     class Meta(DonorSerializer.Meta):
         model = Donor
         fields = DonorSerializer.Meta.fields + ('client_secret',)
+
+    def validate_amount(self, value):
+        provider = StripePaymentProvider.objects.first()
+        currency_code = str(value.currency)
+        currency_settings = provider.get_currency_settings(currency_code)
+
+        if currency_settings:
+            min_amount = currency_settings.min_amount
+            max_amount = currency_settings.max_amount
+
+            if min_amount and value.amount < min_amount:
+                raise serializers.ValidationError(
+                    _("Amount must be at least {amount} {currency}").format(
+                        amount=min_amount, currency=currency_code
+                    )
+                )
+
+            if max_amount and value.amount > max_amount:
+                raise serializers.ValidationError(
+                    _("Amount cannot exceed {amount} {currency}").format(
+                        amount=max_amount, currency=currency_code
+                    )
+                )
+
+        return value
 
 
 class KycDocumentSerializer(PrivateDocumentSerializer):

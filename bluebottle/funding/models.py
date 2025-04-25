@@ -89,6 +89,17 @@ class PaymentProvider(PolymorphicModel):
                         currencies.append(currency)
         return currencies
 
+    def get_currency_settings(self, code):
+        """
+        Return the settings for a currency
+        """
+        if self.pk:
+            try:
+                return self.paymentcurrency_set.get(code=code)
+            except PaymentCurrency.DoesNotExist:
+                pass
+        return None
+
     @classmethod
     def get_default_currency(cls):
         if len(cls.get_currency_choices()):
@@ -145,6 +156,13 @@ class Funding(Activity):
     amount_matching = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_donated = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
     amount_pledged = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+
+    impact_location = models.ForeignKey(
+        'geo.Geolocation',
+        null=True, blank=True,
+        related_name='funding_activities',
+        on_delete=models.SET_NULL
+    )
 
     country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)

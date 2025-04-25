@@ -16,9 +16,9 @@ from bluebottle.time_based.messages import (
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
-    DateActivityFactory, DateParticipantFactory, DateRegistrationFactory,
-    DateActivitySlotFactory,
-    DeadlineActivityFactory, DeadlineRegistrationFactory
+    DateRegistrationFactory,
+    DateActivityFactory, DateParticipantFactory,
+    DateActivitySlotFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
 )
 
 

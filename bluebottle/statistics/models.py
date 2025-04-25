@@ -59,7 +59,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
 
     timeout = 3600
 
-    def get_value(self, start=None, end=None, subregion=None, user=None):
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
         return self.value
 
     unit = None
@@ -147,11 +147,17 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         return mapping.get(self.query)
 
     @memoize(timeout=3600)
-    def get_value(self, start=None, end=None, subregion=None, user=None):
-        return getattr(Statistics(start, end, subregion, user), self.query)
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
+        return getattr(
+            Statistics(start, end, subregion=subregion, region=region, user=user),
+            self.query
+        )
 
-    def get_live_value(self, start=None, end=None, subregion=None, user=None):
-        return getattr(Statistics(start, end, subregion, user), self.query)
+    def get_live_value(self, start=None, end=None, subregion=None, region=None, user=None):
+        return getattr(
+            Statistics(start, end, subregion=subregion, region=region, user=user),
+            self.query
+        )
 
     def __str__(self):
         return str(self.query)
@@ -167,7 +173,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
 class ImpactStatistic(BaseStatistic):
     impact_type = models.ForeignKey('impact.ImpactType', on_delete=models.CASCADE)
 
-    def get_value(self, start=None, end=None, subregion=None, user=None):
+    def get_value(self, start=None, end=None, subregion=None, region=None, user=None):
         goals = self.impact_type.goals.filter(
             activity__status='succeeded',
         )

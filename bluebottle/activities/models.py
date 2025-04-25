@@ -63,6 +63,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     organization = models.ForeignKey(
         Organization,
+        verbose_name=_('Partner organization'),
         null=True,
         blank=True,
         on_delete=SET_NULL,

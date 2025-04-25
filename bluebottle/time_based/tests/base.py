@@ -30,10 +30,9 @@ class TimeBasedActivityListAPITestCase:
 
     def setUp(self):
         self.url = reverse(self.url_name)
-        if self.defaults == {}:
-            self.defaults = {
-                'description': json.dumps({'html': 'test description', 'delta': ''}),
-            }
+        self.defaults = {
+            'description': json.dumps({'html': 'test description', 'delta': ''}),
+        }
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append(self.model_name)

@@ -144,7 +144,7 @@ class TimeBasedActivity(Activity):
                 TeamScheduleParticipant
             )
         else:
-            return Contributor.objects.node()
+            return Contributor.objects.none()
 
     @property
     def pending_participants(self):

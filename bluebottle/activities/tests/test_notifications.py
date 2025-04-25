@@ -44,7 +44,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.reviewer])
         self.assertSubject('A new activity is ready to be reviewed on [site name]')
         self.assertBodyContains('Please take a moment to review this activity')
-        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View this activity')
 
     def test_activity_published_reviewer_notification(self):

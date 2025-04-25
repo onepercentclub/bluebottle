@@ -168,39 +168,27 @@ class InitiativeAdmin(
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
 
     def get_fieldsets(self, request, obj=None):
-        detail_fields = ["title", "slug", "owner", "theme", "categories"]
+        detail_fields = [
+            "title",
+            "slug",
+            "theme",
+            "categories",
+            "pitch",
+            "story",
+            "image",
+            "video_url",
+        ]
         detail_fields.append("place")
 
         if InitiativePlatformSettings.objects.get().enable_open_initiatives:
             detail_fields.append("is_open")
 
         fieldsets = (
-            (_("Details"), {"fields": detail_fields}),
             (
-                _("Description"),
+                _("Management"),
                 {
                     "fields": (
-                        "pitch",
-                        "story",
-                        "image",
-                        "video_url",
-                    )
-                },
-            ),
-            (
-                _("Organization"),
-                {
-                    "fields": (
-                        "has_organization",
-                        "organization",
-                        "organization_contact",
-                    )
-                },
-            ),
-            (
-                _("Status"),
-                {
-                    "fields": (
+                        "owner",
                         "reviewer",
                         "activity_managers",
                         "promoter",
@@ -211,6 +199,17 @@ class InitiativeAdmin(
                         "updated",
                         "published",
                         "has_deleted_data",
+                    )
+                },
+            ),
+            (_("Information"), {"fields": detail_fields}),
+            (
+                _("Organization"),
+                {
+                    "fields": (
+                        "has_organization",
+                        "organization",
+                        "organization_contact",
                     )
                 },
             ),

@@ -21,8 +21,7 @@ from bluebottle.time_based.effects.participants import (
     CreateScheduleContributionEffect,
     CreateTimeContributionEffect,
     CreateRegistrationEffect,
-    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect,
-)
+    CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
 )
@@ -36,6 +35,7 @@ from bluebottle.time_based.notifications.participants import (
     UserParticipantWithdrewNotification,
     ManagerParticipantWithdrewNotification, UserScheduledNotification,
 )
+from bluebottle.time_based.notifications.registrations import UserReminderNotification
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
     DeadlineParticipantStateMachine,
@@ -476,6 +476,30 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
             and effect.instance.registration.status == "accepted"
         )
 
+    def send_daily_reminder(effect):
+        """Is daily recurring, after 4 iterations send every day"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == 'days' and count >= 4 and (count - 4) % 3 == 0
+
+    def send_weekly_reminder(effect):
+        """Is weekly recurring, after 2 iterations send every week"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == "weeks" and count > 1
+
+    def send_monthly_reminder(effect):
+        """Is monthly recurring, after 2 iterations send every month"""
+        if not effect.instance.registration:
+            return False
+        period = effect.instance.activity.period
+        count = effect.instance.registration.participants.exclude(id=effect.instance.id).count()
+        return period == "months" and count > 1
+
     triggers = RegistrationParticipantTriggers.triggers + [
         TransitionTrigger(
             PeriodicParticipantStateMachine.initiate,
@@ -485,6 +509,18 @@ class PeriodicParticipantTriggers(RegistrationParticipantTriggers):
                 TransitionEffect(
                     PeriodicParticipantStateMachine.succeed,
                     conditions=[slot_is_finished],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_daily_reminder],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_weekly_reminder],
+                ),
+                NotificationEffect(
+                    UserReminderNotification,
+                    conditions=[send_monthly_reminder],
                 ),
             ],
         ),

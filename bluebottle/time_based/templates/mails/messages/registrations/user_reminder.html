@@ -1,0 +1,13 @@
+{% extends "mails/messages/participant_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+        <p>We just wanted to check if everything is up-to-date with your participation in "{{ title }}".</p>
+        <p>
+          If you are no longer participating, please update your participation.
+          This helps us manage the activity better and keep our reports accurate.
+        </p>
+        <p>Thank you!</p>
+    {% endblocktrans %}
+{% endblock %}

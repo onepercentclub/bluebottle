@@ -220,7 +220,7 @@ class SlotParticipantStateMachine(ModelStateMachine):
     def can_accept_participant(self, user):
         """can accept participant"""
         return (
-            user.is_supersuser or
+            user.is_superuser or
             user.is_staff or
             user in self.instance.activity.owners
         )

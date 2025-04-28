@@ -50,12 +50,22 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
 
         if self.request.user:
             type_filter = self.request.query_params.get('filter[type]')
-            if type_filter == 'office_subregion':
+            if (
+                type_filter == 'office_subregion' and
+                self.request.user.location and
+                self.request.user.location.subregion
+
+            ):
                 subregion = self.request.user.location.subregion
                 queryset = queryset.filter(
                     office_location__subregion=subregion
                 )
-            elif type_filter == 'office_region':
+            elif (
+                type_filter == 'office_region'
+                self.request.user.location and
+                self.request.user.location.subregion and
+                self.request.user.location.subregion.region
+            ):
                 region = self.request.user.location.subregion.region
                 queryset = queryset.filter(
                     office_location__subregion__region=region

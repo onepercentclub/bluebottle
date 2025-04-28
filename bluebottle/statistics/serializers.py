@@ -38,10 +38,19 @@ class BaseStatisticSerializer(ModelSerializer):
         current_user = get_current_user()
 
         if 'filter[type]' in params and current_user:
-            if params['filter[type]'] == 'office_region':
+            if (
+                params['filter[type]'] == 'office_region' and 
+                current_user.location and 
+                current_user.location.subregion and
+                current_user.location.subregion.region
+            ):
                 region = current_user.location.subregion.region
                 value = obj.get_value(start, end, region=region)
-            elif params['filter[type]'] == 'office_subregion':
+            elif (
+                params['filter[type]'] == 'office_subregion'
+                current_user.location and 
+                current_user.location.subregion and
+            ):
                 subregion = current_user.location.subregion
                 value = obj.get_value(start, end, subregion=subregion)
             else:

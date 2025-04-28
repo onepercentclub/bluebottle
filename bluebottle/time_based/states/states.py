@@ -220,12 +220,9 @@ class SlotParticipantStateMachine(ModelStateMachine):
     def can_accept_participant(self, user):
         """can accept participant"""
         return (
-            user in [
-                self.instance.activity.owner,
-                self.instance.activity.initiative.owner
-            ] or
+            user.is_superuser or
             user.is_staff or
-            user in self.instance.activity.initiative.activity_managers.all()
+            user in self.instance.activity.owners
         )
 
     def slot_is_open(self):

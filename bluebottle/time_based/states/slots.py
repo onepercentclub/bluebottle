@@ -38,9 +38,7 @@ class SlotStateMachine(ModelStateMachine):
     def is_activity_owner(self, user):
         """Is manager of related activity"""
         return (
-            user == self.instance.activity.owner or
-            user == self.instance.activity.initiative.owner or
-            user in self.instance.activity.initiative.activity_managers.all() or
+            user in self.instance.activity.owners or
             user.is_staff or
             user.is_superuser
         )
@@ -173,9 +171,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     def is_activity_owner(self, user):
         """Is manager of related activity"""
         return (
-            user == self.instance.activity.owner or
-            user == self.instance.activity.initiative.owner or
-            user in self.instance.activity.initiative.activity_managers.all() or
+            user in self.instance.activity.owners or
             user.is_staff or
             user.is_superuser
         )

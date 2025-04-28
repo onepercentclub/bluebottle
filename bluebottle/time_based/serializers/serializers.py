@@ -671,7 +671,7 @@ class ParticipantSerializer(BaseContributorSerializer):
         if (user not in [
             instance.user,
             instance.activity.owner,
-        ] and user not in instance.activity.initiative.activity_managers.all() and
+        ] and user not in instance.activity.owners and
             not user.is_staff and
             not user.is_superuser
         ):

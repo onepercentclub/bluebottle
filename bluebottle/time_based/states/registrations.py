@@ -32,8 +32,7 @@ class RegistrationStateMachine(ModelStateMachine):
         ]
 
         if self.instance.activity.initiative:
-            owners.append(self.instance.activity.initiative.owner)
-            owners += self.instance.activity.initiative.activity_managers.all()
+            owners += list(self.instance.activity.owners)
 
         return (
             user in owners or

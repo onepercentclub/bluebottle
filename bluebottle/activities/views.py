@@ -172,7 +172,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
             raise PermissionError()
         return queryset.filter(
             Q(owner=user) |
-            Q(initiative__onwer=user) |
+            Q(initiative__owner=user) |
             Q(initiative__activity_managers=user)
         )
 

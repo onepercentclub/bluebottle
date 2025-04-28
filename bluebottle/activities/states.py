@@ -143,14 +143,8 @@ class ActivityStateMachine(ModelStateMachine):
     def is_owner(self, user):
         """user is the owner"""
         return (
-            user == self.instance.owner
-            or (
-                self.instance.initiative
-                and (
-                    user == self.instance.initiative.owner
-                    or user in self.instance.initiative.activity_managers.all()
-                )
-            )
+            user in self.instance.owners
+            or user.is_superuser
             or user.is_staff
         )
 

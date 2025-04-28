@@ -736,7 +736,10 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        return getattr(obj.contributor, "registration", None)
+        try:
+            return obj.contributor.registration
+        except (AttributeError, Registration.DoesNotExist):
+            return None
 
     def get_slot_participant(self, obj):
         return getattr(obj, "slot_participant", None)

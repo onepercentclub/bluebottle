@@ -144,7 +144,7 @@ class ActivityStateMachine(ModelStateMachine):
         """user is the owner"""
         return (
             user in self.instance.owners
-            or user.is_stis_superuser
+            or user.is_superuser
             or user.is_staff
         )
 

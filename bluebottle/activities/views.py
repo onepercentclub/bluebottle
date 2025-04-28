@@ -61,7 +61,7 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
                     office_location__subregion=subregion
                 )
             elif (
-                type_filter == 'office_region'
+                type_filter == 'office_region' and
                 self.request.user.location and
                 self.request.user.location.subregion and
                 self.request.user.location.subregion.region

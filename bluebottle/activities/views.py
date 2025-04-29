@@ -50,12 +50,22 @@ class ActivityLocationList(JsonApiViewMixin, ListAPIView):
 
         if self.request.user:
             type_filter = self.request.query_params.get('filter[type]')
-            if type_filter == 'office_subregion':
+            if (
+                type_filter == 'office_subregion' and
+                self.request.user.location and
+                self.request.user.location.subregion
+
+            ):
                 subregion = self.request.user.location.subregion
                 queryset = queryset.filter(
                     office_location__subregion=subregion
                 )
-            elif type_filter == 'office_region':
+            elif (
+                type_filter == 'office_region' and
+                self.request.user.location and
+                self.request.user.location.subregion and
+                self.request.user.location.subregion.region
+            ):
                 region = self.request.user.location.subregion.region
                 queryset = queryset.filter(
                     office_location__subregion__region=region
@@ -172,7 +182,7 @@ class ActivityList(JsonApiViewMixin, AutoPrefetchMixin, ListAPIView):
             raise PermissionError()
         return queryset.filter(
             Q(owner=user) |
-            Q(initiative__onwer=user) |
+            Q(initiative__owner=user) |
             Q(initiative__activity_managers=user)
         )
 

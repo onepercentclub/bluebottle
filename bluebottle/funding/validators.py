@@ -18,6 +18,7 @@ class KYCReadyValidator(Validator):
 
     def is_valid(self):
         return (
+            self.instance.pk and
             self.instance.payout_account
             and self.instance.payout_account.status == "verified"
             and self.instance.bank_account
@@ -63,7 +64,7 @@ class BudgetLineValidator(Validator):
     field = 'budgetlines'
 
     def is_valid(self):
-        return len(self.instance.budget_lines.all()) > 0
+        return self.instance.pk and len(self.instance.budget_lines.all()) > 0
 
 
 class TargetValidator(Validator):

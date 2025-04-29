@@ -3,6 +3,7 @@ from builtins import str
 
 from django.contrib.admin.models import LogEntry
 from django.contrib.admin.options import get_content_type_for_model
+
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _

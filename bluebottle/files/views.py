@@ -132,12 +132,11 @@ class ImageContentView(FileContentView):
             return HttpResponseNotFound()
 
         size = self.kwargs['size']
-
         cropbox = None
+
         if self.kwargs['size'] != ORIGINAL_SIZE and image.cropbox:
             try:
-                left, upper, right, lower = image.cropbox
-
+                left, upper, right, lower = map(int, image.cropbox.split(','))
                 if right <= left:
                     left, right = min(left, right), max(left, right)
                 if lower <= upper:

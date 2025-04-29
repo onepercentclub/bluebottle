@@ -62,7 +62,7 @@ class FilterRelatedUserMixin:
     def owners(self):
         if 'activity_id' in self.kwargs:
             activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-            return [activity.owner] + list(activity.owners)
+            return list(activity.owners)
 
     def get_queryset(self):
         if self.request.user.is_authenticated:

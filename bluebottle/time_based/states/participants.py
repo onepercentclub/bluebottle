@@ -56,14 +56,8 @@ class ParticipantStateMachine(ContributorStateMachine):
 
     def can_accept_participant(self, user):
         """can accept participant"""
-        owners = [self.instance.activity.owner]
-
-        if self.instance.activity.initiative:
-            owners += [self.instance.activity.initiative.owner]
-            owners += self.instance.activity.initiative.activity_managers.all()
-
         return (
-            user in owners or
+            user in self.instance.activity.owners or
             user.is_staff or
             user.is_superuser
         )

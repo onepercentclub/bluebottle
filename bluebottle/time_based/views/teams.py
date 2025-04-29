@@ -93,9 +93,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
         )
 
         activity = Activity.objects.get(pk=self.kwargs["activity_id"])
-        context["owners"] = [activity.owner] + list(
-            activity.initiative.activity_managers.all()
-        )
+        context["owners"] = list(activity.owners)
 
         if (
             self.request.user

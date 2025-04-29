@@ -36,9 +36,7 @@ class CanExportTeamMembersPermission(IsOwner):
     def has_object_action_permission(self, action, user, obj):
         return (
             obj.user == user
-            or obj.activity.owner == user
-            or user in obj.activity.initiative.activity_managers.all()
-            or obj.activity.initiative.owner == user
+            or user in obj.activity.owners
             or user.is_staff
             or user.is_superuser
         ) and InitiativePlatformSettings.load().enable_participant_exports
@@ -61,9 +59,7 @@ class TeamSerializer(ModelSerializer):
     def get_captain_email(self, obj):
         user = self.context['request'].user
         if (
-            user == obj.activity.owner or
-            user == obj.activity.initiative.owner or
-            user in obj.activity.initiative.activity_managers.all() or
+            user in obj.activity.owners or
             user.is_staff or
             user.is_superuser
         ):
@@ -93,7 +89,7 @@ class TeamSerializer(ModelSerializer):
         if (user not in [
             instance.user,
             instance.activity.owner,
-        ] and user not in instance.activity.initiative.activity_managers.all() and
+        ] and user not in instance.activity.owners and
             not user.is_staff and
             not user.is_superuser
         ):

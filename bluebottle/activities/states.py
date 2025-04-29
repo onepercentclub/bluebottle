@@ -99,7 +99,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     def can_publish(self):
         """the activity can be published. Activities can be published if they are reviewed or if reviewing is disabled.
-        Funding activities cannot be published"""
+        Funding activities cannot be publised"""
         from bluebottle.funding.models import Funding
 
         if isinstance(self.instance, Funding):
@@ -138,19 +138,13 @@ class ActivityStateMachine(ModelStateMachine):
 
     def is_staff(self, user):
         """user is a staff member"""
-        return user.is_staff
+        return user.is_staff or user.is_superuser
 
     def is_owner(self, user):
         """user is the owner"""
         return (
-            user == self.instance.owner
-            or (
-                self.instance.initiative
-                and (
-                    user == self.instance.initiative.owner
-                    or user in self.instance.initiative.activity_managers.all()
-                )
-            )
+            user in self.instance.owners
+            or user.is_superuser
             or user.is_staff
         )
 

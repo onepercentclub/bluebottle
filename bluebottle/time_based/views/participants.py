@@ -129,10 +129,9 @@ class SlotRelatedParticipantListView(
                     Q(status__in=statuses)
                 ).order_by('-id')
         else:
-            queryset = self.queryset.filter(
+            queryset = queryset.filter(
                 status__in=statuses
             ).order_by('-id')
-
         return queryset
 
 

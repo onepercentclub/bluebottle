@@ -3,56 +3,77 @@ from datetime import datetime, timedelta
 
 from dateutil.parser import parse
 from django.db import connection
-from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import get_current_timezone, make_aware, now
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField
+    PolymorphicResourceRelatedField,
+    ResourceRelatedField,
+    SerializerMethodResourceRelatedField,
 )
-from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField
 from rest_framework_json_api.serializers import (
-    ModelSerializer, ValidationError, IntegerField,
-    PolymorphicModelSerializer
+    IntegerField,
+    ModelSerializer,
+    PolymorphicModelSerializer,
+    ValidationError,
 )
 
 from bluebottle.activities.utils import (
-    BaseContributorSerializer, BaseContributorListSerializer,
-    BaseActivityListSerializer, BaseActivitySerializer,
-    BaseTinyActivitySerializer
+    BaseActivityListSerializer,
+    BaseActivitySerializer,
+    BaseContributorListSerializer,
+    BaseContributorSerializer,
+    BaseTinyActivitySerializer,
 )
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.files.serializers import PrivateDocumentField
-from bluebottle.files.serializers import PrivateDocumentSerializer
+from bluebottle.files.serializers import PrivateDocumentField, PrivateDocumentSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import (
-    Funding, Donor, Reward, BudgetLine, PaymentMethod,
-    BankAccount, PayoutAccount, PaymentProvider,
-    Payout, FundingPlatformSettings)
-from bluebottle.funding.models import PlainPayoutAccount
+    BankAccount,
+    BudgetLine,
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    PaymentMethod,
+    PaymentProvider,
+    Payout,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Reward,
+)
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
-    FlutterwaveBankAccountSerializer, PayoutFlutterwaveBankAccountSerializer
+    FlutterwaveBankAccountSerializer,
+    PayoutFlutterwaveBankAccountSerializer,
 )
 from bluebottle.funding_lipisha.serializers import (
-    LipishaBankAccountSerializer, PayoutLipishaBankAccountSerializer
+    LipishaBankAccountSerializer,
+    PayoutLipishaBankAccountSerializer,
 )
 from bluebottle.funding_pledge.serializers import (
-    PledgeBankAccountSerializer, PayoutPledgeBankAccountSerializer
+    PayoutPledgeBankAccountSerializer,
+    PledgeBankAccountSerializer,
 )
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.serializers import (
-    ExternalAccountSerializer, ConnectAccountSerializer, PayoutStripeBankSerializer
+    ConnectAccountSerializer,
+    ExternalAccountSerializer,
+    PayoutStripeBankSerializer,
 )
-from bluebottle.funding_telesom.serializers import PayoutTelesomBankAccountSerializer, TelesomBankAccountSerializer
+from bluebottle.funding_telesom.serializers import (
+    PayoutTelesomBankAccountSerializer,
+    TelesomBankAccountSerializer,
+)
 from bluebottle.funding_vitepay.serializers import (
-    VitepayBankAccountSerializer, PayoutVitepayBankAccountSerializer
+    PayoutVitepayBankAccountSerializer,
+    VitepayBankAccountSerializer,
 )
+from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
-from bluebottle.utils.serializers import (
-    MoneySerializer, ResourcePermissionField, )
+from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
+from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
 
 
 class FundingCurrencyValidator(object):
@@ -256,6 +277,12 @@ class FundingSerializer(BaseActivitySerializer):
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
+    impact_location = ResourceRelatedField(
+        queryset=Geolocation.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -321,11 +348,7 @@ class FundingSerializer(BaseActivitySerializer):
         user = self.context["request"].user
         if (
             self.instance
-            and user not in [
-                self.instance.owner,
-                self.instance.initiative.owner,
-            ]
-            and user not in self.instance.initiative.activity_managers.all()
+            and user not in self.instance.owners
             and not user.is_staff
             and not user.is_superuser
         ):
@@ -358,6 +381,7 @@ class FundingSerializer(BaseActivitySerializer):
             "supporters_export_url",
             "psp",
             "donations",
+            "impact_location"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -369,6 +393,7 @@ class FundingSerializer(BaseActivitySerializer):
             'co_financers',
             'co_financers.user',
             'partner_organization',
+            'impact_location'
         ]
         resource_name = 'activities/fundings'
 
@@ -380,6 +405,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+            'impact_location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 
@@ -406,9 +432,10 @@ class FundingSerializer(BaseActivitySerializer):
         return methods
 
     def get_partner_organization(self, obj):
-        if obj.initiative.organization:
+        organization = super().get_partner_organization(obj)
+        if organization:
             return obj.initiative.organization
-        if (
+        elif (
             obj.bank_account
             and obj.bank_account.connect_account
             and obj.bank_account.connect_account.partner_organization
@@ -588,6 +615,31 @@ class DonorCreateSerializer(DonorSerializer):
     class Meta(DonorSerializer.Meta):
         model = Donor
         fields = DonorSerializer.Meta.fields + ('client_secret',)
+
+    def validate_amount(self, value):
+        provider = StripePaymentProvider.objects.first()
+        currency_code = str(value.currency)
+        currency_settings = provider.get_currency_settings(currency_code)
+
+        if currency_settings:
+            min_amount = currency_settings.min_amount
+            max_amount = currency_settings.max_amount
+
+            if min_amount and value.amount < min_amount:
+                raise serializers.ValidationError(
+                    _("Amount must be at least {amount} {currency}").format(
+                        amount=min_amount, currency=currency_code
+                    )
+                )
+
+            if max_amount and value.amount > max_amount:
+                raise serializers.ValidationError(
+                    _("Amount cannot exceed {amount} {currency}").format(
+                        amount=max_amount, currency=currency_code
+                    )
+                )
+
+        return value
 
 
 class KycDocumentSerializer(PrivateDocumentSerializer):

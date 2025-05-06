@@ -77,7 +77,7 @@ class RelatedRegistrationListView(
     def owners(self):
         if 'activity_id' in self.kwargs:
             activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-            return [activity.owner] + list(activity.initiative.activity_managers.all())
+            return list(activity.owners)
 
     search_fields = ['user__first_name', 'user__last_name']
     filter_backends = [filters.SearchFilter]

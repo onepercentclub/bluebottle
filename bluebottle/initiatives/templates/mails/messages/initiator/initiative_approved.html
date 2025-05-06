@@ -1,0 +1,10 @@
+{% extends "mails/messages/initiative_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        Good news, your initiative <i>{{ title }}</i> has been approved!
+        People can now join your activities. No activities yet? This is the perfect
+        moment to create one (or two), so people can help you reach your initiative’s goal.
+    {% endblocktrans %}
+{% endblock %}

@@ -1,9 +1,13 @@
 from datetime import date
 
-from bluebottle.activities.messages import (
+from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification, ActivitySucceededNotification,
     ActivityRejectedNotification, ActivityCancelledNotification,
-    ActivityRestoredNotification, InactiveParticipantAddedNotification, ParticipantWithdrewConfirmationNotification,
+    ActivityRestoredNotification
+)
+from bluebottle.activities.messages.participant import (
+    InactiveParticipantAddedNotification,
+    ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
     OrganizerStateMachine, EffortContributionStateMachine

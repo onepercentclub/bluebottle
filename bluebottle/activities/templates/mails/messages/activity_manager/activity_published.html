@@ -1,0 +1,11 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+Nice work! Your activity <i>{{ title }}</i> is now live on {{ site_name }} for people to contribute.<br>
+<br>
+Share your activity far and wide to inspire support and attract contributions!
+{% endblocktrans %}
+{% endblock %}
+

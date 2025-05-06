@@ -22,8 +22,6 @@ class Deed(Activity):
         help_text=_('The number of users you want to participate.')
     )
 
-    auto_approve = True
-
     activity_type = _('Deed')
 
     @property

@@ -36,10 +36,12 @@ class ActivityOwnerUpdatePermission(permissions.BasePermission):
         """
         Return `True` if user is author of the update, `False` otherwise.
         """
+        owners = [obj.activity.owner]
+        if obj.activity.initiative:
+            owners += list(obj.activity.owners)
+
         return (
-            obj.author == obj.activity.owner or
-            obj.author == obj.activity.initiative.owner or
-            obj.author in obj.activity.initiative.activity_managers.all() or
+            obj.author in owners or
             (not obj.notify and not obj.pinned) or
             request.user.is_staff or
             request.user.is_superuser
@@ -51,21 +53,13 @@ class UpdateRelatedActivityPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
         activity = obj.activity
-        return user in [
-            getattr(activity, 'owner', None),
-            getattr(activity.initiative, 'owner', None),
-            getattr(activity.initiative, 'promoter', None)
-        ] + list(activity.initiative.activity_managers.all())
+        return user in list(activity.owners)
 
     def has_object_action_permission(self, method, user, obj):
         if method in SAFE_METHODS:
             return True
         activity = obj.activity
-        return user in [
-            getattr(activity, 'owner', None),
-            getattr(activity.initiative, 'owner', None),
-            getattr(activity.initiative, 'promoter', None)
-        ] + list(activity.initiative.activity_managers.all())
+        return user in list(activity.owners)
 
     def has_action_permission(self, method, user, obj):
         return True

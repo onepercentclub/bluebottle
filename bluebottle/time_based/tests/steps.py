@@ -2,6 +2,7 @@ import json
 
 from django.urls import reverse
 
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.time_based.models import DateActivity, DateActivitySlot
 
 
@@ -18,6 +19,12 @@ def api_create_date_activity(test, initiative, attributes,
                     'data': {
                         'type': 'initiatives',
                         'id': initiative.pk
+                    }
+                },
+                'theme': {
+                    'data': {
+                        'type': 'themes',
+                        'id': ThemeFactory.create().pk
                     }
                 }
             }

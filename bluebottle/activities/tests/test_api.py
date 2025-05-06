@@ -31,6 +31,7 @@ from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.geo import (
     CountryFactory,
     GeolocationFactory,
@@ -140,7 +141,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
 
     def test_date_preview(self):
         activity = DateActivityFactory.create(status='open')
@@ -154,7 +155,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], 1)
         self.assertEqual(dateutil.parser.parse(attributes['start']), activity.slots.first().start)
@@ -181,7 +182,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(
@@ -210,7 +211,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], False)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], 3)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -317,7 +318,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             activity=activity
         )
 
-        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.favourite_themes.add(activity.theme)
         self.owner.skills.add(activity.expertise)
         self.owner.place = PlaceFactory.create(
             position=Point(20.0, 10.0)
@@ -342,7 +343,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], activity.expertise.name)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -363,7 +364,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             location=GeolocationFactory.create(position=Point(20.1, 10.1))
         )
 
-        self.owner.favourite_themes.add(activity.initiative.theme)
+        self.owner.favourite_themes.add(activity.theme)
         self.owner.skills.add(activity.expertise)
         self.owner.place = PlaceFactory.create(
             position=Point(20.0, 10.0)
@@ -388,7 +389,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], True)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -410,7 +411,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         self.assertEqual(attributes['team-activity'], activity.team_activity)
         self.assertEqual(attributes['is-online'], False)
         self.assertEqual(attributes['is-full'], None)
-        self.assertEqual(attributes['theme'], activity.initiative.theme.name)
+        self.assertEqual(attributes['theme'], activity.theme.name)
         self.assertEqual(attributes['expertise'], None)
         self.assertEqual(attributes['slot-count'], None)
         self.assertEqual(attributes['has-multiple-locations'], False)
@@ -423,7 +424,7 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_collect_preview_dutch(self):
         activity = CollectActivityFactory.create(status='open')
-        theme_translation = activity.initiative.theme.translations.get(
+        theme_translation = activity.theme.translations.get(
             language_code='nl'
         )
 
@@ -898,39 +899,39 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
         })
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
-                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
+                str(matching_theme.pk): (matching_theme.name, len(matching)),
+                str(other_theme.pk): (other_theme.name, len(other))
             }
         )
         self.assertFound(matching)
 
     def test_filter_theme_not_in_settings(self):
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
-
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        matching_theme = ThemeFactory.create()
+        other_theme = ThemeFactory.create()
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
         })
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, len(matching)),
-                str(other_initiative.theme.pk): (other_initiative.theme.name, len(other))
+                str(matching_theme.pk): (matching_theme.name, len(matching)),
+                str(other_theme.pk): (other_theme.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -940,20 +941,20 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
         ActivitySearchFilter.objects.create(settings=settings, type="country")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search({
-            'theme': matching_initiative.theme.pk,
+            'theme': matching_theme.pk,
             'country': 'something-that-does-not-match'
         })
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): (matching_initiative.theme.name, 0),
+                str(matching_theme.pk): (matching_theme.name, 0),
             }
         )
         self.assertFound([])
@@ -962,28 +963,28 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         settings = InitiativePlatformSettings.objects.create()
         ActivitySearchFilter.objects.create(settings=settings, type="theme")
 
-        matching_initiative, other_initiative = InitiativeFactory.create_batch(2, status='approved')
+        matching_theme, other_theme = ThemeFactory.create_batch(2)
 
-        matching = DeedFactory.create_batch(3, status="open", initiative=matching_initiative)
-        other = DeedFactory.create_batch(2, status="open", initiative=other_initiative)
+        matching = DeedFactory.create_batch(3, status="open", theme=matching_theme)
+        other = DeedFactory.create_batch(2, status="open", theme=other_theme)
 
         self.search(
-            {'theme': matching_initiative.theme.pk},
+            {'theme': matching_theme.pk},
             headers={'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
         )
 
-        matching_theme_translation = matching_initiative.theme.translations.get(
+        matching_theme_translation = matching_theme.translations.get(
             language_code='nl'
         )
-        other_theme_translation = other_initiative.theme.translations.get(
+        other_theme_translation = other_theme.translations.get(
             language_code='nl'
         )
 
         self.assertFacets(
             'theme',
             {
-                str(matching_initiative.theme.pk): (matching_theme_translation.name, len(matching)),
-                str(other_initiative.theme.pk): (other_theme_translation.name, len(other))
+                str(matching_theme.pk): (matching_theme_translation.name, len(matching)),
+                str(other_theme.pk): (other_theme_translation.name, len(other))
             }
         )
         self.assertFound(matching)
@@ -1112,11 +1113,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1135,11 +1136,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1159,11 +1160,11 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         matching = DeadlineActivityFactory.create_batch(2, status='open')
         for activity in matching:
-            activity.initiative.categories.add(matching_category)
+            activity.categories.add(matching_category)
 
         other = DeadlineActivityFactory.create_batch(3, status='open')
         for activity in other:
-            activity.initiative.categories.add(other_category)
+            activity.categories.add(other_category)
 
         self.search({'category': matching_category.pk})
 
@@ -1779,8 +1780,36 @@ class ActivityLocationAPITestCase(APITestCase):
     model = Activity
 
     def setUp(self):
+        self.user = BlueBottleUserFactory.create(
+            location=LocationFactory.create(subregion=OfficeSubRegionFactory.create())
+        )
+
         CollectActivityFactory.create(status='succeeded')
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        CollectActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
         DeadlineActivityFactory.create(status='succeeded')
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=self.user.location.subregion
+            )
+        )
+        DeadlineActivityFactory.create(
+            status='succeeded',
+            office_location=LocationFactory.create(
+                subregion=OfficeSubRegionFactory(region=self.user.location.subregion.region)
+            )
+        )
 
         date_activity = DateActivityFactory.create(status="succeeded")
         slot = date_activity.slots.first()
@@ -1792,9 +1821,32 @@ class ActivityLocationAPITestCase(APITestCase):
         self.url = reverse('activity-location-list')
 
     def test_get(self):
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_anon(self):
         self.perform_get()
         self.assertStatus(status.HTTP_200_OK)
-        self.assertTotal(3)
+        self.assertTotal(7)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_region(self):
+        self.url += '?filter[type]=office_region'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(4)
+        self.assertAttribute('position')
+        self.assertRelationship('activity')
+
+    def test_get_subregion(self):
+        self.url += '?filter[type]=office_subregion'
+        self.perform_get(user=self.user)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertTotal(2)
         self.assertAttribute('position')
         self.assertRelationship('activity')
 

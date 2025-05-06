@@ -23,24 +23,24 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.message_class = FundingSubmittedReviewerMessage
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new crowdfunding campaign is ready to be reviewed on [site name]')
+        self.assertSubject('A new crowdfunding campaign is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this campaign')
-        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')
 
     def test_activity_submitted_notification(self):
         self.message_class = FundingSubmittedMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('You submitted a crowdfunding campaign on [site name]')
-        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertSubject('You submitted a crowdfunding campaign on Test')
+        self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View campaign')
 
     def test_activity_approved_notification(self):
         self.message_class = FundingApprovedMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your crowdfunding campaign on [site name] has been approved!')
+        self.assertSubject('Your crowdfunding campaign on Test has been approved!')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')
 
@@ -48,7 +48,7 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.message_class = FundingNeedsWorkMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('The crowdfunding campaign you submitted on [site name] needs work')
+        self.assertSubject('The crowdfunding campaign you submitted on Test needs work')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')
 
@@ -56,7 +56,7 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.message_class = FundingRejectedMessage
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your crowdfunding campaign on [site name] has been rejected')
+        self.assertSubject('Your crowdfunding campaign on Test has been rejected')
         self.assertBodyContains('Unfortunately your crowdfunding campaign "Save the world!" has been rejected.')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')

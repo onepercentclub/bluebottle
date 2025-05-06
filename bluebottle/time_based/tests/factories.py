@@ -10,6 +10,7 @@ from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
+
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -29,7 +30,8 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     Team,
     TimeContribution,
-    TeamMember, DateRegistration,
+    TeamMember,
+    DateRegistration,
 )
 from bluebottle.utils.models import Language
 

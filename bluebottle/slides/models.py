@@ -25,14 +25,14 @@ class Slide(PublishableModel):
         draft = ChoiceItem('draft', label=_("Draft"))
 
     slug = models.SlugField(_("Slug"))
-    sub_region = models.ForeignKey(
+    sub_regions = models.ManyToManyField(
         'offices.OfficeSubRegion',
-        on_delete=models.CASCADE,
-        null=True, blank=True,
-        verbose_name=_("Office group"),
+        blank=True,
+        related_name='slides',
+        verbose_name=_("Office groups"),
         help_text=_(
-            "Select a region to make the slide only visible to visitors from the "
-            "same region or select 'Global' to make the slide visible for everyone."
+            "Select office groups to make the slide only visible to visitors from those "
+            "regions or leave empty to make the slide visible for everyone."
         )
     )
     language = models.CharField(

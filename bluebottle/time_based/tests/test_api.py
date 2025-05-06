@@ -3,8 +3,8 @@ from datetime import timedelta
 
 import icalendar
 from django.urls import reverse
-from rest_framework import status
 from pytz import UTC
+from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings

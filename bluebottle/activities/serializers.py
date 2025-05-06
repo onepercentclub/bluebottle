@@ -731,7 +731,10 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        return getattr(obj.contributor, "registration", None)
+        try:
+            return obj.contributor.registration
+        except (AttributeError, Registration.DoesNotExist):
+            return None
 
     class JSONAPIMeta(object):
         resource_name = "contributions"

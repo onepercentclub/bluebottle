@@ -55,7 +55,7 @@ from bluebottle.funding_pledge.serializers import (
     PayoutPledgeBankAccountSerializer,
     PledgeBankAccountSerializer,
 )
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     ExternalAccountSerializer,
@@ -69,6 +69,7 @@ from bluebottle.funding_vitepay.serializers import (
     PayoutVitepayBankAccountSerializer,
     VitepayBankAccountSerializer,
 )
+from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
@@ -276,6 +277,12 @@ class FundingSerializer(BaseActivitySerializer):
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
 
+    impact_location = ResourceRelatedField(
+        queryset=Geolocation.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     rewards = ResourceRelatedField(
         many=True, read_only=True
     )
@@ -374,6 +381,7 @@ class FundingSerializer(BaseActivitySerializer):
             "supporters_export_url",
             "psp",
             "donations",
+            "impact_location"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -385,6 +393,7 @@ class FundingSerializer(BaseActivitySerializer):
             'co_financers',
             'co_financers.user',
             'partner_organization',
+            'impact_location'
         ]
         resource_name = 'activities/fundings'
 
@@ -396,6 +405,7 @@ class FundingSerializer(BaseActivitySerializer):
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
+            'impact_location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )
 
@@ -605,6 +615,31 @@ class DonorCreateSerializer(DonorSerializer):
     class Meta(DonorSerializer.Meta):
         model = Donor
         fields = DonorSerializer.Meta.fields + ('client_secret',)
+
+    def validate_amount(self, value):
+        provider = StripePaymentProvider.objects.first()
+        currency_code = str(value.currency)
+        currency_settings = provider.get_currency_settings(currency_code)
+
+        if currency_settings:
+            min_amount = currency_settings.min_amount
+            max_amount = currency_settings.max_amount
+
+            if min_amount and value.amount < min_amount:
+                raise serializers.ValidationError(
+                    _("Amount must be at least {amount} {currency}").format(
+                        amount=min_amount, currency=currency_code
+                    )
+                )
+
+            if max_amount and value.amount > max_amount:
+                raise serializers.ValidationError(
+                    _("Amount cannot exceed {amount} {currency}").format(
+                        amount=max_amount, currency=currency_code
+                    )
+                )
+
+        return value
 
 
 class KycDocumentSerializer(PrivateDocumentSerializer):

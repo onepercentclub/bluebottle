@@ -143,7 +143,9 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'description',
         'theme',
         'image',
-        'video_url'
+        'video_url',
+        'organization'
+
     )
 
     status_fields = (
@@ -547,6 +549,17 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
             )
 
         return formset
+
+    def slots(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
+
+    readonly_fields = ('status_label', 'edit', 'slots')
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.slots.count() > 1:
+            fields += ('slots', )
+        return fields
 
     def has_add_permission(self, request, obj):
         return obj and obj.id and obj.slots.count() <= 1
@@ -1341,8 +1354,8 @@ class TimeContributionInlineAdmin(admin.TabularInline):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    raw_id_fields = ContributionChildAdmin.raw_id_fields + ('slot_participant',)
-    fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
+    raw_id_fields = ContributionChildAdmin.raw_id_fields
+    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 class SlotWidget(TextInput):

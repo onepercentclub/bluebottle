@@ -23,7 +23,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, DateRegistrationFactory
+    DateParticipantFactory, SlotParticipantFactory
 )
 
 
@@ -42,16 +42,16 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivitySubmittedReviewerNotification
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new activity is ready to be reviewed on [site name]')
+        self.assertSubject('A new activity is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this activity')
-        self.assertActionLink(self.obj.get_admin_url())
+        self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View this activity')
 
     def test_activity_published_reviewer_notification(self):
         self.message_class = ActivityPublishedReviewerNotification
         self.create()
         self.assertRecipients([self.reviewer])
-        self.assertSubject('A new activity has been published on [site name]')
+        self.assertSubject('A new activity has been published on Test')
         self.assertBodyContains('has been successfully published')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View this activity')
@@ -60,7 +60,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivitySubmittedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('You submitted an activity on [site name]')
+        self.assertSubject('You submitted an activity on Test')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -68,7 +68,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityPublishedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your activity on [site name] has been published!')
+        self.assertSubject('Your activity on Test has been published!')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -76,7 +76,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityApprovedNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('Your activity on [site name] has been approved!')
+        self.assertSubject('Your activity on Test has been approved!')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -84,7 +84,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.message_class = ActivityNeedsWorkNotification
         self.create()
         self.assertRecipients([self.obj.owner])
-        self.assertSubject('The activity you submitted on [site name] needs work')
+        self.assertSubject('The activity you submitted on Test needs work')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('Open your activity')
 
@@ -167,39 +167,39 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        registration1 = DateRegistrationFactory.create(
+        part1 = DateParticipantFactory.create(
             user=self.active_user,
             activity=activity
         )
-        DateParticipantFactory.create(
-            registration=registration1,
+        SlotParticipantFactory.create(
+            participant=part1,
             slot=slot1
         )
-        DateParticipantFactory.create(
-            registration=registration1,
+        SlotParticipantFactory.create(
+            participant=part1,
             slot=slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        registration2 = DateRegistrationFactory.create(
+        part2 = DateParticipantFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        DateParticipantFactory.create(
-            registration=registration2,
+        SlotParticipantFactory.create(
+            participant=part2,
             slot=slot1
         )
-        DateParticipantFactory.create(
-            registration=registration2,
+        SlotParticipantFactory.create(
+            participant=part2,
             slot=old_slot
         )
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        registration3 = DateRegistrationFactory.create(
+        part3 = DateParticipantFactory.create(
             user=self.passive_user,
             activity=activity
         )
 
-        DateParticipantFactory.create(
-            registration=registration3,
+        SlotParticipantFactory.create(
+            participant=part3,
             slot=old_slot
         )
 

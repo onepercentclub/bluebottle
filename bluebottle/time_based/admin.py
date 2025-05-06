@@ -1343,8 +1343,8 @@ class TimeContributionInlineAdmin(admin.TabularInline):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    raw_id_fields = ContributionChildAdmin.raw_id_fields + ('slot_participant',)
-    fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
+    raw_id_fields = ContributionChildAdmin.raw_id_fields
+    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 class SlotWidget(TextInput):

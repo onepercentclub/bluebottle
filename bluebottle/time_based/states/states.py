@@ -12,8 +12,7 @@ from bluebottle.time_based.models import (
     TimeContribution,
     DeadlineActivity,
     PeriodicActivity,
-    ScheduleActivity,
-    RegisteredDateActivity,
+    ScheduleActivity, RegisteredDateActivity,
 )
 
 

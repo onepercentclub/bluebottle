@@ -435,8 +435,8 @@ class ActivitySearch(Search):
                                 "filter": (
                                     Range(**{"dates.end": {"lte": end}}) &
                                     (
-                                        Range(**{"dates.start": {"gte": start}}) |
-                                        Bool(must_not=Exists(field='dates.start'))
+                                        Range(**{"dates.end": {"gte": start}}) |
+                                        Bool(must_not=Exists(field='dates.end'))
                                     )
                                 ),
                             },

@@ -581,19 +581,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
+            first_date_activity,
+            second_date_activity,
+
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
+
 
             DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
-
-            first_date_activity,
-            second_date_activity,
-
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                status='open', start=None, deadline=None
+            ),
         ]
 
         DateActivitySlotFactory.create(
@@ -762,12 +762,12 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         today = now().date()
         activities = [
             DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)
+                status='open', start=now() + timedelta(days=1), deadline=now() + timedelta(days=1)
             ),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
             DeadlineActivityFactory(
                 status='open', start=None, deadline=None
             ),

@@ -31,8 +31,7 @@ from bluebottle.time_based.messages import (
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant,
-)
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, DateParticipant, )
 from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,

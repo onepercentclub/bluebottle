@@ -550,6 +550,17 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
 
         return formset
 
+    def slots(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
+
+    readonly_fields = ('status_label', 'edit', 'slots')
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.slots.count() > 1:
+            fields += ('slots', )
+        return fields
+
     def has_add_permission(self, request, obj):
         return obj and obj.id and obj.slots.count() <= 1
 

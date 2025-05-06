@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 import dateutil
 from django.utils.timezone import now
@@ -420,7 +420,7 @@ class ActivitySearch(Search):
                 and self.filter_values["upcoming"][0] == "1"
             ):
                 start = now()
-                end = None
+                end = date.max
 
                 if "date" in self.filter_values:
                     start, end = self.filter_values["date"][0].split(",")

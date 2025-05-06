@@ -614,35 +614,35 @@ class DeadlineActivity(RegistrationActivity):
         permissions = (
             (
                 "api_read_deadlineactivity",
-                "Can view on a flexible activities through the API",
+                "Can view on a felxible activities through the API",
             ),
             (
                 "api_add_deadlineactivity",
-                "Can add on a flexible activities through the API",
+                "Can add on a felxible activities through the API",
             ),
             (
                 "api_change_deadlineactivity",
-                "Can change on a flexible activities through the API",
+                "Can change on a felxible activities through the API",
             ),
             (
                 "api_delete_deadlineactivity",
-                "Can delete on a flexible activities through the API",
+                "Can delete on a felxible activities through the API",
             ),
             (
                 "api_read_own_deadlineactivity",
-                "Can view own on a flexible activities through the API",
+                "Can view own on a felxible activities through the API",
             ),
             (
                 "api_add_own_deadlineactivity",
-                "Can add own on a flexible activities through the API",
+                "Can add own on a felxible activities through the API",
             ),
             (
                 "api_change_own_deadlineactivity",
-                "Can change own on a flexible activities through the API",
+                "Can change own on a felxible activities through the API",
             ),
             (
                 "api_delete_own_deadlineactivity",
-                "Can delete own on a flexible activities through the API",
+                "Can delete own on a felxible activities through the API",
             ),
         )
 
@@ -795,79 +795,6 @@ class PeriodicActivity(RegistrationActivity):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/periodics'
-
-
-class RegisteredDateActivity(TimeBasedActivity):
-    url_pattern = "{}/{}/activities/details/registered/{}/{}"
-
-    duration = models.DurationField(
-        _("Activity duration"),
-        help_text=_("How much time did/will a participant contribute?"),
-        null=True,
-        blank=True,
-    )
-
-    start = models.DateTimeField(
-        _('Start date'),
-        help_text=_('Start of the activity.'),
-        null=True,
-        blank=True
-    )
-
-    location = models.ForeignKey(
-        Geolocation, verbose_name=_('location'),
-        help_text=_(
-            'If the activity takes place in multiple locations then add the region. '
-            'You will be able to add specific locations to individual participants when they are scheduled.'
-        ),
-        null=True, blank=True, on_delete=models.SET_NULL
-    )
-
-    @property
-    def required_fields(self):
-        return super().required_fields + ["duration"]
-
-    class Meta:
-        verbose_name = _("Registered date activity")
-        verbose_name_plural = _("Registered date activities")
-
-        permissions = (
-            (
-                "api_read_registereddate",
-                "Can view on a registered date activities through the API",
-            ),
-            (
-                "api_add_registereddate",
-                "Can add on a registered date activities through the API",
-            ),
-            (
-                "api_change_registereddate",
-                "Can change on a registered date activities through the API",
-            ),
-            (
-                "api_delete_registereddate",
-                "Can delete on a registered date activities through the API",
-            ),
-            (
-                "api_read_own_registereddate",
-                "Can view own on a registered date activities through the API",
-            ),
-            (
-                "api_add_own_registereddate",
-                "Can add own on a registered date activities through the API",
-            ),
-            (
-                "api_change_own_registereddate",
-                "Can change own on a registered date activities through the API",
-            ),
-            (
-                "api_delete_own_registereddate",
-                "Can delete own on a registered date activities through the API",
-            ),
-        )
-
-    class JSONAPIMeta:
-        resource_name = "activities/time-based/registered-dates"
 
 
 class Participant(Contributor):
@@ -1344,44 +1271,6 @@ class DeadlineParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-participants'
-
-
-class RegisteredDateParticipant(Contributor):
-    class Meta:
-        verbose_name = _("Participant to registered date activity")
-        verbose_name_plural = _("Participants to registered date activity")
-
-        permissions = (
-            ("api_read_registereddateparticipant", "Can view participant through the API"),
-            ("api_add_registereddateparticipant", "Can add participant through the API"),
-            (
-                "api_change_registereddateparticipant",
-                "Can change participant through the API",
-            ),
-            (
-                "api_delete_registereddateparticipant",
-                "Can delete participant through the API",
-            ),
-            (
-                "api_read_own_registereddateparticipant",
-                "Can view own participant through the API",
-            ),
-            (
-                "api_add_own_registereddateparticipant",
-                "Can add own participant through the API",
-            ),
-            (
-                "api_change_own_registereddateparticipant",
-                "Can change own participant through the API",
-            ),
-            (
-                "api_delete_own_registereddateparticipant",
-                "Can delete own participant through the API",
-            ),
-        )
-
-    class JSONAPIMeta(object):
-        resource_name = 'contributors/time-based/registered-date-participants'
 
 
 class TeamScheduleRegistration(Registration):

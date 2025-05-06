@@ -12,7 +12,6 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     ScheduleActivity,
-    RegisteredDateActivity,
 )
 
 
@@ -138,11 +137,6 @@ class DateStateMachine(TimeBasedStateMachine):
             "The activity is reopened because the start date changed."
         )
     )
-
-
-@register(RegisteredDateActivity)
-class RegisteredDateStateMachine(TimeBasedStateMachine):
-    pass
 
 
 class RegistrationActivityStateMachine(TimeBasedStateMachine):

@@ -823,7 +823,9 @@ class RegisteredDateActivity(TimeBasedActivity):
         null=True, blank=True, on_delete=models.SET_NULL
     )
 
-    required_fields = ["title", "start", "duration"]
+    @property
+    def required_fields(self):
+        return super().required_fields + ["duration"]
 
     class Meta:
         verbose_name = _("Registered date activity")

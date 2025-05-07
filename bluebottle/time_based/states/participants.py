@@ -207,6 +207,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
             ParticipantStateMachine.removed,
+            ParticipantStateMachine.withdrawn,
             ParticipantStateMachine.succeeded,
         ],
         ParticipantStateMachine.accepted,

@@ -133,6 +133,13 @@ class SlotRelatedParticipantListView(
     def get_queryset(self):
         queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        my = self.request.query_params.get('filter[my]')
+
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         statuses = ('accepted', 'succeeded',)
         if self.request.user.is_staff or self.request.user.is_superuser or self.request.user in activity.owners:
@@ -147,10 +154,9 @@ class SlotRelatedParticipantListView(
                     Q(status__in=statuses)
                 ).order_by('-id')
         else:
-            queryset = self.queryset.filter(
+            queryset = queryset.filter(
                 status__in=statuses
             ).order_by('-id')
-
         return queryset
 
 

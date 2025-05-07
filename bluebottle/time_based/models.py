@@ -614,35 +614,35 @@ class DeadlineActivity(RegistrationActivity):
         permissions = (
             (
                 "api_read_deadlineactivity",
-                "Can view on a felxible activities through the API",
+                "Can view on a flexible activities through the API",
             ),
             (
                 "api_add_deadlineactivity",
-                "Can add on a felxible activities through the API",
+                "Can add on a flexible activities through the API",
             ),
             (
                 "api_change_deadlineactivity",
-                "Can change on a felxible activities through the API",
+                "Can change on a flexible activities through the API",
             ),
             (
                 "api_delete_deadlineactivity",
-                "Can delete on a felxible activities through the API",
+                "Can delete on a flexible activities through the API",
             ),
             (
                 "api_read_own_deadlineactivity",
-                "Can view own on a felxible activities through the API",
+                "Can view own on a flexible activities through the API",
             ),
             (
                 "api_add_own_deadlineactivity",
-                "Can add own on a felxible activities through the API",
+                "Can add own on a flexible activities through the API",
             ),
             (
                 "api_change_own_deadlineactivity",
-                "Can change own on a felxible activities through the API",
+                "Can change own on a flexible activities through the API",
             ),
             (
                 "api_delete_own_deadlineactivity",
-                "Can delete own on a felxible activities through the API",
+                "Can delete own on a flexible activities through the API",
             ),
         )
 
@@ -822,6 +822,15 @@ class RegisteredDateActivity(TimeBasedActivity):
         ),
         null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def participants(self):
+        if self.pk:
+            return self.contributors.instance_of(
+                RegisteredDateParticipant
+            )
+        else:
+            return Contributor.objects.none()
 
     required_fields = ["title", "start", "duration"]
 
@@ -1342,6 +1351,44 @@ class DeadlineParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-participants'
+
+
+class RegisteredDateParticipant(Contributor):
+    class Meta:
+        verbose_name = _("Participant to registered date activity")
+        verbose_name_plural = _("Participants to registered date activity")
+
+        permissions = (
+            ("api_read_registereddateparticipant", "Can view participant through the API"),
+            ("api_add_registereddateparticipant", "Can add participant through the API"),
+            (
+                "api_change_registereddateparticipant",
+                "Can change participant through the API",
+            ),
+            (
+                "api_delete_registereddateparticipant",
+                "Can delete participant through the API",
+            ),
+            (
+                "api_read_own_registereddateparticipant",
+                "Can view own participant through the API",
+            ),
+            (
+                "api_add_own_registereddateparticipant",
+                "Can add own participant through the API",
+            ),
+            (
+                "api_change_own_registereddateparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_registereddateparticipant",
+                "Can delete own participant through the API",
+            ),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/registered-date-participants'
 
 
 class TeamScheduleRegistration(Registration):

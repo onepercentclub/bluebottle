@@ -1,4 +1,3 @@
-from datetime import datetime
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -57,8 +56,8 @@ class CollectDocument(ActivityDocument):
 
     def prepare_dates(self, instance):
         return [{
-            'start': instance.start or datetime.min,
-            'end': instance.end or datetime.max
+            'start': instance.start,
+            'end': instance.end
         }]
 
     def prepare_duration(self, instance):

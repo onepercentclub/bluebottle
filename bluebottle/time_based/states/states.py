@@ -203,6 +203,12 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
         sources=[planned, ActivityStateMachine.expired],
     )
 
+    publish = ActivityStateMachine.publish.extend(
+        target=planned,
+        name=_('Register'),
+        description=_('Register activity, so it will be visible on the platform.'),
+    )
+
     approve = ActivityStateMachine.approve.extend(
         description=_('Approve activity, so it will be planned on the platform.'),
         target=planned,

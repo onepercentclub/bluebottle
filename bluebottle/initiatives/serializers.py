@@ -28,7 +28,7 @@ from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import TinyPointSerializer
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings, Theme, ActivitySearchFilter, \
-    InitiativeSearchFilter
+    InitiativeSearchFilter, ActivityQuestion
 from bluebottle.initiatives.states import ReviewStateMachine
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPermissionsSerializer
@@ -536,11 +536,19 @@ class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
         fields = ['type', 'name', 'highlight', 'placeholder']
 
 
+class ActivityQuestionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActivityQuestion
+        fields = ['id', 'question', 'description', 'sequence', 'activity_types']
+
+
 class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     has_locations = serializers.SerializerMethodField()
 
     search_filters_activities = ActivitySearchFilterSerializer(many=True)
     search_filters_initiatives = InitiativeSearchFilterSerializer(many=True)
+    activity_questions = ActivityQuestionSerializer(many=True, read_only=True)
 
     def get_has_locations(self, obj):
         return Location.objects.count()
@@ -549,7 +557,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
         model = InitiativePlatformSettings
 
         fields = (
-            'activity_types',
+            # 'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',
@@ -568,7 +576,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_open_initiatives',
             'has_locations',
             'enable_matching_emails',
-            'create_flow'
+            'activity_questions'
         )
 
 

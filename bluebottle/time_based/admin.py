@@ -671,7 +671,7 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
     readonly_fields = TimeBasedAdmin.readonly_fields
 
     list_display = TimeBasedAdmin.list_display + [
-        'start', 'end_date', 'duration_string', 'participant_count'
+        'start', 'duration_string', 'participant_count'
     ]
 
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
@@ -693,11 +693,6 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         ('duration', 'TimeContribution'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
-
-    def end_date(self, obj):
-        if not obj.deadline:
-            return _('indefinitely')
-        return obj.deadline
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()

@@ -1,19 +1,23 @@
 from rest_framework import serializers
 from rest_framework_json_api.relations import (
+    HyperlinkedRelatedField,
     ResourceRelatedField,
-    HyperlinkedRelatedField, SerializerMethodHyperlinkedRelatedField
-
+    SerializerMethodHyperlinkedRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
 from bluebottle.activities.utils import BaseContributionSerializer
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransitionsField, CurrentStatusField
+from bluebottle.fsm.serializers import (
+    AvailableTransitionsField,
+    CurrentStatusField,
+    TransitionSerializer,
+)
 from bluebottle.geo.models import Geolocation
-from bluebottle.time_based.models import TimeContribution, DateActivitySlot, Skill
+from bluebottle.time_based.models import DateActivitySlot, Skill, TimeContribution
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.utils.fields import ValidationErrorsField, RequiredErrorsField, FSMField
+from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField
 from bluebottle.utils.utils import reverse_signed
 
@@ -94,12 +98,12 @@ class ActivitySlotSerializer(ModelSerializer):
 class DateActivitySlotSerializer(ActivitySlotSerializer):
     participants = RelatedLinkFieldByStatus(
         read_only=True,
-        related_link_view_name='date-slot-related-participants',
-        related_link_url_kwarg='slot_id',
+        related_link_view_name="date-slot-related-participants",
+        related_link_url_kwarg="slot_id",
         include_my=True,
         statuses={
             "active": ["accepted", "succeeded", "running"],
-            "failed": ["failed", "rejected", "expired", "cancelled"],
+            "failed": ["failed", "rejected", "expired", "cancelled", "withdrawn"],
         },
     )
 

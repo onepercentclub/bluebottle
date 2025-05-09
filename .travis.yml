@@ -27,6 +27,7 @@ env:
 before_install:
   - "echo 'xpack.security.enabled: false' | sudo tee -a /etc/elasticsearch/elasticsearch.yml"
   - sudo systemctl restart elasticsearch
+  - sudo journalctl -xe
   - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/*/main/pg_hba.conf
   - sudo service postgresql restart
   - sleep 1

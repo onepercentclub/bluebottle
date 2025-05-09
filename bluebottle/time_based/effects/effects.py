@@ -25,9 +25,8 @@ class CreateSlotTimeContributionEffect(Effect):
         if slot.start and slot.duration:
             end = slot.start + slot.duration
             contribution = TimeContribution(
-                contributor=self.instance.participant,
+                contributor=self.instance,
                 contribution_type=ContributionTypeChoices.date,
-                slot_participant=self.instance,
                 value=slot.duration,
                 start=slot.start,
                 end=end
@@ -400,20 +399,17 @@ class CheckPreparationTimeContributionEffect(Effect):
     template = 'admin/check_preparation_time_contribution.html'
 
     def post_save(self, **kwargs):
-        participant = self.instance.participant
-        participant.refresh_from_db()
-        has_registrations = participant.slot_participants.filter(
-            status__in=['registered']
-        ).exists()
-        prep_time = participant.contributions.filter(
+        prep_time = self.instance.contributions.filter(
             timecontribution__contribution_type=ContributionTypeChoices.preparation
         ).first()
         if prep_time:
-            if not has_registrations and prep_time.status in ['succeeded', 'new']:
+            if (
+                prep_time.contributor.status not in ('accepted', 'succeeded') and
+                prep_time.status in ['succeeded', 'new']
+            ):
                 prep_time.states.fail(save=True)
             elif (
-                participant.status in ['new', 'accepted', 'succeeded'] and
-                has_registrations and
+                prep_time.contributor.status in ['new', 'accepted', 'succeeded'] and
                 prep_time.status == 'failed'
             ):
                 prep_time.states.succeed(save=True)
@@ -457,7 +453,7 @@ class SlotParticipantUnFollowActivityEffect(Effect):
     @property
     def is_valid(self):
         return (
-            self.instance.participant.slot_participants.filter(
+            self.instance.registration.participants.filter(
                 status__in=("registered", "succeeded")
             ).count()
             == 1

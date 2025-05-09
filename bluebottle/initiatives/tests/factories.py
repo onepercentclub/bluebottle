@@ -34,7 +34,6 @@ class InitiativeFactory(factory.DjangoModelFactory):
         if not extracted:
             extracted = [BlueBottleUserFactory.create()]
 
-        self.activity_managers.clear()
         for manager in extracted:
             self.activity_managers.add(manager)
 

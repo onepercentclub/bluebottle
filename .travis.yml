@@ -25,8 +25,6 @@ env:
   global:
     - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - sudo systemctl restart elasticsearch
-  - sudo journalctl -xe
   - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/*/main/pg_hba.conf
   - sudo service postgresql restart
   - sleep 1

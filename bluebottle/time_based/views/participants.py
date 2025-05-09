@@ -2,15 +2,25 @@ from django.db.models import Q
 
 from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
 from bluebottle.activities.views import ParticipantCreateMixin
-from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant, DateActivity, RegisteredDateParticipant
+from bluebottle.time_based.models import (
+    DateActivity,
+    DateParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+)
+from bluebottle.time_based.models import RegisteredDateParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
     DateParticipantTransitionSerializer,
-    ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer,
-    RegisteredDateParticipantSerializer
+    DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
+    ScheduleParticipantSerializer,
+    ScheduleParticipantTransitionSerializer,
+    TeamScheduleParticipantSerializer,
+    TeamScheduleParticipantTransitionSerializer,
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -23,15 +33,18 @@ from bluebottle.time_based.views.mixins import (
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
+    IsAuthenticated,
+    IsOwnerOrReadOnly,
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
+    ResourcePermission,
 )
 from bluebottle.utils.views import (
     CreateAPIView,
+    JsonApiPagination,
     JsonApiViewMixin,
     ListAPIView,
-    RetrieveUpdateAPIView, JsonApiPagination,
+    RetrieveUpdateAPIView,
 )
 
 
@@ -141,11 +154,28 @@ class SlotRelatedParticipantListView(
             else:
                 queryset = queryset.none()
 
-        statuses = ('accepted', 'succeeded',)
-        if self.request.user.is_staff or self.request.user.is_superuser or self.request.user in activity.owners:
-            statuses = ('accepted', 'succeeded', 'rejected', 'withdrawn', 'cancelled')
+        status_filter = self.request.query_params.get("filter[status]")
+        if status_filter:
+            statuses = status_filter.split(",")
+        else:
+            statuses = (
+                "accepted",
+                "succeeded",
+            )
+            if (
+                self.request.user.is_staff
+                or self.request.user.is_superuser
+                or self.request.user in activity.owners
+            ):
+                statuses = (
+                    "accepted",
+                    "succeeded",
+                    "rejected",
+                    "withdrawn",
+                    "cancelled",
+                )
 
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and not status_filter:
             if self.request.user.is_staff:
                 queryset = queryset
             else:

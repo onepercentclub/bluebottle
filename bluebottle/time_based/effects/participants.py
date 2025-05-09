@@ -12,7 +12,7 @@ from bluebottle.time_based.models import (
     DeadlineRegistration,
     DeadlineParticipant,
     ScheduleRegistration,
-    ScheduleParticipant, ScheduleSlot
+    ScheduleParticipant, ScheduleSlot, DateRegistration,
 )
 
 
@@ -43,6 +43,27 @@ class CreateTimeContributionEffect(Effect):
             contribution_type=ContributionTypeChoices.period,
             value=activity.duration,
             start=contribution_date
+        )
+
+        contribution.execute_triggers(**self.options)
+        contribution.save()
+
+    def __str__(self):
+        return _("Create contribution")
+
+
+class CreateRegisteredTimeContributionEffect(Effect):
+    title = _('Create contribution')
+    template = 'admin/create_deadline_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+
+        contribution = TimeContribution(
+            contributor=self.instance,
+            contribution_type=ContributionTypeChoices.period,
+            value=activity.duration,
+            start=activity.start or now()
         )
 
         contribution.execute_triggers(**self.options)
@@ -120,6 +141,27 @@ class CreateRegistrationEffect(Effect):
     conditions = [
         without_registration
     ]
+
+
+class CreateDateRegistrationEffect(Effect):
+    title = _('Create or assign registration for this participant')
+    template = 'admin/create_date_registration.html'
+
+    def pre_save(self, **kwargs):
+
+        if not self.instance.activity_id:
+            # we need this for inline admin, so we can add users to a slot
+            self.instance.activity = self.instance.slot.activity
+        self.instance.registration = self.instance.activity.registrations.filter(user=self.instance.user).first()
+
+    def post_save(self, **kwargs):
+        if not self.instance.registration:
+            self.instance.registration = DateRegistration.objects.create(
+                activity=self.instance.activity,
+                user=self.instance.user,
+            )
+
+            self.instance.save()
 
 
 class CreatePeriodicPreparationTimeContributionEffect(CreatePeriodicParticipantsEffect):

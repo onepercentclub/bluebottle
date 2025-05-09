@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.db.models import F
-from django.utils.timezone import get_current_timezone, make_aware
+from django.utils.timezone import get_current_timezone, make_aware, now
 
 from bluebottle.fsm.effects import Effect
 
@@ -31,5 +31,16 @@ class RescheduleActivityDurationsEffect(Effect):
         self.instance.durations.update(
             start=start,
             end=end,
+            value=self.instance.duration
+        )
+
+
+class RescheduleRelatedTimeContributionsEffect(Effect):
+    display = False
+
+    def post_save(self, **kwargs):
+
+        self.instance.durations.update(
+            start=self.instance.start or now(),
             value=self.instance.duration
         )

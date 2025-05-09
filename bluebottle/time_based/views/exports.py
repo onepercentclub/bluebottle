@@ -1,4 +1,5 @@
 import re
+from django.utils.timezone import now
 
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
@@ -6,14 +7,16 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicActivity,
     ScheduleActivity,
+    DateActivity,
     ScheduleParticipant,
     PeriodicRegistration,
+    DateRegistration, RegisteredDateActivity, RegisteredDateParticipant
 )
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import ExportView
 
 
-class TimebasedExportView(ExportView):
+class TimeBasedExportView(ExportView):
     filename = "participants"
     fields = (
         ('user__email', 'Email'),
@@ -57,17 +60,22 @@ class TimebasedExportView(ExportView):
         ).prefetch_related('user__segments').select_related('user')
 
 
-class DeadlineParticipantExportView(TimebasedExportView):
+class DeadlineParticipantExportView(TimeBasedExportView):
     model = DeadlineActivity
     participant_model = DeadlineParticipant
 
 
-class ScheduleParticipantExportView(TimebasedExportView):
+class RegisteredDateParticipantExportView(TimeBasedExportView):
+    model = RegisteredDateActivity
+    participant_model = RegisteredDateParticipant
+
+
+class ScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
     participant_model = ScheduleParticipant
 
 
-class TeamScheduleParticipantExportView(TimebasedExportView):
+class TeamScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
     fields = (
         ("user__email", "Captain email"),
@@ -111,7 +119,7 @@ class TeamScheduleParticipantExportView(TimebasedExportView):
                 worksheet.write_row(index + 1, 0, row)
 
 
-class PeriodicParticipantExportView(TimebasedExportView):
+class PeriodicParticipantExportView(TimeBasedExportView):
     model = PeriodicActivity
     participant_model = PeriodicRegistration
 
@@ -133,3 +141,48 @@ class PeriodicParticipantExportView(TimebasedExportView):
             .prefetch_related("user__segments")
             .select_related("user")
         )
+
+
+class DateParticipantExportView(TimeBasedExportView):
+    model = DateActivity
+    participant_model = DateRegistration
+
+    fields = (
+        ("user__email", "Email"),
+        ("user__full_name", "Name"),
+        ("created", "Registration Date"),
+        ("status", "Status"),
+        ("answer", "Registration answer"),
+    )
+
+    def get_instances(self):
+        return (
+            self.participant_model.objects.filter(activity=self.get_object())
+            .prefetch_related("user__segments")
+            .select_related("user")
+        )
+
+    def write_data(self, workbook):
+        activity = self.get_object()
+        bold = workbook.add_format({'bold': True})
+
+        if activity.status == 'succeeded':
+            slots = activity.slots.order_by('start')
+        else:
+            slots = activity.active_slots.filter(start__gt=now()).order_by('start')
+
+        for slot in slots:
+            title = f"{slot.start.strftime('%d-%m-%y %H:%M')} {slot.id} {slot.title or ''}"
+            title = re.sub("[\[\]\\:*?/]", '', str(title)[:30])
+            worksheet = workbook.add_worksheet(title)
+            worksheet.set_column(0, 4, 30)
+            c = 0
+            for field in self.get_fields():
+                worksheet.write(0, c, field[1], bold)
+                c += 1
+            r = 0
+
+            for participant in slot.slot_participants.all():
+                row = self.get_row(participant)
+                r += 1
+                worksheet.write_row(r, 0, row)

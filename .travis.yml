@@ -35,7 +35,7 @@ before_install:
   - psql -c "ALTER ROLE testuser SUPERUSER"
 install:
   - pip install pip==20.2.1
-  - pip install setuptools
+  - pip install setuptools==58.2.0
   - pip install wheel
   - pip install --upgrade -I flake8==5.0.4
   - pip install -e .[test] --trusted-host github.com

@@ -24,7 +24,10 @@ from bluebottle.cms.models import (
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
-from bluebottle.pages.models import Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem
+from bluebottle.pages.models import (
+    Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem,
+    ScaledImageTextItem
+)
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
 
@@ -455,6 +458,18 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
         resource_name = 'pages/blocks/image-rounded-text'
 
 
+class ScaledImageTextBlockSerializer(BaseBlockSerializer):
+    image = ImageSerializer()
+
+    class Meta(object):
+        model = ScaledImageTextItem
+
+        fields = ('id', 'text', 'image', 'align', 'block_type',)
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/scaled-image-text'
+
+
 class DocumentBlockSerializer(BaseBlockSerializer):
     class Meta(object):
         model = DocumentItem
@@ -541,6 +556,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         TextBlockSerializer,
         ImageTextBlockSerializer,
         ImageRoundTextBlockSerializer,
+        ScaledImageTextBlockSerializer,
         ImageBlockSerializer,
         PictureBlockSerializer,
         ImagePlainTextBlockSerializer,

@@ -6,6 +6,7 @@ import dkim
 
 import premailer
 
+from django.conf import settings
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import connection
 from django.utils import translation
@@ -21,6 +22,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.mails.models import MailPlatformSettings
 from bluebottle.utils.utils import to_text
+
 
 from tenant_extras.utils import TenantLanguage
 
@@ -45,12 +47,12 @@ class TenantAwareBackend(EmailBackend):
         if tenant_mail_config:
             # clear everything that was initialized from settings in __init__
             # that is, use the same defaults as django
-            self.host = tenant_mail_config.get('HOST', 'localhost')
-            self.port = tenant_mail_config.get('PORT', 25)
+            self.host = tenant_mail_config.get('HOST', settings.EMAIL_HOST)
+            self.port = tenant_mail_config.get('PORT', settings.EMAIL_PORT)
             self.username = tenant_mail_config.get('USERNAME', '')
             self.password = tenant_mail_config.get('PASSWORD', '')
-            self.use_tls = tenant_mail_config.get('TLS', False)
-            self.use_ssl = tenant_mail_config.get('SSL', False)
+            self.use_tls = tenant_mail_config.get('TLS', settings.EMAIL_USE_TLS)
+            self.use_ssl = tenant_mail_config.get('SSL', settings.EMAIL_USE_SSL)
 
         return super(TenantAwareBackend, self).open()
 

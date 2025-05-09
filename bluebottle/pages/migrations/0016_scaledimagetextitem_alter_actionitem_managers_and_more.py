@@ -9,7 +9,6 @@ import fluent_contents.extensions
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('fluent_contents', '0002_alter_contentitem_polymorphic_ctype'),
         ('pages', '0015_auto_20230921_1242'),
     ]
 

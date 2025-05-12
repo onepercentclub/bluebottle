@@ -556,7 +556,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'description',
         'image',
         'video_url',
-        'organization'
+        'organization',
+        'theme'
     )
 
     status_fields = (

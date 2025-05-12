@@ -193,6 +193,9 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
 @register(RegisteredDateActivity)
 class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
 
+    def has_participants(self):
+        return self.instance.participants.count() > 0
+
     planned = State(
         _('Planned'),
         'planned',
@@ -218,9 +221,14 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
         conditions=[
             TimeBasedStateMachine.is_complete,
             TimeBasedStateMachine.is_valid,
-            TimeBasedStateMachine.can_publish
+            TimeBasedStateMachine.can_publish,
+            has_participants
         ],
     )
+    submit = ActivityStateMachine.submit.extend(
+        conditions=ActivityStateMachine.submit.conditions + [has_participants],
+    )
+
     publish = None
 
     approve = ActivityStateMachine.approve.extend(

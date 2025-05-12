@@ -570,7 +570,7 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
 
     triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
-            RegisteredDateActivityStateMachine.publish,
+            RegisteredDateActivityStateMachine.register,
             effects=[
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,

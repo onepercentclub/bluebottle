@@ -19,6 +19,7 @@ from bluebottle.time_based.models import (
     DateActivitySlot,
     ScheduleSlot,
     TeamScheduleSlot,
+    RegisteredDateActivity
 )
 from bluebottle.time_based.states import (
     TimeBasedStateMachine,
@@ -162,6 +163,20 @@ class ActivityFinishedTask(ModelPeriodicTask):
         return str(_("Finish an activity when deadline has passed."))
 
 
+class RegisteredDateActivityFinishedTask(ModelPeriodicTask):
+    def get_queryset(self):
+        return self.model.objects.filter(
+            start__lte=date.today(), status__in=["planned"]
+        )
+
+    effects = [
+        TransitionEffect(TimeBasedStateMachine.succeed)
+    ],
+
+    def __str__(self):
+        return str(_("Finish an activity when start has passed."))
+
+
 class PeriodicSlotStartedTask(ModelPeriodicTask):
     def get_queryset(self):
         return PeriodicSlot.objects.filter(
@@ -247,6 +262,10 @@ PeriodicActivity.periodic_tasks = [
 ScheduleActivity.periodic_tasks = [
     ActivityFinishedTask,
     TimeBasedActivityRegistrationDeadlinePassedTask,
+]
+RegisteredDateActivity.periodic_tasks = [
+    RegisteredDateActivityFinishedTask
+
 ]
 
 PeriodicSlot.periodic_tasks = [PeriodicSlotStartedTask, PeriodicSlotFinishedTask]

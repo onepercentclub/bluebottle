@@ -193,6 +193,9 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
 @register(RegisteredDateActivity)
 class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
 
+    def has_participants(self):
+        return self.instance.participants.count() > 0
+
     planned = State(
         _('Planned'),
         'planned',
@@ -203,11 +206,30 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
         sources=[planned, ActivityStateMachine.expired],
     )
 
-    publish = ActivityStateMachine.publish.extend(
-        target=planned,
-        name=_('Register'),
-        description=_('Register activity, so it will be visible on the platform.'),
+    register = Transition(
+        [
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+        ],
+        planned,
+        name=_("Register"),
+        description=_('Register your activity, so it will be visible on the platform.'),
+        automatic=False,
+        passed_label=_("registered"),
+        permission=TimeBasedStateMachine.is_owner,
+        conditions=[
+            TimeBasedStateMachine.is_complete,
+            TimeBasedStateMachine.is_valid,
+            TimeBasedStateMachine.can_publish,
+            has_participants
+        ],
     )
+    submit = ActivityStateMachine.submit.extend(
+        conditions=ActivityStateMachine.submit.conditions + [has_participants],
+    )
+
+    publish = None
 
     approve = ActivityStateMachine.approve.extend(
         description=_('Approve activity, so it will be planned on the platform.'),

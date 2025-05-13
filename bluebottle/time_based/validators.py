@@ -1,4 +1,5 @@
 import re
+
 from django.db.models import Min
 from django.utils.translation import gettext_lazy as _
 
@@ -63,6 +64,9 @@ class CompletedSlotsValidator(Validator):
     message = _('At least one time slot should have all required fields filled out.')
 
     def is_valid(self):
+        slots = self.instance.slots.all()
+        if slots.exists():
+            return slots[0].is_complete
         return not self.instance.pk or len([slot for slot in self.instance.slots.all() if slot.is_complete]) > 0
 
 

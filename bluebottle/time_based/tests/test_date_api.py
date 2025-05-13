@@ -81,7 +81,7 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
 
         self.assertTransition('delete')
 
-        # A full activity was created. Now add a slot
+        activity_id = self.response.json()['data']['id']
         slot_url = reverse('date-slot-list')
         response = self.client.post(
             slot_url,
@@ -92,11 +92,12 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
                         'start': '2026-01-01 10:00:00',
                         'duration': '01:00',
                         'is-online': True,
+                        'title': ''
                     },
                     'relationships': {
                         'activity': {
                             'data': {
-                                'id': self.response.json()['data']['id'],
+                                'id': activity_id,
                                 'type': 'activities/time-based/dates'
                             }
                         }
@@ -112,7 +113,6 @@ class DateActivityListAPITestCase(TimeBasedActivityListAPITestCase, APITestCase)
             if resource['type'] == 'activities/time-based/dates'
         ][0]
 
-        # Now the activity is really complete and we should be able to publish it
         self.assertTrue(
             'publish' in [transition['name'] for transition in activity['meta']['transitions']]
         )

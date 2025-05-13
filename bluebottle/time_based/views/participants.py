@@ -2,15 +2,25 @@ from django.db.models import Q
 
 from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
 from bluebottle.activities.views import ParticipantCreateMixin
-from bluebottle.time_based.models import DeadlineParticipant, PeriodicParticipant, ScheduleParticipant, \
-    TeamScheduleParticipant, DateParticipant, DateActivity, RegisteredDateParticipant
+from bluebottle.time_based.models import (
+    DateActivity,
+    DateParticipant,
+    DeadlineParticipant,
+    PeriodicParticipant,
+    ScheduleParticipant,
+    TeamScheduleParticipant,
+)
+from bluebottle.time_based.models import RegisteredDateParticipant
 from bluebottle.time_based.serializers import (
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
     DateParticipantTransitionSerializer,
-    ScheduleParticipantSerializer, ScheduleParticipantTransitionSerializer,
-    TeamScheduleParticipantSerializer, TeamScheduleParticipantTransitionSerializer, DateParticipantSerializer,
-    RegisteredDateParticipantSerializer
+    DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
+    ScheduleParticipantSerializer,
+    ScheduleParticipantTransitionSerializer,
+    TeamScheduleParticipantSerializer,
+    TeamScheduleParticipantTransitionSerializer,
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
@@ -23,15 +33,18 @@ from bluebottle.time_based.views.mixins import (
 )
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
+    IsAuthenticated,
+    IsOwnerOrReadOnly,
     OneOf,
     ResourceOwnerPermission,
-    ResourcePermission, IsAuthenticated, IsOwnerOrReadOnly,
+    ResourcePermission,
 )
 from bluebottle.utils.views import (
     CreateAPIView,
+    JsonApiPagination,
     JsonApiViewMixin,
     ListAPIView,
-    RetrieveUpdateAPIView, JsonApiPagination,
+    RetrieveUpdateAPIView,
 )
 
 
@@ -133,12 +146,36 @@ class SlotRelatedParticipantListView(
     def get_queryset(self):
         queryset = super().get_queryset().filter(slot_id=self.kwargs['slot_id'])
         activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
+        my = self.request.query_params.get('filter[my]')
 
-        statuses = ('accepted', 'succeeded',)
-        if self.request.user.is_staff or self.request.user.is_superuser or self.request.user in activity.owners:
-            statuses = ('accepted', 'succeeded', 'rejected', 'withdrawn', 'cancelled')
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
-        if self.request.user.is_authenticated:
+        status_filter = self.request.query_params.get("filter[status]")
+        if status_filter:
+            statuses = status_filter.split(",")
+        else:
+            statuses = (
+                "accepted",
+                "succeeded",
+            )
+            if (
+                self.request.user.is_staff
+                or self.request.user.is_superuser
+                or self.request.user in activity.owners
+            ):
+                statuses = (
+                    "accepted",
+                    "succeeded",
+                    "rejected",
+                    "withdrawn",
+                    "cancelled",
+                )
+
+        if self.request.user.is_authenticated and not status_filter:
             if self.request.user.is_staff:
                 queryset = queryset
             else:
@@ -147,10 +184,9 @@ class SlotRelatedParticipantListView(
                     Q(status__in=statuses)
                 ).order_by('-id')
         else:
-            queryset = self.queryset.filter(
+            queryset = queryset.filter(
                 status__in=statuses
             ).order_by('-id')
-
         return queryset
 
 

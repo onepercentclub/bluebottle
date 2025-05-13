@@ -25,7 +25,7 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.reviewer])
         self.assertSubject('A new crowdfunding campaign is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this campaign')
-        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View campaign')
 
     def test_activity_submitted_notification(self):

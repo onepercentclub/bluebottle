@@ -167,39 +167,39 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        registration1 = DateRegistrationFactory.create(
+        reg1 = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
         DateParticipantFactory.create(
-            registration=registration1,
+            registration=reg1,
             slot=slot1
         )
         DateParticipantFactory.create(
-            registration=registration1,
+            registration=reg1,
             slot=slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        registration2 = DateRegistrationFactory.create(
+        reg2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
         DateParticipantFactory.create(
-            registration=registration2,
+            registration=reg2,
             slot=slot1
         )
         DateParticipantFactory.create(
-            registration=registration2,
+            registration=reg2,
             slot=old_slot
         )
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        registration3 = DateRegistrationFactory.create(
+        reg3 = DateRegistrationFactory.create(
             user=self.passive_user,
             activity=activity
         )
 
         DateParticipantFactory.create(
-            registration=registration3,
+            registration=reg3,
             slot=old_slot
         )
 

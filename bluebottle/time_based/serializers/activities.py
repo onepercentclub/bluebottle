@@ -22,9 +22,9 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity, RegisteredDateActivity,
-)
+    DateActivity, RegisteredDateActivity, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -232,6 +232,7 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
 class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
     detail_view_name = 'registered-date-detail'
     export_view_name = 'registered-date-participant-export'
+    description = RichTextField(allow_blank=True)
 
     start = serializers.DateTimeField(allow_null=True)
 
@@ -250,6 +251,7 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
         model = RegisteredDateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start',
+            'end',
             'duration',
         )
 

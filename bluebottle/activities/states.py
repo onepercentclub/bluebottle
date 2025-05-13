@@ -99,7 +99,7 @@ class ActivityStateMachine(ModelStateMachine):
 
     def can_publish(self):
         """the activity can be published. Activities can be published if they are reviewed or if reviewing is disabled.
-        Funding activities cannot be publised"""
+        Funding activities cannot be published"""
         from bluebottle.funding.models import Funding
 
         if isinstance(self.instance, Funding):
@@ -205,9 +205,9 @@ class ActivityStateMachine(ModelStateMachine):
             needs_work,
         ],
         open,
+        name=_("Publish"),
         description=_("Your activity will be open to contributions."),
         automatic=False,
-        name=_("Publish"),
         passed_label=_("published"),
         permission=is_owner,
         conditions=[is_complete, is_valid, can_publish],
@@ -239,11 +239,15 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [submitted, needs_work, draft],
+        [
+            submitted,
+            needs_work,
+            draft
+        ],
         open,
         name=_("Approve"),
         automatic=False,
-        permissions=[is_staff],
+        permissions=is_staff,
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),

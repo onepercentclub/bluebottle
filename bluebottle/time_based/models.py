@@ -823,6 +823,19 @@ class RegisteredDateActivity(TimeBasedActivity):
         null=True, blank=True, on_delete=models.SET_NULL
     )
 
+    @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
+    def participants(self):
+        if self.pk:
+            return self.contributors.instance_of(
+                RegisteredDateParticipant
+            )
+        else:
+            return Contributor.objects.none()
+
     required_fields = ["title", "start", "duration"]
 
     class Meta:

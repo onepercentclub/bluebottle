@@ -144,8 +144,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'theme',
         'image',
         'video_url',
-        'organization'
-
+        'organization',
+        'theme'
     )
 
     status_fields = (
@@ -550,6 +550,17 @@ class DateRegistrationAdminInline(BaseRegistrationAdminInline):
 
         return formset
 
+    def slots(self, obj):
+        return obj.participants.filter(status__in=['accepted', 'succeeded', 'registered', 'running']).count()
+
+    readonly_fields = ('status_label', 'edit', 'slots')
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        if obj and obj.slots.count() > 1:
+            fields += ('slots', )
+        return fields
+
     def has_add_permission(self, request, obj):
         return obj and obj.id and obj.slots.count() <= 1
 
@@ -666,8 +677,8 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     date_fields = [
-        'start',
         'duration',
+        'start',
         'location',
     ]
     registration_fields = []
@@ -678,6 +689,7 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
         return fieldsets
 
     export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
+        ('deadline', 'Deadline'),
         ('duration', 'TimeContribution'),
     )
     actions = [export_as_csv_action(fields=export_as_csv_fields)]
@@ -1217,7 +1229,8 @@ class SlotBulkAddForm(forms.Form):
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this slot.'),
-        initial=True
+        initial=True,
+        required=False
     )
 
     title = _('Bulk add participants')
@@ -1343,8 +1356,8 @@ class TimeContributionInlineAdmin(admin.TabularInline):
 
 @admin.register(TimeContribution)
 class TimeContributionAdmin(ContributionChildAdmin):
-    raw_id_fields = ContributionChildAdmin.raw_id_fields + ('slot_participant',)
-    fields = ['contributor', 'slot_participant', 'created', 'start', 'end', 'value', 'status', 'states']
+    raw_id_fields = ContributionChildAdmin.raw_id_fields
+    fields = ['contributor', 'created', 'start', 'end', 'value', 'status', 'states']
 
 
 class SlotWidget(TextInput):

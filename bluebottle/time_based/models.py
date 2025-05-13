@@ -824,6 +824,10 @@ class RegisteredDateActivity(TimeBasedActivity):
     )
 
     @property
+    def end(self):
+        return self.start + self.duration
+
+    @property
     def participants(self):
         if self.pk:
             return self.contributors.instance_of(

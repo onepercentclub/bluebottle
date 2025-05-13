@@ -251,6 +251,7 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
         model = RegisteredDateActivity
         fields = TimeBasedBaseSerializer.Meta.fields + (
             'start',
+            'end',
             'duration',
         )
 

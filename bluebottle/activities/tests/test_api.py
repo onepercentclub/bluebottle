@@ -46,7 +46,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
     SkillFactory,
-    DateRegistrationFactory,
+    SlotParticipantFactory,
 )
 
 
@@ -1638,9 +1638,9 @@ class ContributionListAPITestCase(BluebottleTestCase):
             activity=activity
         )
 
-        registration = DateRegistrationFactory.create(user=self.user, activity=activity)
-        DateParticipantFactory.create(slot=slot1, registration=registration)
-        DateParticipantFactory.create(slot=slot2, registration=registration)
+        participant = DateParticipantFactory.create(user=self.user, activity=activity)
+        SlotParticipantFactory.create(slot=slot1, participant=participant)
+        SlotParticipantFactory.create(slot=slot2, participant=participant)
 
         deadline = DeadlineActivityFactory.create(
             start=(now() - timedelta(days=4, hours=1)).date(),

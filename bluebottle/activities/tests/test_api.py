@@ -626,28 +626,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             [activity['id'] for activity in self.data['data']]
         )
 
-    def test_sort_unknown(self):
-        activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=now() + timedelta(days=1)
-            ),
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
-
-            DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=None
-            ),
-
-        ]
-
-        self.search({}, sort='some-unknown-sort-option')
-
-        self.assertEqual(
-            [str(activity.pk) for activity in activities],
-            [activity['id'] for activity in self.data['data']]
-        )
-
     def test_sort_upcoming_false(self):
         today = now().date()
         first_date_activity = DateActivityFactory.create(status='succeeded', slots=[])

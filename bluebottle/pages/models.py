@@ -142,8 +142,8 @@ class ImageTextItem(ContentItem):
         return 12 - self.text_width
 
     class Meta(object):
-        verbose_name = _('Picture + Text')
-        verbose_name_plural = _('Picture + Text')
+        verbose_name = _('Text + Image')
+        verbose_name_plural = _('Text + Image')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-text'

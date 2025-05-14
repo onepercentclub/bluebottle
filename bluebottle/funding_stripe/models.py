@@ -562,7 +562,7 @@ class StripePayoutAccount(PayoutAccount):
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
-    currency = models.CharField(max_length=10, help_text=_("Currency code"), null=True, blank=True)
+    currency = models.CharField(max_length=10, null=True, blank=True)
 
     @cached_property
     def account(self):

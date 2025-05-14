@@ -1,4 +1,4 @@
-from bluebottle.activities.messages import InactiveParticipantAddedNotification
+from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register

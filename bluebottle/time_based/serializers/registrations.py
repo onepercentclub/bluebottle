@@ -31,9 +31,7 @@ class ContactEmailField(serializers.CharField):
         if user.is_authenticated and (
             user.is_staff or
             user.is_superuser or
-            user == activity.owner or
-            user == activity.initiative.owner or
-            user in activity.initiative.activity_managers.all()
+            user in activity.owners
         ):
             return super().to_representation(value)
 
@@ -86,11 +84,9 @@ class RegistrationSerializer(ModelSerializer):
 
         user = self.context['request'].user
 
-        privileged_users = [instance.user, instance.activity.owner] + list(
-            instance.activity.initiative.activity_managers.all()
-        )
         if (
-            user not in privileged_users and
+            user != instance.user and
+            user not in instance.activity.owners and
             not user.is_staff and
             not user.is_superuser
         ):

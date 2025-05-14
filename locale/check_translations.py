@@ -6,7 +6,7 @@ import argparse
 
 import polib
 
-display_missing = 3
+display_missing = 10
 
 parser = argparse.ArgumentParser(description='Check translation percentages')
 

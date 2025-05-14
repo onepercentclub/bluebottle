@@ -1,0 +1,10 @@
+{% extends "mails/messages/initiative_base.html" %}
+
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        The initiative "{{ title }}" has been successfully published and is now live on {{ site_name }} together
+        with its completed activities for people to contribute to.
+    {% endblocktrans %}
+{% endblock %}

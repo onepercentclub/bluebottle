@@ -13,7 +13,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding
+from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding, PaymentCurrency
 from bluebottle.funding.tests.factories import (
     FundingFactory,
     PlainPayoutAccountFactory,
@@ -32,6 +32,7 @@ from bluebottle.funding_lipisha.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
@@ -735,6 +736,8 @@ class FundingTestCase(BluebottleTestCase):
         settings.activity_types.append('funding')
         settings.save()
 
+        self.theme = ThemeFactory.create()
+
         self.bank_account = PledgeBankAccountFactory.create(
             status="verified",
             connect_account=PlainPayoutAccountFactory.create(status="verified"),
@@ -756,6 +759,13 @@ class FundingTestCase(BluebottleTestCase):
                         'data': {
                             'type': 'initiatives',
                             'id': self.initiative.pk,
+                        },
+                    },
+
+                    'theme': {
+                        'data': {
+                            'type': 'themes',
+                            'id': self.theme.pk,
                         },
                     },
                 }
@@ -841,7 +851,6 @@ class FundingTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = response.json()
-
         self.assertEqual(
             data['errors'][0]['source']['pointer'],
             '/data/attributes/deadline'
@@ -891,6 +900,37 @@ class DonationTestCase(BluebottleTestCase):
         self.assertEqual(data['data']['relationships']['activity']['data']['id'], str(self.funding.pk))
         self.assertEqual(data['data']['relationships']['user']['data']['id'], str(self.user.pk))
         self.assertIsNone(data['data']['attributes']['client-secret'])
+
+    def test_donate_limits(self):
+        provider = StripePaymentProvider.objects.first()
+        PaymentCurrency.objects.create(
+            provider=provider,
+            code='EUR',
+            min_amount=10,
+            max_amount=1000,
+            default1=25,
+            default2=50,
+            default3=100,
+            default4=200,
+        )
+
+        self.data['data']['attributes']['amount'] = {'amount': 1, 'currency': 'EUR'}
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertEqual(
+            data['errors'][0]['detail'],
+            "Amount must be at least 10.00 EUR"
+        )
+
+        self.data['data']['attributes']['amount'] = {'amount': 2000, 'currency': 'EUR'}
+        response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        data = response.json()
+        self.assertEqual(
+            data['errors'][0]['detail'],
+            "Amount cannot exceed 1000.00 EUR"
+        )
 
     def test_donate(self):
         response = self.client.post(self.create_url, json.dumps(self.data), user=self.user)

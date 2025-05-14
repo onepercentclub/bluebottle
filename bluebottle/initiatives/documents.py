@@ -195,7 +195,7 @@ class InitiativeDocument(Document):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, (Theme, Geolocation, Category)):
             return related_instance.initiative_set.all()
-        if isinstance(related_instance, Activity):
+        if isinstance(related_instance, Activity) and related_instance.initiative:
             return [related_instance.initiative]
 
     def prepare_current_status(self, instance):

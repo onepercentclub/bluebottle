@@ -190,8 +190,7 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
             activity = DateActivity.objects.get(slots=self.kwargs['slot_id'])
 
             if (
-                activity.owner == self.request.user or
-                self.request.user in activity.initiative.activity_managers.all() or
+                self.request.user in activity.owners or
                 self.request.user.is_staff or
                 self.request.user.is_superuser
             ):
@@ -211,9 +210,7 @@ class SlotRelatedParticipantList(JsonApiViewMixin, ListAPIView):
                 status__in=('registered', 'succeeded'),
             )
         elif (
-            user != activity.owner and
-            user != activity.initiative.owner and
-            user not in activity.initiative.activity_managers.all() and
+            user not in activity.owners and
             not user.is_staff and
             not user.is_superuser
         ):
@@ -259,7 +256,7 @@ class ParticipantList(JsonApiViewMixin, ListCreateAPIView):
 
         if 'activity_id' in kwargs:
             activity = Activity.objects.get(pk=self.kwargs['activity_id'])
-            context['owners'] = [activity.owner] + list(activity.initiative.activity_managers.all())
+            context['owners'] = list(activity.owners)
 
             if self.request.user and self.request.user.is_authenticated and (
                 self.request.user in context['owners'] or

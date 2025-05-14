@@ -7,7 +7,7 @@ from rest_framework import status
 
 from bluebottle.collect.models import CollectType
 from bluebottle.collect.serializers import (
-    CollectActivityListSerializer, CollectActivitySerializer,
+    CollectActivitySerializer,
     CollectActivityTransitionSerializer, CollectContributorSerializer,
     CollectContributorTransitionSerializer, CollectTypeSerializer
 )
@@ -17,6 +17,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.utils import APITestCase
 
@@ -26,19 +27,23 @@ class CollectActivityListViewAPITestCase(APITestCase):
         super().setUp()
 
         self.url = reverse('collect-activity-list')
-        self.serializer = CollectActivityListSerializer
+        self.serializer = CollectActivitySerializer
         self.factory = CollectActivityFactory
         self.collect_type = CollectTypeFactory.create()
 
         self.defaults = {
             'initiative': InitiativeFactory.create(status='approved', owner=self.user),
+            'theme': ThemeFactory.create(),
             'start': date.today() + timedelta(days=10),
             'end': date.today() + timedelta(days=20),
             'location': GeolocationFactory.create(),
             'collect_type': self.collect_type
         }
 
-        self.fields = ['initiative', 'start', 'end', 'title', 'description', 'collect_type', 'location']
+        self.fields = [
+            'initiative', 'start', 'end', 'title', 'description', 'collect_type',
+            'location', 'theme'
+        ]
 
         settings = InitiativePlatformSettings.objects.get()
         settings.activity_types.append('collect')
@@ -56,7 +61,7 @@ class CollectActivityListViewAPITestCase(APITestCase):
         self.assertPermission('PUT', True)
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
 
     def test_create_incomplete(self):
@@ -153,7 +158,7 @@ class CollectActivityDetailViewAPITestCase(APITestCase):
         self.assertPermission('GET', True)
         self.assertPermission('PATCH', True)
 
-        self.assertTransition('submit')
+        self.assertTransition('publish')
         self.assertTransition('delete')
         contributors = self.loadLinkedRelated('contributors')
         self.assertObjectList(
@@ -288,7 +293,7 @@ class CollectActivityTransitionListViewAPITestCase(APITestCase):
 
         self.defaults = {
             'resource': self.activity,
-            'transition': 'submit',
+            'transition': 'publish',
         }
 
         self.fields = ['resource', 'transition', ]

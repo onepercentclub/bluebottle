@@ -15,6 +15,9 @@ from bluebottle.utils.views import (
 
 class UpdateThrottle(UserRateThrottle):
     def allow_request(self, request, view):
+        if request.user.is_superuser:
+            return True
+
         try:
             if request.data['notify']:
                 return super().allow_request(request, view)

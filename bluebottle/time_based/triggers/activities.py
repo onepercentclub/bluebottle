@@ -567,7 +567,6 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
 
 @register(RegisteredDateActivity)
 class RegisteredDateActivityTriggers(ActivityTriggers):
-
     triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
             RegisteredDateActivityStateMachine.register,
@@ -578,15 +577,39 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
                         start_has_passed
                     ]
                 ),
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.accept,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
             ]
         ),
         TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
                         start_has_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'contributors',
+                    RegisteredDateParticipantStateMachine.accept,
+                    conditions=[
+                        start_is_not_passed
                     ]
                 ),
             ]

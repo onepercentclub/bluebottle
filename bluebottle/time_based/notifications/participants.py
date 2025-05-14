@@ -82,3 +82,27 @@ class UserScheduledNotification(UserParticipantNotification):
         if self.obj.slot and self.obj.slot.start:
             context['slot'] = get_slot_info(self.obj.slot)
         return context
+
+
+class RegisteredActivityParticipantAddedNotification(TransitionMessage):
+    """
+    A participant was added
+    """
+    subject = pgettext('email', 'You have been added to the activity "{title}"')
+    template = 'messages/participants/registered_activity_participant_added'
+    context = {
+        'title': 'activity.title',
+    }
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
+
+    action_title = pgettext('email', 'View activity')
+
+    def get_recipients(self):
+        """participant"""
+        if self.obj.user:
+            return [self.obj.user]
+        else:
+            return []

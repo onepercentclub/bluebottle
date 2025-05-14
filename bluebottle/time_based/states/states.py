@@ -93,6 +93,9 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,

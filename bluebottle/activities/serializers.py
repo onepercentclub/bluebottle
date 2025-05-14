@@ -471,7 +471,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                     slot.status not in ["draft", "cancelled"]
                     and (
                         not only_upcoming
-                        or datetime.fromisoformat(slot.start).date() >= now().date()
+                        or datetime.fromisoformat(slot.start) >= now()
                     )
                     and (
                         not start

@@ -18,7 +18,7 @@ def get_stripe():
         raise ImproperlyConfigured('Stripe not enabled for this tenant')
 
     stripe.api_key = provider.stripe_secret or settings.STRIPE['api_key']
-    stripe.api_version = '2019-09-09'
+    stripe.api_version = '2024-11-20.acacia'
     stripe.webhook_secret_sources = provider.webhook_secret_sources or settings.STRIPE['webhook_secret_sources']
     stripe.webhook_secret_intents = provider.webhook_secret_intents or settings.STRIPE['webhook_secret_intents']
     stripe.webhook_secret_connect = provider.webhook_secret_connect or settings.STRIPE['webhook_secret_connect']

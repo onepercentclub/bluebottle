@@ -225,7 +225,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 class StripeBankAccountAdmin(BankAccountChildAdmin):
     base_model = BankAccount
     model = ExternalAccount
-    readonly_fields = ('status', 'account_details') + BankAccountChildAdmin.readonly_fields
+    readonly_fields = ('status', 'currency', 'account_details') + BankAccountChildAdmin.readonly_fields
     fields = ('connect_account', 'account_id') + readonly_fields
 
     list_filter = ['reviewed']

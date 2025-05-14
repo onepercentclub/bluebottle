@@ -48,7 +48,7 @@ class FundingDocument(ActivityDocument):
     def prepare_dates(self, instance):
         return [{
             'start': datetime.min,
-            'end': instance.deadline or datetime.max
+            'end': instance.deadline
         }]
 
     def prepare_duration(self, instance):

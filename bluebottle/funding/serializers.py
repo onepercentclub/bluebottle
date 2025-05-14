@@ -276,6 +276,7 @@ class FundingSerializer(BaseActivitySerializer):
     amount_raised = MoneySerializer(read_only=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_matching = MoneySerializer(read_only=True)
+    account_currency = serializers.SerializerMethodField()
 
     impact_location = ResourceRelatedField(
         queryset=Geolocation.objects.all(),
@@ -338,6 +339,14 @@ class FundingSerializer(BaseActivitySerializer):
         MaxDeadlineValidator(),
     ]
 
+    def get_account_currency(self, obj):
+        if obj.bank_account:
+            if not obj.bank_account.currency:
+                obj.bank_account.currency = obj.bank_account.account.currency
+                obj.bank_account.save()
+            return obj.bank_account.currency.upper()
+        return None
+
     def get_psp(self, obj):
         if obj.bank_account and obj.bank_account.connect_account:
             return obj.bank_account.provider
@@ -371,6 +380,7 @@ class FundingSerializer(BaseActivitySerializer):
             "amount_donated",
             "amount_matching",
             "amount_raised",
+            'account_currency',
             "account_info",
             "co_financers",
             "rewards",

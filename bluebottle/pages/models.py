@@ -142,8 +142,8 @@ class ImageTextItem(ContentItem):
         return 12 - self.text_width
 
     class Meta(object):
-        verbose_name = _('Picture + Text')
-        verbose_name_plural = _('Picture + Text')
+        verbose_name = _('Text + Image')
+        verbose_name_plural = _('Text + Image')
 
     class JSONAPIMeta:
         resource_name = 'pages/blocks/image-text'
@@ -196,6 +196,35 @@ class ImageTextRoundItem(ContentItem):
             self.text_final = None
 
 
+class ScaledImageTextItem(ContentItem):
+    text = PluginHtmlField(_('text'), blank=True)
+    image = PluginImageField(
+        _("Image"),
+        upload_to='pages',
+        validators=[
+            FileMimetypeValidator(
+                allowed_mimetypes=settings.IMAGE_ALLOWED_MIME_TYPES,
+            ),
+            validate_file_infection
+        ]
+    )
+    ALIGN_CHOICES = (
+        ('left', _("Left")),
+        ('right', _("Right")),
+    )
+
+    align = models.CharField(_("Image placement"), max_length=10, choices=ALIGN_CHOICES, default='left')
+
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Text + Scaled Image')
+        verbose_name_plural = _('Text + Scaled Image')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
 @python_2_unicode_compatible
 class Page(PublishableModel):
     class PageStatus(DjangoChoices):
@@ -228,6 +257,7 @@ class Page(PublishableModel):
         'ActionPlugin',
         'ImageTextPlugin',
         'ImageTextRoundPlugin',
+        'ScaledImageTextPlugin',
         'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',

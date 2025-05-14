@@ -869,8 +869,8 @@ class ImagePlainTextItem(TitledContent):
     objects = ContentItemManager()
 
     class Meta(object):
-        verbose_name = _('Plain Text + Media')
-        verbose_name_plural = _('Plain Text + Media')
+        verbose_name = _('Text + Media')
+        verbose_name_plural = _('Text + Media')
 
     def __str__(self):
         return Truncator(self.text).words(20)

@@ -177,11 +177,11 @@ class StripeBankTransferList(PaymentList):
         # Get data from serializer without saving
         payment_intent_data = serializer.validated_data
         donation = payment_intent_data['donation']
-        account_currency = str(donation.activity.bank_account.currency)
+        account_currency = str(donation.activity.bank_account.currency).upper()
         currency = str(donation.amount.currency)
         # Validate the currency compatibility
         if currency != account_currency:
-            raise ValidationError(f'Bank transfer not supported for currency {currency}')
+            raise ValidationError(f'Bank transfer not supported for currency {currency} only {account_currency}')
 
         stripe = get_stripe()
         init_args = get_init_args(donation)

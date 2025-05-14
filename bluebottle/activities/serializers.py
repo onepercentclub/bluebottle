@@ -56,6 +56,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
     DeadlineActivitySerializer,
     DeadlineParticipantSerializer,
     PeriodicActivitySerializer,
@@ -631,6 +632,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
         DonorSerializer,
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
+        RegisteredDateParticipantSerializer,
         PeriodicParticipantSerializer,
         ScheduleParticipantSerializer,
         TeamScheduleParticipantSerializer,

@@ -348,6 +348,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_activity_type(self, obj):
+        if obj.type == 'registereddateactivity':
+            return 'registeredDate'
+
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):

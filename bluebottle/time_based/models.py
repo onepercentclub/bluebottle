@@ -838,6 +838,10 @@ class RegisteredDateActivity(TimeBasedActivity):
 
     required_fields = ["title", "start", "duration"]
 
+    @property
+    def activity_date(self):
+        return self.start
+
     class Meta:
         verbose_name = _("Registered date activity")
         verbose_name_plural = _("Registered date activities")

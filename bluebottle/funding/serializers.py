@@ -342,7 +342,9 @@ class FundingSerializer(BaseActivitySerializer):
     def get_account_currency(self, obj):
         if obj.bank_account:
             if not obj.bank_account.currency:
-                obj.bank_account.currency = obj.bank_account.account.currency
+                obj.bank_account.currency = getattr(obj.bank_account.account, 'currency', None)
+                if not obj.bank_account.currency:
+                    return None
                 obj.bank_account.save()
             return obj.bank_account.currency.upper()
         return None

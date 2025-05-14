@@ -298,6 +298,7 @@ class ActivityDocument(Document):
             "deadlineactivity": "time",
             "periodicactivity": "time",
             "scheduleactivity": "time",
+            "registereddateactivity": "time",
             "funding": "funding",
             "collectactivity": "collect",
             "deed": "deed",

@@ -38,7 +38,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicSlotFactory,
     ScheduleRegistrationFactory,
     ScheduleActivityFactory,
-    ScheduleSlotFactory,
+    ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
 )
 
 
@@ -98,25 +98,10 @@ class TimeBasedActivityTriggerTestCase():
         activity = self.factory.create(initiative=self.initiative)
         if self.activity.states.submit:
             activity.states.submit(save=True)
-
             self.assertEqual(activity.status, 'submitted')
 
-    def test_approve_initiative(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'open')
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, 'succeeded')
-
     def test_cancel(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
         self.activity.states.cancel(save=True)
-
         self.assertEqual(self.activity.status, 'cancelled')
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
@@ -1042,4 +1027,95 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
         with self.execute(user=self.manager):
             self.assertNotificationEffect(
                 UserScheduledNotification
+            )
+
+
+class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
+    factory = RegisteredDateActivityFactory
+    participant_factory = RegisteredDateParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+        self.manager = BlueBottleUserFactory.create()
+        self.settings.enable_reviewing = True
+        self.settings.save()
+        self.model = self.factory.create(initiative=None, owner=self.manager)
+        self.participant = self.participant_factory.create(activity=self.model)
+
+    def test_initial(self):
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'new')
+
+    def test_delete(self):
+        self.model.states.delete(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+
+    def test_reject(self):
+        self.model.states.submit(save=True)
+        self.model.states.reject(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'Your activity "{}" has been rejected'.format(self.model.title)
+        )
+
+    def test_approve_past(self):
+        self.model.states.submit()
+        self.model.states.approve()
+        with self.execute(user=self.manager):
+            self.assertStatus(self.model, 'succeeded')
+            self.assertStatus(self.participant, 'succeeded')
+            organizer = self.model.contributors.instance_of(Organizer).get()
+            self.assertEqual(organizer.status, 'succeeded')
+
+    def test_approve_future(self):
+        self.model.start = now() + timedelta(days=10)
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.model, 'planned')
+        self.assertStatus(self.participant, 'accepted')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'succeeded')
+
+    def test_register_past(self):
+        self.settings.enable_reviewing = False
+        self.settings.save()
+        activity = self.factory.create()
+        activity.states.register()
+        with self.execute(user=self.manager):
+            self.assertEqual(activity.status, 'succeeded')
+
+    def test_register_future(self):
+        self.settings.enable_reviewing = False
+        self.settings.save()
+        activity = self.factory.create(start=now() + timedelta(days=10))
+        activity.states.register()
+        with self.execute(user=self.manager):
+            self.assertStatus(activity, 'succeeded')
+
+    def test_submit(self):
+        activity = self.factory.create()
+        activity.states.submit()
+        with self.execute(user=self.manager):
+            self.assertStatus(activity, 'submitted')
+
+    def test_cancel(self):
+        self.model.states.submit()
+        self.model.states.approve()
+        self.model.states.cancel()
+        with self.execute(user=self.manager):
+
+            self.assertStatus(self.model, 'cancelled')
+
+            organizer = self.model.contributors.instance_of(Organizer).get()
+            self.assertStatus(organizer, 'failed')
+
+            self.assertEqual(
+                mail.outbox[-1].subject,
+                'Your activity "{}" has been cancelled'.format(self.model.title)
             )

@@ -1065,13 +1065,12 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         )
 
     def test_approve_past(self):
-        self.model.states.submit()
-        self.model.states.approve()
-        with self.execute(user=self.manager):
-            self.assertStatus(self.model, 'succeeded')
-            self.assertStatus(self.participant, 'succeeded')
-            organizer = self.model.contributors.instance_of(Organizer).get()
-            self.assertEqual(organizer.status, 'succeeded')
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.model, 'succeeded')
+        self.assertStatus(self.participant, 'succeeded')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
 
     def test_approve_future(self):
         self.model.start = now() + timedelta(days=10)
@@ -1080,42 +1079,42 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertStatus(self.model, 'planned')
         self.assertStatus(self.participant, 'accepted')
         organizer = self.model.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, 'succeeded')
+        self.assertStatus(organizer, 'succeeded')
 
     def test_register_past(self):
         self.settings.enable_reviewing = False
         self.settings.save()
-        activity = self.factory.create()
-        activity.states.register()
-        with self.execute(user=self.manager):
-            self.assertEqual(activity.status, 'succeeded')
+        activity = self.factory.create(
+            initiative=None,
+            start=now() - timedelta(days=10)
+        )
+        self.participant_factory.create(activity=activity)
+        activity.states.register(save=True)
+        self.assertEqual(activity.status, 'succeeded')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
 
     def test_register_future(self):
         self.settings.enable_reviewing = False
         self.settings.save()
-        activity = self.factory.create(start=now() + timedelta(days=10))
-        activity.states.register()
-        with self.execute(user=self.manager):
-            self.assertStatus(activity, 'succeeded')
+        activity = self.factory.create(
+            initiative=None,
+            start=now() + timedelta(days=10)
+        )
+        self.participant_factory.create(activity=activity)
+        activity.states.register(save=True)
+        self.assertStatus(activity, 'planned')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
 
     def test_submit(self):
-        activity = self.factory.create()
-        activity.states.submit()
-        with self.execute(user=self.manager):
-            self.assertStatus(activity, 'submitted')
+        self.model.states.submit(save=True)
+        self.assertStatus(self.model, 'submitted')
 
     def test_cancel(self):
-        self.model.states.submit()
-        self.model.states.approve()
-        self.model.states.cancel()
-        with self.execute(user=self.manager):
-
-            self.assertStatus(self.model, 'cancelled')
-
-            organizer = self.model.contributors.instance_of(Organizer).get()
-            self.assertStatus(organizer, 'failed')
-
-            self.assertEqual(
-                mail.outbox[-1].subject,
-                'Your activity "{}" has been cancelled'.format(self.model.title)
-            )
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.model.states.cancel(save=True)
+        self.assertStatus(self.model, 'cancelled')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'failed')

@@ -413,7 +413,10 @@ class ContributionStateMachine(ModelStateMachine):
 @register(Organizer)
 class OrganizerStateMachine(ContributorStateMachine):
     succeed = Transition(
-        [ContributorStateMachine.new, ContributorStateMachine.failed],
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.failed
+        ],
         ContributorStateMachine.succeeded,
         name=_("succeed"),
         description=_("The organizer was successful in setting up the activity."),

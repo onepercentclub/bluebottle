@@ -578,6 +578,10 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
                     ]
                 ),
                 RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
                     'contributors',
                     RegisteredDateParticipantStateMachine.accept,
                     conditions=[

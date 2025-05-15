@@ -89,7 +89,7 @@ class RegisteredActivityParticipantAddedNotification(TransitionMessage):
     A participant was added
     """
     subject = pgettext('email', 'You have been added to the activity "{title}"')
-    template = 'messages/participants/registered_activity_participant_added'
+    template = 'messages/participants/registered_date_participant_added'
     context = {
         'title': 'activity.title',
     }

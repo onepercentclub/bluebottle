@@ -1064,30 +1064,20 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
             'Your activity "{}" has been rejected'.format(self.model.title)
         )
 
-    def test_approve_past(self):
+    def test_approve(self):
         self.model.states.submit(save=True)
         self.model.states.approve(save=True)
         self.assertStatus(self.participant, 'succeeded')
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have been added to the activity {}'.format(self.model.title)
-        )
         organizer = self.model.contributors.instance_of(Organizer).get()
         self.assertStatus(organizer, 'succeeded')
         self.assertStatus(self.model, 'succeeded')
         self.assertStatus(self.participant, 'succeeded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity "{}"'.format(self.model.title)
+        )
 
-    def test_approve_future(self):
-        self.model.start = now() + timedelta(days=10)
-        self.model.states.submit(save=True)
-        self.model.states.approve(save=True)
-        self.assertStatus(self.model, 'planned')
-        self.assertStatus(self.participant, 'accepted')
-
-        organizer = self.model.contributors.instance_of(Organizer).get()
-        self.assertStatus(organizer, 'succeeded')
-
-    def test_register_past(self):
+    def test_register(self):
         self.settings.enable_reviewing = False
         self.settings.save()
         activity = self.factory.create(
@@ -1099,19 +1089,10 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertEqual(activity.status, 'succeeded')
         organizer = activity.contributors.instance_of(Organizer).get()
         self.assertStatus(organizer, 'succeeded')
-
-    def test_register_future(self):
-        self.settings.enable_reviewing = False
-        self.settings.save()
-        activity = self.factory.create(
-            initiative=None,
-            start=now() + timedelta(days=10)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity "{}"'.format(activity.title)
         )
-        self.participant_factory.create(activity=activity)
-        activity.states.register(save=True)
-        self.assertStatus(activity, 'planned')
-        organizer = activity.contributors.instance_of(Organizer).get()
-        self.assertStatus(organizer, 'succeeded')
 
     def test_submit(self):
         self.model.states.submit(save=True)

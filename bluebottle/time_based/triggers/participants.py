@@ -1383,7 +1383,7 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
             RegisteredDateParticipantStateMachine.succeed,
             effects=[
                 NotificationEffect(
-                    RegisteredActivityParticipantAddedNotification
+                    RegisteredActivityParticipantAddedNotification,
                 ),
                 RelatedTransitionEffect(
                     'contributions',

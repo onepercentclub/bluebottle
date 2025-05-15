@@ -1367,10 +1367,6 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
         """Slot has status finished"""
         return effect.instance.activity and effect.instance.activity.status != "succeeded"
 
-    def activity_is_expired(effect):
-        """Slot has status finished"""
-        return effect.instance.activity and effect.instance.activity.status == "expired"
-
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.initiate,
@@ -1384,14 +1380,11 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
             ],
         ),
         TransitionTrigger(
-            RegisteredDateParticipantStateMachine.accept,
-            effects=[
-                NotificationEffect(RegisteredActivityParticipantAddedNotification)
-            ]
-        ),
-        TransitionTrigger(
             RegisteredDateParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(
+                    RegisteredActivityParticipantAddedNotification
+                ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.succeed,

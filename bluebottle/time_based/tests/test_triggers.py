@@ -1069,15 +1069,10 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.model.states.approve(save=True)
         self.assertStatus(self.model, 'succeeded')
         self.assertStatus(self.participant, 'succeeded')
-        organizer = self.model.contributors.instance_of(Organizer).get()
-        self.assertStatus(organizer, 'succeeded')
-
-    def test_approve_future(self):
-        self.model.start = now() + timedelta(days=10)
-        self.model.states.submit(save=True)
-        self.model.states.approve(save=True)
-        self.assertStatus(self.model, 'planned')
-        self.assertStatus(self.participant, 'accepted')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have been added to the activity {}'.format(self.model.title)
+        )
         organizer = self.model.contributors.instance_of(Organizer).get()
         self.assertStatus(organizer, 'succeeded')
 

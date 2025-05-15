@@ -825,7 +825,8 @@ class RegisteredDateActivity(TimeBasedActivity):
 
     @property
     def end(self):
-        return self.start + self.duration
+        if self.start and self.duration:
+            return self.start + self.duration
 
     @property
     def participants(self):

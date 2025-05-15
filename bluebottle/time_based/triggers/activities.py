@@ -7,7 +7,11 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification,
     ActivityRejectedNotification,
     ActivityRestoredNotification,
-    ActivitySucceededNotification,
+    ActivitySucceededNotification, ActivityApprovedNotification, ActivitySubmittedNotification,
+)
+from bluebottle.activities.messages.reviewer import (
+    ActivitySubmittedReviewerNotification,
+    ActivityPublishedReviewerNotification
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
@@ -571,28 +575,35 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.register,
             effects=[
+                NotificationEffect(
+                    ActivityPublishedReviewerNotification,
+                ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        start_has_passed
-                    ]
                 ),
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,
                 ),
-                RelatedTransitionEffect(
-                    'participants',
-                    RegisteredDateParticipantStateMachine.accept,
-                    conditions=[
-                        start_is_not_passed
-                    ]
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.submit,
+            effects=[
+                NotificationEffect(
+                    ActivitySubmittedNotification,
                 ),
+                NotificationEffect(
+                    ActivitySubmittedReviewerNotification,
+                )
             ]
         ),
         TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
+                NotificationEffect(
+                    ActivityApprovedNotification
+                ),
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,

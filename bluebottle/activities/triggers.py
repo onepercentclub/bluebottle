@@ -237,7 +237,7 @@ class OrganizerTriggers(TriggerManager):
             OrganizerStateMachine.reset,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions', EffortContributionStateMachine.reset, display=False
+                    'contributions', EffortContributionStateMachine.reset, display=True
                 )
             ]
         ),
@@ -245,7 +245,7 @@ class OrganizerTriggers(TriggerManager):
             OrganizerStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'contributions', EffortContributionStateMachine.succeed, display=False
+                    'contributions', EffortContributionStateMachine.succeed, display=True
                 )
             ]
         ),

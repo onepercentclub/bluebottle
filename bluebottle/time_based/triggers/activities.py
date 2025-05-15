@@ -566,7 +566,7 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
 
 
 @register(RegisteredDateActivity)
-class RegisteredDateActivityTriggers(ActivityTriggers):
+class RegisteredDateActivityTriggers(TimeBasedTriggers):
     triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
             RegisteredDateActivityStateMachine.register,
@@ -619,8 +619,21 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
             ]
         ),
         TransitionTrigger(
+            TimeBasedStateMachine.reject,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegisteredDateActivityStateMachine.succeed,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
                 RelatedTransitionEffect(
                     'contributors',
                     RegisteredDateParticipantStateMachine.succeed
@@ -639,6 +652,10 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.cancel,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                ),
                 RelatedTransitionEffect(
                     'contributors',
                     RegisteredDateParticipantStateMachine.cancel

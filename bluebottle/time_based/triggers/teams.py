@@ -14,7 +14,7 @@ from bluebottle.time_based.effects.teams import (
     DeleteTeamMemberSlotParticipantsEffect,
 )
 from bluebottle.time_based.models import Team, TeamMember
-from bluebottle.time_based.notifications.teams import (
+from bluebottle.time_based.messages.teams import (
     CaptainTeamMemberJoinedNotification,
     ManagerTeamRemovedNotification,
     UserTeamMemberJoinedNotification,

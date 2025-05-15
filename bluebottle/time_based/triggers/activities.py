@@ -582,7 +582,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     OrganizerStateMachine.succeed,
                 ),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.accept,
                     conditions=[
                         start_is_not_passed
@@ -610,7 +610,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     ]
                 ),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.accept,
                     conditions=[
                         start_is_not_passed
@@ -621,6 +621,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             TimeBasedStateMachine.reject,
             effects=[
+                NotificationEffect(ActivityRejectedNotification),
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.fail,
@@ -631,11 +632,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'organizer',
-                    OrganizerStateMachine.succeed,
-                ),
-                RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.succeed
                 )
             ]
@@ -644,7 +641,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.reopen,
             effects=[
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.accept
                 )
             ]
@@ -652,12 +649,13 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.cancel,
             effects=[
+                NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.fail,
                 ),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.cancel
                 )
             ]
@@ -665,8 +663,9 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.restore,
             effects=[
+                NotificationEffect(ActivityRestoredNotification),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.restore
                 )
             ]

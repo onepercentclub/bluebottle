@@ -1040,6 +1040,10 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
             activity_types=[self.factory._meta.model.__name__.lower()]
         )
         self.manager = BlueBottleUserFactory.create()
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
         self.settings.enable_reviewing = True
         self.settings.save()
         self.model = self.factory.create(initiative=None, owner=self.manager)
@@ -1061,6 +1065,14 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertEqual(organizer.status, 'failed')
         self.assertEqual(
             mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
             'Your activity "{}" has been rejected'.format(self.model.title)
         )
 
@@ -1074,6 +1086,18 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertStatus(self.participant, 'succeeded')
         self.assertEqual(
             mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your activity on Test has been approved!'
+        )
+        self.assertEqual(
+            mail.outbox[3].subject,
             'You have been added to the activity "{}"'.format(self.model.title)
         )
 
@@ -1091,12 +1115,24 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertStatus(organizer, 'succeeded')
         self.assertEqual(
             mail.outbox[0].subject,
+            'A new activity has been published on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
             'You have been added to the activity "{}"'.format(activity.title)
         )
 
     def test_submit(self):
         self.model.states.submit(save=True)
         self.assertStatus(self.model, 'submitted')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
 
     def test_cancel(self):
         self.model.states.submit(save=True)

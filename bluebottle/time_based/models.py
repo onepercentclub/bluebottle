@@ -3,10 +3,13 @@ from html import unescape
 from urllib.parse import urlencode
 
 import pytz
+
+from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import now
+
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -811,7 +814,8 @@ class RegisteredDateActivity(TimeBasedActivity):
         _('Start date'),
         help_text=_('Start of the activity.'),
         null=True,
-        blank=True
+        blank=True,
+        validators=[MaxValueValidator(timezone.now, message=_('Make sure the value is in the past'))]
     )
 
     location = models.ForeignKey(

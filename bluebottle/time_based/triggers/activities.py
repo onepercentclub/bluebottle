@@ -8,6 +8,7 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification,
     ActivityRestoredNotification,
     ActivitySucceededNotification, ActivityApprovedNotification, ActivitySubmittedNotification,
+    ActivityPublishedNotification,
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification,
@@ -577,6 +578,9 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             effects=[
                 NotificationEffect(
                     ActivityPublishedReviewerNotification,
+                ),
+                NotificationEffect(
+                    ActivityPublishedNotification,
                 ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,

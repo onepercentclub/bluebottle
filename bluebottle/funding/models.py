@@ -15,6 +15,7 @@ from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
@@ -820,7 +821,7 @@ class FundingPlatformSettings(BasePlatformSettings):
         verbose_name = _('funding settings')
 
 
-class GrantApplication(TriggerMixin, ValidatedModelMixin, Activity):
+class GrantApplication(Activity):
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
@@ -884,7 +885,7 @@ class GrantApplication(TriggerMixin, ValidatedModelMixin, Activity):
 
 class GrantFund(models.Model):
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
+    description = QuillField(_("Description"), blank=True)
     start = models.DateField(null=True, blank=True)
     end = models.DateField(null=True, blank=True)
     amount = MoneyField()

@@ -310,6 +310,21 @@ class RegisteredDateParticipantStateMachine(RegistrationParticipantStateMachine)
         description=_("Add this person as a participant of this activity."),
         automatic=True,
     )
+    restore = Transition(
+        ParticipantStateMachine.cancelled,
+        ParticipantStateMachine.succeeded,
+        name=_("Restore"),
+        description=_("Restore previously cancelled participant"),
+        automatic=True,
+    )
+    readd = Transition(
+        [
+            ParticipantStateMachine.removed,
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_("Re-add"),
+        description=_("Add previously removed participant"),
+    )
 
 
 @register(ScheduleParticipant)

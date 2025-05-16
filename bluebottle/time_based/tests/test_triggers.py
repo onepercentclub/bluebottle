@@ -1101,6 +1101,18 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
             'You have been added to the activity "{}"'.format(self.model.title)
         )
 
+    def test_remove_participant(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertStatus(self.model, 'succeeded')
+        self.participant.states.remove(save=True)
+        self.assertStatus(self.participant, 'removed')
+        self.assertStatus(self.model, 'expired')
+        self.participant.states.readd(save=True)
+        self.assertStatus(self.model, 'succeeded')
+        self.assertStatus(self.participant, 'succeeded')
+
     def test_needs_work(self):
         self.model.states.submit(save=True)
         self.model.states.request_changes(save=True)

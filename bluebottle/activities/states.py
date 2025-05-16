@@ -293,6 +293,7 @@ class ActivityStateMachine(ModelStateMachine):
             rejected,
             cancelled,
             deleted,
+            expired
         ],
         needs_work,
         name=_("Restore"),
@@ -336,7 +337,10 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     succeed = Transition(
-        open,
+        [
+            open,
+            expired
+        ],
         succeeded,
         name=_("Succeed"),
         automatic=True,

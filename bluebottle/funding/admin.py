@@ -31,7 +31,7 @@ from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donor, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings, MoneyContribution)
+    FundingPlatformSettings, MoneyContribution, GrantApplication)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
@@ -152,7 +152,7 @@ class FundingAdmin(ActivityChildAdmin):
     search_fields = ['title', 'slug', 'description']
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
-    detail_fields = ("title", "description", "image", "video_url")
+    detail_fields = ("title", "description", "image", "video_url", "theme")
 
     status_fields = (
         "initiative",
@@ -756,3 +756,92 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
             'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
         }
         return super().get_form(request, obj, **kwargs)
+
+
+@admin.register(GrantApplication)
+class GrantApplicationAdmin(ActivityChildAdmin):
+    inlines = (UpdateInline, MessageAdminInline)
+
+    base_model = GrantApplication
+    list_filter = [StateMachineFilter, CurrencyFilter]
+
+    search_fields = ['title', 'slug', 'description']
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
+
+    detail_fields = ("title", "description", "image", "video_url", "theme")
+
+    status_fields = (
+        "initiative",
+        "owner",
+        "slug",
+        "highlight",
+        "created",
+        "updated",
+        'started',
+        "has_deleted_data",
+        "status",
+        "states",
+    )
+
+    detail_fields = (
+        'title',
+        'target',
+        'description',
+        'image',
+        'video_url',
+        'organization',
+        'theme',
+        'impact_location',
+        'bank_account',
+    )
+
+    def geet_fieldsets(self, request, obj=None):
+        settings = InitiativePlatformSettings.objects.get()
+        fieldsets = [
+            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+        ]
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                if "office_restriction" not in self.office_fields:
+                    self.office_fields += ("office_restriction",)
+                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+
+        if request.user.is_superuser:
+            fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
+
+        if SegmentType.objects.count():
+            fieldsets.append(
+                (
+                    _("Segments"),
+                    {
+                        "fields": [
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
+                        ]
+                    },
+                )
+            )
+        return fieldsets
+
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        'started',
+    ]
+
+    list_display = ActivityChildAdmin.list_display + [
+        'target'
+    ]
+
+    export_to_csv_fields = (
+        ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('target', 'Target'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
+        ('bank_account', 'Bank Account'),
+        ('office_location', 'Office Location'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]

@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
+from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution, \
+    GrantApplication
 
 
 @register(Funding)
@@ -59,7 +60,7 @@ class FundingStateMachine(ActivityStateMachine):
 
     def can_approve(self, user):
         """user has the permission to approve (staff member)"""
-        return user.is_staff
+        return user.is_staff or user.is_superuser
 
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
@@ -262,6 +263,101 @@ class FundingStateMachine(ActivityStateMachine):
             psp_allows_refunding,
             without_approved_payouts
         ],
+    )
+
+
+@register(GrantApplication)
+class GrantApplicationStateMachine(ActivityStateMachine):
+
+    def kyc_is_valid(self):
+        return (
+            self.instance.payout_account
+            and self.instance.payout_account.status == "verified"
+        )
+
+    def can_approve(self, user):
+        """user has the permission to approve (staff member)"""
+        return user.is_staff or user.is_superuser
+
+    submit = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.submitted,
+        description=_("Submit the grant application for approval."),
+        automatic=False,
+        name=_("Submit"),
+        permission=ActivityStateMachine.is_owner,
+        conditions=[
+            ActivityStateMachine.is_complete,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.initiative_is_submitted,
+            kyc_is_valid,
+        ],
+    )
+
+    approve = Transition(
+        [
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
+        ],
+        ActivityStateMachine.open,
+        name=_('Approve'),
+        description=_('Approve this application.'),
+        automatic=False,
+        permission=can_approve,
+        conditions=[
+            ActivityStateMachine.initiative_is_approved,
+            ActivityStateMachine.is_valid,
+            ActivityStateMachine.is_complete
+        ],
+    )
+
+    request_changes = Transition(
+        [
+            ActivityStateMachine.submitted
+        ],
+        ActivityStateMachine.needs_work,
+        name=_('Needs work'),
+        description=_(
+            "The status of the application will be set to 'Needs work'. The activity manager "
+            "can edit and resubmit the application. Don't forget to inform the activity "
+            "manager of the necessary adjustments."
+        ),
+        automatic=False,
+        permission=can_approve
+    )
+
+    reject = Transition(
+        [
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+        ],
+        ActivityStateMachine.rejected,
+        name=_('Reject'),
+        description=_(
+            "Reject in case this application doesn't fit your program or the rules of the game. "
+            "The activity manager will not be able to edit the application and it won't show up "
+            "on the search page in the front end. The application will still be available in the "
+            "back office and appear in your reporting."
+        ),
+        automatic=False,
+        permission=ActivityStateMachine.is_staff,
+    )
+
+    succeed = Transition(
+        [
+            ActivityStateMachine.open,
+        ],
+        ActivityStateMachine.succeeded,
+        name=_('Succeed'),
+        description=_(
+            "The campaign ends and received donations can be payed out. Triggered when "
+            "the deadline passes."
+        ),
+        automatic=True,
     )
 
 

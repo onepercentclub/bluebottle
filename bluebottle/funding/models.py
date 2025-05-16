@@ -820,4 +820,65 @@ class FundingPlatformSettings(BasePlatformSettings):
         verbose_name = _('funding settings')
 
 
+class GrantApplication(Activity):
+
+    target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
+
+    impact_location = models.ForeignKey(
+        'geo.Geolocation',
+        null=True, blank=True,
+        related_name='grant_applications',
+        on_delete=models.SET_NULL
+    )
+
+    bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
+    started = models.DateTimeField(
+        _('started'),
+        null=True,
+        blank=True,
+    )
+
+    needs_review = True
+
+    validators = [
+        TargetValidator,
+        KYCReadyValidator,
+    ]
+
+    activity_type = _('Grant application')
+
+    @property
+    def required_fields(self):
+        fields = super().required_fields + [
+            "title",
+            "description.html",
+            "target",
+            "bank_account",
+        ]
+        return fields
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/grant-applications'
+
+    class Meta(object):
+        verbose_name = _("Grant application")
+        verbose_name_plural = _("Grant applications")
+        permissions = (
+            ('api_read_grantapplication', 'Can view grant application through the API'),
+            ('api_add_grantapplication', 'Can add funding through the API'),
+            ('api_change_grantapplication', 'Can change funding through the API'),
+            ('api_delete_grantapplication', 'Can delete funding through the API'),
+
+            ('api_read_own_grantapplication', 'Can view own funding through the API'),
+            ('api_add_own_grantapplication', 'Can add own funding through the API'),
+            ('api_change_own_grantapplication', 'Can change own funding through the API'),
+            ('api_delete_own_grantapplication', 'Can delete own funding through the API'),
+        )
+
+    @property
+    def activity_date(self):
+        return self.created.date()
+
+
+
 from bluebottle.funding.periodic_tasks import *  # noqa

@@ -87,20 +87,25 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             owner=self.owner,
             slots=[]
         )
+        self.registration = DateRegistrationFactory.create(
+            answer='Par-bleu yellow'
+        )
         self.slots = DateActivitySlotFactory.create_batch(
             3,
             activity=self.activity
         )
-        self.obj = DateRegistrationFactory.create(
+        self.obj = DateParticipantFactory.create(
             activity=self.activity,
+            registration=self.registration,
             user=self.supporter,
             slot=self.slots[0]
         )
 
     def test_participant_registered_notification(self):
         self.obj = DateParticipantFactory.create(
-            registration=self.obj,
-            slot=self.obj.activity.slots.first()
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
         )
         self.message_class = ParticipantSlotParticipantRegisteredNotification
         self.create()
@@ -113,11 +118,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.answer = 'Par-bleu yellow'
-        self.obj.save()
         self.obj = DateParticipantFactory.create(
-            registration=self.obj,
-            slot=self.obj.activity.slots.first()
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter,
+            registration=self.registration
         )
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
@@ -130,11 +135,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.answer = 'Par-bleu yellow'
-        self.obj.save()
         self.obj = DateParticipantFactory.create(
-            registration=self.obj,
-            slot=self.obj.activity.slots.first()
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            registration=self.registration,
+            user=self.supporter
         )
         self.message_class = NewParticipantNotification
         self.create()
@@ -201,7 +206,9 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
 
     def test_participant_joined_notification(self):
         DateParticipantFactory.create(
-            registration=self.obj, slot=self.obj.activity.slots.first()
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
         )
 
         self.message_class = ParticipantJoinedNotification

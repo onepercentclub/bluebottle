@@ -820,7 +820,7 @@ class FundingPlatformSettings(BasePlatformSettings):
         verbose_name = _('funding settings')
 
 
-class GrantApplication(Activity):
+class GrantApplication(TriggerMixin, ValidatedModelMixin, Activity):
 
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
@@ -837,6 +837,8 @@ class GrantApplication(Activity):
         null=True,
         blank=True,
     )
+
+    fund = models.ForeignKey('funding.GrantFund', null=True, blank=True, on_delete=SET_NULL)
 
     needs_review = True
 
@@ -879,6 +881,18 @@ class GrantApplication(Activity):
     def activity_date(self):
         return self.created.date()
 
+
+class GrantFund(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
+    amount = MoneyField()
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        null=True, blank=True,
+        on_delete=SET_NULL
+    )
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

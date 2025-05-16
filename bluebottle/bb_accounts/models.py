@@ -353,7 +353,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_initiator(self):
-        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists()
+        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists() or self.activities.exists()
 
     @cached_property
     def is_supporter(self):

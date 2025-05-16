@@ -17,7 +17,7 @@ from bluebottle.time_based.notifications.registrations import ManagerRegistratio
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory,
-    DateActivitySlotFactory, SlotParticipantFactory, DeadlineActivityFactory, DeadlineRegistrationFactory
+    DateActivitySlotFactory, DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory
 )
 
 
@@ -91,14 +91,15 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             3,
             activity=self.activity
         )
-        self.obj = DateParticipantFactory.create(
+        self.obj = DateRegistrationFactory.create(
             activity=self.activity,
             user=self.supporter
         )
 
     def test_participant_registered_notification(self):
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.obj = DateParticipantFactory.create(
+            registration=self.obj,
+            slot=self.obj.activity.slots.first()
         )
         self.message_class = ParticipantSlotParticipantRegisteredNotification
         self.create()
@@ -111,10 +112,11 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
+        self.obj.answer = 'Par-bleu yellow'
         self.obj.save()
-        self.obj = SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        self.obj = DateParticipantFactory.create(
+            registration=self.obj,
+            slot=self.obj.activity.slots.first()
         )
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
@@ -127,7 +129,12 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
     def test_new_participant_notification(self):
         self.activity.review_title = 'What is your favorite color?'
         self.activity.save()
-        self.obj.motivation = 'Par-bleu yellow'
+        self.obj.answer = 'Par-bleu yellow'
+        self.obj.save()
+        self.obj = DateParticipantFactory.create(
+            registration=self.obj,
+            slot=self.obj.activity.slots.first()
+        )
         self.message_class = NewParticipantNotification
         self.create()
         self.assertRecipients([self.owner])
@@ -196,8 +203,8 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_participant_joined_notification(self):
-        SlotParticipantFactory.create(
-            participant=self.obj, slot=self.obj.activity.slots.first()
+        DateParticipantFactory.create(
+            registration=self.obj, slot=self.obj.activity.slots.first()
         )
 
         self.message_class = ParticipantJoinedNotification
@@ -230,22 +237,10 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_slot_cancelled_with_participant(self):
-        participant = DateParticipantFactory.create(activity=self.activity, status='accepted')
-        SlotParticipantFactory.create(
-            status='registered',
+        participant = DateParticipantFactory.create(
+            status='accepted',
             slot=self.obj,
-            participant=participant
-        )
-        SlotParticipantFactory.create(
-            status='rejected',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='accepted')
-        )
-
-        SlotParticipantFactory.create(
-            status='registered',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='rejected')
+            activity=self.activity
         )
 
         self.message_class = SlotCancelledNotification

@@ -5,7 +5,6 @@ from bluebottle.time_based.views import (
     ScheduleActivityListView, ScheduleActivityDetailView,
     ScheduleRelatedRegistrationList, ScheduleRegistrationList, ScheduleRegistrationTransitionList,
     ScheduleRegistrationDetail,
-    ScheduleRegistrationDocumentDetail,
     ScheduleParticipantTransitionList,
     ScheduleParticipantExportView,
     TeamScheduleParticipantExportView,
@@ -21,7 +20,6 @@ from bluebottle.time_based.views import (
     TeamScheduleRegistrationDetail,
     TeamScheduleRelatedRegistrationList,
     TeamScheduleRegistrationTransitionList,
-    TeamScheduleRegistrationDocumentDetail,
 
     TeamScheduleParticipantDetail,
     TeamScheduleRelatedParticipantList,
@@ -71,12 +69,6 @@ urlpatterns = [
         name='schedule-registration-detail'
     ),
     re_path(
-        r'^/registrations/(?P<pk>\d+)/document$',
-        ScheduleRegistrationDocumentDetail.as_view(),
-        name='schedule-registration-document'
-    ),
-
-    re_path(
         r'^/(?P<activity_id>\d+)/team-registrations/$',
         TeamScheduleRelatedRegistrationList.as_view(),
         name='related-team-schedule-registrations'
@@ -95,11 +87,6 @@ urlpatterns = [
         r'^/team-registrations/transitions$',
         TeamScheduleRegistrationTransitionList.as_view(),
         name="team-schedule-registration-transitions"
-    ),
-    re_path(
-        r"^/team-registrations/(?P<pk>\d+)/document$",
-        TeamScheduleRegistrationDocumentDetail.as_view(),
-        name="team-schedule-registration-document",
     ),
     re_path(
         r"^/(?P<activity_id>\d+)/participants$",

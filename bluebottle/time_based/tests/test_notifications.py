@@ -13,9 +13,11 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification
 )
-from bluebottle.time_based.notifications.participants import RegisteredActivityParticipantAddedNotification
-from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
+from bluebottle.time_based.messages.activity_manager import ActivityRegisteredNotification
+from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
+from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
+from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory,
     DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory, RegisteredDateActivityFactory,
@@ -294,6 +296,43 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
 
+class RegisteredDateActivityNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+
+        self.reviewer = BlueBottleUserFactory.create(
+            first_name='Oliver',
+            last_name='Kahn',
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+        self.obj = RegisteredDateActivityFactory.create(
+            title="Save the world!",
+            owner=self.owner
+        )
+
+    def test_activity_registered_reviewer(self):
+        self.message_class = ActivityRegisteredReviewerNotification
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new activity has been registered on Test')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View this activity')
+
+    def test_activity_registered(self):
+        self.message_class = ActivityRegisteredNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('Your activity on Test has been registered!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('Open your activity')
+
+
 class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):
 
     def setUp(self):
@@ -311,7 +350,7 @@ class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):
             user=self.supporter
         )
 
-    def test_manager_registration_created(self):
+    def test_participant_added(self):
         self.message_class = RegisteredActivityParticipantAddedNotification
         self.create()
         self.assertRecipients([self.obj.user])

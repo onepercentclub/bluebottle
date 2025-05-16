@@ -21,8 +21,8 @@ from bluebottle.time_based.effects.effects import (
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ManagerParticipantAddedOwnerNotification,
 )
-from bluebottle.time_based.notifications.participants import UserScheduledNotification
-from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
+from bluebottle.time_based.messages.participants import UserScheduledNotification
+from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification, \
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
     UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
@@ -1101,6 +1101,22 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
             'You have been added to the activity "{}"'.format(self.model.title)
         )
 
+    def test_needs_work(self):
+        self.model.states.submit(save=True)
+        self.model.states.request_changes(save=True)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'The activity you submitted on Test needs work'
+        )
+
     def test_register(self):
         self.settings.enable_reviewing = False
         self.settings.save()
@@ -1115,10 +1131,14 @@ class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
         self.assertStatus(organizer, 'succeeded')
         self.assertEqual(
             mail.outbox[0].subject,
-            'A new activity has been published on Test'
+            'A new activity has been registered on Test'
         )
         self.assertEqual(
             mail.outbox[1].subject,
+            'Your activity on Test has been registered!'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
             'You have been added to the activity "{}"'.format(activity.title)
         )
 

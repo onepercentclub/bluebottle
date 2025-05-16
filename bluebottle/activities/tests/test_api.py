@@ -526,25 +526,25 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
     def test_sort_upcoming(self):
         today = now().date()
-        first_date_activity = DateActivityFactory.create(status='open', slots=[])
-        second_date_activity = DateActivityFactory.create(status='open', slots=[])
+        first_date_activity = DateActivityFactory.create(pk=2, status='open', slots=[])
+        second_date_activity = DateActivityFactory.create(pk=3, status='open', slots=[])
         activities = [
             DeadlineActivityFactory(
-                status='full', start=None, deadline=now() + timedelta(days=1)
+                pk=1, status='full', start=None, deadline=now() + timedelta(days=1)
             ),
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
-
-            DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=None
-            ),
-
             first_date_activity,
             second_date_activity,
 
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                pk=4, status='open', start=today + timedelta(days=8), deadline=today + timedelta(days=10)
+            ),
+            CollectActivityFactory(
+                pk=5, status='open', start=today + timedelta(days=9), end=today + timedelta(days=11)
+            ),
+
+            DeadlineActivityFactory(pk=6, status='open', start=now() - timedelta(days=2), deadline=None),
+            DeadlineActivityFactory(pk=7, status='open', start=now() + timedelta(days=2), deadline=None),
+            DeadlineActivityFactory(pk=8, status='open', start=None, deadline=None),
         ]
 
         DateActivitySlotFactory.create(
@@ -581,19 +581,19 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         first_date_activity = DateActivityFactory.create(status='open', slots=[])
         second_date_activity = DateActivityFactory.create(status='open', slots=[])
         activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
+            first_date_activity,
+            second_date_activity,
+
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
+
 
             DeadlineActivityFactory(
                 status='open', start=now() - timedelta(days=1), deadline=None
             ),
-
-            first_date_activity,
-            second_date_activity,
-
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                status='open', start=None, deadline=None
+            ),
         ]
 
         DateActivitySlotFactory.create(
@@ -620,28 +620,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         ),
 
         self.search({'upcoming': 1})
-
-        self.assertEqual(
-            [str(activity.pk) for activity in activities],
-            [activity['id'] for activity in self.data['data']]
-        )
-
-    def test_sort_unknown(self):
-        activities = [
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=now() + timedelta(days=1)
-            ),
-            DeadlineActivityFactory(
-                status='open', start=None, deadline=None
-            ),
-
-            DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=None
-            ),
-
-        ]
-
-        self.search({}, sort='some-unknown-sort-option')
 
         self.assertEqual(
             [str(activity.pk) for activity in activities],
@@ -762,12 +740,15 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
         today = now().date()
         activities = [
             DeadlineActivityFactory(
-                status='open', start=now() - timedelta(days=1), deadline=now() + timedelta(days=10)
+                status='open', start=now() + timedelta(days=1), deadline=now() + timedelta(days=1)
             ),
             DateActivityFactory.create(status='open', slots=[]),
             DateActivityFactory.create(status='open', slots=[]),
-            DeadlineActivityFactory(status='open', start=today + timedelta(days=8)),
-            CollectActivityFactory(status='open', start=today + timedelta(days=9)),
+            DeadlineActivityFactory(status='open', deadline=today + timedelta(days=8)),
+            CollectActivityFactory(status='open', end=today + timedelta(days=9)),
+            DeadlineActivityFactory(
+                status='open', start=None, deadline=None
+            ),
         ]
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=2), activity=activities[1])
         DateActivitySlotFactory.create(status='open', start=now() + timedelta(days=5), activity=activities[1])

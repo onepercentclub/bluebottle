@@ -36,7 +36,16 @@ class PaymentIntent(models.Model):
     @property
     def intent(self):
         stripe = get_stripe()
-        return stripe.PaymentIntent.retrieve(self.intent_id)
+        # TODO: Determine beforehand if we need to use stripe_account here.
+        try:
+            return stripe.PaymentIntent.retrieve(
+                self.intent_id,
+            )
+        except InvalidRequestError:
+            return stripe.PaymentIntent.retrieve(
+                self.intent_id,
+                stripe_account=self.donation.activity.bank_account.connect_account.account_id
+            )
 
     @property
     def metadata(self):
@@ -84,27 +93,42 @@ class StripePayment(Payment):
 
         if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
             self.states.require_action(save=True)
-        elif len(intent.charges) == 0 and self.status != self.states.action_needed.value:
+        elif (
+                'charges' in intent and
+                len(intent.charges) == 0 and
+                self.status != self.states.action_needed.value
+        ):
             # No charge. Do we still need to charge?
             self.states.fail(save=True)
-        elif len(intent.charges) > 0 and intent.charges.data[0].refunded and self.status != self.states.refunded.value:
+        elif (
+                'charges' in intent and
+                len(intent.charges) > 0 and
+                intent.charges.data[0].refunded and
+                self.status != self.states.refunded.value
+        ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
             self.states.authorize(save=True)
         elif intent.status == 'failed' and self.status != self.states.failed.value:
             self.states.fail(save=True)
         elif intent.status == 'succeeded':
-            transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
-            self.donation.payout_amount = Money(
-                transfer.amount / 100.0, transfer.currency
-            )
+            if 'charges' in intent:
+                transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
+                self.donation.payout_amount = Money(
+                    transfer.amount / 100.0, transfer.currency
+                )
+            elif 'amount_received' in intent:
+                self.donation.payout_amount = Money(
+                    intent.amount_received / 100.0, intent.currency
+                )
 
             if (
-                    self.donation.amount.currency == transfer.currency
-                    and self.donation.amount.amount != transfer.amount / 100.00
+                    self.donation.amount.currency == self.donation.payout_amount.currency
+                    and self.donation.amount.amount != self.donation.payout_amount.amount
             ):
                 self.donation.amount = Money(
-                    transfer.amount / 100.0, transfer.currency
+                    self.donation.payout_amount.amount,
+                    self.donation.payout_amount.currency
                 )
 
             self.donation.save()
@@ -538,6 +562,7 @@ class StripePayoutAccount(PayoutAccount):
 class ExternalAccount(BankAccount):
     account_id = models.CharField(max_length=40, help_text=_("Starts with 'ba_...'"))
     provider_class = StripePaymentProvider
+    currency = models.CharField(max_length=10, null=True, blank=True)
 
     @cached_property
     def account(self):

@@ -143,8 +143,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'description',
         'image',
         'video_url',
-        'organization'
-
+        'organization',
+        'theme'
     )
 
     status_fields = (
@@ -1183,7 +1183,8 @@ class SlotBulkAddForm(forms.Form):
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this slot.'),
-        initial=True
+        initial=True,
+        required=False
     )
 
     title = _('Bulk add participants')

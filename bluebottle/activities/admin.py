@@ -368,7 +368,8 @@ class ActivityBulkAddForm(forms.Form):
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this activity.'),
-        initial=True
+        initial=True,
+        required=False
     )
 
     title = _('Bulk add participants')
@@ -552,7 +553,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'description',
         'image',
         'video_url',
-        'organization'
+        'organization',
+        'theme'
     )
 
     status_fields = (

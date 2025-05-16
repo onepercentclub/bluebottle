@@ -138,12 +138,12 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.obj = DateParticipantFactory.create(
             activity=self.activity,
             slot=self.obj.activity.slots.first(),
-            registration=self.registration,
-            user=self.supporter
+            user=self.supporter,
         )
+        self.obj.registration = self.registration
         self.message_class = NewParticipantNotification
         self.create()
-        self.assertRecipients([self.owner])
+        self.assertRecipients([self.activity.owner])
         self.assertSubject('A new participant has joined your activity "Save the world!" 🎉')
         self.assertBodyContains('Frans Beckenbauer has joined your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())

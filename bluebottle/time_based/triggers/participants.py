@@ -38,7 +38,7 @@ from bluebottle.time_based.notifications.participants import (
     ManagerParticipantRemovedNotification,
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
-    ManagerParticipantWithdrewNotification, UserScheduledNotification,
+    ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -50,7 +50,7 @@ from bluebottle.time_based.states import (
     ScheduleActivityStateMachine,
     TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
     DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine,
-    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine
+    RegisteredDateParticipantStateMachine
 )
 
 
@@ -1367,10 +1367,6 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
         """Slot has status finished"""
         return effect.instance.activity and effect.instance.activity.status != "succeeded"
 
-    def activity_is_expired(effect):
-        """Slot has status finished"""
-        return effect.instance.activity and effect.instance.activity.status == "expired"
-
     triggers = ContributorTriggers.triggers + [
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.initiate,
@@ -1381,27 +1377,14 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     RegisteredDateParticipantStateMachine.succeed,
                     conditions=[activity_is_succeeded],
                 ),
-                TransitionEffect(
-                    RegisteredDateParticipantStateMachine.accept,
-                    conditions=[activity_is_not_succeeded]
-                )
             ],
-        ),
-        TransitionTrigger(
-            RegisteredDateParticipantStateMachine.accept,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        activity_is_expired
-                    ]
-                )
-            ]
         ),
         TransitionTrigger(
             RegisteredDateParticipantStateMachine.succeed,
             effects=[
+                NotificationEffect(
+                    RegisteredActivityParticipantAddedNotification,
+                ),
                 RelatedTransitionEffect(
                     'contributions',
                     TimeContributionStateMachine.succeed,

@@ -13,11 +13,13 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification
 )
+from bluebottle.time_based.notifications.participants import RegisteredActivityParticipantAddedNotification
 from bluebottle.time_based.notifications.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory,
-    DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory
+    DeadlineActivityFactory, DeadlineRegistrationFactory, DateRegistrationFactory, RegisteredDateActivityFactory,
+    RegisteredDateParticipantFactory
 )
 
 
@@ -290,3 +292,29 @@ class DeadlineRegistrationNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have a new application for your activity "Save the world!" 🎉')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
+
+
+class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.supporter = BlueBottleUserFactory.create(
+            first_name='Frans',
+            last_name='Beckenbauer'
+        )
+
+        self.activity = RegisteredDateActivityFactory.create(
+            title="Save the world!",
+        )
+
+        self.obj = RegisteredDateParticipantFactory.create(
+            activity=self.activity,
+            user=self.supporter
+        )
+
+    def test_manager_registration_created(self):
+        self.message_class = RegisteredActivityParticipantAddedNotification
+        self.create()
+        self.assertRecipients([self.obj.user])
+        self.assertSubject('You have been added to the activity "Save the world!"')
+        self.assertActionLink(self.activity.get_absolute_url())
+        self.assertActionTitle('View activity')

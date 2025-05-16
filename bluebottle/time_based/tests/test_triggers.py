@@ -38,7 +38,7 @@ from bluebottle.time_based.tests.factories import (
     PeriodicSlotFactory,
     ScheduleRegistrationFactory,
     ScheduleActivityFactory,
-    ScheduleSlotFactory,
+    ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
 )
 
 
@@ -98,25 +98,10 @@ class TimeBasedActivityTriggerTestCase():
         activity = self.factory.create(initiative=self.initiative)
         if self.activity.states.submit:
             activity.states.submit(save=True)
-
             self.assertEqual(activity.status, 'submitted')
 
-    def test_approve_initiative(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
-
-        self.assertEqual(self.activity.status, 'open')
-
-        organizer = self.activity.contributors.instance_of(Organizer).get()
-        self.assertEqual(organizer.status, 'succeeded')
-
     def test_cancel(self):
-        self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.refresh_from_db()
         self.activity.states.cancel(save=True)
-
         self.assertEqual(self.activity.status, 'cancelled')
 
         organizer = self.activity.contributors.instance_of(Organizer).get()
@@ -1043,3 +1028,116 @@ class ScheduleRegistrationTriggersTestCase(RegistrationTriggerTestBase, TriggerT
             self.assertNotificationEffect(
                 UserScheduledNotification
             )
+
+
+class RegisteredDateActivityTriggerTestCase(TriggerTestCase):
+    factory = RegisteredDateActivityFactory
+    participant_factory = RegisteredDateParticipantFactory
+
+    def setUp(self):
+        super().setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=[self.factory._meta.model.__name__.lower()]
+        )
+        self.manager = BlueBottleUserFactory.create()
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+        self.settings.enable_reviewing = True
+        self.settings.save()
+        self.model = self.factory.create(initiative=None, owner=self.manager)
+        self.participant = self.participant_factory.create(activity=self.model)
+
+    def test_initial(self):
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'new')
+
+    def test_delete(self):
+        self.model.states.delete(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+
+    def test_reject(self):
+        self.model.states.submit(save=True)
+        self.model.states.reject(save=True)
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertEqual(organizer.status, 'failed')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your activity "{}" has been rejected'.format(self.model.title)
+        )
+
+    def test_approve(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.assertStatus(self.participant, 'succeeded')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
+        self.assertStatus(self.model, 'succeeded')
+        self.assertStatus(self.participant, 'succeeded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+        self.assertEqual(
+            mail.outbox[2].subject,
+            'Your activity on Test has been approved!'
+        )
+        self.assertEqual(
+            mail.outbox[3].subject,
+            'You have been added to the activity "{}"'.format(self.model.title)
+        )
+
+    def test_register(self):
+        self.settings.enable_reviewing = False
+        self.settings.save()
+        activity = self.factory.create(
+            initiative=None,
+            start=now() - timedelta(days=10)
+        )
+        self.participant_factory.create(activity=activity)
+        activity.states.register(save=True)
+        self.assertEqual(activity.status, 'succeeded')
+        organizer = activity.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'succeeded')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'A new activity has been published on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'You have been added to the activity "{}"'.format(activity.title)
+        )
+
+    def test_submit(self):
+        self.model.states.submit(save=True)
+        self.assertStatus(self.model, 'submitted')
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You submitted an activity on Test'
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'A new activity is ready to be reviewed on Test'
+        )
+
+    def test_cancel(self):
+        self.model.states.submit(save=True)
+        self.model.states.approve(save=True)
+        self.model.states.cancel(save=True)
+        self.assertStatus(self.model, 'cancelled')
+        organizer = self.model.contributors.instance_of(Organizer).get()
+        self.assertStatus(organizer, 'failed')

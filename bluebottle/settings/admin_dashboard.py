@@ -57,6 +57,10 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["time_based.change_dateactivity"],
             },
             {
+                "name": "time_based.registereddateactivity",
+                "permissions": ["time_based.change_registereddateactivity"],
+            },
+            {
                 "name": "time_based.dateactivityslot",
                 "permissions": ["time_based.change_dateactivityslot"],
             },

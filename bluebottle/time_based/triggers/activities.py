@@ -7,7 +7,12 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification,
     ActivityRejectedNotification,
     ActivityRestoredNotification,
-    ActivitySucceededNotification,
+    ActivitySucceededNotification, ActivityApprovedNotification, ActivitySubmittedNotification,
+    ActivityPublishedNotification,
+)
+from bluebottle.activities.messages.reviewer import (
+    ActivitySubmittedReviewerNotification,
+    ActivityPublishedReviewerNotification
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
@@ -566,28 +571,75 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
 
 
 @register(RegisteredDateActivity)
-class RegisteredDateActivityTriggers(ActivityTriggers):
-
+class RegisteredDateActivityTriggers(TimeBasedTriggers):
     triggers = ActivityTriggers.triggers + [
         TransitionTrigger(
             RegisteredDateActivityStateMachine.register,
             effects=[
+                NotificationEffect(
+                    ActivityPublishedReviewerNotification,
+                ),
+                NotificationEffect(
+                    ActivityPublishedNotification,
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.submit,
+            effects=[
+                NotificationEffect(
+                    ActivitySubmittedNotification,
+                ),
+                NotificationEffect(
+                    ActivitySubmittedReviewerNotification,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.approve,
+            effects=[
+                NotificationEffect(
+                    ActivityApprovedNotification
+                ),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[
                         start_has_passed
                     ]
                 ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.accept,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
             ]
         ),
         TransitionTrigger(
-            RegisteredDateActivityStateMachine.approve,
+            TimeBasedStateMachine.reject,
             effects=[
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        start_has_passed
-                    ]
+                NotificationEffect(ActivityRejectedNotification),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
                 ),
             ]
         ),
@@ -595,7 +647,7 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
             RegisteredDateActivityStateMachine.succeed,
             effects=[
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.succeed
                 )
             ]
@@ -604,7 +656,7 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
             RegisteredDateActivityStateMachine.reopen,
             effects=[
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.accept
                 )
             ]
@@ -612,8 +664,13 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.cancel,
             effects=[
+                NotificationEffect(ActivityCancelledNotification),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'participants',
                     RegisteredDateParticipantStateMachine.cancel
                 )
             ]
@@ -621,8 +678,9 @@ class RegisteredDateActivityTriggers(ActivityTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.restore,
             effects=[
+                NotificationEffect(ActivityRestoredNotification),
                 RelatedTransitionEffect(
-                    'contributors',
+                    'participants',
                     RegisteredDateParticipantStateMachine.restore
                 )
             ]

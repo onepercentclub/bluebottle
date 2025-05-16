@@ -93,6 +93,9 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
@@ -203,7 +206,13 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
     )
 
     succeed = ActivityStateMachine.succeed.extend(
-        sources=[planned, ActivityStateMachine.expired],
+        sources=[
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+            TimeBasedStateMachine.expired,
+            planned,
+        ],
     )
 
     register = Transition(
@@ -234,6 +243,14 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
     approve = ActivityStateMachine.approve.extend(
         description=_('Approve activity, so it will be planned on the platform.'),
         target=planned,
+    )
+
+    cancel = ActivityStateMachine.cancel.extend(
+        sources=[
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            planned,
+        ],
     )
 
     reopen = TimeBasedStateMachine.reopen.extend(

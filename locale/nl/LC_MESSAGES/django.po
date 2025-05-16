@@ -2,8 +2,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
+<<<<<<< HEAD
+"POT-Creation-Date: 2025-04-25 09:51+0200\n"
+"PO-Revision-Date: 2025-04-29 13:20\n"
+=======
 "POT-Creation-Date: 2025-05-13 11:34+0200\n"
 "PO-Revision-Date: 2025-05-13 09:57\n"
+>>>>>>> master
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"

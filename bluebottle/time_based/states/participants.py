@@ -4,7 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, RegisteredDateParticipant
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
@@ -201,32 +201,18 @@ class ParticipantStateMachine(ContributorStateMachine):
     )
 
 
-@register(DateParticipant)
-class DateParticipantStateMachine(ParticipantStateMachine):
-    succeed = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.failed,
-            ParticipantStateMachine.rejected,
-            ParticipantStateMachine.accepted
-        ],
-        ParticipantStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_("This participant has completed their contribution."),
-        automatic=True,
-    )
-
-
 class RegistrationParticipantStateMachine(ParticipantStateMachine):
     accept = Transition(
         [
             ParticipantStateMachine.new,
             ParticipantStateMachine.rejected,
-            ParticipantStateMachine.removed
+            ParticipantStateMachine.removed,
+            ParticipantStateMachine.withdrawn,
+            ParticipantStateMachine.succeeded,
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
-        description=_("Accept this person as a participant of this Activity."),
+        description=_("Accept this person as a participant of this activity."),
         passed_label=_("accepted"),
         automatic=True,
     )
@@ -295,7 +281,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.removed,
             ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.new,
+        ParticipantStateMachine.accepted,
         name=_("Re-add"),
         passed_label=_("re-added"),
         description=_("Re-add this person as a participant of this activity"),
@@ -306,6 +292,17 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
 
 @register(DeadlineParticipant)
 class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
+    add = Transition(
+        [ContributorStateMachine.new],
+        ParticipantStateMachine.accepted,
+        name=_("Add"),
+        description=_("Add this person as a participant of this activity."),
+        automatic=True,
+    )
+
+
+@register(RegisteredDateParticipant)
+class RegisteredDateParticipantStateMachine(RegistrationParticipantStateMachine):
     add = Transition(
         [ContributorStateMachine.new],
         ParticipantStateMachine.accepted,
@@ -434,7 +431,7 @@ class ScheduleParticipantStateMachine(RegistrationParticipantStateMachine):
             ParticipantStateMachine.cancelled
         ],
         ParticipantStateMachine.succeeded,
-        name=_("Schedule"),
+        name=_("Succeed"),
         description=_("Succeed this participant for the Activity."),
         passed_label=_("succeeded"),
         automatic=True,
@@ -501,3 +498,22 @@ class TeamScheduleParticipantStateMachine(ScheduleParticipantStateMachine):
 @register(PeriodicParticipant)
 class PeriodicParticipantStateMachine(RegistrationParticipantStateMachine):
     pass
+
+
+@register(DateParticipant)
+class DateParticipantStateMachine(RegistrationParticipantStateMachine):
+
+    finish = Transition(
+        RegistrationParticipantStateMachine.accepted,
+        RegistrationParticipantStateMachine.succeeded,
+        automatic=True,
+        name=_('Finish'),
+        description="Slot has finished"
+    )
+
+    def activity_is_open(self):
+        """task is open"""
+        return self.instance.slot_id and self.instance.slot.status in (
+            'open',
+            'running',
+        )

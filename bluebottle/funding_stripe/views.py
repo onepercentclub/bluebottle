@@ -177,7 +177,7 @@ class StripeBankTransferList(PaymentList):
         # Get data from serializer without saving
         payment_intent_data = serializer.validated_data
         donation = payment_intent_data['donation']
-        account_currency = str(donation.activity.bank_account.currency).upper()
+        account_currency = str(donation.activity.bank_account.currency or 'EUR').upper()
         currency = str(donation.amount.currency)
         # Validate the currency compatibility
         if currency != account_currency:

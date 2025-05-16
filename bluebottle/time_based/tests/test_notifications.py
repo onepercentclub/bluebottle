@@ -237,22 +237,10 @@ class DateSlotNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('Open your activity')
 
     def test_slot_cancelled_with_participant(self):
-        participant = DateParticipantFactory.create(activity=self.activity, status='accepted')
-        DateParticipantFactory.create(
-            status='registered',
+        participant = DateParticipantFactory.create(
+            status='accepted',
             slot=self.obj,
-            participant=participant
-        )
-        DateParticipantFactory.create(
-            status='rejected',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='accepted')
-        )
-
-        DateParticipantFactory.create(
-            status='registered',
-            slot=self.obj,
-            participant=DateParticipantFactory.create(activity=self.activity, status='rejected')
+            activity=self.activity
         )
 
         self.message_class = SlotCancelledNotification

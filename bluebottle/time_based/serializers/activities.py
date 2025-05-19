@@ -242,7 +242,7 @@ class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
         related_link_view_name="registered-date-participants",
         related_link_url_kwarg="activity_id",
         statuses={
-            "active": ["succeeded", "accepted"],
+            "active": ["succeeded", "accepted", "new"],
             "failed": ["rejected", "withdrawn", "removed"],
         },
     )

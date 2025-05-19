@@ -677,8 +677,8 @@ class RegisteredDateActivityAdmin(TimeBasedAdmin):
     registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
 
     date_fields = [
-        'duration',
         'start',
+        'duration',
         'location',
     ]
     registration_fields = []

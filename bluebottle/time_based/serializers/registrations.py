@@ -10,9 +10,10 @@ from bluebottle.fsm.serializers import TransitionSerializer, AvailableTransition
 from bluebottle.time_based.models import (
     DeadlineRegistration, PeriodicRegistration,
     Registration, ScheduleRegistration,
-    TeamScheduleRegistration
+    TeamScheduleRegistration, DateRegistration
 )
 from bluebottle.time_based.permissions import ParticipantDocumentPermission
+from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
 from bluebottle.utils.fields import FSMField
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -102,6 +103,36 @@ class RegistrationSerializer(ModelSerializer):
         return data
 
 
+class DateRegistrationSerializer(RegistrationSerializer):
+    permissions = ResourcePermissionField('date-registration-detail', view_args=('pk',))
+    participants = RelatedLinkFieldByStatus(
+        many=True,
+        read_only=True,
+        related_link_view_name="date-registration-related-participants",
+        related_link_url_kwarg="registration_id",
+        statuses={
+            "upcoming": ["new", "accepted", "running"],
+            "passed": ["succeeded"],
+            "total": ["new", "accepted", "running", "withdrawn", "succeeded", "failed"]
+        },
+    )
+
+    class Meta(RegistrationSerializer.Meta):
+        model = DateRegistration
+
+    class JSONAPIMeta(RegistrationSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-registrations'
+        included_resources = ['user', 'document', 'activity']
+
+    included_serializers = dict(
+        RegistrationSerializer.included_serializers.serializers,
+        **{
+            'activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+            'document': 'bluebottle.time_based.serializers.registrations.RegistrationDocumentSerializer',
+        }
+    )
+
+
 class DeadlineRegistrationSerializer(RegistrationSerializer):
     permissions = ResourcePermissionField('deadline-registration-detail', view_args=('pk',))
     participants = ResourceRelatedField(many=True, read_only=True, source='deadlineparticipant_set')
@@ -116,7 +147,7 @@ class DeadlineRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.DeadlineActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.DeadlineRegistrationDocumentSerializer',
+            'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
             'participants': 'bluebottle.time_based.serializers.DeadlineParticipantSerializer'
         }
     )
@@ -137,7 +168,7 @@ class ScheduleRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.ScheduleActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.ScheduleRegistrationDocumentSerializer',
+            'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
             'participants': 'bluebottle.time_based.serializers.ScheduleParticipantSerializer'
         }
     )
@@ -169,7 +200,7 @@ class TeamScheduleRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers.serializers,
         **{
             "activity": "bluebottle.time_based.serializers.ScheduleActivitySerializer",
-            "document": "bluebottle.time_based.serializers.TeamScheduleRegistrationDocumentSerializer",
+            "document": "bluebottle.time_based.serializers.RegistrationDocumentSerializer",
             "team": "bluebottle.time_based.serializers.teams.TeamSerializer",
             "participants": "bluebottle.time_based.serializers.TeamScheduleParticipantSerializer",
             'team.slots': 'bluebottle.time_based.serializers.slots.TeamScheduleSlotSerializer'
@@ -197,7 +228,7 @@ class PeriodicRegistrationSerializer(RegistrationSerializer):
         RegistrationSerializer.included_serializers.serializers,
         **{
             'activity': 'bluebottle.time_based.serializers.PeriodicActivitySerializer',
-            'document': 'bluebottle.time_based.serializers.PeriodicRegistrationDocumentSerializer',
+            'document': 'bluebottle.time_based.serializers.RegistrationDocumentSerializer',
             'participants': 'bluebottle.time_based.serializers.PeriodicParticipantSerializer'
         }
     )
@@ -208,7 +239,8 @@ class PolymorphicRegistrationSerializer(PolymorphicModelSerializer):
         DeadlineRegistrationSerializer,
         ScheduleRegistrationSerializer,
         TeamScheduleRegistrationSerializer,
-        PeriodicRegistrationSerializer
+        PeriodicRegistrationSerializer,
+        DateRegistrationSerializer
     ]
 
     class Meta(object):
@@ -225,6 +257,17 @@ class RegistrationTransitionSerializer(TransitionSerializer):
         included_resources = [
             'resource', 'resource.activity'
         ]
+
+
+class DateRegistrationTransitionSerializer(RegistrationTransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateRegistration.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.DateRegistrationSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
+
+    class JSONAPIMeta(RegistrationTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-registration-transitions'
 
 
 class DeadlineRegistrationTransitionSerializer(RegistrationTransitionSerializer):
@@ -271,21 +314,6 @@ class PeriodicRegistrationTransitionSerializer(RegistrationTransitionSerializer)
         resource_name = 'contributors/time-based/periodic-registration-transitions'
 
 
-class DeadlineRegistrationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'deadline-registration-document'
-    relationship = 'registration_set'
-
-
-class ScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'schedule-registration-document'
-    relationship = 'registration_set'
-
-
-class TeamScheduleRegistrationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = "team-schedule-registration-document"
-    relationship = "registration_set"
-
-
-class PeriodicRegistrationDocumentSerializer(PrivateDocumentSerializer):
-    content_view_name = 'periodic-registration-document'
+class RegistrationDocumentSerializer(PrivateDocumentSerializer):
+    content_view_name = 'registration-document'
     relationship = 'registration_set'

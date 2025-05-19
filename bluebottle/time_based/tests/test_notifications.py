@@ -126,8 +126,8 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
             activity=self.activity,
             slot=self.obj.activity.slots.first(),
             user=self.supporter,
-            registration=self.registration
         )
+        self.obj.registration = self.registration
         self.message_class = ManagerSlotParticipantRegisteredNotification
         self.create()
         self.assertRecipients([self.activity.owner])
@@ -142,7 +142,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.obj = DateParticipantFactory.create(
             activity=self.activity,
             slot=self.obj.activity.slots.first(),
-            user=self.supporter,
+            user=self.supporter
         )
         self.obj.registration = self.registration
         self.message_class = NewParticipantNotification

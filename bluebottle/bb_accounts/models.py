@@ -398,7 +398,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.time_based.models import TimeContribution, TimeContributionStateMachine
         total = TimeContribution.objects.filter(
             contributor__user=self,
-            status=TimeContributionStateMachine.succeeded
+            status=TimeContributionStateMachine.succeeded.value
         ).aggregate(
             time_spent=models.Sum('value')
         )['time_spent'] or datetime.timedelta()

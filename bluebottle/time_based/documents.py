@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django_elasticsearch_dsl import fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -14,6 +12,8 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     DateParticipant,
     DateActivitySlot,
+    RegisteredDateActivity,
+    RegisteredDateParticipant
 )
 
 SCORE_MAP = {
@@ -191,8 +191,8 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
 
     def prepare_dates(self, instance):
         return [{
-            'start': instance.start or datetime.min,
-            'end': instance.deadline or datetime.max,
+            'start': instance.start,
+            'end': instance.deadline
         }]
 
     def prepare_duration(self, instance):
@@ -258,3 +258,40 @@ class ScheduleActivityDocument(RegistrationActivityDocument):
 
         related_models = ActivityDocument.Django.related_models + (ScheduleParticipant,)
         model = ScheduleActivity
+
+
+@registry.register_document
+@activity.doc_type
+class RegisteredActivityDocument(RegistrationActivityDocument):
+    participant_class = RegisteredDateParticipant
+
+    def prepare_contribution_duration(self, instance):
+        if instance.duration:
+            return [
+                {
+                    'period': 'once',
+                    'value': instance.duration.seconds / (60 * 60) + instance.duration.days * 24
+                }
+            ]
+
+    class Django:
+        related_models = ActivityDocument.Django.related_models + (RegisteredDateParticipant,)
+        model = RegisteredDateActivity
+
+    def prepare_position(self, instance):
+        return []
+
+    def prepare_start(self, instance):
+        return [instance.start]
+
+    def prepare_end(self, instance):
+        return [instance.start]
+
+    def prepare_dates(self, instance):
+        return [{
+            'start': instance.start,
+            'end': instance.start
+        }]
+
+    def prepare_duration(self, instance):
+        return {"gte": instance.start, "lte": instance.start}

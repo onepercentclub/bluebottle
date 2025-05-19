@@ -293,6 +293,7 @@ class ActivityStateMachine(ModelStateMachine):
             rejected,
             cancelled,
             deleted,
+            expired
         ],
         needs_work,
         name=_("Restore"),
@@ -336,7 +337,10 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     succeed = Transition(
-        open,
+        [
+            open,
+            expired
+        ],
         succeeded,
         name=_("Succeed"),
         automatic=True,
@@ -353,30 +357,41 @@ class ContributorStateMachine(ModelStateMachine):
     def is_user(self, user):
         return self.instance.user == user
 
+    succeed = Transition(
+        [new, succeeded, failed],
+        succeeded,
+        name=_("Succeed"),
+        description=_("The contribution was successful."),
+    )
+
     initiate = Transition(
         EmptyState(),
         new,
         name=_("Initiate"),
         description=_("The contribution was created."),
     )
+
     fail = Transition(
-        (
-            new,
-            succeeded,
-            failed,
-        ),
+        [new, succeeded, failed],
         failed,
         name=_("Fail"),
         description=_("The contribution failed. It will not be visible in reports."),
     )
 
+    reset = Transition(
+        [new, succeeded, failed],
+        new,
+        name=_("Reset"),
+        description=_("Reset the contribution to new."),
+    )
+
 
 class ContributionStateMachine(ModelStateMachine):
-    new = State(_("new"), "new", _("The user started a contribution"))
+    new = State(_("New"), "new", _("The user started a contribution"))
     succeeded = State(
-        _("succeeded"), "succeeded", _("The contribution was successful.")
+        _("Succeeded"), "succeeded", _("The contribution was successful.")
     )
-    failed = State(_("failed"), "failed", _("The contribution failed."))
+    failed = State(_("Failed"), "failed", _("The contribution failed."))
 
     def is_user(self, user):
         return self.instance.user == user
@@ -384,28 +399,28 @@ class ContributionStateMachine(ModelStateMachine):
     initiate = Transition(
         EmptyState(),
         new,
-        name=_("initiate"),
+        name=_("Initiate"),
         description=_("The contribution was created."),
     )
 
     fail = Transition(
-        [new, succeeded],
+        [new, succeeded, failed],
         failed,
-        name=_("fail"),
+        name=_("Fail"),
         description=_("The contribution failed. It will not be visible in reports."),
     )
 
     succeed = Transition(
-        [new, failed],
+        [new, succeeded, failed],
         succeeded,
-        name=_("succeed"),
+        name=_("Succeed"),
         description=_("The contribution succeeded. It will be visible in reports."),
     )
 
     reset = Transition(
-        [failed, succeeded],
+        [new, succeeded, failed],
         new,
-        name=_("reset"),
+        name=_("Reset"),
         description=_("The contribution is reset."),
     )
 
@@ -413,19 +428,31 @@ class ContributionStateMachine(ModelStateMachine):
 @register(Organizer)
 class OrganizerStateMachine(ContributorStateMachine):
     succeed = Transition(
-        [ContributorStateMachine.new, ContributorStateMachine.failed],
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
+        ],
         ContributorStateMachine.succeeded,
-        name=_("succeed"),
+        name=_("Succeed"),
         description=_("The organizer was successful in setting up the activity."),
     )
     fail = Transition(
-        AllStates(),
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
+        ],
         ContributorStateMachine.failed,
         name=_("fail"),
         description=_("The organizer failed to set up the activity."),
     )
     reset = Transition(
-        [ContributorStateMachine.succeeded, ContributorStateMachine.failed],
+        [
+            ContributorStateMachine.new,
+            ContributorStateMachine.succeeded,
+            ContributorStateMachine.failed
+        ],
         ContributorStateMachine.new,
         name=_("reset"),
         description=_("The organizer is still busy setting up the activity."),

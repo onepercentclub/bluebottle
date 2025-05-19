@@ -222,6 +222,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         return self.title or str(_("-empty-"))
 
     def save(self, **kwargs):
+        if not self.theme_id and self.initiative_id:
+            self.theme = self.initiative.theme
         if self.slug in ["", "new"]:
             if self.title and slugify(self.title):
                 self.slug = slugify(self.title)

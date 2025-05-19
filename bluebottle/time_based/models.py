@@ -3,10 +3,13 @@ from html import unescape
 from urllib.parse import urlencode
 
 import pytz
+
+from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import now
+
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -811,17 +814,22 @@ class RegisteredDateActivity(TimeBasedActivity):
         _('Start date'),
         help_text=_('Start of the activity.'),
         null=True,
-        blank=True
+        blank=True,
+        validators=[MaxValueValidator(timezone.now, message=_('Make sure the value is in the past'))]
     )
 
     location = models.ForeignKey(
         Geolocation, verbose_name=_('location'),
         help_text=_(
-            'If the activity takes place in multiple locations then add the region. '
-            'You will be able to add specific locations to individual participants when they are scheduled.'
+            'If the activity took place in multiple locations then add the region.'
         ),
         null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def end(self):
+        if self.start and self.duration:
+            return self.start + self.duration
 
     @property
     def participants(self):
@@ -832,44 +840,52 @@ class RegisteredDateActivity(TimeBasedActivity):
         else:
             return Contributor.objects.none()
 
+    @property
+    def active_participants(self):
+        return self.participants.filter(status="succeeded")
+
     required_fields = ["title", "start", "duration"]
 
+    @property
+    def activity_date(self):
+        return self.start
+
     class Meta:
-        verbose_name = _("Registered date activity")
-        verbose_name_plural = _("Registered date activities")
+        verbose_name = _("Past date activity")
+        verbose_name_plural = _("Past date activities")
 
         permissions = (
             (
                 "api_read_registereddateactivity",
-                "Can view on a registered date activities through the API",
+                "Can view on a past date activities through the API",
             ),
             (
                 "api_add_registereddateactivity",
-                "Can add on a registered date activities through the API",
+                "Can add on a past date activities through the API",
             ),
             (
                 "api_change_registereddateactivity",
-                "Can change on a registered date activities through the API",
+                "Can change on a past date activities through the API",
             ),
             (
                 "api_delete_registereddateactivity",
-                "Can delete on a registered date activities through the API",
+                "Can delete on a past date activities through the API",
             ),
             (
                 "api_read_own_registereddateactivity",
-                "Can view own on a registered date activities through the API",
+                "Can view own on a past date activities through the API",
             ),
             (
                 "api_add_own_registereddateactivity",
-                "Can add own on a registered date activities through the API",
+                "Can add own on a past date activities through the API",
             ),
             (
                 "api_change_own_registereddateactivity",
-                "Can change own on a registered date activities through the API",
+                "Can change own on a past date activities through the API",
             ),
             (
                 "api_delete_own_registereddateactivity",
-                "Can delete own on a registered date activities through the API",
+                "Can delete own on a past date activities through the API",
             ),
         )
 
@@ -1355,8 +1371,8 @@ class DeadlineParticipant(Participant, Contributor):
 
 class RegisteredDateParticipant(Contributor):
     class Meta:
-        verbose_name = _("Participant to registered date activity")
-        verbose_name_plural = _("Participants to registered date activity")
+        verbose_name = _("Participant to past date activity")
+        verbose_name_plural = _("Participants to past date activity")
 
         permissions = (
             ("api_read_registereddateparticipant", "Can view participant through the API"),

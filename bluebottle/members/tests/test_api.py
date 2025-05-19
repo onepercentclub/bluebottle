@@ -6,21 +6,22 @@ from datetime import datetime, timedelta, date
 
 import jwt
 import mock
-from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
-from django_recaptcha import client
 from django.core import mail
 from django.core.signing import TimestampSigner
 from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
+from django_recaptcha import client
 from rest_framework import status
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.auth.middleware import authorization_logger
 from bluebottle.clients import properties
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings, UserActivity, Member
+from bluebottle.members.serializers import MemberProfileSerializer, MemberSignUpSerializer
 from bluebottle.offices.tests.factories import LocationFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory, SegmentFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -1243,6 +1244,19 @@ class UserAPITestCase(BluebottleTestCase):
 
     def test_get_current_user_with_initiatives(self):
         InitiativeFactory.create(
+            owner=self.user
+        )
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], True)
+
+    def test_get_current_user_is_manager(self):
+        initiative = InitiativeFactory.create()
+        initiative.activity_managers.add(self.user)
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.json()['has_initiatives'], True)
+
+    def test_get_current_user_with_activity(self):
+        DeedFactory.create(
             owner=self.user
         )
         response = self.client.get(self.current_user_url, token=self.user_token)

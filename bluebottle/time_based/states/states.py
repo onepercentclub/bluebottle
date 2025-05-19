@@ -93,6 +93,9 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
@@ -193,6 +196,9 @@ class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
 @register(RegisteredDateActivity)
 class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
 
+    def has_participants(self):
+        return self.instance.participants.count() > 0
+
     planned = State(
         _('Planned'),
         'planned',
@@ -201,23 +207,50 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
 
     succeed = ActivityStateMachine.succeed.extend(
         sources=[
-            ActivityStateMachine.expired,
-            ActivityStateMachine.draft,
-            ActivityStateMachine.needs_work,
-            ActivityStateMachine.submitted,
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+            TimeBasedStateMachine.expired,
             planned,
         ],
     )
 
-    publish = ActivityStateMachine.publish.extend(
-        description=_('Publish activity, so it will be planned on the platform.'),
+    register = Transition(
+        [
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+        ],
+        planned,
         name=_("Register"),
-        target=planned,
+        description=_('Once the activity is registered, the participants contributions will be recorded.'),
+        automatic=False,
+        passed_label=_("registered"),
+        permission=TimeBasedStateMachine.is_owner,
+        conditions=[
+            TimeBasedStateMachine.is_complete,
+            TimeBasedStateMachine.is_valid,
+            TimeBasedStateMachine.can_publish,
+            has_participants
+        ],
     )
+    submit = ActivityStateMachine.submit.extend(
+        conditions=ActivityStateMachine.submit.conditions + [has_participants],
+    )
+
+    publish = None
 
     approve = ActivityStateMachine.approve.extend(
         description=_('Approve activity, so it will be planned on the platform.'),
         target=planned,
+    )
+
+    cancel = ActivityStateMachine.cancel.extend(
+        sources=[
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            planned,
+        ],
     )
 
     reopen = TimeBasedStateMachine.reopen.extend(

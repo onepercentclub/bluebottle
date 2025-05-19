@@ -61,7 +61,7 @@ class StripeSourcePaymentList(PaymentList):
     permission_classes = (PaymentPermission,)
 
 
-def get_init_args(donation,):
+def get_init_args(donation, ):
     statement_descriptor = connection.tenant.name[:22]
 
     intent_args = dict(
@@ -177,11 +177,11 @@ class StripeBankTransferList(PaymentList):
         # Get data from serializer without saving
         payment_intent_data = serializer.validated_data
         donation = payment_intent_data['donation']
-        account_currency = str(donation.activity.target.currency)
+        account_currency = str(donation.activity.bank_account.currency or 'EUR').upper()
         currency = str(donation.amount.currency)
         # Validate the currency compatibility
         if currency != account_currency:
-            raise ValidationError(f'Bank transfer not supported for currency {currency}')
+            raise ValidationError(f'Bank transfer not supported for currency {currency} only {account_currency}')
 
         stripe = get_stripe()
         init_args = get_init_args(donation)
@@ -239,11 +239,16 @@ class StripeBankTransferList(PaymentList):
         intent = stripe.PaymentIntent.create(
             **init_args
         )
-
-        serializer.save(
+        intent = serializer.save(
             intent_id=intent.id,
             client_secret=intent.client_secret,
             instructions=intent.next_action
+        )
+        donation.payment_intent = intent
+        donation.save()
+        StripePayment.objects.create(
+            payment_intent=intent,
+            donation=donation,
         )
 
 

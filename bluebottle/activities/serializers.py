@@ -56,6 +56,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
     DeadlineActivitySerializer,
     DeadlineParticipantSerializer,
     PeriodicActivitySerializer,
@@ -347,6 +348,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_activity_type(self, obj):
+        if obj.type == 'registereddateactivity':
+            return 'registeredDate'
+
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
@@ -467,7 +471,7 @@ class ActivityPreviewSerializer(ModelSerializer):
                     slot.status not in ["draft", "cancelled"]
                     and (
                         not only_upcoming
-                        or datetime.fromisoformat(slot.start).date() >= now().date()
+                        or datetime.fromisoformat(slot.start) >= now()
                     )
                     and (
                         not start
@@ -631,6 +635,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
         DonorSerializer,
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
+        RegisteredDateParticipantSerializer,
         PeriodicParticipantSerializer,
         ScheduleParticipantSerializer,
         TeamScheduleParticipantSerializer,
@@ -731,10 +736,7 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        try:
-            return obj.contributor.registration
-        except (AttributeError, Registration.DoesNotExist):
-            return None
+        return getattr(obj.contributor, "registration", None)
 
     class JSONAPIMeta(object):
         resource_name = "contributions"

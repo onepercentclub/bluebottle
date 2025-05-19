@@ -164,7 +164,8 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         elif status == 'started':
             serializer.instance.states.start()
         elif status in ['success', 'succeeded', 'confirmed']:
-            serializer.instance.states.succeed()
+            if serializer.instance.status != 'succeeded':
+                serializer.instance.states.succeed()
         elif status in ['failed']:
             serializer.instance.states.fail()
         serializer.instance.save()

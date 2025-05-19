@@ -310,7 +310,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("deadlineactivity", _("Activity within a deadline")),
         ("scheduleactivity", _("Scheduled activity")),
         ("periodicactivity", _("Periodic Activity")),
-        ("registereddateactivity", _("Registered date activity")),
+        ("registereddateactivity", _("Past date activity")),
         ("deed", _("Deed")),
         ("collect", _("Collect activity")),
     )

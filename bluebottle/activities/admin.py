@@ -192,11 +192,25 @@ class ContributorChildAdmin(
         return obj.polymorphic_ctype
 
 
+class EffortContributionInline(admin.TabularInline):
+    model = Contribution
+    readonly_field = ['start', 'status']
+    fields = ['start', 'status']
+    can_delete = False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Organizer)
 class OrganizerAdmin(ContributorChildAdmin):
     model = Organizer
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
+    inlines = [EffortContributionInline]
 
     readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
@@ -369,7 +383,8 @@ class ActivityBulkAddForm(forms.Form):
     send_messages = forms.BooleanField(
         label=_('Send messages'),
         help_text=_('Email participants that they have been added to this activity.'),
-        initial=True
+        initial=True,
+        required=False
     )
 
     title = _('Bulk add participants')
@@ -553,7 +568,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         'description',
         'image',
         'video_url',
-        'organization'
+        'organization',
+        'theme'
     )
 
     status_fields = (

@@ -353,7 +353,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_initiator(self):
-        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists()
+        return self.own_initiatives.exists() or self.activity_managers_initiatives.exists() or self.activities.exists()
 
     @cached_property
     def is_supporter(self):
@@ -398,7 +398,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         from bluebottle.time_based.models import TimeContribution, TimeContributionStateMachine
         total = TimeContribution.objects.filter(
             contributor__user=self,
-            status=TimeContributionStateMachine.succeeded
+            status=TimeContributionStateMachine.succeeded.value
         ).aggregate(
             time_spent=models.Sum('value')
         )['time_spent'] or datetime.timedelta()

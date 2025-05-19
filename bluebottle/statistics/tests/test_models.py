@@ -9,7 +9,10 @@ from bluebottle.impact.tests.factories import (
 from bluebottle.statistics.tests.factories import (
     ManualStatisticFactory, DatabaseStatisticFactory, ImpactStatisticFactory
 )
-from bluebottle.time_based.tests.factories import DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory
+from bluebottle.time_based.tests.factories import (
+    DateActivityFactory, DateParticipantFactory,
+    DateActivitySlotFactory, DateRegistrationFactory
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -67,7 +70,7 @@ class StatisticsModelTestCase(BluebottleTestCase):
             owner=initiative.owner,
             slots=[]
         )
-        DateActivitySlotFactory.create(
+        slot = DateActivitySlotFactory.create(
             activity=activity,
             start=timezone.now() - datetime.timedelta(hours=1),
             duration=datetime.timedelta(minutes=6)
@@ -78,7 +81,11 @@ class StatisticsModelTestCase(BluebottleTestCase):
 
         activity.refresh_from_db()
 
-        DateParticipantFactory.create_batch(5, activity=activity)
+        registrations = DateRegistrationFactory.create_batch(5, activity=activity)
+        for registration in registrations:
+            DateParticipantFactory.create(
+                slot=slot, activity=activity, registration=registration
+            )
 
         stat = DatabaseStatisticFactory.create(name='Test', query='people_involved')
 

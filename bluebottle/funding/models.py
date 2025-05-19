@@ -839,13 +839,10 @@ class GrantApplication(Activity):
         blank=True,
     )
 
-    fund = models.ForeignKey('funding.GrantFund', null=True, blank=True, on_delete=SET_NULL)
-
     needs_review = True
 
     validators = [
         TargetValidator,
-        KYCReadyValidator,
     ]
 
     activity_type = _('Grant application')
@@ -886,13 +883,20 @@ class GrantApplication(Activity):
 class GrantFund(models.Model):
     name = models.CharField(max_length=200)
     description = QuillField(_("Description"), blank=True)
-    start = models.DateField(null=True, blank=True)
-    end = models.DateField(null=True, blank=True)
-    amount = MoneyField()
     organization = models.ForeignKey(
         'organizations.Organization',
         null=True, blank=True,
         on_delete=SET_NULL
+    )
+
+
+class GrantDonor(Contributor):
+    amount = MoneyField()
+    fund = models.ForeignKey(
+        GrantFund,
+        null=True, blank=True,
+        related_name="payments",
+        on_delete=models.SET_NULL
     )
 
 

@@ -127,7 +127,11 @@ class RelatedParticipantListView(
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        status_filter = self.request.query_params.get("filter[status]")
 
+        if status_filter:
+            statuses = status_filter.split(",")
+            queryset = queryset.filter(status__in=statuses)
         return queryset.filter(activity_id=self.kwargs["activity_id"])
 
 

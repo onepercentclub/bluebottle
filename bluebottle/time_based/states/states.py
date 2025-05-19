@@ -214,7 +214,7 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
         ],
         planned,
         name=_("Register"),
-        description=_('Register your activity, so it will be visible on the platform.'),
+        description=_('Once the activity is registered, the participants contributions will be recorded.'),
         automatic=False,
         passed_label=_("registered"),
         permission=TimeBasedStateMachine.is_owner,

@@ -849,11 +849,10 @@ class GrantApplication(Activity):
 
     @property
     def required_fields(self):
-        fields = super().required_fields + [
+        fields = [
             "title",
             "description.html",
             "target",
-            "bank_account",
         ]
         return fields
 
@@ -889,6 +888,13 @@ class GrantFund(models.Model):
         on_delete=SET_NULL
     )
 
+    class Meta:
+        verbose_name = _('Grant fund')
+        verbose_name_plural = _('Grant funds')
+
+    def __str__(self):
+        return self.name or f'Grant fund #{self.pk}'
+
 
 class GrantDonor(Contributor):
     amount = MoneyField()
@@ -898,6 +904,10 @@ class GrantDonor(Contributor):
         related_name="payments",
         on_delete=models.SET_NULL
     )
+
+    class Meta:
+        verbose_name = _('Grant allocation')
+        verbose_name_plural = _('Grant allocations')
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

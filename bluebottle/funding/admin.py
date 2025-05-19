@@ -6,13 +6,13 @@ from datetime import timedelta
 
 from babel.numbers import get_currency_symbol
 from django import forms
-from django.urls import re_path
 from django.contrib import admin
 from django.contrib.admin import TabularInline, SimpleListFilter
 from django.db import models, connection
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
+from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -31,7 +31,7 @@ from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
     Funding, Donor, Payment, PaymentProvider,
     BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings, MoneyContribution, GrantApplication)
+    FundingPlatformSettings, MoneyContribution, GrantApplication, GrantFund, GrantDonor)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
@@ -758,9 +758,24 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         return super().get_form(request, obj, **kwargs)
 
 
+class GrantPaymentInline(admin.StackedInline):
+    model = GrantDonor
+    extra = 0
+    readonly_fields = ['created', 'status', 'contributor_date']
+    fields = ['fund', 'amount', 'created', 'status', 'contributor_date']
+
+
+@admin.register(GrantFund)
+class GrantFundAdmin(admin.ModelAdmin):
+    model = GrantFund
+    raw_id_fields = ['organization']
+    search_fields = ['name', 'description']
+    list_display = ['name', 'organization']
+
+
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = (UpdateInline, MessageAdminInline)
+    inlines = (GrantPaymentInline, UpdateInline, MessageAdminInline)
 
     base_model = GrantApplication
     list_filter = [StateMachineFilter, CurrencyFilter]

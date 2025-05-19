@@ -786,7 +786,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_registered'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
         'answer': 'registration.answer',
         'question': 'activity.review_title'
     }

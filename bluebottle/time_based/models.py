@@ -840,6 +840,10 @@ class RegisteredDateActivity(TimeBasedActivity):
         else:
             return Contributor.objects.none()
 
+    @property
+    def active_participants(self):
+        return self.participants.filter(status="succeeded")
+
     required_fields = ["title", "start", "duration"]
 
     @property

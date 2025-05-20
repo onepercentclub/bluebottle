@@ -7,37 +7,69 @@ from datetime import timedelta
 from babel.numbers import get_currency_symbol
 from django import forms
 from django.contrib import admin
-from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models, connection
+from django.contrib.admin import SimpleListFilter, TabularInline
+from django.db import connection, models
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import re_path
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from past.utils import old_div
-from polymorphic.admin import PolymorphicChildModelAdmin
-from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin,
+    ActivityForm,
+    ContributionChildAdmin,
+    ContributorChildAdmin,
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
+from bluebottle.fsm.admin import (
+    StateMachineAdmin,
+    StateMachineAdminMixin,
+    StateMachineFilter,
+)
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonorAdminStatusFilter, DonorAdminCurrencyFilter, DonorAdminPledgeFilter
+from bluebottle.funding.filters import (
+    DonorAdminCurrencyFilter,
+    DonorAdminPledgeFilter,
+    DonorAdminStatusFilter,
+)
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings, MoneyContribution, GrantApplication, GrantFund, GrantDonor)
+    BankAccount,
+    BudgetLine,
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    GrantApplication,
+    GrantDonor,
+    GrantFund,
+    LegacyPayment,
+    MoneyContribution,
+    Payment,
+    PaymentCurrency,
+    PaymentProvider,
+    Payout,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Reward,
+)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
-from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount, StripePayment, PaymentIntent
+from bluebottle.funding_stripe.models import (
+    ExternalAccount,
+    PaymentIntent,
+    StripePayment,
+    StripePaymentProvider,
+    StripePayoutAccount,
+    StripeSourcePayment,
+)
 from bluebottle.funding_telesom.models import TelesomPayment
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.geo.models import Location
@@ -45,7 +77,11 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.segments.models import SegmentType
 from bluebottle.updates.admin import UpdateInline
-from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import (
+    BasePlatformSettingsAdmin,
+    TotalAmountAdminChangeList,
+    export_as_csv_action,
+)
 from bluebottle.utils.utils import reverse_signed
 
 logger = logging.getLogger(__name__)
@@ -758,16 +794,33 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         return super().get_form(request, obj, **kwargs)
 
 
-class GrantPaymentInline(admin.StackedInline):
+class GrantInline(admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ['created', 'status', 'contributor_date', 'activity']
-    fields = ['fund', 'activity', 'amount', 'created', 'status', 'contributor_date']
+    readonly_fields = ["created", "status", "contributor_date", "activity_display"]
+
+    def get_fields(self, request, obj=None):
+        fields = ["amount", "created", "status", "contributor_date"]
+
+        if self.parent_model == GrantFund:
+            fields.insert(0, "activity_display")
+
+        return fields
+
+    def activity_display(self, obj):
+        if obj.activity:
+            url = reverse(
+                "admin:funding_grantapplication_change", args=(obj.activity.id,)
+            )
+            return format_html('<a href="{}">{}</a>', url, obj.activity)
+        return "-"
+
+    activity_display.short_description = _("Grant application")
 
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantPaymentInline]
+    inlines = [GrantInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
@@ -776,15 +829,27 @@ class GrantFundAdmin(admin.ModelAdmin):
 
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = [GrantPaymentInline, UpdateInline, MessageAdminInline]
+    inlines = [GrantInline, UpdateInline, MessageAdminInline]
 
     base_model = GrantApplication
-    list_filter = [StateMachineFilter, CurrencyFilter]
+    list_filter = [
+        StateMachineFilter,
+    ]
+    list_display = [
+        "title",
+        "target",
+        "status",
+    ]
 
-    search_fields = ['title', 'slug', 'description']
+    def get_list_display(self, request):
+        return self.list_display
+
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        "started",
+    ]
+
+    search_fields = ["title", "description"]
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
-
-    detail_fields = ("title", "description", "image", "video_url", "theme")
 
     status_fields = (
         "initiative",
@@ -799,19 +864,19 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "states",
     )
 
-    detail_fields = (
-        'title',
-        'target',
-        'description',
-        'image',
-        'video_url',
-        'organization',
-        'theme',
-        'impact_location',
-        'bank_account',
-    )
+    detail_fields = [
+        "title",
+        "target",
+        "description",
+        "image",
+        "video_url",
+        "organization",
+        "theme",
+        "impact_location",
+        "bank_account",
+    ]
 
-    def geet_fieldsets(self, request, obj=None):
+    def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
@@ -839,14 +904,6 @@ class GrantApplicationAdmin(ActivityChildAdmin):
                 )
             )
         return fieldsets
-
-    readonly_fields = ActivityChildAdmin.readonly_fields + [
-        'started',
-    ]
-
-    list_display = ActivityChildAdmin.list_display + [
-        'target'
-    ]
 
     export_to_csv_fields = (
         ('title', 'Title'),

@@ -2,15 +2,12 @@
 import logging
 import random
 import string
-from builtins import object
-from builtins import range
+from builtins import object, range
 
 from babel.numbers import get_currency_name
 from django.core.exceptions import ValidationError
-from django.db import connection
-from django.db import models
-from django.db.models import Count
-from django.db.models import SET_NULL
+from django.db import connection, models
+from django.db.models import SET_NULL, Count
 from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -21,21 +18,21 @@ from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from bluebottle.activities.models import Activity, Contributor
-from bluebottle.activities.models import Contribution
+from bluebottle.activities.models import Activity, Contribution, Contributor
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import (
-    DeadlineValidator,
-    TargetValidator,
-    DeadlineMaxValidator,
     BudgetLineValidator,
+    DeadlineMaxValidator,
+    DeadlineValidator,
     KYCReadyValidator,
+    TargetValidator,
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
+from bluebottle.utils.utils import get_current_host, get_current_language
 
 logger = logging.getLogger(__name__)
 
@@ -238,6 +235,7 @@ class Funding(Activity):
 
     def update_amounts(self):
         from bluebottle.funding.utils import calculate_total
+
         from .states import DonorStateMachine
 
         if not self.has_deleted_data:
@@ -856,6 +854,14 @@ class GrantApplication(Activity):
         ]
         return fields
 
+    @property
+    def amount_granted(self):
+        grants = self.contributors.instance_of(GrantDonor)
+        amount = 0
+        for grant in grants:
+            amount += grant.amount.amount
+        return Money(amount, self.target.currency)
+
     class JSONAPIMeta(object):
         resource_name = 'activities/grant-applications'
 
@@ -878,6 +884,11 @@ class GrantApplication(Activity):
     def activity_date(self):
         return self.created.date()
 
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return f"{domain}/{language}/activities/details/grant-application/{self.id}/{self.slug}"
+
 
 class GrantFund(models.Model):
     name = models.CharField(max_length=200)
@@ -895,6 +906,9 @@ class GrantFund(models.Model):
     def __str__(self):
         return self.name or f'Grant fund #{self.pk}'
 
+    class JSONAPIMeta(object):
+        resource_name = "activities/grant-funds"
+
 
 class GrantDonor(Contributor):
     amount = MoneyField()
@@ -908,6 +922,9 @@ class GrantDonor(Contributor):
     class Meta:
         verbose_name = _('Grant')
         verbose_name_plural = _('Grants')
+
+    class JSONAPIMeta(object):
+        resource_name = "contributors/grants"
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

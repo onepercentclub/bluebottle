@@ -800,7 +800,7 @@ class GrantInline(admin.StackedInline):
     readonly_fields = ["created", "status", "contributor_date", "activity_display"]
 
     def get_fields(self, request, obj=None):
-        fields = ["amount", "created", "status", "contributor_date"]
+        fields = ["fund", "amount", "created", "status", "contributor_date"]
 
         if self.parent_model == GrantFund:
             fields.insert(0, "activity_display")

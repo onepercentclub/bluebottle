@@ -40,7 +40,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward, GrantApplication,
+    Reward, GrantApplication, GrantDonor, GrantFund,
 )
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -72,7 +72,7 @@ from bluebottle.funding_vitepay.serializers import (
 from bluebottle.geo.models import Geolocation
 from bluebottle.members.models import Member
 from bluebottle.time_based.serializers import RelatedLinkFieldByStatus
-from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField
+from bluebottle.utils.fields import FSMField, RequiredErrorsField, ValidationErrorsField, RichTextField
 from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionField
 
 
@@ -837,23 +837,68 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
         )
 
 
+class GrantFundSerializer(ModelSerializer):
+    description = RichTextField()
+
+    class Meta:
+        model = GrantFund
+        fields = ['name', 'description']
+
+    class JSONAPIMeta:
+        resource_name = 'activities/grant-funds'
+
+
+class GrantSerializer(BaseContributorSerializer):
+    amount = MoneySerializer()
+    fund = ResourceRelatedField(read_only=True)
+
+    class Meta(BaseContributorSerializer.Meta):
+        model = GrantDonor
+        fields = BaseContributorSerializer.Meta.fields + (
+            "amount",
+            "fund"
+        )
+
+    class JSONAPIMeta(BaseContributorSerializer.JSONAPIMeta):
+        resource_name = 'contributors/grants'
+
+    included_serializers = {
+        'fund': 'bluebottle.funding.serializers.GrantFundSerializer',
+    }
+
+
 class GrantApplicationSerializer(BaseActivitySerializer):
 
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+    grants = ResourceRelatedField(
+        source='contributors',
+        many=True,
+        queryset=GrantDonor.objects.all(),
+    )
+
+    amount_granted = MoneySerializer(read_only=True)
 
     class Meta(BaseActivitySerializer.Meta):
         model = GrantApplication
         fields = BaseActivitySerializer.Meta.fields + (
             "target",
+            "grants",
+            "amount_granted"
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/grant-applications'
+        included_resources = [
+            'grants',
+            'grants.fund',
+        ]
 
     included_serializers = dict(
         BaseActivitySerializer.included_serializers.serializers,
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+            'grants': 'bluebottle.funding.serializers.GrantSerializer',
+            'grants.fund': 'bluebottle.funding.serializers.GrantFundSerializer',
         }
     )

@@ -906,8 +906,8 @@ class GrantDonor(Contributor):
     )
 
     class Meta:
-        verbose_name = _('Grant allocation')
-        verbose_name_plural = _('Grant allocations')
+        verbose_name = _('Grant')
+        verbose_name_plural = _('Grants')
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

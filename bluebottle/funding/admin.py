@@ -761,12 +761,13 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
 class GrantPaymentInline(admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ['created', 'status', 'contributor_date']
-    fields = ['fund', 'amount', 'created', 'status', 'contributor_date']
+    readonly_fields = ['created', 'status', 'contributor_date', 'activity']
+    fields = ['fund', 'activity', 'amount', 'created', 'status', 'contributor_date']
 
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
+    inlines = [GrantPaymentInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
@@ -775,7 +776,7 @@ class GrantFundAdmin(admin.ModelAdmin):
 
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = (GrantPaymentInline, UpdateInline, MessageAdminInline)
+    inlines = [GrantPaymentInline, UpdateInline, MessageAdminInline]
 
     base_model = GrantApplication
     list_filter = [StateMachineFilter, CurrencyFilter]

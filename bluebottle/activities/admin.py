@@ -28,7 +28,7 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
-from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.funding.models import Funding, Donor, MoneyContribution, GrantApplication
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -800,6 +800,7 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
     base_model = Activity
     child_models = (
         Funding,
+        GrantApplication,
         DateActivity,
         Deed,
         CollectActivity,

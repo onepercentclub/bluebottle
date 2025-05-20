@@ -40,7 +40,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward,
+    Reward, GrantApplication,
 )
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -835,3 +835,25 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'public_accounts',
             'matching_name'
         )
+
+
+class GrantApplicationSerializer(BaseActivitySerializer):
+
+    target = MoneySerializer(required=False, allow_null=True)
+    permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
+
+    class Meta(BaseActivitySerializer.Meta):
+        model = GrantApplication
+        fields = BaseActivitySerializer.Meta.fields + (
+            "target",
+        )
+
+    class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
+        resource_name = 'activities/grant-applications'
+
+    included_serializers = dict(
+        BaseActivitySerializer.included_serializers.serializers,
+        **{
+            'location': 'bluebottle.geo.serializers.GeolocationSerializer',
+        }
+    )

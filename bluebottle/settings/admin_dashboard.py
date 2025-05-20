@@ -126,6 +126,8 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["funding.change_bankaccount"],
             },
             {"name": "funding.payout", "permissions": ["funding.change_payout"]},
+            {"name": "funding.grantfund", "permissions": ["funding.change_grantfund"]},
+            {"name": "funding.grantapplication", "permissions": ["funding.change_grantapplication"]},
         ],
     },
     {

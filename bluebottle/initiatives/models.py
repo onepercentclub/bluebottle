@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
-from parler.models import TranslatedFields, TranslatableModel
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
@@ -305,6 +305,7 @@ def get_search_filters(filters):
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
+        ("grantapplication", _("Grant Application")),
         ("periodactivity", _("Activity during a period")),
         ("dateactivity", _("Activity on a specific date")),
         ("deadlineactivity", _("Activity within a deadline")),

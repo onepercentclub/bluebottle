@@ -14,14 +14,14 @@ from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout
+    Payout, GrantApplication
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
     DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer
+    PayoutSerializer, GrantApplicationSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -144,6 +144,55 @@ class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefet
         'budgetlines': ['budgetlines'],
         'payment_methods': ['payment_methods'],
         'fundraisers': ['fundraisers']
+    }
+
+
+class GrantApplicationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = GrantApplication.objects.all()
+    serializer_class = GrantApplicationSerializer
+
+    permission_classes = (
+        ActivityTypePermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner'],
+    }
+
+    def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save(owner=self.request.user)
+
+
+class GrantApplicationDetail(
+    JsonApiViewMixin, ClosedSegmentActivityViewMixin,
+    AutoPrefetchMixin, RetrieveUpdateAPIView
+):
+    queryset = GrantApplication.objects.select_related(
+        'initiative', 'initiative__owner',
+    )
+
+    serializer_class = GrantApplicationSerializer
+    permission_classes = (
+        ActivityStatusPermission,
+        ActivitySegmentPermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner'],
     }
 
 

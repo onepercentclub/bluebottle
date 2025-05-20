@@ -9,7 +9,7 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
-    PayoutDetails, ActivityDonationList
+    PayoutDetails, ActivityDonationList, GrantApplicationList, GrantApplicationDetail
 )
 
 
@@ -29,6 +29,10 @@ urlpatterns = [
     re_path(r'^/(?P<pk>[\d]+)$', FundingDetail.as_view(), name='funding-detail'),
     re_path(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
     re_path(r'^/export/(?P<pk>[\d]+)$', SupportersExportView.as_view(), name='funding-supporters-export'),
+
+    # Grants
+    re_path(r'^/grant-applications/$', GrantApplicationList.as_view(), name='grant-application-list'),
+    re_path(r'^/grant-applications/(?P<pk>[\d]+)$', GrantApplicationDetail.as_view(), name='grant-application-detail'),
 
     re_path(
         r'^/payouts/(?P<pk>[\d]+)$',

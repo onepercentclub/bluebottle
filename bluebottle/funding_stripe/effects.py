@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django_tools.middlewares.ThreadLocal import get_current_request
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.funding.models import Funding
+from bluebottle.funding.models import Funding, GrantApplication, GrantPayout
 from bluebottle.utils.utils import get_client_ip
 
 from bluebottle.funding_stripe.utils import get_stripe
@@ -63,6 +63,26 @@ class OpenActivitiesOnHoldEffect(Effect):
 
     def __str__(self):
         return "Open activities that are on hold when payments are verified again by stripe"
+
+
+class PrepareGrantApplicationPayoutsEffect(Effect):
+    conditions = []
+    title = _("Create payouts for connected grant applications that where granted")
+    template = "admin/create_grant_application_payouts.html"
+
+    def post_save(self, **kwargs):
+        if isinstance(self.instance, GrantApplication):
+            GrantPayout.generate(self.instance)
+        else:
+            applications = GrantApplication.objects.filter(
+                status="granted",
+                bank_account__connect_account=self.instance
+            )
+            for application in applications:
+                GrantPayout.generate(application)
+
+    def __str__(self):
+        return "Create payouts for a connected grant application that was granted"
 
 
 class UpdateBusinessTypeEffect(Effect):

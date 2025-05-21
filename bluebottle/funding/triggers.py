@@ -22,7 +22,7 @@ from bluebottle.funding.messages.activity_manager import (
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
     PayoutAccountVerified, PayoutAccountRejected,
     FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
-    FundingCancelledMessage, FundingApprovedMessage
+    FundingCancelledMessage, FundingApprovedMessage, GrantApplicationApprovedMessage
 )
 from bluebottle.funding.messages.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
 from bluebottle.funding.messages.contributor import (
@@ -33,12 +33,14 @@ from bluebottle.funding.messages.contributor import (
 from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
     Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount,
-    MoneyContribution
+    MoneyContribution, GrantDonor, GrantApplication
 )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine,
+    GrantDonorStateMachine, GrantApplicationStateMachine
 )
+from bluebottle.funding_stripe.effects import PrepareGrantApplicationPayoutsEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -499,6 +501,42 @@ class BasePaymentTriggers(TriggerManager):
                         donation_not_refunded
                     ]
                 ),
+            ]
+        ),
+    ]
+
+
+@register(GrantDonor)
+class GrantDonorTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            GrantDonorStateMachine.initiate,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    GrantApplicationStateMachine.approve
+                ),
+            ]
+        ),
+    ]
+
+
+@register(GrantApplication)
+class GrantApplicationTriggers(TriggerManager):
+    triggers = [
+
+        TransitionTrigger(
+            GrantApplicationStateMachine.approve,
+            effects=[
+                NotificationEffect(
+                    GrantApplicationApprovedMessage
+                )
+            ]
+        ),
+        TransitionTrigger(
+            GrantApplicationStateMachine.generate_payout,
+            effects=[
+                PrepareGrantApplicationPayoutsEffect
             ]
         ),
     ]

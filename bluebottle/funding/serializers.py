@@ -466,6 +466,17 @@ class FundingTransitionSerializer(TransitionSerializer):
         resource_name = 'funding-transitions'
 
 
+class GrantApplicationTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=GrantApplication.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.funding.serializers.GrantApplicationSerializer',
+    }
+
+    class JSONAPIMeta(object):
+        included_resources = ['resource', ]
+        resource_name = 'activities/grant-application-transitions'
+
+
 class IsRelatedToActivity(object):
     """
     Validates that the reward activity is the same as the donation activity

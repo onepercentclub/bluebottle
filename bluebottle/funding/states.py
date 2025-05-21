@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution, \
-    GrantApplication, GrantDonor
+    GrantApplication, GrantDonor, GrantPayout
 
 
 @register(Funding)
@@ -268,6 +268,15 @@ class FundingStateMachine(ActivityStateMachine):
 
 @register(GrantApplication)
 class GrantApplicationStateMachine(ActivityStateMachine):
+    open = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
+    succeeded = State(
+        _("Completed"), "completed", _("The grant application was approved and has been paid out to the applicant.")
+    )
+
+    def has_no_payouts(self):
+        return (
+            self.instance.payouts.count() == 0
+        )
 
     def kyc_is_valid(self):
         return (
@@ -305,17 +314,29 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
         ],
-        ActivityStateMachine.open,
+        open,
         name=_('Approve'),
         description=_('Approve this application.'),
-        automatic=False,
+        automatic=True,
         permission=can_approve,
         conditions=[
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
             ActivityStateMachine.is_complete,
-            has_contributors
         ],
+    )
+
+    generate_payout = Transition(
+        open,
+        open,
+        name=_('Generate payout'),
+        description=_(
+            "The grant application has been approved and the payout has been made."),
+        automatic=False,
+        conditions=[
+            has_no_payouts,
+            kyc_is_valid,
+        ]
     )
 
     request_changes = Transition(
@@ -355,49 +376,20 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         [
             ActivityStateMachine.open,
         ],
-        ActivityStateMachine.succeeded,
-        name=_('Succeed'),
-        description=_(
-            "The campaign ends and received donations can be payed out. Triggered when "
-            "the deadline passes."
-        ),
+        succeeded,
+        name=_('Complete'),
+        description=_("The grant application has been completed and the payout has been made."),
         automatic=True,
     )
 
 
 @register(GrantDonor)
 class GrantDonorStateMachine(ContributorStateMachine):
-    refunded = State(
-        _('Refunded'),
-        'refunded',
-        _("The donation was refunded.")
-    )
-
-    activity_refunded = State(
-        _('Activity refunded'),
-        'activity_refunded',
-        _("The donation was refunded because the activity refunded.")
-    )
-
-    pending = State(
-        _('Pending'),
-        'pending',
-        _("The donation is pending while the payment is still not completed.")
-    )
-
-    expired = State(_('expired'), 'expired')
-
-    def is_successful(self):
-        """donation is successful"""
-        return self.instance.status == ContributorStateMachine.succeeded
 
     succeed = Transition(
         [
             ContributorStateMachine.new,
             ContributorStateMachine.failed,
-            pending,
-            expired,
-            refunded
         ],
         ContributorStateMachine.succeeded,
         name=_('Succeed'),
@@ -405,58 +397,15 @@ class GrantDonorStateMachine(ContributorStateMachine):
         automatic=True,
     )
 
-    set_pending = Transition(
-        ContributorStateMachine.new,
-        pending,
-        name=_('Set pending'),
-        description=_("The payment for this donation needs to be completed."),
-        automatic=True,
-    )
-
     fail = Transition(
         [
             ContributorStateMachine.new,
-            pending,
             ContributorStateMachine.succeeded
         ],
         ContributorStateMachine.failed,
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
-    )
-
-    refund = Transition(
-        [
-            ContributorStateMachine.new,
-            ContributorStateMachine.succeeded,
-        ],
-        refunded,
-        name=_('Refund'),
-        description=_("Refund this donation."),
-        automatic=True,
-    )
-
-    activity_refund = Transition(
-        [
-            ContributorStateMachine.succeeded,
-            activity_refunded
-        ],
-        activity_refunded,
-        name=_('Activity refund'),
-        description=_(
-            "Refund the donation, because the entire activity will be refunded."),
-        automatic=True,
-    )
-
-    expire = Transition(
-        [
-            ContributorStateMachine.new,
-            pending,
-        ],
-        expired,
-        name=_('Expire'),
-        description=_("Expire the donation account. This happens when a donation is still 'new' after 10 days"),
-        automatic=True
     )
 
 
@@ -751,6 +700,11 @@ class PayoutStateMachine(ModelStateMachine):
                       "Contact support to resolve the issue."),
         automatic=True,
     )
+
+
+@register(GrantPayout)
+class GrantPayoutStateMachine(PayoutStateMachine):
+    pass
 
 
 class BankAccountStateMachine(ModelStateMachine):

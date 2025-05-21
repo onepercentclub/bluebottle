@@ -1,9 +1,9 @@
 from bluebottle.funding.messages.activity_manager import (
     FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
-    FundingRejectedMessage
+    FundingRejectedMessage, GrantApplicationApprovedMessage
 )
 from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
-from bluebottle.funding.tests.factories import FundingFactory
+from bluebottle.funding.tests.factories import FundingFactory, GrantApplicationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 
@@ -60,3 +60,24 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('Unfortunately your crowdfunding campaign "Save the world!" has been rejected.')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')
+
+
+class GrantApplicationNotificationTestCase(NotificationTestCase):
+
+    def setUp(self):
+        self.obj = GrantApplicationFactory.create(
+            title="Save the world!"
+        )
+        self.reviewer = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+    def test_activity_approved_notification(self):
+        self.message_class = GrantApplicationApprovedMessage
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Your grant application has been approved!')
+        self.assertBodyContains('Good news, your grant application')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View grant application')

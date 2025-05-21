@@ -56,7 +56,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward,
+    Reward, GrantPayout,
 )
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
@@ -827,9 +827,29 @@ class GrantFundAdmin(admin.ModelAdmin):
     list_display = ['name', 'organization']
 
 
+@admin.register(GrantPayout)
+class GrantPayoutAdmin(StateMachineAdmin):
+    pass
+
+
+class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
+
+    model = GrantPayout
+    readonly_fields = [
+        'total_amount', 'provider', 'currency',
+        'date_approved', 'date_started', 'date_completed'
+    ]
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = [GrantInline, UpdateInline, MessageAdminInline]
+    inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
 
     base_model = GrantApplication
     list_filter = [

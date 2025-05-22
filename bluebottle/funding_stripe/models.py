@@ -494,6 +494,9 @@ class StripePayoutAccount(PayoutAccount):
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 
+        if self.verified and self.payouts_enabled and self.payments_enabled:
+            self.states.verify()
+
         if self.id and save:
             self.save()
 

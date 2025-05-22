@@ -48,6 +48,7 @@ from bluebottle.funding.models import (
     GrantApplication,
     GrantDonor,
     GrantFund,
+    GrantPayout,
     LegacyPayment,
     MoneyContribution,
     Payment,
@@ -56,7 +57,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward, GrantPayout,
+    Reward,
 )
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
@@ -580,31 +581,60 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class PayoutAccountFundingLinkMixin(object):
+class PayoutAccountActivityLinkMixin(object):
     def funding_links(self, obj):
-        if len(obj.funding_set.all()):
+        if isinstance(obj, PayoutAccount):
+            fundings = Funding.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            fundings = obj.funding_set.all()
+
+        if len(fundings):
             return format_html(", ".join([
                 format_html(
                     u"<a href='{}'>{}</a>",
                     reverse('admin:funding_funding_change', args=(p.id,)),
                     p.title
-                ) for p in obj.funding_set.all()
+                ) for p in fundings
             ]))
         else:
             return _('None')
 
     funding_links.short_description = _('Funding activities')
 
+    def grant_application_links(self, obj):
+        if isinstance(obj, PayoutAccount):
+            grant_applications = GrantApplication.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            grant_applications = obj.grant_application_set.all()
+        if len(grant_applications):
+            return format_html(", ".join([
+                format_html(
+                    u"<a href='{}'>{}</a>",
+                    reverse('admin:funding_grantapplication_change', args=(p.id,)),
+                    p.title
+                ) for p in grant_applications
+            ]))
+        else:
+            return _('None')
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    grant_application_links.short_description = _('Grant applications')
+
+
+class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner', 'partner_organization')
-    readonly_fields = ['status', 'created']
+    readonly_fields = ['status', 'created', 'funding_links', 'grant_application_links']
     fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
 
     def get_basic_fields(self, request, obj):
-        return ['owner', 'public', 'partner_organization']
+        fields = ['owner', 'public', 'partner_organization']
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
 
     def get_status_fields(self, request, obj):
         return ['status', 'created', ]
@@ -638,11 +668,26 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('document', 'funding_links', 'created', 'updated')
-    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
+    readonly_fields = (
+        'document', 'funding_links', 'grant_application_links', 'created', 'updated'
+    )
+    fields = (
+        'connect_account', 'document',
+        'status', 'states', 'created', 'updated'
+    )
+
+    def get_fields(self, request, obj):
+        fields = super().get_fields(request, obj)
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
+
     show_in_index = True
 
     def document(self, obj):
@@ -662,7 +707,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
 
 
 @admin.register(BankAccount)
-class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+class BankAccountAdmin(PayoutAccountActivityLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
     list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'funding_links', 'public')
     list_filter = ('status', PolymorphicChildModelFilter)
@@ -794,13 +839,15 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         return super().get_form(request, obj, **kwargs)
 
 
-class GrantInline(admin.StackedInline):
+class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ["created", "status", "contributor_date", "activity_display"]
+    readonly_fields = ["created", "state_name", "contributor_date", "activity_display"]
+
+    raw_id_fields = ['fund']
 
     def get_fields(self, request, obj=None):
-        fields = ["fund", "amount", "created", "status", "contributor_date"]
+        fields = ["fund", "amount", "created", "state_name", "contributor_date"]
 
         if self.parent_model == GrantFund:
             fields.insert(0, "activity_display")
@@ -829,15 +876,66 @@ class GrantFundAdmin(admin.ModelAdmin):
 
 @admin.register(GrantPayout)
 class GrantPayoutAdmin(StateMachineAdmin):
-    pass
+    readonly_fields = [
+        "total_amount",
+        "provider",
+        "currency",
+        "date_approved",
+        "date_started",
+        "date_completed",
+    ]
+
+    list_filter = [
+        StateMachineFilter,
+    ]
+
+    list_display = ['activity', 'total_amount', 'state_name', 'created']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (
+                _("Manage"),
+                {
+                    "fields": [
+                        "total_amount",
+                        "provider",
+                        "currency",
+                        "date_approved",
+                        "date_started",
+                        "date_completed",
+                        "status",
+                        "states"
+                    ],
+                },
+            ),
+        ]
+
+        if request.user.is_superuser:
+            fieldsets.append(
+                (
+                    _("Super admin"),
+                    {
+                        "fields": [
+                            "force_status",
+                        ],
+                    },
+                )
+            )
+
+        return fieldsets
 
 
 class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     model = GrantPayout
     readonly_fields = [
-        'total_amount', 'provider', 'currency',
-        'date_approved', 'date_started', 'date_completed'
+        "payout_link",
+        "total_amount",
+        "provider",
+        "currency",
+        "date_approved",
+        "date_started",
+        "date_completed",
     ]
     fields = readonly_fields
     extra = 0
@@ -845,6 +943,10 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+    def payout_link(self, obj):
+        url = reverse("admin:funding_grantpayout_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
 
 
 @admin.register(GrantApplication)

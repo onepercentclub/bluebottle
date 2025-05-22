@@ -71,15 +71,12 @@ class PrepareGrantApplicationPayoutsEffect(Effect):
     template = "admin/create_grant_application_payouts.html"
 
     def post_save(self, **kwargs):
-        if isinstance(self.instance, GrantApplication):
-            GrantPayout.generate(self.instance)
-        else:
-            applications = GrantApplication.objects.filter(
-                status="granted",
-                bank_account__connect_account=self.instance
-            )
-            for application in applications:
-                GrantPayout.generate(application)
+        applications = GrantApplication.objects.filter(
+            status="granted",
+            bank_account__connect_account=self.instance
+        )
+        for application in applications:
+            GrantPayout.generate(application)
 
     def __str__(self):
         return "Create payouts for a connected grant application that was granted"

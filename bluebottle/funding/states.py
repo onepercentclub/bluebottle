@@ -326,19 +326,6 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         ],
     )
 
-    generate_payout = Transition(
-        open,
-        open,
-        name=_('Generate payout'),
-        description=_(
-            "The grant application has been approved and the payout has been made."),
-        automatic=False,
-        conditions=[
-            has_no_payouts,
-            kyc_is_valid,
-        ]
-    )
-
     request_changes = Transition(
         [
             ActivityStateMachine.submitted

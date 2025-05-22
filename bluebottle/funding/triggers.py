@@ -40,7 +40,6 @@ from bluebottle.funding.states import (
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine,
     GrantDonorStateMachine, GrantApplicationStateMachine
 )
-from bluebottle.funding_stripe.effects import PrepareGrantApplicationPayoutsEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -531,12 +530,6 @@ class GrantApplicationTriggers(TriggerManager):
                 NotificationEffect(
                     GrantApplicationApprovedMessage
                 )
-            ]
-        ),
-        TransitionTrigger(
-            GrantApplicationStateMachine.generate_payout,
-            effects=[
-                PrepareGrantApplicationPayoutsEffect
             ]
         ),
     ]

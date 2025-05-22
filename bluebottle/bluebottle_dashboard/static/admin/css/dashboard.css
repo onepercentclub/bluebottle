@@ -519,3 +519,12 @@ div.inline.radiolist {
 #participants-group .field-checked .inline-deletelink {
     display: none !important;
 }
+
+.related-lookup.add-object {
+    text-decoration: none;
+    font-weight: bold;
+}
+.related-lookup.add-object:before {
+    font-family: 'jet-icons';
+    content: "";
+}

@@ -21,7 +21,7 @@ from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
     DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer, GrantApplicationSerializer
+    PayoutSerializer, GrantApplicationSerializer, GrantApplicationTransitionSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -227,6 +227,15 @@ class FundingTransitionList(TransitionList):
 
     prefetch_for_includes = {
         'resource': ['funding'],
+    }
+
+
+class GrantApplicationTransitionList(TransitionList):
+    serializer_class = GrantApplicationTransitionSerializer
+    queryset = GrantApplication.objects.all()
+
+    prefetch_for_includes = {
+        'resource': ['grant_application'],
     }
 
 

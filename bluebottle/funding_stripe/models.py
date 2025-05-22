@@ -15,7 +15,7 @@ from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor, Funding, GrantApplication
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
@@ -367,6 +367,14 @@ class StripePayoutAccount(PayoutAccount):
     provider = 'stripe'
 
     @property
+    def crowdfunding_campaigns(self):
+        return Funding.objects.filter(bank_account__connect_account=self).all()
+
+    @property
+    def grant_applications(self):
+        return GrantApplication.objects.filter(bank_account__connect_account=self).all()
+
+    @property
     def account_settings(self):
         statement_descriptor = connection.tenant.name[:22]
         while len(statement_descriptor) < 5:
@@ -485,6 +493,9 @@ class StripePayoutAccount(PayoutAccount):
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
+
+        if self.verified and self.payouts_enabled and self.payments_enabled:
+            self.states.verify()
 
         if self.id and save:
             self.save()

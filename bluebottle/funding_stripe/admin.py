@@ -106,7 +106,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'requirements_list',
         'verification_link',
         'stripe_link',
-        'funding'
+        'grant_application',
+
     ]
 
     search_fields = ["account_id"]
@@ -123,7 +124,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def get_basic_fields(self, request, obj):
         fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'country', 'funding'
+            'business_type', 'country',
         ]
         if request.user.is_superuser:
             fields = fields + ['stripe_link', 'account_id']

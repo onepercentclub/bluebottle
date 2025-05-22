@@ -10,7 +10,7 @@ from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, TabularInline
 from django.db import connection, models
 from django.forms.utils import ErrorList
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -949,6 +949,54 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
         return format_html('<a href="{}">{}</a>', url, obj)
 
 
+@admin.register(GrantDonor)
+class GrantDonorAdmin(StateMachineAdminMixin, admin.ModelAdmin):
+    model = GrantDonor
+    fields = ["activity", "fund", "amount", "status", "states"]
+    raw_id_fields = ["activity"]
+
+    def response_add(self, request, obj):
+        response = super().response_add(request, obj)
+        if request.GET.get("_popup"):
+            content = """
+            <script>
+                window.parent.location.reload();
+                window.close();
+            </script>
+            """
+            return HttpResponse(content)
+        return response
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        if request.GET.get("activity"):
+            try:
+                activity_id = request.GET.get("activity")
+                activity = GrantApplication.objects.get(id=activity_id)
+                initial["activity"] = activity
+                initial["amount"] = activity.target
+            except GrantApplication.DoesNotExist:
+                pass
+        return initial
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not obj and request.GET.get("activity"):
+            # Ensure the activity field is properly initialized
+            form.base_fields["activity"].initial = request.GET.get("activity")
+        return form
+
+    list_display = ["id", "activity", "fund", "amount", "get_state_display"]
+    search_fields = ["activity__title", "fund__name"]
+
+    def get_state_display(self, obj):
+        if hasattr(obj, "status") and hasattr(obj, "get_status_display"):
+            return obj.get_status_display()
+        return obj.status
+
+    get_state_display.short_description = _("Status")
+
+
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
     inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
@@ -963,27 +1011,25 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "status",
     ]
 
-    def get_list_display(self, request):
-        return self.list_display
-
     readonly_fields = ActivityChildAdmin.readonly_fields + [
         "started",
+        "grants",
     ]
 
     search_fields = ["title", "description"]
     raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
 
     status_fields = (
+        "status",
+        "states",
         "initiative",
         "owner",
         "slug",
         "highlight",
         "created",
         "updated",
-        'started',
+        "started",
         "has_deleted_data",
-        "status",
-        "states",
     )
 
     detail_fields = [
@@ -998,17 +1044,79 @@ class GrantApplicationAdmin(ActivityChildAdmin):
         "bank_account",
     ]
 
+    def grants(self, obj):
+        if not obj.pk:
+            return "-"
+
+        dummy_field_name_for_id = "grant_donors_add"
+        link_id = f"lookup_id_{dummy_field_name_for_id}"
+
+        add_url = reverse("admin:funding_grantdonor_add")
+        href = f"{add_url}?activity={obj.pk}&_popup=1"
+
+        grants = obj.grants.all()
+        if grants.count() > 0:
+            return format_html(
+                '<div style="display: inline-block" >'
+                + "<br/><br/>".join(
+                    [
+                        format_html(
+                            '<a href="{}"><b>{}</b><br/>{}</a>',
+                            reverse(
+                                "admin:funding_grantdonor_change", args=(grant.id,)
+                            ),
+                            grant.fund.name,
+                            grant.amount,
+                        )
+                        for grant in grants
+                    ]
+                )
+                + "</div>"
+            )
+
+        return format_html(
+            "<div>"
+            '<input type="hidden" id="id_{}" />'
+            '<a href="{}" id="{}" class="related-lookup add-object button default">'
+            '<i class="fa fa-money" style="margin-right: 5px;"></i>{}'
+            "</a>"
+            "</div>",
+            dummy_field_name_for_id,
+            href,
+            link_id,
+            _("Add grant"),
+        )
+
+    grants.short_description = _("Grants")
+
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
+
+        try:
+            current_status_fields = list(self.get_status_fields(request, obj))
+        except TypeError:
+            current_status_fields = []
+            logger.error(
+                "get_status_fields did not return an iterable in GrantApplicationAdmin"
+            )
+
+        if "grants" not in current_status_fields:
+            current_status_fields.insert(2, "grants")
+
         fieldsets = [
-            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Management"), {"fields": tuple(current_status_fields)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
         ]
+
         if Location.objects.count():
             if settings.enable_office_restrictions:
-                if "office_restriction" not in self.office_fields:
-                    self.office_fields += ("office_restriction",)
-                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+                current_office_fields = list(getattr(self, "office_fields", ()))
+                if "office_restriction" not in current_office_fields:
+                    current_office_fields.append("office_restriction")
+                if current_office_fields:
+                    fieldsets.append(
+                        (_("Office"), {"fields": tuple(current_office_fields)})
+                    )
 
         if request.user.is_superuser:
             fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))

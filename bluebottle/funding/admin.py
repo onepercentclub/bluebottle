@@ -854,6 +854,12 @@ class GrantInline(StateMachineAdminMixin, admin.StackedInline):
 
         return fields
 
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and obj.target:
+            formset.form.base_fields["amount"].initial = obj.target
+        return formset
+
     def activity_display(self, obj):
         if obj.activity:
             url = reverse(

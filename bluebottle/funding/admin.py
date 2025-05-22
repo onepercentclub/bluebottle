@@ -23,8 +23,7 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin,
-)
+    ContributorChildAdmin, )
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import (
     StateMachineAdmin,
@@ -837,6 +836,11 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
             'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
         }
         return super().get_form(request, obj, **kwargs)
+
+
+@admin.register(GrantDonor)
+class GrantDonorAdmin(ContributorChildAdmin):
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('payout',)
 
 
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):

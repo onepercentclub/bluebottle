@@ -19,6 +19,8 @@ from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
+from django_admin_inline_paginator.admin import TabularInlinePaginated
+
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
@@ -47,7 +49,9 @@ from bluebottle.funding.models import (
     FundingPlatformSettings,
     GrantApplication,
     GrantDonor,
+    GrantDeposit,
     GrantFund,
+    LedgerItem,
     LegacyPayment,
     MoneyContribution,
     Payment,
@@ -818,13 +822,43 @@ class GrantInline(admin.StackedInline):
     activity_display.short_description = _("Grant application")
 
 
+class LedgerItemInline(TabularInlinePaginated):
+    model = LedgerItem
+    readonly_fields = ["created", "status", "amount", "type"]
+
+    fields = readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+
+class GrantDonorInline(admin.StackedInline):
+    model = GrantDonor
+    readonly_fields = ["created", "status", "amount"]
+
+    fields = readonly_fields
+    extra = 0
+
+
+class GrantDepositInline(admin.StackedInline):
+    model = GrantDeposit
+    readonly_fields = ["created", "status"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantInline]
+    inlines = [GrantInline, LedgerItemInline, GrantDonorInline, GrantDepositInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
-    list_display = ['name', 'organization']
+    list_display = ['name', 'balance', 'total_debet', 'total_credit', 'organization']
+    readonly_fields = ['balance', 'total_debet', 'total_credit']
 
 
 @admin.register(GrantApplication)

@@ -33,11 +33,12 @@ from bluebottle.funding.messages.contributor import (
 from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
     Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount,
-    MoneyContribution
+    MoneyContribution, GrantDeposit
 )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine
+    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine,
+    LedgerItemStateMachine, GrantDepositStateMachine
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
@@ -499,6 +500,28 @@ class BasePaymentTriggers(TriggerManager):
                         donation_not_refunded
                     ]
                 ),
+            ]
+        ),
+    ]
+
+
+def has_reference(effect):
+    return bool(effect.instance.reference)
+
+
+@register(GrantDeposit)
+class GrantDepositTriggers(TriggerManager):
+    triggers = [
+        ModelChangedTrigger(
+            ['reference'],
+            effects=[
+                TransitionEffect(GrantDepositStateMachine.complete, conditions=[has_reference])
+            ]
+        ),
+        TransitionTrigger(
+            GrantDepositStateMachine.complete,
+            effects=[
+                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
             ]
         ),
     ]

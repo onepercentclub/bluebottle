@@ -22,7 +22,7 @@ class StatisticList(JsonApiViewMixin, ListAPIView):
         queryset = super().get_queryset(*args, **kwargs)
         filter = self.request.GET.get('filter[type]')
 
-        if not filter == 'all':
+        if not filter or filter != 'all':
             queryset = queryset.instance_of(DatabaseStatistic, ImpactStatistic)
 
         return queryset

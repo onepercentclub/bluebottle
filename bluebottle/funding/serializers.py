@@ -40,7 +40,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward, GrantApplication, GrantDonor, GrantFund,
+    Reward, GrantApplication, GrantDonor, GrantFund, GrantPayout,
 )
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -869,7 +869,7 @@ class GrantPayoutSerializer(ModelSerializer):
     currency = serializers.CharField(read_only=True)
     status = serializers.CharField(write_only=True)
     method = serializers.CharField(source='provider', read_only=True)
-    # donations = ResourceRelatedField(source='grants', read_only=True, many=True)
+    donations = ResourceRelatedField(source='grants', read_only=True, many=True)
 
     class Meta(object):
         fields = (
@@ -878,22 +878,22 @@ class GrantPayoutSerializer(ModelSerializer):
             'activity',
             'method',
             'currency',
-            # 'donations'
+            'donations'
         )
-        model = Payout
+        model = GrantPayout
 
     class JSONAPIMeta(object):
-        resource_name = 'funding/payouts'
+        resource_name = 'funding/grant-payouts'
         included_resources = [
             'activity',
-            # 'donations',
+            'donations',
             'activity.bank_account'
         ]
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.PayoutGrantApplicationSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
-        # 'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer'
+        'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer'
     }
 
 

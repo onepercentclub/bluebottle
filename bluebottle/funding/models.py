@@ -484,13 +484,8 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        from .states import PayoutStateMachine
-        for payout in cls.objects.filter(activity=activity):
-            if payout.status == PayoutStateMachine.new.value:
-                payout.delete()
-            elif payout.donations.count() == 0:
-                raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
+
+        ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -515,6 +510,61 @@ class Payout(TriggerMixin, models.Model):
         if self.currency:
             return Money(self.donations.aggregate(total=Sum('payout_amount'))['total'] or 0, self.currency)
         return self.donations.aggregate(total=Sum('amount'))['total']
+
+    class Meta(object):
+        verbose_name = _('payout')
+        verbose_name_plural = _('payouts')
+
+    def __str__(self):
+        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
+
+
+class GrantPayout(TriggerMixin, models.Model):
+    activity = models.ForeignKey(
+        'funding.GrantApplication',
+        verbose_name=_("Grant application"),
+        related_name="payouts",
+        on_delete=models.CASCADE
+    )
+    provider = models.CharField(max_length=100)
+    currency = models.CharField(max_length=5)
+
+    status = models.CharField(max_length=40)
+
+    date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
+    date_started = models.DateTimeField(_('started'), null=True, blank=True)
+    date_completed = models.DateTimeField(_('completed'), null=True, blank=True)
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def generate(cls, activity):
+        from .states import GrantPayoutStateMachine
+        for payout in cls.objects.filter(activity=activity):
+            if payout.status == GrantPayoutStateMachine.new.value:
+                payout.delete()
+            elif payout.grants.count() == 0:
+                raise AssertionError('Payout without donations already started!')
+        ready_grants = activity.grants.filter(status='new', grantdonor__payout__isnull=True)
+        groups = set([
+            don.amount_currency for don in
+            ready_grants
+        ])
+        for currency in groups:
+            payout = cls.objects.create(
+                activity=activity,
+                currency=currency
+            )
+            for grant in ready_grants:
+                grant.payout = payout
+                grant.save()
+
+    @property
+    def total_amount(self):
+        if self.currency:
+            return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
+        return self.grants.aggregate(total=Sum('amount'))['total']
 
     class Meta(object):
         verbose_name = _('payout')
@@ -692,6 +742,12 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
             for funding in account.funding_set.all():
                 return funding
 
+    @property
+    def grant_application(self):
+        for account in self.external_accounts.all():
+            for grant_application in account.grant_application_set.all():
+                return grant_application
+
     def __str__(self):
         return "Payout account #{}".format(self.id)
 
@@ -819,6 +875,7 @@ class FundingPlatformSettings(BasePlatformSettings):
         settings = get_stripe_settings()
         if settings:
             return settings['publishable_key']
+        return ""
 
     class Meta(object):
         verbose_name_plural = _('funding settings')
@@ -842,7 +899,6 @@ class GrantApplication(Activity):
         null=True,
         blank=True,
     )
-
     needs_review = True
 
     validators = [
@@ -867,6 +923,20 @@ class GrantApplication(Activity):
         for grant in grants:
             amount += grant.amount.amount
         return Money(amount, self.target.currency)
+
+    @property
+    def payout_account(self):
+        if self.bank_account:
+            return self.bank_account.connect_account
+        else:
+            return self.owner.funding_payout_account.first()
+
+    @property
+    def grants(self):
+        if self.pk:
+            return self.contributors.instance_of(GrantDonor)
+        else:
+            return GrantDonor.objects.none()
 
     class JSONAPIMeta(object):
         resource_name = 'activities/grant-applications'
@@ -985,12 +1055,21 @@ class GrantDonor(Contributor):
     fund = models.ForeignKey(
         GrantFund,
         null=True, blank=True,
-        related_name="payments",
+        related_name="grants",
         on_delete=models.CASCADE
     )
 
     ledger_items = GenericRelation(
-        LedgerItem, object_id_field="object_id", content_type_field='object_type'
+        LedgerItem, object_id_field="object_id", content_type_field='object_type',
+        related_name="grants",
+        on_delete=models.SET_NULL
+    )
+
+    payout = models.ForeignKey(
+        GrantPayout,
+        null=True, blank=True,
+        on_delete=SET_NULL,
+        related_name='grants'
     )
 
     class Meta:

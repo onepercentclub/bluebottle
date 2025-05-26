@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from django.utils.translation import gettext_lazy as _, pgettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -107,3 +108,24 @@ class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
 class PublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/activity_manager/public_payout_account_verified'
+
+
+class GrantApplicationManagerMessage(TransitionMessage):
+    context = {
+        "title": "title",
+    }
+
+    action_title = pgettext("email", "View application")
+
+    @property
+    def action_link(self):
+        return self.obj.get_absolute_url()
+
+    def get_recipients(self):
+        """the activity organizer"""
+        return [self.obj.owner]
+
+
+class GrantApplicationApprovedMessage(GrantApplicationManagerMessage):
+    subject = _("Your grant application has been approved!")
+    template = "messages/activity_manager/grant_application_approved"

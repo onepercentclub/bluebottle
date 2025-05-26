@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
+from bluebottle.utils.fields import MoneyField
 
 from bluebottle.utils.models import BasePlatformSettings
 
@@ -14,15 +15,44 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
         society = ChoiceItem('society', label=_('Society'))
 
     user_base = models.PositiveIntegerField(
-        _("User base"),
-        help_text=_('Number of employees or number of users that could access the platform.'),
+        _("Potential reach"),
+        help_text=_('Total number of people who could potentially visit the platform (e.g. employees, citizens).'),
         null=True,
         blank=True
     )
+
     engagement_target = models.PositiveIntegerField(
-        _("Engagement"),
+        _("Contributor goal (people)"),
         help_text=_(
-            'Target for the number of people contributing to an activity or starting an activity per year.'
+            'How many unique people do you want to engage this year through '
+            'contributions like volunteering, donations, or good deeds?'
+        ),
+        null=True,
+        blank=True
+    )
+
+    acts_of_impact_target = models.PositiveIntegerField(
+        _("Contribution goal (actions)"),
+        help_text=_(
+            'How many total contributions do you aim to reach this year, regardless of how many people made them?'
+        ),
+        null=True,
+        blank=True
+    )
+
+    hours_spent_target = models.PositiveIntegerField(
+        _("Hours goal"),
+        help_text=_(
+            'How many total hours do you aim to spend on contributions this year.'
+        ),
+        null=True,
+        blank=True
+    )
+
+    amount_raised_target = MoneyField(
+        _("Donation goal"),
+        help_text=_(
+            'Total value of donations you aim to raise this year.'
         ),
         null=True,
         blank=True
@@ -46,5 +76,5 @@ class AnalyticsPlatformSettings(BasePlatformSettings):
     )
 
     class Meta(object):
-        verbose_name_plural = _('reporting platform settings')
-        verbose_name = _('reporting platform settings')
+        verbose_name_plural = _('reporting settings')
+        verbose_name = _('reporting settings')

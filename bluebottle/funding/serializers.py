@@ -778,6 +778,19 @@ class PayoutDonationSerializer(ModelSerializer):
         model = Donor
 
 
+class PayoutGrantSerializer(ModelSerializer):
+    # For Payout service
+    amount = MoneySerializer()
+
+    class Meta(object):
+        fields = (
+            'id',
+            'amount',
+            'status',
+        )
+        model = GrantDonor
+
+
 class PayoutFundingSerializer(BaseActivityListSerializer):
 
     class Meta(BaseActivityListSerializer.Meta):
@@ -788,6 +801,25 @@ class PayoutFundingSerializer(BaseActivityListSerializer):
 
     class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
         resource_name = 'activities/fundings'
+        included_resources = [
+            'bank_account'
+        ]
+
+    included_serializers = {
+        'bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer'
+    }
+
+
+class PayoutGrantApplicationSerializer(BaseActivityListSerializer):
+
+    class Meta(BaseActivityListSerializer.Meta):
+        model = GrantApplication
+        fields = (
+            'title', 'bank_account',
+        )
+
+    class JSONAPIMeta(BaseActivityListSerializer.JSONAPIMeta):
+        resource_name = 'activities/grant-applications'
         included_resources = [
             'bank_account'
         ]
@@ -828,6 +860,40 @@ class PayoutSerializer(ModelSerializer):
         'activity': 'bluebottle.funding.serializers.PayoutFundingSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
         'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer'
+    }
+
+
+class GrantPayoutSerializer(ModelSerializer):
+    # For Payout service
+    activity = ResourceRelatedField(read_only=True)
+    currency = serializers.CharField(read_only=True)
+    status = serializers.CharField(write_only=True)
+    method = serializers.CharField(source='provider', read_only=True)
+    # donations = ResourceRelatedField(source='grants', read_only=True, many=True)
+
+    class Meta(object):
+        fields = (
+            'id',
+            'status',
+            'activity',
+            'method',
+            'currency',
+            # 'donations'
+        )
+        model = Payout
+
+    class JSONAPIMeta(object):
+        resource_name = 'funding/payouts'
+        included_resources = [
+            'activity',
+            # 'donations',
+            'activity.bank_account'
+        ]
+
+    included_serializers = {
+        'activity': 'bluebottle.funding.serializers.PayoutGrantApplicationSerializer',
+        'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
+        # 'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer'
     }
 
 

@@ -34,13 +34,15 @@ from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
     Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount,
     MoneyContribution, GrantDeposit,
-    GrantDonor, GrantApplication
+    GrantDonor, GrantApplication,
+    GrantPayout
 )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine,
     LedgerItemStateMachine, GrantDepositStateMachine,
-    GrantDonorStateMachine, GrantApplicationStateMachine
+    GrantDonorStateMachine, GrantApplicationStateMachine,
+    GrantPayoutStateMachine
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
@@ -529,6 +531,7 @@ class GrantDepositTriggers(TriggerManager):
         ),
     ]
 
+
 @register(GrantDonor)
 class GrantDonorTriggers(TriggerManager):
     triggers = [
@@ -554,6 +557,47 @@ class GrantApplicationTriggers(TriggerManager):
                 NotificationEffect(
                     GrantApplicationApprovedMessage
                 )
+            ]
+        ),
+    ]
+
+
+@register(GrantPayout)
+class GrantPayoutTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            GrantPayoutStateMachine.approve,
+            effects=[
+                SubmitPayoutEffect,
+                SetDateEffect('date_approved')
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantPayoutStateMachine.start,
+            effects=[
+                SetDateEffect('date_started')
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantPayoutStateMachine.reset,
+            effects=[
+                ClearPayoutDatesEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantPayoutStateMachine.schedule,
+            effects=[
+                ClearPayoutDatesEffect
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantPayoutStateMachine.succeed,
+            effects=[
+                SetDateEffect('date_completed')
             ]
         ),
     ]

@@ -14,14 +14,14 @@ from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout, GrantApplication
+    Payout, GrantApplication, GrantPayout
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
     DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer, GrantApplicationSerializer, GrantApplicationTransitionSerializer
+    PayoutSerializer, GrantApplicationSerializer, GrantApplicationTransitionSerializer, GrantPayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -219,6 +219,11 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
             serializer.instance.states.fail()
         serializer.instance.save()
         return HttpResponse(200)
+
+
+class GrantPayoutDetails(PayoutDetails):
+    queryset = GrantPayout.objects.all()
+    serializer_class = GrantPayoutSerializer
 
 
 class FundingTransitionList(TransitionList):

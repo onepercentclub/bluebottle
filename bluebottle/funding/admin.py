@@ -15,6 +15,7 @@ from django.template import loader
 from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
@@ -846,23 +847,28 @@ class GrantDonorAdmin(ContributorChildAdmin):
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ["created", "state_name", "contributor_date", "activity_display"]
-
+    readonly_fields = ["created", "state_name", "contributor_date"]
     raw_id_fields = ['fund']
-
-    def get_fields(self, request, obj=None):
-        fields = ["fund", "amount", "created", "state_name", "contributor_date"]
-
-        if self.parent_model == GrantFund:
-            fields.insert(0, "activity_display")
-
-        return fields
+    fields = ['amount', 'fund'] + readonly_fields
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
-        if obj and obj.target:
+        if obj and isinstance(obj, GrantApplication) and obj.target:
             formset.form.base_fields["amount"].initial = obj.target
         return formset
+
+
+class GrantTabularInline(StateMachineAdminMixin, TabularInlinePaginated):
+    model = GrantDonor
+    extra = 0
+    readonly_fields = ["activity_display", "state_name", "contributor_date", "amount"]
+    fields = readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj):
+        return False
 
     def activity_display(self, obj):
         if obj.activity:
@@ -874,10 +880,12 @@ class GrantInline(StateMachineAdminMixin, admin.StackedInline):
 
     activity_display.short_description = _("Grant application")
 
+    can_delete = False
+
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantInline]
+    inlines = [GrantTabularInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
@@ -888,7 +896,6 @@ class GrantFundAdmin(admin.ModelAdmin):
 class GrantPayoutAdmin(StateMachineAdmin):
     readonly_fields = [
         "total_amount",
-        "provider",
         "currency",
         "date_approved",
         "date_started",
@@ -908,7 +915,6 @@ class GrantPayoutAdmin(StateMachineAdmin):
                 {
                     "fields": [
                         "total_amount",
-                        "provider",
                         "currency",
                         "date_approved",
                         "date_started",

@@ -3,8 +3,10 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution, \
-    GrantApplication, GrantDonor, GrantPayout
+from bluebottle.funding.models import (
+    Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
+    GrantApplication, GrantDonor, GrantDeposit, LedgerItem, GrantPayout
+)
 
 
 @register(Funding)
@@ -290,7 +292,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     def has_contributors(self):
         """has an allocation"""
-        return self.instance.contributors.count()
+        return self.instance.pk and self.instance.contributors.count()
 
     submit = Transition(
         [
@@ -862,3 +864,74 @@ class PlainPayoutAccountStateMachine(PayoutAccountStateMachine):
 @register(MoneyContribution)
 class DonationStateMachine(ContributionStateMachine):
     pass
+
+
+@register(GrantDeposit)
+class GrantDepositStateMachine(ModelStateMachine):
+    pending = State(
+        _('pending'),
+        'pending',
+        _('The deposit is pending')
+    )
+
+    finished = State(
+        _('finished'),
+        'finished',
+        _('The deposit is finished')
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        pending
+    )
+
+    complete = Transition(
+        pending,
+        finished,
+        description=_("Complete the deposit"),
+        automatic=True,
+        name=_("complete"),
+    )
+
+
+@register(LedgerItem)
+class LedgerItemStateMachine(ModelStateMachine):
+    pending = State(
+        _('Pending'),
+        'pending',
+        _('The ledger item is waiting for confirmation')
+    )
+
+    final = State(
+        _('Final'),
+        'final',
+        _('The ledger item is finalised')
+    )
+
+    removed = State(
+        _('removed'),
+        'removed',
+        _('The ledger item is removed from the ledget')
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        pending,
+        automatic=True
+    )
+
+    finalise = Transition(
+        [pending],
+        final,
+        description=_("Finalise the ledger item."),
+        automatic=True,
+        name=_("Finalise"),
+    )
+
+    remove = Transition(
+        [pending],
+        removed,
+        description=_("Remove the ledger item."),
+        automatic=True,
+        name=_("Remove"),
+    )

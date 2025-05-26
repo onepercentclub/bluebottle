@@ -3,6 +3,7 @@ from rest_framework.throttling import UserRateThrottle
 
 
 from bluebottle.files.views import ImageContentView
+from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.updates.permissions import IsAuthorPermission, ActivityOwnerUpdatePermission, \
     UpdateRelatedActivityPermission, IsStaffMember
@@ -76,8 +77,10 @@ class ActivityUpdateList(JsonApiViewMixin, ListAPIView):
 
 class UpdateImageContent(ImageContentView):
     allowed_sizes = {
-        'preview': '292x164',
+        'small': '150x150',
+        'medium': '800x450',
         'large': '1600x900',
+        'full': ORIGINAL_SIZE,
     }
 
     queryset = UpdateImage.objects

@@ -306,6 +306,18 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    ParticipantStateMachine.cancel
+                ),
+
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+            ],
+        ),
+
+        TransitionTrigger(
             DateStateMachine.auto_approve,
             effects=[
                 TransitionEffect(

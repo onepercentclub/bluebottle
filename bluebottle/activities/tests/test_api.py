@@ -542,8 +542,8 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
                 pk=5, status='open', start=today + timedelta(days=9), end=today + timedelta(days=11)
             ),
 
-            DeadlineActivityFactory(pk=6, status='open', start=now() - timedelta(days=2), deadline=None),
             DeadlineActivityFactory(pk=7, status='open', start=now() + timedelta(days=2), deadline=None),
+            DeadlineActivityFactory(pk=6, status='open', start=now() - timedelta(days=2), deadline=None),
             DeadlineActivityFactory(pk=8, status='open', start=None, deadline=None),
         ]
 

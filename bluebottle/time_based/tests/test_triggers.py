@@ -481,7 +481,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.title = "Session 3"
         self.slot.states.cancel(save=True)
         self.assertEqual(self.slot.status, "cancelled")
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.assertEqual(
             mail.outbox[0].subject,

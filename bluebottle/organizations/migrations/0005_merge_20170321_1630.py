@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('organizations', '0004_organizationcontact'),
+        ('organizations', '0003_auto_20170303_1057'),
     ]
 
     operations = [

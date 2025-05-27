@@ -236,6 +236,7 @@ class ActivityDocument(Document):
         )
 
     def prepare_current_status(self, instance):
+        print(instance.states.current_state.value)
         if instance.states.current_state:
             return {
                 'value': instance.states.current_state.value,
@@ -302,6 +303,7 @@ class ActivityDocument(Document):
             "funding": "funding",
             "collectactivity": "collect",
             "deed": "deed",
+            "grantapplication": "funding",
         }
         return mapping[str(instance.__class__.__name__.lower())]
 

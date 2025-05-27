@@ -917,12 +917,22 @@ class GrantDepositInline(admin.StackedInline):
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantTabularInline, LedgerItemInline, GrantDonorInline, GrantDepositInline]
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
-    list_display = ['name', 'balance', 'total_debet', 'total_credit', 'organization']
+    list_display = [
+        'name', 'balance', 'total_debet', 'total_credit', 'organization', 'approved_grants'
+    ]
     readonly_fields = ['balance', 'total_debet', 'total_credit']
+
+    def has_delete_permission(self, request, obj=None):
+        return obj and obj.total_debet == 0
+
+    def approved_grants(self, obj):
+        return obj.grants.count()
+
+    approved_grants.short_description = _('Approved grants')
 
 
 @admin.register(GrantPayout)

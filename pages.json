@@ -1,0 +1,1516 @@
+[
+  {
+    "model": "HomePage",
+    "app": "cms",
+    "properties": {},
+    "data": [
+      {
+        "model": "SlidesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "title": null,
+          "sub_title": null
+        },
+        "items": []
+      },
+      {
+        "model": "SlidesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 0,
+          "title": null,
+          "sub_title": null
+        },
+        "items": []
+      },
+      {
+        "model": "LinksContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 1,
+          "title": "Zoek naar activiteiten bij jou in de buurt",
+          "sub_title": null
+        },
+        "items": []
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "title": "Choose how you want to make an Impact today",
+          "sub_title": null,
+          "action_text": null,
+          "action_link": null
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_step_1.png",
+              "header": "Act as a volunteer",
+              "text": "Act as a volunteer by joining our Volunteer Program",
+              "link": "/activities/list?sort=date",
+              "link_text": "Find an activity",
+              "external": false,
+              "sequence": 1
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_step_2.png",
+              "header": "Start an activity",
+              "text": "Learn how you can start your own act of impact",
+              "link": "/pages/start",
+              "link_text": "Start an activity",
+              "external": false,
+              "sequence": 2
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_step_3.png",
+              "header": "Become an ambassador",
+              "text": "Lean how to become a promotor of our program",
+              "link": "/pages/ambassadors/",
+              "link_text": "Become an ambassador",
+              "external": false,
+              "sequence": 3
+            }
+          }
+        ]
+      },
+      {
+        "model": "LinksContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 2,
+          "title": null,
+          "sub_title": null
+        },
+        "items": []
+      },
+      {
+        "model": "ActivitiesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "title": "Your personalised activities",
+          "sub_title": "These activities match with your availability, location & interests",
+          "action_text": "Find more activities",
+          "action_link": "/activities/list",
+          "activity_type": "highlighted"
+        },
+        "items": []
+      },
+      {
+        "model": "ActivitiesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 3,
+          "title": "Activiteiten in de spotlight",
+          "sub_title": null,
+          "action_text": "Bekijk alle activiteiten",
+          "action_link": "/initiatives/activities/list",
+          "activity_type": "highlighted"
+        },
+        "items": []
+      },
+      {
+        "model": "HomepageStatisticsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 4,
+          "title": "Onze impact dit jaar",
+          "sub_title": "Dit is was we dit jaar al hebben berijkt",
+          "year": 2022,
+          "stat_type": "all"
+        },
+        "items": []
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "title": "Choose your area of impact",
+          "sub_title": "Pick an impact theme that you care about",
+          "action_text": null,
+          "action_link": null
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_icon_01_QQLjrLw.png",
+              "header": "Sustainability",
+              "text": "These activities include tree planting, recycling drives, clean-up campaigns, and educational workshops on environmental stewardship.",
+              "link": "/segments/11/Sustainability/activities/list",
+              "link_text": "See activities",
+              "external": false,
+              "sequence": 10
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_icon_02_JAOrFUp.png",
+              "header": "Social Impact",
+              "text": "Activities focused on social impact encompass tutoring and mentoring youth, supporting food banks, and assisting in disaster relief efforts.",
+              "link": "/segments/12/Social-Impact/activities/list",
+              "link_text": "See activities",
+              "external": false,
+              "sequence": 11
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_icon_03_DAhcUwY.png",
+              "header": "Diversity & Inclusion",
+              "text": "Think of mentoring programs, workshops on cultural competence, support for LGBTQ+ initiatives, and community events celebrating diverse cultures.",
+              "link": "/segments/13/Diversity-Inclusion/activities/list",
+              "link_text": "See activities",
+              "external": false,
+              "sequence": 12
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_icon_04_VLYqj5b.png",
+              "header": "Health & Wellbeing",
+              "text": "These activities include organizing health and wellbeing events, providing mental health first aid training, and promoting healthy lifestyle campaigns.",
+              "link": "/segments/14/Health-Wellbeing/activities/list",
+              "link_text": "See activities",
+              "external": false,
+              "sequence": 13
+            }
+          }
+        ]
+      },
+      {
+        "model": "HomepageStatisticsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 5,
+          "title": "Sinds we begonnen zoijn",
+          "sub_title": "Samen maken we het verschil. Dit is wat we tot nu toe hebben bereikt",
+          "year": null,
+          "stat_type": "all"
+        },
+        "items": []
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "title": "What is next?",
+          "sub_title": "These are upcoming events",
+          "action_text": null,
+          "action_link": null
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_calendar_01.png",
+              "header": "World CleanUp Day",
+              "text": "September 20th",
+              "link": "/initiatives/details/384/123",
+              "link_text": "World CleanUp Day",
+              "external": false,
+              "sequence": 14
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/6a2e1c3a06e0d059eeeb16e53d37a0b6.png",
+              "header": "Footprint Challenge",
+              "text": "August 17th",
+              "link": "/initiatives/details/431/Sustainable-Footprint-Challenge",
+              "link_text": "Footprint Challenge",
+              "external": false,
+              "sequence": 15
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_calendar_03.png",
+              "header": "Acts of Kindness Day",
+              "text": "February 17th",
+              "link": "/initiatives/details/432/Random-Acts-of-Kindness-Day",
+              "link_text": "Acts of Kindness Day",
+              "external": false,
+              "sequence": 16
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_calendar_04.png",
+              "header": "Pride Month",
+              "text": "June",
+              "link": "/initiatives/details/403/youareincluded-pride-month-2023",
+              "link_text": "Pride Month",
+              "external": false,
+              "sequence": 17
+            }
+          }
+        ]
+      },
+      {
+        "model": "CategoriesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 6,
+          "title": "Our Impact Areas",
+          "sub_title": "Act together with like-minded colleagues on the issue you care about"
+        },
+        "items": []
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 6,
+          "title": "Maak impact in drie stappen...",
+          "sub_title": "Start je eigen initiatief en voeg activiteiten toe.",
+          "action_text": "Start een initiatief",
+          "action_link": "/pages/start"
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/launch.png",
+              "header": "Start een initiatief",
+              "text": "Wat is je verhaal?  Waar wil je impact maken?",
+              "link": "/pages/start",
+              "link_text": null,
+              "external": false,
+              "sequence": 4
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/share.png",
+              "header": "Voeg activiteiten toe",
+              "text": "Hoe kunnen mensen bijdragen? Tijd, geld, kennis?",
+              "link": "/pages/activities",
+              "link_text": null,
+              "external": false,
+              "sequence": 5
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/people.png",
+              "header": "Nodig mensen uit",
+              "text": "Deel de link naar jouw activiteiten.",
+              "link": "/pages/share",
+              "link_text": null,
+              "external": false,
+              "sequence": 6
+            }
+          }
+        ]
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "nl",
+          "sort_order": 7,
+          "title": "Ervaringen met NL Cares",
+          "sub_title": null,
+          "action_text": "Deel ook jouw ervaring",
+          "action_link": "mailto:liza@nlcares.nl"
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/6._NLCares_Norah.png",
+              "header": "Norah - Vrijwilliger",
+              "text": "\u201cE\u00e9n \u00e1 twee keer per week doe ik vrijwilligerswerk via NL Cares. Dit doe ik met veel plezier, het welzijn en zorgen voor mensen vanuit cultuursensitief oogpunt maakt mij gelukkig. Uiteindelijk zou ik graag (betaald) werk in het maatschappelijke \u2018zorg milieu\u2019 gaan doen.",
+              "link": "/pages/ervaringen-met-nl-cares",
+              "link_text": "Lees verder",
+              "external": false,
+              "sequence": 7
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/foundation-682x1020_1_1.png",
+              "header": "Marjolein - Bedrijf",
+              "text": "NL Cares is heel professioneel, maar niet enkel zakelijk. Het zijn mensen met het hart op de goede plek. Ze kunnen goed organiseren, zijn service-gericht en zorgen altijd dat alles goed verloopt. De populairste teamactiviteiten zijn de buitenklussen of uitjes met ouderen of mensen uit AZC.",
+              "link": "/pages/ervaringen-met-nl-cares",
+              "link_text": "Lees verder",
+              "external": false,
+              "sequence": 8
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/5._NLCares_Angela_QZYJEaa.png",
+              "header": "Angela - Maatschappelijke Instelling",
+              "text": "Het contact met NL Cares verloopt altijd heel gemakkelijk en rechtstreeks. NL Cares medewerkers denken mee en helpen met het organiseren van activiteiten, ze komen zelfs nog met de pannen aanzetten.",
+              "link": "/pages/ervaringen-met-nl-cares",
+              "link_text": "Lees verder",
+              "external": false,
+              "sequence": 9
+            }
+          }
+        ]
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 7,
+          "title": "Success Stories",
+          "sub_title": "Act together with like-minded colleagues on the issue you care about",
+          "action_text": null,
+          "action_link": null
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_success_03.png",
+              "header": "Green office movement",
+              "text": "Emma, passionate about environmental conservation, initiated the 'Green Office Movement'",
+              "link": "/initiatives/details/433/GOM/",
+              "link_text": "Read Emma's story",
+              "external": false,
+              "sequence": 18
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_success_01.png",
+              "header": "Coding for Good",
+              "text": "Raj launched the 'Coding for Good' challenge to team up to develop apps for non-profits.",
+              "link": "/initiatives/details/22/citizens-skateistan-portal/activities",
+              "link_text": "Read Raj's story",
+              "external": false,
+              "sequence": 19
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp_demo_success_02.png",
+              "header": "Sponsor run",
+              "text": "Mary organised a run to raise funds for children's education in underprivileged areas.",
+              "link": "/activities/details/funding/22/new-york-marathon-for-education-guatemala",
+              "link_text": "Read Mary's story",
+              "external": false,
+              "sequence": 20
+            }
+          }
+        ]
+      },
+      {
+        "model": "CategoriesContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 8,
+          "title": "Our Employee Resource Groups",
+          "sub_title": "Elevate your career and connect with like-minded peers by joining one of our Employee Resource Groups\u2014you'll find support, growth, and exciting opportunities waiting for you!"
+        },
+        "items": []
+      },
+      {
+        "model": "ProjectsMapContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 9,
+          "title": "Impact Map",
+          "sub_title": "Find initiatives around the world with a simple click on the map.",
+          "map_type": "all"
+        },
+        "items": []
+      },
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 10,
+          "title": "Sustainable Development Goals",
+          "sub_title": "See the activities we did for each Sustainable Development Goal",
+          "action_text": null,
+          "action_link": null
+        },
+        "items": [
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp-Demo-Home-SDG-5.png",
+              "header": "SDG 5",
+              "text": "Gender Equality Activities",
+              "link": "/segments/15/SGD-5/activities/list?",
+              "link_text": "Gender Equality",
+              "external": false,
+              "sequence": 21
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp-Demo-Home-SDG-12.png",
+              "header": "SDG 12",
+              "text": "Responsible Consumption Activities",
+              "link": "/segments/16/SGD-12/activities/list?",
+              "link_text": "Responsible Consumption",
+              "external": false,
+              "sequence": 22
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp-Demo-Home-SDG-13.png",
+              "header": "SDG 13",
+              "text": "Climate Action Activities",
+              "link": "/segments/17/SGD-13/activities/list?",
+              "link_text": "Climate Action",
+              "external": false,
+              "sequence": 23
+            }
+          },
+          {
+            "model": "Step",
+            "app": "cms",
+            "data": {
+              "image": "step_images/GoodUp-Demo-Home-SDG-17.png",
+              "header": "SDG 17",
+              "text": "Partnerships for the Goals Activities",
+              "link": "/segments/18/SGD-17/activities/list?",
+              "link_text": "Partnerships for the Goals",
+              "external": false,
+              "sequence": 24
+            }
+          }
+        ]
+      },
+      {
+        "model": "HomepageStatisticsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 11,
+          "title": "Our total impact this year",
+          "sub_title": "See our progress towards a more positive world",
+          "year": null,
+          "stat_type": "all"
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Ambassadors",
+      "slug": "ambassadors",
+      "status": "published",
+      "language": "en",
+      "full_page": true,
+      "publication_date": "2024-05-30 13:04"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<h1><span>Ambassadors</span></h1>\r\n<p><span><span>Our Impact Ambassadors are passionate individuals within our company who lead by example, driving forward our mission to make a positive impact.</span></span></p>\r\n<p><span><span>These ambassadors are the catalysts for change, inspiring and guiding others in their journey to contribute meaningfully to our communities and the environment.</span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"#\"><span class=\"text-button-color\">Talk to an ambassador</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-01.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<h2><span>Talk to an Ambassador</span></h2>\r\n<p><span><span>Our Ambassadors are here to guide you, offering insights. Whether you're looking to volunteer, spearhead a new project, or simply learn more about our efforts, these Ambassadors are your local point of contact.</span></span></p>\r\n<p><span><span>Connect with them today and take the first step towards making a significant impact in your community and beyond.</span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"#\"><span class=\"text-button-color\">Contact an ambassador</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-02.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text": "<h2 style=\"text-align: center;\"><span>What is the role of Make a Difference Ambassadors?</span></h2>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "text": "<ul>\r\n<li><span><strong>Planning:</strong> Ambassadors are key in crafting and implementing initiatives that resonate with the core mission and ethical standards.</span></li>\r\n<li><span><strong>Communication:</strong> Utilising the platform, emails, and internal communications, they drive awareness and participation.</span></li>\r\n<li><span><strong>Collaboration:</strong> Ambassadors serve as vital connectors, orchestrating efforts between various departments and initiatives.</span></li>\r\n</ul>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-03.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "text": "<ul>\r\n<li><span><strong>Partnership Coordination:</strong> Ambassadors collaborate with NGOs and charitable organisations to arrange resources, oversee contributions.</span></li>\r\n<li><span><strong>Volunteer Recruitment:</strong> Ambassadors play a crucial role in identifying and nurturing potential participants, building a community of committed individuals.</span></li>\r\n<li><span><strong>Impact Reporting:</strong> By compiling detailed reports and conducting discussions, ambassadors ensure that local efforts are in harmony with our overarching goals.</span></li>\r\n</ul>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-04_nunk6JD.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 6,
+          "text": "<h2><span>How to become an Ambassador</span></h2>\r\n<p><span><span>Are you ready to make difference?</span></span></p>\r\n<p><span><span>Joining as an Impact Ambassador offers the opportunity working in partnership with NGOs and charitable organisations to design, implement, and expand initiatives that drive meaningful impact in our organisations and the society.</span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"#\"><span class=\"text-button-color\">Get in contact for more info</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-05_Zq5p63M.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 7,
+          "text": "<h2><span>Frequently Asked Questions</span></h2>\r\n<ul>\r\n<li><a href=\"#\"><span><span>What is the role of a Ambassador?</span></span></a></li>\r\n<li><a href=\"#\"><span><span>How do I found out who is a local Ambassador?</span></span></a></li>\r\n<li><a href=\"#\"><span><span>How do I become an Ambassador?</span></span></a></li>\r\n<li><a href=\"#\"><span><span>How much time is involved in becoming an Ambassador?</span></span></a></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"#\"><span class=\"text-button-color\">Go to Frequently Asked Questions</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Ambassadors-06_903MBRJ.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImagePlainTextItem",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 8,
+          "title": null,
+          "sub_title": null,
+          "text": "{\"delta\":\"{\\\"ops\\\":[{\\\"insert\\\":\\\"dfg\\\\n\\\"}]}\",\"html\":\"<p>dfg</p>\"}",
+          "image": "",
+          "video_url": null,
+          "action_text": null,
+          "action_link": null,
+          "align": "right",
+          "ratio": "0.5"
+        },
+        "items": []
+      },
+      {
+        "model": "ImagePlainTextItem",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 9,
+          "title": null,
+          "sub_title": null,
+          "text": "{\"delta\":\"{\\\"ops\\\":[{\\\"insert\\\":\\\"dsfgsgd\\\\n\\\"}]}\",\"html\":\"<p>dsfgsgd</p>\"}",
+          "image": "",
+          "video_url": null,
+          "action_text": null,
+          "action_link": null,
+          "align": "right",
+          "ratio": "0.5"
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Contact",
+      "slug": "contact",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2017-11-17 09:30"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span><img src=\"/en/admin/pages/page/4/change/devteam\" alt=\"\" />This is the place where you can leave your contact details on the website so visitors can contact you with any questions or remarks. </span><span><br class=\"kix-line-break\" /></span><span><br class=\"kix-line-break\" /></span><span>People can reach this page via multiple links on the website, such as the one in the footer.</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\">&nbsp;</p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "PictureItem",
+        "app": "contentplugins",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "image": "content_images/FM_logo_gif.gif",
+          "align": ""
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<p><a href=\"https://www.geef.nl/donatiemodule/index.php?gd=11219\" target=\"_blank\"> <img style=\"border: 0px;\" src=\"https://www.geefgratis.nl/images/geef/donatiemodule/donatiebutton.gif\" alt=\"ONLINE DONEREN\" /> </a></p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "RawHtmlItem",
+        "app": "rawhtml",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "html": "<a href=\"https://www.geef.nl/donatiemodule/index.php?gd=11219\" target=\"_blank\">\r\n<img src=\"https://www.geefgratis.nl/images/geef/donatiemodule/donatiebutton.gif\" alt=\"ONLINE DONEREN\" style=\"border:0px;\" /> </a>"
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "FAQ",
+      "slug": "faq",
+      "status": "published",
+      "language": "en",
+      "full_page": true,
+      "publication_date": "2017-11-17 09:30"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<h2 dir=\"ltr\">&nbsp;</h2>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<h2 dir=\"ltr\">Got any questions?</h2>\r\n<p dir=\"ltr\">We reckon, you do.&nbsp;<strong>And so do the visitors of your platform</strong>. So you want to&nbsp;<strong>provide</strong>&nbsp;them with&nbsp;<strong>answers</strong>.</p>\r\n<p dir=\"ltr\">We&rsquo;ve created tons of FAQs for all the platforms we&rsquo;ve launched. That is why&nbsp;<strong>we can provide you</strong>&nbsp;with a good set of&nbsp;<strong>standard questions and answers</strong>, scroll down this page to see some examples. It is a good idea to&nbsp;<strong>set up a brainstorm about which questions you can expect,</strong>&nbsp;so you can add these questions to the FAQ.\u200b</p>\r\n<p dir=\"ltr\">And remember:&nbsp;<strong>the more questions</strong>&nbsp;you cover in your FAQ,&nbsp;<strong>the less emails</strong>&nbsp;with questions you will receive ;).</p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"mailto:info@goodup.com\"><span class=\"text-button-color\">\ud83d\udce5 Email us</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp_Office_4.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<h2>Crowdfunding FAQ</h2>\r\n<p><strong>START AN INITIATIVE</strong></p>\r\n<p><strong>Who can start an initiative?</strong></p>\r\n<p>Absolutely everyone! Individuals, associations, schools, foundations and businesses&hellip;everybody is welcome to start or join a do-good campaign and change the world!\u200b</p>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/Goodup_Office_3.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ColumnsItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text1": "<p><strong>What are the criteria?</strong></p>\r\n<p>Our team checks every initiative proposal carefully to see if it meets the following criteria:</p>\r\n<ul>\r\n<li>Your initiative contributes to a better world.</li>\r\n<li>You&rsquo;re able to show us how you plan to work together on activities and spend the money raised (with an itemised budget)&nbsp;in your initiative and activity descriptions.</li>\r\n<li>The goal of your initiative is not to convert people&rsquo;s faiths and does not involve any sort of activism (religious or political).</li>\r\n<li>Your initiative is not for personal gain.</li>\r\n<li>Your initiative cannot fund or support criminal - or any illegal &ndash; activity.</li>\r\n</ul>\r\n<p>&nbsp;</p>\r\n<p><strong>How do I choose my target amount?</strong></p>\r\n<p>You choose your own target amount. It's good to be ambitious but stay realistic: A target doesn't have to be exactly the same as how much you need. Make sure you've got a realistic plan with a feasible target amount. To do this, make a list of possible supporters, estimate how much they will support you, and calculate your target amount from these estimates.</p>\r\n<p>Don&rsquo;t forget &ndash; you can always fundraise more (and less) than you hoped!</p>",
+          "text1_final": null,
+          "text2": "<p><strong>How can&nbsp;I start?</strong></p>\r\n<p>If you think your initiative fits these criteria, the first step to getting it on the platform is to create a personal account.&nbsp; Now you can apply to start an initiative! The next step is to write and submit your plan.&nbsp;</p>\r\n<p>It&rsquo;s really important to make sure you fill in all the details correctly &ndash; and just as important to think carefully about how you&rsquo;re going to present your project in the best way possible. Convince us &ndash; and the rest of the world &ndash; that your initiative is worth caring about by creating a catchy title and make some nice photos or videos to bring us into your world and show what you&rsquo;re talking about.</p>\r\n<p>Don&rsquo;t worry if you don't finish your initiative right away. Save your details and you&rsquo;ll be able to begin again via 'My Initiatives' the next time you login.</p>\r\n<p>Once you&rsquo;re happy with everything, click 'submit' and we will review your plan. Within 3 working days we'll get back to you with our feedback. If everything is approved, we'll put your campaign online and you can start crowdfunding straightaway.</p>\r\n<p>Remember: you &ndash; and only you - are responsible for promoting and spreading your initiative online and offline with the rest of the world.</p>",
+          "text2_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ColumnsItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "text1": "<p><strong>SUPPORT AN INITIATIVE</strong></p>\r\n<p><strong>How can I support an initiative?</strong></p>\r\n<p>There are lots of ways to support one of our do-good projects &ndash; here&rsquo;s how you can share your knowledge, time, network, skills or money.</p>\r\n<p>Money - you can support a crowdfunding campaign by donating a minimum amount of &euro;5. As long as you donate more than that, you&rsquo;re free to choose whatever amount you want to give whichever campaign you wish!</p>\r\n<p>Time &amp; Knowledge - you can support initiatives by sharing your skills to help with a specific activity. For example, an initiative might need some financial advice, and you could be the accountant to help them?</p>\r\n<p>Network - you can support a project initiator by setting up a fundraiser and assist him or her in reaching the target amount.</p>\r\n<p><strong>How can I donate money?\u200b\u200b</strong></p>\r\n<p>It&rsquo;s as easy as 1,2,3:&nbsp;</p>\r\n<ol>\r\n<li>Choose an amount: Once you've selected a campaign to support, click the 'support' button. Now you can choose the amount you want to donate; either click on the set amounts or fill in a specific amount.</li>\r\n<li>Fill in your personal details (if you want): You can donate by creating an account or logging in via Facebook. However, you can skip this step and donate as an anonymous guest.&nbsp;</li>\r\n<li>Choose a payment method: Finally, choose how you want to pay, and follow the payment process provided by DocData Payments or iDeal.</li>\r\n</ol>\r\n<p>That's it! After you&rsquo;ve paid, you can add a short message of encouragement for the project initiator to give him or her an extra boost &ndash; and give yourself a pat on the shoulder too!</p>\r\n<p><strong>How do I set up a fundraiser?</strong></p>\r\n<p>A fundraiser is a great way to raise support and awareness for a crowdfunding campaign. Whatever you do, whether it&rsquo;s asking people to donate to a project as a present for your birthday, organising a benefit dinner or going the whole way and running a marathon, it will raise funds for a project you care about.</p>\r\n<p>The even better news is that it takes less than two minutes to create your own fundraiser page. Go to the project you would like to fundraise for, click on the right side of the project page, punch in a catchy title, short description, upload a photo or video and choose a target amount and deadline.&nbsp;Then all you have to do is start fundraising!</p>\r\n<p>With this personal fundraiser page you can invite your friends, family, neighbours and colleagues to support you. Just in case you were wondering, it&rsquo;s completely free to create a fundraiser page and every donation will be directly transferred to your chosen project.</p>\r\n<p><strong>Is every project checked before it's put online?</strong></p>\r\n<p>Absolutely! Once an initiative plan has been submitted, our team checks it carefully to see if the proposal meets the following criteria:</p>\r\n<ul>\r\n<li>Your initiative contributes to a better world</li>\r\n<li>You&rsquo;re able to show us - with an itemised budget &ndash; how you plan to spend the money raised, right up to your target amount, via your campaign.</li>\r\n<li>The goal of your campaign is not to convert people&rsquo;s faiths and does not involve any sort of activism (religious or political).</li>\r\n<li>Your campaign is not for personal gain.</li>\r\n<li>Your campaign cannot fund criminal - or any illegal - activity.</li>\r\n</ul>\r\n<p><span data-redactor-tag=\"strong\">&nbsp;</span></p>\r\n<p>&nbsp;</p>",
+          "text1_final": null,
+          "text2": "<p><strong>TECHNICAL QUESTIONS</strong></p>\r\n<p><strong>Which browsers does GoodUp support?</strong></p>\r\n<p>For the best site experience, GoodUp recommends using one of the supported browsers and versions listed below.</p>\r\n<p>Using older browser versions may prevent you from accessing to the platform. Also, some site features won't function as expected if you use an older or beta test version. Instead, always use the latest version of your browser since old browsers are more vulnerable to security threats like viruses and malware.</p>\r\n<ul>\r\n<li><strong>Microsoft Edge:</strong>&nbsp;from 11.x (Windows);<br /><strong>Firefox:</strong>&nbsp;two most recent versions (Windows, Mac OS X);<br /><strong>Safari:</strong>&nbsp;two most recent versions(Mac OS X);<br /><strong>Chrome:</strong>&nbsp;two most recent versions;<br /><strong>Safari Mobile:</strong>&nbsp;most recent version;<br /><strong>Chrome for Android:</strong>&nbsp;most recent version;<br /><strong>Chrome for OS:&nbsp;</strong>most recent version.</li>\r\n</ul>\r\n<p><strong>I cannot submit my initiative, what's going on?</strong></p>\r\n<p>What is exactly happening?</p>\r\n<ul>\r\n<li>Could it be that your title is extremely long, over 12 words is too long.</li>\r\n<li>You don't need to add a &euro; or ,.- with your target amount.</li>\r\n<li>Make sure you have a back up; save your story also in a Word file.</li>\r\n<li>Sometimes it's good to refresh (Mac: cmd R, Windows: F5)</li>\r\n</ul>\r\n<p>Still encountering issues, send us an email.</p>\r\n<p>Please add as many details about the issue as possible, this is extremely helpful for solving the issue!</p>\r\n<p><strong>I cannot donate, what's going on?</strong></p>\r\n<p>Oh no! What happened exactly?</p>\r\n<ul>\r\n<li>Did you log in?</li>\r\n<li>Which browser &amp; version did you use?</li>\r\n<li>What exactly went wrong, did you see an error message?</li>\r\n</ul>\r\n<p>If possible, send this information with screenshots to our emailadres listed on the bottom of our platform.&nbsp;</p>",
+          "text2_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImagePlainTextItem",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "title": "Nice",
+          "sub_title": null,
+          "text": "{\"delta\":\"{\\\"ops\\\":[{\\\"insert\\\":\\\"sdf\\\\n\\\"}]}\",\"html\":\"<p>sdf</p>\"}",
+          "image": "",
+          "video_url": null,
+          "action_text": null,
+          "action_link": null,
+          "align": "right",
+          "ratio": "0.5"
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "How it works",
+      "slug": "how-it-works",
+      "status": "published",
+      "language": "en",
+      "full_page": true,
+      "publication_date": "2017-11-17 09:28"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<h2>How it Works</h2>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<p>Join our platform today and <strong>unlock the power to lead transformative initiatives</strong> at your workplace, seamlessly <strong>connecting with causes you're passionate about</strong> and driving <strong>real change</strong> with every action you take.</p>\r\n<p>&nbsp;</p>\r\n<p><span><span>On this page <strong>we explain to you</strong> how you can <strong>join,</strong> how you can <strong>start activities</strong>, who are <strong>our partners</strong> and how to <strong>get started</strong>!<br /><br /><br /></span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?sort=date\"><span class=\"text-button-color\">Search an Activity</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-01.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text": "<h2 class=\"LC20lb MBeuO DKV0Md\" style=\"padding-left: 150px;\">\u26a1Empowering You to Make a Difference\u2763\ufe0f</h2>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "text": "<h2><span>Volunteering &amp; Events</span></h2>\r\n<p><span><span>By participating in events and volunteer opportunities employees have the chance to:<br /></span></span></p>\r\n<ul>\r\n<li><strong>Connect</strong> with their colleagues</li>\r\n<li><strong>Build</strong> new skills</li>\r\n<li><strong>Create</strong> meaningful impact</li>\r\n<li>Let employees pick what fits them best:<br /><br />\u279c<strong>&nbsp;Event or skill-based</strong><br />\u279c<strong> In person or online</strong><br />\u279c <strong>Individually or as a team<br /><br /></strong></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?sort=date\"><span class=\"text-button-color\">Browse volunteer activities</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-02.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "text": "<h2><span>Challenges &amp; Good Deeds</span></h2>\r\n<p><span><span><strong>Building habits</strong> and <strong>creating positive change</strong> can be easy if you <strong>start with small actions</strong>.</span></span></p>\r\n<p><span><span><strong>Encourage your team</strong> to build positive habits with challenges that promote sustainability, social impact, diversity &amp; inclusion and well-being:<br /></span></span></p>\r\n<ul>\r\n<li><strong>Learn and build a new habit</strong></li>\r\n<li><strong>Bottom-up &amp; action-oriented</strong></li>\r\n<li><strong>Drive real cultural change<br /><br /></strong></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?filters%5Boffice_restriction%5D=0&amp;filters%5Bactivity-type%5D=deed&amp;sort=date\"><span class=\"text-button-color\">Browse challenges</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-03.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 6,
+          "text": "<h2><span>Giving &amp; Collecting</span></h2>\r\n<p><span><span>Invite employees to <strong>give back</strong> to their communities and support causes that they care about <strong>by raising money</strong> or <strong>collect items</strong> for their initiative.<br /></span></span></p>\r\n<ul>\r\n<li><span><span><strong>Donate</strong> easily and seamlessly</span></span></li>\r\n<li><span><span>Streamlined<strong> fundraising and collection of goods</strong></span></span></li>\r\n<li><span><span><strong>Secure and efficient</strong> disbursement<br /><br /></span></span></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/en/activities/list?filters%5Boffice_restriction%5D=0&amp;filters%5Bactivity-type%5D=collect&amp;sort=date\"><span class=\"text-button-color\">Browse giving activities</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-04.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 7,
+          "text": "<h2><span>Partners</span></h2>\r\n<p><span><span>Our Partners section on the platform<strong> highlights the collaborative efforts</strong> between us and a variety of initiatives and organisations <strong>committed to driving positive change in society and the environment</strong>.</span></span></p>\r\n<p><span><span>By joining forces with<strong> NGOs, non-profits, and community groups,</strong> we leverage shared knowledge, resources, and passion to<strong> create a more sustainable and equitable world for all</strong>.<br /><br /></span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/pages/our-partners\"><span class=\"text-button-color\">View our Partners</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-05.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 8,
+          "text": "<h2><span>Start your own activity</span></h2>\r\n<p><span><span><strong>Ready to make an impact?</strong> GoodUp empowers you to turn your passion into action with the \"Start Your Activity\" feature.</span></span></p>\r\n<p><span><span>Whether you're aiming to improve sustainability, boost wellbeing, or foster diversity and inclusion, <strong>starting your own activity is simple and impactful.<br /><br /></strong></span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/pages/start\"><span class=\"text-button-color\">Start an Activity</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-06.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 9,
+          "text": "<h2><span>Frequently Asked Questions</span></h2>\r\n<ul>\r\n<li><a href=\"/pages/faq\"><span><span>What qualifies as a volunteer activity for which I can take my 2 days?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>Do I need my manager&rsquo;s approval?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>How do I search for activities to join?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>What are the criteria for an activity to be accepted?<br /><br /></span></span></a></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/pages/faq\"><span class=\"text-button-color\">Go to Frequently Asked Questions</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-08_vYAAayj.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 10,
+          "text": "<h2><span>Talk to one of our Ambassadors</span></h2>\r\n<p><span><span><strong>Our Ambassadors</strong> are available to <strong>provide guidance</strong> and <strong>share their expertise</strong> with you.&nbsp;</span></span>Whether you're eager to volunteer, launch an initiative, or just want to deepen your understanding of our impact activities, our ambassadors are<strong> your go-to resource</strong>.<br /><br /></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/pages/ambassadors\"><span class=\"text-button-color\">Contact on of our Ambassadors</span></a></div>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-How-it-works-07_yOhw0iQ.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "how-platform-works",
+      "slug": "how-platform-works",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2022-04-05 08:28"
+    },
+    "data": [
+      {
+        "model": "StepsContent",
+        "app": "cms",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "title": "1",
+          "sub_title": "1",
+          "action_text": "Start your own project",
+          "action_link": "/start-project"
+        },
+        "items": []
+      },
+      {
+        "model": "PictureItem",
+        "app": "contentplugins",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "image": "content_images/Untitled_8_Wykud5d.png",
+          "align": ""
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<p>\" /&gt;</p>\r\n<p>&nbsp;</p>\r\n<p><a href=\"http://www.google.nl\"><img src=\"/media/content_images/Untitled_8_Wykud5d.png\" alt=\"&quot;&lt;/a\" /></a></p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Impact Themes",
+      "slug": "impact-themes",
+      "status": "published",
+      "language": "en",
+      "full_page": true,
+      "publication_date": "2024-05-30 12:50"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<h1><span>\ud83d\udca5 Impact Themes</span></h1>\r\n<p><span><span>Dive into the heart of our mission on the Impact Themes page, where we outline our commitment to shaping a brighter future through our focused themes:<br /></span></span></p>\r\n<ul>\r\n<li><strong>Sustainability</strong></li>\r\n<li><strong>Social Impact</strong></li>\r\n<li><strong>Diversity &amp; Inclusion</strong></li>\r\n<li><span><span><strong>Health &amp; Wellbeing</strong><br /></span></span></li>\r\n</ul>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Impact-themes-01_5mGzNVc.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<h2><span>\ud83c\udf0e Sustainability</span></h2>\r\n<p><span><span>Our platform is designed to <strong>engage employees</strong>&nbsp;and promote a <strong>culture of sustainability in the workplace</strong>.<br /></span></span></p>\r\n<ul>\r\n<li><span><span>Fosters<strong> a sense of </strong>environmental<strong> responsibility</strong></span></span></li>\r\n<li><span><span><strong>Improved</strong> sustainability<strong> initiatives</strong></span></span></li>\r\n<li><span><span><strong>Measurable impact</strong> on reducing environmental footprint</span></span></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?filters%5Boffice_restriction%5D=1&amp;filters%5Btheme%5D=6&amp;sort=date\"><span class=\"text-button-color\">Sustainability Activities</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Impact-themes-02.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text": "<h2><span>\u2764\ufe0f Social Impact</span></h2>\r\n<p><span><span>Our platform is designed to <strong>engage employees</strong> and promote a <strong>culture of corporate social responsibility</strong> in the workplace.<br /></span></span></p>\r\n<ul>\r\n<li><span><span>Fosters<strong> a sense of purpose and social impact</strong></span></span></li>\r\n<li><span><span><strong>Improved</strong> societal<strong> impact initiatives</strong></span></span></li>\r\n<li><span><span><strong>Measurable impact</strong> on the community and society</span></span></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/en/admin/pages/page/24/change/activities/list?filters%5Boffice_restriction%5D=1&amp;filters%5Btheme%5D=6&amp;sort=date\"><span class=\"text-button-color\">Social Impact Activities</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Impact-themes-03.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "text": "<h2><span>\ud83d\udc68\ud83c\udffb&zwj;\ud83e\udd1d&zwj;\ud83d\udc68\ud83c\udfff Diversity &amp; Inclusion</span></h2>\r\n<p><span><span>The platform is designed to <strong>engage employees</strong> to drive change and <strong>create a more inclusive workplace culture</strong>.<br /></span></span></p>\r\n<ul>\r\n<li><span><span>Fosters <strong>inclusivity and builds community</strong></span></span></li>\r\n<li><span><span><strong>Improved</strong> diversity &amp; inclusion <strong>initiatives</strong></span></span></li>\r\n<li><span><span><strong>Measurable impact</strong> on diversity and inclusion</span></span></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?filters%5Boffice_restriction%5D=1&amp;filters%5Btheme%5D=7&amp;sort=date\"><span class=\"text-button-color\">Diversity &amp; Inclusion Activities</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Impact-themes-04.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "text": "<h2><span>\ud83e\uddd8\ud83c\udffd Health &amp; Wellbeing</span></h2>\r\n<p><span><span>The platform is designed to<strong> engage employees</strong> and promote a <strong>culture of wellbeing in the workplace</strong>.<br /></span></span></p>\r\n<ul>\r\n<li><span><span>Fosters a <strong>positive work environment</strong></span></span></li>\r\n<li><span><span><strong>Improved</strong> employee well-being <strong>initiatives</strong></span></span></li>\r\n<li><span><span><strong>Measurable impact</strong> on employee well-being</span></span></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/activities/list?filters%5Boffice_restriction%5D=1&amp;filters%5Btheme%5D=10&amp;sort=date\"><span class=\"text-button-color\">Health &amp; Wellbeing Activities</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Impact-themes-05.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "News",
+      "slug": "news",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2018-02-09 10:39"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>This is such a cool page! Here, you can share general news updates concerning the platform, projects or specific organisational updates. </span></p>\r\n<p dir=\"ltr\"><span>You can choose how you would like to show this news page to your audience. It can get extra attention on the Home page.</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\">&nbsp;</p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Our partners",
+      "slug": "our-partners",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2018-02-09 10:32"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>This partner page gives an overview of the partners you are working with, if you are working with any. If you do not work with any partners, you can easily leave this page out. You might even change it to something that is more relevant to your programme. </span><span><br class=\"kix-line-break\" /></span></p>\r\n<p dir=\"ltr\"><span>Some of our customers mention specific NGOs, others describe the groups of people to which they contribute in their initiatives and activities.&nbsp;</span></p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<p><img src=\"data:image/png;base64,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\" alt=\"\" />&nbsp; &nbsp;&nbsp;&nbsp;<img src=\"data:image/png;base64,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\" alt=\"\" /></p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Our story",
+      "slug": "our-story",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2022-05-02 11:48"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>On this page, you want to tell the inspiring story about why you started this platform.</span></p>\r\n<p dir=\"ltr\"><span>You can share background information about the programme and how it connects to your organisation. What is the purpose of this programme and platform? What is the mission, vision and maybe even the dream?</span></p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "PictureItem",
+        "app": "contentplugins",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "image": "content_images/GoodUp-team-slider_889hGrf_JB0myc1.jpg",
+          "align": ""
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<p style=\"color: #e35205;\"><strong>Quick links</strong></p>\r\n<ol>\r\n<li><strong>Banfield Gives Back</strong></li>\r\n<li><a href=\"/segments/8/slug/initiatives/list\" target=\"_self\">Volunteer now</a></li>\r\n<li><a href=\"/pages/banfield-programs\" target=\"_self\">Community Programs Overview</a></li>\r\n<li><a href=\"/pages/banfield-resources\" target=\"_self\">Additional resources</a></li>\r\n</ol>\r\n<p class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><strong><a href=\"/segments/15/map-assignments/activities/list?filters%5Boffice_restriction%5D=1&amp;sort=date\"><span class=\"text-button-color\">Hier nog een button?</span></a></strong></p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text": "<p>Button Color Change</p>\r\n<!-- Your button HTML -->\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/nl/pages/impact-themas#:~:text=Start-,your,-activity\"> <span class=\"text-button-color\">Meer over impact thema's</span> </a></div>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "How it works for partners",
+      "slug": "partner-login",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2020-02-17 13:15"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p>sdfst</p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Privacy policy",
+      "slug": "privacy",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2017-11-17 09:33"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>On this page, you can show the Privacy policy that applies to the programme and platform. This is an agreement between your organisation and the users of the platform. </span></p>\r\n<p dir=\"ltr\"><span>GoodUp provides a standard format with you. You can see an example of this just below this paragraph. You can use this as inspiration and top up additional components or you can completely copy these. This privacy policy will be presented by a link in the footer of the platform. Other GoodUp clients also use this privacy policy.\u200b</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\"><strong>Privacy Policy</strong></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Introduction</span></p>\r\n<p dir=\"ltr\"><span>We like sharing things &ndash; but not your personal details. We want to explain what we do with your information, why we do it and how we protect it, so you know exactly what&rsquo;s going on. </span></p>\r\n<p dir=\"ltr\"><span>We&rsquo;re committed to protecting your privacy and we&rsquo;ll do everything we can to keep your private information completely private. We will only ever use your personal information for providing and improving our services and giving you a better user experience.</span></p>\r\n<p dir=\"ltr\"><span>Finally, rest assured that we handle and protect your data in line with the Data Protection Act.</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Your Profile</span></p>\r\n<p dir=\"ltr\"><span>These are the details that you can fill in on your profile page &ndash; and this is why we ask you for them: </span></p>\r\n<ul>\r\n<li dir=\"ltr\">\r\n<p dir=\"ltr\"><span>Your name &ndash; so that we can talk to you as you wish to spoken to, and so that other users can see who you are</span></p>\r\n</li>\r\n<li dir=\"ltr\">Email &ndash; so that you can login into you account and we can contact you (if you want).</li>\r\n<li dir=\"ltr\">Password - this is encrypted and securely saved so that you&rsquo;re the only person who can access and change it. Not even we can do this!</li>\r\n<li dir=\"ltr\">Account details &ndash; you can choose whether to provide more personal details (for example, a profile photo or a short biography) for other users to get know you and for us to able to presents tasks and projects that we think you&rsquo;ll find interesting.</li>\r\n</ul>\r\n<p dir=\"ltr\"><span>We only use these personal details to deliver a great service and make the website as user friendly as possible. You&rsquo;re in complete control of how much of your profile is visible to other users. So you don&rsquo;t have to share any personal information if you don&rsquo;t want to.</span></p>\r\n<p dir=\"ltr\"><span>Would you like to know exactly which of your personal details we have? Or would you like to change your account details or even delete your account? No problem. Just send us an email at the address that you can find at the bottom of this Privacy Policy.</span></p>\r\n<p dir=\"ltr\"><span><span>&nbsp;</span></span></p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Email contact</span></p>\r\n<p dir=\"ltr\"><span>We know you&rsquo;re busy, so we&rsquo;ll only ever send you an email when you give us permission, if you&rsquo;ve emailed us first, or if you use a part of the site that requires us to send you a confirmation email.</span></p>\r\n<p dir=\"ltr\"><span>If you want to, you can sign up for our regular email updates. These contain the latest news on our favourite projects and their progress. We think they&rsquo;re great &ndash; however, if you ever get tired of receiving them, you can unsubscribe at any time by clicking the link at the bottom of every email, or changing your account settings.</span></p>\r\n<p dir=\"ltr\"><span>We save every email we receive and send so that we know exactly what we&rsquo;ve said to you in the past and we won&rsquo;t have to repeat anything we&rsquo;ve already told you. Of course, we&rsquo;ll never keep any personal details in this correspondence on file any longer than is necessary.</span></p>\r\n<p dir=\"ltr\"><span><span>&nbsp;</span></span></p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Sharing with Third Parties</span></p>\r\n<p dir=\"ltr\"><span>We never give your personal details to anybody else. The only time we&rsquo;ll ever do this is under exceptional circumstances - if we&rsquo;re legally obliged to, for example, or if we believe that it&rsquo;s imperative to do so to protect our legal rights.</span></p>\r\n<p dir=\"ltr\"><span>We never post anything to your accounts with Facebook, Twitter, or any other third-party sites without your permission.</span></p>\r\n<p dir=\"ltr\"><span><span>&nbsp;</span></span></p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Cookies</span></p>\r\n<p dir=\"ltr\"><span>We love cookies. Cookies with coffee, cookies with tea, cookies with milk, cookies without coffee, etc., etc. So it should come as no surprise to learn that cookies come with this website too. Cookies are tiny temporary text files for your computer. We use tracking cookies, functional cookies and analytical cookies, amongst others. &nbsp;</span></p>\r\n<p dir=\"ltr\"><span>These cookies help us recognise you when you return to our site and they stop you from having to fill in the same information again and again. They also help us to learn how you use our site, which helps us to continually improve our site and make it even more user friendly.</span></p>\r\n<p dir=\"ltr\"><span>Of course, if you don&rsquo;t want to use cookies, that&rsquo;s absolutely fine. You can disable them in your browser. However, we would like to warn you that you won&rsquo;t be using the website at its absolute best.</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Secure Payment</span></p>\r\n<p dir=\"ltr\"><span>We want you to be able to donate online in complete safety. That&rsquo;s why we use a secure online payment environment when you decide to make a donation. This makes it impossible for anybody else to see what&rsquo;s going on.</span></p>\r\n<p dir=\"ltr\"><span>We never save any payment details like credit card details &ndash; our super trustworthy Service Payment Provider partner, Docdata.com, handles everything. All we keep is a record of the transaction. </span></p>\r\n<p dir=\"ltr\"><span>The details of your transaction are encrypted, transmitted and secured via SSL (Secure Socket Layers). You know when you&rsquo;re in a SSL environment when you see https:// in the address bar of your browser. </span></p>\r\n<p dir=\"ltr\"><span>&nbsp;</span></p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Servers Location</span></p>\r\n<p dir=\"ltr\"><span>Our platform is hosted by our trusty partner Linode.com. We use their data centre in London &ndash; meaning that the servers where all our data is stored are in the European Economic Area (EEA). To ensure that your privacy rights remain protected, we will make sure that these servers &ndash; and your personal information &ndash; remain within the EEA.</span></p>\r\n<p dir=\"ltr\"><span><span>&nbsp;</span></span></p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Changes</span></p>\r\n<p dir=\"ltr\"><span>This Privacy Policy is based on the present use and future possibilities of the &lsquo;do good platform&rsquo;. Changes to the platform can therefore lead to changes in this Privacy Policy. We would therefore advise you to regularly check the Privacy page of our website for updates. If we make any changes to this Privacy Policy, we&rsquo;ll let you know via this website and/or via email.</span></p>\r\n<p dir=\"ltr\">&nbsp;</p>\r\n<p dir=\"ltr\"><span style=\"text-decoration: underline;\">Questions?</span></p>\r\n<p dir=\"ltr\"><span>If you have any questions or suggestions, please get in touch! We&rsquo;d love to hear from you.\u200b\u200b</span></p>\r\n<p><span>&nbsp;</span></p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Start an Activity",
+      "slug": "start",
+      "status": "published",
+      "language": "en",
+      "full_page": true,
+      "publication_date": "2020-03-19 10:29"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "text": "<h1>\ud83c\udfc1&nbsp;Start an Activity&nbsp;</h1>\r\n<p><span><span>So, you are ready to make an impact. Awesome! <strong>We are here to help</strong> you start an initiative for a cause you care about.</span></span></p>\r\n<p><span><span><strong>Starting an activity in 3 steps:</strong><br /></span></span></p>\r\n<ul>\r\n<li><strong>Start an initiative</strong></li>\r\n<li><strong>Add activities</strong></li>\r\n<li><strong>Submit for review</strong></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/initiatives/create\"><span class=\"text-button-color\">Start an Activity</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-02_u82DO9X.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 2,
+          "text": "<h2 class=\"LC20lb MBeuO DKV0Md\">\ud83d\udcdc&nbsp;Rules of the Game</h2>\r\n<ol>\r\n<li>Your intiative<strong> contributes to a better world</strong></li>\r\n<li><span><span>You <strong>provide clarity</strong> about: the location and spending of the hours within a certain budget</span></span></li>\r\n<li><span><span>Your project must fit with<strong> our program theme</strong>s:</span></span></li>\r\n<ol>\r\n<li><span><span>Sustainability</span></span></li>\r\n<li><span><span>Social Impact</span></span></li>\r\n<li><span><span>Diversity &amp; Inclusion</span></span></li>\r\n<li><span><span>Health &amp; Wellbeing</span></span></li>\r\n</ol>\r\n<li><span><span><strong>You are ready</strong> to inspire your colleagues to get involved.</span></span></li>\r\n</ol>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-03_H1z7brc.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 3,
+          "text": "<h2 class=\"LC20lb MBeuO DKV0Md\">\ud83e\udd7e&nbsp;What are the steps?</h2>\r\n<p><span><span><strong>1. Create initiative &amp; activities\u2028</strong><br />First you create your initiative. You briefly explain what your goal is and what you want to make an impact on. With your story you tell and inspire colleagues to help you.</span></span></p>\r\n<p><span><span><strong>2. Submit for review\u2028</strong><br />When everything is ready, submit your initiative for assessment. If you need to change anything, we'll let you know. If not, you're good to go!<br /></span></span></p>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-04_ozVb6wy.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 4,
+          "text": "<h2><span>\ud83d\udee0\ufe0f Download Activity Toolkit</span></h2>\r\n<p><span><span>Our comprehensive toolkit is <strong>your first step</strong> in mobilising for good. It&rsquo;s packed with resources to guide you through <strong>planning</strong>, <strong>promoting</strong>, and <strong>executing</strong> your activity.</span></span></p>\r\n<p><span><span>Whether you're new to organising or a seasoned leader, this toolkit<strong> simplifies the process</strong>, helping you focus on what truly matters&mdash;making an impact.</span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"/pages/faq\"><span class=\"text-button-color\">Download Toolkit</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-08_YnkRgK6.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 5,
+          "text": "<h2><span>\u2753Frequently Asked Questions</span></h2>\r\n<ul>\r\n<li><a href=\"/pages/faq\"><span><span>What qualifies as a volunteer activity for which I can take my 2 days?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>Do I need my manager&rsquo;s approval?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>How do I search for activities to join?</span></span></a></li>\r\n<li><a href=\"/pages/faq\"><span><span>What are the criteria for an activity to be accepted?</span></span></a></li>\r\n</ul>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a href=\"/pages/faq\"><span class=\"text-button-color\">Go to Frequently Asked Questions</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-01_RDbkcG3.png",
+          "align": "right",
+          "ratio": 6
+        },
+        "items": []
+      },
+      {
+        "model": "ImageTextItem",
+        "app": "pages",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 6,
+          "text": "<h2><span>\ud83d\udde3\ufe0fTalk to one of our Ambassadors</span></h2>\r\n<p><span><span>Our Ambassadors are available to <strong>provide guidance</strong> and <strong>share their expertise</strong> with you.</span></span></p>\r\n<p><span><span>Whether you're eager to volunteer, launch an initiative, or just want to deepen your understanding of our impact activities, our ambassadors are <strong>your go-to resource</strong>.</span></span></p>\r\n<div class=\"no-underline new-btn__small--pri inline-flex items-center justify-center text-center mb-24\"><a class=\"text-grey\" href=\"mailto:%20info@goodup.com\"><span class=\"text-button-color\">Contact one of our Ambassadors</span></a></div>\r\n<p>&nbsp;</p>",
+          "text_final": null,
+          "image": "pages/GoodUp-Demo-Start-an-activity-09_uj7euph.png",
+          "align": "left",
+          "ratio": 6
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Our story",
+      "slug": "story",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2017-11-17 09:29"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>On this page, you want to tell the inspiring story about why you started this platform. </span></p>\r\n<p dir=\"ltr\"><span>You can share background information about the programme and how it connects to your organisation. What is the purpose of this programme and platform? What is the mission, vision and maybe even the dream?</span></p>",
+          "text_final": null
+        },
+        "items": []
+      },
+      {
+        "model": "PictureItem",
+        "app": "contentplugins",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 1,
+          "image": "content_images/GoodUp-team-slider_889hGrf.jpg",
+          "align": ""
+        },
+        "items": []
+      }
+    ]
+  },
+  {
+    "model": "Page",
+    "app": "pages",
+    "properties": {
+      "title": "Terms of service",
+      "slug": "terms-and-conditions",
+      "status": "published",
+      "language": "en",
+      "full_page": false,
+      "publication_date": "2017-11-17 09:30"
+    },
+    "data": [
+      {
+        "model": "TextItem",
+        "app": "text",
+        "fields": {
+          "language_code": "en",
+          "sort_order": 0,
+          "text": "<p dir=\"ltr\"><span>This is where things get serious. You can show the terms of service on this page. We can help you set it up if you like. </span></p>\r\n<p dir=\"ltr\"><span>If you feel like this is too formal for your organisation and/or platform, you can also choose to leave this page out.</span></p>",
+          "text_final": null
+        },
+        "items": []
+      }
+    ]
+  }
+]

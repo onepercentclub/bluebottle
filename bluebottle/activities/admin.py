@@ -152,7 +152,6 @@ class ContributorChildAdmin(
         "contributor_date",
         "created",
         "updated",
-        "team",
     ]
 
     fields = [
@@ -163,15 +162,12 @@ class ContributorChildAdmin(
         "contributor_date",
         "created",
         "updated",
-        "team",
     ]
 
     superadmin_fields = ['force_status']
 
     def get_fieldsets(self, request, obj=None):
         fields = self.get_fields(request, obj)
-        if InitiativePlatformSettings.team_activities and 'team' not in fields:
-            fields += ('team',)
         fieldsets = (
             (_('Details'), {'fields': fields}),
         )

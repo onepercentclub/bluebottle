@@ -33,6 +33,7 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
+    DateParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -290,6 +291,18 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    ParticipantStateMachine.cancel
+                ),
+
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+            ],
+        ),
+
+        TransitionTrigger(
             DateStateMachine.auto_approve,
             effects=[
                 TransitionEffect(
@@ -339,6 +352,16 @@ class DateActivityTriggers(TimeBasedTriggers):
                         is_finished, has_no_participants
                     ]
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            DateStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.succeed
+                )
             ]
         ),
     ]

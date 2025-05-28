@@ -1,10 +1,14 @@
+from datetime import datetime, time
+
 import dateutil
 from django.db.models import Count
+from django.db.models.functions import Trunc
+from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_json_api.relations import (
     ResourceRelatedField,
-    HyperlinkedRelatedField,
+    HyperlinkedRelatedField
 )
 from rest_framework_json_api.serializers import ModelSerializer
 
@@ -17,6 +21,8 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicActivity,
     ScheduleActivity,
+    DateParticipant,
+    DateActivity,
 )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -67,10 +73,6 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'review_document_enabled',
             'contributors',
             'registration_flow',
-            'review_link',
-            'review_title',
-            'review_description',
-            'review_document_enabled',
             'permissions',
             'registrations'
         )
@@ -124,12 +126,13 @@ class PeriodActivitySerializer(ModelSerializer):
 class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
     model = DeadlineParticipant
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, include_my=True, *args, **kwargs):
         self.statuses = kwargs.pop("statuses") or {}
         self.related_link_team_view_name = kwargs.pop(
             "related_link_team_view_name",
             None
         )
+        self.include_my = include_my
         super().__init__(*args, **kwargs)
 
     def get_links(self, obj=None, lookup_field="pk"):
@@ -153,21 +156,22 @@ class RelatedLinkFieldByStatus(HyperlinkedRelatedField):
                 "meta": {"count": queryset.filter(status__in=statuses).count()},
             }
 
-        if self.context['request'].user.is_authenticated:
-            return_data['my'] = {
-                'href': url + '?filter[my]=true',
-                'meta': {
-                    'count': queryset.filter(user=self.context['request'].user).count()
+        if self.include_my:
+            if self.context['request'].user.is_authenticated:
+                return_data['my'] = {
+                    'href': url + '?filter[my]=true',
+                    'meta': {
+                        'count': queryset.filter(user=self.context['request'].user).count()
+                    }
                 }
-            }
-        else:
-            return_data['my'] = {
-                'href': url + '?filter[my]=true',
-                'meta': {
-                    'count': 0
-                }
+            else:
+                return_data['my'] = {
+                    'href': url + '?filter[my]=true',
+                    'meta': {
+                        'count': 0
+                    }
 
-            }
+                }
 
         return_data['related'] = url
 
@@ -366,6 +370,187 @@ class PeriodicActivitySerializer(TimeBasedBaseSerializer):
     )
 
 
+class DateActivitySerializer(TimeBasedBaseSerializer):
+    detail_view_name = 'date-detail'
+    export_view_name = 'date-participant-export'
+
+    date_info = serializers.SerializerMethodField()
+    location_info = serializers.SerializerMethodField()
+
+    contributors = RelatedLinkFieldByStatus(
+        read_only=True,
+        source="participants",
+        related_link_view_name="date-participants",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["new", "succeeded"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
+    )
+
+    registrations = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="related-date-registrations",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "new": ["new"],
+            "accepted": ["accepted"],
+            "rejected": ["rejected", "removed", "withdrawn"]
+        },
+    )
+
+    slots = RelatedLinkFieldByStatus(
+        read_only=True,
+        related_link_view_name="related-date-slots",
+        related_link_url_kwarg="activity_id",
+        include_my=False,
+        statuses={
+            "upcoming": ["open", "full", "running"],
+            "passed": ["failed", "succeeded", "expired", "cancelled"],
+            "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled"],
+        },
+    )
+
+    def get_contributor_count(self, instance):
+        return (
+            instance.deleted_successful_contributors
+            + instance.contributors.not_instance_of(Organizer)
+            .filter(status__in=["accepted", "participating"])
+            .count()
+        )
+
+    def get_filtered_slots(self, obj, only_upcoming=False):
+
+        start = self.context['request'].GET.get('filter[start]')
+        end = self.context['request'].GET.get('filter[end]')
+        tz = get_current_timezone()
+
+        slots = obj.slots.exclude(status__in=['draft', 'cancelled']).all()
+        try:
+            if start:
+                slots = slots.filter(start__gte=dateutil.parser.parse(start).astimezone(tz))
+            elif only_upcoming:
+                slots = slots.filter(start__gte=now())
+
+            if end:
+                slots = slots.filter(
+                    start__lte=datetime.combine(dateutil.parser.parse(end), time.max).astimezone(tz)
+                )
+        except ValueError:
+            pass
+
+        return slots
+
+    def get_date_info(self, obj):
+        total = self.get_filtered_slots(obj).count()
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        last_slot = obj.slots.exclude(status__in=['draft', 'cancelled']).order_by('start').last()
+        end = last_slot.end if last_slot else None
+        capacity = None
+        duration = None
+
+        if total > 1:
+            starts = set(
+                slots.annotate(date=Trunc('start', kind='day')).values_list('date')
+            )
+            count = len(slots)
+            end = end.date()
+            first = min(starts)[0].date() if starts else None
+        elif total == 1:
+            slot = self.get_filtered_slots(obj).first()
+            first = slot.start
+            duration = slot.duration
+            count = 1
+        else:
+            first = None
+            duration = None
+            count = 0
+
+        return {
+            'total': total,
+            'has_multiple': total > 1,
+            'is_full': all(slot.status == 'full' for slot in slots),
+            'count': count,
+            'first': first,
+            'end': end,
+            'duration': duration,
+            'capacity': capacity,
+        }
+
+    def get_location_info(self, obj):
+        slots = self.get_filtered_slots(obj, only_upcoming=True)
+        if not slots:
+            slots = self.get_filtered_slots(obj, only_upcoming=False)
+        is_online = len(slots) > 0 and len(slots.filter(is_online=True)) == len(slots)
+
+        locations = slots.values_list(
+            'location__locality',
+            'location__country__alpha2_code',
+            'location__formatted_address',
+            'online_meeting_url',
+            'location_hint'
+        )
+
+        if not len(slots) or not len(locations):
+            return {
+                'has_multiple': False,
+                'is_online': is_online,
+                'online_meeting_url': None,
+                'location': None,
+                'location_hint': None,
+            }
+
+        has_multiple = len(set(location[:2] for location in locations)) > 1 and not is_online
+        if has_multiple:
+            return {
+                'has_multiple': True,
+                'is_online': False,
+                'online_meeting_url': None,
+                'location': None,
+                'location_hint': None,
+            }
+        slot = slots.first()
+
+        if is_online or not slot.location:
+            location = None
+        else:
+            location = {
+                'locality': slot.location.locality if slot.location else None,
+                'country': {
+                    'code': slot.location.country.alpha2_code if slot.location.country else None,
+                },
+                'formattedAddress': slot.location.formatted_address if slot.location else None,
+            }
+
+        user = self.context['request'].user
+        if (
+                user.is_authenticated and
+                obj.contributors.filter(user=user, status='accepted').instance_of(DateParticipant).count()
+        ):
+            meeting_url = slot.online_meeting_url or None
+        else:
+            meeting_url = None
+
+        return {
+            'has_multiple': False,
+            'is_online': is_online,
+            'online_meeting_url': meeting_url,
+            'location': location,
+            'location_hint': slot.location_hint,
+        }
+
+    class Meta(TimeBasedBaseSerializer.Meta):
+        model = DateActivity
+        fields = TimeBasedBaseSerializer.Meta.fields + (
+            'slots',
+            'date_info',
+            'location_info',
+        )
+
+    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/dates'
+
+
 class DeadlineTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=DeadlineActivity.objects.all())
     included_serializers = {
@@ -396,4 +581,15 @@ class PeriodicTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/periodic-transitions'
+        included_resources = ['resource', ]
+
+
+class DateTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/time-based/date-transitions'
         included_resources = ['resource', ]

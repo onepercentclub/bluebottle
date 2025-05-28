@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
 from django.template.defaultfilters import slugify
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
@@ -241,12 +242,14 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         domain = get_current_host()
         language = get_current_language()
         type = self.get_real_instance().__class__.__name__.lower()
-        if type != "collectactivity":
-            return (
-                f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
-            )
-        else:
-            return f"{domain}/{language}/initiatives/activities/details/collectactivity/{self.id}/{self.slug}"
+        return (
+            f"{domain}/{language}/activities/details/{type}/{self.id}/{self.slug}"
+        )
+
+    def get_admin_url(self):
+        domain = get_current_host()
+        url = reverse('admin:%s_%s_change' % (self._meta.app_label, self._meta.model_name), args=[self.id])
+        return f"{domain}{url}"
 
     @property
     def organizer(self):

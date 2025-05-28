@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('organizations', '0003_auto_20170314_0900'),
+        ('organizations', '0003_auto_20170303_1057'),
         ('geo', '0013_auto_20190524_0958')
     ]
 

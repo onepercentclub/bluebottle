@@ -208,13 +208,13 @@ class DateActivitySlotStatesTestCase(BluebottleTestCase):
             self.slot.status, 'cancelled'
         )
         self.assertTrue(
-            DateActivitySlotStateMachine.reopen in
+            DateActivitySlotStateMachine.restore in
             self.slot.states.possible_transitions()
         )
 
     def test_reopen(self):
         self.test_cancel()
-        self.slot.states.reopen(save=True)
+        self.slot.states.restore(save=True)
         self.assertEqual(
             self.slot.status, 'open'
         )

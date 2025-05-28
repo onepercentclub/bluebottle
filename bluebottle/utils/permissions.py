@@ -31,7 +31,6 @@ class IsActivityManager(permissions.BasePermission):
         Return `True` if user is owner of the object granted, `False` otherwise.
         """
         return (
-            obj.owner == request.user or
             request.user in obj.owners or
             request.user.is_superuser or
             request.user.is_staff
@@ -191,6 +190,7 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
         return True
 
     def has_action_permission(self, action, user, model_cls):
+
         if model_cls:
             perms = self.get_required_permissions(action, model_cls)
             return user.has_perms(perms)

@@ -26,7 +26,7 @@ from bluebottle.time_based.tests.factories import (
     DateParticipantFactory,
     DeadlineActivityFactory,
     DeadlineParticipantFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -242,9 +242,9 @@ class SegmentDetailAPITestCase(APITestCase):
             start=now() - datetime.timedelta(weeks=1),
         )
 
-        participants = DateParticipantFactory.create_batch(3, activity=date_activity)
-        for participant in participants:
-            SlotParticipantFactory.create(slot=slot, participant=participant)
+        registrations = DateRegistrationFactory.create_batch(3, activity=date_activity)
+        for registration in registrations:
+            DateParticipantFactory.create(slot=slot, registration=registration)
 
         funding = FundingFactory.create(
             initiative=initiative,

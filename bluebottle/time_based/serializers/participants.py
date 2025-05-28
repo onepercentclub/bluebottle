@@ -1,9 +1,13 @@
+from rest_framework.exceptions import ValidationError
+
 from rest_framework_json_api import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.activities.utils import BaseContributorSerializer
 from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.time_based.models import (
+    DateParticipant,
+    DateRegistration,
     DeadlineParticipant,
     DeadlineRegistration,
     PeriodicParticipant,
@@ -11,7 +15,8 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     ScheduleRegistration,
     TeamScheduleParticipant,
-    TeamScheduleRegistration
+    TeamScheduleRegistration,
+    DateActivitySlot, RegisteredDateParticipant
 )
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -40,7 +45,38 @@ class ParticipantSerializer(BaseContributorSerializer):
     included_serializers = dict(
         BaseContributorSerializer.included_serializers.serializers,
         **{
+            'activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
             'contributions': 'bluebottle.time_based.serializers.TimeContributionSerializer',
+        }
+    )
+
+
+class DateParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('date-participant-detail', view_args=('pk',))
+    registration = ResourceRelatedField(queryset=DateRegistration.objects.all(), required=False)
+
+    slot = ResourceRelatedField(queryset=DateActivitySlot.objects)
+
+    def validate(self, data):
+        email = data.get('email', None)
+        if data['slot'].status != 'open' and not email:
+            raise ValidationError('Participants cannot sign up for full slots')
+        return data
+
+    class Meta(ParticipantSerializer.Meta):
+        model = DateParticipant
+        fields = ParticipantSerializer.Meta.fields + ("contributions", 'slot')
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = "contributors/time-based/date-participants"
+        included_resources = ParticipantSerializer.JSONAPIMeta.included_resources + ['slot']
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers.serializers,
+        **{
+            "activity": "bluebottle.time_based.serializers.DateActivitySerializer",
+            "registration": "bluebottle.time_based.serializers.DateRegistrationSerializer",
+            'slot': 'bluebottle.time_based.serializers.DateActivitySlotSerializer',
         }
     )
 
@@ -61,6 +97,29 @@ class DeadlineParticipantSerializer(ParticipantSerializer):
         **{
             "activity": "bluebottle.time_based.serializers.DeadlineActivitySerializer",
             "registration": "bluebottle.time_based.serializers.DeadlineRegistrationSerializer",
+        }
+    )
+
+
+class RegisteredDateParticipantSerializer(ParticipantSerializer):
+    permissions = ResourcePermissionField('registered-date-participant-detail', view_args=('pk',))
+
+    class Meta(ParticipantSerializer.Meta):
+        model = RegisteredDateParticipant
+        fields = BaseContributorSerializer.Meta.fields + ('contributions',)
+
+    class JSONAPIMeta(ParticipantSerializer.JSONAPIMeta):
+        resource_name = "contributors/time-based/registered-date-participants"
+        included_resources = [
+            "user",
+            "activity",
+            "contributions"
+        ]
+
+    included_serializers = dict(
+        ParticipantSerializer.included_serializers.serializers,
+        **{
+            "activity": "bluebottle.time_based.serializers.RegisteredDateActivitySerializer",
         }
     )
 
@@ -157,6 +216,17 @@ class ParticipantTransitionSerializer(TransitionSerializer):
         ]
 
 
+class DateParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=DateParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.DateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.DateActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/date-participant-transitions'
+
+
 class DeadlineParticipantTransitionSerializer(ParticipantTransitionSerializer):
     resource = ResourceRelatedField(queryset=DeadlineParticipant.objects.all())
     included_serializers = {
@@ -166,6 +236,17 @@ class DeadlineParticipantTransitionSerializer(ParticipantTransitionSerializer):
 
     class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
         resource_name = 'contributors/time-based/deadline-participant-transitions'
+
+
+class RegisteredDateParticipantTransitionSerializer(ParticipantTransitionSerializer):
+    resource = ResourceRelatedField(queryset=RegisteredDateParticipant.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.RegisteredDateParticipantSerializer',
+        'resource.activity': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
+    }
+
+    class JSONAPIMeta(ParticipantTransitionSerializer.JSONAPIMeta):
+        resource_name = 'contributors/time-based/registered-date-participant-transitions'
 
 
 class ScheduleParticipantTransitionSerializer(ParticipantTransitionSerializer):

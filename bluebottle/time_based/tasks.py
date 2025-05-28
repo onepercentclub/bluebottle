@@ -16,6 +16,7 @@ from bluebottle.time_based.models import (
     ScheduleSlot,
     TeamScheduleSlot,
     ScheduleActivity,
+    RegisteredDateActivity
 )
 
 logger = logging.getLogger('bluebottle')
@@ -126,4 +127,18 @@ def team_schedule_slot_tasks():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
             for task in TeamScheduleSlot.get_periodic_tasks():
+                task.execute()
+
+
+@periodic_task(
+    run_every=(crontab(minute='*/15')),
+    name="registered_date_activity_tasks",
+    ignore_result=True
+)
+def registered_date_activity_tasks():
+    for tenant in Client.objects.all():
+        with LocalTenant(tenant, clear_tenant=True):
+            for task in RegisteredDateActivity.get_periodic_tasks():
+                task.execute()
+            for task in RegisteredDateActivity.get_periodic_tasks():
                 task.execute()

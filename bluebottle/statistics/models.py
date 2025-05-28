@@ -65,7 +65,7 @@ class ManualStatistic(BaseStatistic, TranslatableModel):
     unit = None
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/manual-statistics'
+        resource_name = 'statistics'
 
     def __str__(self):
         return str(self.translations.name)
@@ -163,7 +163,7 @@ class DatabaseStatistic(BaseStatistic, TranslatableModel):
         return str(self.query)
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/database-statistics'
+        resource_name = 'statistics'
 
     class Meta(object):
         verbose_name = _('Engagement statistic')
@@ -206,7 +206,7 @@ class ImpactStatistic(BaseStatistic):
         return str(self.impact_type.name)
 
     class JSONAPIMeta(object):
-        resource_name = 'statistics/impact-statistics'
+        resource_name = 'statistics'
 
     class Meta(object):
         verbose_name = _('Impact statistic')

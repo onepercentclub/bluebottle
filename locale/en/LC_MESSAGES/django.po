@@ -1,3 +1,23 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-28 11:11+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
 #: bluebottle/activities/admin.py:86 bluebottle/activities/admin.py:881
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:222
 #: bluebottle/fsm/admin.py:230 bluebottle/utils/models.py:171
@@ -334,7 +354,7 @@ msgstr ""
 #: bluebottle/activities/messages/activity_manager.py:34
 #, python-brace-format
 msgctxt "email"
-msgid "Your activity \"{title}\" has succeeded "
+msgid "Your activity \"{title}\" has succeeded 🎉"
 msgstr ""
 
 #: bluebottle/activities/messages.py:122
@@ -497,7 +517,7 @@ msgstr ""
 #: bluebottle/activities/messages.py:385
 #, python-brace-format
 msgctxt "email"
-msgid "Youre added to a team for '{title}'"
+msgid "You’re added to a team for '{title}'"
 msgstr ""
 
 #: bluebottle/activities/messages.py:407
@@ -520,7 +540,7 @@ msgstr ""
 #: bluebottle/activities/messages.py:462
 #, python-brace-format
 msgctxt "email"
-msgid "Team member removed for {title}"
+msgid "Team member removed for ‘{title}’"
 msgstr ""
 
 #: bluebottle/activities/messages.py:491
@@ -545,13 +565,13 @@ msgstr ""
 #: bluebottle/activities/messages.py:573
 #: bluebottle/activities/messages/matching.py:181
 msgctxt "email"
-msgid "Its a new year, let's make some impact!"
+msgid "It’s a new year, let's make some impact!"
 msgstr ""
 
 #: bluebottle/activities/messages.py:578
 #: bluebottle/activities/messages/matching.py:186
 msgctxt "email"
-msgid "Havent joined an activity yet? Lets get started!"
+msgid "Haven’t joined an activity yet? Let’s get started!"
 msgstr ""
 
 #: bluebottle/activities/messages.py:584
@@ -1059,8 +1079,8 @@ msgstr ""
 
 #: bluebottle/activities/states.py:305 bluebottle/deeds/states.py:75
 msgid ""
-"The activity will be set to the status Needs work. Then you can make changes "
-"to the activity and submit it again."
+"The activity will be set to the status ‘Needs work’. Then you can make "
+"changes to the activity and submit it again."
 msgstr ""
 
 #: bluebottle/activities/states.py:315 bluebottle/collect/states.py:34
@@ -1376,12 +1396,12 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "Unfortunately, nobody applied to your activity \"%(title)s\" before the "
-"deadline to apply. Thats why we have cancelled your activity."
+"deadline to apply. That’s why we have cancelled your activity."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:10
 msgctxt "email"
-msgid "Dont worry, you can always create a new activity and try again."
+msgid "Don’t worry, you can always create a new activity and try again."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_expired.html:14
@@ -1453,7 +1473,7 @@ msgid ""
 "\n"
 "Your activity <i>%(title)s</i> has been submitted on %(site_name)s.<br>\n"
 "<br>\n"
-"<b>Whats next?</b>\n"
+"<b>What’s next?</b>\n"
 "<ul>\n"
 "    <li>\n"
 "        The platform manager will review your activity.\n"
@@ -1463,7 +1483,7 @@ msgid ""
 "the platform and people can contribute.\n"
 "    </li>\n"
 "    <li>\n"
-"        If any changes are needed, youll receive an email with suggested "
+"        If any changes are needed, you’ll receive an email with suggested "
 "improvements.\n"
 "    </li>\n"
 "</ul>\n"
@@ -1486,7 +1506,7 @@ msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_succeeded.html:17
 msgctxt "email"
-msgid "And dont forget to thank your awesome participants for their support."
+msgid "And don’t forget to thank your awesome participants for their support."
 msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/publish_activity_reminder.html:5
@@ -1572,7 +1592,7 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"        Theres still so much time to reach the target of %(do_good_hours)s "
+"        There’s still so much time to reach the target of %(do_good_hours)s "
 "hours making an impact this year.\n"
 "        Check out the activities you can join.\n"
 "    "
@@ -1599,7 +1619,7 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"<p>View the activity to learn more about whats planned and what to expect. "
+"<p>View the activity to learn more about what’s planned and what to expect. "
 "We'll ask you to activate your account to stay updated which will make it "
 "easier to join future activities.</p>\n"
 msgstr ""
@@ -1925,7 +1945,7 @@ msgid "Any distance"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:152
-msgid "Dont show online/remote activities"
+msgid "Don’t show online/remote activities"
 msgstr ""
 
 #: bluebottle/bb_accounts/models.py:154
@@ -3216,7 +3236,7 @@ msgid "Disable this item so it cannot be selected when creating an activity."
 msgstr ""
 
 #: bluebottle/collect/models.py:26
-msgid "The item to be collected (E.g. Bicycles, Clothing, Groceries, )"
+msgid "The item to be collected (E.g. Bicycles, Clothing, Groceries, …)"
 msgstr ""
 
 #: bluebottle/collect/models.py:30 bluebottle/impact/models.py:54
@@ -3226,7 +3246,7 @@ msgstr ""
 #: bluebottle/collect/models.py:32
 msgid ""
 "The unit in which you want to count the item (E.g. Bicycle, Bag of clothing, "
-"Crate of groceries, )"
+"Crate of groceries, …)"
 msgstr ""
 
 #: bluebottle/collect/models.py:38
@@ -3236,7 +3256,7 @@ msgstr ""
 #: bluebottle/collect/models.py:40
 msgid ""
 "The unit in which you want to count the item (E.g. Bicycles, Bags of "
-"clothing, Crates of groceries, )"
+"clothing, Crates of groceries, …)"
 msgstr ""
 
 #: bluebottle/collect/models.py:51
@@ -4149,7 +4169,7 @@ msgid "View campaign"
 msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:24
-msgid "You have a new donation!"
+msgid "You have a new donation!💰"
 msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:33
@@ -4158,7 +4178,7 @@ msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:38
 #, python-brace-format
-msgid "Your campaign \"{title}\" has been successfully completed! "
+msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
 msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:43
@@ -4192,7 +4212,7 @@ msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:73
 #, python-brace-format
-msgid "Your crowdfunding campaign \"{title}\" is open for new donations "
+msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
 msgstr ""
 
 #: bluebottle/funding/messages/activity_manager.py:78
@@ -5131,7 +5151,7 @@ msgid ""
 "\n"
 "            Hi %(recipient_name)s,\n"
 "            <br><br>\n"
-"            Unfortunately your campaign %(title)s has been cancelled.\n"
+"            Unfortunately your campaign “%(title)s” has been cancelled.\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager "
 "by replying to this email.\n"
@@ -5146,7 +5166,7 @@ msgid ""
 "            Hi %(recipient_name)s,<br/>\n"
 "            Unfortunately, the platform manager closed your crowdfunding "
 "campaign <i>%(title)s</i>.\n"
-"            Didnt expect this? Reach out to your platform manager to find "
+"            Didn’t expect this? Reach out to your platform manager to find "
 "out why.\n"
 "        "
 msgstr ""
@@ -5158,8 +5178,8 @@ msgid ""
 "\n"
 "            Hi %(recipient_name)s,\n"
 "            <br><br>\n"
-"            The deadline for your campaign %(title)s has been extended. This "
-"means that your campaign is open for new donations.\n"
+"            The deadline for your campaign “%(title)s” has been extended. "
+"This means that your campaign is open for new donations.\n"
 "            <br><br>\n"
 "            Share your campaign to attract new donations!\n"
 "\n"
@@ -5173,7 +5193,7 @@ msgid ""
 "\n"
 "            Hi %(recipient_name)s,<br/>\n"
 "            Your funding deadline for <i>%(title)s\"</i> passed. "
-"Unfortunately, you didnt reach your funding goal within the deadline.\n"
+"Unfortunately, you didn’t reach your funding goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
 msgstr ""
@@ -5286,8 +5306,8 @@ msgid ""
 "            We have good news! Your identity has been verified, and you can "
 "continue with your crowdfunding campaign.\n"
 "            <br/><br/>\n"
-"            If your campaign has already started, you dont need to do "
-"anything else. If it hasnt started yet,\n"
+"            If your campaign has already started, you don’t need to do "
+"anything else. If it hasn’t started yet,\n"
 "            please check that everything is in order and submit your "
 "campaign for approval.\n"
 "        "
@@ -5370,8 +5390,8 @@ msgid ""
 "            Hi %(recipient_name)s,<br/>\n"
 "            Your donation to \"%(title)s\" will be fully refunded within 10 "
 "days.\n"
-"            Either you requested this refund or the campaign didnt reach its "
-"funding goal.\n"
+"            Either you requested this refund or the campaign didn’t reach "
+"its funding goal.\n"
 "            If you have any questions about this refund, please contact "
 "%(contact_email)s.\n"
 "        "
@@ -5443,7 +5463,7 @@ msgid ""
 "\n"
 "    Please note: without a complete identity verification, the collected "
 "funds cannot be paid out. Additionally, new donations may be temporarily "
-"paused. Therefore, its important to provide the missing information as soon "
+"paused. Therefore, it’s important to provide the missing information as soon "
 "as possible.\n"
 "    "
 msgstr ""
@@ -6070,11 +6090,11 @@ msgid "Formulate the goal \"Our goal is to...\""
 msgstr ""
 
 #: bluebottle/impact/models.py:64
-msgid "E.g. \"Save plastic\" or \"Reduce CO emission\""
+msgid "E.g. \"Save plastic\" or \"Reduce CO₂ emission\""
 msgstr ""
 
 #: bluebottle/impact/models.py:67
-msgid "Formulate the goal including the target Our goal is to"
+msgid "Formulate the goal including the target “Our goal is to…”"
 msgstr ""
 
 #: bluebottle/impact/models.py:77
@@ -6082,7 +6102,7 @@ msgid "Formulate the result in past tense"
 msgstr ""
 
 #: bluebottle/impact/models.py:79
-msgid "E.g. \"Plastic saved\" or \"CO emissions reduced\""
+msgid "E.g. \"Plastic saved\" or \"CO₂ emissions reduced\""
 msgstr ""
 
 #: bluebottle/impact/models.py:94
@@ -6620,7 +6640,7 @@ msgid ""
 "        People can now join your activities. No activities yet? This is the "
 "perfect\n"
 "        moment to create one (or two), so people can help you reach your "
-"initiatives goal.\n"
+"initiative’s goal.\n"
 "    "
 msgstr ""
 
@@ -6676,7 +6696,7 @@ msgid ""
 "\n"
 "        Your initiative \"%(title)s\" has been submitted on %(site_name)s.\n"
 "        <br><br>\n"
-"        <b>Whats next?</b><br>\n"
+"        <b>What’s next?</b><br>\n"
 "        <ul>\n"
 "            <li>\n"
 "                The platform manager will review your initiative.\n"
@@ -6687,7 +6707,7 @@ msgid ""
 "for people to contribute.\n"
 "            </li>\n"
 "            <li>\n"
-"                If any changes are needed, youll receive an email with "
+"                If any changes are needed, you’ll receive an email with "
 "suggested improvements.\n"
 "            </li>\n"
 "        </ul>\n"
@@ -7175,13 +7195,13 @@ msgstr ""
 #: bluebottle/members/models.py:219
 msgid ""
 "Set the number of months after which user data will be anonymised. Leave the "
-"field empty or with 0 if you do not wish to anonymise user data."
+"field empty or with ‘0’ if you do not wish to anonymise user data."
 msgstr ""
 
 #: bluebottle/members/models.py:231
 msgid ""
 "Set the number of months after which user data will be deleted. Leave the "
-"field empty or with 0 if you do not wish to delete user data."
+"field empty or with ‘0’ if you do not wish to delete user data."
 msgstr ""
 
 #: bluebottle/members/models.py:259 bluebottle/members/models.py:260
@@ -7365,7 +7385,7 @@ msgstr ""
 msgid ""
 "\n"
 "<h1>Welcome %(first_name)s</h1>\n"
-"<p class=\"lead\">Youre now officially part of the %(site_name)s community. "
+"<p class=\"lead\">You’re now officially part of the %(site_name)s community. "
 "Connect, share and work with others on initiatives that you care about.</p>\n"
 msgstr ""
 
@@ -7373,7 +7393,7 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"<p>If you have any questions please dont hesitate to contact "
+"<p>If you have any questions please don’t hesitate to contact "
 "%(contact_email)s</p>\n"
 msgstr ""
 
@@ -8677,28 +8697,28 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:314
 #, python-brace-format
 msgctxt "email"
-msgid "The activity \"{title}\" has succeeded "
+msgid "The activity \"{title}\" has succeeded 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:337
 #: bluebottle/time_based/messages/messages.py:337
 #, python-brace-format
 msgctxt "email"
-msgid "You have been added to the activity \"{title}\" "
+msgid "You have been added to the activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:362
 #: bluebottle/time_based/messages/messages.py:362
 #, python-brace-format
 msgctxt "email"
-msgid "Your team was added to the activity \"{title}\" "
+msgid "Your team was added to the activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:386
 #: bluebottle/time_based/messages/messages.py:386
 #, python-brace-format
 msgctxt "email"
-msgid "You have been added to a team for \"{title}\" "
+msgid "You have been added to a team for \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:411
@@ -8706,14 +8726,14 @@ msgstr ""
 #: bluebottle/time_based/messages/registrations.py:36
 #, python-brace-format
 msgctxt "email"
-msgid "You have a new participant for your activity \"{title}\" "
+msgid "You have a new participant for your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:434
 #: bluebottle/time_based/messages/messages.py:434
 #, python-brace-format
 msgctxt "email"
-msgid "A new participant has joined your activity \"{title}\" "
+msgid "A new participant has joined your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:514 bluebottle/time_based/messages.py:582
@@ -8754,7 +8774,7 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:627
 #, python-brace-format
 msgctxt "email"
-msgid "You have been selected for the activity \"{title}\" "
+msgid "You have been selected for the activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:651
@@ -8784,14 +8804,14 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:693
 #, python-brace-format
 msgctxt "email"
-msgid "Your team participation in {title} has been cancelled"
+msgid "Your team participation in ‘{title}’ has been cancelled"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:715
 #: bluebottle/time_based/messages/messages.py:715
 #, python-brace-format
 msgctxt "email"
-msgid "Your contribution to the activity \"{title}\" is successful "
+msgid "Your contribution to the activity \"{title}\" is successful 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:736
@@ -8835,14 +8855,14 @@ msgstr ""
 #: bluebottle/time_based/messages/messages.py:846
 #, python-brace-format
 msgctxt "email"
-msgid "A participant has been added to your activity \"{title}\" "
+msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:872
 #: bluebottle/time_based/messages/messages.py:872
 #, python-brace-format
 msgctxt "email"
-msgid "A team has been added to your activity \"{title}\" "
+msgid "A team has been added to your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages.py:894
@@ -8881,7 +8901,7 @@ msgstr ""
 #: bluebottle/time_based/messages/registrations.py:31
 #, python-brace-format
 msgctxt "email"
-msgid "You have a new application for your activity \"{title}\" "
+msgid "You have a new application for your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages/registrations.py:41
@@ -8954,13 +8974,13 @@ msgstr ""
 #: bluebottle/time_based/messages/registrations.py:193
 #, python-brace-format
 msgctxt "email"
-msgid "A new team has applied to your activity \"{title}\" "
+msgid "A new team has applied to your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages/registrations.py:198
 #, python-brace-format
 msgctxt "email"
-msgid "You have a new team for your activity \"{title}\" "
+msgid "You have a new team for your activity \"{title}\" 🎉"
 msgstr ""
 
 #: bluebottle/time_based/messages/registrations.py:203
@@ -10657,7 +10677,7 @@ msgstr ""
 msgid ""
 "\n"
 "                        Ensure the time slot details are correct before "
-"repeating, as bulk changes wont be possible later.\n"
+"repeating, as bulk changes won’t be possible later.\n"
 "                    "
 msgstr ""
 
@@ -10782,7 +10802,7 @@ msgid ""
 "\n"
 "Your activity <i>%(title)s</i> has been submitted on %(site_name)s.<br>\n"
 "<br>\n"
-"<b>Whats next?</b>\n"
+"<b>What’s next?</b>\n"
 "<ul>\n"
 "    <li>\n"
 "        The platform manager will review your activity.\n"
@@ -10792,7 +10812,7 @@ msgid ""
 "contributions will be recorded.\n"
 "    </li>\n"
 "    <li>\n"
-"        If any changes are needed, youll receive an email with suggested "
+"        If any changes are needed, you’ll receive an email with suggested "
 "improvements.\n"
 "    </li>\n"
 "</ul>\n"
@@ -11130,12 +11150,12 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"<p>Unfortunately, you have not been selected for the activity %(title)s.</"
+"<p>Unfortunately, you have not been selected for the activity ‘%(title)s’.</"
 "p>\n"
 "\n"
-"<p>Dont worry, there are more activities out there that need your help. Head "
-"over to the activity overview page to see if there is something for you.</"
-"p>\n"
+"<p>Don’t worry, there are more activities out there that need your help. "
+"Head over to the activity overview page to see if there is something for you."
+"</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_removed.html:4
@@ -11146,9 +11166,9 @@ msgid ""
 "\n"
 "<p>You have been removed as participant for the activity \"%(title)s\".</p>\n"
 "\n"
-"<p>Dont worry, there are more activities out there that need your help. Head "
-"over to the activity overview page to see if there is something for you.</"
-"p>\n"
+"<p>Don’t worry, there are more activities out there that need your help. "
+"Head over to the activity overview page to see if there is something for you."
+"</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:6
@@ -11186,8 +11206,8 @@ msgid ""
 "\n"
 "<p>You have been added as a participant to the activity \"%(title)s\", which "
 "has already taken place.</p>\n"
-"<p>We're happy to let you know that your contribution has been recordedthank "
-"you for being a part of it!\n"
+"<p>We're happy to let you know that your contribution has been recorded—"
+"thank you for being a part of it!\n"
 "</p>\n"
 msgstr ""
 
@@ -11395,9 +11415,9 @@ msgid ""
 "        <li>Contact the team captain %(applicant_name)s to discuss a "
 "specific date, time and location for when they can take part in your "
 "activity.</li>\n"
-"        <li>Add this information to the team via the Unscheduled tab on the "
-"team list on the activity page. The team captain and team members will be "
-"notified when the information is added.</li>\n"
+"        <li>Add this information to the team via the ‘Unscheduled’ tab on "
+"the team list on the activity page. The team captain and team members will "
+"be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
 msgstr ""
@@ -11421,9 +11441,9 @@ msgid ""
 "        <li>If accepted then contact the team captain %(applicant_name)s to "
 "discuss a specific date, time and location for when they can take part in "
 "your activity.</li>\n"
-"        <li>Add this information to the team via the Unscheduled tab of the "
-"team list on the activity page. The team captain and team members will be "
-"notified when the information is added.</li>\n"
+"        <li>Add this information to the team via the ‘Unscheduled’ tab of "
+"the team list on the activity page. The team captain and team members will "
+"be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
 msgstr ""
@@ -11538,12 +11558,12 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"<p>Unfortunately, your team has not been selected for the activity %(title)s."
-"</p>\n"
+"<p>Unfortunately, your team has not been selected for the activity "
+"‘%(title)s’.</p>\n"
 "\n"
-"<p>Dont worry, there are more activities out there that need your help. Head "
-"over to the activity overview page to see if there is something for you.</"
-"p>\n"
+"<p>Don’t worry, there are more activities out there that need your help. "
+"Head over to the activity overview page to see if there is something for you."
+"</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_accepted.html:5
@@ -11563,10 +11583,10 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"<p>Unfortunately, you have been removed from the activity %(title)s.</p>\n"
+"<p>Unfortunately, you have been removed from the activity ‘%(title)s’.</p>\n"
 "\n"
 "<p>\n"
-"    Dont worry, there are more activities out there that need your help. "
+"    Don’t worry, there are more activities out there that need your help. "
 "Head\n"
 "    over to the activity overview page to see if there is something for "
 "you.\n"
@@ -11740,7 +11760,7 @@ msgctxt "email"
 msgid ""
 "\n"
 "                If your team is unable to participate, please withdraw via "
-"the activity page so that another team can take your place.\n"
+"the activity page so that another team can take your place. \n"
 "            "
 msgstr ""
 
@@ -11802,9 +11822,9 @@ msgid ""
 "\n"
 "<p>Your team has been removed from the activity \"%(title)s\".</p>\n"
 "\n"
-"<p>Dont worry, there are more activities out there that need your help. Head "
-"over to the activity overview page to see if there is something for you.</"
-"p>\n"
+"<p>Don’t worry, there are more activities out there that need your help. "
+"Head over to the activity overview page to see if there is something for you."
+"</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_scheduled.html:6
@@ -11828,7 +11848,7 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"    Invite your team members if you havent done so already!\n"
+"    Invite your team members if you haven’t done so already!\n"
 "  "
 msgstr ""
 
@@ -11856,9 +11876,9 @@ msgid ""
 "<p>Your have been removed as a team member from {name}'s team for the "
 "activity \"%(title)s\".</p>\n"
 "\n"
-"<p>Dont worry, there are more activities out there that need your help. Head "
-"over to the activity overview page to see if there is something for you.</"
-"p>\n"
+"<p>Don’t worry, there are more activities out there that need your help. "
+"Head over to the activity overview page to see if there is something for you."
+"</p>\n"
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_teammember_scheduled.html:5
@@ -12065,8 +12085,8 @@ msgstr ""
 #: bluebottle/utils/monkey_patch_object_not_found.py:17
 #, python-format
 msgid ""
-"%(name)s with ID %(key)s cant be found. Perhaps you dont have permission to "
-"view it or maybe it was deleted?"
+"%(name)s with ID “%(key)s” can’t be found. Perhaps you don’t have permission "
+"to view it or maybe it was deleted?"
 msgstr ""
 
 #: bluebottle/utils/serializers.py:32
@@ -12205,12 +12225,11 @@ msgstr[1] ""
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
 #: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
-#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:23
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:25
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -12238,27 +12257,22 @@ msgstr ""
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
 #: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
 #: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27 tenants/navara/settings.py:27
+#: tenants/maximising-potential/settings.py:27
 #: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:24 tenants/partos/settings.py:26
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
 #: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
+#: tenants/shell-disaster-relief/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
-msgstr ""
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
 msgstr ""
 
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27

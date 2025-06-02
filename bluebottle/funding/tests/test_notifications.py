@@ -5,6 +5,7 @@ from bluebottle.funding.messages.funding.activity_manager import (
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.messages.grant_application.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationRejectedMessage, GrantApplicationSubmittedMessage, GrantApplicationCancelledMessage
+from bluebottle.funding.messages.grant_application.reviewer import GrantApplicationSubmittedReviewerMessage
 from bluebottle.funding.tests.factories import FundingFactory, GrantApplicationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
@@ -100,6 +101,15 @@ class GrantApplicationNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have submitted a grant application on Test')
         self.assertBodyContains('has been submitted')
         self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View application')
+
+    def test_activity_submitted_reviewer_notification(self):
+        self.message_class = GrantApplicationSubmittedReviewerMessage
+        self.create()
+        self.assertRecipients([self.reviewer])
+        self.assertSubject('A new grant application is ready to be reviewed on Test')
+        self.assertBodyContains('Please take a moment to review this application')
+        self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View application')
 
     def test_activity_cancelled_notification(self):

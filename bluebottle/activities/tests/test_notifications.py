@@ -23,7 +23,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateActivitySlotFactory,
-    DateParticipantFactory, SlotParticipantFactory
+    DateParticipantFactory, DateRegistrationFactory
 )
 
 
@@ -44,7 +44,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.reviewer])
         self.assertSubject('A new activity is ready to be reviewed on Test')
         self.assertBodyContains('Please take a moment to review this activity')
-        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('View this activity')
 
     def test_activity_published_reviewer_notification(self):
@@ -167,39 +167,39 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         )
 
         self.active_user = BlueBottleUserFactory.create(first_name='Active')
-        part1 = DateParticipantFactory.create(
+        reg1 = DateRegistrationFactory.create(
             user=self.active_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=reg1,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part1,
+        DateParticipantFactory.create(
+            registration=reg1,
             slot=slot2
         )
         self.moderate_user = BlueBottleUserFactory.create(first_name='Moderate')
-        part2 = DateParticipantFactory.create(
+        reg2 = DateRegistrationFactory.create(
             user=self.moderate_user,
             activity=activity
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=reg2,
             slot=slot1
         )
-        SlotParticipantFactory.create(
-            participant=part2,
+        DateParticipantFactory.create(
+            registration=reg2,
             slot=old_slot
         )
         self.passive_user = BlueBottleUserFactory.create(first_name='Passive')
-        part3 = DateParticipantFactory.create(
+        reg3 = DateRegistrationFactory.create(
             user=self.passive_user,
             activity=activity
         )
 
-        SlotParticipantFactory.create(
-            participant=part3,
+        DateParticipantFactory.create(
+            registration=reg3,
             slot=old_slot
         )
 

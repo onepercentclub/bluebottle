@@ -1,10 +1,8 @@
 from builtins import object
 from builtins import str
-from builtins import zip
 
-from django.contrib.admin.options import get_content_type_for_model
 from django.contrib.admin.models import LogEntry
-
+from django.contrib.admin.options import get_content_type_for_model
 from django.db.models.signals import post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
@@ -167,11 +165,10 @@ class TriggerMixin(object):
 
                 setattr(self, name, machine)
 
-        self._initial_values = dict(
-            (field.name, getattr(self, field.name))
-            for field in self._meta.fields
-            if not field.is_relation
-        )
+        self._initial_values = {}
+        for field in self._meta.fields:
+            field_name = f'{field.name}_id' if field.is_relation else field.name
+            self._initial_values[field_name] = getattr(self, field_name)
 
     @classmethod
     def get_periodic_tasks(cls):
@@ -183,7 +180,10 @@ class TriggerMixin(object):
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super(TriggerMixin, cls).from_db(db, field_names, values)
-        instance._initial_values = dict(list(zip(field_names, values)))
+        instance._initial_values = {}
+        for field in instance._meta.fields:
+            field_name = f'{field.name}_id' if field.is_relation else field.name
+            instance._initial_values[field_name] = getattr(instance, field_name)
 
         return instance
 

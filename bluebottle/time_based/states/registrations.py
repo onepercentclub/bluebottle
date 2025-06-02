@@ -5,7 +5,7 @@ from bluebottle.fsm.state import (
 )
 from bluebottle.time_based.models import (
     DeadlineRegistration,
-    PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, )
+    PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, DateRegistration, )
 
 
 class RegistrationStateMachine(ModelStateMachine):
@@ -27,15 +27,8 @@ class RegistrationStateMachine(ModelStateMachine):
 
     def can_accept_registration(self, user):
         """can accept participant"""
-        owners = [
-            self.instance.activity.owner
-        ]
-
-        if self.instance.activity.initiative:
-            owners += list(self.instance.activity.owners)
-
         return (
-            user in owners or
+            user in self.instance.activity.owners or
             user.is_superuser or
             user.is_staff
         )
@@ -78,13 +71,18 @@ class RegistrationStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [new],
+        [new, accepted],
         rejected,
         name=_('Reject'),
         description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_registration,
     )
+
+
+@register(DateRegistration)
+class DateRegistrationStateMachine(RegistrationStateMachine):
+    pass
 
 
 @register(DeadlineRegistration)

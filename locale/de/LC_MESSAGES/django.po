@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-06-02 06:14+0200\n"
-"PO-Revision-Date: 2025-06-02 04:30\n"
+"PO-Revision-Date: 2025-06-02 04:53\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -1522,7 +1522,8 @@ msgstr "\n"
 msgctxt "email"
 msgid "\n"
 "<p>You have been added to an activity on %(site_name)s</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Du wurdest zur Aktivität \"%(site_name)s\" hinzugefügt</p>\n"
 
 #: bluebottle/activities/templates/mails/messages/participant/inactive_participant_added.html:10
 msgctxt "email"
@@ -1571,7 +1572,9 @@ msgctxt "email"
 msgid "\n"
 "The activity <i>%(title)s</i> has been successfully published\n"
 "and is now live on %(site_name)s for people to contribute to.\n"
-msgstr ""
+msgstr "\n"
+"Die Aktivität <i>%(title)s</i> wurde erfolgreich veröffentlicht\n"
+"und ist nun auf %(site_name)s live, damit Menschen beitragen können.\n"
 
 #: bluebottle/activities/templates/mails/messages/reviewer/activity_submitted.html:5
 #, python-format
@@ -4930,7 +4933,13 @@ msgid "\n"
 "            <br><br>\n"
 "            If you have any questions, you can contact the platform manager by replying to this email.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br><br>\n"
+"            Leider wurde Ihre Kampagne “%(title)s” abgebrochen.\n"
+"            <br><br>\n"
+"            Wenn Sie Fragen haben, können Sie den Plattform-Manager kontaktieren, indem Sie auf diese E-Mail antworten.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/funding_expired.html:7
 #, python-format
@@ -4940,7 +4949,11 @@ msgid "\n"
 "            Unfortunately, the platform manager closed your crowdfunding campaign <i>%(title)s</i>.\n"
 "            Didn’t expect this? Reach out to your platform manager to find out why.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,<br/>\n"
+"            Leider hat der Plattform-Manager Ihre Crowdfunding-Kampagne <i>%(title)s</i> geschlossen.\n"
+"            Erwarten Sie das nicht? Wenden Sie sich an Ihren Plattform-Manager, um herauszufinden, warum.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/funding_extended.html:8
 #, python-format
@@ -4952,7 +4965,13 @@ msgid "\n"
 "            <br><br>\n"
 "            Share your campaign to attract new donations!\n\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br><br>\n"
+"            Die Frist für Ihre Kampagne “%(title)s” wurde verlängert. Das bedeutet, dass Ihre Kampagne für neue Spenden offen ist.\n"
+"            <br><br>\n"
+"            Teilen Sie Ihre Kampagne, um neue Spenden anzuziehen!\n\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/funding_partially_funded.html:8
 #, python-format
@@ -4962,7 +4981,11 @@ msgid "\n"
 "            Your funding deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your funding goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,<br/>\n"
+"            Ihre Zahlungsfrist für <i>%(title)s\"</i> ist abgelaufen. Leider haben Sie Ihr Förderziel nicht innerhalb der Frist erreicht.\n"
+"            Wir werden Ihnen in Kürze eine Nachfass-E-Mail mit weiteren Informationen senden.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/funding_realised_owner.html:9
 #, python-format
@@ -5029,7 +5052,14 @@ msgid "\n"
 "            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.\n"
 "            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            Sie arbeiten an einer Crowdfunding-Kampagne auf %(site_name)s.\n"
+"            <br/><br/>\n"
+"            Zuvor haben Sie Informationen zur Überprüfung Ihrer Identität eingereicht. In einigen Fällen benötigen wir zusätzliche Informationen von Ihnen.\n"
+"            Bitte stellen Sie diese so schnell wie möglich bereit, um Probleme mit Ihrer Kampagne zu vermeiden oder um sie schnell zu lösen.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/payout_account_marked_incomplete.html:21
 #: bluebottle/funding/templates/mails/messages/activity_manager/public_payout_account_marked_incomplete.html:14
@@ -5054,7 +5084,20 @@ msgid "\n"
 "            <br/>\n"
 "            Please do this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Sie arbeiten an einer Crowdfunding-Kampagne auf %(site_name)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Zuvor haben Sie Informationen zur Überprüfung Ihrer Identität eingereicht, aber leider war dies nicht erfolgreich.\n"
+"            Dies könnte aus verschiedenen Gründen geschehen. Bitte überprüfen Sie den untenstehenden Link, um sicherzustellen, dass Ihre Angaben korrekt sind.\n"
+"            Wenn Sie weiterhin Probleme haben, kontaktieren Sie den Plattform-Manager unter %(contact_email)s.\n"
+"            <br/>\n"
+"            <br/>\n"
+"            Bitte tun Sie dies so schnell wie möglich, um Probleme mit Ihrer Kampagne zu vermeiden oder um sie schnell zu lösen.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/payout_account_rejected.html:25
 msgctxt "email"
@@ -5074,7 +5117,16 @@ msgid "\n"
 "            If your campaign has already started, you don’t need to do anything else. If it hasn’t started yet,\n"
 "            please check that everything is in order and submit your campaign for approval.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            Sie arbeiten an einer Crowdfunding-Kampagne auf %(site_name)s.\n"
+"            <br/><br/>\n"
+"            Wir haben gute Nachrichten! Ihre Identität wurde verifiziert, und Sie können mit Ihrer Crowdfunding-Kampagne fortfahren.\n"
+"            <br/><br/>\n"
+"            Wenn Ihre Kampagne bereits gestartet ist, müssen Sie nichts Weiteres tun. Wenn sie noch nicht gestartet ist,\n"
+"            überprüfen Sie bitte, ob alles in Ordnung ist, und reichen Sie Ihre Kampagne zur Genehmigung ein.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/activity_manager/public_payout_account_marked_incomplete.html:4
 #, python-format
@@ -5134,7 +5186,12 @@ msgid "\n"
 "            Great news! Your identity has been successfully verified on %(site_name)s.\n\n"
 "            This means that people can now collect funds for your organisation. These funds will be paid out straight to your organisation once a funding campaign has come to an end.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            Tolle Neuigkeiten! Ihre Identität wurde erfolgreich auf %(site_name)s verifiziert.\n\n"
+"            Das bedeutet, dass Menschen jetzt Gelder für Ihre Organisation sammeln können. Diese Gelder werden direkt an Ihre Organisation ausgezahlt, sobald eine Finanzierungskampagne beendet ist.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/contributor/donation_activity_refunded_donor.html:7
 #, python-format
@@ -5163,7 +5220,12 @@ msgid "\n"
 "            Either you requested this refund or the campaign didn’t reach its funding goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,<br/>\n"
+"            Ihre Spende an \"%(title)s\" wird innerhalb von 10 Tagen vollständig zurückerstattet.\n"
+"            Entweder haben Sie diese Rückerstattung beantragt oder die Kampagne hat ihr Finanzierungsziel nicht erreicht.\n"
+"            Wenn Sie Fragen zu dieser Erstattung haben, kontaktieren Sie bitte %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/contributor/donation_success_donor.html:8
 #, python-format
@@ -5208,7 +5270,14 @@ msgid "\n"
 "            Identity verification is required for processing the payout of the campaign.\n"
 "            If the verification fails, we cannot process the payout. In that case, all donations will be returned to the supporters.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,\n"
+"            <br/><br/>\n"
+"            Die Identitätsüberprüfung ist für eine laufende Crowdfunding-Kampagne fehlgeschlagen.\n"
+"            <br/><br/>\n"
+"            Eine Identitätsüberprüfung ist erforderlich, um die Auszahlung der Kampagne zu bearbeiten.\n"
+"            Wenn die Überprüfung fehlschlägt, können wir die Auszahlung nicht bearbeiten. In diesem Fall werden alle Spenden an die Unterstützer zurückgegeben.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/platform_manager/live_payout_account_rejected.html:19
 #: bluebottle/funding/templates/mails/messages/platform_manager/live_public_payout_account_rejected.html:14
@@ -7044,7 +7113,10 @@ msgid "\n"
 "                    When user data is deleted after the set number of months, only contributions that took place\n"
 "                    before the set months will be shown.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Wenn Nutzerdaten nach der festgelegten Anzahl von Monaten gelöscht werden, werden nur die Beiträge angezeigt,\n"
+"                    die vor den festgelegten Monaten getätigt wurden.\n"
+"                "
 
 #: bluebottle/members/templates/admin/members/set_retention_confirmation.html:46
 msgid "Activity detail page"
@@ -7087,7 +7159,8 @@ msgstr "\n"
 #, python-format
 msgid "\n"
 "<p>If you have any questions please don’t hesitate to contact %(contact_email)s</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Bei Fragen wenden Sie sich bitte an %(contact_email)s</p>\n"
 
 #: bluebottle/members/templates/mails/messages/account_activation.html:24
 msgctxt "email"
@@ -8746,7 +8819,7 @@ msgstr "Beitrag {name} {date}"
 #: bluebottle/time_based/models.py:966
 #, python-brace-format
 msgid "Contribution {date}"
-msgstr ""
+msgstr "Beitrag {date}"
 
 #: bluebottle/time_based/models.py:972
 msgid "expertise based"
@@ -8768,7 +8841,7 @@ msgstr "Kandidat {name} für {activity}"
 #: bluebottle/time_based/models.py:1028
 #, python-brace-format
 msgid "Candidate {name}"
-msgstr ""
+msgstr "Kandidat {name}"
 
 #: bluebottle/time_based/models.py:1031
 msgid "Candidate"
@@ -9811,7 +9884,8 @@ msgstr "Teilnehmer anpassen"
 #, python-format
 msgid "\n"
 "    Adjust a participant for \"%(activity)s\"\n"
-msgstr ""
+msgstr "\n"
+"    Passen Sie einen Teilnehmer für \"%(activity)s\" an\n"
 
 #: bluebottle/time_based/templates/admin/adjust_participant.html:10
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:10
@@ -9847,7 +9921,8 @@ msgstr "Vorbereitungszeitbeitrag prüfen"
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:5
 msgid "\n"
 "    Check if we should change the status of the preparation time\n"
-msgstr ""
+msgstr "\n"
+"    Überprüfen Sie, ob wir den Status der Vorbereitungszeit ändern sollten\n"
 
 #: bluebottle/time_based/templates/admin/clear_deadline.html:2
 msgid "Clear the deadline"

@@ -718,12 +718,11 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_slot(self, obj):
-        if isinstance(obj.contributor, DateParticipant) and obj.slot_participant_id:
-            return obj.slot_participant.slot
-        elif (
+        if (
             isinstance(obj.contributor, ScheduleParticipant)
             or isinstance(obj.contributor, TeamScheduleParticipant)
             or isinstance(obj.contributor, PeriodicParticipant)
+            or isinstance(obj.contributor, DateParticipant)
         ):
             return obj.contributor.slot
         return

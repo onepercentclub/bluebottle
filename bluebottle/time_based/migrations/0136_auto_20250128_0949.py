@@ -12,23 +12,25 @@ def migrate_date_participants(apps, schema_editor):
     date_participant_ctype = ContentType.objects.get_for_model(DateParticipant)
 
     for participant in DateParticipant.objects.all():
-        if not participant.user:
-            print(f'Date participant {participant.pk} has no user, skipping')
-            continue
-        registration = DateRegistration.objects.create(
-            user=participant.user,
-            activity=participant.activity,
-            status=participant.status,
-            created=participant.created,
-            answer=participant.motivation,
-            document=participant.document,
-            polymorphic_ctype=date_registration_ctype
-        )
+        if participant.user:
+            registration = DateRegistration.objects.create(
+                user=participant.user,
+                activity=participant.activity,
+                status=participant.status,
+                created=participant.created,
+                answer=participant.motivation,
+                document=participant.document,
+                polymorphic_ctype=date_registration_ctype
+            )
+        else:
+            registration = None
+
         slot_participants = participant.slot_participants.all()
         for slot_participant in slot_participants:
             participant_status = slot_participant.status
             if participant_status == 'registered':
                 participant_status = 'accepted'
+
             new_participant = DateParticipant.objects.create(
                 user=participant.user,
                 registration=registration,

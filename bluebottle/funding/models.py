@@ -5,6 +5,8 @@ import string
 from builtins import object, range
 
 from babel.numbers import get_currency_name
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import SET_NULL, Count
@@ -13,9 +15,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
-
-from djchoices import DjangoChoices, ChoiceItem
-
+from djchoices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
@@ -33,12 +33,9 @@ from bluebottle.funding.validators import (
     TargetValidator,
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import CurrencyField, MoneyField
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
-
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 
 logger = logging.getLogger(__name__)
 
@@ -979,7 +976,9 @@ class LedgerItemChoices(DjangoChoices):
 
 class GrantFund(models.Model):
     name = models.CharField(max_length=200)
-    currency = models.CharField(max_length=3)
+
+    currency = CurrencyField()
+
     description = QuillField(_("Description"), blank=True)
     organization = models.ForeignKey(
         'organizations.Organization',
@@ -1129,7 +1128,6 @@ class GrantDeposit(TriggerMixin, models.Model):
                 type=LedgerItemChoices.debet
             )
             self.save()
-
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

@@ -46,16 +46,16 @@ class GrantApplicationCancelledMessage(GrantApplicationManagerMessage):
     template = 'messages/grant_application/activity_manager/application_cancelled'
 
 
-class PayoutAccountRejected(GrantApplicationManagerMessage):
+class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
     subject = _(u'Action required for your grant application')
     template = 'messages/grant_application/activity_manager/payout_account_rejected'
 
 
-class PayoutAccountMarkedIncomplete(GrantApplicationManagerMessage):
+class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessage):
     subject = _("Action required for your grant application")
     template = "messages/grant_application/activity_manager/payout_account_marked_incomplete"
 
 
-class PayoutAccountVerified(GrantApplicationManagerMessage):
+class GrantApplicationPayoutAccountVerified(GrantApplicationManagerMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/grant_application/activity_manager/payout_account_verified'

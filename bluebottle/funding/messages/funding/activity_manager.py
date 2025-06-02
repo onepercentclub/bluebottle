@@ -80,31 +80,31 @@ class FundingCancelledMessage(FundingActivityManagerMessage):
     template = 'messages/funding/activity_manager/funding_cancelled'
 
 
-class PayoutAccountRejected(FundingActivityManagerMessage):
+class FundingPayoutAccountRejected(FundingActivityManagerMessage):
     subject = _(u'Action required for your crowdfunding campaign')
     template = 'messages/funding/activity_manager/payout_account_rejected'
 
 
-class PayoutAccountMarkedIncomplete(FundingActivityManagerMessage):
+class FundingPayoutAccountMarkedIncomplete(FundingActivityManagerMessage):
     subject = _("Action required for your crowdfunding campaign")
     template = "messages/funding/activity_manager/payout_account_marked_incomplete"
 
 
-class PayoutAccountVerified(FundingActivityManagerMessage):
+class FundingPayoutAccountVerified(FundingActivityManagerMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/funding/activity_manager/payout_account_verified'
 
 
-class PublicPayoutAccountRejected(PayoutAccountRejected):
+class FundingPublicPayoutAccountRejected(FundingPayoutAccountRejected):
     subject = _(u'Action required for your identity verification')
-    template = 'messages/activity_manager/public_payout_account_rejected'
+    template = 'messages/funding/activity_manager/public_payout_account_rejected'
 
 
-class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
+class FundingPublicPayoutAccountMarkedIncomplete(FundingPayoutAccountMarkedIncomplete):
     subject = _("Action required for identity verification")
-    template = "messages/activity_manager/public_payout_account_marked_incomplete"
+    template = "messages/funding/activity_manager/public_payout_account_marked_incomplete"
 
 
-class PublicPayoutAccountVerified(TransitionMessage):
+class FundingPublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
-    template = 'messages/activity_manager/public_payout_account_verified'
+    template = 'messages/funding/activity_manager/public_payout_account_verified'

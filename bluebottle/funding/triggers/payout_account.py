@@ -7,7 +7,7 @@ from bluebottle.funding.effects import (
     ClearPayoutDatesEffect
 )
 from bluebottle.funding.messages.funding.activity_manager import (
-    PayoutAccountVerified, PayoutAccountRejected
+    FundingPayoutAccountVerified, FundingPayoutAccountRejected
 )
 from bluebottle.funding.models import (
     PlainPayoutAccount, Payout, BankAccount
@@ -34,7 +34,7 @@ class PlainPayoutAccountTriggers(TriggerManager):
         TransitionTrigger(
             PlainPayoutAccountStateMachine.verify,
             effects=[
-                NotificationEffect(PayoutAccountVerified),
+                NotificationEffect(FundingPayoutAccountVerified),
                 DeleteDocumentEffect
             ]
         ),
@@ -42,7 +42,7 @@ class PlainPayoutAccountTriggers(TriggerManager):
         TransitionTrigger(
             PlainPayoutAccountStateMachine.reject,
             effects=[
-                NotificationEffect(PayoutAccountRejected),
+                NotificationEffect(FundingPayoutAccountRejected),
                 DeleteDocumentEffect
             ]
         ),

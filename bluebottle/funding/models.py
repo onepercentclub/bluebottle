@@ -743,15 +743,15 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def funding(self):
-        for account in self.external_accounts.all():
-            for funding in account.funding_set.all():
-                return funding
+        return Funding.objects.filter(
+            bank_account__in=self.external_accounts.all()
+        ).all()
 
     @property
     def grant_application(self):
-        for account in self.external_accounts.all():
-            for grant_application in account.grant_application_set.all():
-                return grant_application
+        return GrantApplication.objects.filter(
+            bank_account__in=self.external_accounts.all()
+        ).all()
 
     def __str__(self):
         return "Payout account #{}".format(self.id)

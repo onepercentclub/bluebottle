@@ -14,7 +14,7 @@ from rest_framework_json_api.serializers import ModelSerializer
 from bluebottle.activities.models import Activity
 from bluebottle.activities.serializers import ActivitySerializer, ContributorSerializer
 from bluebottle.files.models import Image
-from bluebottle.files.serializers import ImageSerializer
+from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.utils.serializers import ResourcePermissionField
@@ -124,7 +124,7 @@ IMAGE_SIZES = {
     'small': '150x150',
     'medium': '800x450',
     'large': '1600x900',
-    'full': '1600',
+    'full': ORIGINAL_SIZE,
 }
 
 

@@ -371,6 +371,19 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         automatic=True,
     )
 
+    cancel = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_("The grant application has been cancelled and it will no longer be up for review."),
+        automatic=False,
+    )
+
 
 @register(GrantDonor)
 class GrantDonorStateMachine(ContributorStateMachine):

@@ -484,8 +484,13 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-
-        ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
+        from .states import PayoutStateMachine
+        for payout in cls.objects.filter(activity=activity):
+            if payout.status == PayoutStateMachine.new.value:
+                payout.delete()
+            elif payout.donations.count() == 0:
+                raise AssertionError('Payout without donations already started!')
+        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations

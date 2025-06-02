@@ -1,13 +1,9 @@
-{% extends "base.mail.html" %}
-{% load djmoney %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
-{% load message_url %}
 
-{% block content %}
+{% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},
-            <br><br>
             The deadline for your campaign “{{ title }}” has been extended. This means that your campaign is open for new donations.
             <br><br>
             Share your campaign to attract new donations!
@@ -15,8 +11,3 @@
         {% endblocktrans %}
     </p>
 {% endblock content %} 
-{% block action %}
-    <a href="{% message_url obj.get_absolute_url %}" class="action-email">
-       {% trans 'Go to campaign' context 'email' %}
-    </a>
-{% endblock %}`

@@ -42,6 +42,8 @@ from bluebottle.funding.serializers import (
     FundingListSerializer,
     FundingSerializer,
     TinyFundingSerializer,
+    GrantSerializer,
+    GrantApplicationSerializer
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import (
@@ -351,6 +353,9 @@ class ActivityPreviewSerializer(ModelSerializer):
         if obj.type == 'registereddateactivity':
             return 'registeredDate'
 
+        if obj.type == 'grantapplication':
+            return 'grantApplication'
+
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
@@ -565,6 +570,7 @@ class ActivityPreviewSerializer(ModelSerializer):
 class ActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         FundingListSerializer,
+        GrantApplicationSerializer,
         DeedListSerializer,
         CollectActivityListSerializer,
         DateActivitySerializer,
@@ -641,6 +647,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
         TeamScheduleParticipantSerializer,
         DeedParticipantSerializer,
         CollectContributorSerializer,
+        GrantSerializer
     ]
 
     included_serializers = {

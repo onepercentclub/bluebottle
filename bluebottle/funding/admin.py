@@ -20,12 +20,12 @@ from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin, )
+    ContributorChildAdmin,
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import (
     StateMachineAdmin,
@@ -47,11 +47,11 @@ from bluebottle.funding.models import (
     Funding,
     FundingPlatformSettings,
     GrantApplication,
-    GrantDonor,
     GrantDeposit,
+    GrantDonor,
     GrantFund,
-    LedgerItem,
     GrantPayout,
+    LedgerItem,
     LegacyPayment,
     MoneyContribution,
     Payment,
@@ -905,14 +905,19 @@ class GrantDonorInline(admin.StackedInline):
     extra = 0
 
 
-class GrantDepositInline(admin.StackedInline):
+class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDeposit
-    readonly_fields = ["created", "status"]
+    readonly_fields = ["created", "state_name"]
     fields = ['amount', 'reference', ] + readonly_fields
     extra = 0
 
     def has_delete_permission(self, *args, **kwargs):
         return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
 
 
 @admin.register(GrantFund)

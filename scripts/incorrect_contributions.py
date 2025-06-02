@@ -13,7 +13,7 @@ from bluebottle.time_based.models import (
 def run(*args):
     fix = 'fix' in args
     total_errors = False
-    for client in Client.objects.filter(schema_name='dll').all():
+    for client in Client.objects.all():
         with (LocalTenant(client)):
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',

@@ -13,36 +13,29 @@ from bluebottle.funding.effects import (
     GeneratePayoutsEffect, GenerateDonorWallpostEffect,
     RemoveDonorWallpostEffect, UpdateFundingAmountsEffect, RefundPaymentAtPSPEffect, SetDeadlineEffect,
     DeletePayoutsEffect,
-    SubmitPayoutEffect, SetDateEffect, DeleteDocumentEffect,
-    ClearPayoutDatesEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect, UpdateDonationValueEffect,
+    SetDateEffect, RemoveDonorFromPayoutEffect, CreateDonationEffect,
+    UpdateDonationValueEffect,
     RemoveAnonymousRewardEffect
 )
-from bluebottle.funding.messages.activity_manager import (
+from bluebottle.funding.messages.funding.activity_manager import (
     DonationSuccessActivityManagerMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
-    PayoutAccountVerified, PayoutAccountRejected,
     FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
-    FundingCancelledMessage, FundingApprovedMessage, GrantApplicationApprovedMessage
+    FundingCancelledMessage, FundingApprovedMessage
 )
-from bluebottle.funding.messages.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
-from bluebottle.funding.messages.contributor import (
+from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
+from bluebottle.funding.messages.funding.contributor import (
     DonationSuccessDonorMessage,
     DonationRefundedDonorMessage,
     DonationActivityRefundedDonorMessage,
 )
-from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
-    Funding, PlainPayoutAccount, Donor, Payout, Payment, BankAccount,
-    MoneyContribution, GrantDeposit,
-    GrantDonor, GrantApplication,
-    GrantPayout
+    Funding, Donor, Payment, MoneyContribution
 )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
-    PayoutStateMachine, BankAccountStateMachine, PlainPayoutAccountStateMachine, DonationStateMachine,
-    LedgerItemStateMachine, GrantDepositStateMachine,
-    GrantDonorStateMachine, GrantApplicationStateMachine,
-    GrantPayoutStateMachine
+    DonationStateMachine
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
@@ -274,94 +267,6 @@ class FundingTriggers(ActivityTriggers):
     ]
 
 
-def is_reviewed(effect):
-    """has been verified"""
-    return effect.instance.reviewed
-
-
-def is_unreviewed(effect):
-    """has not been verified"""
-    return not effect.instance.reviewed
-
-
-@register(PlainPayoutAccount)
-class PlainPayoutAccountTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            PlainPayoutAccountStateMachine.verify,
-            effects=[
-                NotificationEffect(PayoutAccountVerified),
-                DeleteDocumentEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PlainPayoutAccountStateMachine.reject,
-            effects=[
-                NotificationEffect(PayoutAccountRejected),
-                DeleteDocumentEffect
-            ]
-        ),
-    ]
-
-
-@register(BankAccount)
-class BankAccountTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            BankAccountStateMachine.reject,
-            effects=[
-                RelatedTransitionEffect(
-                    'connect_account',
-                    PlainPayoutAccountStateMachine.reject,
-                    description='Reject connected KYC account'
-                )
-            ]
-        ),
-    ]
-
-
-@register(Payout)
-class PayoutTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            PayoutStateMachine.approve,
-            effects=[
-                SubmitPayoutEffect,
-                SetDateEffect('date_approved')
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.start,
-            effects=[
-                SetDateEffect('date_started')
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.reset,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.schedule,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            PayoutStateMachine.succeed,
-            effects=[
-                SetDateEffect('date_completed')
-            ]
-        ),
-    ]
-
-
 def is_successful(instance):
     """donation is successful"""
     return instance.instance.status == ContributorStateMachine.succeeded
@@ -504,100 +409,6 @@ class BasePaymentTriggers(TriggerManager):
                         donation_not_refunded
                     ]
                 ),
-            ]
-        ),
-    ]
-
-
-def has_reference(effect):
-    return bool(effect.instance.reference)
-
-
-@register(GrantDeposit)
-class GrantDepositTriggers(TriggerManager):
-    triggers = [
-        ModelChangedTrigger(
-            ['reference'],
-            effects=[
-                TransitionEffect(GrantDepositStateMachine.complete, conditions=[has_reference])
-            ]
-        ),
-        TransitionTrigger(
-            GrantDepositStateMachine.complete,
-            effects=[
-                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
-
-            ]
-        ),
-    ]
-
-
-@register(GrantDonor)
-class GrantDonorTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            GrantDonorStateMachine.initiate,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    GrantApplicationStateMachine.approve
-                ),
-            ]
-        ),
-    ]
-
-
-@register(GrantApplication)
-class GrantApplicationTriggers(TriggerManager):
-    triggers = [
-
-        TransitionTrigger(
-            GrantApplicationStateMachine.approve,
-            effects=[
-                NotificationEffect(
-                    GrantApplicationApprovedMessage
-                )
-            ]
-        ),
-    ]
-
-
-@register(GrantPayout)
-class GrantPayoutTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            GrantPayoutStateMachine.approve,
-            effects=[
-                SubmitPayoutEffect,
-                SetDateEffect('date_approved')
-            ]
-        ),
-
-        TransitionTrigger(
-            GrantPayoutStateMachine.start,
-            effects=[
-                SetDateEffect('date_started')
-            ]
-        ),
-
-        TransitionTrigger(
-            GrantPayoutStateMachine.reset,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            GrantPayoutStateMachine.schedule,
-            effects=[
-                ClearPayoutDatesEffect
-            ]
-        ),
-
-        TransitionTrigger(
-            GrantPayoutStateMachine.succeed,
-            effects=[
-                SetDateEffect('date_completed')
             ]
         ),
     ]

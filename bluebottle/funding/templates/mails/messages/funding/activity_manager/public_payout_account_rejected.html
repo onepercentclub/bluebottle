@@ -1,8 +1,9 @@
-{% extends "base.mail.html" %} {% load i18n %} {% block content %}
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
 <p class="donation-intro">
-    {% blocktrans context 'email' %} Hi {{ recipient_name }},
-    <br />
-    <br />
+    {% blocktrans context 'email' %}
     Identity verification failed for an organization you manage.
     <br />
     <br />
@@ -15,10 +16,10 @@
     <br />
     Please do this as soon as possible. {% endblocktrans %}
 </p>
-{% endblock content %} {% block action %}
-<a
-    href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}"
->
+{% endblock content %}
+
+{% block action %}
+<a href="{{ site }}/admin/funding_stripe/stripepayoutaccount/{obj.pk}/change }}">
     {% trans 'Check details' context 'email' %}
 </a>
 {% endblock %}`

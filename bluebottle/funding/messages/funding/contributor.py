@@ -6,7 +6,7 @@ from bluebottle.notifications.messages import TransitionMessage
 
 class DonationSuccessDonorMessage(TransitionMessage):
     subject = _("Thanks for your donation!")
-    template = 'messages/contributor/donation_success_donor'
+    template = 'messages/funding/contributor/donation_success_donor'
 
     context = {
         'title': 'activity.title'
@@ -22,7 +22,7 @@ class DonationSuccessDonorMessage(TransitionMessage):
 
 class DonationRefundedDonorMessage(TransitionMessage):
     subject = _('Your donation for the campaign "{title}" will be refunded')
-    template = 'messages/contributor/donation_refunded_donor'
+    template = 'messages/funding/contributor/donation_refunded_donor'
 
     context = {
         'title': 'activity.title'
@@ -38,7 +38,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 
 class DonationActivityRefundedDonorMessage(TransitionMessage):
     subject = _('Your donation for the campaign "{title}" will be refunded')
-    template = 'messages/contributor/donation_activity_refunded_donor'
+    template = 'messages/funding/contributor/donation_activity_refunded_donor'
 
     context = {
         'title': 'activity.title'

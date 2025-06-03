@@ -32,100 +32,79 @@ class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
 
 class FundingPartiallyFundedMessage(FundingActivityManagerMessage):
     subject = _("Your crowdfunding campaign deadline passed")
-    template = 'messages/activity_manager/funding_partially_funded'
+    template = 'messages/funding/activity_manager/funding_partially_funded'
 
 
 class FundingRealisedOwnerMessage(FundingActivityManagerMessage):
     subject = _('Your campaign "{title}" has been successfully completed! 🎉')
-    template = 'messages/activity_manager/funding_realised_owner'
+    template = 'messages/funding/activity_manager/funding_realised_owner'
 
 
 class FundingRejectedMessage(FundingActivityManagerMessage):
     subject = _("Your crowdfunding campaign on {site_name} has been rejected")
-    template = 'messages/activity_manager/campaign_rejected'
+    template = 'messages/funding/activity_manager/campaign_rejected'
 
 
 class FundingSubmittedMessage(FundingActivityManagerMessage):
     subject = _("You submitted a crowdfunding campaign on {site_name}")
-    template = 'messages/activity_manager/campaign_submitted'
+    template = 'messages/funding/activity_manager/campaign_submitted'
 
 
 class FundingNeedsWorkMessage(FundingActivityManagerMessage):
     subject = _(u"The crowdfunding campaign you submitted on {site_name} needs work")
-    template = 'messages/activity_manager/campaign_needs_work'
+    template = 'messages/funding/activity_manager/campaign_needs_work'
 
 
 class FundingExpiredMessage(FundingActivityManagerMessage):
     subject = _(u"Your crowdfunding campaign has expired")
-    template = 'messages/activity_manager/funding_expired'
+    template = 'messages/funding/activity_manager/funding_expired'
 
 
 class FundingRefundedMessage(FundingActivityManagerMessage):
     subject = _(u'The donations received for your campaign "{title}" will be refunded')
-    template = 'messages/activity_manager/funding_refunded'
+    template = 'messages/funding/activity_manager/funding_refunded'
 
 
 class FundingApprovedMessage(FundingActivityManagerMessage):
     subject = _('Your crowdfunding campaign on {site_name} has been approved!')
-    template = 'messages/activity_manager/campaign_approved'
+    template = 'messages/funding/activity_manager/campaign_approved'
 
 
 class FundingExtendedMessage(FundingActivityManagerMessage):
     subject = _(u'Your crowdfunding campaign "{title}" is open for new donations 💸')
-    template = 'messages/activity_manager/funding_extended'
+    template = 'messages/funding/activity_manager/funding_extended'
 
 
 class FundingCancelledMessage(FundingActivityManagerMessage):
     subject = _(u'Your crowdfunding campaign "{title}" has been cancelled')
-    template = 'messages/activity_manager/funding_cancelled'
+    template = 'messages/funding/activity_manager/funding_cancelled'
 
 
-class PayoutAccountRejected(FundingActivityManagerMessage):
+class FundingPayoutAccountRejected(FundingActivityManagerMessage):
     subject = _(u'Action required for your crowdfunding campaign')
-    template = 'messages/activity_manager/payout_account_rejected'
+    template = 'messages/funding/activity_manager/payout_account_rejected'
 
 
-class PayoutAccountMarkedIncomplete(FundingActivityManagerMessage):
+class FundingPayoutAccountMarkedIncomplete(FundingActivityManagerMessage):
     subject = _("Action required for your crowdfunding campaign")
-    template = "messages/activity_manager/payout_account_marked_incomplete"
+    template = "messages/funding/activity_manager/payout_account_marked_incomplete"
 
 
-class PayoutAccountVerified(FundingActivityManagerMessage):
+class FundingPayoutAccountVerified(FundingActivityManagerMessage):
     subject = _(u'Your identity has been verified')
-    template = 'messages/activity_manager/payout_account_verified'
+    template = 'messages/funding/activity_manager/payout_account_verified'
 
 
-class PublicPayoutAccountRejected(PayoutAccountRejected):
+class FundingPublicPayoutAccountRejected(FundingPayoutAccountRejected):
     subject = _(u'Action required for your identity verification')
-    template = 'messages/activity_manager/public_payout_account_rejected'
+    template = 'messages/funding/activity_manager/public_payout_account_rejected'
 
 
-class PublicPayoutAccountMarkedIncomplete(PayoutAccountMarkedIncomplete):
+class FundingPublicPayoutAccountMarkedIncomplete(FundingPayoutAccountMarkedIncomplete):
     subject = _("Action required for identity verification")
-    template = "messages/activity_manager/public_payout_account_marked_incomplete"
+    template = "messages/funding/activity_manager/public_payout_account_marked_incomplete"
 
 
-class PublicPayoutAccountVerified(TransitionMessage):
+class FundingPublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
-    template = 'messages/activity_manager/public_payout_account_verified'
-
-
-class GrantApplicationManagerMessage(TransitionMessage):
-    context = {
-        "title": "title",
-    }
-
-    action_title = pgettext("email", "View application")
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    def get_recipients(self):
-        """the activity organizer"""
-        return [self.obj.owner]
-
-
-class GrantApplicationApprovedMessage(GrantApplicationManagerMessage):
-    subject = _("Your grant application has been approved!")
-    template = "messages/activity_manager/grant_application_approved"
+    template = 'messages/funding/activity_manager/public_payout_account_verified'

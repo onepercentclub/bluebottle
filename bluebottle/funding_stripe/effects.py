@@ -12,7 +12,7 @@ from bluebottle.funding_stripe.utils import get_stripe
 
 class AcceptTosEffect(Effect):
     def post_save(self, **kwargs):
-        if self.instance.tos_accepted:
+        if self.instance.tos_accepted and self.instance.account_id:
             stripe = get_stripe()
 
             service_argreement = (

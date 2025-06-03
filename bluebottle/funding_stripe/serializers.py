@@ -80,7 +80,7 @@ class ConnectAccountSerializer(ModelSerializer):
     included_serializers = {
         'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner': 'bluebottle.initiatives.serializers.CurrentMemberSerializer',
     }
 
     class Meta(object):

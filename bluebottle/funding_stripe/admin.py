@@ -118,18 +118,21 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     def get_status_fields(self, request, obj):
         return super().get_status_fields(request, obj) + [
             'verified', 'payments_enabled', 'payouts_enabled',
-            'requirements_list', 'verification_link'
+            'requirements_list'
 
         ]
 
     def get_basic_fields(self, request, obj):
         fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'country',
+            'business_type', 'country', 'funding', 'verification_link'
         ]
-        if request.user.is_superuser:
-            fields = fields + ['stripe_link', 'account_id']
-
         return fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if request.user.is_superuser:
+            fieldsets[2][1]['fields'] += ['stripe_link', 'account_id']
+        return fieldsets
 
     def save_model(self, request, obj, form, change):
         if obj.account_id and 'ba_' in obj.account_id:
@@ -207,10 +210,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         else:
             url = 'https://dashboard.stripe.com/test/connect/accounts/{}'.format(obj.account_id)
         return format_html(
-            '<a href="{}" target="_blank">{}</a><br/>'
-            '<small>{}</small>',
+            '<a href="{}" target="_blank">{}</a><br/>',
             url, obj.account_id,
-            _('This is only visible for superadmin accounts.')
         )
     stripe_link.short_description = _('Stripe link')
 

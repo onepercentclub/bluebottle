@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-06-02 06:14+0200\n"
-"PO-Revision-Date: 2025-06-02 04:30\n"
+"PO-Revision-Date: 2025-06-04 10:50\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -8500,7 +8500,7 @@ msgstr "Jouw deelname aan '{title}' is geannuleerd"
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" is successful 🎉"
-msgstr ""
+msgstr "Jouw bijdrage aan de activiteit \"{title}\" is succesvol 🎉"
 
 #: bluebottle/time_based/messages.py:736
 #: bluebottle/time_based/notifications/participants.py:36
@@ -8536,13 +8536,13 @@ msgstr "Je hebt je geregistreerd voor een tijdsblok voor de activiteit \"{title}
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Een deelnemer is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:872
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Een team is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:894
 #: bluebottle/time_based/notifications/participants.py:28
@@ -8762,11 +8762,11 @@ msgstr "Periodieke activiteiten"
 
 #: bluebottle/time_based/models.py:877
 msgid "Participant to date activity slot"
-msgstr ""
+msgstr "Deelnemer voor tijdslot"
 
 #: bluebottle/time_based/models.py:878
 msgid "Participants to date activity slot"
-msgstr ""
+msgstr "Deelnemers voor tijdslot"
 
 #: bluebottle/time_based/models.py:910
 msgid "Participant during a period"
@@ -8838,11 +8838,11 @@ msgstr "Kandidaten"
 
 #: bluebottle/time_based/models.py:1044
 msgid "Candidate for date activities"
-msgstr ""
+msgstr "Kandidaat voor datum activiteiten"
 
 #: bluebottle/time_based/models.py:1045
 msgid "Candidates for date activities"
-msgstr ""
+msgstr "Kandidaten voor datum activiteiten"
 
 #: bluebottle/time_based/models.py:1089
 msgid "Candidate for flexible activities"
@@ -8970,7 +8970,7 @@ msgstr "Je bent ingeroosterd voor de activiteit \"{title}\""
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new application for your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Je hebt een nieuwe aanmelding voor je activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/notifications/registrations.py:41
 #, python-brace-format
@@ -9043,13 +9043,13 @@ msgstr "maanden"
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Een nieuw team heeft zich aangemeld voor je activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/notifications/registrations.py:198
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
-msgstr ""
+msgstr "Er is een nieuw team voor je activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/notifications/registrations.py:203
 #: bluebottle/time_based/notifications/registrations.py:208
@@ -10191,7 +10191,9 @@ msgstr "Herhaal tijdsslot"
 msgid "\n"
 "                        Ensure the time slot details are correct before repeating, as bulk changes won’t be possible later.\n"
 "                    "
-msgstr ""
+msgstr "\n"
+"Zorg ervoor dat de gegevens van het tijdslot correct zijn, aanpassingen aan meerdere tijdsloten tegelijk zijn niet mogelijk\n"
+"                    "
 
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:46
 msgid "Create duplicates"
@@ -10627,7 +10629,9 @@ msgctxt "email"
 msgid "\n"
 "<p>Unfortunately, you have not been selected for the activity ‘%(title)s’.</p>\n\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Helaas, je bent niet geselecteerd voor de activiteit \"%(title)s\".</p>\n\n"
+"<p>Geen zorgen, er zijn nog meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina met activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_removed.html:4
 #: bluebottle/time_based/templates/mails/messages/participants/user_participant_removed.html:4
@@ -10636,7 +10640,9 @@ msgctxt "email"
 msgid "\n"
 "<p>You have been removed as participant for the activity \"%(title)s\".</p>\n\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je bent verwijderd als deelnemer voor de activiteit \"%(title)s\".</p>\n\n"
+"<p>Geen zorgen, er zijn nog meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina met activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/participant_removed_owner.html:6
 #, python-format
@@ -10743,7 +10749,9 @@ msgstr "Deelnemen"
 msgid "\n"
 "                    When you are accepted you can participate at the place and time indicated below.\n"
 "                "
-msgstr ""
+msgstr "\n"
+"                    Wanneer je wordt geaccepteerd, kun je deelnemen op de hieronder aangegeven plaats en tijd.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:6
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:6
@@ -10868,7 +10876,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab on the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"      <ol>\n"
+"        <li>Neem contact op met de teamleider %(applicant_name)s om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"        <li>Voeg deze informatie toe aan het team via de ‘Unscheduled’ tab op de teamlijst op de activiteitpagina. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"      </ol>\n"
+"    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created.html:24
 msgctxt "email"
@@ -10889,7 +10902,12 @@ msgid "\n"
 "        <li>Add this information to the team via the ‘Unscheduled’ tab of the team list on the activity page. The team captain and team members will be notified when the information is added.</li>\n"
 "      </ol>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"<ol>\n"
+"  <li>Ga naar je activiteit om de aanmelding te accepteren of af te wijzen.</li>\n"
+"  <li>Als je de aanmelding accepteert, neem dan contact op met de teamleider %(applicant_name)s om een specifieke datum, tijd en locatie te bespreken waarop ze aan jouw activiteit kunnen deelnemen.</li>\n"
+"  <li>Voeg deze informatie toe aan het team via de pagina van je activiteit. De teamleider en teamleden worden op de hoogte gesteld wanneer de informatie is toegevoegd.</li>\n"
+"</ol>    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_team_registration_created_review.html:25
 msgctxt "email"
@@ -10996,7 +11014,9 @@ msgctxt "email"
 msgid "\n"
 "<p>Unfortunately, your team has not been selected for the activity ‘%(title)s’.</p>\n\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Helaas, je team is niet geselecteerd voor de activiteit \"%(title)s\".</p>\n\n"
+"<p>Geen zorgen, er zijn nog meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina met activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_accepted.html:5
 #, python-format
@@ -11019,7 +11039,12 @@ msgid "\n"
 "    Don’t worry, there are more activities out there that need your help. Head\n"
 "    over to the activity overview page to see if there is something for you.\n"
 "</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Helaas, u bent verwijderd van de activiteit ‘%(title)s’.</p>\n\n"
+"<p>\n"
+"    Maak je geen zorgen, er zijn meer activiteiten die je hulp nodig hebben. Hoofd\n"
+"    naar de activiteitenoverzichtspagina om te zien of er iets voor je is.\n"
+"</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_restarted.html:5
 #, python-format
@@ -11172,7 +11197,9 @@ msgctxt "email"
 msgid "\n"
 "                If your team is unable to participate, please withdraw via the activity page so that another team can take your place. \n"
 "            "
-msgstr ""
+msgstr "\n"
+"                Als jouw team niet kan deelnemen, meld je dan af via de activiteitspagina zodat een ander team je plaats kan innemen\n"
+"            "
 
 #: bluebottle/time_based/templates/mails/messages/team_participant_removed.html:4
 #, python-format
@@ -11228,7 +11255,9 @@ msgctxt "email"
 msgid "\n"
 "<p>Your team has been removed from the activity \"%(title)s\".</p>\n\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je team is verwijderd van de activiteit \"%(title)s\".</p>\n\n"
+"<p>Geen zorgen, er zijn nog meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina met activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_scheduled.html:6
 #, python-format
@@ -11254,7 +11283,9 @@ msgctxt "email"
 msgid "\n"
 "    Invite your team members if you haven’t done so already!\n"
 "  "
-msgstr ""
+msgstr "\n"
+"    Nodig je teamleden uit als je dit nog niet gedaan hebt!\n"
+"  "
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_withdrew.html:4
 #, python-format
@@ -11278,7 +11309,9 @@ msgctxt "email"
 msgid "\n"
 "<p>Your have been removed as a team member from {name}'s team for the activity \"%(title)s\".</p>\n\n"
 "<p>Don’t worry, there are more activities out there that need your help. Head over to the activity overview page to see if there is something for you.</p>\n"
-msgstr ""
+msgstr "\n"
+"<p>Je bent verwijderd van het team {name} voor de activiteit \"%(title)s\".</p>\n\n"
+"<p>Geen zorgen, er zijn nog meer activiteiten die je hulp nodig hebben. Ga naar de overzichtspagina met activiteiten om te kijken of er iets voor jou tussen zit.</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_teammember_scheduled.html:5
 #, python-format
@@ -11506,7 +11539,7 @@ msgstr "vertalingsinstellingen"
 #: bluebottle/utils/monkey_patch_object_not_found.py:17
 #, python-format
 msgid "%(name)s with ID “%(key)s” can’t be found. Perhaps you don’t have permission to view it or maybe it was deleted?"
-msgstr ""
+msgstr "%(name)s met ID \"%(key)s\" kan niet worden gevonden. Mogelijk heb je geen toestemming om het te bekijken of is het verwijderd?"
 
 #: bluebottle/utils/serializers.py:32
 #, python-format

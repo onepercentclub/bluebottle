@@ -17,7 +17,7 @@ from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
+from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
 from bluebottle.utils.models import ValidatedModelMixin
@@ -200,6 +200,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def required_fields(self):
+        from bluebottle.initiatives.models import InitiativePlatformSettings
         fields = ['theme']
         if Location.objects.count():
             fields.append("office_location")

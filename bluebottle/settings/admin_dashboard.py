@@ -57,6 +57,10 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["time_based.change_dateactivity"],
             },
             {
+                "name": "time_based.registereddateactivity",
+                "permissions": ["time_based.change_registereddateactivity"],
+            },
+            {
                 "name": "time_based.dateactivityslot",
                 "permissions": ["time_based.change_dateactivityslot"],
             },
@@ -122,6 +126,8 @@ JET_SIDE_MENU_ITEMS = [
                 "permissions": ["funding.change_bankaccount"],
             },
             {"name": "funding.payout", "permissions": ["funding.change_payout"]},
+            {"name": "funding.grantfund", "permissions": ["funding.change_grantfund"]},
+            {"name": "funding.grantapplication", "permissions": ["funding.change_grantapplication"]},
         ],
     },
     {

@@ -14,14 +14,14 @@ from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout
+    Payout, GrantApplication, GrantPayout
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
     DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer
+    PayoutSerializer, GrantApplicationSerializer, GrantApplicationTransitionSerializer, GrantPayoutSerializer
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -147,6 +147,55 @@ class FundingDetail(JsonApiViewMixin, ClosedSegmentActivityViewMixin, AutoPrefet
     }
 
 
+class GrantApplicationList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):
+    queryset = GrantApplication.objects.all()
+    serializer_class = GrantApplicationSerializer
+
+    permission_classes = (
+        ActivityTypePermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner'],
+    }
+
+    def perform_create(self, serializer):
+        self.check_related_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save(owner=self.request.user)
+
+
+class GrantApplicationDetail(
+    JsonApiViewMixin, ClosedSegmentActivityViewMixin,
+    AutoPrefetchMixin, RetrieveUpdateAPIView
+):
+    queryset = GrantApplication.objects.select_related(
+        'initiative', 'initiative__owner',
+    )
+
+    serializer_class = GrantApplicationSerializer
+    permission_classes = (
+        ActivityStatusPermission,
+        ActivitySegmentPermission,
+        OneOf(ResourcePermission, ActivityOwnerPermission),
+    )
+
+    prefetch_for_includes = {
+        'initiative': ['initiative'],
+        'owner': ['owner'],
+    }
+
+
 class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Payout.objects.all()
     serializer_class = PayoutSerializer
@@ -172,12 +221,26 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
         return HttpResponse(200)
 
 
+class GrantPayoutDetails(PayoutDetails):
+    queryset = GrantPayout.objects.all()
+    serializer_class = GrantPayoutSerializer
+
+
 class FundingTransitionList(TransitionList):
     serializer_class = FundingTransitionSerializer
     queryset = Funding.objects.all()
 
     prefetch_for_includes = {
         'resource': ['funding'],
+    }
+
+
+class GrantApplicationTransitionList(TransitionList):
+    serializer_class = GrantApplicationTransitionSerializer
+    queryset = GrantApplication.objects.all()
+
+    prefetch_for_includes = {
+        'resource': ['grant_application'],
     }
 
 

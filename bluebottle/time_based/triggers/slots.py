@@ -21,7 +21,7 @@ from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
 )
 from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
-from bluebottle.time_based.notifications.teams import UserTeamDetailsChangedNotification
+from bluebottle.time_based.messages.teams import UserTeamDetailsChangedNotification
 from bluebottle.time_based.states import (
     DateStateMachine,
     DateActivitySlotStateMachine,

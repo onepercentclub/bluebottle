@@ -190,6 +190,7 @@ class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
         return True
 
     def has_action_permission(self, action, user, model_cls):
+
         if model_cls:
             perms = self.get_required_permissions(action, model_cls)
             return user.has_perms(perms)

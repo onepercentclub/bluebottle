@@ -106,7 +106,8 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'requirements_list',
         'verification_link',
         'stripe_link',
-        'funding'
+        'grant_application',
+
     ]
 
     search_fields = ["account_id"]

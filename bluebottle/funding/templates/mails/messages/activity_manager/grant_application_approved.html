@@ -1,0 +1,22 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+Good news, your grant application <i>{{ title }}</i> has been approved!
+<br><br>
+<b>What’s next?</b>
+<ul>
+    <li>
+        Go to your grant application page to submit your bank details.
+    </li>
+    <li>
+        Proceed to our verification process. This is a mandatory step before we can transfer the funds to your bank account.
+    </li>
+    <li>
+        The payout will be processed after the verification process is completed.
+    </li>
+</ul>
+<br>
+{% endblocktrans %}
+{% endblock %}

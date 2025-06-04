@@ -21,7 +21,7 @@ from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory
 )
 
 
@@ -144,11 +144,11 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant(self):
-        participant = DateParticipantFactory.create(
-            activity=self.activity, user=self.other_user
+        registration = DateRegistrationFactory.create(
+            user=self.other_user, activity=self.activity, status="accepted"
         )
-        SlotParticipantFactory.create(
-            slot=self.activity.slots.get(), participant=participant
+        DateParticipantFactory.create(
+            registration=registration, slot=self.activity.slots.get()
         )
         self.activity.states.succeed(save=True)
 
@@ -172,7 +172,10 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_withdrawn(self):
-        contribution = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity, user=self.other_user
+        )
+        contribution = DateParticipantFactory.create(registration=registration)
         contribution.states.withdraw(save=True)
         self.activity.states.succeed(save=True)
 
@@ -196,7 +199,10 @@ class DateActivityStatisticsTest(StatisticsTest):
         )
 
     def test_participant_noshow(self):
-        participant = DateParticipantFactory.create(activity=self.activity, user=self.other_user)
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity, user=self.other_user
+        )
+        participant = DateParticipantFactory.create(registration=registration)
         self.activity.states.succeed(save=True)
         participant.states.remove(save=True)
         self.assertEqual(
@@ -625,6 +631,7 @@ class StatisticsDateTest(BluebottleTestCase):
         for diff in (10, 5, 1):
             initiative = InitiativeFactory.create(owner=user)
             past_date = timezone.now() - datetime.timedelta(days=diff)
+            future_date = timezone.now() + datetime.timedelta(days=5)
             initiative.created = past_date
             initiative.save()
             initiative.states.submit()
@@ -635,18 +642,28 @@ class StatisticsDateTest(BluebottleTestCase):
                 owner=BlueBottleUserFactory.create(),
                 slots=[]
             )
+
             slot = DateActivitySlotFactory.create(
                 activity=activity,
-                start=past_date,
+                start=future_date,
                 duration=datetime.timedelta(minutes=60),
             )
-
-            participant = DateParticipantFactory.create(
-                activity=activity,
-                user=other_user
-            )
-            SlotParticipantFactory.create(participant=participant, slot=slot)
             activity.states.publish(save=True)
+
+            registration = DateRegistrationFactory.create(
+                user=other_user,
+                activity=activity,
+            )
+
+            DateParticipantFactory.create(
+                activity=activity,
+                user=other_user,
+                registration=registration,
+                slot=slot
+            )
+
+            slot.start = past_date
+            slot.save()
 
     def test_all(self):
         stats = Statistics()

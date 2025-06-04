@@ -321,8 +321,8 @@ CONFLUENCE = {
             'page_id': ''
         },
         {
-            'title': '[DEV] States - Time based - Participant on a date',
-            'model': 'bluebottle.time_based.models.DateParticipant',
+            'title': '[DEV] States - Time based - Registration for a date',
+            'model': 'bluebottle.time_based.models.DateRegistration',
             'page_id': ''
         },
         {
@@ -331,8 +331,8 @@ CONFLUENCE = {
             'page_id': ''
         },
         {
-            'title': '[DEV] States - Time based - Slot participant',
-            'model': 'bluebottle.time_based.models.SlotParticipant',
+            'title': '[DEV] States - Time based - Date participant',
+            'model': 'bluebottle.time_based.models.DateParticipant',
             'page_id': ''
         },
         {

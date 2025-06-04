@@ -1205,3 +1205,9 @@ div.info-box::before {
     font-weight: bold;
     top: 24px;
 }
+
+div.slot-info {
+    background: #ccc;
+    padding: 8px;
+    margin-bottom: 16px;
+}

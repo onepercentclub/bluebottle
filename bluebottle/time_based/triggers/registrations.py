@@ -3,10 +3,11 @@ from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffe
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import TransitionTrigger, TriggerManager, register
 from bluebottle.notifications.effects import NotificationEffect
+from bluebottle.time_based.effects import LockFilledSlotsEffect
 from bluebottle.time_based.effects.registrations import (
     CreateInitialPeriodicParticipantEffect,
     CreateParticipantEffect,
-    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect
+    CreateTeamEffect, AdjustInitialPeriodicParticipantEffect, CreateSlotParticipantEffect
 )
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification,
@@ -19,6 +20,7 @@ from bluebottle.time_based.models import (
     PeriodicRegistration,
     ScheduleRegistration,
     TeamScheduleRegistration,
+    DateRegistration,
 )
 from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationCreatedNotification,
@@ -37,14 +39,13 @@ from bluebottle.time_based.notifications.registrations import (
     ManagerRegistrationStoppedNotification,
     ManagerRegistrationRestartedNotification, DeadlineUserAppliedNotification, DeadlineUserJoinedNotification,
     PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, ScheduleUserAppliedNotification,
-    ScheduleUserJoinedNotification,
+    ScheduleUserJoinedNotification, DateUserAppliedNotification, DateUserJoinedNotification,
 )
 from bluebottle.time_based.states import (
     DeadlineParticipantStateMachine,
     RegistrationStateMachine,
     TeamStateMachine,
-    ScheduleActivityStateMachine,
-)
+    ScheduleActivityStateMachine, )
 from bluebottle.time_based.states.participants import (
     PeriodicParticipantStateMachine,
     RegistrationParticipantStateMachine,
@@ -579,6 +580,65 @@ class TeamScheduleRegistrationTriggers(RegistrationTriggers):
                 ),
                 NotificationEffect(
                     UserTeamRegistrationRejectedNotification,
+                ),
+            ],
+        ),
+    ]
+
+
+@register(DateRegistration)
+class DateRegistrationTriggers(RegistrationTriggers):
+    triggers = RegistrationTriggers.triggers + [
+        TransitionTrigger(
+            RegistrationStateMachine.initiate,
+            effects=[
+                NotificationEffect(
+                    ManagerRegistrationCreatedReviewNotification,
+                    conditions=[review_needed, is_user],
+                ),
+                NotificationEffect(
+                    DateUserAppliedNotification, conditions=[review_needed, is_user]
+                ),
+                NotificationEffect(
+                    ManagerRegistrationCreatedNotification,
+                    conditions=[no_review_needed, is_user],
+                ),
+                NotificationEffect(
+                    DateUserJoinedNotification, conditions=[no_review_needed, is_user]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.add,
+            effects=[
+                CreateSlotParticipantEffect,
+                NotificationEffect(
+                    ParticipantAddedNotification,
+                ),
+                NotificationEffect(
+                    ManagerParticipantAddedOwnerNotification,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.accept,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationAcceptedNotification,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.auto_accept,
+            effects=[
+                LockFilledSlotsEffect,
+            ],
+        ),
+        TransitionTrigger(
+            RegistrationStateMachine.reject,
+            effects=[
+                NotificationEffect(
+                    UserRegistrationRejectedNotification,
                 ),
             ],
         ),

@@ -13,13 +13,23 @@ from bluebottle.activities.models import Activity
 from bluebottle.utils.views import PrivateFileView
 
 
-class AnonimizeMembersMixin:
+class AnonymizeMembersMixin:
     @property
     def owners(self):
+        if 'activity_id' in self.kwargs:
+            activity = Activity.objects.get(pk=self.kwargs['activity_id'])
+            return activity.owners
+        if 'registration_id' in self.kwargs:
+            activity = Activity.objects.get(registrations__id=self.kwargs['registration_id'])
+            return activity.owners
+        if 'slot_id' in self.kwargs:
+            activity = Activity.objects.get(slots__id=self.kwargs['slot_id'])
+            return activity.owners
         return []
 
     def get_serializer_context(self, **kwargs):
         context = super().get_serializer_context(**kwargs)
+        context['owners'] = self.owners
         context['display_member_names'] = MemberPlatformSettings.objects.get().display_member_names
 
         if self.request.user and self.request.user.is_authenticated and (

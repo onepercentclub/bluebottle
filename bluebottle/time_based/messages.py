@@ -9,8 +9,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, SlotParticipant,
-    PeriodParticipant, DateActivitySlot
+    DateParticipant, PeriodParticipant, DateActivitySlot
 )
 
 
@@ -47,8 +46,6 @@ class TimeBasedInfoMixin(object):
             participant = self.obj
         elif isinstance(self.obj, DateActivitySlot):
             participant = self.obj.activity.participants.filter(user=recipient).first()
-        elif isinstance(self.obj, SlotParticipant):
-            participant = self.obj.participant
         else:
             participant = self.obj.participants.get(user=recipient)
 
@@ -230,13 +227,15 @@ class ChangedSingleDateNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    def get_event_data(self, recipient=None):
-        return self.obj.event_data
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['slots'] = [get_slot_info(self.obj)]
+        return context
 
     def get_recipients(self):
         """participants that signed up"""
         return [
-            participant.user for participant in self.obj.activity.accepted_participants
+            participant.user for participant in self.obj.accepted_participants
         ]
 
 
@@ -254,25 +253,24 @@ class ChangedMultipleDateNotification(TimeBasedInfoMixin, TransitionMessage):
     def action_link(self):
         return self.obj.activity.get_absolute_url()
 
-    def get_event_data(self, recipient=None):
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+
         slots = self.obj.activity.slots.filter(
-            slot_participants__participant__user=recipient,
-            slot_participants__participant__status='accepted',
-            slot_participants__status='registered',
+            participants__user=recipient,
+            participants__status='accepted',
         ).all()
-        return [slot.event_data for slot in slots]
+
+        context['slots'] = [get_slot_info(slot) for slot in slots]
+        return context
 
     action_title = pgettext('email', 'View activity')
 
     def get_recipients(self):
         """participants that signed up"""
         return [
-            slot_participant.participant.user for slot_participant
-            in self.obj.slot_participants.all()
-            if (
-                slot_participant.status == 'registered' and
-                slot_participant.participant.status == 'accepted'
-            )
+            participant.user for participant
+            in self.obj.accepted_participants
         ]
 
 
@@ -415,7 +413,7 @@ class ParticipantCreatedNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'question': 'activity.review_title',
-        'answer': 'motivation'
+        'answer': 'registration.answer'
     }
 
     @property
@@ -439,7 +437,7 @@ class NewParticipantNotification(TransitionMessage):
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
         'question': 'activity.review_title',
-        'answer': 'motivation'
+        'answer': 'registration.answer'
     }
 
     @property
@@ -487,13 +485,16 @@ class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     delay = 60
 
-    def get_event_data(self, recipient=None):
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+
         slots = self.obj.activity.slots.filter(
-            slot_participants__participant__user=recipient,
-            slot_participants__participant__status='accepted',
-            slot_participants__status='registered',
+            participants__user=recipient,
+            participants__status='accepted',
         ).all()
-        return [slot.event_data for slot in slots]
+        context['slots'] = [get_slot_info(slot) for slot in slots]
+
+        return context
 
     @property
     def action_link(self):
@@ -547,26 +548,9 @@ class ParticipantChangedNotification(TimeBasedInfoMixin, TransitionMessage):
 
     action_title = pgettext('email', 'View activity')
 
-    @property
-    def task_id(self):
-        return f'{self.__class__.__name__}-{self.obj.participant.id}'
-
     def get_recipients(self):
         """participant"""
-        joined_message = ParticipantJoinedNotification(self.obj.participant)
-        applied_message = ParticipantAppliedNotification(self.obj.participant)
-        changed_message = ParticipantChangedNotification(self.obj)
-
-        participant = DateParticipant.objects.get(pk=self.obj.participant.pk)
-
-        if (
-                participant.status == 'withdrawn' or
-                joined_message.is_delayed or
-                changed_message.is_delayed or applied_message.is_delayed
-        ):
-            return []
-
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ParticipantAppliedNotification(TimeBasedInfoMixin, TransitionMessage):
@@ -803,7 +787,7 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'participant_name': 'participant.user.full_name',
-        'answer': 'participant.motivation',
+        'answer': 'registration.answer',
         'question': 'activity.review_title'
     }
 
@@ -852,7 +836,7 @@ class ParticipantSlotParticipantRegisteredNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
 
-        return [self.obj.participant.user]
+        return [self.obj.user]
 
 
 class ManagerParticipantAddedOwnerNotification(TransitionMessage):
@@ -946,12 +930,9 @@ class SlotCancelledNotification(TransitionMessage):
         return [
             self.obj.activity.owner
         ] + [
-            slot_participant.participant.user for slot_participant
-            in self.obj.slot_participants.all()
-            if (
-                slot_participant.status == 'registered' and
-                slot_participant.participant.status == 'accepted'
-            )
+            participant.user for participant
+            in self.obj.participants.all()
+            if participant.status == 'accepted'
         ]
 
     @property

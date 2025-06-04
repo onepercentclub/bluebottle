@@ -35,7 +35,7 @@ from bluebottle.time_based.tests.factories import (
     DeadlineParticipantFactory,
     DateParticipantFactory,
     DateActivitySlotFactory,
-    SlotParticipantFactory,
+    DateRegistrationFactory,
 )
 
 
@@ -422,14 +422,15 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             activity=date_activity,
             start=now() - datetime.timedelta(weeks=1),
         )
-        for participant in DateParticipantFactory.create_batch(
+        for registration in DateRegistrationFactory.create_batch(
                 3, activity=date_activity
         ):
-            SlotParticipantFactory.create(participant=participant, slot=slot)
-        for participant in DateParticipantFactory.create_batch(
+            DateParticipantFactory.create(registration=registration, slot=slot)
+
+        for registration in DateRegistrationFactory.create_batch(
                 3, activity=date_activity, status="rejected"
         ):
-            SlotParticipantFactory.create(participant=participant, slot=slot)
+            DateParticipantFactory.create(registration=registration, slot=slot, status='rejected')
 
         funding = FundingFactory.create(
             initiative=self.initiative,

@@ -27,7 +27,7 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicActivity,
     PeriodicParticipant,
-    SlotParticipant,
+    DateRegistration,
     TimeContribution, ScheduleActivity, ScheduleParticipant, DeadlineRegistration, ScheduleRegistration,
     TeamScheduleRegistration, TeamScheduleParticipant, TeamMember, PeriodicRegistration,
 )
@@ -155,7 +155,7 @@ def setup_instance(model):
         instance.title = "[activity title]"
         instance.owner = Member(first_name='[first name]', last_name='[last name]')
 
-    if isinstance(instance, DateParticipant):
+    if isinstance(instance, DateRegistration):
         instance.activity = DateActivity(title="[activity title]")
         instance.activity.pre_save_polymorphic()
         instance.user = Member(first_name='[first name]', last_name='[last name]')
@@ -163,11 +163,12 @@ def setup_instance(model):
     if isinstance(instance, DateActivitySlot):
         instance.activity = DateActivity(title="[activity title]")
 
-    if isinstance(instance, SlotParticipant):
+    if isinstance(instance, DateParticipant):
         activity = DateActivity(title="[activity title]")
         instance.slot = DateActivitySlot(activity=activity)
-        instance.participant = DateParticipant(activity=activity)
-        instance.participant.user = Member(
+        instance.activity = activity
+        instance.registration = DateRegistration(activity=activity)
+        instance.registration.user = Member(
             first_name="[first name]", last_name="[last name]"
         )
 

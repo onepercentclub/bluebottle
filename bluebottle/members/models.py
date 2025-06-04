@@ -21,7 +21,6 @@ from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType
-from ..time_based.models import TimeContribution
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -318,11 +317,14 @@ class Member(BlueBottleBaseUser):
     def create_by_email(cls, email, **kwargs):
         validate_email(email)
         name, _domain = email.split('@')
+        names = name.split('.')
+        first_name = names.pop(0)
+        last_name = ' '.join(names) or ''
         user = cls.objects.create(
             email=email,
             username=email,
-            first_name=name,
-            last_name='',
+            first_name=first_name,
+            last_name=last_name,
             is_active=False,
         )
         return user
@@ -406,6 +408,7 @@ class Member(BlueBottleBaseUser):
         return self.full_name
 
     def get_hours(self, status):
+        from ..time_based.models import TimeContribution
         platform_settings = MemberPlatformSettings.load()
         year_start = platform_settings.fiscal_year_start
         year_end = platform_settings.fiscal_year_end

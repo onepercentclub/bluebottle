@@ -299,7 +299,7 @@ class ParticipantCreateMixin:
             if self.request.user.required:
                 raise ValidationError('Required fields', code="required")
 
-        if self.queryset.filter(user=user, activity=serializer.validated_data['activity']).exists():
+        if self.queryset.filter(user=user, **serializer.validated_data).exists():
             raise ValidationError(_('Already participating'), code="exists")
 
         serializer.save(user=user, send_messages=send_messages)

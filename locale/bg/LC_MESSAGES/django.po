@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-02 06:14+0200\n"
-"PO-Revision-Date: 2025-06-02 04:30\n"
+"POT-Creation-Date: 2025-06-04 13:02+0200\n"
+"PO-Revision-Date: 2025-06-04 11:07\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -33,8 +33,8 @@ msgid "Edit"
 msgstr ""
 
 #: bluebottle/activities/admin.py:172 bluebottle/activities/admin.py:276
-#: bluebottle/funding_stripe/admin.py:201
-#: bluebottle/funding_stripe/admin.py:271 bluebottle/time_based/admin.py:292
+#: bluebottle/funding_stripe/admin.py:204
+#: bluebottle/funding_stripe/admin.py:272 bluebottle/time_based/admin.py:292
 #: bluebottle/time_based/admin.py:422
 msgid "Details"
 msgstr ""
@@ -42,7 +42,7 @@ msgstr ""
 #: bluebottle/activities/admin.py:176 bluebottle/activities/admin.py:280
 #: bluebottle/activities/admin.py:682 bluebottle/funding/admin.py:196
 #: bluebottle/funding/admin.py:435 bluebottle/funding/admin.py:583
-#: bluebottle/funding/admin.py:746 bluebottle/funding_stripe/admin.py:241
+#: bluebottle/funding/admin.py:746 bluebottle/funding_stripe/admin.py:242
 #: bluebottle/initiatives/admin.py:218 bluebottle/time_based/admin.py:296
 #: bluebottle/time_based/admin.py:426 bluebottle/time_based/admin.py:768
 #: bluebottle/time_based/admin.py:815 bluebottle/time_based/admin.py:1085
@@ -1541,52 +1541,84 @@ msgstr ""
 msgid "Already participating"
 msgstr ""
 
-#: bluebottle/analytics/models.py:12
-msgid "Corporate"
+#: bluebottle/analytics/admin.py:12
+msgid "General"
+msgstr ""
+
+#: bluebottle/analytics/admin.py:21
+msgid "Targets"
 msgstr ""
 
 #: bluebottle/analytics/models.py:13
-msgid "Civic"
+msgid "Corporate"
 msgstr ""
 
 #: bluebottle/analytics/models.py:14
+msgid "Civic"
+msgstr ""
+
+#: bluebottle/analytics/models.py:15
 msgid "Society"
 msgstr ""
 
-#: bluebottle/analytics/models.py:17
-msgid "User base"
-msgstr ""
-
 #: bluebottle/analytics/models.py:18
-msgid "Number of employees or number of users that could access the platform."
+msgid "Potential reach"
 msgstr ""
 
-#: bluebottle/analytics/models.py:23 bluebottle/members/admin.py:500
-msgid "Engagement"
+#: bluebottle/analytics/models.py:19
+msgid "Total number of people who could potentially visit the platform (e.g. employees, citizens)."
 msgstr ""
 
 #: bluebottle/analytics/models.py:25
-msgid "Target for the number of people contributing to an activity or starting an activity per year."
+msgid "Contributor goal (people)"
 msgstr ""
 
-#: bluebottle/analytics/models.py:32
+#: bluebottle/analytics/models.py:27
+msgid "How many unique people do you want to engage this year through contributions like volunteering, donations, or good deeds?"
+msgstr ""
+
+#: bluebottle/analytics/models.py:35
+msgid "Contribution goal (actions)"
+msgstr ""
+
+#: bluebottle/analytics/models.py:37
+msgid "How many total contributions do you aim to reach this year, regardless of how many people made them?"
+msgstr ""
+
+#: bluebottle/analytics/models.py:44
+msgid "Hours goal"
+msgstr ""
+
+#: bluebottle/analytics/models.py:46
+msgid "How many total hours do you aim to spend on contributions this year."
+msgstr ""
+
+#: bluebottle/analytics/models.py:53
+msgid "Donation goal"
+msgstr ""
+
+#: bluebottle/analytics/models.py:55
+msgid "Total value of donations you aim to raise this year."
+msgstr ""
+
+#: bluebottle/analytics/models.py:62
 msgid "platform type"
 msgstr ""
 
-#: bluebottle/analytics/models.py:39
+#: bluebottle/analytics/models.py:69
 msgid "Plausibe embed link"
 msgstr ""
 
-#: bluebottle/analytics/models.py:43
+#: bluebottle/analytics/models.py:73
 msgid "Terminated"
 msgstr ""
 
-#: bluebottle/analytics/models.py:45
+#: bluebottle/analytics/models.py:75
 msgid "Is the platform terminated?"
 msgstr ""
 
-#: bluebottle/analytics/models.py:49 bluebottle/analytics/models.py:50
-msgid "reporting platform settings"
+#: bluebottle/analytics/models.py:79 bluebottle/analytics/models.py:80
+msgid "reporting settings"
 msgstr ""
 
 #: bluebottle/auth/password_validation.py:21
@@ -3692,7 +3724,7 @@ msgid "Sync donation with payment."
 msgstr ""
 
 #: bluebottle/funding/admin.py:431 bluebottle/funding/admin.py:578
-#: bluebottle/funding/admin.py:742 bluebottle/funding_stripe/admin.py:237
+#: bluebottle/funding/admin.py:742 bluebottle/funding_stripe/admin.py:238
 msgid "Basic"
 msgstr ""
 
@@ -5212,28 +5244,24 @@ msgstr ""
 msgid "Country"
 msgstr ""
 
-#: bluebottle/funding_stripe/admin.py:168
+#: bluebottle/funding_stripe/admin.py:171
 msgid "Check status at Stripe"
 msgstr ""
 
-#: bluebottle/funding_stripe/admin.py:180
-#: bluebottle/funding_stripe/admin.py:193
+#: bluebottle/funding_stripe/admin.py:183
+#: bluebottle/funding_stripe/admin.py:196
 msgid "Pending verification"
 msgstr ""
 
-#: bluebottle/funding_stripe/admin.py:200
+#: bluebottle/funding_stripe/admin.py:203
 msgid "All info missing"
 msgstr ""
 
-#: bluebottle/funding_stripe/admin.py:212
-msgid "This is only visible for superadmin accounts."
-msgstr ""
-
-#: bluebottle/funding_stripe/admin.py:214
+#: bluebottle/funding_stripe/admin.py:215
 msgid "Stripe link"
 msgstr ""
 
-#: bluebottle/funding_stripe/admin.py:221
+#: bluebottle/funding_stripe/admin.py:222
 msgid "Requirements"
 msgstr ""
 
@@ -5314,23 +5342,23 @@ msgstr ""
 msgid "Starts with 'acct_...'"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:551
+#: bluebottle/funding_stripe/models.py:553
 msgid "stripe payout account"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:552
+#: bluebottle/funding_stripe/models.py:554
 msgid "stripe payout accounts"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:563
+#: bluebottle/funding_stripe/models.py:565
 msgid "Starts with 'ba_...'"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:602
+#: bluebottle/funding_stripe/models.py:604
 msgid "Bank account"
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:603
+#: bluebottle/funding_stripe/models.py:605
 msgid "Bank accounts"
 msgstr ""
 
@@ -6348,6 +6376,10 @@ msgstr ""
 
 #: bluebottle/members/admin.py:496
 msgid "Permissions"
+msgstr ""
+
+#: bluebottle/members/admin.py:500
+msgid "Engagement"
 msgstr ""
 
 #: bluebottle/members/admin.py:616

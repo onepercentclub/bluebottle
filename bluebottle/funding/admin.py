@@ -19,6 +19,7 @@ from django_admin_inline_paginator.admin import TabularInlinePaginated
 from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
+from stripe import StripeError
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
@@ -948,6 +949,10 @@ class GrantPayoutAdmin(StateMachineAdmin):
         "date_approved",
         "date_started",
         "date_completed",
+        "activity",
+        "partner_organization",
+        "account_details",
+        "bank_details"
     ]
 
     list_filter = [
@@ -956,6 +961,39 @@ class GrantPayoutAdmin(StateMachineAdmin):
 
     list_display = ['activity', 'total_amount', 'state_name', 'created']
 
+    def partner_organization(self, obj):
+        if obj.activity and obj.activity.organization:
+            url = reverse('admin:organizations_organization_change', args=(obj.activity.organization.id,))
+            return format_html('<a href="{}">{}</a>', url, obj.activity.organization)
+        return None
+
+    def bank_details(self, obj):
+        try:
+            template = loader.get_template(
+                'admin/funding_stripe/stripebankaccount/detail_fields.html'
+            )
+            return template.render({'info': obj.activity.bank_account.account})
+        except StripeError as e:
+            return "Error retrieving details: {}".format(e)
+    bank_details.short_description = _('Bank details')
+
+    def account_details(self, obj):
+        account = obj.activity.bank_account.connect_account.account
+        individual = account.get('individual', None)
+        business = account.get('business_profile', None)
+        if individual:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/detail_fields.html'
+            )
+            return template.render({'info': individual})
+        if business:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/business_fields.html'
+            )
+            return template.render({'info': business})
+        return _("Bank account details not available")
+    account_details.short_description = _('KYC details')
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             (
@@ -963,7 +1001,10 @@ class GrantPayoutAdmin(StateMachineAdmin):
                 {
                     "fields": [
                         "total_amount",
-                        "currency",
+                        "activity",
+                        "partner_organization",
+                        "account_details",
+                        "bank_details",
                         "date_approved",
                         "date_started",
                         "date_completed",

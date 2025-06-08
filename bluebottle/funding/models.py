@@ -523,7 +523,7 @@ class GrantPayout(TriggerMixin, models.Model):
         related_name="payouts",
         on_delete=models.CASCADE
     )
-    provider = models.CharField(max_length=100)
+    provider = models.CharField(max_length=100, default='stripe')
     currency = models.CharField(max_length=5)
 
     status = models.CharField(max_length=40)
@@ -564,8 +564,8 @@ class GrantPayout(TriggerMixin, models.Model):
         return self.grants.aggregate(total=Sum('amount'))['total']
 
     class Meta(object):
-        verbose_name = _('payout')
-        verbose_name_plural = _('payouts')
+        verbose_name = _('Grant payout')
+        verbose_name_plural = _('Grant payouts')
 
     def __str__(self):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)

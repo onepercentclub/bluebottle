@@ -684,7 +684,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
     )
 
     def get_fields(self, request, obj):
-        fields = super().get_fields(request, obj)
+        fields = list(super().get_fields(request, obj))
         settings = InitiativePlatformSettings.objects.get()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
@@ -952,7 +952,8 @@ class GrantPayoutAdmin(StateMachineAdmin):
         "activity",
         "partner_organization",
         "account_details",
-        "bank_details"
+        "bank_details",
+        "provider"
     ]
 
     list_filter = [
@@ -1009,7 +1010,8 @@ class GrantPayoutAdmin(StateMachineAdmin):
                         "date_started",
                         "date_completed",
                         "status",
-                        "states"
+                        "states",
+                        "provider"
                     ],
                 },
             ),

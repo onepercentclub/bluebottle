@@ -781,14 +781,33 @@ class PayoutDonationSerializer(ModelSerializer):
 class PayoutGrantSerializer(ModelSerializer):
     # For Payout service
     amount = MoneySerializer()
+    fund = ResourceRelatedField(read_only=True)
 
     class Meta(object):
         fields = (
             'id',
             'amount',
+            'fund',
             'status',
         )
         model = GrantDonor
+        included_resources = [
+            'fund',
+        ]
+
+    included_serializers = {
+        'fund': 'bluebottle.funding.serializers.PayoutGrantFundSerializer'
+    }
+
+
+class PayoutGrantFundSerializer(ModelSerializer):
+
+    class Meta(object):
+        fields = (
+            'id',
+            'name',
+        )
+        model = GrantFund
 
 
 class PayoutFundingSerializer(BaseActivityListSerializer):
@@ -859,7 +878,7 @@ class PayoutSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.PayoutFundingSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
-        'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer'
+        'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer',
     }
 
 
@@ -887,13 +906,15 @@ class GrantPayoutSerializer(ModelSerializer):
         included_resources = [
             'activity',
             'donations',
+            'donations.fund',
             'activity.bank_account'
         ]
 
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.PayoutGrantApplicationSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
-        'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer'
+        'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer',
+        'donations.fund': 'bluebottle.funding.serializers.PayoutGrantFundSerializer'
     }
 
 

@@ -201,7 +201,6 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     serializer_class = PayoutSerializer
 
     authentication_classes = (TokenAuthentication,)
-
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):

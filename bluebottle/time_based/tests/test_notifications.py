@@ -13,7 +13,7 @@ from bluebottle.time_based.messages import (
     ParticipantSlotParticipantRegisteredNotification,
     ManagerSlotParticipantRegisteredNotification
 )
-from bluebottle.time_based.messages.activity_manager import ActivityRegisteredNotification
+from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
 from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
     ManagerRegistrationCreatedReviewNotification
@@ -325,7 +325,7 @@ class RegisteredDateActivityNotificationTestCase(NotificationTestCase):
         self.assertActionTitle('View this activity')
 
     def test_activity_registered(self):
-        self.message_class = ActivityRegisteredNotification
+        self.message_class = PastActivityRegisteredNotification
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('Your activity on Test has been registered!')

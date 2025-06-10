@@ -13,13 +13,19 @@ from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.files.fields import ImageField
+
+from parler.models import TranslatableModel, TranslatedFields
+from django_better_admin_arrayfield.models.fields import ArrayField
+
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
-from bluebottle.initiatives.models import Initiative
+from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
+from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
@@ -429,6 +435,84 @@ class Team(TriggerMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+from parler.managers import TranslatableManager, TranslatableQuerySet
+from polymorphic.managers import PolymorphicManager
+from polymorphic.query import PolymorphicQuerySet
+
+class TranslatedPolymorphicQueryset(TranslatableQuerySet, PolymorphicQuerySet):
+    pass
+
+class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
+    queryset_class = TranslatablePolymorphicManager
+
+
+class ActivityQuestion(PolymorphicModel, TranslatableModel):
+    objects = TranslatablePolymorphicManager()
+
+    translations = TranslatedFields(
+        name = models.CharField(max_length=255),
+        question = models.CharField(max_length=255),
+        help_text = models.TextField(null=True, blank=True)
+    )
+
+    activity_types = ArrayField(
+        models.CharField(max_length=200, choices=InitiativePlatformSettings.ACTIVITY_TYPES),
+        default=tuple(type[0] for type in InitiativePlatformSettings.ACTIVITY_TYPES),
+    )
+
+    required = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.question
+
+    class Meta(object):
+        verbose_name = _("Question")
+        verbose_name_plural = _("Questions")
+
+
+
+class ActivityAnswer(PolymorphicModel):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
+
+
+class TextQuestion(ActivityQuestion, TranslatableModel):
+    class JSONAPIMeta:
+        resource_name = 'text-questions'
+
+
+class TextAnswer(ActivityAnswer):
+    answer = models.TextField() 
+
+    class JSONAPIMeta:
+        resource_name = 'text-answers'
+
+
+class SegmentQuestion(ActivityQuestion, TranslatableModel):
+    segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
+
+    class JSONAPIMeta:
+        resource_name = 'segment-questions'
+
+
+class SegmentAnswer(ActivityAnswer):
+    segment = models.ForeignKey(Segment, on_delete=models.CASCADE) 
+
+    class JSONAPIMeta:
+        resource_name = 'segment-answers'
+
+
+class FileUploadQuestion(ActivityQuestion, TranslatableModel):
+    class JSONAPIMeta:
+        resource_name = 'file-upload-questions'
+
+
+class FileUploadAnswer(ActivityAnswer):
+    file = DocumentField(on_delete=models.CASCADE)
+
+    class JSONAPIMeta:
+        resource_name = 'file-upload-answers'
 
 
 from bluebottle.activities.signals import *  # noqa

@@ -10,7 +10,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.filters import ActivitySearchFilter
-from bluebottle.activities.models import Activity, Contributor, Invite, Contribution
+from bluebottle.activities.models import (
+    Activity, Contributor, Invite, Contribution, ActivityQuestion, ActivityAnswer, FileUploadAnswer
+)
 from bluebottle.activities.permissions import ActivityOwnerPermission
 from bluebottle.activities.serializers import (
     ActivityLocation,
@@ -20,8 +22,12 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageSerializer,
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
-    ActivityImageSerializer, ContributionSerializer, )
-from bluebottle.activities.utils import InviteSerializer
+    ActivityImageSerializer, 
+    ContributionSerializer, 
+    ActivityQuestionSerializer,
+    FileUploadAnswerDocumentSerializer
+)
+from bluebottle.activities.utils import InviteSerializer, ActivityAnswerSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
@@ -32,7 +38,8 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.views import (
     ListAPIView, JsonApiViewMixin, RetrieveUpdateDestroyAPIView,
-    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination
+    CreateAPIView, RetrieveAPIView, JsonApiElasticSearchPagination, JsonApiPagination,
+    PrivateFileView
 )
 
 
@@ -414,3 +421,35 @@ class RelatedContributorListView(JsonApiViewMixin, ListAPIView):
         return queryset.filter(
             activity_id=self.kwargs['activity_id']
         )
+
+
+class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
+    model = ActivityQuestion
+    serializer_class = ActivityQuestionSerializer
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    def get_queryset(self):
+        return ActivityQuestion.objects.filter(activity_types__contains=[self.kwargs['type']])
+
+
+class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
+    model = ActivityAnswer
+    serializer_class = ActivityAnswerSerializer
+
+    permission_classes = (
+        IsAuthenticated
+    )
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class FileUploadAnswerDocumentView(PrivateFileView):
+    max_age = 15 * 60  # 15 minutes
+    relation = 'document'
+    field = 'file'
+    queryset = FileUploadAnswer.objects
+    serializer_class = FileUploadAnswerDocumentSerializer

@@ -25,7 +25,9 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin, )
+    ContributorChildAdmin, 
+    ActivityAnswerInline
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import (
     StateMachineAdmin,
@@ -1000,7 +1002,7 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
+    inlines = [ActivityAnswerInline, GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
 
     base_model = GrantApplication
     list_filter = [

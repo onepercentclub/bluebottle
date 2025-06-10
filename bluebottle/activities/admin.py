@@ -16,10 +16,14 @@ from polymorphic.admin import (
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
 from pytz import timezone
 
+from parler.admin import TranslatableAdmin, TranslatableModelForm
+
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
-    Activity, Contributor, Organizer, Contribution, EffortContribution, Team
+    Activity, Contributor, Organizer, Contribution, EffortContribution, Team,
+    ActivityQuestion, TextQuestion, SegmentQuestion, FileUploadQuestion,
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
@@ -498,10 +502,29 @@ class BulkAddMixin(object):
         )
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
+class ActivityAnswerInline(StackedPolymorphicInline):
+    class TextAnswerInline(StackedPolymorphicInline.Child):
+        model = TextAnswer
+
+    class SegmentAnswerInline(StackedPolymorphicInline.Child):
+        model = SegmentAnswer
+
+    class FileUploadAnswerInline(StackedPolymorphicInline.Child):
+        model = FileUploadAnswer
+
+    model = ActivityAnswer
+
+    child_inlines = (
+        TextAnswerInline,
+        SegmentAnswerInline,
+        FileUploadAnswerInline,
+    )
+
+
+class ActivityChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
-    inlines = (UpdateInline,)
+    inlines = (UpdateInline, ActivityAnswerInline)
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Follow, Message, Update]
@@ -974,3 +997,38 @@ class BaseContributionInline(admin.TabularInline):
 
     def status_label(self, obj):
         return not obj.states.current_state.name
+
+
+
+@admin.register(ActivityQuestion)
+class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
+    base_form = TranslatableModelForm
+    base_model = ActivityQuestion
+    child_models = (
+        TextQuestion,
+        SegmentQuestion,
+        FileUploadQuestion
+    )
+    list_fields = ['question', 'help_text']
+
+
+class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+    base_model = ActivityQuestion
+    fields = ['name', 'question', 'help_text', 'required', 'activity_types']
+    list_fields = ['question', 'help_text']
+
+
+@admin.register(TextQuestion)
+class TextQuestionAdmin(ActivityQuestionChildAdmin):
+    model = TextQuestion
+
+
+@admin.register(SegmentQuestion)
+class SegmentQuestionAdmin(ActivityQuestionChildAdmin):
+    model = SegmentQuestion
+    fields = ['segment_type'] + ActivityQuestionChildAdmin.fields
+
+
+@admin.register(FileUploadQuestion)
+class FileUploadQuestionAdmin(ActivityQuestionChildAdmin):
+    model = FileUploadQuestion

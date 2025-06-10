@@ -82,7 +82,7 @@ class StripePayment(Payment):
         stripe = get_stripe()
 
         intent = self.payment_intent.intent
-        charge = intent.charges.data[0]
+        charge = intent.latest_charge
 
         stripe.Refund.create(charge=charge, reverse_transfer=True)
 

@@ -449,6 +449,8 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verification_link(self):
+        if not self.id or not self.account_id:
+            return '-'
         stripe = get_stripe()
 
         account_link = stripe.AccountLink.create(

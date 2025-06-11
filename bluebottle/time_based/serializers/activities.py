@@ -406,8 +406,8 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         include_my=False,
         statuses={
             "upcoming": ["open", "full", "running"],
-            "passed": ["failed", "succeeded", "expired", "cancelled"],
-            "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled"],
+            "passed": ["failed", "succeeded", "expired", "cancelled", "finished"],
+            "total": ["open", "full", "running", "failed", "succeeded", "expired", "cancelled", "finished"],
         },
     )
 

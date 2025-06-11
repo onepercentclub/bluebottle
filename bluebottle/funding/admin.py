@@ -1,10 +1,9 @@
 from __future__ import division
 
 import logging
+from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
-
-from babel.numbers import get_currency_symbol
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, TabularInline
@@ -851,7 +850,7 @@ class GrantDonorAdmin(ContributorChildAdmin):
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ["created", "state_name", "contributor_date"]
+    readonly_fields = ["created", "state_name", "contributor_date", "activity"]
     raw_id_fields = ['fund']
     fields = ['amount', 'fund'] + readonly_fields
 

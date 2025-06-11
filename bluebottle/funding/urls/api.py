@@ -9,8 +9,8 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
-    PayoutDetails, ActivityDonationList, GrantApplicationList, GrantApplicationDetail, GrantApplicationTransitionList,
-    GrantPayoutDetails
+    GrantPayoutDetails,
+    PayoutDetails, ActivityDonationList, GrantApplicationList, GrantApplicationDetail, GrantApplicationTransitionList
 )
 
 urlpatterns = [

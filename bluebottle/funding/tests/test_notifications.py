@@ -1,7 +1,5 @@
-from bluebottle.funding.messages.funding.activity_manager import (
-    FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
-    FundingRejectedMessage
-)
+from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingApprovedMessage, \
+    FundingNeedsWorkMessage, FundingRejectedMessage
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.messages.grant_application.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationRejectedMessage, GrantApplicationSubmittedMessage, GrantApplicationCancelledMessage

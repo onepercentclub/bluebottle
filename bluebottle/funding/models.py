@@ -2,9 +2,8 @@
 import logging
 import random
 import string
-from builtins import object, range
-
 from babel.numbers import get_currency_name
+from builtins import object, range
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -481,13 +480,8 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-        from .states import PayoutStateMachine
-        for payout in cls.objects.filter(activity=activity):
-            if payout.status == PayoutStateMachine.new.value:
-                payout.delete()
-            elif payout.donations.count() == 0:
-                raise AssertionError('Payout without donations already started!')
-        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
+
+        ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -528,7 +522,7 @@ class GrantPayout(TriggerMixin, models.Model):
         related_name="payouts",
         on_delete=models.CASCADE
     )
-    provider = models.CharField(max_length=100, default='stripe')
+    provider = models.CharField(max_length=100)
     currency = models.CharField(max_length=5)
 
     status = models.CharField(max_length=40)
@@ -569,8 +563,8 @@ class GrantPayout(TriggerMixin, models.Model):
         return self.grants.aggregate(total=Sum('amount'))['total']
 
     class Meta(object):
-        verbose_name = _('Grant payout')
-        verbose_name_plural = _('Grant payouts')
+        verbose_name = _('payout')
+        verbose_name_plural = _('payouts')
 
     def __str__(self):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)

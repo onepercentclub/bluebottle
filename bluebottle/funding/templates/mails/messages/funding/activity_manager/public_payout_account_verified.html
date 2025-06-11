@@ -1,13 +1,11 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block content %}
+{% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},
-            <br/><br/>
             Great news! Your identity has been successfully verified on {{site_name}}.
-
+            <br/>
             This means that people can now collect funds for your organisation. These funds will be paid out straight to your organisation once a funding campaign has come to an end.
         {% endblocktrans %}
     </p>

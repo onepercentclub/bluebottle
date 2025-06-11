@@ -1,11 +1,9 @@
-{% extends "base.mail.html" %}
-{% load djmoney %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block content %}
+{% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},<br/>
             Unfortunately, the platform manager closed your crowdfunding campaign <i>{{ title }}</i>.
             Didn’t expect this? Reach out to your platform manager to find out why.
         {% endblocktrans %}

@@ -481,8 +481,13 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
-
-        ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
+        from .states import PayoutStateMachine
+        for payout in cls.objects.filter(activity=activity):
+            if payout.status == PayoutStateMachine.new.value:
+                payout.delete()
+            elif payout.donations.count() == 0:
+                raise AssertionError('Payout without donations already started!')
+        ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -735,15 +740,15 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def funding(self):
-        for account in self.external_accounts.all():
-            for funding in account.funding_set.all():
-                return funding
+        return Funding.objects.filter(
+            bank_account__in=self.external_accounts.all()
+        ).all()
 
     @property
     def grant_application(self):
-        for account in self.external_accounts.all():
-            for grant_application in account.grant_application_set.all():
-                return grant_application
+        return GrantApplication.objects.filter(
+            bank_account__in=self.external_accounts.all()
+        ).all()
 
     def __str__(self):
         return "Payout account #{}".format(self.id)

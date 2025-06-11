@@ -12,15 +12,18 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.funding.messages.activity_manager import (
+from bluebottle.funding.messages.funding.activity_manager import (
     FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
     FundingRejectedMessage
 )
-from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.messages.grant_application.activity_manager import GrantApplicationSubmittedMessage, \
+    GrantApplicationApprovedMessage, GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, \
+    GrantApplicationCancelledMessage
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory, RewardFactory, \
-    BankAccountFactory, PlainPayoutAccountFactory
+    BankAccountFactory, PlainPayoutAccountFactory, GrantApplicationFactory
 from bluebottle.funding.tests.utils import generate_mock_bank_account
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.tests.factories import (
@@ -258,3 +261,78 @@ class FundingTriggersTestCase(TriggerTestCase):
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
             self.assertNotificationEffect(FundingRejectedMessage)
             self.assertNoNotificationEffect(ActivityRejectedNotification)
+
+
+class GrantApplicationTriggersTestCase(TriggerTestCase):
+    factory = GrantApplicationFactory
+
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create()
+        self.staff_user = BlueBottleUserFactory.create(
+            is_staff=True,
+            submitted_initiative_notifications=True
+        )
+
+        image = ImageFactory()
+
+        self.defaults = {
+            'initiative': InitiativeFactory.create(status='approved'),
+            'owner': self.owner,
+            'target': Money(1000, 'EUR'),
+            'image': image,
+        }
+        super().setUp()
+
+    def create(self):
+        self.model = self.factory.create(**self.defaults)
+
+    def test_submit(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationSubmittedMessage)
+            self.assertNoNotificationEffect(ActivitySubmittedReviewerNotification)
+            self.assertNoNotificationEffect(ActivitySubmittedNotification)
+
+    def test_approve(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationApprovedMessage)
+            self.assertNoNotificationEffect(ActivityApprovedNotification)
+            self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
+
+    def test_needs_work(self):
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.request_changes()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationNeedsWorkMessage)
+            self.assertNoNotificationEffect(ActivityNeedsWorkNotification)
+
+    def test_reject(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.reject()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationRejectedMessage)
+            self.assertNoNotificationEffect(ActivityRejectedNotification)
+            self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+
+    def test_cancel(self):
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.cancel()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationCancelledMessage)
+            self.assertNoNotificationEffect(ActivityRejectedNotification)
+            self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)

@@ -347,7 +347,7 @@ class BusinessTypeChoices(DjangoChoices):
 
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
-    country = models.CharField(max_length=2)
+    country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
         max_length=100,
         blank=True,
@@ -439,10 +439,11 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def service_agreement(self):
-        if 'card_payments' in self.capabilities:
-            return 'full'
-        else:
-            return 'recipient'
+        if self.country:
+            if 'card_payments' in self.capabilities:
+                return 'full'
+            else:
+                return 'recipient'
 
     @property
     def capabilities(self):

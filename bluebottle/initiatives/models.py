@@ -425,6 +425,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     def funding_enabled(self):
         return "funding" in self.activity_types
 
+    @property
+    def grant_application_enabled(self):
+        return "grantapplication" in self.activity_types
+
     class Meta(object):
         verbose_name_plural = _("initiative settings")
         verbose_name = _("initiative settings")

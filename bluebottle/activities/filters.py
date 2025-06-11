@@ -108,7 +108,7 @@ class UpcomingFacet(Facet):
                 statuses.append("full")
             return Terms(status=statuses)
         if filter_values == ["0"]:
-            return Terms(status=["succeeded", "partially_funded", "refnnded"])
+            return Terms(status=["succeeded", "partially_funded", "refunded", "granted"])
 
 
 class DraftFacet(Facet):
@@ -256,7 +256,7 @@ class StatusFacet(Facet):
         if filter_values == ["open"]:
             return Terms(status=["open", "running", "full", "on_hold"])
         if filter_values == ["succeeded"]:
-            return Terms(status=["succeeded", "partially_funded"])
+            return Terms(status=["succeeded", "partially_funded", "granted"])
         if filter_values == ["failed"]:
             return Terms(
                 status=["refunded", "rejected", "expired", "failed", "cancelled"]
@@ -519,7 +519,7 @@ class ActivitySearch(Search):
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(
                 Terms(
-                    status=["succeeded", "open", "full", "partially_funded", "refunded"]
+                    status=["succeeded", "open", "full", "partially_funded", "refunded", "granted"]
                 )
             )
 

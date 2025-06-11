@@ -1,10 +1,9 @@
 from __future__ import division
 
 import logging
+from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
-
-from babel.numbers import get_currency_symbol
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, TabularInline
@@ -15,9 +14,11 @@ from django.template import loader
 from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from past.utils import old_div
 from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
+from stripe import StripeError
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
@@ -46,9 +47,11 @@ from bluebottle.funding.models import (
     Funding,
     FundingPlatformSettings,
     GrantApplication,
+    GrantDeposit,
     GrantDonor,
     GrantFund,
     GrantPayout,
+    LedgerItem,
     LegacyPayment,
     MoneyContribution,
     Payment,
@@ -680,7 +683,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
     )
 
     def get_fields(self, request, obj):
-        fields = super().get_fields(request, obj)
+        fields = list(super().get_fields(request, obj))
         settings = InitiativePlatformSettings.objects.get()
         if 'funding' in settings.activity_types:
             fields.append('funding_links')
@@ -839,20 +842,36 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         return super().get_form(request, obj, **kwargs)
 
 
+@admin.register(GrantDonor)
+class GrantDonorAdmin(ContributorChildAdmin):
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('payout',)
+
+
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ["created", "state_name", "contributor_date", "activity_display"]
-
+    readonly_fields = ["created", "state_name", "contributor_date", "activity"]
     raw_id_fields = ['fund']
+    fields = ['amount', 'fund'] + readonly_fields
 
-    def get_fields(self, request, obj=None):
-        fields = ["fund", "amount", "created", "state_name", "contributor_date"]
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and isinstance(obj, GrantApplication) and obj.target:
+            formset.form.base_fields["amount"].initial = obj.target
+        return formset
 
-        if self.parent_model == GrantFund:
-            fields.insert(0, "activity_display")
 
-        return fields
+class GrantTabularInline(StateMachineAdminMixin, TabularInlinePaginated):
+    model = GrantDonor
+    extra = 0
+    readonly_fields = ["activity_display", "state_name", "contributor_date", "amount"]
+    fields = readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj):
+        return False
 
     def activity_display(self, obj):
         if obj.activity:
@@ -864,25 +883,76 @@ class GrantInline(StateMachineAdminMixin, admin.StackedInline):
 
     activity_display.short_description = _("Grant application")
 
+    can_delete = False
+
+
+class LedgerItemInline(TabularInlinePaginated):
+    model = LedgerItem
+    readonly_fields = ["created", "status", "amount", "type"]
+
+    fields = readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+
+class GrantDonorInline(admin.StackedInline):
+    model = GrantDonor
+    readonly_fields = ["created", "status", "amount"]
+
+    fields = readonly_fields
+    extra = 0
+
+
+class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantDeposit
+    readonly_fields = ["created", "state_name"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
+
 
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
-    inlines = [GrantInline]
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
     model = GrantFund
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
-    list_display = ['name', 'organization']
+    list_display = [
+        'name', 'balance', 'total_debet', 'total_credit', 'organization', 'approved_grants'
+    ]
+    readonly_fields = ['balance', 'total_debet', 'total_credit']
+
+    def has_delete_permission(self, request, obj=None):
+        return obj and obj.total_debet == 0
+
+    def approved_grants(self, obj):
+        return obj.grants.count()
+
+    approved_grants.short_description = _('Approved grants')
 
 
 @admin.register(GrantPayout)
 class GrantPayoutAdmin(StateMachineAdmin):
     readonly_fields = [
         "total_amount",
-        "provider",
         "currency",
         "date_approved",
         "date_started",
         "date_completed",
+        "activity",
+        "partner_organization",
+        "account_details",
+        "bank_details",
+        "provider"
     ]
 
     list_filter = [
@@ -891,6 +961,39 @@ class GrantPayoutAdmin(StateMachineAdmin):
 
     list_display = ['activity', 'total_amount', 'state_name', 'created']
 
+    def partner_organization(self, obj):
+        if obj.activity and obj.activity.organization:
+            url = reverse('admin:organizations_organization_change', args=(obj.activity.organization.id,))
+            return format_html('<a href="{}">{}</a>', url, obj.activity.organization)
+        return None
+
+    def bank_details(self, obj):
+        try:
+            template = loader.get_template(
+                'admin/funding_stripe/stripebankaccount/detail_fields.html'
+            )
+            return template.render({'info': obj.activity.bank_account.account})
+        except StripeError as e:
+            return "Error retrieving details: {}".format(e)
+    bank_details.short_description = _('Bank details')
+
+    def account_details(self, obj):
+        account = obj.activity.bank_account.connect_account.account
+        individual = account.get('individual', None)
+        business = account.get('business_profile', None)
+        if individual:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/detail_fields.html'
+            )
+            return template.render({'info': individual})
+        if business:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/business_fields.html'
+            )
+            return template.render({'info': business})
+        return _("Bank account details not available")
+    account_details.short_description = _('KYC details')
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = [
             (
@@ -898,13 +1001,16 @@ class GrantPayoutAdmin(StateMachineAdmin):
                 {
                     "fields": [
                         "total_amount",
-                        "provider",
-                        "currency",
+                        "activity",
+                        "partner_organization",
+                        "account_details",
+                        "bank_details",
                         "date_approved",
                         "date_started",
                         "date_completed",
                         "status",
-                        "states"
+                        "states",
+                        "provider"
                     ],
                 },
             ),

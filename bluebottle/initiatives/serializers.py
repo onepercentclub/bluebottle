@@ -557,7 +557,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
         model = InitiativePlatformSettings
 
         fields = (
-            # 'activity_types',
+            'activity_types',
             'initiative_search_filters',
             'activity_search_filters',
             'activity_search_filters',

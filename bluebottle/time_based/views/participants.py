@@ -134,6 +134,7 @@ class RelatedParticipantListView(
             queryset = queryset.filter(status__in=statuses)
 
         my = self.request.query_params.get('filter[my]')
+
         if my:
             if self.request.user.is_authenticated:
                 queryset = queryset.filter(user=self.request.user)

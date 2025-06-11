@@ -452,10 +452,10 @@ class SearchFilter(SortableMixin, models.Model):
     @property
     def placeholder(self):
         if self.type == "office":
-            return _("Select an office")
+            return _("Select office")
         if self.type in ["is_online", "team_activity", "open"]:
             return _("Make a choice")
-        return _("Select a {filter_name}").format(filter_name=self.name.lower())
+        return _("Select {filter_name}").format(filter_name=self.name.lower())
 
     class Meta:
         abstract = True

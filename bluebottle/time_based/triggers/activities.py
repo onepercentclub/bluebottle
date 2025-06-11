@@ -698,24 +698,6 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         ModelChangedTrigger(
-            'start',
-            effects=[
-                RescheduleRelatedTimeContributionsEffect,
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.reopen,
-                    conditions=[
-                        start_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        start_has_passed,
-                    ]
-                ),
-            ]
-        ),
-        ModelChangedTrigger(
             'duration',
             effects=[
                 RescheduleRelatedTimeContributionsEffect,

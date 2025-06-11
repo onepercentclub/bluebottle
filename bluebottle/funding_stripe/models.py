@@ -1,6 +1,6 @@
 import json
+import logging
 from builtins import object
-
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
@@ -20,7 +20,6 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -113,9 +112,22 @@ class StripePayment(Payment):
             self.states.fail(save=True)
         elif intent.status == 'succeeded':
             if 'charges' in intent:
-                transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
+                transfer = stripe.Transfer.retrieve(
+                    intent.charges.data[0].transfer,
+                    expand=['balance_transaction']
+                )
+                transaction = transfer.balance_transaction
                 self.donation.payout_amount = Money(
-                    transfer.amount / 100.0, transfer.currency
+                    transaction.amount / 100.0, transaction.currency
+                )
+            elif 'latest_charge' in intent:
+                transfer = stripe.Charge.retrieve(
+                    intent.latest_charge,
+                    expand=['balance_transaction']
+                )
+                transaction = transfer.balance_transaction
+                self.donation.payout_amount = Money(
+                    transaction.amount / 100.0, transaction.currency
                 )
             elif 'amount_received' in intent:
                 self.donation.payout_amount = Money(

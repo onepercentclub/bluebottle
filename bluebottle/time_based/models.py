@@ -801,7 +801,7 @@ class PeriodicActivity(RegistrationActivity):
 
 
 class RegisteredDateActivity(TimeBasedActivity):
-    url_pattern = "{}/{}/activities/details/registered/{}/{}"
+    url_pattern = "{}/{}/activities/details/registered-date/{}/{}"
 
     duration = models.DurationField(
         _("Activity duration"),

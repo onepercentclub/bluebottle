@@ -25,7 +25,7 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
-from bluebottle.time_based.messages.activity_manager import ActivityRegisteredNotification
+from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
@@ -306,6 +306,18 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            TimeBasedStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'accepted_participants',
+                    ParticipantStateMachine.cancel
+                ),
+
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
+            ],
+        ),
+
+        TransitionTrigger(
             DateStateMachine.auto_approve,
             effects=[
                 TransitionEffect(
@@ -580,7 +592,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     ActivityRegisteredReviewerNotification
                 ),
                 NotificationEffect(
-                    ActivityRegisteredNotification
+                    PastActivityRegisteredNotification
                 ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
@@ -683,24 +695,6 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     'participants',
                     RegisteredDateParticipantStateMachine.restore
                 )
-            ]
-        ),
-        ModelChangedTrigger(
-            'start',
-            effects=[
-                RescheduleRelatedTimeContributionsEffect,
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.reopen,
-                    conditions=[
-                        start_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        start_has_passed,
-                    ]
-                ),
             ]
         ),
         ModelChangedTrigger(

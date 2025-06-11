@@ -77,10 +77,6 @@ class Migration(migrations.Migration):
             name='task_manager',
         ),
         migrations.RemoveField(
-            model_name='project',
-            name='theme',
-        ),
-        migrations.RemoveField(
             model_name='projectaddon',
             name='polymorphic_ctype',
         ),

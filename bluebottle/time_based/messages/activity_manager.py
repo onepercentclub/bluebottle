@@ -3,12 +3,12 @@ from django.utils.translation import pgettext_lazy as pgettext
 from bluebottle.activities.messages.activity_manager import OwnerActivityNotification
 
 
-class ActivityRegisteredNotification(OwnerActivityNotification):
+class PastActivityRegisteredNotification(OwnerActivityNotification):
     """
     The activity was published
     """
     subject = pgettext('email', "Your activity on {site_name} has been registered!")
-    template = 'messages/activity_manager/activity_registered'
+    template = 'messages/activity_manager/past_activity_registered'
 
 
 class PastActivitySubmittedNotification(OwnerActivityNotification):

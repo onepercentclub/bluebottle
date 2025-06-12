@@ -52,6 +52,27 @@ class CreateTimeContributionEffect(Effect):
         return _("Create contribution")
 
 
+class CreateRegisteredTimeContributionEffect(Effect):
+    title = _('Create contribution')
+    template = 'admin/create_deadline_time_contribution.html'
+
+    def post_save(self, **kwargs):
+        activity = self.instance.activity
+
+        contribution = TimeContribution(
+            contributor=self.instance,
+            contribution_type=ContributionTypeChoices.period,
+            value=activity.duration,
+            start=activity.start or now()
+        )
+
+        contribution.execute_triggers(**self.options)
+        contribution.save()
+
+    def __str__(self):
+        return _("Create contribution")
+
+
 class CreateScheduleContributionEffect(Effect):
     title = _("Create contribution")
     template = "admin/create_deadline_time_contribution.html"

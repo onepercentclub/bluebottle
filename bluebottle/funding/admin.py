@@ -1,43 +1,79 @@
 from __future__ import division
 
 import logging
+from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
-
-from babel.numbers import get_currency_symbol
 from django import forms
-from django.urls import re_path
 from django.contrib import admin
-from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models, connection
+from django.contrib.admin import SimpleListFilter, TabularInline
+from django.db import connection, models
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django_admin_inline_paginator.admin import TabularInlinePaginated
 from past.utils import old_div
-from polymorphic.admin import PolymorphicChildModelAdmin
-from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
+from stripe import StripeError
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin,
+    ActivityForm,
+    ContributionChildAdmin,
+    ContributorChildAdmin,
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
+from bluebottle.fsm.admin import (
+    StateMachineAdmin,
+    StateMachineAdminMixin,
+    StateMachineFilter,
+)
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonorAdminStatusFilter, DonorAdminCurrencyFilter, DonorAdminPledgeFilter
+from bluebottle.funding.filters import (
+    DonorAdminCurrencyFilter,
+    DonorAdminPledgeFilter,
+    DonorAdminStatusFilter,
+)
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings, MoneyContribution)
+    BankAccount,
+    BudgetLine,
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    GrantApplication,
+    GrantDeposit,
+    GrantDonor,
+    GrantFund,
+    GrantPayout,
+    LedgerItem,
+    LegacyPayment,
+    MoneyContribution,
+    Payment,
+    PaymentCurrency,
+    PaymentProvider,
+    Payout,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Reward,
+)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
-from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount, StripePayment, PaymentIntent
+from bluebottle.funding_stripe.models import (
+    ExternalAccount,
+    PaymentIntent,
+    StripePayment,
+    StripePaymentProvider,
+    StripePayoutAccount,
+    StripeSourcePayment,
+)
 from bluebottle.funding_telesom.models import TelesomPayment
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.geo.models import Location
@@ -45,7 +81,11 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.segments.models import SegmentType
 from bluebottle.updates.admin import UpdateInline
-from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import (
+    BasePlatformSettingsAdmin,
+    TotalAmountAdminChangeList,
+    export_as_csv_action,
+)
 from bluebottle.utils.utils import reverse_signed
 
 logger = logging.getLogger(__name__)
@@ -544,31 +584,60 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class PayoutAccountFundingLinkMixin(object):
+class PayoutAccountActivityLinkMixin(object):
     def funding_links(self, obj):
-        if len(obj.funding_set.all()):
+        if isinstance(obj, PayoutAccount):
+            fundings = Funding.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            fundings = obj.funding_set.all()
+
+        if len(fundings):
             return format_html(", ".join([
                 format_html(
                     u"<a href='{}'>{}</a>",
                     reverse('admin:funding_funding_change', args=(p.id,)),
                     p.title
-                ) for p in obj.funding_set.all()
+                ) for p in fundings
             ]))
         else:
             return _('None')
 
     funding_links.short_description = _('Funding activities')
 
+    def grant_application_links(self, obj):
+        if isinstance(obj, PayoutAccount):
+            grant_applications = GrantApplication.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            grant_applications = obj.grant_application_set.all()
+        if len(grant_applications):
+            return format_html(", ".join([
+                format_html(
+                    u"<a href='{}'>{}</a>",
+                    reverse('admin:funding_grantapplication_change', args=(p.id,)),
+                    p.title
+                ) for p in grant_applications
+            ]))
+        else:
+            return _('None')
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    grant_application_links.short_description = _('Grant applications')
+
+
+class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner', 'partner_organization')
-    readonly_fields = ['status', 'created']
+    readonly_fields = ['status', 'created', 'funding_links', 'grant_application_links']
     fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
 
     def get_basic_fields(self, request, obj):
-        return ['owner', 'public', 'partner_organization']
+        fields = ['owner', 'public', 'partner_organization']
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
 
     def get_status_fields(self, request, obj):
         return ['status', 'created', ]
@@ -602,11 +671,26 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('document', 'funding_links', 'created', 'updated')
-    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
+    readonly_fields = (
+        'document', 'funding_links', 'grant_application_links', 'created', 'updated'
+    )
+    fields = (
+        'connect_account', 'document',
+        'status', 'states', 'created', 'updated'
+    )
+
+    def get_fields(self, request, obj):
+        fields = list(super().get_fields(request, obj))
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
+
     show_in_index = True
 
     def document(self, obj):
@@ -626,7 +710,7 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
 
 
 @admin.register(BankAccount)
-class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+class BankAccountAdmin(PayoutAccountActivityLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
     list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'funding_links', 'public')
     list_filter = ('status', PolymorphicChildModelFilter)
@@ -756,3 +840,309 @@ class FundingPlatformSettingsAdmin(BasePlatformSettingsAdmin):
             'matching_name': forms.TextInput(attrs={'placeholder': connection.tenant.name})
         }
         return super().get_form(request, obj, **kwargs)
+
+
+@admin.register(GrantDonor)
+class GrantDonorAdmin(ContributorChildAdmin):
+    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('payout',)
+
+
+class GrantInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantDonor
+    extra = 0
+    readonly_fields = ["created", "state_name", "contributor_date", "activity"]
+    raw_id_fields = ['fund']
+    fields = ['amount', 'fund'] + readonly_fields
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        if obj and isinstance(obj, GrantApplication) and obj.target:
+            formset.form.base_fields["amount"].initial = obj.target
+        return formset
+
+
+class GrantTabularInline(StateMachineAdminMixin, TabularInlinePaginated):
+    model = GrantDonor
+    extra = 0
+    readonly_fields = ["activity_display", "state_name", "contributor_date", "amount"]
+    fields = readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj):
+        return False
+
+    def activity_display(self, obj):
+        if obj.activity:
+            url = reverse(
+                "admin:funding_grantapplication_change", args=(obj.activity.id,)
+            )
+            return format_html('<a href="{}">{}</a>', url, obj.activity)
+        return "-"
+
+    activity_display.short_description = _("Grant application")
+
+    can_delete = False
+
+
+class LedgerItemInline(TabularInlinePaginated):
+    model = LedgerItem
+    readonly_fields = ["created", "status", "amount", "type"]
+
+    fields = readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+
+class GrantDonorInline(admin.StackedInline):
+    model = GrantDonor
+    readonly_fields = ["created", "status", "amount"]
+
+    fields = readonly_fields
+    extra = 0
+
+
+class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
+    model = GrantDeposit
+    readonly_fields = ["created", "state_name"]
+    fields = ['amount', 'reference', ] + readonly_fields
+    extra = 0
+
+    def has_delete_permission(self, *args, **kwargs):
+        return False
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.form.base_fields["amount"].initial = (None, obj.currency)
+        return formset
+
+
+@admin.register(GrantFund)
+class GrantFundAdmin(admin.ModelAdmin):
+    inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
+    model = GrantFund
+    raw_id_fields = ['organization']
+    search_fields = ['name', 'description']
+    list_display = [
+        'name', 'balance', 'total_debet', 'total_credit', 'organization', 'approved_grants'
+    ]
+    readonly_fields = ['balance', 'total_debet', 'total_credit']
+
+    def has_delete_permission(self, request, obj=None):
+        return obj and obj.total_debet == 0
+
+    def approved_grants(self, obj):
+        return obj.grants.count()
+
+    approved_grants.short_description = _('Approved grants')
+
+
+@admin.register(GrantPayout)
+class GrantPayoutAdmin(StateMachineAdmin):
+    readonly_fields = [
+        "total_amount",
+        "currency",
+        "date_approved",
+        "date_started",
+        "date_completed",
+        "activity",
+        "partner_organization",
+        "account_details",
+        "bank_details",
+        "provider"
+    ]
+
+    list_filter = [
+        StateMachineFilter,
+    ]
+
+    list_display = ['activity', 'total_amount', 'state_name', 'created']
+
+    def partner_organization(self, obj):
+        if obj.activity and obj.activity.organization:
+            url = reverse('admin:organizations_organization_change', args=(obj.activity.organization.id,))
+            return format_html('<a href="{}">{}</a>', url, obj.activity.organization)
+        return None
+
+    def bank_details(self, obj):
+        try:
+            template = loader.get_template(
+                'admin/funding_stripe/stripebankaccount/detail_fields.html'
+            )
+            return template.render({'info': obj.activity.bank_account.account})
+        except StripeError as e:
+            return "Error retrieving details: {}".format(e)
+    bank_details.short_description = _('Bank details')
+
+    def account_details(self, obj):
+        account = obj.activity.bank_account.connect_account.account
+        individual = account.get('individual', None)
+        business = account.get('business_profile', None)
+        if individual:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/detail_fields.html'
+            )
+            return template.render({'info': individual})
+        if business:
+            template = loader.get_template(
+                'admin/funding_stripe/stripepayoutaccount/business_fields.html'
+            )
+            return template.render({'info': business})
+        return _("Bank account details not available")
+    account_details.short_description = _('KYC details')
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            (
+                _("Manage"),
+                {
+                    "fields": [
+                        "total_amount",
+                        "activity",
+                        "partner_organization",
+                        "account_details",
+                        "bank_details",
+                        "date_approved",
+                        "date_started",
+                        "date_completed",
+                        "status",
+                        "states",
+                        "provider"
+                    ],
+                },
+            ),
+        ]
+
+        if request.user.is_superuser:
+            fieldsets.append(
+                (
+                    _("Super admin"),
+                    {
+                        "fields": [
+                            "force_status",
+                        ],
+                    },
+                )
+            )
+
+        return fieldsets
+
+
+class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
+
+    model = GrantPayout
+    readonly_fields = [
+        "payout_link",
+        "total_amount",
+        "provider",
+        "currency",
+        "date_approved",
+        "date_started",
+        "date_completed",
+    ]
+    fields = readonly_fields
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def payout_link(self, obj):
+        url = reverse("admin:funding_grantpayout_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, obj)
+
+
+@admin.register(GrantApplication)
+class GrantApplicationAdmin(ActivityChildAdmin):
+    inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
+
+    base_model = GrantApplication
+    list_filter = [
+        StateMachineFilter,
+    ]
+    list_display = [
+        "title",
+        "target",
+        "status",
+    ]
+
+    def get_list_display(self, request):
+        return self.list_display
+
+    readonly_fields = ActivityChildAdmin.readonly_fields + [
+        "started",
+    ]
+
+    search_fields = ["title", "description"]
+    raw_id_fields = ActivityChildAdmin.raw_id_fields + ['bank_account', 'impact_location']
+
+    status_fields = (
+        "initiative",
+        "owner",
+        "slug",
+        "highlight",
+        "created",
+        "updated",
+        'started',
+        "has_deleted_data",
+        "status",
+        "states",
+    )
+
+    detail_fields = [
+        "title",
+        "target",
+        "description",
+        "image",
+        "video_url",
+        "organization",
+        "theme",
+        "impact_location",
+        "bank_account",
+    ]
+
+    def get_fieldsets(self, request, obj=None):
+        settings = InitiativePlatformSettings.objects.get()
+        fieldsets = [
+            (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+        ]
+        if Location.objects.count():
+            if settings.enable_office_restrictions:
+                if "office_restriction" not in self.office_fields:
+                    self.office_fields += ("office_restriction",)
+                fieldsets.append((_("Office"), {"fields": self.office_fields}))
+
+        if request.user.is_superuser:
+            fieldsets.append((_("Super admin"), {"fields": ("force_status",)}))
+
+        if SegmentType.objects.count():
+            fieldsets.append(
+                (
+                    _("Segments"),
+                    {
+                        "fields": [
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
+                        ]
+                    },
+                )
+            )
+        return fieldsets
+
+    export_to_csv_fields = (
+        ('title', 'Title'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created', 'Created'),
+        ('target', 'Target'),
+        ('owner__full_name', 'Owner'),
+        ('owner__email', 'Email'),
+        ('bank_account', 'Bank Account'),
+        ('office_location', 'Office Location'),
+    )
+
+    actions = [export_as_csv_action(fields=export_to_csv_fields)]

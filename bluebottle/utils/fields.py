@@ -1,11 +1,9 @@
+import inflection
 import json
 import mimetypes
-import xml.etree.cElementTree as et
-from builtins import object
-from builtins import str
-
-import inflection
 import sorl.thumbnail
+import xml.etree.cElementTree as et
+from builtins import object, str
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -17,9 +15,9 @@ from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework_json_api.relations import (
-    PolymorphicResourceRelatedField,
+    LINKS_PARAMS,
     MANY_RELATION_KWARGS,
-    LINKS_PARAMS
+    PolymorphicResourceRelatedField,
 )
 
 from .utils import clean_html
@@ -66,6 +64,45 @@ class MoneyField(DjangoMoneyField):
         self.default_currency = self.get_default_currency()
         self.currency_choices = self.get_currency_choices()
         return super(MoneyField, self).formfield(**kwargs)
+
+
+class CurrencyField(models.CharField):
+    def __init__(self, verbose_name=None, name=None, **kwargs):
+
+        super(CurrencyField, self).__init__(
+            verbose_name=verbose_name,
+            name=name,
+            choices=[('EUR', "Euro")],
+            **kwargs
+        )
+
+    def get_default_currency(self):
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_currency_choices()
+
+    def deconstruct(self):
+        name, path, args, kwargs = super(CurrencyField, self).deconstruct()
+
+        if self.default != self.get_default_currency():
+            kwargs["default"] = str(self.default)
+        if self.currency_choices != self.get_currency_choices():
+            kwargs["currency_choices"] = self.currency_choices
+        return name, path, args, kwargs
+
+    def formfield(self, **kwargs):
+        defaults = {
+            "form_class": forms.ChoiceField,
+            "choices": self.get_currency_choices(),
+            "initial": self.get_default_currency(),
+        }
+        defaults.update(kwargs)
+        return super(CurrencyField, self).formfield(**defaults)
 
 
 class LegacyMoneyField(MoneyField):

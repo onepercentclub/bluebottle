@@ -45,6 +45,7 @@ urlpatterns = [
 
     re_path(r"^/date", include("bluebottle.time_based.urls.date_api")),
     re_path(r"^/deadline", include("bluebottle.time_based.urls.deadline_api")),
+    re_path(r"^/registered-date", include("bluebottle.time_based.urls.registered_date_api")),
     re_path(r"^/periodic", include("bluebottle.time_based.urls.periodic_api")),
     re_path(r"^/schedule", include("bluebottle.time_based.urls.schedule_api")),
     re_path(r"^/teams", include("bluebottle.time_based.urls.team_api")),

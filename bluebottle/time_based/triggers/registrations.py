@@ -22,7 +22,7 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     DateRegistration,
 )
-from bluebottle.time_based.notifications.registrations import (
+from bluebottle.time_based.messages.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
     ManagerTeamRegistrationCreatedNotification,

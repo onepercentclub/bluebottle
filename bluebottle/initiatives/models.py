@@ -10,10 +10,9 @@ from django.urls import reverse
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
-from djchoices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
-from parler.models import TranslatedFields
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
@@ -303,21 +302,16 @@ def get_search_filters(filters):
     return filters
 
 
-class CreateFlowChoices(DjangoChoices):
-    initiative = ChoiceItem(
-        "initiative", label=_("Start the create flow by creating an initiative")
-    )
-    acitivity = ChoiceItem("activity", label=_("Directly create an activity"))
-
-
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
+        ("grantapplication", _("Grant Application")),
         ("periodactivity", _("Activity during a period")),
         ("dateactivity", _("Activity on a specific date")),
         ("deadlineactivity", _("Activity within a deadline")),
         ("scheduleactivity", _("Scheduled activity")),
         ("periodicactivity", _("Periodic Activity")),
+        ("registereddateactivity", _("Past date activity")),
         ("deed", _("Deed")),
         ("collect", _("Collect activity")),
     )
@@ -415,12 +409,9 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
-    create_flow = models.CharField(
-        _("Create flow"),
-        default=CreateFlowChoices.initiative,
-        choices=CreateFlowChoices.choices,
-        max_length=100,
-    )
+    @property
+    def activity_questions(self):
+        return ActivityQuestion.objects.order_by("sequence")
 
     @property
     def deeds_enabled(self):
@@ -434,9 +425,31 @@ class InitiativePlatformSettings(BasePlatformSettings):
     def funding_enabled(self):
         return "funding" in self.activity_types
 
+    @property
+    def grant_application_enabled(self):
+        return "grantapplication" in self.activity_types
+
     class Meta(object):
         verbose_name_plural = _("initiative settings")
         verbose_name = _("initiative settings")
+
+
+class ActivityQuestion(TranslatableModel):
+    translations = TranslatedFields(
+        question=models.CharField(_('Question'), max_length=255),
+        description=models.CharField(_('Help text'), max_length=1500, blank=True, null=True)
+    )
+    sequence = models.PositiveIntegerField(
+        default=0,
+        help_text=_("The order in which the question should be displayed."),
+    )
+    activity_types = MultiSelectField(
+        max_length=300,
+        choices=InitiativePlatformSettings.ACTIVITY_TYPES
+    )
+
+    def __str__(self):
+        return self.question
 
 
 class SearchFilter(SortableMixin, models.Model):

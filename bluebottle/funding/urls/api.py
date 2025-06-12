@@ -9,9 +9,9 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
-    PayoutDetails, ActivityDonationList
+    GrantPayoutDetails,
+    PayoutDetails, ActivityDonationList, GrantApplicationList, GrantApplicationDetail, GrantApplicationTransitionList
 )
-
 
 urlpatterns = [
     re_path(r'^/donations$', DonationList.as_view(), name='funding-donation-list'),
@@ -29,6 +29,12 @@ urlpatterns = [
     re_path(r'^/(?P<pk>[\d]+)$', FundingDetail.as_view(), name='funding-detail'),
     re_path(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
     re_path(r'^/export/(?P<pk>[\d]+)$', SupportersExportView.as_view(), name='funding-supporters-export'),
+
+    # Grants
+    re_path(r'^/grant-applications$', GrantApplicationList.as_view(), name='grant-application-list'),
+    re_path(r'^/grant-applications/(?P<pk>[\d]+)$', GrantApplicationDetail.as_view(), name='grant-application-detail'),
+    re_path(r'^/grant-applications/transitions$', GrantApplicationTransitionList.as_view(),
+            name='grant-application-transition-list'),
 
     re_path(
         r'^/payouts/(?P<pk>[\d]+)$',
@@ -55,4 +61,10 @@ urlpatterns = [
         PlainPayoutAccountDocumentDetail.as_view(),
         name="kyc-document"
     ),
+    re_path(
+        r'^/grant-payouts/(?P<pk>[\d]+)$',
+        GrantPayoutDetails.as_view(),
+        name='grant-payout-details'
+    ),
+
 ]

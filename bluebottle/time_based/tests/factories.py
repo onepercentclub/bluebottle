@@ -10,7 +10,6 @@ from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
@@ -31,7 +30,7 @@ from bluebottle.time_based.models import (
     Team,
     TimeContribution,
     TeamMember,
-    DateRegistration,
+    DateRegistration, RegisteredDateActivity, RegisteredDateParticipant,
 )
 from bluebottle.utils.models import Language
 
@@ -89,6 +88,15 @@ class DateActivityFactory(TimeBasedFactory):
         DateActivitySlotFactory,
         factory_related_name='activity'
     )
+
+
+class RegisteredDateActivityFactory(TimeBasedFactory):
+    class Meta:
+        model = RegisteredDateActivity
+
+    start = now() - timedelta(weeks=2)
+    duration = timedelta(hours=2)
+    title = factory.Faker('sentence')
 
 
 class DeadlineActivityFactory(TimeBasedFactory):
@@ -218,6 +226,14 @@ class DateParticipantFactory(FSMModelFactory):
     activity = factory.SubFactory(DateActivityFactory)
     registration = factory.SubFactory(DateRegistrationFactory)
     slot = factory.SubFactory(DateActivitySlotFactory)
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+
+class RegisteredDateParticipantFactory(FSMModelFactory):
+    class Meta(object):
+        model = RegisteredDateParticipant
+
+    activity = factory.SubFactory(RegisteredDateActivityFactory)
     user = factory.SubFactory(BlueBottleUserFactory)
 
 

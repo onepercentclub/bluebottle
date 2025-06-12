@@ -28,7 +28,7 @@ from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
-from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.funding.models import Funding, Donor, MoneyContribution, GrantApplication, GrantDonor
 from bluebottle.geo.models import Location
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
@@ -46,7 +46,7 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
-    PeriodicParticipant,
+    PeriodicParticipant, RegisteredDateActivity, RegisteredDateParticipant,
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
@@ -58,6 +58,7 @@ class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, Sta
     base_model = Contributor
     child_models = (
         Donor,
+        GrantDonor,
         Organizer,
         DateParticipant,
         DeedParticipant,
@@ -66,6 +67,7 @@ class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, Sta
         ScheduleParticipant,
         TeamScheduleParticipant,
         PeriodicParticipant,
+        RegisteredDateParticipant,
     )
     list_display = ['created', 'owner', 'type', 'activity', 'state_name']
     list_filter = (PolymorphicChildModelFilter, StateMachineFilter,)
@@ -191,11 +193,25 @@ class ContributorChildAdmin(
         return obj.polymorphic_ctype
 
 
+class EffortContributionInline(admin.TabularInline):
+    model = Contribution
+    readonly_field = ['start', 'status']
+    fields = ['start', 'status']
+    can_delete = False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Organizer)
 class OrganizerAdmin(ContributorChildAdmin):
     model = Organizer
     list_display = ['user', 'status', 'activity_link']
     raw_id_fields = ('user', 'activity')
+    inlines = [EffortContributionInline]
 
     readonly_fields = ContributorChildAdmin.readonly_fields + ['status', 'created', ]
 
@@ -785,12 +801,14 @@ class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateM
     base_model = Activity
     child_models = (
         Funding,
+        GrantApplication,
         DateActivity,
         Deed,
         CollectActivity,
         DeadlineActivity,
         PeriodicActivity,
-        ScheduleActivity
+        ScheduleActivity,
+        RegisteredDateActivity
     )
     readonly_fields = ['link', 'review_status']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]

@@ -42,6 +42,8 @@ from bluebottle.funding.serializers import (
     FundingListSerializer,
     FundingSerializer,
     TinyFundingSerializer,
+    GrantSerializer,
+    GrantApplicationSerializer
 )
 from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import (
@@ -56,6 +58,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
     DeadlineActivitySerializer,
     DeadlineParticipantSerializer,
     PeriodicActivitySerializer,
@@ -64,7 +67,7 @@ from bluebottle.time_based.serializers import (
     PolymorphicSlotSerializer,
     ScheduleActivitySerializer,
     ScheduleParticipantSerializer,
-    TeamScheduleParticipantSerializer,
+    TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
@@ -108,6 +111,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     def get_segments(self, obj):
@@ -346,6 +350,12 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_activity_type(self, obj):
+        if obj.type == 'registereddateactivity':
+            return 'registeredDate'
+
+        if obj.type == 'grantapplication':
+            return 'grantApplication'
+
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
@@ -560,12 +570,14 @@ class ActivityPreviewSerializer(ModelSerializer):
 class ActivityListSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         FundingListSerializer,
+        GrantApplicationSerializer,
         DeedListSerializer,
         CollectActivityListSerializer,
         DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     included_serializers = {
@@ -609,6 +621,9 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer,
+        CollectActivitySerializer
     ]
 
     class Meta(object):
@@ -626,11 +641,13 @@ class ContributorSerializer(PolymorphicModelSerializer):
         DonorSerializer,
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
+        RegisteredDateParticipantSerializer,
         PeriodicParticipantSerializer,
         ScheduleParticipantSerializer,
         TeamScheduleParticipantSerializer,
         DeedParticipantSerializer,
         CollectContributorSerializer,
+        GrantSerializer
     ]
 
     included_serializers = {
@@ -725,10 +742,7 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        try:
-            return obj.contributor.registration
-        except (AttributeError, Registration.DoesNotExist):
-            return None
+        return getattr(obj.contributor, "registration", None)
 
     class JSONAPIMeta(object):
         resource_name = "contributions"

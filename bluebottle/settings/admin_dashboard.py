@@ -7,7 +7,6 @@ JET_APP_INDEX_DASHBOARD = (
 
 JET_DEFAULT_THEME = "goodup"
 
-
 JET_SIDE_MENU_ITEMS = [
     {
         "label": _("Initiatives"),
@@ -55,6 +54,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "time_based.dateactivity",
                 "permissions": ["time_based.change_dateactivity"],
+            },
+            {
+                "name": "time_based.registereddateactivity",
+                "permissions": ["time_based.change_registereddateactivity"],
             },
             {
                 "name": "time_based.dateactivityslot",
@@ -121,7 +124,24 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "funding.bankaccount",
                 "permissions": ["funding.change_bankaccount"],
             },
-            {"name": "funding.payout", "permissions": ["funding.change_payout"]},
+            {
+                "name": "funding.payout", "permissions": ["funding.change_payout"],
+            },
+            {
+                "name": "funding.grantfund",
+                "permissions": ["funding.change_grantfund"],
+                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+            },
+            {
+                "name": "funding.grantapplication",
+                "permissions": ["funding.change_grantapplication"],
+                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+            },
+            {
+                "name": "funding.grantpayout",
+                "permissions": ["funding.change_grantpayout"],
+                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+            },
         ],
     },
     {
@@ -268,6 +288,5 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
 ]
-
 
 JET_SIDE_MENU_COMPACT = False

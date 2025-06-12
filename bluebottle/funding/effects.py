@@ -279,3 +279,26 @@ class RemoveAnonymousRewardEffect(Effect):
 
     def __str__(self):
         return _('Remove anonymous donation')
+
+
+class SelectOrCreatePayoutAccountEffect(Effect):
+    conditions = []
+    display = False
+
+    def post_save(self, **kwargs):
+        if self.instance.bank_account:
+            return
+        user = self.instance.owner
+        country = self.instance.country.alpha2_code or 'NL'
+        from bluebottle.funding_stripe.models import StripePayoutAccount
+        payout_account = StripePayoutAccount.objects.filter(
+            owner=user,
+        ).first()
+        if not payout_account:
+            payout_account = StripePayoutAccount.objects.create(
+                owner=user,
+                country=country,
+            )
+
+    def __str__(self):
+        return _('Select or create a payout account')

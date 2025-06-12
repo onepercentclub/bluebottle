@@ -971,7 +971,6 @@ class GrantApplicationSerializer(BaseActivitySerializer):
     target = MoneySerializer(required=False, allow_null=True)
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     grants = ResourceRelatedField(
-        source='contributors',
         many=True,
         queryset=GrantDonor.objects.all(),
     )

@@ -563,8 +563,8 @@ class GrantPayout(TriggerMixin, models.Model):
         return self.grants.aggregate(total=Sum('amount'))['total']
 
     class Meta(object):
-        verbose_name = _('payout')
-        verbose_name_plural = _('payouts')
+        verbose_name = _('Grant payout')
+        verbose_name_plural = _('Grant payouts')
 
     def __str__(self):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
@@ -930,7 +930,7 @@ class GrantApplication(Activity):
     @property
     def grants(self):
         if self.pk:
-            return self.contributors.instance_of(GrantDonor)
+            return self.contributors.instance_of(GrantDonor).all()
         else:
             return GrantDonor.objects.none()
 

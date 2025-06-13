@@ -108,10 +108,11 @@ class StripePayment(Payment):
         elif intent.status == 'succeeded':
             if intent.latest_charge:
                 charge = stripe.Charge.retrieve(intent.latest_charge)
-                transfer = stripe.Transfer.retrieve(charge.transfer)
-                self.donation.payout_amount = Money(
-                    transfer.amount / 100.0, transfer.currency
-                )
+                if 'transfer' in charge:
+                    transfer = stripe.Transfer.retrieve(charge.transfer)
+                    self.donation.payout_amount = Money(
+                        transfer.amount / 100.0, transfer.currency
+                    )
             elif 'amount_received' in intent:
                 self.donation.payout_amount = Money(
                     intent.amount_received / 100.0, intent.currency

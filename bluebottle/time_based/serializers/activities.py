@@ -22,9 +22,9 @@ from bluebottle.time_based.models import (
     PeriodicActivity,
     ScheduleActivity,
     DateParticipant,
-    DateActivity,
-)
+    DateActivity, RegisteredDateActivity, )
 from bluebottle.time_based.permissions import CanExportParticipantsPermission
+from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import ResourcePermissionField
 
 
@@ -226,6 +226,40 @@ class DeadlineActivitySerializer(TimeBasedBaseSerializer):
         **{
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
+    )
+
+
+class RegisteredDateActivitySerializer(TimeBasedBaseSerializer):
+    detail_view_name = 'registered-date-detail'
+    export_view_name = 'registered-date-participant-export'
+    description = RichTextField(allow_blank=True)
+
+    start = serializers.DateTimeField(allow_null=True)
+
+    contributors = RelatedLinkFieldByStatus(
+        read_only=True,
+        source="participants",
+        related_link_view_name="registered-date-participants",
+        related_link_url_kwarg="activity_id",
+        statuses={
+            "active": ["succeeded", "accepted", "new"],
+            "failed": ["rejected", "withdrawn", "removed"],
+        },
+    )
+
+    class Meta(TimeBasedBaseSerializer.Meta):
+        model = RegisteredDateActivity
+        fields = TimeBasedBaseSerializer.Meta.fields + (
+            'start',
+            'end',
+            'duration',
+        )
+
+    class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):
+        resource_name = 'activities/time-based/registered-dates'
+
+    included_serializers = dict(
+        TimeBasedBaseSerializer.included_serializers.serializers,
     )
 
 
@@ -559,6 +593,17 @@ class DeadlineTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta(object):
         resource_name = 'activities/time-based/deadline-transitions'
+        included_resources = ['resource', ]
+
+
+class RegisteredDateTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=RegisteredDateActivity.objects.all())
+    included_serializers = {
+        'resource': 'bluebottle.time_based.serializers.RegisteredDateActivitySerializer',
+    }
+
+    class JSONAPIMeta(object):
+        resource_name = 'activities/time-based/registered-date-transitions'
         included_resources = ['resource', ]
 
 

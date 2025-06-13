@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from bluebottle.activities.permissions import ContributorPermission
+from bluebottle.activities.permissions import ContributorPermission, ActivityManagerPermission
 from bluebottle.activities.views import ParticipantCreateMixin
 from bluebottle.time_based.models import (
     DateActivity,
@@ -10,11 +10,13 @@ from bluebottle.time_based.models import (
     ScheduleParticipant,
     TeamScheduleParticipant,
 )
+from bluebottle.time_based.models import RegisteredDateParticipant
 from bluebottle.time_based.serializers import (
-    DateParticipantSerializer,
-    DateParticipantTransitionSerializer,
     DeadlineParticipantSerializer,
     DeadlineParticipantTransitionSerializer,
+    DateParticipantTransitionSerializer,
+    DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
     ScheduleParticipantSerializer,
     ScheduleParticipantTransitionSerializer,
     TeamScheduleParticipantSerializer,
@@ -22,7 +24,7 @@ from bluebottle.time_based.serializers import (
 )
 from bluebottle.time_based.serializers.participants import (
     PeriodicParticipantSerializer,
-    PeriodicParticipantTransitionSerializer,
+    PeriodicParticipantTransitionSerializer, RegisteredDateParticipantTransitionSerializer,
 )
 from bluebottle.time_based.views.mixins import (
     AnonymizeMembersMixin,
@@ -49,7 +51,11 @@ from bluebottle.utils.views import (
 class ParticipantList(JsonApiViewMixin, ParticipantCreateMixin, CreateAPIView, CreatePermissionMixin):
 
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(
+            ResourcePermission,
+            ResourceOwnerPermission,
+            ActivityManagerPermission
+        ),
     )
 
 
@@ -67,6 +73,14 @@ class DeadlineParticipantList(ParticipantList):
     serializer_class = DeadlineParticipantSerializer
 
 
+class RegisteredDateParticipantList(ParticipantList):
+    queryset = RegisteredDateParticipant.objects.prefetch_related(
+        'user',
+        'activity'
+    )
+    serializer_class = RegisteredDateParticipantSerializer
+
+
 class ParticipantDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission, ContributorPermission),
@@ -81,6 +95,11 @@ class DateParticipantDetail(ParticipantDetail):
 class DeadlineParticipantDetail(ParticipantDetail):
     queryset = DeadlineParticipant.objects.all()
     serializer_class = DeadlineParticipantSerializer
+
+
+class RegisteredDateParticipantDetail(ParticipantDetail):
+    queryset = RegisteredDateParticipant.objects.all()
+    serializer_class = RegisteredDateParticipantSerializer
 
 
 class ScheduleParticipantDetail(ParticipantDetail):
@@ -108,6 +127,19 @@ class RelatedParticipantListView(
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        status_filter = self.request.query_params.get("filter[status]")
+        if status_filter:
+            statuses = status_filter.split(",")
+            queryset = queryset.filter(status__in=statuses)
+
+        my = self.request.query_params.get('filter[my]')
+
+        if my:
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(user=self.request.user)
+            else:
+                queryset = queryset.none()
 
         return queryset.filter(activity_id=self.kwargs["activity_id"])
 
@@ -231,6 +263,13 @@ class DeadlineRelatedParticipantList(RelatedParticipantListView):
     serializer_class = DeadlineParticipantSerializer
 
 
+class RegisteredDateRelatedParticipantList(RelatedParticipantListView):
+    queryset = RegisteredDateParticipant.objects.prefetch_related(
+        'user', 'activity'
+    )
+    serializer_class = RegisteredDateParticipantSerializer
+
+
 class ScheduleRelatedParticipantList(RelatedParticipantListView):
     queryset = ScheduleParticipant.objects.prefetch_related(
         'user', 'activity'
@@ -285,6 +324,11 @@ class DateParticipantTransitionList(TransitionList):
 class DeadlineParticipantTransitionList(TransitionList):
     serializer_class = DeadlineParticipantTransitionSerializer
     queryset = DeadlineParticipant.objects.all()
+
+
+class RegisteredDateParticipantTransitionList(TransitionList):
+    serializer_class = RegisteredDateParticipantTransitionSerializer
+    queryset = RegisteredDateParticipant.objects.all()
 
 
 class ScheduleParticipantTransitionList(TransitionList):

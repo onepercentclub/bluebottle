@@ -1,5 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 
+
 from bluebottle.activities.states import (
     ActivityStateMachine, ContributionStateMachine,
 )
@@ -12,6 +13,7 @@ from bluebottle.time_based.models import (
     DeadlineActivity,
     PeriodicActivity,
     ScheduleActivity,
+    RegisteredDateActivity,
 )
 
 
@@ -54,6 +56,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
         name=_("Reopen"),
         passed_label=_('reopened'),
         automatic=True,
+        hide_from_admin=True,
         description=_(
             "The number of participants has fallen below the required number or new slots have been added. "
             "People can sign up again for the task."
@@ -61,7 +64,7 @@ class TimeBasedStateMachine(ActivityStateMachine):
     )
 
     reopen_manually = Transition(
-        [ActivityStateMachine.succeeded, ActivityStateMachine.expired],
+        [ActivityStateMachine.expired, ],
         ActivityStateMachine.draft,
         name=_("Reopen"),
         passed_label=_('reopened'),
@@ -90,6 +93,9 @@ class TimeBasedStateMachine(ActivityStateMachine):
 
     cancel = Transition(
         [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
             ActivityStateMachine.open,
             ActivityStateMachine.succeeded,
             full,
@@ -180,6 +186,68 @@ class ScheduleActivityStateMachine(RegistrationActivityStateMachine):
 @register(PeriodicActivity)
 class PeriodicActivityStateMachine(RegistrationActivityStateMachine):
     pass
+
+
+@register(RegisteredDateActivity)
+class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
+
+    def has_participants(self):
+        return self.instance.participants.count() > 0
+
+    planned = State(
+        _('Planned'),
+        'planned',
+        _('The activity is planned. The activity manager will register participants.')
+    )
+
+    succeed = ActivityStateMachine.succeed.extend(
+        sources=[
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+            TimeBasedStateMachine.expired,
+            TimeBasedStateMachine.open,
+            planned,
+        ],
+    )
+
+    register = Transition(
+        [
+            TimeBasedStateMachine.submitted,
+            TimeBasedStateMachine.draft,
+            TimeBasedStateMachine.needs_work,
+        ],
+        planned,
+        name=_("Register"),
+        description=_('Once the activity is registered, the participants contributions will be recorded.'),
+        automatic=False,
+        passed_label=_("registered"),
+        permission=TimeBasedStateMachine.is_owner,
+        conditions=[
+            TimeBasedStateMachine.is_complete,
+            TimeBasedStateMachine.is_valid,
+            TimeBasedStateMachine.can_publish,
+            has_participants
+        ],
+    )
+    submit = ActivityStateMachine.submit.extend(
+        conditions=ActivityStateMachine.submit.conditions + [has_participants],
+    )
+
+    publish = None
+
+    approve = ActivityStateMachine.approve.extend(
+        description=_('Approve activity, so it will be registered on the platform.'),
+        target=planned,
+    )
+
+    cancel = ActivityStateMachine.cancel.extend(
+        sources=[
+            ActivityStateMachine.open,
+            ActivityStateMachine.succeeded,
+            planned,
+        ],
+    )
 
 
 @register(TimeContribution)

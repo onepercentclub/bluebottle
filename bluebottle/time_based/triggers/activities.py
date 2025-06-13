@@ -7,7 +7,7 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification,
     ActivityRejectedNotification,
     ActivityRestoredNotification,
-    ActivitySucceededNotification, ActivityApprovedNotification, ActivitySubmittedNotification,
+    ActivitySucceededNotification,
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification
@@ -25,7 +25,11 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
-from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
+from bluebottle.time_based.messages.activity_manager import (
+    PastActivityRegisteredNotification,
+    PastActivityApprovedNotification,
+    PastActivitySubmittedNotification
+)
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
@@ -607,7 +611,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.submit,
             effects=[
                 NotificationEffect(
-                    ActivitySubmittedNotification,
+                    PastActivitySubmittedNotification,
                 ),
                 NotificationEffect(
                     ActivitySubmittedReviewerNotification,
@@ -618,7 +622,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.approve,
             effects=[
                 NotificationEffect(
-                    ActivityApprovedNotification
+                    PastActivityApprovedNotification
                 ),
                 RelatedTransitionEffect(
                     'organizer',

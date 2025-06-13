@@ -258,7 +258,6 @@ class TimeBasedTriggers(ActivityTriggers):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
-
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
@@ -667,6 +666,10 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             effects=[
                 NotificationEffect(ActivityRejectedNotification),
                 RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.fail
+                ),
+                RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.fail,
                 ),
@@ -675,6 +678,10 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.succeed,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
                 RelatedTransitionEffect(
                     'participants',
                     RegisteredDateParticipantStateMachine.succeed

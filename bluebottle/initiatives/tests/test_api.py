@@ -1379,8 +1379,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_activities'],
             [
-                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
-                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select a distance'},
+                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select date'},
+                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select distance'},
                 {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
             ]
 
@@ -1388,8 +1388,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'}
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'}
             ]
 
         )
@@ -1407,8 +1407,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'},
-                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select a --------'}
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
+                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'}
             ]
         )

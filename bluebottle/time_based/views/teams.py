@@ -71,7 +71,7 @@ class RelatedTeamList(JsonApiViewMixin, ListAPIView, FilterRelatedUserMixin):
         my = self.request.query_params.get("filter[my]")
         if my:
             if self.request.user.is_authenticated:
-                queryset = queryset.filter(user=self.request.user)
+                queryset = queryset.filter(team_members__user=self.request.user)
             else:
                 queryset = queryset.none()
 

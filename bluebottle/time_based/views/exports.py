@@ -69,6 +69,14 @@ class RegisteredDateParticipantExportView(TimeBasedExportView):
     model = RegisteredDateActivity
     participant_model = RegisteredDateParticipant
 
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('activity__start', 'Contribution Date')
+    )
+
 
 class ScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity

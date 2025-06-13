@@ -935,6 +935,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = ScheduleActivity
 
+    class RegisteredDateInline(ActivityInlineChild):
+        readonly_fields = ["activity_link", "start", "state_name"]
+        fields = readonly_fields
+        model = RegisteredDateActivity
+
     child_inlines = (
         FundingInline,
         DeadlineInline,
@@ -942,7 +947,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
         ScheduleInline,
         DateInline,
         DeedInline,
-        CollectActivityInline
+        CollectActivityInline,
+        RegisteredDateInline
     )
 
     pagination_key = 'page'

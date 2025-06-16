@@ -978,6 +978,10 @@ class DateParticipant(Participant):
         blank=True, null=True, view_name="date-participant-document"
     )
 
+    @property
+    def answer(self):
+        return self.registration.answer
+
     class Meta:
         verbose_name = _("Participant to date activity slot")
         verbose_name_plural = _("Participants to date activity slot")

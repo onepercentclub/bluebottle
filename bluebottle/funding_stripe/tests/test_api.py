@@ -425,12 +425,17 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
             "stripe-payment-intent-detail", args=(self.intent.pk, )
         )
 
+        self.charge = stripe.Charge('some-charge-id')
+        self.charge.update({
+            'refunded': True
+        })
+
         self.payment_intent = stripe.PaymentIntent("some intent id")
         self.payment_intent.update(
             {
                 'status': 'succeeded',
                 "client_secret": self.intent.client_secret,
-                "charges": []
+                "latest_charge": self.charge.id
             }
         )
 
@@ -438,8 +443,11 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
         with mock.patch(
             "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
         ):
-            response = self.client.get(self.intent_url, user=self.donation.user)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                "stripe.Charge.retrieve", return_value=self.charge
+            ):
+                response = self.client.get(self.intent_url, user=self.donation.user)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_other_user(self):
         with mock.patch(
@@ -464,11 +472,14 @@ class StripePaymentIntentDetailTestCase(BluebottleTestCase):
         with mock.patch(
             "stripe.PaymentIntent.retrieve", return_value=self.payment_intent
         ):
-            response = self.client.get(
-                self.intent_url,
-                HTTP_AUTHORIZATION=f'donation {self.intent.client_secret}'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            with mock.patch(
+                "stripe.Charge.retrieve", return_value=self.charge
+            ):
+                response = self.client.get(
+                    self.intent_url,
+                    HTTP_AUTHORIZATION=f'donation {self.intent.client_secret}'
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_get_wrong_client_secret(self):
         self.donation.user = None

@@ -850,6 +850,15 @@ class RegisteredDateActivity(TimeBasedActivity):
     def activity_date(self):
         return self.start
 
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/registered-date/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+
     class Meta:
         verbose_name = _("Past date activity")
         verbose_name_plural = _("Past date activities")
@@ -968,6 +977,10 @@ class DateParticipant(Participant):
     document = PrivateDocumentField(
         blank=True, null=True, view_name="date-participant-document"
     )
+
+    @property
+    def answer(self):
+        return self.registration.answer
 
     class Meta:
         verbose_name = _("Participant to date activity slot")

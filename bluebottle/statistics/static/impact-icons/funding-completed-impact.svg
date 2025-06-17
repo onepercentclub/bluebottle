@@ -1,0 +1,5 @@
+<svg width="inherit" height="inherit"  viewBox="0 0 32 32" fill="inherit" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd"
+        d="M1 0h30a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V1a1 1 0 0 1 1-1Zm12.707 13.121a.997.997 0 0 0 1.414 0l6.707-6.707L20.414 5l-6 6-3-3L10 9.414l3.707 3.707Z" />
+    <path d="M23 23a7.976 7.976 0 0 0-6 2.726V20h-2v12h4c4.411 0 8-3.589 8-8v-1h-4Z" />
+</svg>

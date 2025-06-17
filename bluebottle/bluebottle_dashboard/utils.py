@@ -109,9 +109,14 @@ def get_menu_items(context):
     return groups
 
 
-def recent_log_entries():
-    return LogEntry.objects.filter(
+def recent_log_entries(polymorpic=True):
+    log_entries = LogEntry.objects.filter(
         action_flag=9,
         object_id=functions.Cast(OuterRef('id'), output_field=CharField()),
-        content_type=OuterRef('polymorphic_ctype'),
-    ).order_by('-action_time').values('action_time')[:1]
+    )
+    if polymorpic:
+        log_entries = log_entries.filter(
+            content_type=OuterRef('polymorphic_ctype')
+        )
+
+    return log_entries.order_by('-action_time').values('action_time')[:1]

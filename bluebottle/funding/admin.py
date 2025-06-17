@@ -1137,6 +1137,7 @@ class GrantProviderAdmin(admin.ModelAdmin):
 @admin.register(GrantPayment)
 class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     list_display = ["created", "grant_provider"]
+    list_filter = [StateMachineFilter, "grant_provider"]
     inlines = [GrantPayoutInline]
     change_form_template = "admin/funding/grantpayment/change_form.html"
     readonly_fields = [
@@ -1144,7 +1145,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         "total",
         "grant_provider",
         "state_name",
-        "payment_intent",
+        "checkout_id",
         "get_payment_link",
     ]
     fields = readonly_fields

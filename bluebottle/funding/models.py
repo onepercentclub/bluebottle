@@ -558,7 +558,7 @@ class GrantPayment(TriggerMixin, models.Model):
     grant_provider = models.ForeignKey(
         GrantProvider, null=True, on_delete=models.SET_NULL
     )
-    payment_intent = models.CharField(max_length=500, null=True, blank=True)
+    checkout_id = models.CharField(max_length=500, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     paid_on = models.DateTimeField(null=True, blank=True)
@@ -571,17 +571,17 @@ class GrantPayment(TriggerMixin, models.Model):
         return f"Grant Payment #{self.pk}"
 
     @cached_property
-    def payment_link(self):
-        if self.payment_intent:
+    def checkout_link(self):
+        if self.checkout_id:
             stripe = get_stripe()
-            session = stripe.checkout.Session.retrieve(self.payment_intent)
+            session = stripe.checkout.Session.retrieve(self.checkout_id)
             return session.url
         return None
 
     def check_status(self):
-        if self.payment_intent:
+        if self.checkout_id:
             stripe = get_stripe()
-            session = stripe.checkout.Session.retrieve(self.payment_intent)
+            session = stripe.checkout.Session.retrieve(self.checkout_id)
             if session.status == "complete":
                 self.states.succeed()
                 self.save()

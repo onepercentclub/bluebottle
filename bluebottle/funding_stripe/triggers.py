@@ -14,8 +14,10 @@ from bluebottle.funding.messages.funding.platform_manager import (
     LivePayoutAccountMarkedIncomplete,
     LivePublicPayoutAccountMarkedIncomplete
 )
-from bluebottle.funding.messages.grant_application.activity_manager import GrantApplicationPayoutAccountVerified, \
+from bluebottle.grant_management.messages.grant_management.activity_manager import (
+    GrantApplicationPayoutAccountVerified,
     GrantApplicationPayoutAccountMarkedIncomplete
+)
 from bluebottle.funding.models import Funding
 from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachine
 from bluebottle.funding.triggers import BasePaymentTriggers

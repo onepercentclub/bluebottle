@@ -21,7 +21,7 @@ from bluebottle.funding.messages.funding.activity_manager import (
     DonationSuccessActivityManagerMessage,
     FundingPartiallyFundedMessage, FundingExpiredMessage, FundingRealisedOwnerMessage,
     FundingRejectedMessage, FundingRefundedMessage, FundingExtendedMessage,
-    FundingCancelledMessage, FundingApprovedMessage, GrantApplicationApprovedMessage
+    FundingCancelledMessage, FundingApprovedMessage
 )
 from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingNeedsWorkMessage
 from bluebottle.funding.messages.funding.contributor import (
@@ -31,12 +31,11 @@ from bluebottle.funding.messages.funding.contributor import (
 )
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, MoneyContribution, GrantDonor, GrantApplication
+    Funding, Donor, Payment, MoneyContribution,
 )
 from bluebottle.funding.states import (
     FundingStateMachine, DonorStateMachine, BasePaymentStateMachine,
     DonationStateMachine,
-    GrantDonorStateMachine, GrantApplicationStateMachine
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
@@ -410,36 +409,6 @@ class BasePaymentTriggers(TriggerManager):
                         donation_not_refunded
                     ]
                 ),
-            ]
-        ),
-    ]
-
-
-@register(GrantDonor)
-class GrantDonorTriggers(TriggerManager):
-    triggers = [
-        TransitionTrigger(
-            GrantDonorStateMachine.initiate,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    GrantApplicationStateMachine.approve
-                ),
-            ]
-        ),
-    ]
-
-
-@register(GrantApplication)
-class GrantApplicationTriggers(TriggerManager):
-    triggers = [
-
-        TransitionTrigger(
-            GrantApplicationStateMachine.approve,
-            effects=[
-                NotificationEffect(
-                    GrantApplicationApprovedMessage
-                )
             ]
         ),
     ]

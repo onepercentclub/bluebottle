@@ -9,7 +9,7 @@ from requests.exceptions import MissingSchema
 
 from bluebottle.clients import properties
 from bluebottle.fsm.state import TransitionNotPossible
-from bluebottle.funding.models import GrantPayout
+from bluebottle.grant_management.models import GrantPayout
 
 
 class PayoutValidationError(Exception):

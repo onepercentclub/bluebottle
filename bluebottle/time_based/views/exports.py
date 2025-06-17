@@ -182,7 +182,7 @@ class DateParticipantExportView(TimeBasedExportView):
                 c += 1
             r = 0
 
-            for participant in slot.slot_participants.all():
+            for participant in slot.participants.all():
                 row = self.get_row(participant)
                 r += 1
                 worksheet.write_row(r, 0, row)

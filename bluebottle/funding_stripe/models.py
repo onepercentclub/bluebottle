@@ -1,6 +1,6 @@
 import json
+import logging
 from builtins import object
-
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
@@ -20,7 +20,6 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ class StripePayment(Payment):
         stripe = get_stripe()
 
         intent = self.payment_intent.intent
-        charge = intent.charges.data[0]
+        charge = intent.latest_charge
 
         stripe.Refund.create(charge=charge, reverse_transfer=True)
 
@@ -93,18 +92,13 @@ class StripePayment(Payment):
 
         if intent.status == 'requires_action' and self.status != self.states.action_needed.value:
             self.states.require_action(save=True)
-        elif (
-                'charges' in intent and
-                len(intent.charges) == 0 and
-                self.status != self.states.action_needed.value
-        ):
+        elif not intent.latest_charge and self.status != self.states.action_needed.value:
             # No charge. Do we still need to charge?
             self.states.fail(save=True)
         elif (
-                'charges' in intent and
-                len(intent.charges) > 0 and
-                intent.charges.data[0].refunded and
-                self.status != self.states.refunded.value
+            intent.latest_charge and
+            stripe.Charge.retrieve(intent.latest_charge).refunded and
+            self.status != self.states.refunded.value
         ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
@@ -112,11 +106,13 @@ class StripePayment(Payment):
         elif intent.status == 'failed' and self.status != self.states.failed.value:
             self.states.fail(save=True)
         elif intent.status == 'succeeded':
-            if 'charges' in intent:
-                transfer = stripe.Transfer.retrieve(intent.charges.data[0].transfer)
-                self.donation.payout_amount = Money(
-                    transfer.amount / 100.0, transfer.currency
-                )
+            if intent.latest_charge:
+                charge = stripe.Charge.retrieve(intent.latest_charge)
+                if 'transfer' in charge:
+                    transfer = stripe.Transfer.retrieve(charge.transfer)
+                    self.donation.payout_amount = Money(
+                        transfer.amount / 100.0, transfer.currency
+                    )
             elif 'amount_received' in intent:
                 self.donation.payout_amount = Money(
                     intent.amount_received / 100.0, intent.currency

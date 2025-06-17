@@ -619,6 +619,23 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         TransitionTrigger(
+            RegisteredDateActivityStateMachine.auto_publish,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
                 NotificationEffect(

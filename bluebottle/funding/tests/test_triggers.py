@@ -163,21 +163,24 @@ class DonorTriggerTests(BluebottleTestCase):
         self.assertEqual(self.donor.amount, Money(500, 'EUR'))
         self.funding.deadline = now() - timedelta(days=1)
         self.funding.save()
+
         payment_intent = stripe.PaymentIntent('some intent id')
 
         charge = stripe.Charge('charge-id')
-        charges = stripe.ListObject()
-        charges.data = [charge]
 
-        payment_intent.charges = charges
+        payment_intent.latest_charge = charge
 
         with mock.patch(
             "stripe.PaymentIntent.retrieve", return_value=payment_intent
-        ), mock.patch("stripe.Refund.create"):
-            self.assertEqual(self.funding.status, "partially_funded")
-            self.funding.states.refund(save=True)
-            self.donor.refresh_from_db()
-            self.payment.states.refund(save=True)
+        ):
+            with mock.patch("stripe.Refund.create"):
+                with mock.patch(
+                    "stripe.Charge.retrieve", return_value=charge
+                ):
+                    self.assertEqual(self.funding.status, "partially_funded")
+                    self.funding.states.refund(save=True)
+                    self.donor.refresh_from_db()
+                    self.payment.states.refund(save=True)
 
         self.donor.refresh_from_db()
         self.assertEqual(self.donor.status, 'activity_refunded')

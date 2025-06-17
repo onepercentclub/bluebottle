@@ -206,6 +206,7 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
             TimeBasedStateMachine.draft,
             TimeBasedStateMachine.needs_work,
             TimeBasedStateMachine.expired,
+            TimeBasedStateMachine.open,
             planned,
         ],
     )

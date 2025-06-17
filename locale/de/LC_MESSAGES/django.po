@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-04 13:02+0200\n"
-"PO-Revision-Date: 2025-06-04 11:07\n"
+"POT-Creation-Date: 2025-06-11 15:03+0200\n"
+"PO-Revision-Date: 2025-06-11 13:04\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -3776,7 +3776,7 @@ msgid "Payment"
 msgstr "Zahlung"
 
 #: bluebottle/funding/admin.py:90 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:290
+#: bluebottle/funding_stripe/models.py:285
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:13
 msgid "Currency"
 msgstr "Währung"
@@ -5526,88 +5526,88 @@ msgstr "Offene Aktivitäten, die gewartet werden"
 msgid "Update business type at stripe"
 msgstr "Geschäftstyp im Streifen aktualisieren"
 
-#: bluebottle/funding_stripe/models.py:241
+#: bluebottle/funding_stripe/models.py:236
 msgid "Country of primary stripe account"
 msgstr "Land des primären Streifenkontos"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:238
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Normalerweise ist dies NL, aber durch das Überschreiben der Strip-Taste kann ein anderes Primärstreifen-Konto ausgewählt werden. "
 
-#: bluebottle/funding_stripe/models.py:251
+#: bluebottle/funding_stripe/models.py:246
 msgid "Stripe publishable key"
 msgstr "Streifen publizierbarer Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:252
-#: bluebottle/funding_stripe/models.py:260
+#: bluebottle/funding_stripe/models.py:247
+#: bluebottle/funding_stripe/models.py:255
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Dies wird nur benötigt, wenn Sie ein bestimmtes Stripe-Konto verwenden möchten."
 
-#: bluebottle/funding_stripe/models.py:259
+#: bluebottle/funding_stripe/models.py:254
 msgid "Stripe secret key"
 msgstr "Geheimer Stripe-Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:267
+#: bluebottle/funding_stripe/models.py:262
 msgid "Stripe connect webhook secret"
 msgstr "Webhook Geheimnis für Stripe verbinden"
 
-#: bluebottle/funding_stripe/models.py:268
+#: bluebottle/funding_stripe/models.py:263
 msgid "The secret for connect webhook."
 msgstr "Das Geheimnis zum Verbinden von Webhook."
 
-#: bluebottle/funding_stripe/models.py:275
+#: bluebottle/funding_stripe/models.py:270
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe Zahlungsabsichten Webhook Geheimnis"
 
-#: bluebottle/funding_stripe/models.py:276
+#: bluebottle/funding_stripe/models.py:271
 msgid "The secret for payment intents webhook."
 msgstr "Das Geheimnis für Zahlung beabsichtigt webhook."
 
-#: bluebottle/funding_stripe/models.py:283
+#: bluebottle/funding_stripe/models.py:278
 msgid "Stripe payment sources webhook secret"
 msgstr "Stripe Zahlungsquellen Webhook Secret"
 
-#: bluebottle/funding_stripe/models.py:284
+#: bluebottle/funding_stripe/models.py:279
 msgid "The secret for payment sources webhook."
 msgstr "Das Geheimnis für Zahlungsquellen Webhook."
 
-#: bluebottle/funding_stripe/models.py:291
+#: bluebottle/funding_stripe/models.py:286
 msgid "The currency for the global account."
 msgstr "Die Währung für das globale Konto."
 
-#: bluebottle/funding_stripe/models.py:336
+#: bluebottle/funding_stripe/models.py:331
 msgid "Commercial company"
 msgstr "Handelsunternehmen"
 
-#: bluebottle/funding_stripe/models.py:340
+#: bluebottle/funding_stripe/models.py:335
 msgid "Individual person"
 msgstr "Individuelle Person"
 
-#: bluebottle/funding_stripe/models.py:344
+#: bluebottle/funding_stripe/models.py:339
 msgid "Non-profit organization"
 msgstr "Non-Profit-Organisation"
 
-#: bluebottle/funding_stripe/models.py:349
+#: bluebottle/funding_stripe/models.py:344
 msgid "Starts with 'acct_...'"
 msgstr "Beginnt mit 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:553
+#: bluebottle/funding_stripe/models.py:548
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:554
+#: bluebottle/funding_stripe/models.py:549
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:565
+#: bluebottle/funding_stripe/models.py:560
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:604
+#: bluebottle/funding_stripe/models.py:599
 msgid "Bank account"
 msgstr "Bankkonto"
 
-#: bluebottle/funding_stripe/models.py:605
+#: bluebottle/funding_stripe/models.py:600
 msgid "Bank accounts"
 msgstr "Bankkonten"
 
@@ -6298,8 +6298,8 @@ msgid "initiative settings"
 msgstr "initiativ-Einstellungen"
 
 #: bluebottle/initiatives/models.py:455
-msgid "Select an office"
-msgstr "Wählen Sie ein Büro"
+msgid "Select office"
+msgstr ""
 
 #: bluebottle/initiatives/models.py:457
 msgid "Make a choice"
@@ -6307,8 +6307,8 @@ msgstr "Auswahl treffen"
 
 #: bluebottle/initiatives/models.py:458
 #, python-brace-format
-msgid "Select a {filter_name}"
-msgstr "{filter_name} auswählen"
+msgid "Select {filter_name}"
+msgstr ""
 
 #: bluebottle/initiatives/models.py:533
 msgid "theme"
@@ -11734,12 +11734,11 @@ msgstr[1] "Sekunden"
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
 #: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
-#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:23
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:25
+#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
+#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
+#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -11767,28 +11766,23 @@ msgstr "Niederländisch"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
 #: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
 #: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27 tenants/navara/settings.py:27
+#: tenants/maximising-potential/settings.py:27
 #: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:24 tenants/partos/settings.py:26
+#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
 #: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
+#: tenants/shell-disaster-relief/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Englisch"
-
-#: tenants/goodup-nl/settings.py:27
-msgid "Nederlands"
-msgstr "Nederland"
 
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"

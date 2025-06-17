@@ -1,13 +1,11 @@
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-
 from django_tools.middlewares.ThreadLocal import get_current_request
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.funding.models import Funding, GrantApplication, GrantPayout
-from bluebottle.utils.utils import get_client_ip
-
+from bluebottle.funding.models import Funding
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.utils.utils import get_client_ip
 
 
 class AcceptTosEffect(Effect):
@@ -71,6 +69,7 @@ class PrepareGrantApplicationPayoutsEffect(Effect):
     template = "admin/create_grant_application_payouts.html"
 
     def post_save(self, **kwargs):
+        from bluebottle.grant_management.models import GrantApplication, GrantPayout
         applications = GrantApplication.objects.filter(
             status="granted",
             bank_account__connect_account=self.instance

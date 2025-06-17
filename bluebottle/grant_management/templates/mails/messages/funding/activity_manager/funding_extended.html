@@ -1,0 +1,13 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            The deadline for your campaign “{{ title }}” has been extended. This means that your campaign is open for new donations.
+            <br><br>
+            Share your campaign to attract new donations!
+
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 

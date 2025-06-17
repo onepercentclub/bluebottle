@@ -5,7 +5,7 @@ from bluebottle.activities.states import ActivityStateMachine, ContributorStateM
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
 from bluebottle.funding.models import (
     Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
-    GrantApplication, GrantDonor, GrantDeposit, LedgerItem, GrantPayout
+    GrantApplication, GrantDonor, GrantDeposit, LedgerItem, GrantPayout, GrantPayment
 )
 
 
@@ -408,6 +408,43 @@ class GrantDonorStateMachine(ContributorStateMachine):
         name=_('Fail'),
         description=_("The donation failed."),
         automatic=True,
+    )
+
+
+@register(GrantPayment)
+class GrantPaymentStateMachine(ModelStateMachine):
+    new = State(_("New"), "new", _("The payment was created"))
+    succeeded = State(
+        _("Succeeded"), "succeeded", _("The payment was successful paid.")
+    )
+    failed = State(_("Failed"), "failed", _("The payment failed."))
+
+    succeed = Transition(
+        [new, succeeded, failed],
+        succeeded,
+        name=_("Succeed"),
+        description=_("The payment was successful."),
+    )
+
+    initiate = Transition(
+        EmptyState(),
+        new,
+        name=_("Initiate"),
+        description=_("The payment was created."),
+    )
+
+    fail = Transition(
+        [new, succeeded, failed],
+        failed,
+        name=_("Fail"),
+        description=_("The payment failed."),
+    )
+
+    reset = Transition(
+        [new, succeeded, failed],
+        new,
+        name=_("Reset"),
+        description=_("Reset the payment to new."),
     )
 
 

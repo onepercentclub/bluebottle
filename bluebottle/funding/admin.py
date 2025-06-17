@@ -1,11 +1,12 @@
 from __future__ import division
 
 import logging
-from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
+
+from babel.numbers import get_currency_symbol
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, TabularInline
 from django.db import connection, models
 from django.forms.utils import ErrorList
@@ -50,7 +51,9 @@ from bluebottle.funding.models import (
     GrantDeposit,
     GrantDonor,
     GrantFund,
+    GrantPayment,
     GrantPayout,
+    GrantProvider,
     LedgerItem,
     LegacyPayment,
     MoneyContribution,
@@ -1053,6 +1056,158 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
     def payout_link(self, obj):
         url = reverse("admin:funding_grantpayout_change", args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
+
+
+class GrantPaymentInline(admin.TabularInline):
+    model = GrantPayment
+    readonly_fields = ["created", "grant_provider"]
+    fields = readonly_fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+class GrantFundInline(admin.TabularInline):
+    model = GrantFund
+    readonly_fields = ["name", "total_debet", "total_credit", "balance"]
+    fields = readonly_fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(GrantProvider)
+class GrantProviderAdmin(admin.ModelAdmin):
+    list_display = ["name"]
+    inlines = [GrantPaymentInline, GrantFundInline]
+    change_form_template = "admin/funding/grantprovider/change_form.html"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            re_path(
+                r"^(?P<pk>.+)/create-payments/$",
+                self.admin_site.admin_view(self.create_payment),
+                name="funding_grantprovider_create_payments",
+            ),
+        ]
+        return custom_urls + urls
+
+    def create_payment(self, request, pk):
+        provider = self.get_object(request, pk)
+        if provider is None:
+            return HttpResponseRedirect(
+                reverse("admin:funding_grantprovider_changelist")
+            )
+
+        grants = GrantDonor.objects.filter(
+            fund__grant_provider=provider,
+            payout__status="approved",
+            payout__payment=None,
+        )
+
+        created_count = 0
+        for grant in grants:
+            payout = grant.payout
+            payment, created = GrantPayment.objects.get_or_create(
+                grant_provider=provider, status="new"
+            )
+            if created:
+                created_count += 1
+            payout.payment = payment
+            payout.save()
+
+        self.message_user(
+            request, f"Successfully created {created_count} grant payments."
+        )
+
+        return HttpResponseRedirect(
+            reverse("admin:funding_grantprovider_change", args=[pk])
+        )
+
+
+@admin.register(GrantPayment)
+class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
+    list_display = ["created", "grant_provider"]
+    inlines = [GrantPayoutInline]
+    change_form_template = "admin/funding/grantpayment/change_form.html"
+    readonly_fields = [
+        "created",
+        "total",
+        "grant_provider",
+        "state_name",
+        "payment_intent",
+        "get_payment_link",
+    ]
+    fields = readonly_fields
+
+    def get_payment_link(self, obj):
+        if obj.payment_link:
+            title = _("payment link")
+            return format_html(
+                f'<a href="{obj.payment_link}" target="_blank">{title}</a>'
+            )
+        return "-"
+
+    get_payment_link.short_description = _("Payment Link")
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            re_path(
+                r"^(?P<pk>.+)/generate-payment-link/$",
+                self.admin_site.admin_view(self.generate_payment_link_view),
+                name="funding_grantpayment_generate_payment_link",
+            ),
+            re_path(
+                r"^(?P<pk>.+)/check-status/$",
+                self.admin_site.admin_view(self.check_status_view),
+                name="funding_grantpayment_check_status",
+            ),
+        ]
+        return custom_urls + urls
+
+    def generate_payment_link_view(self, request, pk):
+        payment = self.get_object(request, pk)
+        if payment is None:
+            return HttpResponseRedirect(
+                reverse("admin:funding_grantpayment_changelist")
+            )
+
+        try:
+            payment.generate_payment_link()
+            self.message_user(request, _("Successfully generated payment link"))
+        except Exception as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+        return HttpResponseRedirect(
+            reverse("admin:funding_grantpayment_change", args=[pk])
+        )
+
+    def check_status_view(self, request, pk):
+        payment = self.get_object(request, pk)
+        if payment is None:
+            return HttpResponseRedirect(
+                reverse("admin:funding_grantpayment_changelist")
+            )
+
+        try:
+            payment.check_status()
+            self.message_user(request, _("Successfully checked payment status"))
+        except Exception as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+        return HttpResponseRedirect(
+            reverse("admin:funding_grantpayment_change", args=[pk])
+        )
 
 
 @admin.register(GrantApplication)

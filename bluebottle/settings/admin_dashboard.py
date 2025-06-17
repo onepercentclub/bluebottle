@@ -127,20 +127,33 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "funding.payout", "permissions": ["funding.change_payout"],
             },
+        ],
+    },
+    {
+        "label": _("Grant management"),
+        "app_label": "grantmanagement",
+        "permissions": ["funding.change_grantapplication"],
+        "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+        "items": [
+            {
+                "name": "funding.grantprovider",
+                "permissions": ["funding.change_grantprovider"],
+            },
             {
                 "name": "funding.grantfund",
                 "permissions": ["funding.change_grantfund"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
             },
             {
                 "name": "funding.grantapplication",
                 "permissions": ["funding.change_grantapplication"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
             },
             {
                 "name": "funding.grantpayout",
                 "permissions": ["funding.change_grantpayout"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+            },
+            {
+                "name": "funding.grantpayment",
+                "permissions": ["funding.change_grantpayment"],
             },
         ],
     },

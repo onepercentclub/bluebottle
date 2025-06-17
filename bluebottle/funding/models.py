@@ -2,8 +2,9 @@
 import logging
 import random
 import string
-from babel.numbers import get_currency_name
 from builtins import object, range
+
+from babel.numbers import get_currency_name
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -31,6 +32,7 @@ from bluebottle.funding.validators import (
     KYCReadyValidator,
     TargetValidator,
 )
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import CurrencyField, MoneyField
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
@@ -515,6 +517,144 @@ class Payout(TriggerMixin, models.Model):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
+class GrantProvider(models.Model):
+    """
+    A provider of grants, e.g. a foundation or government body.
+    """
+
+    FREQUENCY_CHOICES = (
+        ("weekly", _("Weekly")),
+        ("biweekly", _("Biweekly")),
+        ("monthly", _("Monthly")),
+        ("quarterly", _("Quarterly")),
+        ("yearly", _("Yearly")),
+    )
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)
+    stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
+    payment_frequency = models.CharField(
+        max_length=100, choices=FREQUENCY_CHOICES, default="weekly"
+    )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    class Meta(object):
+        verbose_name = _("Grant provider")
+        verbose_name_plural = _("Grant providers")
+
+    def __str__(self):
+        return self.name or f"Grant Provider #{self.pk}"
+
+
+class GrantPayment(TriggerMixin, models.Model):
+    """
+    A payment made to a grant donor.
+    """
+
+    total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
+    status = models.CharField(max_length=40)
+    grant_provider = models.ForeignKey(
+        GrantProvider, null=True, on_delete=models.SET_NULL
+    )
+    payment_intent = models.CharField(max_length=500, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    paid_on = models.DateTimeField(null=True, blank=True)
+
+    class Meta(object):
+        verbose_name = _("Grant payment")
+        verbose_name_plural = _("Grant payments")
+
+    def __str__(self):
+        return f"Grant Payment #{self.pk}"
+
+    @cached_property
+    def payment_link(self):
+        if self.payment_intent:
+            stripe = get_stripe()
+            session = stripe.checkout.Session.retrieve(self.payment_intent)
+            return session.url
+        return None
+
+    def check_status(self):
+        if self.payment_intent:
+            stripe = get_stripe()
+            session = stripe.checkout.Session.retrieve(self.payment_intent)
+            if session.status == "complete":
+                self.states.succeed()
+                self.save()
+        return None
+
+    def generate_payment_link(self):
+        stripe = get_stripe()
+        currency = str(self.total.currency)
+        init_args = {}
+        bank_transfer_type = "eu_bank_transfer"
+        if currency == "USD":
+            bank_transfer_type = "us_bank_transfer"
+        elif currency == "GBP":
+            bank_transfer_type = "gb_bank_transfer"
+        elif currency == "MXN":
+            bank_transfer_type = "mx_bank_transfer"
+
+        if currency == "EUR":
+            init_args["payment_method_options"] = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": bank_transfer_type,
+                        "eu_bank_transfer": {"country": "NL"},
+                    },
+                },
+            }
+        else:
+            init_args["payment_method_options"] = {
+                "customer_balance": {
+                    "funding_type": "bank_transfer",
+                    "bank_transfer": {
+                        "type": bank_transfer_type,
+                    },
+                },
+            }
+
+        line_items = []
+        donations = GrantDonor.objects.filter(payout__payment=self).all()
+
+        for donation in donations:
+            product = stripe.Product.create(
+                name=donation.activity.title,
+                description=f"Payment for grant {donation.activity.title} for fund {donation.fund.name}",
+            )
+            price = stripe.Price.create(
+                unit_amount=int(donation.amount.amount * 100),
+                currency=donation.amount.currency,
+                product=product["id"],
+            )
+            line_items.append(
+                {
+                    "price": price.id,
+                    "quantity": 1,
+                }
+            )
+
+        init_args["payment_method_types"] = ["customer_balance", "ideal", "card"]
+        init_args["line_items"] = line_items
+        init_args["customer"] = self.grant_provider.stripe_customer_id
+        init_args["success_url"] = get_current_host()
+
+        intent = stripe.checkout.Session.create(mode="payment", **init_args)
+        self.payment_intent = intent.id
+        self.save()
+
+    def save(self, run_triggers=True, *args, **kwargs):
+        if self.total.amount == 0 and self.payouts.exists():
+            for payout in self.payouts.all():
+                self.total.amount += payout.total_amount
+        super().save(run_triggers, *args, **kwargs)
+
+
 class GrantPayout(TriggerMixin, models.Model):
     activity = models.ForeignKey(
         'funding.GrantApplication',
@@ -524,6 +664,13 @@ class GrantPayout(TriggerMixin, models.Model):
     )
     provider = models.CharField(max_length=100)
     currency = models.CharField(max_length=5)
+    payment = models.ForeignKey(
+        GrantPayment,
+        null=True,
+        blank=True,
+        related_name="payouts",
+        on_delete=models.SET_NULL,
+    )
 
     status = models.CharField(max_length=40)
 
@@ -983,6 +1130,14 @@ class GrantFund(models.Model):
         'organizations.Organization',
         null=True, blank=True,
         on_delete=SET_NULL
+    )
+
+    grant_provider = models.ForeignKey(
+        GrantProvider,
+        null=True,
+        blank=True,
+        related_name="funds",
+        on_delete=models.SET_NULL,
     )
 
     class Meta:

@@ -1054,3 +1054,13 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.connect_account.payouts_enabled = False
         self.execute_hook()
         self.assertEqual(self.payout_account.status, "new")
+
+    def test_tos_reaccept(self):
+        self.payout_account.tos_accepted = True
+        self.payout_account.save(run_triggers=False)
+
+        self.connect_account.requirements = munch.munchify({
+            'eventually_due': ['tos_acceptance.date', 'tos_acceptance.ip']
+        })
+        self.execute_hook()
+        self.assertFalse(self.payout_account.tos_accepted)

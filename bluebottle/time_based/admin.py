@@ -145,7 +145,8 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'image',
         'video_url',
         'organization',
-        'theme'
+        'theme',
+        'categories'
     )
 
     status_fields = (

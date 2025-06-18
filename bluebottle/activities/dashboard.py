@@ -1,4 +1,5 @@
 from django.db.models import Subquery
+from django.db.models.functions import Coalesce
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
@@ -35,7 +36,7 @@ class RecentlySubmittedActivities(DashboardModule):
         activities = Activity.objects.filter(
             status='submitted'
         ).annotate(
-            transition_date=Subquery(recent_log_entries())
+            transition_date=Coalesce(Subquery(recent_log_entries()), 'created')
         ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
@@ -53,7 +54,7 @@ class RecentlyPublishedActivities(DashboardModule):
         activities = Activity.objects.filter(
             status='open'
         ).annotate(
-            transition_date=Subquery(recent_log_entries())
+            transition_date=Coalesce(Subquery(recent_log_entries()), 'created')
         ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)

@@ -66,7 +66,7 @@ from bluebottle.time_based.models import (
     TeamScheduleParticipant,
     TeamScheduleRegistration,
     TeamScheduleSlot,
-    TimeContribution,
+    TimeContribution, RegisteredDateActivity, RegisteredDateParticipant,
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
@@ -141,6 +141,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
     detail_fields = (
         'title',
         'description',
+        'theme',
         'image',
         'video_url',
         'organization',
@@ -239,6 +240,12 @@ class DateActivitySlotInline(TabularInlinePaginated):
 
 class DeadlineParticipantAdminInline(BaseContributorInline):
     model = DeadlineParticipant
+    verbose_name = _("Participant")
+    verbose_name_plural = _("Participants")
+
+
+class RegisteredDateParticipantAdminInline(BaseContributorInline):
+    model = RegisteredDateParticipant
     verbose_name = _("Participant")
     verbose_name_plural = _("Participants")
 
@@ -648,6 +655,45 @@ class DeadlineActivityAdmin(TimeBasedAdmin):
         if not obj.deadline:
             return _('indefinitely')
         return obj.deadline
+
+    def duration_string(self, obj):
+        duration = get_human_readable_duration(str(obj.duration)).lower()
+        return duration
+
+    duration_string.short_description = _('Duration')
+
+
+@admin.register(RegisteredDateActivity)
+class RegisteredDateActivityAdmin(TimeBasedAdmin):
+    base_model = RegisteredDateActivity
+
+    inlines = (RegisteredDateParticipantAdminInline,) + TimeBasedAdmin.inlines
+    raw_id_fields = TimeBasedAdmin.raw_id_fields + ['location']
+    readonly_fields = TimeBasedAdmin.readonly_fields
+
+    list_display = TimeBasedAdmin.list_display + [
+        'start', 'duration_string', 'participant_count'
+    ]
+
+    registration_fields = ("capacity",) + TimeBasedAdmin.registration_fields
+
+    date_fields = [
+        'start',
+        'duration',
+        'location',
+    ]
+    registration_fields = []
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        fieldsets.insert(2, (_("Date & time"), {"fields": self.date_fields}))
+        return fieldsets
+
+    export_as_csv_fields = TimeBasedAdmin.export_to_csv_fields + (
+        ('deadline', 'Deadline'),
+        ('duration', 'TimeContribution'),
+    )
+    actions = [export_as_csv_action(fields=export_as_csv_fields)]
 
     def duration_string(self, obj):
         duration = get_human_readable_duration(str(obj.duration)).lower()
@@ -1516,6 +1562,24 @@ class DeadlineParticipantAdmin(ContributorChildAdmin):
             )
 
     registration_info.short_description = _('Registration')
+
+    list_display = ['__str__', 'activity_link', 'status']
+
+
+@admin.register(RegisteredDateParticipant)
+class RegisteredDateParticipantAdmin(ContributorChildAdmin):
+
+    def get_inline_instances(self, request, obj=None):
+        inlines = super().get_inline_instances(request, obj)
+        for inline in inlines:
+            inline.parent_object = obj
+        return inlines
+
+    inlines = ContributorChildAdmin.inlines + (
+        TimeContributionInlineAdmin,
+    )
+    fields = ContributorChildAdmin.fields
+    pending_fields = ['activity', 'user', 'created', 'updated']
 
     list_display = ['__str__', 'activity_link', 'status']
 

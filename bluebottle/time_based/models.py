@@ -3,10 +3,13 @@ from html import unescape
 from urllib.parse import urlencode
 
 import pytz
+
+from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import now
+
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -614,35 +617,35 @@ class DeadlineActivity(RegistrationActivity):
         permissions = (
             (
                 "api_read_deadlineactivity",
-                "Can view on a felxible activities through the API",
+                "Can view on a flexible activities through the API",
             ),
             (
                 "api_add_deadlineactivity",
-                "Can add on a felxible activities through the API",
+                "Can add on a flexible activities through the API",
             ),
             (
                 "api_change_deadlineactivity",
-                "Can change on a felxible activities through the API",
+                "Can change on a flexible activities through the API",
             ),
             (
                 "api_delete_deadlineactivity",
-                "Can delete on a felxible activities through the API",
+                "Can delete on a flexible activities through the API",
             ),
             (
                 "api_read_own_deadlineactivity",
-                "Can view own on a felxible activities through the API",
+                "Can view own on a flexible activities through the API",
             ),
             (
                 "api_add_own_deadlineactivity",
-                "Can add own on a felxible activities through the API",
+                "Can add own on a flexible activities through the API",
             ),
             (
                 "api_change_own_deadlineactivity",
-                "Can change own on a felxible activities through the API",
+                "Can change own on a flexible activities through the API",
             ),
             (
                 "api_delete_own_deadlineactivity",
-                "Can delete own on a felxible activities through the API",
+                "Can delete own on a flexible activities through the API",
             ),
         )
 
@@ -795,6 +798,108 @@ class PeriodicActivity(RegistrationActivity):
 
     class JSONAPIMeta:
         resource_name = 'activities/time-based/periodics'
+
+
+class RegisteredDateActivity(TimeBasedActivity):
+    url_pattern = "{}/{}/activities/details/registered-date/{}/{}"
+
+    duration = models.DurationField(
+        _("Activity duration"),
+        help_text=_("How much time did/will a participant contribute?"),
+        null=True,
+        blank=True,
+    )
+
+    start = models.DateTimeField(
+        _('Start date'),
+        help_text=_('Start of the activity.'),
+        null=True,
+        blank=True,
+        validators=[MaxValueValidator(timezone.now, message=_('Make sure the value is in the past'))]
+    )
+
+    location = models.ForeignKey(
+        Geolocation, verbose_name=_('location'),
+        help_text=_(
+            'If the activity took place in multiple locations then add the region.'
+        ),
+        null=True, blank=True, on_delete=models.SET_NULL
+    )
+
+    @property
+    def end(self):
+        if self.start and self.duration:
+            return self.start + self.duration
+
+    @property
+    def participants(self):
+        if self.pk:
+            return self.contributors.instance_of(
+                RegisteredDateParticipant
+            )
+        else:
+            return Contributor.objects.none()
+
+    @property
+    def active_participants(self):
+        return self.participants.filter(status="succeeded")
+
+    required_fields = ["title", "start", "duration"]
+
+    @property
+    def activity_date(self):
+        return self.start
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/registered-date/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
+
+    class Meta:
+        verbose_name = _("Past date activity")
+        verbose_name_plural = _("Past date activities")
+
+        permissions = (
+            (
+                "api_read_registereddateactivity",
+                "Can view on a past date activities through the API",
+            ),
+            (
+                "api_add_registereddateactivity",
+                "Can add on a past date activities through the API",
+            ),
+            (
+                "api_change_registereddateactivity",
+                "Can change on a past date activities through the API",
+            ),
+            (
+                "api_delete_registereddateactivity",
+                "Can delete on a past date activities through the API",
+            ),
+            (
+                "api_read_own_registereddateactivity",
+                "Can view own on a past date activities through the API",
+            ),
+            (
+                "api_add_own_registereddateactivity",
+                "Can add own on a past date activities through the API",
+            ),
+            (
+                "api_change_own_registereddateactivity",
+                "Can change own on a past date activities through the API",
+            ),
+            (
+                "api_delete_own_registereddateactivity",
+                "Can delete own on a past date activities through the API",
+            ),
+        )
+
+    class JSONAPIMeta:
+        resource_name = "activities/time-based/registered-dates"
 
 
 class Participant(Contributor):
@@ -1275,6 +1380,44 @@ class DeadlineParticipant(Participant, Contributor):
 
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/deadline-participants'
+
+
+class RegisteredDateParticipant(Contributor):
+    class Meta:
+        verbose_name = _("Participant to past date activity")
+        verbose_name_plural = _("Participants to past date activity")
+
+        permissions = (
+            ("api_read_registereddateparticipant", "Can view participant through the API"),
+            ("api_add_registereddateparticipant", "Can add participant through the API"),
+            (
+                "api_change_registereddateparticipant",
+                "Can change participant through the API",
+            ),
+            (
+                "api_delete_registereddateparticipant",
+                "Can delete participant through the API",
+            ),
+            (
+                "api_read_own_registereddateparticipant",
+                "Can view own participant through the API",
+            ),
+            (
+                "api_add_own_registereddateparticipant",
+                "Can add own participant through the API",
+            ),
+            (
+                "api_change_own_registereddateparticipant",
+                "Can change own participant through the API",
+            ),
+            (
+                "api_delete_own_registereddateparticipant",
+                "Can delete own participant through the API",
+            ),
+        )
+
+    class JSONAPIMeta(object):
+        resource_name = 'contributors/time-based/registered-date-participants'
 
 
 class TeamScheduleRegistration(Registration):

@@ -4,7 +4,7 @@ from bluebottle.activities.states import ContributorStateMachine
 from bluebottle.fsm.state import register, State, Transition, EmptyState
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant
+    PeriodicParticipant, ScheduleParticipant, TeamScheduleParticipant, RegisteredDateParticipant
 )
 from bluebottle.time_based.models import (
     DeadlineParticipant,
@@ -208,10 +208,11 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.rejected,
             ParticipantStateMachine.removed,
             ParticipantStateMachine.withdrawn,
+            ParticipantStateMachine.succeeded,
         ],
         ParticipantStateMachine.accepted,
         name=_("Accept"),
-        description=_("Accept this person as a participant of this Activity."),
+        description=_("Accept this person as a participant of this activity."),
         passed_label=_("accepted"),
         automatic=True,
     )
@@ -280,7 +281,7 @@ class RegistrationParticipantStateMachine(ParticipantStateMachine):
             ParticipantStateMachine.removed,
             ParticipantStateMachine.cancelled,
         ],
-        ParticipantStateMachine.new,
+        ParticipantStateMachine.accepted,
         name=_("Re-add"),
         passed_label=_("re-added"),
         description=_("Re-add this person as a participant of this activity"),
@@ -297,6 +298,32 @@ class DeadlineParticipantStateMachine(RegistrationParticipantStateMachine):
         name=_("Add"),
         description=_("Add this person as a participant of this activity."),
         automatic=True,
+    )
+
+
+@register(RegisteredDateParticipant)
+class RegisteredDateParticipantStateMachine(RegistrationParticipantStateMachine):
+    add = Transition(
+        [ContributorStateMachine.new],
+        ParticipantStateMachine.accepted,
+        name=_("Add"),
+        description=_("Add this person as a participant of this activity."),
+        automatic=True,
+    )
+    restore = Transition(
+        ParticipantStateMachine.cancelled,
+        ParticipantStateMachine.succeeded,
+        name=_("Restore"),
+        description=_("Restore previously cancelled participant"),
+        automatic=True,
+    )
+    readd = Transition(
+        [
+            ParticipantStateMachine.removed,
+        ],
+        ParticipantStateMachine.succeeded,
+        name=_("Re-add"),
+        description=_("Add previously removed participant"),
     )
 
 

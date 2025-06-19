@@ -12,7 +12,9 @@ from django_quill.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from polymorphic.models import PolymorphicModel
-
+from parler.managers import TranslatableManager, TranslatableQuerySet
+from polymorphic.managers import PolymorphicManager
+from polymorphic.query import PolymorphicQuerySet
 
 from parler.models import TranslatableModel, TranslatedFields
 from django_better_admin_arrayfield.models.fields import ArrayField
@@ -436,12 +438,10 @@ class Team(TriggerMixin, models.Model):
     def __str__(self):
         return self.name
 
-from parler.managers import TranslatableManager, TranslatableQuerySet
-from polymorphic.managers import PolymorphicManager
-from polymorphic.query import PolymorphicQuerySet
 
 class TranslatedPolymorphicQueryset(TranslatableQuerySet, PolymorphicQuerySet):
     pass
+
 
 class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
     queryset_class = TranslatablePolymorphicManager
@@ -451,9 +451,9 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
     translations = TranslatedFields(
-        name = models.CharField(max_length=255),
-        question = models.CharField(max_length=255),
-        help_text = models.TextField(null=True, blank=True)
+        name=models.CharField(max_length=255),
+        question=models.CharField(max_length=255),
+        help_text=models.TextField(null=True, blank=True)
     )
 
     activity_types = ArrayField(
@@ -471,7 +471,6 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         verbose_name_plural = _("Questions")
 
 
-
 class ActivityAnswer(PolymorphicModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
@@ -483,7 +482,7 @@ class TextQuestion(ActivityQuestion, TranslatableModel):
 
 
 class TextAnswer(ActivityAnswer):
-    answer = models.TextField() 
+    answer = models.TextField()
 
     class JSONAPIMeta:
         resource_name = 'text-answers'
@@ -497,7 +496,7 @@ class SegmentQuestion(ActivityQuestion, TranslatableModel):
 
 
 class SegmentAnswer(ActivityAnswer):
-    segment = models.ForeignKey(Segment, on_delete=models.CASCADE) 
+    segment = models.ForeignKey(Segment, on_delete=models.CASCADE)
 
     class JSONAPIMeta:
         resource_name = 'segment-answers'

@@ -1,12 +1,9 @@
-{% extends "base.mail.html" %}
+{% extends "mails/messages/activity_base.html" %}
 {% load i18n %}
 
-{% block content %}
+{% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            Hi {{ recipient_name }},
-            <br/>
-            <br/>
             You are working on a crowdfunding campaign on {{ site_name }}.
             <br/>
             <br/>

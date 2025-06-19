@@ -22,8 +22,8 @@ from bluebottle.activities.serializers import (
     RelatedActivityImageSerializer,
     RelatedActivityImageContentSerializer,
     ActivityPreviewSerializer,
-    ActivityImageSerializer, 
-    ContributionSerializer, 
+    ActivityImageSerializer,
+    ContributionSerializer,
     ActivityQuestionSerializer,
     FileUploadAnswerDocumentSerializer
 )

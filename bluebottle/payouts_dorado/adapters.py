@@ -36,7 +36,7 @@ class DoradoPayoutAdapter(object):
         data = {
             'payout_id': self.payout.pk,
             'tenant': self.tenant.client_name,
-            'payout_type': payout_type
+            'payout_type': payout_type,
         }
         try:
             response = requests.post(self.settings['url'], data)

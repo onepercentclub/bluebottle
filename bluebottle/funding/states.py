@@ -270,7 +270,7 @@ class FundingStateMachine(ActivityStateMachine):
 
 @register(GrantApplication)
 class GrantApplicationStateMachine(ActivityStateMachine):
-    open = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
+    granted = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
     succeeded = State(
         _("Completed"), "completed", _("The grant application was approved and has been paid out to the applicant.")
     )
@@ -316,7 +316,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
             ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
         ],
-        open,
+        granted,
         name=_('Approve'),
         description=_('Approve this application.'),
         automatic=True,
@@ -363,12 +363,25 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     succeed = Transition(
         [
-            ActivityStateMachine.open,
+            granted,
         ],
         succeeded,
         name=_('Complete'),
         description=_("The grant application has been completed and the payout has been made."),
         automatic=True,
+    )
+
+    cancel = Transition(
+        [
+            ActivityStateMachine.draft,
+            ActivityStateMachine.needs_work,
+            ActivityStateMachine.submitted,
+            ActivityStateMachine.open,
+        ],
+        ActivityStateMachine.cancelled,
+        name=_('Cancel'),
+        description=_("The grant application has been cancelled and it will no longer be up for review."),
+        automatic=False,
     )
 
 

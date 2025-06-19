@@ -521,7 +521,10 @@ class ActivityAnswerInline(StackedPolymorphicInline):
     )
 
 
-class ActivityChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
+class ActivityChildAdmin(
+    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin
+):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
     inlines = (UpdateInline, ActivityAnswerInline)
@@ -997,7 +1000,6 @@ class BaseContributionInline(admin.TabularInline):
 
     def status_label(self, obj):
         return not obj.states.current_state.name
-
 
 
 @admin.register(ActivityQuestion)

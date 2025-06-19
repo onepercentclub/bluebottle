@@ -1,0 +1,18 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+Your grant application <i>{{ title }}</i> has been submitted on {{ site_name }}.<br>
+<br>
+<b>What’s next?</b>
+<ul>
+    <li>
+        The platform manager will review your application.
+    </li>
+    <li>
+        If your application is approved, you will need to enter your bank details and complete the verification process.
+    </li>
+</ul>
+{% endblocktrans %}
+{% endblock %}

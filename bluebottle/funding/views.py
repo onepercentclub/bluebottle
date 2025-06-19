@@ -1,5 +1,4 @@
 import re
-
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -201,7 +200,6 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     serializer_class = PayoutSerializer
 
     authentication_classes = (TokenAuthentication,)
-
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):

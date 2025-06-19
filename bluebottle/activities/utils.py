@@ -12,7 +12,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField,
-    HyperlinkedRelatedField, 
+    HyperlinkedRelatedField,
     PolymorphicResourceRelatedField,
 )
 from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
@@ -134,7 +134,7 @@ class TextAnswerSerializer(BaseAnswerSerializer):
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'text-answers'
-        
+
 
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
@@ -153,6 +153,7 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
 class FileUploadAnswerDocumentSerializer(DocumentSerializer):
     content_view_name = 'file-upload-answer-document'
     relationship = 'fileuploadanswer_set'
+
 
 class FileUploadAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
@@ -186,6 +187,7 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
         'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
     }
+
 
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):

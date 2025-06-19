@@ -8,6 +8,6 @@ class FundingSubmittedReviewerMessage(ReviewerActivityNotification):
         "email",
         "A new crowdfunding campaign is ready to be reviewed on {site_name}"
     )
-    template = 'messages/reviewer/campaign_submitted'
+    template = 'messages/funding/reviewer/campaign_submitted'
 
     action_title = pgettext("email", "View campaign")

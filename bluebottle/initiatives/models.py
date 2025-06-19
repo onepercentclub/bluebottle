@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
 from bluebottle.files.fields import ImageField
 from bluebottle.follow.models import Follow
@@ -420,6 +420,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     @property
     def funding_enabled(self):
         return "funding" in self.activity_types
+
+    @property
+    def grant_application_enabled(self):
+        return "grantapplication" in self.activity_types
 
     class Meta(object):
         verbose_name_plural = _("initiative settings")

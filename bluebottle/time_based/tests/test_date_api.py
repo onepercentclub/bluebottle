@@ -135,6 +135,16 @@ class DateActivityDetailAPITestCase(TimeBasedActivityDetailAPITestCase, APITestC
     def test_put_start_after_end(self):
         pass
 
+    def test_get_multiple_slots(self):
+        self.model.slots.get().delete()
+
+        DateActivitySlotFactory.create_batch(3, activity=self.model, status='open', capacity=10)
+        DateActivitySlotFactory.create_batch(3, activity=self.model, status='cancelled', capacity=10)
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertEqual(self.response.json()['data']['attributes']['date-info']['capacity'], 30)
+
 
 class DateActivityTransitionListAPITestCase(TimeBasedActivityTransitionListAPITestCase, APITestCase):
     url_name = 'date-transition-list'

@@ -178,7 +178,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.owner])
         self.assertSubject('A participant has withdrawn from your activity "Save the world!"')
-        self.assertBodyContains('Frans Beckenbauer has withdrawn from you activity "Save the world!"')
+        self.assertBodyContains('Frans Beckenbauer has withdrawn from your activity "Save the world!"')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('Open your activity')
 

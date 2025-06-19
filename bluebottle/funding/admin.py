@@ -916,7 +916,7 @@ class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
-        formset.form.base_fields["amount"].initial = (None, obj.currency)
+        formset.form.base_fields["amount"].initial = (None, obj.currency if obj else 'EUR')
         return formset
 
 

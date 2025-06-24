@@ -600,10 +600,6 @@ class DateRegistrationTriggers(RegistrationTriggers):
                     DateUserAppliedNotification, conditions=[review_needed, is_user]
                 ),
                 NotificationEffect(
-                    ManagerRegistrationCreatedNotification,
-                    conditions=[no_review_needed, is_user],
-                ),
-                NotificationEffect(
                     DateUserJoinedNotification, conditions=[no_review_needed, is_user]
                 ),
             ]

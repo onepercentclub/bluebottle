@@ -1888,7 +1888,7 @@ class BaseScheduleSlot(TriggerMixin, Slot):
     )
 
     online_meeting_url = models.TextField(
-        _("online meeting link"), blank=True, default=""
+        _("online meeting link"), blank=True, default="", null=True
     )
 
     location = models.ForeignKey(

@@ -579,6 +579,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'slots',
             'date_info',
             'location_info',
+            'preparation',
         )
 
     class JSONAPIMeta(TimeBasedBaseSerializer.JSONAPIMeta):

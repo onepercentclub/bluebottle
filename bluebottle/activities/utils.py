@@ -124,7 +124,12 @@ class BaseAnswerSerializer(ModelSerializer):
         fields = ('activity', 'question')
 
     class JSONAPIMeta:
-        pass
+        included_resources = ['activity', 'question']
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+    }
 
 
 class TextAnswerSerializer(BaseAnswerSerializer):
@@ -143,10 +148,12 @@ class SegmentAnswerSerializer(BaseAnswerSerializer):
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'segment-answers'
-        included_resources = ['segment']
+        included_resources = BaseAnswerSerializer.JSONAPIMeta.included_resources + ['segment']
 
     included_serializers = {
-        'segment': 'bluebottle.segments.serializers.SegmentDetailSerializer'
+        'segment': 'bluebottle.segments.serializers.SegmentDetailSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
     }
 
 
@@ -226,6 +233,7 @@ class BaseActivitySerializer(ModelSerializer):
         many=True,
         read_only=True
     )
+
     answers = PolymorphicResourceRelatedField(
         ActivityAnswerSerializer,
         queryset=ActivityAnswer.objects.all(),

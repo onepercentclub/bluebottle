@@ -25,9 +25,10 @@ from bluebottle.activities.serializers import (
     ActivityImageSerializer,
     ContributionSerializer,
     ActivityQuestionSerializer,
-    FileUploadAnswerDocumentSerializer
+    FileUploadAnswerDocumentSerializer,
+    ActivityAnswerSerializer
 )
-from bluebottle.activities.utils import InviteSerializer, ActivityAnswerSerializer
+from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
@@ -436,15 +437,33 @@ class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
 
 
 class ActivityAnswerList(JsonApiViewMixin, CreateAPIView):
-    model = ActivityAnswer
+    queryset = ActivityAnswer.objects.all()
     serializer_class = ActivityAnswerSerializer
 
     permission_classes = (
-        IsAuthenticated
+        TenantConditionalOpenClose,
     )
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    related_permission_classes = {
+        'activity': [
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+        ]
+    }
+
+
+class ActivityAnswerDetail(JsonApiViewMixin, RetrieveUpdateDestroyAPIView):
+    queryset = ActivityAnswer.objects.all()
+    serializer_class = ActivityAnswerSerializer
+
+    permission_classes = (
+        TenantConditionalOpenClose,
+    )
+
+    related_permission_classes = {
+        'activity': [
+            OneOf(ResourcePermission, ActivityOwnerPermission),
+        ]
+    }
 
 
 class FileUploadAnswerDocumentView(PrivateFileView):

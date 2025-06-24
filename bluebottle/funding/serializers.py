@@ -972,7 +972,8 @@ class GrantApplicationSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     grants = ResourceRelatedField(
         many=True,
-        queryset=GrantDonor.objects.all(),
+        model=GrantDonor,
+        read_only=True
     )
 
     amount_granted = MoneySerializer(read_only=True)
@@ -1040,7 +1041,7 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'grants': 'bluebottle.funding.serializers.GrantSerializer',
             'grants.fund': 'bluebottle.funding.serializers.GrantFundSerializer',
-            'answers': 'bluebottle.activities.utils.ActivityAnswerSerializer',
+            'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
             'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
             'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
             'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',

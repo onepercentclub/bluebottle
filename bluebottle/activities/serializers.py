@@ -22,6 +22,7 @@ from rest_framework_json_api.serializers import (
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
     FileUploadQuestion, SegmentQuestion, TextQuestion,
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
 )
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
@@ -76,6 +77,7 @@ from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedFi
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
 
+
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
 
 
@@ -114,7 +116,8 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
-        RegisteredDateActivitySerializer
+        RegisteredDateActivitySerializer,
+        GrantApplicationSerializer
     ]
 
     def get_segments(self, obj):
@@ -903,11 +906,6 @@ class FileUploadQuestionSerializer(BaseQuestionSerializer):
         resource_name = 'file-upload-questions'
 
 
-class FileUploadAnswerDocumentSerializer(DocumentSerializer):
-    content_view_name = 'file-upload-answer-document'
-    relationship = 'fileuploadanswer_set'
-
-
 class ActivityQuestionSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TextQuestionSerializer,
@@ -923,4 +921,86 @@ class ActivityQuestionSerializer(PolymorphicModelSerializer):
 
     included_serializers = {
         'segment_type': 'bluebottle.segments.serializers.SegmentTypeSerializer'
+    }
+
+
+class BaseAnswerSerializer(ModelSerializer):
+    activity = PolymorphicResourceRelatedField(ActivitySerializer, queryset=Activity.objects.all())
+    question = PolymorphicResourceRelatedField(
+        ActivityQuestionSerializer, queryset=ActivityQuestion.objects.all()
+    )
+
+    class Meta:
+        fields = ('activity', 'question')
+
+    class JSONAPIMeta:
+        included_resources = ['activity', 'question']
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+    }
+
+
+class TextAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = TextAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'text-answers'
+
+
+class SegmentAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = SegmentAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'segment-answers'
+        included_resources = BaseAnswerSerializer.JSONAPIMeta.included_resources + ['segment']
+
+    included_serializers = {
+        'segment': 'bluebottle.segments.serializers.SegmentDetailSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+    }
+
+
+class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+    content_view_name = 'file-upload-answer-document'
+    relationship = 'fileuploadanswer_set'
+
+
+class FileUploadAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = FileUploadAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'file-upload-answers'
+        included_resources = ['file']
+
+    included_serializers = {
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
+    }
+
+
+class ActivityAnswerSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        TextAnswerSerializer,
+        SegmentAnswerSerializer,
+        FileUploadAnswerSerializer
+    ]
+
+    class Meta():
+        model = ActivityAnswer
+
+    class JSONAPIMeta:
+        included_resources = ['question', 'segment', 'file']
+
+    included_serializers = {
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+        'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
     }

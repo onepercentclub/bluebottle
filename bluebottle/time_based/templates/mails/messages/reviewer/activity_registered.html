@@ -1,0 +1,9 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+The activity <i>{{ title }}</i> has been successfully registered
+and the participants contributions have been recorded.
+{% endblocktrans %}
+{% endblock %}

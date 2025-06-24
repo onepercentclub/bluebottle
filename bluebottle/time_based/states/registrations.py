@@ -27,15 +27,8 @@ class RegistrationStateMachine(ModelStateMachine):
 
     def can_accept_registration(self, user):
         """can accept participant"""
-        owners = [
-            self.instance.activity.owner
-        ]
-
-        if self.instance.activity.initiative:
-            owners += list(self.instance.activity.owners)
-
         return (
-            user in owners or
+            user in self.instance.activity.owners or
             user.is_superuser or
             user.is_staff
         )

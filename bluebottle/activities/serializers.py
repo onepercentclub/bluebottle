@@ -56,6 +56,7 @@ from bluebottle.time_based.models import (
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
+    RegisteredDateParticipantSerializer,
     DeadlineActivitySerializer,
     DeadlineParticipantSerializer,
     PeriodicActivitySerializer,
@@ -64,7 +65,7 @@ from bluebottle.time_based.serializers import (
     PolymorphicSlotSerializer,
     ScheduleActivitySerializer,
     ScheduleParticipantSerializer,
-    TeamScheduleParticipantSerializer,
+    TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
@@ -108,6 +109,7 @@ class ActivitySerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     def get_segments(self, obj):
@@ -346,6 +348,9 @@ class ActivityPreviewSerializer(ModelSerializer):
             pass
 
     def get_activity_type(self, obj):
+        if obj.type == 'registereddateactivity':
+            return 'registeredDate'
+
         return obj.type.replace("activity", "")
 
     def get_location(self, obj):
@@ -566,6 +571,7 @@ class ActivityListSerializer(PolymorphicModelSerializer):
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
         ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer
     ]
 
     included_serializers = {
@@ -609,6 +615,9 @@ class TinyActivityListSerializer(PolymorphicModelSerializer):
         DateActivitySerializer,
         DeadlineActivitySerializer,
         PeriodicActivitySerializer,
+        ScheduleActivitySerializer,
+        RegisteredDateActivitySerializer,
+        CollectActivitySerializer
     ]
 
     class Meta(object):
@@ -626,6 +635,7 @@ class ContributorSerializer(PolymorphicModelSerializer):
         DonorSerializer,
         DateParticipantSerializer,
         DeadlineParticipantSerializer,
+        RegisteredDateParticipantSerializer,
         PeriodicParticipantSerializer,
         ScheduleParticipantSerializer,
         TeamScheduleParticipantSerializer,
@@ -725,10 +735,7 @@ class ContributionSerializer(ModelSerializer):
     )
 
     def get_registration(self, obj):
-        try:
-            return obj.contributor.registration
-        except (AttributeError, Registration.DoesNotExist):
-            return None
+        return getattr(obj.contributor, "registration", None)
 
     class JSONAPIMeta(object):
         resource_name = "contributions"

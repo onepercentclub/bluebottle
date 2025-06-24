@@ -9,6 +9,9 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityRestoredNotification,
     ActivitySucceededNotification,
 )
+from bluebottle.activities.messages.reviewer import (
+    ActivitySubmittedReviewerNotification
+)
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
@@ -20,20 +23,26 @@ from bluebottle.time_based.effects import (
 )
 from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffect
 from bluebottle.time_based.effects.contributions import (
-    RescheduleActivityDurationsEffect,
+    RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
+from bluebottle.time_based.messages.activity_manager import (
+    PastActivityRegisteredNotification,
+    PastActivityApprovedNotification,
+    PastActivitySubmittedNotification
+)
+from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
     DateActivitySlot,
     DeadlineActivity,
-    PeriodicActivity, ScheduleActivity,
+    PeriodicActivity, ScheduleActivity, RegisteredDateActivity,
 )
 from bluebottle.time_based.states import (
     DateStateMachine,
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    DateParticipantStateMachine
+    DateParticipantStateMachine, RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -153,7 +162,17 @@ def start_is_not_passed(effect):
     """
     return (
         effect.instance.start is None or
-        effect.instance.start > date.today()
+        effect.instance.start > now()
+    )
+
+
+def start_has_passed(effect):
+    """
+    start date has passed
+    """
+    return (
+        effect.instance.start is None or
+        effect.instance.start <= now()
     )
 
 
@@ -243,7 +262,6 @@ class TimeBasedTriggers(ActivityTriggers):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
-
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
@@ -564,4 +582,154 @@ class PeriodicActivityTriggers(RegistrationActivityTriggers):
                 CreateFirstSlotEffect,
             ]
         ),
+    ]
+
+
+@register(RegisteredDateActivity)
+class RegisteredDateActivityTriggers(TimeBasedTriggers):
+    triggers = ActivityTriggers.triggers + [
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.register,
+            effects=[
+                NotificationEffect(
+                    ActivityRegisteredReviewerNotification
+                ),
+                NotificationEffect(
+                    PastActivityRegisteredNotification
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.submit,
+            effects=[
+                NotificationEffect(
+                    PastActivitySubmittedNotification,
+                ),
+                NotificationEffect(
+                    ActivitySubmittedReviewerNotification,
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.auto_publish,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.approve,
+            effects=[
+                NotificationEffect(
+                    PastActivityApprovedNotification
+                ),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.accept,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.reject,
+            effects=[
+                NotificationEffect(ActivityRejectedNotification),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.fail
+                ),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                ),
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.succeed
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.reopen,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.accept
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.cancel,
+            effects=[
+                NotificationEffect(ActivityCancelledNotification),
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.fail,
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.cancel
+                )
+            ]
+        ),
+        TransitionTrigger(
+            RegisteredDateActivityStateMachine.restore,
+            effects=[
+                NotificationEffect(ActivityRestoredNotification),
+                RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.restore
+                )
+            ]
+        ),
+        ModelChangedTrigger(
+            'duration',
+            effects=[
+                RescheduleRelatedTimeContributionsEffect,
+            ]
+        )
+
     ]

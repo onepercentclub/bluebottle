@@ -22,7 +22,7 @@ from bluebottle.time_based.models import (
     TeamScheduleRegistration,
     DateRegistration,
 )
-from bluebottle.time_based.notifications.registrations import (
+from bluebottle.time_based.messages.registrations import (
     ManagerRegistrationCreatedNotification,
     ManagerRegistrationCreatedReviewNotification,
     ManagerTeamRegistrationCreatedNotification,
@@ -598,10 +598,6 @@ class DateRegistrationTriggers(RegistrationTriggers):
                 ),
                 NotificationEffect(
                     DateUserAppliedNotification, conditions=[review_needed, is_user]
-                ),
-                NotificationEffect(
-                    ManagerRegistrationCreatedNotification,
-                    conditions=[no_review_needed, is_user],
                 ),
                 NotificationEffect(
                     DateUserJoinedNotification, conditions=[no_review_needed, is_user]

@@ -17,6 +17,13 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "initiatives.initiative",
                 "permissions": ["initiatives.change_initiative"],
             },
+        ],
+    },
+    {
+        "label": _("Activity settings"),
+        "app_label": "activities",
+        "permissions": ["activities.change_activities"],
+        "items": [
             {
                 "name": "activities.activity",
                 "permissions": ["activities.change_activity"],
@@ -28,6 +35,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "activities.contribution",
                 "permissions": ["activities.change_contribution"],
+            },
+            {
+                "name": "activities.activityquestion",
+                "permissions": ["activities.change_activityquestion"],
             },
             {
                 "name": "impact.impacttype",

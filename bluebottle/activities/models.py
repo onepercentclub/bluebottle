@@ -1,6 +1,5 @@
 import uuid
 from builtins import object, str
-
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -11,22 +10,21 @@ from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
-from polymorphic.models import PolymorphicModel
+from multiselectfield import MultiSelectField
 from parler.managers import TranslatableManager, TranslatableQuerySet
-from polymorphic.managers import PolymorphicManager
-from polymorphic.query import PolymorphicQuerySet
-
 from parler.models import TranslatableModel, TranslatedFields
-from django_better_admin_arrayfield.models.fields import ArrayField
+from polymorphic.managers import PolymorphicManager
+from polymorphic.models import PolymorphicModel
+from polymorphic.query import PolymorphicQuerySet
 
 from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
-from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
+from bluebottle.segments.models import SegmentType, Segment
 from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -451,14 +449,21 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
     translations = TranslatedFields(
-        name=models.CharField(max_length=255),
+        name=models.CharField(
+            _('Label'),
+            help_text=_(
+                'The label for this question. This is used for validation messages e.g. "[label] is required".'
+            ),
+            max_length=255
+        ),
         question=models.CharField(max_length=255),
         help_text=models.TextField(null=True, blank=True)
     )
 
-    activity_types = ArrayField(
-        models.CharField(max_length=200, choices=InitiativePlatformSettings.ACTIVITY_TYPES),
-        default=tuple(type[0] for type in InitiativePlatformSettings.ACTIVITY_TYPES),
+    activity_types = MultiSelectField(
+        max_length=300,
+        choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        default=[choice[0] for choice in InitiativePlatformSettings.ACTIVITY_TYPES]
     )
 
     required = models.BooleanField(default=True)

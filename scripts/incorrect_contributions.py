@@ -16,10 +16,17 @@ def run(*args):
     total_errors = False
     for client in Client.objects.all():
         with (LocalTenant(client)):
+            date_participants_without_registration = DateParticipant.objects.filter(
+                registration__isnull=True,
+                user__isnull=False,
+                slot__isnull=False
+            )
+
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',
                 contributor__dateparticipant__isnull=False,
-                contributor__user__isnull=False
+                contributor__user__isnull=False,
+                contributor__dateparticipant__registration__isnull=False
             ).exclude(
                 Q(contributor__dateparticipant__registration__status__in=('accepted', 'new')) &
                 Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
@@ -201,7 +208,8 @@ def run(*args):
                 succeeded_contributions.count() or
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
-                registrations_without_participant_multi_slot.count()
+                registrations_without_participant_multi_slot.count() or
+                date_participants_without_registration.count()
             )
             if errors:
                 total_errors = True
@@ -210,25 +218,30 @@ def run(*args):
                 if failed_contributions.count():
                     print(f'failed but should be succeeded: {failed_contributions.count()}')
                     if verbose:
-                        print(f'IDs: {", ".join([str(c.id) for c in failed_contributions])}')
+                        print(f'IDs: {" ".join([str(c.id) for c in failed_contributions])}')
                 if failed_contributions_new.count():
                     print(f'failed but should be new: {failed_contributions_new.count()}')
                     if verbose:
-                        print(f'IDs: {", ".join([str(c.id) for c in failed_contributions_new])}')
+                        print(f'IDs: {" ".join([str(c.id) for c in failed_contributions_new])}')
                 if succeeded_contributions.count():
                     print(f'succeeded but should be failed: {succeeded_contributions.count()}')
                     if verbose:
-                        print(f'IDs: {", ".join([str(c.id) for c in succeeded_contributions])}')
+                        print(f'IDs: {" ".join([str(c.id) for c in succeeded_contributions])}')
                 if registrations_without_participant.count():
                     print(f'registrations without participant (single slot): '
                           f'{registrations_without_participant.count()}')
                     if verbose:
-                        print(f'IDs: {", ".join([str(r.id) for r in registrations_without_participant])}')
+                        print(f'IDs: {" ".join([str(r.id) for r in registrations_without_participant])}')
                 if registrations_without_participant_multi_slot.count():
                     print(f'registrations without participant (multiple slots): '
                           f'{registrations_without_participant_multi_slot.count()}')
                     if verbose:
-                        print(f'IDs: {", ".join([str(r.id) for r in registrations_without_participant_multi_slot])}')
+                        print(f'IDs: {" ".join([str(r.id) for r in registrations_without_participant_multi_slot])}')
+                if date_participants_without_registration.count():
+                    print(f'date participants without registration: '
+                          f'{date_participants_without_registration.count()}')
+                    if verbose:
+                        print(f'IDs: {" ".join([str(p.id) for p in date_participants_without_registration])}')
 
                 print('\n')
                 if fix:

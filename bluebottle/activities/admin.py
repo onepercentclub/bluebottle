@@ -679,9 +679,9 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
                     self.office_fields += (
                         'office_restriction',
                     )
-            fieldsets.append((
-                _('Office'), {'fields': self.office_fields}
-            ))
+                fieldsets.append((
+                    _('Office'), {'fields': self.office_fields}
+                ))
 
         if SegmentType.objects.count():
             fieldsets.append((

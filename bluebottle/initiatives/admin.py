@@ -1,7 +1,5 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
 from django.contrib import admin
-from django.db import models
-from django.forms import Textarea
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
@@ -13,7 +11,6 @@ from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.geo.models import Country
 from bluebottle.initiatives.models import (
-    ActivityQuestion,
     ActivitySearchFilter,
     Initiative,
     InitiativePlatformSettings,
@@ -51,27 +48,6 @@ class InitiativeReviewerFilter(admin.SimpleListFilter):
             return queryset.filter(reviewer__id=self.value())
         else:
             return queryset
-
-
-@admin.register(ActivityQuestion)
-class ActivityQuestionAdmin(TranslatableAdmin):
-    list_display = ["__str__", "sequence", "activity_types"]
-
-    formfield_overrides = {
-        models.CharField: {"widget": Textarea(attrs={"rows": 3, "cols": 80})},
-    }
-
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        if "question" in form.base_fields:
-            form.base_fields["question"].widget = Textarea(
-                attrs={"rows": 3, "cols": 80}
-            )
-        if "help_text" in form.base_fields:
-            form.base_fields["help_text"].widget = Textarea(
-                attrs={"rows": 3, "cols": 80}
-            )
-        return form
 
 
 class InitiativeCountryFilter(admin.SimpleListFilter):

@@ -158,7 +158,8 @@ class GrantApplicationSerializer(BaseActivitySerializer):
     permissions = ResourcePermissionField('funding-detail', view_args=('pk',))
     grants = ResourceRelatedField(
         many=True,
-        queryset=GrantDonor.objects.all(),
+        model=GrantDonor,
+        read_only=True
     )
 
     amount_granted = MoneySerializer(read_only=True)
@@ -201,15 +202,21 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             "amount_granted",
             "bank_account",
             "payout_account",
+            "answers",
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
         resource_name = 'activities/grant-applications'
-        included_resources = [
+        included_resources = BaseActivitySerializer.JSONAPIMeta.included_resources + [
             'grants',
             'grants.fund',
             'bank_account',
             'payout_account',
+            'answers',
+            'answers.segment',
+            'answers.question'
+            'answers.file'
+
         ]
 
     included_serializers = dict(
@@ -220,5 +227,9 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
             'grants': 'bluebottle.funding.serializers.GrantSerializer',
             'grants.fund': 'bluebottle.funding.serializers.GrantFundSerializer',
+            'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
+            'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
+            'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
+            'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
         }
     )

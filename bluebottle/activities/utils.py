@@ -12,16 +12,19 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField,
-    HyperlinkedRelatedField
+    HyperlinkedRelatedField,
+    PolymorphicResourceRelatedField,
 )
-from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.serializers import ModelSerializer, PolymorphicModelSerializer
 
 from bluebottle.activities.models import (
-    Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite
+    Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite,
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
 )
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
+from bluebottle.files.serializers import DocumentSerializer
 from bluebottle.fsm.serializers import AvailableTransitionsField, CurrentStatusField
 from bluebottle.funding.models import MoneyContribution
 from bluebottle.impact.models import ImpactGoal
@@ -116,6 +119,83 @@ class MatchingPropertiesField(serializers.ReadOnlyField):
         return matching
 
 
+class BaseAnswerSerializer(ModelSerializer):
+    class Meta:
+        fields = ('activity', 'question')
+
+    class JSONAPIMeta:
+        included_resources = ['activity', 'question']
+
+    included_serializers = {
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+    }
+
+
+class TextAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = TextAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'text-answers'
+
+
+class SegmentAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = SegmentAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'segment-answers'
+        included_resources = BaseAnswerSerializer.JSONAPIMeta.included_resources + ['segment']
+
+    included_serializers = {
+        'segment': 'bluebottle.segments.serializers.SegmentDetailSerializer',
+        'activity': 'bluebottle.activities.serializers.ActivitySerializer',
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+    }
+
+
+class FileUploadAnswerDocumentSerializer(DocumentSerializer):
+    content_view_name = 'file-upload-answer-document'
+    relationship = 'fileuploadanswer_set'
+
+
+class FileUploadAnswerSerializer(BaseAnswerSerializer):
+    class Meta(BaseAnswerSerializer.Meta):
+        model = FileUploadAnswer
+        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+
+    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
+        resource_name = 'file-upload-answers'
+        included_resources = ['file']
+
+    included_serializers = {
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
+    }
+
+
+class ActivityAnswerSerializer(PolymorphicModelSerializer):
+    polymorphic_serializers = [
+        TextAnswerSerializer,
+        SegmentAnswerSerializer,
+        FileUploadAnswerSerializer
+    ]
+
+    class Meta():
+        model = ActivityAnswer
+
+    class JSONAPIMeta:
+        included_resources = ['question', 'segment', 'file']
+
+    included_serializers = {
+        'question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+        'segment': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'file': 'bluebottle.activities.serializers.FileUploadAnswerDocumentSerializer'
+    }
+
+
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField()
@@ -152,6 +232,12 @@ class BaseActivitySerializer(ModelSerializer):
         model=Segment,
         many=True,
         read_only=True
+    )
+
+    answers = PolymorphicResourceRelatedField(
+        ActivityAnswerSerializer,
+        queryset=ActivityAnswer.objects.all(),
+        many=True
     )
 
     def __init__(self, instance=None, *args, **kwargs):
@@ -204,6 +290,10 @@ class BaseActivitySerializer(ModelSerializer):
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'answers': 'bluebottle.activities.utils.ActivityAnswerSerializer',
+        'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
+        'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
+        'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
     }
 
     def get_is_follower(self, instance):
@@ -249,7 +339,8 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_button_label',
             'admin_url',
             'partner_organization',
-            'theme'
+            'theme',
+            'answers'
         )
 
         meta_fields = (
@@ -289,7 +380,11 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location',
             'office_location.subregion',
             'office_location.subregion.region',
-            'partner_organization'
+            'partner_organization',
+            'answers',
+            'answers.segment',
+            'answers.file',
+            'answers.question'
         ]
 
 

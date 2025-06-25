@@ -22,7 +22,7 @@ from bluebottle.activities.admin import (
     ActivityChildAdmin,
     ActivityForm,
     ContributionChildAdmin,
-    ContributorChildAdmin,
+    ContributorChildAdmin
 )
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.fsm.admin import (

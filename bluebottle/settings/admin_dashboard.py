@@ -295,6 +295,10 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "scim.scimplatformsettings",
                 "permissions": ["scim.change_scimplatformsettings"],
             },
+            {
+                "name": "activities.activityquestion",
+                "permissions": ["activities.change_activityquestion"],
+            },
             {"name": "geo.country", "permissions": ["geo.change_country"]},
             {"name": "utils.language", "permissions": ["utils.change_language"]},
             {"name": "authtoken.token", "permissions": ["authtoken.change_token"]},

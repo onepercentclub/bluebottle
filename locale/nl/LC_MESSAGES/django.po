@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-19 11:14+0200\n"
-"PO-Revision-Date: 2025-06-24 14:21\n"
+"POT-Creation-Date: 2025-06-25 09:36+0200\n"
+"PO-Revision-Date: 2025-06-25 07:43\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -5622,23 +5622,23 @@ msgstr "Non-profit organisatie"
 msgid "Starts with 'acct_...'"
 msgstr "Begint met 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:549
+#: bluebottle/funding_stripe/models.py:552
 msgid "stripe payout account"
 msgstr "stripe uitbetalingsaccount"
 
-#: bluebottle/funding_stripe/models.py:550
+#: bluebottle/funding_stripe/models.py:553
 msgid "stripe payout accounts"
 msgstr "stripe uitbetalingsaccounts"
 
-#: bluebottle/funding_stripe/models.py:561
+#: bluebottle/funding_stripe/models.py:564
 msgid "Starts with 'ba_...'"
 msgstr "Begint met 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:600
+#: bluebottle/funding_stripe/models.py:603
 msgid "Bank account"
 msgstr "Bankrekening"
 
-#: bluebottle/funding_stripe/models.py:601
+#: bluebottle/funding_stripe/models.py:604
 msgid "Bank accounts"
 msgstr "Bankrekeningen"
 
@@ -6333,8 +6333,8 @@ msgid "initiative settings"
 msgstr "initiatief instellingen"
 
 #: bluebottle/initiatives/models.py:456
-msgid "Select an office"
-msgstr "Kies een kantoor"
+msgid "Select office"
+msgstr "Kies kantoor"
 
 #: bluebottle/initiatives/models.py:458
 msgid "Make a choice"
@@ -6342,8 +6342,8 @@ msgstr "Maak een keuze"
 
 #: bluebottle/initiatives/models.py:459
 #, python-brace-format
-msgid "Select a {filter_name}"
-msgstr "Selecteer een {filter_name}"
+msgid "Select {filter_name}"
+msgstr "Selecteer {filter_name}"
 
 #: bluebottle/initiatives/models.py:534
 msgid "theme"

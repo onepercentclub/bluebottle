@@ -12,6 +12,7 @@ from bluebottle.time_based.models import (
 
 def run(*args):
     fix = 'fix' in args
+    verbose = 'verbose' in args
     total_errors = False
     for client in Client.objects.all():
         with (LocalTenant(client)):
@@ -208,16 +209,26 @@ def run(*args):
                 print("### Tenant {}:".format(client.name))
                 if failed_contributions.count():
                     print(f'failed but should be succeeded: {failed_contributions.count()}')
+                    if verbose:
+                        print(f'IDs: {", ".join([str(c.id) for c in failed_contributions])}')
                 if failed_contributions_new.count():
                     print(f'failed but should be new: {failed_contributions_new.count()}')
+                    if verbose:
+                        print(f'IDs: {", ".join([str(c.id) for c in failed_contributions_new])}')
                 if succeeded_contributions.count():
                     print(f'succeeded but should be failed: {succeeded_contributions.count()}')
+                    if verbose:
+                        print(f'IDs: {", ".join([str(c.id) for c in succeeded_contributions])}')
                 if registrations_without_participant.count():
                     print(f'registrations without participant (single slot): '
                           f'{registrations_without_participant.count()}')
+                    if verbose:
+                        print(f'IDs: {", ".join([str(r.id) for r in registrations_without_participant])}')
                 if registrations_without_participant_multi_slot.count():
                     print(f'registrations without participant (multiple slots): '
                           f'{registrations_without_participant_multi_slot.count()}')
+                    if verbose:
+                        print(f'IDs: {", ".join([str(r.id) for r in registrations_without_participant_multi_slot])}')
 
                 print('\n')
                 if fix:
@@ -300,6 +311,8 @@ def run(*args):
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")
+    if not verbose and total_errors:
+        print("☝️ Add '--script-args=verbose' to the command to see all related ids of the faulty contributions.")
 
     if not total_errors:
         print("No errors found! 🎉🎉🎉")

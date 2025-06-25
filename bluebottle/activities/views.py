@@ -433,19 +433,8 @@ class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
     )
 
     def get_queryset(self):
-        activity_type_mapping = {
-            'activities/deeds': 'deed',
-            'activities/collects': 'collect',
-            'activities/fundings': 'funding',
-            'activities/grant-applications': 'grantapplication',
-            'activities/time-based/dates': 'dateactivity',
-            'activities/time-based/deadlines': 'deadlineactivity',
-            'activities/time-based/schedules': 'scheduleactivity',
-            'activities/time-based/periodics': 'periodicactivity',
-            'activities/time-based/registered-dates': 'registereddateactivity',
-        }
         return ActivityQuestion.objects.filter(
-            activity_types__contains=activity_type_mapping[self.kwargs['type']]
+            activity_types__contains=self.kwargs['type']
         )
 
 

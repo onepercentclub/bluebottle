@@ -1,22 +1,20 @@
 import re
-
 from django import forms
-from django.urls import re_path
 from django.contrib import admin, messages
 from django.db import connection
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.template.response import TemplateResponse
+from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _, ngettext
 from django_admin_inline_paginator.admin import PaginationFormSetBase, TabularInlinePaginated
+from parler.admin import TranslatableAdmin, TranslatableModelForm
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline, PolymorphicInlineSupportMixin)
 from pytz import timezone
-
-from parler.admin import TranslatableAdmin, TranslatableModelForm
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
@@ -33,8 +31,8 @@ from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
 from bluebottle.funding.models import Funding, Donor, MoneyContribution
-from bluebottle.grant_management.models import GrantApplication, GrantDonor
 from bluebottle.geo.models import Location
+from bluebottle.grant_management.models import GrantApplication, GrantDonor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
@@ -1012,7 +1010,7 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
         SegmentQuestion,
         FileUploadQuestion
     )
-    list_fields = ['question', 'help_text']
+    list_display = ['name', 'question', 'activity_types']
 
 
 class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):

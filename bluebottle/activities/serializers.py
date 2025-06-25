@@ -46,6 +46,8 @@ from bluebottle.funding.serializers import (
     FundingListSerializer,
     FundingSerializer,
     TinyFundingSerializer,
+)
+from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )

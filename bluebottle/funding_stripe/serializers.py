@@ -124,6 +124,16 @@ class ConnectAccountSessionSerializer(serializers.Serializer):
         resource_name = 'payout-accounts/stripe-sessions'
 
 
+class ConnectVerificationLinkSerializer(serializers.Serializer):
+    link = serializers.CharField(source="url")
+
+    class Meta(object):
+        fields = ("id", "link", )
+
+    class JSONAPIMeta(object):
+        resource_name = 'payout-accounts/stripe-verification-links'
+
+
 class StripeSourcePaymentSerializer(PaymentSerializer):
     charge_token = serializers.CharField(required=False, allow_blank=True)
 

@@ -86,6 +86,10 @@ urlpatterns = [
         include('bluebottle.time_based.urls.old_assignments')
     ),
     re_path(
+        r'^api/grant-management',
+        include('bluebottle.grant_management.urls.api')
+    ),
+    re_path(
         r'^api/funding',
         include('bluebottle.funding.urls.api')
     ),

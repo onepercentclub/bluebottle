@@ -1,9 +1,10 @@
-import inflection
 import json
 import mimetypes
-import sorl.thumbnail
 import xml.etree.cElementTree as et
 from builtins import object, str
+
+import inflection
+import sorl.thumbnail
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -67,13 +68,11 @@ class MoneyField(DjangoMoneyField):
 
 
 class CurrencyField(models.CharField):
-    def __init__(self, verbose_name=None, name=None, **kwargs):
+    currency_choices = [("EUR", "Euro")]
 
+    def __init__(self, verbose_name=None, name=None, max_length=3, **kwargs):
         super(CurrencyField, self).__init__(
-            verbose_name=verbose_name,
-            name=name,
-            choices=[('EUR', "Euro")],
-            **kwargs
+            verbose_name=verbose_name, name=name, max_length=max_length, **kwargs
         )
 
     def get_default_currency(self):
@@ -102,7 +101,7 @@ class CurrencyField(models.CharField):
             "initial": self.get_default_currency(),
         }
         defaults.update(kwargs)
-        return super(CurrencyField, self).formfield(**defaults)
+        return super(models.CharField, self).formfield(**defaults)
 
 
 class LegacyMoneyField(MoneyField):

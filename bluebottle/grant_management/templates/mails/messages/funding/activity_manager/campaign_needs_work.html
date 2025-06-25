@@ -1,0 +1,9 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+Your crowdfunding campaign <i>{{ title }}</i> has been reviewed and needs work. The platform manager
+will be in contact to help you make some changes to your campaign.
+{% endblocktrans %}
+{% endblock %}

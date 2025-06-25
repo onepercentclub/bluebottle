@@ -1,0 +1,15 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            You are working on a crowdfunding campaign on {{ site_name }}.
+            <br/><br/>
+            We have good news! Your identity has been verified, and you can continue with your crowdfunding campaign.
+            <br/><br/>
+            If your campaign has already started, you don’t need to do anything else. If it hasn’t started yet,
+            please check that everything is in order and submit your campaign for approval.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 

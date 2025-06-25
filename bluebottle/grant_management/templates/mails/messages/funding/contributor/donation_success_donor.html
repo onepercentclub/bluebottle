@@ -1,0 +1,26 @@
+{% extends "base.mail.html" %}
+{% load djmoney %}
+{% load i18n %}
+{% load message_url %}
+
+{% block content %}
+<p class="donation-intro">
+    {% blocktrans context 'email' %} Hi {{ recipient_name }},<br />
+    Thanks for your donation! {% endblocktrans %}
+</p>
+<br><br>
+{% include 'mails/messages/partials/donation_receipt.html' %}
+{% if pledged %}
+<p class="twelve columns">
+    {% blocktrans with amount=obj.amount %}
+    <strong>Please transfer the amount of {{ amount }} to "{{ title }}".</strong><br />
+    {% endblocktrans %}
+</p>
+{% endif %}
+{% endblock content %}
+
+{% block action %}
+    <a href="{% message_url obj.activity.get_absolute_url %}" class="action-email">
+       {% trans 'Go to campaign' context 'email' %}
+    </a>
+{% endblock %}`

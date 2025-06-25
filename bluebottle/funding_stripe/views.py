@@ -1,9 +1,11 @@
+import uuid
 import logging
 
 from django.core.exceptions import ValidationError
 from django.db import connection
 from django.http import HttpResponse
 from django.urls.exceptions import Http404
+from django.core.exceptions import PermissionDenied
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
 from moneyed import Money
@@ -34,7 +36,9 @@ from bluebottle.funding_stripe.serializers import (
     StripePaymentSerializer,
     ConnectAccountSessionSerializer,
     CountrySpecSerializer,
-    ExternalAccountSerializer, BankTransferSerializer
+    ExternalAccountSerializer,
+    BankTransferSerializer,
+    ConnectVerificationLinkSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.permissions import IsOwner
@@ -46,6 +50,7 @@ from bluebottle.utils.views import (
     RetrieveAPIView,
     ListCreateAPIView,
 )
+from bluebottle.utils.utils import get_current_host
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +308,8 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
         account = get_object_or_404(
             StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
         )
+        if account.owner != request.user:
+            raise PermissionDenied()
 
         # TODO check permissions on account
         account_session = stripe.AccountSession.create(
@@ -327,6 +334,40 @@ class ConnectAccountSession(JsonApiViewMixin, CreateAPIView):
         )
 
     serializer_class = ConnectAccountSessionSerializer
+
+
+class ConnectVerificationLink(JsonApiViewMixin, CreateAPIView):
+
+    def create(self, request):
+        stripe = get_stripe()
+        account = get_object_or_404(
+            StripePayoutAccount.objects.all(), pk=request.data.get("account_id")
+        )
+        if account.owner != request.user:
+            raise PermissionDenied()
+
+        # TODO check permissions on account
+
+        verification_link = stripe.AccountLink.create(
+            account=account.account_id,
+            refresh_url=f'{get_current_host()}/activities/stripe/expired',
+            return_url=f'{get_current_host()}/activities/stripe/complete',
+            type="account_onboarding",
+            collection_options={
+                "fields": "eventually_due",
+                "future_requirements": "include",
+            }
+        )
+
+        verification_link.pk = str(uuid.uuid4())
+        serializer = self.get_serializer(instance=verification_link)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    serializer_class = ConnectVerificationLinkSerializer
 
 
 class ExternalAccountList(JsonApiViewMixin, AutoPrefetchMixin, ListCreateAPIView):

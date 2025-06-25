@@ -416,7 +416,7 @@ class MemberMessagesInline(TabularInlinePaginated):
 
 
 class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
+    raw_id_fields = ('partner_organization', 'place', 'location')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {

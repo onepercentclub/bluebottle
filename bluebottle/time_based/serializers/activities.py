@@ -1,8 +1,9 @@
 from datetime import datetime, time
 
 import dateutil
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models.functions import Trunc
+
 from django.utils.timezone import now, get_current_timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -480,25 +481,27 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         slots = self.get_filtered_slots(obj, only_upcoming=True)
         last_slot = obj.slots.exclude(status__in=['draft', 'cancelled']).order_by('start').last()
         end = last_slot.end if last_slot else None
-        capacity = None
         duration = None
 
         if total > 1:
             starts = set(
                 slots.annotate(date=Trunc('start', kind='day')).values_list('date')
             )
+            capacity = slots.aggregate(capacity=Sum('capacity'))['capacity']
             count = len(slots)
             end = end.date()
             first = min(starts)[0].date() if starts else None
         elif total == 1:
             slot = self.get_filtered_slots(obj).first()
             first = slot.start
+            capacity = slot.capacity
             duration = slot.duration
             count = 1
         else:
             first = None
             duration = None
             count = 0
+            capacity = None
 
         return {
             'total': total,

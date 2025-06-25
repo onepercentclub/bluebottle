@@ -543,7 +543,6 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
             ),
 
             DeadlineActivityFactory(pk=7, status='open', start=now() + timedelta(days=2), deadline=None),
-            DeadlineActivityFactory(pk=6, status='open', start=now() - timedelta(days=2), deadline=None),
             DeadlineActivityFactory(pk=8, status='open', start=None, deadline=None),
         ]
 

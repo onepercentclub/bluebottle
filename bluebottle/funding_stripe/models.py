@@ -464,6 +464,9 @@ class StripePayoutAccount(PayoutAccount):
     def update(self, data, save=True):
         self.requirements = data.requirements.eventually_due
 
+        if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
+            self.tos_accepted = False
+
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:

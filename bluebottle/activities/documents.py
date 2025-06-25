@@ -236,7 +236,6 @@ class ActivityDocument(Document):
         )
 
     def prepare_current_status(self, instance):
-        print(instance.states.current_state.value)
         if instance.states.current_state:
             return {
                 'value': instance.states.current_state.value,

@@ -4,8 +4,6 @@ import random
 import string
 from babel.numbers import get_currency_name
 from builtins import object, range
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models import SET_NULL, Count
@@ -13,8 +11,6 @@ from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from django_quill.fields import QuillField
-from djchoices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from moneyed import Money
 from polymorphic.models import PolymorphicModel
@@ -32,9 +28,8 @@ from bluebottle.funding.validators import (
     TargetValidator,
 )
 from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.fields import CurrencyField, MoneyField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
-from bluebottle.utils.utils import get_current_host, get_current_language
 
 logger = logging.getLogger(__name__)
 
@@ -515,61 +510,6 @@ class Payout(TriggerMixin, models.Model):
         return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
 
 
-class GrantPayout(TriggerMixin, models.Model):
-    activity = models.ForeignKey(
-        'funding.GrantApplication',
-        verbose_name=_("Grant application"),
-        related_name="payouts",
-        on_delete=models.CASCADE
-    )
-    provider = models.CharField(max_length=100)
-    currency = models.CharField(max_length=5)
-
-    status = models.CharField(max_length=40)
-
-    date_approved = models.DateTimeField(_('approved'), null=True, blank=True)
-    date_started = models.DateTimeField(_('started'), null=True, blank=True)
-    date_completed = models.DateTimeField(_('completed'), null=True, blank=True)
-
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    @classmethod
-    def generate(cls, activity):
-        from .states import GrantPayoutStateMachine
-        for payout in cls.objects.filter(activity=activity):
-            if payout.status == GrantPayoutStateMachine.new.value:
-                payout.delete()
-            elif payout.grants.count() == 0:
-                raise AssertionError('Payout without donations already started!')
-        ready_grants = activity.grants.filter(status='new', grantdonor__payout__isnull=True)
-        groups = set([
-            don.amount_currency for don in
-            ready_grants
-        ])
-        for currency in groups:
-            payout = cls.objects.create(
-                activity=activity,
-                currency=currency
-            )
-            for grant in ready_grants:
-                grant.payout = payout
-                grant.save()
-
-    @property
-    def total_amount(self):
-        if self.currency:
-            return Money(self.grants.aggregate(total=Sum('amount'))['total'] or 0, self.currency)
-        return self.grants.aggregate(total=Sum('amount'))['total']
-
-    class Meta(object):
-        verbose_name = _('Grant payout')
-        verbose_name_plural = _('Grant payouts')
-
-    def __str__(self):
-        return '{} #{} {}'.format(_('Payout'), self.id, self.activity.title)
-
-
 @python_2_unicode_compatible
 class Donor(Contributor):
     amount = MoneyField()
@@ -740,6 +680,7 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def grant_application(self):
+        from bluebottle.grant_management.models import GrantApplication
         return GrantApplication.objects.filter(
             bank_account__in=self.external_accounts.all()
         ).all()
@@ -876,257 +817,6 @@ class FundingPlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _('funding settings')
         verbose_name = _('funding settings')
-
-
-class GrantApplication(Activity):
-
-    target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
-
-    impact_location = models.ForeignKey(
-        'geo.Geolocation',
-        null=True, blank=True,
-        related_name='grant_applications',
-        on_delete=models.SET_NULL
-    )
-
-    bank_account = models.ForeignKey('funding.BankAccount', null=True, blank=True, on_delete=SET_NULL)
-    started = models.DateTimeField(
-        _('started'),
-        null=True,
-        blank=True,
-    )
-    needs_review = True
-
-    validators = [
-        TargetValidator,
-    ]
-
-    activity_type = _('Grant application')
-
-    @property
-    def required_fields(self):
-        fields = [
-            "title",
-            "description.html",
-            "target",
-        ]
-        return fields
-
-    @property
-    def amount_granted(self):
-        grants = self.contributors.instance_of(GrantDonor)
-        amount = 0
-        for grant in grants:
-            amount += grant.amount.amount
-        return Money(amount, self.target.currency)
-
-    @property
-    def payout_account(self):
-        if self.bank_account:
-            return self.bank_account.connect_account
-        else:
-            return self.owner.funding_payout_account.first()
-
-    @property
-    def grants(self):
-        if self.pk:
-            return self.contributors.instance_of(GrantDonor).all()
-        else:
-            return GrantDonor.objects.none()
-
-    class JSONAPIMeta(object):
-        resource_name = 'activities/grant-applications'
-
-    class Meta(object):
-        verbose_name = _("Grant application")
-        verbose_name_plural = _("Grant applications")
-        permissions = (
-            ('api_read_grantapplication', 'Can view grant application through the API'),
-            ('api_add_grantapplication', 'Can add funding through the API'),
-            ('api_change_grantapplication', 'Can change funding through the API'),
-            ('api_delete_grantapplication', 'Can delete funding through the API'),
-
-            ('api_read_own_grantapplication', 'Can view own funding through the API'),
-            ('api_add_own_grantapplication', 'Can add own funding through the API'),
-            ('api_change_own_grantapplication', 'Can change own funding through the API'),
-            ('api_delete_own_grantapplication', 'Can delete own funding through the API'),
-        )
-
-    @property
-    def activity_date(self):
-        return self.created.date()
-
-    def get_absolute_url(self):
-        domain = get_current_host()
-        language = get_current_language()
-        return f"{domain}/{language}/activities/details/grant-application/{self.id}/{self.slug}"
-
-
-class LedgerItemChoices(DjangoChoices):
-    debet = ChoiceItem(
-        'debit',
-        label=_("Debit")
-    )
-    credit = ChoiceItem(
-        'credit',
-        label=_("credit")
-    )
-
-
-class GrantFund(models.Model):
-    name = models.CharField(max_length=200)
-
-    currency = CurrencyField()
-
-    description = QuillField(_("Description"), blank=True)
-    organization = models.ForeignKey(
-        'organizations.Organization',
-        null=True, blank=True,
-        on_delete=SET_NULL
-    )
-
-    class Meta:
-        verbose_name = _('Grant fund')
-        verbose_name_plural = _('Grant funds')
-
-    def __str__(self):
-        return self.name or f'Grant fund #{self.pk}'
-
-    def save(self, *args, **kwargs):
-        if not self.currency:
-            self.currency = properties.DEFAULT_CURRENCY
-
-        super().save(*args, **kwargs)
-
-    @property
-    def credit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit)
-
-    @property
-    def debet_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.debet)
-
-    @property
-    def total_credit(self):
-        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
-    total_credit.fget.short_description = _('Total payed out')
-
-    @property
-    def total_debet(self):
-        return self.debet_items.aggregate(total=Sum('amount'))['total'] or 0
-    total_debet.fget.short_description = _('Total budget')
-
-    @property
-    def balance(self):
-        return self.total_debet - self.total_credit
-    balance.fget.short_description = _('Balance')
-
-    class JSONAPIMeta(object):
-        resource_name = "activities/grant-funds"
-
-
-class LedgerItem(TriggerMixin, models.Model):
-    status = models.CharField(max_length=40)
-
-    amount = MoneyField()
-    type = models.CharField(choices=LedgerItemChoices.choices)
-    fund = models.ForeignKey(GrantFund, related_name='ledger_items', on_delete=models.CASCADE)
-
-    object_type = models.ForeignKey(
-        ContentType, related_name='ledger_item', on_delete=models.CASCADE
-    )
-    object_id = models.PositiveIntegerField()
-    object = GenericForeignKey('object_type', 'object_id')
-
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-
-    def clean(self):
-        if str(self.amount.currency) != self.fund.currency:
-            raise ValidationError({'amount': _('Currency should match fund currency')})
-
-        super().clean()
-
-
-class GrantDonor(Contributor):
-    amount = MoneyField()
-    fund = models.ForeignKey(
-        GrantFund,
-        null=True, blank=True,
-        related_name="grants",
-        on_delete=models.CASCADE
-    )
-
-    ledger_items = GenericRelation(
-        LedgerItem, object_id_field="object_id", content_type_field='object_type',
-        related_name="grants",
-        on_delete=models.SET_NULL
-    )
-
-    payout = models.ForeignKey(
-        GrantPayout,
-        null=True, blank=True,
-        on_delete=SET_NULL,
-        related_name='grants'
-    )
-
-    class Meta:
-        verbose_name = _('Grant')
-        verbose_name_plural = _('Grants')
-
-    class JSONAPIMeta(object):
-        resource_name = "contributors/grants"
-
-    def clean(self):
-        if str(self.amount.currency) != self.fund.currency:
-            raise ValidationError({'amount': _('Currency should match fund currency')})
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.ledger_items.exists():
-            self.ledger_item = LedgerItem.objects.create(
-                fund=self.fund,
-                amount=self.amount,
-                object=self,
-                type=LedgerItemChoices.credit
-            )
-            self.save()
-
-
-class GrantDeposit(TriggerMixin, models.Model):
-    status = models.CharField(max_length=40)
-    amount = MoneyField()
-
-    reference = models.CharField(max_length=255, blank=True)
-
-    created = models.DateTimeField(default=timezone.now)
-    updated = models.DateTimeField(auto_now=True)
-
-    fund = models.ForeignKey(GrantFund, on_delete=models.CASCADE)
-    ledger_items = GenericRelation(
-        LedgerItem, object_id_field="object_id", content_type_field='object_type'
-    )
-
-    def clean(self):
-        if str(self.amount.currency) != self.fund.currency:
-            raise ValidationError({'amount': _('Currency should match fund currency')})
-
-        super().clean()
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.ledger_items.exists():
-            self.ledger_item = LedgerItem.objects.create(
-                fund=self.fund,
-                amount=self.amount,
-                object=self,
-                type=LedgerItemChoices.debet
-            )
-            self.save()
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

@@ -127,20 +127,33 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "funding.payout", "permissions": ["funding.change_payout"],
             },
+        ],
+    },
+    {
+        "label": _("Grant management"),
+        "app_label": "grant_management",
+        "permissions": ["funding.change_grantapplication"],
+        "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+        "items": [
             {
-                "name": "funding.grantfund",
-                "permissions": ["funding.change_grantfund"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+                "name": "grant_management.grantprovider",
+                "permissions": ["grant_management.change_grantprovider"],
             },
             {
-                "name": "funding.grantapplication",
-                "permissions": ["funding.change_grantapplication"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+                "name": "grant_management.grantfund",
+                "permissions": ["grant_management.change_grantfund"],
             },
             {
-                "name": "funding.grantpayout",
-                "permissions": ["funding.change_grantpayout"],
-                "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+                "name": "grant_management.grantapplication",
+                "permissions": ["grant_management.change_grantapplication"],
+            },
+            {
+                "name": "grant_management.grantpayout",
+                "permissions": ["grant_management.change_grantpayout"],
+            },
+            {
+                "name": "grant_management.grantpayment",
+                "permissions": ["grant_management.change_grantpayment"],
             },
         ],
     },

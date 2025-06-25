@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load djmoney %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans context 'email' %}
+            Hi {{ recipient_name }},
+            <br><br>
+            Unfortunately, the campaign "{{ title }}" did not reach its goal. Therefore, all donations will be fully refunded within 10 days.
+            <br><br>
+            If you have any questions, you can contact the platform manager by replying to this email.
+        {% endblocktrans %}
+    </p>
+{% endblock content %}

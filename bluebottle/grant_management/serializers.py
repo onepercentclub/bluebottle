@@ -27,7 +27,7 @@ from bluebottle.utils.serializers import MoneySerializer, ResourcePermissionFiel
 class GrantApplicationTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=GrantApplication.objects.all())
     included_serializers = {
-        'resource': 'bluebottle.funding.serializers.GrantApplicationSerializer',
+        'resource': 'bluebottle.grant_management.serializers.GrantApplicationSerializer',
     }
 
     class JSONAPIMeta(object):
@@ -53,7 +53,7 @@ class PayoutGrantSerializer(ModelSerializer):
         ]
 
     included_serializers = {
-        'fund': 'bluebottle.funding.serializers.PayoutGrantFundSerializer'
+        'fund': 'bluebottle.grant_management.serializers.PayoutGrantFundSerializer'
     }
 
 
@@ -115,10 +115,10 @@ class GrantPayoutSerializer(ModelSerializer):
         ]
 
     included_serializers = {
-        'activity': 'bluebottle.funding.serializers.PayoutGrantApplicationSerializer',
+        'activity': 'bluebottle.grant_management.serializers.PayoutGrantApplicationSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
-        'donations': 'bluebottle.funding.serializers.PayoutGrantSerializer',
-        'donations.fund': 'bluebottle.funding.serializers.PayoutGrantFundSerializer'
+        'donations': 'bluebottle.grant_management.serializers.PayoutGrantSerializer',
+        'donations.fund': 'bluebottle.grant_management.serializers.PayoutGrantFundSerializer'
     }
 
 
@@ -148,7 +148,7 @@ class GrantSerializer(BaseContributorSerializer):
         resource_name = 'contributors/grants'
 
     included_serializers = {
-        'fund': 'bluebottle.funding.serializers.GrantFundSerializer',
+        'fund': 'bluebottle.grant_management.serializers.GrantFundSerializer',
     }
 
 
@@ -225,8 +225,8 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             'payout_account': 'bluebottle.funding_stripe.serializers.ConnectAccountSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
             'location': 'bluebottle.geo.serializers.GeolocationSerializer',
-            'grants': 'bluebottle.funding.serializers.GrantSerializer',
-            'grants.fund': 'bluebottle.funding.serializers.GrantFundSerializer',
+            'grants': 'bluebottle.grant_management.serializers.GrantSerializer',
+            'grants.fund': 'bluebottle.grant_management.serializers.GrantFundSerializer',
             'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
             'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
             'answers.file': 'bluebottle.files.serializers.DocumentSerializer',

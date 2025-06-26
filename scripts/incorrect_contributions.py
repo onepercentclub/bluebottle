@@ -6,7 +6,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
-    PeriodicActivity, DateRegistration, DateParticipant
+    PeriodicActivity, DateRegistration, DateParticipant, Registration
 )
 
 
@@ -14,14 +14,17 @@ def run(*args):
     fix = 'fix' in args
     verbose = 'verbose' in args
     total_errors = False
-    for client in Client.objects.all():
+    for client in Client.objects.filter(schema_name='nlcares').all():
         with (LocalTenant(client)):
+            registrations_removed = Registration.objects.filter(
+                status='removed'
+            )
+
             date_participants_without_registration = DateParticipant.objects.filter(
                 registration__isnull=True,
                 user__isnull=False,
                 slot__isnull=False
             )
-
             succeeded_date_contributions = TimeContribution.objects.filter(
                 status='succeeded',
                 contributor__dateparticipant__isnull=False,
@@ -56,7 +59,7 @@ def run(*args):
                 contributor__activity__team_activity='individuals'
             ).exclude(
                 Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_team_schedule_contributions = TimeContribution.objects.filter(
@@ -209,7 +212,8 @@ def run(*args):
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
                 registrations_without_participant_multi_slot.count() or
-                date_participants_without_registration.count()
+                date_participants_without_registration.count() or
+                registrations_removed.count()
             )
             if errors:
                 total_errors = True
@@ -242,6 +246,10 @@ def run(*args):
                           f'{date_participants_without_registration.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(p.id) for p in date_participants_without_registration])}')
+                if registrations_removed.count():
+                    print(f'registrations with status removed: {registrations_removed.count()}')
+                    if verbose:
+                        print(f'IDs: {" ".join([str(r.id) for r in registrations_removed])}')
 
                 print('\n')
                 if fix:
@@ -321,6 +329,20 @@ def run(*args):
                         add_participant_to_registration(registration)
                     for registration in registrations_without_participant_multi_slot.all():
                         add_participant_to_registration(registration)
+
+                    for participant in date_participants_without_registration.all():
+                        if participant.user:
+                            registration = DateRegistration(
+                                send_messages=False,
+                                activity=participant.activity,
+                                status="accepted",
+                                user=participant.user
+                            )
+                            registration.save()
+                            participant.registration = registration
+                            participant.save()
+
+                    registrations_removed.update(status='rejected')
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

@@ -434,7 +434,7 @@ class ActivityQuestionList(JsonApiViewMixin, ListAPIView):
 
     def get_queryset(self):
         return ActivityQuestion.objects.filter(
-            activity_types__contains=[self.kwargs['type']]
+            activity_types__contains=self.kwargs['type']
         )
 
 

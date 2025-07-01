@@ -799,6 +799,15 @@ class FundingPlatformSettings(BasePlatformSettings):
         )
     )
 
+    enable_iban_check = models.BooleanField(
+        _('Do IBAN bank account number vs. name checks'),
+        default=False,
+        help_text=_(
+            'In the KYC flow do a check to see if bank account number and name match. '
+            'This will be done by the Surepay API, and only Dutch IBANs are supported. '
+        )
+    )
+
     matching_name = models.CharField(
         _('Name to use for match funding'),
         max_length=60,
@@ -867,14 +876,13 @@ class IbanCheck(models.Model):
         from bluebottle.funding.adapters.abn_amro import AbnAmroAdapter
         adapter = AbnAmroAdapter()
         result = adapter.check_iban_name(self.iban, self.name)
-        print(result)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()
+        if self.matched == 'close_match':
+            self.name = self.result.get('nameSuggestion', self.name)
+            self.token = self.get_stripe_token()
         if self.matched == 'match':
             self.token = self.get_stripe_token()
-        if self.matched == 'close_match':
-            # If the name is almost matched, we want to notify the user
-            self.suggestion = self.result.get('nameSuggestion', '')
         self.save()
 
 

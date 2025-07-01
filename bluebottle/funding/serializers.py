@@ -799,7 +799,8 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'anonymous_donations',
             'stripe_publishable_key',
             'public_accounts',
-            'matching_name'
+            'matching_name',
+            'enable_iban_check'
         )
 
 

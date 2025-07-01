@@ -9,7 +9,7 @@ from bluebottle.grant_management.views import (
 
 urlpatterns = [
     # Grants
-    re_path(r'^/$', GrantApplicationList.as_view(), name='grant-application-list'),
+    re_path(r'^$', GrantApplicationList.as_view(), name='grant-application-list'),
     re_path(r'^/(?P<pk>[\d]+)$', GrantApplicationDetail.as_view(), name='grant-application-detail'),
     re_path(r'^/transitions$', GrantApplicationTransitionList.as_view(),
             name='grant-application-transition-list'),

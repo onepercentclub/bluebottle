@@ -251,7 +251,7 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
         return False
 
     def payout_link(self, obj):
-        url = reverse("admin:funding_grantpayout_change", args=(obj.id,))
+        url = reverse("admin:grant_management_grantpayout_change", args=(obj.id,))
         return format_html('<a href="{}">{}</a>', url, obj)
 
 
@@ -302,7 +302,7 @@ class GrantProviderAdmin(admin.ModelAdmin):
         provider = self.get_object(request, pk)
         if provider is None:
             return HttpResponseRedirect(
-                reverse("admin:funding_grantprovider_changelist")
+                reverse("admin:grant_management_grantprovider_changelist")
             )
 
         grants = GrantDonor.objects.filter(
@@ -327,7 +327,7 @@ class GrantProviderAdmin(admin.ModelAdmin):
         )
 
         return HttpResponseRedirect(
-            reverse("admin:funding_grantprovider_change", args=[pk])
+            reverse("admin:grant_management_grantprovider_change", args=[pk])
         )
 
 

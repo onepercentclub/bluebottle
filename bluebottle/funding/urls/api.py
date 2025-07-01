@@ -9,7 +9,7 @@ from bluebottle.funding.views import (
     PlainPayoutAccountDetail, PlainPayoutAccountList,
     PlainPayoutAccountDocumentDetail,
     SupportersExportView,
-    PayoutDetails, ActivityDonationList
+    PayoutDetails, ActivityDonationList, IbanCheckView
 )
 
 urlpatterns = [
@@ -29,7 +29,11 @@ urlpatterns = [
     re_path(r'^/transitions$', FundingTransitionList.as_view(), name='funding-transition-list'),
     re_path(r'^/export/(?P<pk>[\d]+)$', SupportersExportView.as_view(), name='funding-supporters-export'),
 
-    # Grants
+    re_path(
+        r'^/iban-check/$',
+        IbanCheckView.as_view(),
+        name='funding-iban-check'
+    ),
 
     re_path(
         r'^/payouts/(?P<pk>[\d]+)$',

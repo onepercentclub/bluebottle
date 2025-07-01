@@ -7,7 +7,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.effects import (
     SubmitPayoutEffect, SetDateEffect, ClearPayoutDatesEffect
 )
-from bluebottle.grant_management.messages.grant_management.activity_manager import GrantApplicationApprovedMessage, \
+from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
     GrantApplicationSubmittedMessage
 from bluebottle.grant_management.models import (

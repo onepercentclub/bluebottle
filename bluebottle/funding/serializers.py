@@ -850,7 +850,7 @@ class IbanCheckSerializer(ModelSerializer):
 
     class Meta(object):
         model = IbanCheck
-        fields = ('iban', 'matched', 'name', 'token')
+        fields = ('iban', 'matched', 'name', 'token', 'suggestion')
 
     class JSONAPIMeta(object):
         resource_name = 'funding/iban-check'

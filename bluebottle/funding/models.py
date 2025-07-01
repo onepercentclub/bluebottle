@@ -828,6 +828,7 @@ class IbanCheck(models.Model):
     )
     iban = ''
     token = ''
+    suggestion = ''
 
     hashed_iban = models.CharField(
         max_length=64,
@@ -835,7 +836,7 @@ class IbanCheck(models.Model):
     )
     matched = models.CharField(
         help_text=_('Result of the IBAN check'),
-        max_length=10,
+        max_length=100,
         choices=MATCH_CHOICES,
         default='no_match',
     )
@@ -866,10 +867,14 @@ class IbanCheck(models.Model):
         from bluebottle.funding.adapters.abn_amro import AbnAmroAdapter
         adapter = AbnAmroAdapter()
         result = adapter.check_iban_name(self.iban, self.name)
+        print(result)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()
         if self.matched == 'match':
             self.token = self.get_stripe_token()
+        if self.matched == 'close_match':
+            # If the name is almost matched, we want to notify the user
+            self.suggestion = self.result.get('nameSuggestion', '')
         self.save()
 
 

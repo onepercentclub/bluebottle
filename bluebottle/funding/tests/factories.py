@@ -7,8 +7,9 @@ from bluebottle.test.factory_models import generate_rich_text
 
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
-    PlainPayoutAccount, Payout, GrantApplication
+    PlainPayoutAccount, Payout,
 )
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

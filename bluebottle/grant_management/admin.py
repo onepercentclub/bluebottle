@@ -75,7 +75,7 @@ class GrantTabularInline(StateMachineAdminMixin, TabularInlinePaginated):
     def activity_display(self, obj):
         if obj.activity:
             url = reverse(
-                "admin:funding_grantapplication_change", args=(obj.activity.id,)
+                "admin:grant_management_grantapplication_change", args=(obj.activity.id,)
             )
             return format_html('<a href="{}">{}</a>', url, obj.activity)
         return "-"
@@ -257,9 +257,13 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
 
 class GrantPaymentInline(admin.TabularInline):
     model = GrantPayment
-    readonly_fields = ["created", "grant_provider"]
+    readonly_fields = ["edit", "created", "grant_provider", "status", "total"]
     fields = readonly_fields
     can_delete = False
+
+    def edit(self, obj):
+        url = reverse("admin:grant_management_grantpayment_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, _("Edit"))
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -336,7 +340,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     list_display = ["created", "grant_provider"]
     list_filter = [StateMachineFilter, "grant_provider"]
     inlines = [GrantPayoutInline]
-    change_form_template = "admin/funding/grantpayment/change_form.html"
+    change_form_template = "admin/grant_management/grantpayment/change_form.html"
     readonly_fields = [
         "created",
         "total",
@@ -363,12 +367,12 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             re_path(
                 r"^(?P<pk>.+)/generate-payment-link/$",
                 self.admin_site.admin_view(self.generate_payment_link_view),
-                name="funding_grantpayment_generate_payment_link",
+                name="grant_management_grantpayment_generate_payment_link",
             ),
             re_path(
                 r"^(?P<pk>.+)/check-status/$",
                 self.admin_site.admin_view(self.check_status_view),
-                name="funding_grantpayment_check_status",
+                name="grant_management_grantpayment_check_status",
             ),
         ]
         return custom_urls + urls
@@ -377,7 +381,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         payment = self.get_object(request, pk)
         if payment is None:
             return HttpResponseRedirect(
-                reverse("admin:funding_grantpayment_changelist")
+                reverse("admin:grant_management_grantpayment_changelist")
             )
 
         try:
@@ -387,14 +391,14 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             self.message_user(request, str(e), level=messages.ERROR)
 
         return HttpResponseRedirect(
-            reverse("admin:funding_grantpayment_change", args=[pk])
+            reverse("admin:grant_management_grantpayment_change", args=[pk])
         )
 
     def check_status_view(self, request, pk):
         payment = self.get_object(request, pk)
         if payment is None:
             return HttpResponseRedirect(
-                reverse("admin:funding_grantpayment_changelist")
+                reverse("admin:grant_management_grantpayment_changelist")
             )
 
         try:
@@ -404,7 +408,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             self.message_user(request, str(e), level=messages.ERROR)
 
         return HttpResponseRedirect(
-            reverse("admin:funding_grantpayment_change", args=[pk])
+            reverse("admin:grant_management_grantpayment_change", args=[pk])
         )
 
 

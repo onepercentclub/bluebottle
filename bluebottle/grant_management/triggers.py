@@ -7,18 +7,19 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.effects import (
     SubmitPayoutEffect, SetDateEffect, ClearPayoutDatesEffect
 )
+from bluebottle.grant_management.effects import DisburseFundsEffect
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
     GrantApplicationSubmittedMessage
 from bluebottle.grant_management.models import (
     GrantDeposit,
     GrantDonor, GrantApplication,
-    GrantPayout
+    GrantPayout, GrantPayment
 )
 from bluebottle.grant_management.states import (
     LedgerItemStateMachine, GrantDepositStateMachine,
     GrantDonorStateMachine, GrantApplicationStateMachine,
-    GrantPayoutStateMachine
+    GrantPaymentStateMachine, GrantPayoutStateMachine
 )
 from bluebottle.notifications.effects import NotificationEffect
 
@@ -147,6 +148,18 @@ class GrantPayoutTriggers(TriggerManager):
             GrantPayoutStateMachine.succeed,
             effects=[
                 SetDateEffect('date_completed')
+            ]
+        ),
+    ]
+
+
+@register(GrantPayment)
+class GrantPaymentTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            GrantPaymentStateMachine.succeed,
+            effects=[
+                DisburseFundsEffect,
             ]
         ),
     ]

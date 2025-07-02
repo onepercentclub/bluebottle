@@ -91,7 +91,6 @@ class UpdateBusinessTypeEffect(Effect):
         account = self.instance
 
         if account.account_id:
-
             stripe_account = stripe.Account.modify(
                 account.account_id,
                 business_type=account.business_type

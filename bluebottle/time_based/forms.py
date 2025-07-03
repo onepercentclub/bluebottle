@@ -11,7 +11,10 @@ class RegistrationRejectForm(TransitionConfirmationForm):
         widget=forms.Textarea,
         label=_('Custom message'),
         required=False,
-        help_text=_('You can provide a custom message for the applicant.'),
+        help_text=_(
+            'You can provide a custom message for the applicant, '
+            'this will replace the default rejection message.'
+        ),
     )
 
     def save(self, **kwargs):
@@ -30,7 +33,10 @@ class RegistrationAcceptForm(TransitionConfirmationForm):
         widget=forms.Textarea,
         label=_('Custom message'),
         required=False,
-        help_text=_('You can provide a custom message for the applicant.'),
+        help_text=_(
+            'You can provide a custom message for the applicant, '
+            'this will replace the default acceptance message.'
+        ),
     )
 
     def save(self, **kwargs):

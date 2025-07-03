@@ -14,7 +14,7 @@ from bluebottle.funding.messages.funding.platform_manager import (
     LivePayoutAccountMarkedIncomplete,
     LivePublicPayoutAccountMarkedIncomplete
 )
-from bluebottle.grant_management.messages.grant_management.activity_manager import (
+from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountVerified,
     GrantApplicationPayoutAccountMarkedIncomplete
 )

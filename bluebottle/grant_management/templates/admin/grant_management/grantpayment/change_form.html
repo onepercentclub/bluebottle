@@ -5,11 +5,11 @@
 {% if original %}
 <li>
     {% if original.status == "new" %}
-    <a href="{% url 'admin:funding_grantpayment_generate_payment_link' original.pk %}" class="default">
+    <a href="{% url 'admin:grant_management_grantpayment_generate_payment_link' original.pk %}" class="default">
         {% trans "Generate new payment link" %}
     </a>
     {% endif %}
-    <a href="{% url 'admin:funding_grantpayment_check_status' original.pk %}" class="default">
+    <a href="{% url 'admin:grant_management_grantpayment_check_status' original.pk %}" class="default">
         {% trans "Check status" %}
     </a>
 </li>

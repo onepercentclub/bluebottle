@@ -606,7 +606,7 @@ class PayoutAccountActivityLinkMixin(object):
             return format_html(", ".join([
                 format_html(
                     u"<a href='{}'>{}</a>",
-                    reverse('admin:funding_grantapplication_change', args=(p.id,)),
+                    reverse('admin:grant_management_grantapplication_change', args=(p.id,)),
                     p.title
                 ) for p in grant_applications
             ]))

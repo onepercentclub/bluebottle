@@ -108,24 +108,3 @@ class FundingPublicPayoutAccountMarkedIncomplete(FundingPayoutAccountMarkedIncom
 class FundingPublicPayoutAccountVerified(TransitionMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/funding/activity_manager/public_payout_account_verified'
-
-
-class GrantApplicationManagerMessage(TransitionMessage):
-    context = {
-        "title": "title",
-    }
-
-    action_title = pgettext("email", "View application")
-
-    @property
-    def action_link(self):
-        return self.obj.get_absolute_url()
-
-    def get_recipients(self):
-        """the activity organizer"""
-        return [self.obj.owner]
-
-
-class GrantApplicationApprovedMessage(GrantApplicationManagerMessage):
-    subject = _("Your grant application has been approved!")
-    template = "messages/activity_manager/grant_application_approved"

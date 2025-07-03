@@ -1,19 +1,19 @@
 import json
-from datetime import timedelta
-from io import BytesIO
-
 import mock
 import munch
 import stripe
+from datetime import timedelta
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
+from io import BytesIO
 from moneyed import Money
 from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
 from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding, PaymentCurrency
+from bluebottle.funding.serializers import IbanCheckSerializer
 from bluebottle.funding.tests.factories import (
     FundingFactory,
     PlainPayoutAccountFactory,
@@ -32,7 +32,6 @@ from bluebottle.funding_lipisha.tests.factories import (
 from bluebottle.funding_pledge.tests.factories import (
     PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
@@ -46,6 +45,7 @@ from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
@@ -542,7 +542,6 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
-
         self.funding.bank_account = generate_mock_bank_account()
 
         self.funding.save()
@@ -1397,8 +1396,8 @@ class PayoutDetailTestCase(BluebottleTestCase):
         self.funding.save()
 
         with mock.patch(
-            "bluebottle.funding_stripe.models.ExternalAccount.verified",
-            new_callable=mock.PropertyMock,
+                "bluebottle.funding_stripe.models.ExternalAccount.verified",
+                new_callable=mock.PropertyMock,
         ) as verified:
             verified.return_value = True
             self.funding.states.submit()
@@ -1826,3 +1825,62 @@ class FundingAnonymousDonationsTestCase(APITestCase):
         funding_settings.save()
         self.perform_get()
         self.assertFalse('user' in self.response.json()['data']['relationships'])
+
+
+class IbanCheckTestCase(APITestCase):
+    url_name = 'funding-iban-check'
+    serializer = IbanCheckSerializer
+    fields = ['iban', 'name', 'matched']
+
+    def setUp(self):
+        super(IbanCheckTestCase, self).setUp()
+        self.url = reverse('funding-iban-check')
+        self.user = BlueBottleUserFactory.create()
+
+    def test_valid(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Nadine Bok'
+                }
+            }
+        }
+        self.perform_create(
+            user=self.user,
+            data=data
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()['data']
+        self.assertEqual(
+            data['attributes']['matched'],
+            'match'
+        )
+        self.assertIsNotNone(
+            data['attributes']['token'],
+        )
+
+    def test_invalid(self):
+        data = {
+            'data': {
+                'type': 'funding/iban-check',
+                'attributes': {
+                    'iban': 'NL78RABO5394792070',
+                    'name': 'Evil Scammer'
+                }
+            }
+        }
+        self.perform_create(
+            user=self.user,
+            data=data
+        )
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()['data']
+        self.assertEqual(
+            data['attributes']['matched'],
+            'no_match'
+        )
+        self.assertIsNone(
+            data['attributes']['token'],
+        )

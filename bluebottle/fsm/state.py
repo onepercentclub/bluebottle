@@ -117,13 +117,16 @@ post_state_transition = Signal()
 
 class Transition(BaseTransition):
 
+    form = None
+
     def extend(self, **kwargs):
         transition = deepcopy(self)
         for kwarg in kwargs:
             setattr(transition, kwarg, kwargs[kwarg])
         return transition
 
-    def __init__(self, sources, target, *args, **kwargs):
+    def __init__(self, sources, target, form=None, *args, **kwargs):
+        self.form = form
         self.permission = kwargs.get('permission')
         super(Transition, self).__init__(sources, target, *args, **kwargs)
 

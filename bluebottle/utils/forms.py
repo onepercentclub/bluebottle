@@ -1,6 +1,6 @@
 from django import forms
-from django.urls import reverse
 from django.forms.models import ModelFormMetaclass
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from future.utils import with_metaclass
 
@@ -64,3 +64,7 @@ class TransitionConfirmationForm(forms.Form):
         label=_('Send messages'),
         help_text=_('Should messages be send or should we transition without notifying users?')
     )
+
+    def __init__(self, *args, **kwargs):
+        self.instance = kwargs.pop("instance", None)
+        super().__init__(*args, **kwargs)

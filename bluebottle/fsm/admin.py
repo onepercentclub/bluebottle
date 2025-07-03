@@ -1,12 +1,10 @@
-from builtins import object
-from builtins import str
+from builtins import object, str
 from collections import defaultdict
 
-from django.urls import re_path
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.fsm.forms import StateMachineModelForm
@@ -141,16 +139,22 @@ class StateMachineAdminMixin(object):
             return HttpResponseRedirect(link)
 
         instance = self.model.objects.get(pk=pk)
-        form = TransitionConfirmationForm(request.POST)
 
         state_machine = getattr(instance, field_name)
         transition = state_machine.transitions[transition_name]
+
+        form = (
+            transition.form(request.POST or None, instance=instance)
+            if transition.form
+            else TransitionConfirmationForm(request.POST or None)
+        )
 
         if transition not in state_machine.possible_transitions():
             messages.error(request, 'Transition not possible: {}'.format(transition.name))
             return HttpResponseRedirect(link)
 
         if 'confirm' in request.POST and request.POST['confirm']:
+
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
                 getattr(state_machine, transition_name)(
@@ -161,8 +165,12 @@ class StateMachineAdminMixin(object):
                     instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
+                if transition.form:
+                    form.save()
 
                 return HttpResponseRedirect(link)
+            else:
+                messages.error(request, "Form is not valid: {}".format(form.errors))
 
         getattr(state_machine, transition_name)()
         effects = instance.execute_triggers(user=request.user)
@@ -187,8 +195,7 @@ class StateMachineAdminMixin(object):
             action_text=action_text,
             form=form,
             has_notifications=any(
-                isinstance(effect, BaseNotificationEffect)
-                for effect in effects
+                isinstance(effect, BaseNotificationEffect) for effect in effects
             ),
             source=instance.status,
             effects=rendered_effects,

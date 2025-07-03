@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.translation import gettext as _
-from djmoney.forms import MoneyField as MoneyFormField
+from djmoney.forms import MoneyField as DjangoMoneyFormField
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 from rest_framework import serializers
 from rest_framework.fields import Field
@@ -22,6 +22,40 @@ from rest_framework_json_api.relations import (
 )
 
 from .utils import clean_html
+
+
+class MoneyFormField(DjangoMoneyFormField):
+    """
+    A reusable form field for money input that automatically loads
+    available currencies from PaymentProvider and sets the default currency.
+
+    This field encapsulates the logic from MoneyField.formfield() method.
+    """
+
+    def __init__(self, **kwargs):
+        # Get currency choices and default currency from PaymentProvider
+        from bluebottle.funding.models import PaymentProvider
+
+        default_currency = PaymentProvider.get_default_currency()
+        currency_choices = PaymentProvider.get_currency_choices()
+
+        # Set up the field with dynamic currency choices
+        kwargs.setdefault("default_currency", default_currency)
+        kwargs.setdefault("currency_choices", currency_choices)
+
+        super().__init__(**kwargs)
+
+    def get_default_currency(self):
+        """Get the default currency from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        """Get available currency choices from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_currency_choices()
 
 
 class MoneyField(DjangoMoneyField):
@@ -59,12 +93,44 @@ class MoneyField(DjangoMoneyField):
         return name, path, args, kwargs
 
     def formfield(self, **kwargs):
-        # For the form load the actual available currencies from PaymentProviders
-        defaults = {'form_class': MoneyFormField}
+        # Use the new reusable form field
+        defaults = {"form_class": MoneyFormField}
         defaults.update(kwargs)
-        self.default_currency = self.get_default_currency()
-        self.currency_choices = self.get_currency_choices()
-        return super(MoneyField, self).formfield(**kwargs)
+        return super(MoneyField, self).formfield(**defaults)
+
+
+class CurrencyFormField(forms.ChoiceField):
+    """
+    A reusable form field for currency selection.
+
+    This field automatically loads available currencies from PaymentProvider
+    and sets the default currency as the initial value.
+    """
+
+    def __init__(self, **kwargs):
+        # Get currency choices and default currency
+        from bluebottle.funding.models import PaymentProvider
+
+        choices = PaymentProvider.get_currency_choices()
+        initial = PaymentProvider.get_default_currency()
+
+        # Set up the field with currency choices
+        kwargs.setdefault("choices", choices)
+        kwargs.setdefault("initial", initial)
+
+        super().__init__(**kwargs)
+
+    def get_default_currency(self):
+        """Get the default currency from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_default_currency()
+
+    def get_currency_choices(self):
+        """Get available currency choices from PaymentProvider."""
+        from bluebottle.funding.models import PaymentProvider
+
+        return PaymentProvider.get_currency_choices()
 
 
 class CurrencyField(models.CharField):

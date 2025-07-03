@@ -67,4 +67,5 @@ class TransitionConfirmationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.instance = kwargs.pop("instance", None)
+        self.transition = kwargs.pop("transition", None)
         super().__init__(*args, **kwargs)

@@ -144,7 +144,7 @@ class StateMachineAdminMixin(object):
         transition = state_machine.transitions[transition_name]
 
         form = (
-            transition.form(request.POST or None, instance=instance)
+            transition.form(request.POST or None, instance=instance, transition=transition)
             if transition.form
             else TransitionConfirmationForm(request.POST or None)
         )
@@ -160,18 +160,20 @@ class StateMachineAdminMixin(object):
                 getattr(state_machine, transition_name)(
                     user=request.user
                 )
+                if transition.form:
+                    form.save()
+                custom_message = getattr(transition, 'custom_message', None)
                 try:
-                    instance.execute_triggers(user=request.user, send_messages=send_messages)
+                    instance.execute_triggers(user=request.user, send_messages=send_messages, message=custom_message)
                     instance.save()
                 except TransitionNotPossible as e:
                     messages.warning(request, 'Effect failed: {}'.format(e))
-                if transition.form:
-                    form.save()
 
                 return HttpResponseRedirect(link)
             else:
                 messages.error(request, "Form is not valid: {}".format(form.errors))
 
+        # Execute the transition
         getattr(state_machine, transition_name)()
         effects = instance.execute_triggers(user=request.user)
         rendered_effects = get_effects(effects)

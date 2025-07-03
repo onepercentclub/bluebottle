@@ -77,13 +77,3 @@ class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMeta
     @property
     def state_machine_fields(self):
         return [field for field in self.instance._state_machines]
-
-    def clean(self):
-        cleaned_data = super(StateMachineModelForm, self).clean()
-
-        # Add debugging here
-        if not self.is_valid():
-            print(f"Form validation failed. Errors: {self.errors}")
-            print(f"Non-field errors: {self.non_field_errors()}")
-
-        return cleaned_data

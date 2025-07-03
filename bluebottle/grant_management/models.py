@@ -219,7 +219,6 @@ class GrantPayout(TriggerMixin, models.Model):
 
         total_amount = self.total_amount
         amount_in_cents = int(total_amount.amount * 100)
-        print(connect_account_id)
         transfer = stripe.Transfer.create(
             amount=amount_in_cents,
             currency=str(total_amount.currency).lower(),
@@ -231,7 +230,6 @@ class GrantPayout(TriggerMixin, models.Model):
                 "grant_application_title": self.activity.title,
             },
         )
-        print(transfer)
         return transfer
 
     @property

@@ -9,7 +9,7 @@ from bluebottle.fsm.state import (
     register,
 )
 from bluebottle.funding.states import PayoutStateMachine
-from bluebottle.grant_management.forms import GrantApplicationApproveForm
+from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
@@ -203,7 +203,10 @@ class GrantPaymentStateMachine(ModelStateMachine):
 
 @register(GrantPayout)
 class GrantPayoutStateMachine(PayoutStateMachine):
-    pass
+
+    approve = PayoutStateMachine.approve.extend(
+        form=GrantPayoutApproveForm
+    )
 
 
 class BankAccountStateMachine(ModelStateMachine):

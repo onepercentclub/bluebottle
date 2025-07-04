@@ -14,7 +14,7 @@ def run(*args):
     fix = 'fix' in args
     verbose = 'verbose' in args
     total_errors = False
-    for client in Client.objects.filter(schema_name='nlcares').all():
+    for client in Client.objects.all():
         with (LocalTenant(client)):
             registrations_removed = Registration.objects.filter(
                 status='removed'

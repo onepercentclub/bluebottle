@@ -584,6 +584,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.story = json.dumps({
             'html': (
                 '<p>Test</p><img src="/media/test.jpg">'
+                '<ul><li class="bla">List</li></ul>'
                 '<script type="javascript">alert("bla")</script>'
             ),
             'delta': ''
@@ -596,7 +597,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json()['data']['attributes']['story'],
-            '<p>Test</p><img src="/media/test.jpg">'
+            '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>'
         )
 
 

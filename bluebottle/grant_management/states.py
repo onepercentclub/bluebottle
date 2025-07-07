@@ -65,7 +65,6 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     approve = Transition(
         [
-            ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
         ],
         granted,
@@ -352,10 +351,16 @@ class GrantDepositStateMachine(ModelStateMachine):
         _('The deposit is pending')
     )
 
-    finished = State(
-        _('finished'),
-        'finished',
-        _('The deposit is finished')
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The deposit is cancelled')
+    )
+
+    final = State(
+        _('final'),
+        'final',
+        _('The deposit is finalised')
     )
 
     initiate = Transition(
@@ -365,10 +370,17 @@ class GrantDepositStateMachine(ModelStateMachine):
 
     complete = Transition(
         pending,
-        finished,
+        final,
         description=_("Complete the deposit"),
         automatic=True,
         name=_("complete"),
+    )
+
+    cancel = Transition(
+        final,
+        cancelled,
+        description=_("Cancel the deposit"),
+        name=_("cancel"),
     )
 
 
@@ -407,7 +419,7 @@ class LedgerItemStateMachine(ModelStateMachine):
     )
 
     remove = Transition(
-        [pending],
+        [pending, final],
         removed,
         description=_("Remove the ledger item."),
         automatic=True,

@@ -1,4 +1,5 @@
 from datetime import timedelta, date
+from django.utils import formats
 
 from bluebottle.deeds.messages import (
     DeedDateChangedNotification, ParticipantJoinedNotification
@@ -52,7 +53,7 @@ class ParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains(
             'The start and/or end date of the activity "Save the world!", '
             'in which you are participating, has changed.')
-        self.assertBodyContains('Start: {}'.format(self.next_week.strftime('%x')))
+        self.assertBodyContains(f'Start: {formats.date_format(self.next_week, "SHORT_DATE_FORMAT")}')
         self.assertBodyContains('End: Runs indefinitely')
         self.assertActionLink(self.activity.get_absolute_url())
         self.assertActionTitle('View activity')
@@ -66,7 +67,8 @@ class ParticipantNotificationTestCase(NotificationTestCase):
         self.assertSubject('You have joined the activity "Save the world!"')
 
         self.assertHtmlBodyContains('You joined an activity on <b>Test</b>')
-        self.assertHtmlBodyContains(f"Ends on {self.next_month.strftime('%x')}")
+
+        self.assertBodyContains(f'Ends on {formats.date_format(self.next_month, "SHORT_DATE_FORMAT")}')
 
     def test_withdrew_confirmation(self):
         self.message_class = ParticipantWithdrewConfirmationNotification

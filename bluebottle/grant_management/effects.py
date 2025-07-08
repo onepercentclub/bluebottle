@@ -1,5 +1,6 @@
-from bluebottle.fsm.effects import Effect
 from django.utils.translation import gettext as _
+
+from bluebottle.fsm.effects import Effect
 
 
 class DisburseFundsEffect(Effect):
@@ -13,3 +14,12 @@ class DisburseFundsEffect(Effect):
 
     def __str__(self):
         return _('Disburse funds to grant application accounts')
+
+
+class GenerateGrantPaymentEffect(Effect):
+    conditions = []
+    title = _("Generate grant payment")
+    template = "admin/generate_grant_payment_effect.html"
+
+    def post_save(self, **kwargs):
+        self.instance.create_payment()

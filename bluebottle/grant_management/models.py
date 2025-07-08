@@ -32,15 +32,13 @@ class GrantProvider(models.Model):
     """
 
     FREQUENCY_CHOICES = (
-        ("weekly", _("Weekly")),
-        ("biweekly", _("Biweekly")),
-        ("monthly", _("Monthly")),
-        ("quarterly", _("Quarterly")),
-        ("yearly", _("Yearly")),
+        ("1", _("Every week")),
+        ("2", _("Every two weeks")),
+        ("4", _("Every four weeks")),
     )
 
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
+    description = QuillField(blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
     payment_frequency = models.CharField(
         max_length=100, choices=FREQUENCY_CHOICES, default="weekly"
@@ -503,3 +501,6 @@ class GrantDeposit(TriggerMixin, models.Model):
                 type=LedgerItemChoices.debit
             )
             self.save()
+
+
+from .periodic_tasks import *  # noqa

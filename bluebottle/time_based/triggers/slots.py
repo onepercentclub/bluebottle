@@ -348,11 +348,11 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
-                    conditions=[slot_is_complete]
+                    conditions=[slot_is_complete, slot_is_not_finished]
                 ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.finish,
-                    conditions=[slot_is_finished]
+                    conditions=[slot_is_complete, slot_is_finished]
                 ),
             ],
         ),
@@ -504,7 +504,15 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
-                    conditions=[slot_is_complete]
+                    conditions=[
+                        slot_is_complete,
+                    ]
+                ),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.finish,
+                    conditions=[
+                        slot_is_finished
+                    ]
                 ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_incomplete,

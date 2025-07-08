@@ -50,7 +50,7 @@ from bluebottle.time_based.states import (
     ScheduleActivityStateMachine,
     TeamScheduleParticipantStateMachine, TeamMemberStateMachine, RegistrationParticipantStateMachine,
     DateParticipantStateMachine, TimeContributionStateMachine, DateActivitySlotStateMachine,
-    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine
+    RegisteredDateParticipantStateMachine, RegisteredDateActivityStateMachine, DateStateMachine
 )
 
 
@@ -1203,7 +1203,7 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                         applicant_is_accepted,
                         is_participant
                     ]
-                )
+                ),
             ]
         ),
 
@@ -1253,6 +1253,17 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 CheckPreparationTimeContributionEffect,
                 FollowActivityEffect,
+            ],
+        ),
+
+        TransitionTrigger(
+            DateParticipantStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect(
+                    'activity',
+                    DateStateMachine.succeed,
+                    conditions=[activity_is_expired]
+                )
             ],
         ),
 
@@ -1454,8 +1465,6 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     RegisteredDateActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
                 )
-
-
             ]
         ),
     ]

@@ -157,7 +157,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     finished = State(
-        _('succeeded'),
+        _('finished'),
         'finished',
         _('The slot has ended.')
     )

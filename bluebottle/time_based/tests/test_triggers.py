@@ -1,10 +1,8 @@
 from datetime import date, datetime, timedelta
-
 from dateutil.relativedelta import relativedelta
 from django.core import mail
 from django.template import defaultfilters
 from django.utils.timezone import get_current_timezone, now, make_aware
-from tenant_extras.utils import TenantLanguage
 
 from bluebottle.activities.messages.participant import InactiveParticipantAddedNotification
 from bluebottle.activities.models import Organizer
@@ -40,6 +38,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleActivityFactory,
     ScheduleSlotFactory, RegisteredDateActivityFactory, RegisteredDateParticipantFactory,
 )
+from tenant_extras.utils import TenantLanguage
 
 
 class TimeBasedActivityTriggerTestCase():
@@ -182,6 +181,28 @@ class DateActivityTriggerTestCase(TimeBasedActivityTriggerTestCase, BluebottleTe
         self.activity.save()
 
         self.assertEqual(self.activity.status, "open")
+
+    def test_add_to_expired_activity(self):
+        self.initiative.states.submit(save=True)
+        activity = self.factory.create(
+            initiative=self.initiative,
+            status='expired',
+            slots=[]
+        )
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() - timedelta(days=1),
+            duration=timedelta(hours=1),
+            is_online=True,
+            status='finished'
+        )
+        participant = self.participant_factory.create(
+            slot=slot,
+            activity=activity,
+        )
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(slot, 'finished')
+        self.assertStatus(activity, 'succeeded')
 
 
 class DateActivitySlotTriggerTestCase(BluebottleTestCase):

@@ -339,6 +339,28 @@ def activity_is_finished(effect):
     ) == 0
 
 
+def activity_has_no_succeeded_participants(effect):
+    """
+    Activity has no succeeded participants.
+    """
+    return (
+        effect.instance.activity.contributors.filter(
+            status__in=['accepted', 'succeeded', 'running', 'scheduled']
+        ).count() == 0
+    )
+
+
+def activity_has_succeeded_participants(effect):
+    """
+    Activity has  succeeded participants.
+    """
+    return (
+        effect.instance.activity.contributors.filter(
+            status__in=['accepted', 'succeeded', 'running', 'scheduled']
+        ).count() > 0
+    )
+
+
 @register(DateActivitySlot)
 class DateActivitySlotTriggers(TriggerManager):
 
@@ -425,12 +447,12 @@ class DateActivitySlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_is_finished, slot_has_participants]
+                    conditions=[activity_is_finished, activity_has_succeeded_participants]
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.expire,
-                    conditions=[activity_is_finished, slot_has_no_participants]
+                    conditions=[activity_is_finished, activity_has_no_succeeded_participants]
                 ),
             ],
         ),

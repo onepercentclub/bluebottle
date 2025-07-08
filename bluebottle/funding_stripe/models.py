@@ -20,7 +20,7 @@ from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
-from ..grant_management.models import GrantApplication
+from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
 

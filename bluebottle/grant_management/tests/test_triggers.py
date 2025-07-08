@@ -1,5 +1,3 @@
-from djmoney.money import Money
-
 from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivitySubmittedNotification,
     ActivityApprovedNotification, ActivityNeedsWorkNotification
@@ -7,13 +5,62 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.grant_management.messages.activity_manager import GrantApplicationSubmittedMessage, \
-    GrantApplicationApprovedMessage, GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, \
+from bluebottle.grant_management.messages.activity_manager import (
+    GrantApplicationPayoutAccountMarkedIncomplete,
+    GrantApplicationPayoutAccountVerified,
+    GrantApplicationSubmittedMessage,
+    GrantApplicationApprovedMessage,
+    GrantApplicationNeedsWorkMessage,
+    GrantApplicationRejectedMessage,
     GrantApplicationCancelledMessage
-from bluebottle.grant_management.tests.factories import GrantApplicationFactory
+)
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
+
+from django.test.utils import override_settings
+
+from djmoney.money import Money
+import mock
+import munch
+import stripe
+
+from bluebottle.funding.messages.funding.activity_manager import (
+    FundingPayoutAccountMarkedIncomplete,
+    FundingPayoutAccountVerified
+)
+
+from bluebottle.grant_management.tests.factories import (
+    GrantApplicationFactory,
+    GrantDepositFactory,
+    GrantFundFactory,
+    GrantDonorFactory,
+    GrantPaymentFactory
+)
+from bluebottle.funding_stripe.tests.factories import (
+    StripePayoutAccountFactory,
+    ExternalAccountFactory
+)
+
+from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
+
+
+COUNTRY_SPEC = stripe.CountrySpec('NL')
+COUNTRY_SPEC.update(
+    {
+        "supported_bank_account_currencies": ['EUR'],
+        "verification_fields": munch.munchify(
+            {
+                "individual": munch.munchify(
+                    {
+                        "additional": ["individual.verification.document"],
+                        "minimum": ["individual.first_name"],
+                    }
+                )
+            }
+        )
+    }
+)
 
 
 class GrantApplicationTriggersTestCase(TriggerTestCase):
@@ -89,3 +136,222 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(GrantApplicationCancelledMessage)
             self.assertNoNotificationEffect(ActivityRejectedNotification)
             self.assertTransitionEffect(OrganizerStateMachine.fail, self.model.organizer)
+
+
+class GrantDepositTriggerTestCase(TriggerTestCase):
+    factory = GrantDepositFactory
+
+    def setUp(self):
+        self.fund = GrantFundFactory.create()
+        self.defaults = {
+            'fund': self.fund,
+            'amount': Money(1000, 'EUR')
+        }
+        self.create()
+
+    def test_initial(self):
+        self.model.ledger_item.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'final')
+        self.assertEqual(self.model.ledger_item.status, 'final')
+        self.assertEqual(self.fund.balance, 1000)
+
+    def test_cancel(self):
+        self.model.states.cancel(save=True)
+
+        self.model.ledger_item.refresh_from_db()
+
+        self.assertEqual(self.model.status, 'cancelled')
+        self.assertEqual(self.model.ledger_item.status, 'removed')
+        self.assertEqual(self.fund.balance, 0)
+
+
+class GrantDonorTriggerTestCase(TriggerTestCase):
+    factory = GrantDonorFactory
+
+    def setUp(self):
+        self.fund = GrantFundFactory.create()
+
+        GrantDepositFactory.create(
+            fund=self.fund,
+            amount=Money(1000, 'EUR')
+        )
+        self.application = GrantApplicationFactory.create(status='submitted', initiative=None)
+        self.defaults = {
+            'activity': self.application,
+            'fund': self.fund,
+            'amount': self.fund.balance
+        }
+        self.application.states.approve(save=True)
+
+    def test_initial(self):
+        self.create()
+        self.assertEqual(self.model.status, 'new')
+        self.assertEqual(self.application.status, 'granted')
+
+        self.assertEqual(self.model.ledger_item.status, 'pending')
+
+        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.pending_balance, 0)
+
+    def get_bank_account(self):
+        with mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
+        ):
+            payout_account = StripePayoutAccountFactory.create(
+                status="pending", account_id="test-account-id"
+            )
+            return ExternalAccountFactory.create(
+                connect_account=payout_account
+            )
+
+    def test_paid(self):
+        self.create()
+
+        self.application.bank_account = self.get_bank_account()
+        self.application.save()
+
+        self.assertIsNone(self.application.payouts.first())
+
+        self.application.bank_account.connect_account.states.verify(save=True)
+
+        payout = self.application.payouts.get()
+        self.assertEqual(payout.status, 'new')
+
+        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.pending_balance, 0)
+
+    def test_paid_existing_payout_account(self):
+        bank_account = self.get_bank_account()
+        bank_account.connect_account.states.verify(save=True)
+
+        self.create()
+
+        self.application.bank_account = bank_account
+        self.application.save()
+
+        payout = self.application.payouts.get()
+        self.assertEqual(payout.status, 'new')
+
+        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.pending_balance, 0)
+
+
+class GrantPaymentTriggerTestCase(TriggerTestCase):
+    factory = GrantPaymentFactory
+
+    def setUp(self):
+        self.fund = GrantFundFactory.create()
+        self.deposit = GrantDepositFactory.create(
+            fund=self.fund,
+            amount=Money(1000, 'EUR')
+        )
+        self.application = GrantApplicationFactory.create(initiative=None, status='submitted')
+        self.application.states.approve(save=True)
+
+        self.donor = GrantDonorFactory.create(activity=self.application, fund=self.fund, amount=Money(1000, 'EUR'))
+
+        with mock.patch(
+            "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
+        ):
+            payout_account = StripePayoutAccountFactory.create(
+                status="pending", account_id="test-account-id"
+            )
+            payout_account.states.verify(save=True)
+
+            self.application.bank_account = ExternalAccountFactory.create(
+                connect_account=payout_account
+            )
+            self.application.save()
+
+        self.payout = self.application.payouts.get()
+
+        self.defaults = {}
+        self.create()
+
+    def create(self):
+        super().create()
+
+        self.payout.payment = self.model
+        self.payout.save()
+
+    def test_initial(self):
+        self.assertEqual(self.model.status, 'new')
+        self.assertEqual(self.donor.status, 'new')
+        self.assertEqual(self.application.status, 'granted')
+
+        self.assertEqual(self.donor.ledger_item.status, 'pending')
+
+        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.pending_balance, 0)
+
+    def test_succeed(self):
+        with mock.patch(
+            "stripe.Transfer.create"
+        ) as create_transfer:
+            self.model.states.succeed(save=True)
+
+        create_transfer.assert_called_with(
+            amount=100000,
+            currency='eur',
+            destination='test-account-id',
+            description=f'Grant payout for {self.application.title}',
+            metadata={
+                'payout_id': str(self.payout.pk),
+                'grant_application_id': str(self.application.pk),
+                'grant_application_title': self.application.title
+            }
+        )
+
+        self.assertEqual(self.model.status, 'succeeded')
+        self.donor.refresh_from_db()
+
+        self.assertEqual(self.donor.status, 'succeeded')
+
+        self.application.refresh_from_db()
+        self.assertEqual(self.application.status, 'granted')
+
+        self.donor.ledger_item.refresh_from_db()
+        self.assertEqual(self.donor.ledger_item.status, 'final')
+
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.pending_balance, 0)
+
+
+@override_settings(
+    SUPPORT_EMAIL_ADDRESSES=[
+        'support@example.com',
+    ]
+)
+class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create()
+        self.staff_user = BlueBottleUserFactory.create(
+            is_staff=True,
+            email='staff@example.com',
+            submitted_initiative_notifications=True
+        )
+        self.support_user = BlueBottleUserFactory.create(email='support@example.com')
+        super().setUp()
+        self.model = StripePayoutAccountFactory.create(
+            status="pending", account_id="test-account-id"
+        )
+        self.bank_account = ExternalAccountFactory.create(connect_account=self.model)
+        self.grant_application = GrantApplicationFactory.create(
+            status='open',
+            bank_account=self.bank_account
+        )
+
+    def test_set_incomplete_draft(self):
+        self.model.states.set_incomplete()
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(FundingPayoutAccountMarkedIncomplete)
+            self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+
+    def test_set_verified(self):
+        self.model.states.verify()
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationPayoutAccountVerified)
+            self.assertNoNotificationEffect(FundingPayoutAccountVerified)
+            self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)

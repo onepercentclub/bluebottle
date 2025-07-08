@@ -1,14 +1,16 @@
-import factory.fuzzy
 from builtins import object
 from moneyed import Money
 
-from bluebottle.funding.models import (
-    GrantApplication
-)
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+import factory
+
 from bluebottle.test.factory_models import generate_rich_text
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
+from bluebottle.grant_management.models import (
+    GrantApplication, GrantDonor, GrantFund, GrantDeposit, GrantPayment
+)
 from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
 class GrantApplicationFactory(factory.DjangoModelFactory):
@@ -23,3 +25,29 @@ class GrantApplicationFactory(factory.DjangoModelFactory):
     initiative = factory.SubFactory(InitiativeFactory)
     target = Money(5000, 'EUR')
     theme = factory.SubFactory(ThemeFactory)
+
+
+class GrantDonorFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = GrantDonor
+
+    amount = Money(5000, 'EUR')
+
+
+class GrantFundFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = GrantFund
+
+
+class GrantDepositFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = GrantDeposit
+
+    amount = Money(5000, 'EUR')
+
+
+class GrantPaymentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = GrantPayment
+
+    total = Money(5000, 'EUR')

@@ -63,24 +63,6 @@ class OpenActivitiesOnHoldEffect(Effect):
         return "Open activities that are on hold when payments are verified again by stripe"
 
 
-class PrepareGrantApplicationPayoutsEffect(Effect):
-    conditions = []
-    title = _("Create payouts for connected grant applications that where granted")
-    template = "admin/create_grant_application_payouts.html"
-
-    def post_save(self, **kwargs):
-        from bluebottle.grant_management.models import GrantApplication, GrantPayout
-        applications = GrantApplication.objects.filter(
-            status="granted",
-            bank_account__connect_account=self.instance
-        )
-        for application in applications:
-            GrantPayout.generate(application)
-
-    def __str__(self):
-        return "Create payouts for a connected grant application that was granted"
-
-
 class UpdateBusinessTypeEffect(Effect):
     conditions = []
     title = _("Update business type at stripe")

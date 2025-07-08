@@ -23,8 +23,8 @@ from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachi
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.effects import (
     PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBusinessTypeEffect, OpenActivitiesOnHoldEffect,
-    PrepareGrantApplicationPayoutsEffect
 )
+from bluebottle.grant_management.effects import PrepareGrantApplicationPayoutsEffect
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,

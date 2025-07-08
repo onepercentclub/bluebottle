@@ -364,6 +364,17 @@ class GrantFund(models.Model):
     class Meta:
         verbose_name = _('Grant fund')
         verbose_name_plural = _('Grant funds')
+        permissions = (
+            ('api_read_grantfund', 'Can view grant application through the API'),
+            ('api_add_grantfund', 'Can add funding through the API'),
+            ('api_change_grantfund', 'Can change funding through the API'),
+            ('api_delete_grantfund', 'Can delete funding through the API'),
+
+            ('api_read_own_grantfund', 'Can view own funding through the API'),
+            ('api_add_own_grantfund', 'Can add own funding through the API'),
+            ('api_change_own_grantfund', 'Can change own funding through the API'),
+            ('api_delete_own_grantfund', 'Can delete own funding through the API'),
+        )
 
     def __str__(self):
         return self.name or f'Grant fund #{self.pk}'
@@ -449,6 +460,17 @@ class GrantDonor(Contributor):
     class Meta:
         verbose_name = _('Grant')
         verbose_name_plural = _('Grants')
+        permissions = (
+            ('api_read_grantdonor', 'Can view grant application through the API'),
+            ('api_add_grantdonor', 'Can add funding through the API'),
+            ('api_change_grantdonor', 'Can change funding through the API'),
+            ('api_delete_grantdonor', 'Can delete funding through the API'),
+
+            ('api_read_own_grantdonor', 'Can view own funding through the API'),
+            ('api_add_own_grantdonor', 'Can add own funding through the API'),
+            ('api_change_own_grantdonor', 'Can change own funding through the API'),
+            ('api_delete_own_grantdonor', 'Can delete own funding through the API'),
+        )
 
     class JSONAPIMeta(object):
         resource_name = "contributors/grants"

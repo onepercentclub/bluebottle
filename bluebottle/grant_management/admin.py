@@ -19,6 +19,7 @@ from bluebottle.fsm.admin import (
     StateMachineAdminMixin,
     StateMachineFilter,
 )
+from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
@@ -29,11 +30,8 @@ from bluebottle.grant_management.models import (
     GrantProvider,
     LedgerItem,
 )
-from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.segments.models import SegmentType
-from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import (
     export_as_csv_action,
 )
@@ -414,7 +412,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
 
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
+    inlines = (GrantInline, GrantPayoutInline) + ActivityChildAdmin.inlines
 
     base_model = GrantApplication
     list_filter = [

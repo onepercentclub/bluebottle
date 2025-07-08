@@ -1,3 +1,5 @@
+from django.db.utils import ProgrammingError
+
 from builtins import object, str
 
 from adminsortable.models import SortableMixin
@@ -296,10 +298,13 @@ INITIATIVE_SEARCH_FILTERS = (
 
 
 def get_search_filters(filters):
-    if connection.tenant.schema_name != "public":
-        for segment in SegmentType.objects.all():
-            filters = filters + ((f"segment.{segment.slug}", segment.name),)
-    return filters
+    try:
+        if connection.tenant.schema_name != "public":
+            for segment in SegmentType.objects.all():
+                filters = filters + ((f"segment.{segment.slug}", segment.name),)
+        return filters
+    except ProgrammingError:
+        return []
 
 
 class InitiativePlatformSettings(BasePlatformSettings):

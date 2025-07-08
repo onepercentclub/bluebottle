@@ -163,7 +163,7 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.status, 'cancelled')
         self.assertEqual(self.model.ledger_item.status, 'removed')
-        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.balance, 1000)
 
 
 class GrantDonorTriggerTestCase(TriggerTestCase):
@@ -191,8 +191,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def get_bank_account(self):
         with mock.patch(
@@ -218,8 +218,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def test_paid_existing_payout_account(self):
         bank_account = self.get_bank_account()
@@ -233,8 +233,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
 
 class GrantPaymentTriggerTestCase(TriggerTestCase):
@@ -282,8 +282,8 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.donor.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def test_succeed(self):
         with mock.patch(
@@ -315,7 +315,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.donor.ledger_item.status, 'final')
 
         self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.total_pending, 0)
 
 
 @override_settings(

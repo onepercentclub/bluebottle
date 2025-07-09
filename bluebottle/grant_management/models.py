@@ -26,21 +26,19 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 logger = logging.getLogger(__name__)
 
 
-class GrantProvider(models.Model):
+class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
 
     FREQUENCY_CHOICES = (
-        ("weekly", _("Weekly")),
-        ("biweekly", _("Biweekly")),
-        ("monthly", _("Monthly")),
-        ("quarterly", _("Quarterly")),
-        ("yearly", _("Yearly")),
+        ("1", _("Every week")),
+        ("2", _("Every two weeks")),
+        ("4", _("Every four weeks")),
     )
 
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
+    description = QuillField(blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
     payment_frequency = models.CharField(
         max_length=100, choices=FREQUENCY_CHOICES, default="weekly"
@@ -56,6 +54,31 @@ class GrantProvider(models.Model):
     def __str__(self):
         return self.name or f"Grant Provider #{self.pk}"
 
+    def create_payment(self):
+        """
+        Create a payment for this provider with all approved payouts that don't have a payment yet.
+        """
+        # Get all grants with approved payouts that don't have a payment yet
+        grants = GrantDonor.objects.filter(
+            fund__grant_provider=self,
+            payout__status="approved",
+            payout__payment=None,
+        )
+
+        if not grants.exists():
+            return None
+
+        # Create a new payment
+        payment = GrantPayment.objects.create(grant_provider=self)
+
+        # Link all approved payouts to this payment
+        for grant in grants:
+            payout = grant.payout
+            payout.payment = payment
+            payout.save()
+
+        return payment
+
 
 class GrantPayment(TriggerMixin, models.Model):
     """
@@ -65,7 +88,10 @@ class GrantPayment(TriggerMixin, models.Model):
     total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
     status = models.CharField(max_length=40)
     grant_provider = models.ForeignKey(
-        GrantProvider, null=True, on_delete=models.SET_NULL
+        GrantProvider,
+        related_name="payments",
+        null=True,
+        on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
@@ -373,6 +399,17 @@ class GrantFund(models.Model):
     class Meta:
         verbose_name = _('Grant fund')
         verbose_name_plural = _('Grant funds')
+        permissions = (
+            ('api_read_grantfund', 'Can view grant application through the API'),
+            ('api_add_grantfund', 'Can add funding through the API'),
+            ('api_change_grantfund', 'Can change funding through the API'),
+            ('api_delete_grantfund', 'Can delete funding through the API'),
+
+            ('api_read_own_grantfund', 'Can view own funding through the API'),
+            ('api_add_own_grantfund', 'Can add own funding through the API'),
+            ('api_change_own_grantfund', 'Can change own funding through the API'),
+            ('api_delete_own_grantfund', 'Can delete own funding through the API'),
+        )
 
     def __str__(self):
         return self.name or f'Grant fund #{self.pk}'
@@ -469,6 +506,17 @@ class GrantDonor(Contributor):
     class Meta:
         verbose_name = _('Grant')
         verbose_name_plural = _('Grants')
+        permissions = (
+            ('api_read_grantdonor', 'Can view grant application through the API'),
+            ('api_add_grantdonor', 'Can add funding through the API'),
+            ('api_change_grantdonor', 'Can change funding through the API'),
+            ('api_delete_grantdonor', 'Can delete funding through the API'),
+
+            ('api_read_own_grantdonor', 'Can view own funding through the API'),
+            ('api_add_own_grantdonor', 'Can add own funding through the API'),
+            ('api_change_own_grantdonor', 'Can change own funding through the API'),
+            ('api_delete_own_grantdonor', 'Can delete own funding through the API'),
+        )
 
     class JSONAPIMeta(object):
         resource_name = "contributors/grants"
@@ -515,5 +563,5 @@ class GrantDeposit(TriggerMixin, models.Model):
 
         super().clean()
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+
+from .periodic_tasks import *  # noqa

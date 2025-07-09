@@ -65,7 +65,7 @@ def add_group_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("grant_management", "0003_grantpayment_payment_link"),
+        ("grant_management", "0004_alter_grantdonor_options_alter_grantfund_options"),
     ]
 
     operations = [migrations.RunPython(add_group_permissions)]

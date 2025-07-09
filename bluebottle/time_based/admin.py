@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
@@ -23,6 +21,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 from pytz import timezone
+from urllib.parse import urlencode
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
@@ -70,7 +69,6 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
-from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
     admin_info_box,
@@ -86,7 +84,6 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]

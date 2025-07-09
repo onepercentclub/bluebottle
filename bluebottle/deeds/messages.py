@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import pgettext_lazy as pgettext
+from django.utils import formats
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -16,12 +17,12 @@ class DeedDateChangedNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         if self.obj.start:
-            context['start'] = self.obj.start.strftime('%x')
+            context['start'] = formats.date_format(self.obj.start, "SHORT_DATE_FORMAT")
         else:
             context['start'] = pgettext('email', 'Today')
 
         if self.obj.end:
-            context['end'] = self.obj.end.strftime('%x')
+            context['end'] = formats.date_format(self.obj.end, "SHORT_DATE_FORMAT")
         else:
             context['end'] = pgettext('email', 'Runs indefinitely')
         return context
@@ -79,10 +80,10 @@ class ParticipantJoinedNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         if self.obj.activity.start:
-            context['start'] = self.obj.activity.start.strftime('%x')
+            context['start'] = formats.date_format(self.obj.activity.start, "SHORT_DATE_FORMAT")
 
         if self.obj.activity.end:
-            context['end'] = self.obj.activity.end.strftime('%x')
+            context['end'] = formats.date_format(self.obj.activity.end, "SHORT_DATE_FORMAT")
 
         return context
 

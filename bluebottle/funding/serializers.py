@@ -39,7 +39,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward
+    Reward, IbanCheck
 )
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -801,6 +801,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'public_accounts',
             'matching_name',
             'business_types'
+            'enable_iban_check'
         )
 
 
@@ -836,3 +837,22 @@ class PayoutSerializer(ModelSerializer):
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
         'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer',
     }
+
+
+class IbanCheckSerializer(ModelSerializer):
+    iban = serializers.CharField(
+        required=True,
+        write_only=True,
+    )
+    matched = serializers.CharField(
+        read_only=True,
+        allow_blank=True,
+        allow_null=True,
+    )
+
+    class Meta(object):
+        model = IbanCheck
+        fields = ('iban', 'matched', 'name', 'token', 'suggestion')
+
+    class JSONAPIMeta(object):
+        resource_name = 'funding/iban-check'

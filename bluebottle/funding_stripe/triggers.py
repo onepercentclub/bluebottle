@@ -14,7 +14,7 @@ from bluebottle.funding.messages.funding.platform_manager import (
     LivePayoutAccountMarkedIncomplete,
     LivePublicPayoutAccountMarkedIncomplete
 )
-from bluebottle.grant_management.messages.grant_management.activity_manager import (
+from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationPayoutAccountVerified,
     GrantApplicationPayoutAccountMarkedIncomplete
 )
@@ -23,8 +23,8 @@ from bluebottle.funding.states import DonorStateMachine, PayoutAccountStateMachi
 from bluebottle.funding.triggers import BasePaymentTriggers
 from bluebottle.funding_stripe.effects import (
     PutActivitiesOnHoldEffect, AcceptTosEffect, UpdateBusinessTypeEffect, OpenActivitiesOnHoldEffect,
-    PrepareGrantApplicationPayoutsEffect
 )
+from bluebottle.grant_management.effects import PrepareGrantApplicationPayoutsEffect
 from bluebottle.funding_stripe.models import (
     StripeSourcePayment,
     StripePayoutAccount,

@@ -1,10 +1,22 @@
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine
-from bluebottle.fsm.state import Transition, ModelStateMachine, State, EmptyState, register
+from bluebottle.fsm.state import (
+    EmptyState,
+    ModelStateMachine,
+    State,
+    Transition,
+    register,
+)
 from bluebottle.funding.states import PayoutStateMachine
+from bluebottle.grant_management.forms import GrantApplicationApproveForm, GrantPayoutApproveForm
 from bluebottle.grant_management.models import (
-    GrantApplication, GrantDonor, GrantDeposit, LedgerItem, GrantPayout, GrantPayment
+    GrantApplication,
+    GrantDeposit,
+    GrantDonor,
+    GrantPayment,
+    GrantPayout,
+    LedgerItem,
 )
 
 
@@ -53,14 +65,14 @@ class GrantApplicationStateMachine(ActivityStateMachine):
 
     approve = Transition(
         [
-            ActivityStateMachine.needs_work,
             ActivityStateMachine.submitted,
         ],
         granted,
-        name=_('Approve'),
-        description=_('Approve this application.'),
-        automatic=True,
+        name=_("Approve"),
+        description=_("Approve this application."),
+        automatic=False,
         permission=can_approve,
+        form=GrantApplicationApproveForm,
         conditions=[
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
@@ -190,7 +202,10 @@ class GrantPaymentStateMachine(ModelStateMachine):
 
 @register(GrantPayout)
 class GrantPayoutStateMachine(PayoutStateMachine):
-    pass
+
+    approve = PayoutStateMachine.approve.extend(
+        form=GrantPayoutApproveForm
+    )
 
 
 class BankAccountStateMachine(ModelStateMachine):
@@ -336,10 +351,16 @@ class GrantDepositStateMachine(ModelStateMachine):
         _('The deposit is pending')
     )
 
-    finished = State(
-        _('finished'),
-        'finished',
-        _('The deposit is finished')
+    cancelled = State(
+        _('cancelled'),
+        'cancelled',
+        _('The deposit is cancelled')
+    )
+
+    final = State(
+        _('final'),
+        'final',
+        _('The deposit is finalised')
     )
 
     initiate = Transition(
@@ -349,10 +370,17 @@ class GrantDepositStateMachine(ModelStateMachine):
 
     complete = Transition(
         pending,
-        finished,
+        final,
         description=_("Complete the deposit"),
         automatic=True,
         name=_("complete"),
+    )
+
+    cancel = Transition(
+        final,
+        cancelled,
+        description=_("Cancel the deposit"),
+        name=_("cancel"),
     )
 
 
@@ -391,7 +419,7 @@ class LedgerItemStateMachine(ModelStateMachine):
     )
 
     remove = Transition(
-        [pending],
+        [pending, final],
         removed,
         description=_("Remove the ledger item."),
         automatic=True,

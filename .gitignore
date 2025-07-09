@@ -113,6 +113,9 @@ celerybeat.pid
 # tenants
 tenants
 
+# credentials
+credentials
+
 celerybeat-schedule
 
 reef-prod-current.sql.bz2

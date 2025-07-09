@@ -20,6 +20,7 @@
 {% endblock %}
 
 {% block content %}
+<form method="post" id="confirm">{% csrf_token %}
     <h2>{% trans "Confirm action" %}</h2>
     {% if transition %}
         <p>
@@ -35,9 +36,52 @@
             {% blocktrans %}You are about to <b>{{ action_text }}</b> for <b>{{ obj }}</b>.{% endblocktrans %}
         </p>
     {% endif %}
+<fieldset class="module aligned">
+    {% for field in form %}
+    <div class="form-row{% if field.errors %} errors{% endif %}">
+        <div{% if field.is_checkbox %} class="checkbox-row" {% endif %}>
+            {% if field.name == 'send_messages' %}
+            {% if has_notifications %}
+            <div class="field-box">
+                <span class="checkbox">
+                    <label>
+                        Send e-mail notifications
+                    </label>
+                    <input type="checkbox" name="send_messages" id="id_send_messages" checked=""><label
+                        for="id_campaign_notifications"></label>
+                    <span class="checkbox_help">
+                        {% trans "Unselect to transition without sending notifications"%}
+                    </span>
+                </span>
+
+            </div>
+            {% endif %}
+            {% else %}
+            {{ field.errors }}
+            {{ field.label_tag }}
+            {% if field.is_readonly %}
+            <p>{{ field.contents|linebreaksbr }}</p>
+            {% else %}
+            {{ field }}
+            {% endif %}
+            {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+
+            {% endif %}
+
+    </div>
+    </div>
+    {% endfor %}
+</fieldset>
+<br />
+<p>
+    {% blocktrans %}Here is what will happen when you confirm this action:{% endblocktrans %}
+</p>
+<fieldset class="module">
+
     <i>{{ action. }}</i>
     {% if effects|length %}
-        {% blocktrans %}That will have these effects:{% endblocktrans %}
         <ul></ul>
         <ul>
             {% for effect in effects %}
@@ -47,21 +91,16 @@
             {% endfor %}
         </ul>
     {% endif %}
+    </fieldset>
 
-    <form method="post" id="confirm">{% csrf_token %}
         <div>
+
             {% for name, value in post.items %}
                 <input type="hidden" name="{{ name }}" value="{{ value }}">
             {% endfor %}
             {% for obj in queryset.items %}
                 <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
             {% endfor %}
-            {% if has_notifications %}
-                <div>
-                    <input type="checkbox" name="send_messages" checked id="id_send_messages">
-                    <label for="id_send_messages">{% trans "Send messages" %}</label><br>
-                </div>
-            {% endif %}
             <br>
             <br>
             <input type="hidden" name="action" value="transition_selected"/>

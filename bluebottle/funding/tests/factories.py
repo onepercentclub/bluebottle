@@ -1,17 +1,16 @@
-from builtins import object
 import factory.fuzzy
+from builtins import object
 from moneyed import Money
 from pytz import UTC
 
-from bluebottle.test.factory_models import generate_rich_text
-
 from bluebottle.funding.models import (
     Funding, Donor, Reward, BudgetLine, Payment, BankAccount,
-    PlainPayoutAccount, Payout, GrantApplication
+    PlainPayoutAccount, Payout
 )
-from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ThemeFactory
 
 
 class FundingFactory(factory.DjangoModelFactory):
@@ -27,20 +26,6 @@ class FundingFactory(factory.DjangoModelFactory):
     deadline = factory.Faker('future_datetime', tzinfo=UTC)
     target = Money(5000, 'EUR')
     amount_matching = Money(0, 'EUR')
-    theme = factory.SubFactory(ThemeFactory)
-
-
-class GrantApplicationFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = GrantApplication
-
-    title = factory.Faker('sentence')
-    slug = factory.Faker('slug')
-    description = factory.LazyFunction(generate_rich_text)
-
-    owner = factory.SubFactory(BlueBottleUserFactory)
-    initiative = factory.SubFactory(InitiativeFactory)
-    target = Money(5000, 'EUR')
     theme = factory.SubFactory(ThemeFactory)
 
 

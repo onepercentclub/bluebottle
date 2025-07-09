@@ -30,6 +30,7 @@ from bluebottle.funding.validators import (
     KYCReadyValidator,
     TargetValidator,
 )
+from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.models import BasePlatformSettings, ValidatedModelMixin
@@ -816,6 +817,15 @@ class FundingPlatformSettings(BasePlatformSettings):
         )
     )
 
+    enable_iban_check = models.BooleanField(
+        _('Do IBAN bank account number vs. name checks'),
+        default=False,
+        help_text=_(
+            'In the KYC flow do a check to see if bank account number and name match. '
+            'This will be done by the Surepay API, and only Dutch IBANs are supported. '
+        )
+    )
+
     matching_name = models.CharField(
         _('Name to use for match funding'),
         max_length=60,
@@ -841,6 +851,63 @@ class FundingPlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _('funding settings')
         verbose_name = _('funding settings')
+
+
+class IbanCheck(models.Model):
+    MATCH_CHOICES = (
+        ('match', _('Match')),
+        ('mistype', _('Almost matched')),
+        ('no_match', _('No match')),
+    )
+    iban = ''
+    token = ''
+    suggestion = ''
+
+    hashed_iban = models.CharField(
+        max_length=64,
+        help_text=_('Hashed IBAN to check against')
+    )
+    matched = models.CharField(
+        help_text=_('Result of the IBAN check'),
+        max_length=100,
+        choices=MATCH_CHOICES,
+        default='no_match',
+    )
+
+    name = models.CharField(
+        max_length=255, blank=True, null=True,
+        help_text=_('Name of the account holder')
+    )
+    result = models.JSONField(null=True)
+
+    def get_stripe_token(self):
+        stripe = get_stripe()
+        iban = self.iban
+        # For testing we convert Surepay test number Stripe test number
+        if iban == 'NL78RABO5394792070':
+            iban = 'NL39RABO0300065264'
+        token = stripe.Token.create(
+            bank_account={
+                "currency": "EUR",
+                "account_holder_name": self.name,
+                "account_holder_type": "individual",
+                "account_number": iban,
+            }
+        )
+        return token.id
+
+    def check_iban(self):
+        from bluebottle.funding.adapters.abn_amro import AbnAmroAdapter
+        adapter = AbnAmroAdapter()
+        result = adapter.check_iban_name(self.iban, self.name)
+        self.result = result
+        self.matched = result.get('nameMatchResult', 'no_match').lower()
+        if self.matched == 'close_match':
+            self.name = self.result.get('nameSuggestion', self.name)
+            self.token = self.get_stripe_token()
+        if self.matched == 'match':
+            self.token = self.get_stripe_token()
+        self.save()
 
 
 from bluebottle.funding.periodic_tasks import *  # noqa

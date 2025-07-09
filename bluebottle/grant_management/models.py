@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from builtins import object
+
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -17,9 +18,7 @@ from moneyed import Money
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients import properties
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import (
-    TargetValidator,
-)
+from bluebottle.funding.validators import TargetValidator
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -69,6 +68,7 @@ class GrantPayment(TriggerMixin, models.Model):
         GrantProvider, null=True, on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
+    payment_link = models.URLField(max_length=500, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     paid_on = models.DateTimeField(null=True, blank=True)
@@ -79,6 +79,15 @@ class GrantPayment(TriggerMixin, models.Model):
 
     def __str__(self):
         return f"Grant Payment #{self.pk}"
+
+    @property
+    def donors(self):
+        donors = []
+        for payout in self.payouts.all():
+            for donor in payout.grants.all():
+                donors.append(donor)
+
+        return donors
 
     @cached_property
     def checkout_link(self):
@@ -153,13 +162,13 @@ class GrantPayment(TriggerMixin, models.Model):
         init_args["line_items"] = line_items
         init_args["customer"] = self.grant_provider.stripe_customer_id
         init_args["success_url"] = get_current_host()
-
-        intent = stripe.checkout.Session.create(mode="payment", **init_args)
-        self.payment_intent = intent.id
+        checkout = stripe.checkout.Session.create(mode="payment", **init_args)
+        self.checkout_id = checkout.id
+        self.payment_link = checkout.url
         self.save()
 
     def save(self, run_triggers=True, *args, **kwargs):
-        if self.total.amount == 0 and self.payouts.exists():
+        if self.id and self.total.amount == 0 and self.payouts.exists():
             for payout in self.payouts.all():
                 self.total.amount += payout.total_amount
         super().save(run_triggers, *args, **kwargs)
@@ -212,6 +221,25 @@ class GrantPayout(TriggerMixin, models.Model):
             for grant in ready_grants:
                 grant.payout = payout
                 grant.save()
+
+    def transfer_to_account(self):
+        stripe = get_stripe()
+        connect_account_id = self.activity.payout_account.account_id
+
+        total_amount = self.total_amount
+        amount_in_cents = int(total_amount.amount * 100)
+        transfer = stripe.Transfer.create(
+            amount=amount_in_cents,
+            currency=str(total_amount.currency).lower(),
+            destination=connect_account_id,
+            description=f"Grant payout for {self.activity.title}",
+            metadata={
+                "payout_id": str(self.id),
+                "grant_application_id": str(self.activity.id),
+                "grant_application_title": self.activity.title,
+            },
+        )
+        return transfer
 
     @property
     def total_amount(self):
@@ -355,28 +383,39 @@ class GrantFund(models.Model):
 
         super().save(*args, **kwargs)
 
-    @property
-    def credit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit)
+    def credit_items(self, statuses=['final']):
+        return self.ledger_items.filter(type=LedgerItemChoices.credit, status__in=statuses)
 
-    @property
-    def debit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+    def debit_items(self, statuses=['final']):
+        return self.ledger_items.filter(type=LedgerItemChoices.debit, status__in=statuses)
 
     @property
     def total_credit(self):
-        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return self.credit_items().aggregate(total=Sum('amount'))['total'] or 0
     total_credit.fget.short_description = _('Total payed out')
 
     @property
     def total_debit(self):
-        return self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return self.debit_items().aggregate(total=Sum('amount'))['total'] or 0
     total_debit.fget.short_description = _('Total budget')
+
+    @property
+    def total_pending_credit(self):
+        return self.credit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
+
+    @property
+    def total_pending_debit(self):
+        return self.debit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
 
     @property
     def balance(self):
         return self.total_debit - self.total_credit
     balance.fget.short_description = _('Balance')
+
+    @property
+    def pending_balance(self):
+        return self.total_pending_debit - self.total_pending_credit
+    pending_balance.fget.short_description = _('Pending balance')
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"
@@ -438,6 +477,9 @@ class GrantDonor(Contributor):
         if str(self.amount.currency) != self.fund.currency:
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
+        if not self.pk and self.amount.amount > self.fund.balance:
+            raise ValidationError({'amount': _('Insufficient funds')})
+
         super().clean()
 
     def save(self, *args, **kwargs):
@@ -475,12 +517,3 @@ class GrantDeposit(TriggerMixin, models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-        if not self.ledger_items.exists():
-            self.ledger_item = LedgerItem.objects.create(
-                fund=self.fund,
-                amount=self.amount,
-                object=self,
-                type=LedgerItemChoices.debit
-            )
-            self.save()

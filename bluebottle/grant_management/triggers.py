@@ -7,19 +7,21 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.effects import (
     SubmitPayoutEffect, SetDateEffect, ClearPayoutDatesEffect
 )
-from bluebottle.grant_management.messages.grant_management.activity_manager import GrantApplicationApprovedMessage, \
+from bluebottle.grant_management.effects import DisburseFundsEffect, CreatePayoutEffect
+from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
     GrantApplicationSubmittedMessage
 from bluebottle.grant_management.models import (
     GrantDeposit,
     GrantDonor, GrantApplication,
-    GrantPayout
+    GrantPayout, GrantPayment
 )
 from bluebottle.grant_management.states import (
     LedgerItemStateMachine, GrantDepositStateMachine,
     GrantDonorStateMachine, GrantApplicationStateMachine,
-    GrantPayoutStateMachine
+    GrantPaymentStateMachine, GrantPayoutStateMachine
 )
+from bluebottle.grant_management.effects import GenerateDepositLedgerItem
 from bluebottle.notifications.effects import NotificationEffect
 
 
@@ -30,16 +32,23 @@ def has_reference(effect):
 @register(GrantDeposit)
 class GrantDepositTriggers(TriggerManager):
     triggers = [
-        ModelChangedTrigger(
-            ['reference'],
+        TransitionTrigger(
+            GrantDepositStateMachine.initiate,
             effects=[
-                TransitionEffect(GrantDepositStateMachine.complete, conditions=[has_reference])
+                TransitionEffect(GrantDepositStateMachine.complete)
             ]
         ),
         TransitionTrigger(
             GrantDepositStateMachine.complete,
             effects=[
-                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
+                GenerateDepositLedgerItem
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantDepositStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.remove)
 
             ]
         ),
@@ -56,6 +65,14 @@ class GrantDonorTriggers(TriggerManager):
                     'activity',
                     GrantApplicationStateMachine.approve
                 ),
+            ]
+        ),
+
+        TransitionTrigger(
+            GrantDonorStateMachine.succeed,
+            effects=[
+                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
+
             ]
         ),
     ]
@@ -108,6 +125,12 @@ class GrantApplicationTriggers(ActivityTriggers):
                 )
             ]
         ),
+        ModelChangedTrigger(
+            'bank_account',
+            effects=[
+                CreatePayoutEffect,
+            ]
+        )
     ]
 
 
@@ -147,6 +170,19 @@ class GrantPayoutTriggers(TriggerManager):
             GrantPayoutStateMachine.succeed,
             effects=[
                 SetDateEffect('date_completed')
+            ]
+        ),
+    ]
+
+
+@register(GrantPayment)
+class GrantPaymentTriggers(TriggerManager):
+    triggers = [
+        TransitionTrigger(
+            GrantPaymentStateMachine.succeed,
+            effects=[
+                DisburseFundsEffect,
+                RelatedTransitionEffect('donors', GrantDonorStateMachine.succeed)
             ]
         ),
     ]

@@ -21,7 +21,7 @@ from bluebottle.funding.models import (
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
-from ..grant_management.models import GrantApplication
+from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
 
@@ -520,15 +520,11 @@ class StripePayoutAccount(PayoutAccount):
         self.set_external_accounts()
 
     def set_external_accounts(self):
-        external_account_ids = [
-            external_account.id for external_account
-            in self.account.external_accounts.data
-        ]
-        for bank_account in self.external_accounts.all():
-            if bank_account.account_id not in external_account_ids:
-                bank_account.delete()
-
-        for external_account in self.account.external_accounts.data:
+        stripe = get_stripe()
+        external_accounts = stripe.Account.list_external_accounts(
+            self.account_id,
+        )
+        for external_account in external_accounts:
             status = 'new'
             if (
                 self.status == 'verified' and
@@ -544,8 +540,16 @@ class StripePayoutAccount(PayoutAccount):
             ExternalAccount.objects.update_or_create(
                 connect_account=self,
                 account_id=external_account.id,
-                defaults={'status': status}
+                defaults={
+                    'status': status,
+                    'currency': external_account.currency,
+                }
             )
+        external_ids = [
+            external_account.id for external_account in external_accounts
+        ]
+        # Remove external accounts that are no longer in Stripe
+        ExternalAccount.objects.exclude(account_id__in=external_ids).filter(connect_account=self).delete()
 
     class Meta(object):
         verbose_name = _('stripe payout account')

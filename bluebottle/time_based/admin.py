@@ -1778,9 +1778,13 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ["created", "activity", "user"]
-    fields = readonly_fields + ["answer", "document", "status", "states"]
+    readonly_fields = ["created", "activity", "user", "show_answer"]
+    fields = readonly_fields + ["document", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
+
+    def show_answer(self, obj):
+        return format_html(f'<div style="display: flow-root">{obj.answer}</div>')
+    show_answer.short_description = _('Answer')
 
     formfield_overrides = {
         PrivateDocumentField: {

@@ -26,7 +26,7 @@ from bluebottle.utils.utils import get_current_host, get_current_language
 logger = logging.getLogger(__name__)
 
 
-class GrantProvider(models.Model):
+class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
@@ -54,6 +54,31 @@ class GrantProvider(models.Model):
     def __str__(self):
         return self.name or f"Grant Provider #{self.pk}"
 
+    def create_payment(self):
+        """
+        Create a payment for this provider with all approved payouts that don't have a payment yet.
+        """
+        # Get all grants with approved payouts that don't have a payment yet
+        grants = GrantDonor.objects.filter(
+            fund__grant_provider=self,
+            payout__status="approved",
+            payout__payment=None,
+        )
+
+        if not grants.exists():
+            return None
+
+        # Create a new payment
+        payment = GrantPayment.objects.create(grant_provider=self)
+
+        # Link all approved payouts to this payment
+        for grant in grants:
+            payout = grant.payout
+            payout.payment = payment
+            payout.save()
+
+        return payment
+
 
 class GrantPayment(TriggerMixin, models.Model):
     """
@@ -63,7 +88,10 @@ class GrantPayment(TriggerMixin, models.Model):
     total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
     status = models.CharField(max_length=40)
     grant_provider = models.ForeignKey(
-        GrantProvider, null=True, on_delete=models.SET_NULL
+        GrantProvider,
+        related_name="payments",
+        null=True,
+        on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)

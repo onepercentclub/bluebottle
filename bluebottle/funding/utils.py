@@ -34,6 +34,9 @@ def calculate_total(queryset, target='EUR'):
     ).annotate(
         total=Sum('donor__payout_amount')
     ).order_by('-created')
-    amounts = [Money(tot['total'], tot['donor__payout_amount_currency']) for tot in totals]
+    amounts = [
+        Money(tot['total'], tot['donor__payout_amount_currency']) for tot in totals
+        if tot['total']
+    ]
     amounts = [convert(amount, target) for amount in amounts]
     return sum(amounts) or Money(0, target)

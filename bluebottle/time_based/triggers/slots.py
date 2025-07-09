@@ -322,7 +322,7 @@ def activity_has_finished_slot(effect):
     activity has finished slots. All slots are either finished or full
     """
     return len(
-        effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='finished')
+        effect.instance.activity.slots.filter(status='finished')
     ) > 0
 
 
@@ -330,35 +330,37 @@ def activity_is_finished(effect):
     """
     activity is finished. All slots are either finished or full
     """
-    return len(
+    if effect.instance.start > now():
+        return False
+    result = (
         effect.instance.activity.slots.exclude(
             pk=effect.instance.pk
         ).filter(
             status__in=['open', 'full']
-        )
-    ) == 0
-
-
-def activity_has_no_succeeded_participants(effect):
-    """
-    Activity has no succeeded participants.
-    """
-    return (
-        effect.instance.activity.contributors.filter(
-            status__in=['accepted', 'succeeded', 'running', 'scheduled']
         ).count() == 0
     )
+    return result
 
 
-def activity_has_succeeded_participants(effect):
+def activity_is_not_finished(effect):
     """
-    Activity has  succeeded participants.
+    activity is not finished.
     """
-    return (
-        effect.instance.activity.contributors.filter(
-            status__in=['accepted', 'succeeded', 'running', 'scheduled']
-        ).count() > 0
-    )
+    return not activity_is_finished(effect)
+
+
+def activity_has_participants(effect):
+    """
+    Activity has accepted participants.
+    """
+    return effect.instance.activity.accepted_participants.count() > 0
+
+
+def activity_has_no_participants(effect):
+    """
+    Activity has no accepted participants.
+    """
+    return not activity_has_participants(effect)
 
 
 @register(DateActivitySlot)
@@ -384,7 +386,20 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "activity",
+                    DateStateMachine.succeed,
+                    conditions=[activity_is_finished, activity_has_participants]
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.expire,
+                    conditions=[activity_is_finished, activity_has_no_participants]
+                ),
+                RelatedTransitionEffect(
+                    "activity",
                     DateStateMachine.reopen,
+                    conditions=[
+                        activity_is_not_finished
+                    ]
                 ),
             ],
         ),
@@ -447,12 +462,12 @@ class DateActivitySlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_is_finished, activity_has_succeeded_participants]
+                    conditions=[activity_is_finished, activity_has_participants]
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.expire,
-                    conditions=[activity_is_finished, activity_has_no_succeeded_participants]
+                    conditions=[activity_is_finished, activity_has_no_participants]
                 ),
             ],
         ),
@@ -524,6 +539,16 @@ class DateActivitySlotTriggers(TriggerManager):
         ModelChangedTrigger(
             ['start', 'duration', 'is_online', 'location_id', 'location_hint'],
             effects=[
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.succeed,
+                    conditions=[activity_is_finished, activity_has_participants]
+                ),
+                RelatedTransitionEffect(
+                    "activity",
+                    DateStateMachine.expire,
+                    conditions=[activity_is_finished, activity_has_no_participants]
+                ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
                     conditions=[slot_is_complete]

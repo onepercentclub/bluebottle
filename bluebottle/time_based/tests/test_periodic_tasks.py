@@ -1,7 +1,6 @@
-from datetime import timedelta, date, datetime, time
-
 import mock
 import pytz
+from datetime import timedelta, date, datetime, time
 from django.contrib.gis.geos import Point
 from django.core import mail
 from django.db import connection
@@ -9,7 +8,6 @@ from django.template import defaultfilters
 from django.utils import timezone
 from django.utils.timezone import now, get_current_timezone, make_aware
 from pytz import UTC
-from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
@@ -39,6 +37,8 @@ from bluebottle.time_based.tests.factories import (
     TeamFactory,
     TeamMemberFactory,
 )
+from bluebottle.time_based.triggers import slots
+from tenant_extras.utils import TenantLanguage
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -99,11 +99,12 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         )
 
     def run_task(self, when):
-        with mock.patch.object(timezone, 'now', return_value=when):
-            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-                mock_date.today.return_value = when.date()
-                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                date_activity_tasks()
+        with mock.patch.object(slots, 'now', return_value=when):
+            with mock.patch.object(timezone, 'now', return_value=when):
+                with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                    mock_date.today.return_value = when.date()
+                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                    date_activity_tasks()
 
     def assertStatus(self, obj, status):
         obj.refresh_from_db()
@@ -562,11 +563,12 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         return self.slot.start + self.slot.duration + timedelta(seconds=10)
 
     def run_task(self, when):
-        with mock.patch.object(timezone, 'now', return_value=when):
-            with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
-                mock_date.today.return_value = when.date()
-                mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
-                date_activity_tasks()
+        with mock.patch.object(slots, 'now', return_value=when):
+            with mock.patch.object(timezone, 'now', return_value=when):
+                with mock.patch('bluebottle.time_based.periodic_tasks.date') as mock_date:
+                    mock_date.today.return_value = when.date()
+                    mock_date.side_effect = lambda *args, **kw: date(*args, **kw)
+                    date_activity_tasks()
 
     def test_finish(self):
         self.assertEqual(self.slot.status, 'open')
@@ -604,14 +606,16 @@ class SlotActivityPeriodicTasksTest(BluebottleTestCase):
         self.assertEqual(self.slot.status, 'open')
         self.participant = DateParticipantFactory.create(activity=self.activity, slot=self.slot)
 
+        self.slot.refresh_from_db()
+        self.assertEqual(self.slot.status, 'open')
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.status, 'open')
+
         self.run_task(self.after)
 
-        with LocalTenant(self.tenant, clear_tenant=True):
-            self.slot.refresh_from_db()
-
+        self.slot.refresh_from_db()
         self.assertEqual(self.slot.status, 'finished')
         self.activity.refresh_from_db()
-
         self.assertEqual(self.activity.status, 'succeeded')
 
     def test_after_start_dont_expire(self):

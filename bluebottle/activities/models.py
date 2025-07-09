@@ -506,6 +506,19 @@ class SegmentAnswer(ActivityAnswer):
     class JSONAPIMeta:
         resource_name = 'segment-answers'
 
+    def save(self, *args, **kwargs):
+        current_segments = self.activity.segments.filter(
+            segment_type=self.question.segment_type
+        ).exclude(pk=self.segment.pk)
+
+        for segment in current_segments:
+            self.activity.segments.remove(segment)
+
+        if self.segment not in self.activity.segments.all():
+            self.activity.segments.add(self.segment)
+
+        super().save(*args, **kwargs)
+
 
 class FileUploadQuestion(ActivityQuestion, TranslatableModel):
     class JSONAPIMeta:

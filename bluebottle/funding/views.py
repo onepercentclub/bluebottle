@@ -1,5 +1,4 @@
 import re
-
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -20,8 +19,7 @@ from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSuccee
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer,
-    PayoutSerializer
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer, PayoutSerializer,
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -152,21 +150,20 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
     serializer_class = PayoutSerializer
 
     authentication_classes = (TokenAuthentication,)
-
     permission_classes = (IsFinancialMember,)
 
     def perform_update(self, serializer):
         status = serializer.validated_data.pop('status')
-        if status == 'reset':
+        current_status = serializer.instance.status
+        if status == 'reset' and current_status != 'new':
             serializer.instance.states.reset()
-        elif status in ['new', 'scheduled', 're_scheduled']:
+        elif status in ['new', 'scheduled', 're_scheduled'] and current_status != 'scheduled':
             serializer.instance.states.schedule()
-        elif status == 'started':
+        elif status == 'started' and current_status != 'started':
             serializer.instance.states.start()
-        elif status in ['success', 'succeeded', 'confirmed']:
-            if serializer.instance.status != 'succeeded':
-                serializer.instance.states.succeed()
-        elif status in ['failed']:
+        elif status in ['success', 'succeeded', 'confirmed'] and current_status != 'succeeded':
+            serializer.instance.states.succeed()
+        elif status in ['failed'] and current_status != 'failed':
             serializer.instance.states.fail()
         serializer.instance.save()
         return HttpResponse(200)

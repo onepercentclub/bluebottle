@@ -1693,6 +1693,29 @@ class PayoutDetailTestCase(BluebottleTestCase):
         payout.refresh_from_db()
         self.assertEqual(payout.status, 'scheduled')
 
+    def test_put_twice(self):
+        self.test_put()
+        payout = self.funding.payouts.first()
+
+        response = self.client.put(
+            self.get_payout_url(payout),
+            data=json.dumps({
+                'data': {
+                    'id': payout.pk,
+                    'type': 'funding/payouts',
+                    'attributes': {
+                        'status': 'scheduled'
+                    }
+                }
+            }),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout.refresh_from_db()
+        self.assertEqual(payout.status, 'scheduled')
+
 
 class FundingAPIPermissionsTestCase(BluebottleTestCase):
 

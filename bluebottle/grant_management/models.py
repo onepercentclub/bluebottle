@@ -477,6 +477,9 @@ class GrantDonor(Contributor):
         if str(self.amount.currency) != self.fund.currency:
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
+        if not self.pk and self.amount.amount > self.fund.balance:
+            raise ValidationError({'amount': _('Insufficient funds')})
+
         super().clean()
 
     def save(self, *args, **kwargs):

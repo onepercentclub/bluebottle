@@ -61,11 +61,11 @@ class PeriodicSlotTriggers(TriggerManager):
 
 
 def slot_is_finished(effect):
-    return effect.instance.end and effect.instance.end < now()
+    return effect.instance.start and effect.instance.start < now()
 
 
 def slot_is_not_finished(effect):
-    return effect.instance.end and effect.instance.end > now()
+    return effect.instance.start and effect.instance.start > now()
 
 
 def slot_is_scheduled(effect):
@@ -172,7 +172,7 @@ class ScheduleSlotTriggers(TriggerManager):
 
 
 def slot_is_complete(effect):
-    return (
+    return bool(
         effect.instance.start
         and effect.instance.duration
         and (effect.instance.is_online is True or effect.instance.location)
@@ -348,11 +348,9 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
-                    conditions=[slot_is_complete, slot_is_not_finished]
-                ),
-                TransitionEffect(
-                    DateActivitySlotStateMachine.finish,
-                    conditions=[slot_is_complete, slot_is_finished]
+                    conditions=[
+                        slot_is_complete,
+                    ]
                 ),
             ],
         ),
@@ -360,6 +358,12 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.mark_complete,
             effects=[
+                TransitionEffect(
+                    DateActivitySlotStateMachine.finish,
+                    conditions=[
+                        slot_is_finished
+                    ]
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.reopen,

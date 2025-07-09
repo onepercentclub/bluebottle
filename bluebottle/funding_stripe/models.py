@@ -6,8 +6,8 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from djchoices import DjangoChoices, ChoiceItem
 from djmoney.money import Money
+
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
@@ -17,7 +17,8 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount)
+    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices
+)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
 from bluebottle.grant_management.models import GrantApplication
@@ -324,21 +325,6 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
     "LT", "LU", "MT", "MC", "NL", "NO", "PL", "PT", "RO",
     "PM", "SM", "SK", "SI", "ES", "SE", "TR", "GB"
 ]
-
-
-class BusinessTypeChoices(DjangoChoices):
-    company = ChoiceItem(
-        'company',
-        label=_("Commercial company")
-    )
-    individual = ChoiceItem(
-        'individual',
-        label=_("Individual person")
-    )
-    non_profit = ChoiceItem(
-        'non_profit',
-        label=_("Non-profit organization")
-    )
 
 
 class StripePayoutAccount(PayoutAccount):

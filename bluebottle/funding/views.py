@@ -159,7 +159,7 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
             serializer.instance.states.reset()
         elif status in ['new', 'scheduled', 're_scheduled'] and current_status != 'scheduled':
             serializer.instance.states.schedule()
-        elif status == 'started' and status != 'started':
+        elif status == 'started' and current_status != 'started':
             serializer.instance.states.start()
         elif status in ['success', 'succeeded', 'confirmed'] and current_status != 'succeeded':
             serializer.instance.states.succeed()

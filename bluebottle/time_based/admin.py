@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 from django import forms
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter, StackedInline, widgets
@@ -23,6 +21,7 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 from pytz import timezone
+from urllib.parse import urlencode
 
 from bluebottle.activities.admin import (
     ActivityChildAdmin,
@@ -70,7 +69,6 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.time_based.states import DateParticipantStateMachine
 from bluebottle.time_based.utils import duplicate_slot, nth_weekday
-from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import (
     TranslatableAdminOrderingMixin,
     admin_info_box,
@@ -86,7 +84,6 @@ class DateParticipantAdminInline(BaseContributorInline):
 
 
 class TimeBasedAdmin(ActivityChildAdmin):
-    inlines = (UpdateInline, )
     skip_on_duplicate = ActivityChildAdmin.skip_on_duplicate + [
         Registration,
     ]
@@ -1778,9 +1775,13 @@ class RegistrationAdmin(PolymorphicParentModelAdmin, StateMachineAdmin):
 
 class RegistrationChildAdmin(PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = Registration
-    readonly_fields = ["created", "activity", "user"]
-    fields = readonly_fields + ["answer", "document", "status", "states"]
+    readonly_fields = ["created", "activity", "user", "show_answer"]
+    fields = readonly_fields + ["document", "status", "states"]
     list_display = ["__str__", "activity", "user", "status_label"]
+
+    def show_answer(self, obj):
+        return format_html(f'<div style="display: flow-root">{obj.answer}</div>')
+    show_answer.short_description = _('Answer')
 
     formfield_overrides = {
         PrivateDocumentField: {

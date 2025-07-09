@@ -50,12 +50,24 @@ class GrantApplicationPayoutAccountRejected(GrantApplicationManagerMessage):
     subject = _(u'Action required for your grant application')
     template = 'messages/grant_application/activity_manager/payout_account_rejected'
 
+    @property
+    def action_link(self):
+        return self.obj.grant_application.get_absolute_url()
+
 
 class GrantApplicationPayoutAccountMarkedIncomplete(GrantApplicationManagerMessage):
     subject = _("Action required for your grant application")
     template = "messages/grant_application/activity_manager/payout_account_marked_incomplete"
 
+    @property
+    def action_link(self):
+        return self.obj.grant_application.get_absolute_url()
+
 
 class GrantApplicationPayoutAccountVerified(GrantApplicationManagerMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/grant_application/activity_manager/payout_account_verified'
+
+    @property
+    def action_link(self):
+        return self.obj.grant_applications.order_by('-created').first().get_absolute_url()

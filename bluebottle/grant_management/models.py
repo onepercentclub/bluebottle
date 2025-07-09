@@ -106,6 +106,15 @@ class GrantPayment(TriggerMixin, models.Model):
     def __str__(self):
         return f"Grant Payment #{self.pk}"
 
+    @property
+    def donors(self):
+        donors = []
+        for payout in self.payouts.all():
+            for donor in payout.grants.all():
+                donors.append(donor)
+
+        return donors
+
     @cached_property
     def checkout_link(self):
         if self.checkout_id:
@@ -411,28 +420,39 @@ class GrantFund(models.Model):
 
         super().save(*args, **kwargs)
 
-    @property
-    def credit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit)
+    def credit_items(self, statuses=['final']):
+        return self.ledger_items.filter(type=LedgerItemChoices.credit, status__in=statuses)
 
-    @property
-    def debit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+    def debit_items(self, statuses=['final']):
+        return self.ledger_items.filter(type=LedgerItemChoices.debit, status__in=statuses)
 
     @property
     def total_credit(self):
-        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return self.credit_items().aggregate(total=Sum('amount'))['total'] or 0
     total_credit.fget.short_description = _('Total payed out')
 
     @property
     def total_debit(self):
-        return self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return self.debit_items().aggregate(total=Sum('amount'))['total'] or 0
     total_debit.fget.short_description = _('Total budget')
+
+    @property
+    def total_pending_credit(self):
+        return self.credit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
+
+    @property
+    def total_pending_debit(self):
+        return self.debit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
 
     @property
     def balance(self):
         return self.total_debit - self.total_credit
     balance.fget.short_description = _('Balance')
+
+    @property
+    def pending_balance(self):
+        return self.total_pending_debit - self.total_pending_credit
+    pending_balance.fget.short_description = _('Pending balance')
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"
@@ -539,18 +559,6 @@ class GrantDeposit(TriggerMixin, models.Model):
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
         super().clean()
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        if not self.ledger_items.exists():
-            self.ledger_item = LedgerItem.objects.create(
-                fund=self.fund,
-                amount=self.amount,
-                object=self,
-                type=LedgerItemChoices.debit
-            )
-            self.save()
 
 
 from .periodic_tasks import *  # noqa

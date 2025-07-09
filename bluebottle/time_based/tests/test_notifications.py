@@ -11,7 +11,8 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedOwnerNotification, ParticipantJoinedNotification,
     SlotCancelledNotification, ParticipantAddedNotification,
     ParticipantSlotParticipantRegisteredNotification,
-    ManagerSlotParticipantRegisteredNotification
+    ManagerSlotParticipantRegisteredNotification,
+    ManagerSlotParticipantWithdrewNotification
 )
 from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
@@ -118,6 +119,20 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('You are registered for a time slot for the activity')
         self.assertActionLink(self.obj.slot.get_absolute_url())
         self.assertActionTitle('View activity')
+
+    def test_slot_participant_withdrew_notification(self):
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.message_class = ManagerSlotParticipantWithdrewNotification
+        self.create()
+        self.assertRecipients([self.owner])
+        self.assertSubject('A participant has withdrawn from a time slot for your activity "Save the world!"')
+        self.assertBodyContains(f'{self.supporter.full_name} has withdrawn from a time slot for your activity')
+        self.assertActionLink(self.obj.slot.get_absolute_url())
+        self.assertActionTitle('Open your activity')
 
     def test_participant_registered_manager(self):
         self.activity.review_title = 'What is your favorite color?'

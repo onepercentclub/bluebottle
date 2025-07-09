@@ -765,11 +765,17 @@ class ActivityChildAdmin(
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        for field in required:
-            field = field.split('.')[0]
-            errors.append(
-                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            )
+        for dotted_field in required:
+            field = dotted_field.split('.')[0]
+            if field == 'answers':
+                question = ActivityQuestion.objects.get(pk=dotted_field.split('.')[1])
+                errors.append(
+                    f'"{question.name}" is required'
+                )
+            else:
+                errors.append(
+                    _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+                )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))

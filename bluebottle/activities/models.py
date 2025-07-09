@@ -207,6 +207,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def required_fields(self):
         from bluebottle.initiatives.models import InitiativePlatformSettings
+
         fields = ['theme']
         if Location.objects.count():
             fields.append("office_location")
@@ -214,7 +215,23 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
                 fields.append("office_restriction")
         if not self.initiative_id:
             fields.append("image")
+
         return fields
+
+    @property
+    def required(self):
+        for field in super().required:
+            yield field
+
+        for question in self.questions.filter(required=True):
+            try:
+                self.answers.get(question=question)
+            except ActivityAnswer.DoesNotExist:
+                yield f'answers.{question.id}'
+
+    @property
+    def questions(self):
+        return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
 
     class Meta(object):
         verbose_name = _("Activity")

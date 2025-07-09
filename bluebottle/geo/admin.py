@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from mapwidgets.widgets import MapboxPointFieldWidget
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
 from parler.admin import TranslatableAdmin
 
@@ -83,7 +84,7 @@ class LocationMergeForm(forms.Form):
         self.fields["to"].queryset = self.fields["to"].queryset.exclude(pk=obj.pk)
 
 
-class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
+class LocationAdmin(AdminMergeMixin, admin.ModelAdmin, DynamicArrayMixin):
     formfield_overrides = {
         PointField: {"widget": CustomMapboxPointFieldWidget},
     }
@@ -143,7 +144,6 @@ class LocationAdmin(AdminMergeMixin, admin.ModelAdmin):
                 )
             },
         ),
-        (_("Map"), {"fields": ("position",)}),
         (_("SSO"), {"fields": ("alternate_names",)}),
     )
 

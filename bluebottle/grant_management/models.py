@@ -4,6 +4,7 @@ from builtins import object
 
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import SET_NULL
@@ -420,39 +421,35 @@ class GrantFund(models.Model):
 
         super().save(*args, **kwargs)
 
-    def credit_items(self, statuses=['final']):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit, status__in=statuses)
-
-    def debit_items(self, statuses=['final']):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit, status__in=statuses)
+    @property
+    def credit_items(self):
+        return self.ledger_items.filter(type=LedgerItemChoices.credit)
 
     @property
+    def debit_items(self):
+        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+
+    @property
+    @admin.display(description='Total amount paid out')
     def total_credit(self):
-        return self.credit_items().aggregate(total=Sum('amount'))['total'] or 0
-    total_credit.fget.short_description = _('Total payed out')
+        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
 
     @property
+    @admin.display(description='Total budget')
     def total_debit(self):
-        return self.debit_items().aggregate(total=Sum('amount'))['total'] or 0
-    total_debit.fget.short_description = _('Total budget')
+        return self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
 
     @property
-    def total_pending_credit(self):
-        return self.credit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
+    @admin.display(description='Total amount pending')
+    def total_pending(self):
+        return self.ledger_items.filter(
+            status='pending'
+        ).aggregate(total=Sum('amount'))['total'] or 0
 
     @property
-    def total_pending_debit(self):
-        return self.debit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
-
-    @property
+    @admin.display(description='Current balance (includes pending)')
     def balance(self):
         return self.total_debit - self.total_credit
-    balance.fget.short_description = _('Balance')
-
-    @property
-    def pending_balance(self):
-        return self.total_pending_debit - self.total_pending_credit
-    pending_balance.fget.short_description = _('Pending balance')
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"

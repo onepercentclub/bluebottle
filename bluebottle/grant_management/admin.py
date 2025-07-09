@@ -125,9 +125,10 @@ class GrantFundAdmin(admin.ModelAdmin):
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
     list_display = [
-        'name', 'balance', 'total_debit', 'total_credit', 'organization', 'approved_grants'
+        'name', 'balance', 'total_pending',
+        'organization', 'approved_grants'
     ]
-    readonly_fields = ['balance', 'total_debit', 'total_credit']
+    readonly_fields = ['balance', 'total_pending', 'total_debit', 'total_credit']
 
     def has_delete_permission(self, request, obj=None):
         return obj and obj.total_debit == 0

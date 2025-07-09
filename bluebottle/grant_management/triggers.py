@@ -11,6 +11,7 @@ from bluebottle.grant_management.effects import DisburseFundsEffect, CreatePayou
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
     GrantApplicationSubmittedMessage
+from bluebottle.grant_management.messages.reviewer import GrantApplicationSubmittedReviewerMessage
 from bluebottle.grant_management.models import (
     GrantDeposit,
     GrantDonor, GrantApplication,
@@ -96,7 +97,11 @@ class GrantApplicationTriggers(ActivityTriggers):
             effects=[
                 NotificationEffect(
                     GrantApplicationSubmittedMessage
-                )
+                ),
+                NotificationEffect(
+                    GrantApplicationSubmittedReviewerMessage
+                ),
+
             ]
         ),
         TransitionTrigger(

@@ -1,9 +1,8 @@
-from bluebottle.fsm.effects import Effect
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.grant_management.models import LedgerItem, LedgerItemChoices
-
+from bluebottle.fsm.effects import Effect
 from bluebottle.grant_management.models import GrantApplication, GrantPayout
+from bluebottle.grant_management.models import LedgerItem, LedgerItemChoices
 
 
 class DisburseFundsEffect(Effect):
@@ -67,3 +66,12 @@ class CreatePayoutEffect(Effect):
 
     def __str__(self):
         return "Create payout grant applications"
+
+
+class GenerateGrantPaymentEffect(Effect):
+    conditions = []
+    title = _("Generate grant payment")
+    template = "admin/generate_grant_payment_effect.html"
+
+    def post_save(self, **kwargs):
+        self.instance.create_payment()

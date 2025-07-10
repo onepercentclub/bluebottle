@@ -166,13 +166,14 @@ class GrantDonorStateMachine(ContributorStateMachine):
 @register(GrantPayment)
 class GrantPaymentStateMachine(ModelStateMachine):
     new = State(_("New"), "new", _("The payment was created"))
+    pending = State(_("Pending"), "pending", _("The payment waiting for payment."))
     succeeded = State(
         _("Succeeded"), "succeeded", _("The payment was successful paid.")
     )
     failed = State(_("Failed"), "failed", _("The payment failed."))
 
     succeed = Transition(
-        [new, succeeded, failed],
+        [new, succeeded, failed, pending],
         succeeded,
         name=_("Succeed"),
         description=_("The payment was successful."),
@@ -185,15 +186,29 @@ class GrantPaymentStateMachine(ModelStateMachine):
         description=_("The payment was created."),
     )
 
-    fail = Transition(
+    prepare = Transition(
         [new, succeeded, failed],
+        pending,
+        name=_("Prepare"),
+        description=_("The payment is being prepared for processing."),
+    )
+
+    wait = Transition(
+        [new, succeeded, failed, succeeded],
+        pending,
+        name=_("Wait"),
+        description=_("The payment is processing."),
+    )
+
+    fail = Transition(
+        [new, succeeded, failed, pending],
         failed,
         name=_("Fail"),
         description=_("The payment failed."),
     )
 
     reset = Transition(
-        [new, succeeded, failed],
+        [new, succeeded, failed, pending],
         new,
         name=_("Reset"),
         description=_("Reset the payment to new."),

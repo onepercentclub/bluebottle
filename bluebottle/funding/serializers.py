@@ -801,7 +801,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'public_accounts',
             'matching_name',
             'business_types',
-            'enable_iban_check'
+            'enable_iban_check',
         )
 
 

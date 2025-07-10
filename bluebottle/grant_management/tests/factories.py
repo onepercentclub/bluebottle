@@ -36,6 +36,7 @@ class GrantProviderFactory(factory.DjangoModelFactory):
     description = factory.LazyFunction(generate_rich_text)
     payment_frequency = 1
     stripe_customer_id = factory.Faker('uuid4')
+    owner = factory.SubFactory(BlueBottleUserFactory)
 
 
 class GrantFundFactory(factory.DjangoModelFactory):
@@ -80,4 +81,4 @@ class GrantPaymentFactory(factory.DjangoModelFactory):
     class Meta:
         model = GrantPayment
 
-    total = Money(5000, 'EUR')
+    grant_provider = factory.SubFactory(GrantProviderFactory)

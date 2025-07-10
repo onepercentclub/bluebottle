@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 from builtins import object
+from django.urls import reverse
+
+from bluebottle.utils.fields import MoneyField
 
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -21,7 +24,6 @@ from bluebottle.clients import properties
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import TargetValidator
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,16 @@ class GrantProvider(TriggerMixin, models.Model):
     )
 
     name = models.CharField(max_length=200)
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_("Finance manager"),
+        help_text=_("This person will receive the payment requests."),
+        related_name='grant_providers',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
     description = QuillField(blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
     payment_frequency = models.CharField(
@@ -77,7 +89,7 @@ class GrantProvider(TriggerMixin, models.Model):
             payout = grant.payout
             payout.payment = payment
             payout.save()
-
+        payment.states.prepare(save=True)
         return payment
 
 
@@ -128,9 +140,12 @@ class GrantPayment(TriggerMixin, models.Model):
         if self.checkout_id:
             stripe = get_stripe()
             session = stripe.checkout.Session.retrieve(self.checkout_id)
-            if session.status == "complete":
-                self.states.succeed()
-                self.save()
+            if session.payment_intent:
+                intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                if intent.status == "succeeded":
+                    self.states.succeed(save=True)
+                if intent.status == "requires_action":
+                    self.states.wait(save=True)
         return None
 
     def generate_payment_link(self):
@@ -188,7 +203,10 @@ class GrantPayment(TriggerMixin, models.Model):
         init_args["payment_method_types"] = ["customer_balance", "ideal", "card"]
         init_args["line_items"] = line_items
         init_args["customer"] = self.grant_provider.stripe_customer_id
-        init_args["success_url"] = get_current_host()
+        init_args["success_url"] = (
+            get_current_host() +
+            reverse('admin:grant_management_grantpayment_change', args=(self.pk,))
+        )
         checkout = stripe.checkout.Session.create(mode="payment", **init_args)
         self.checkout_id = checkout.id
         self.payment_link = checkout.url
@@ -199,6 +217,10 @@ class GrantPayment(TriggerMixin, models.Model):
             for payout in self.payouts.all():
                 self.total.amount += payout.total_amount
         super().save(run_triggers, *args, **kwargs)
+
+    def get_admin_url(self):
+        from django.urls import reverse
+        return get_current_host() + reverse('admin:grant_management_grantpayment_change', args=[self.pk])
 
 
 class GrantPayout(TriggerMixin, models.Model):
@@ -283,7 +305,6 @@ class GrantPayout(TriggerMixin, models.Model):
 
 
 class GrantApplication(Activity):
-
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(

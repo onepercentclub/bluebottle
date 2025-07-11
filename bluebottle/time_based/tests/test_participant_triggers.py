@@ -489,12 +489,10 @@ class TeamScheduleParticipantTriggerTestCase(BluebottleTestCase):
 
     def test_schedule(self):
         self.create()
-        self.schedule(now())
+        self.schedule(now() + timedelta(days=1))
 
-        self.participant.refresh_from_db()
-        self.assertEqual(self.participant.status, "scheduled")
-
-        self.assertEqual(self.participant.contributions.get().status, "new")
+        self.assertStatus(self.participant, "scheduled")
+        self.assertStatus(self.participant.contributions.get(), "new")
 
     def test_succeed(self):
         self.create()

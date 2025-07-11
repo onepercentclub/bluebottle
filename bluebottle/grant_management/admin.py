@@ -151,7 +151,6 @@ class GrantPayoutAdmin(StateMachineAdmin):
         "partner_organization",
         "account_details",
         "bank_details",
-        "provider"
     ]
 
     list_filter = [

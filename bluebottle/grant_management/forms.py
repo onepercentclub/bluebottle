@@ -1,9 +1,9 @@
-from django.forms import CharField, ChoiceField, ModelChoiceField, Textarea
+from django.forms import CharField, ModelChoiceField, Textarea
 from django.utils.translation import gettext_lazy as _
 
+from .models import GrantDonor, GrantFund
 from ..utils.fields import MoneyFormField
 from ..utils.forms import TransitionConfirmationForm
-from .models import GrantDonor, GrantFund
 
 
 class GrantApplicationApproveForm(TransitionConfirmationForm):
@@ -90,19 +90,6 @@ class GrantPayoutApproveForm(TransitionConfirmationForm):
         required=False,
     )
 
-    confirm_account = ChoiceField(
-        label=_("Confirm Account"),
-        choices=[
-            ("yes", _("Yes, this is correct!")),
-            ("no", _("No, I do not confirm the account")),
-        ],
-        required=True,
-        help_text=_(
-            "Please take your time to review the account for a last time. "
-            "Make sure the bank details and KYC details are correct."
-        ),
-    )
-
     def _get_bank_details(self, bank_info):
         """Helper method to get bank details as formatted text"""
         try:
@@ -168,15 +155,5 @@ class GrantPayoutApproveForm(TransitionConfirmationForm):
         else:
             return _("Account details not available")
 
-    def is_valid(self):
-        """
-        Override to ensure the confirm_account field is checked.
-        """
-        valid = super().is_valid()
-        if not self.cleaned_data.get("confirm_account"):
-            self.add_error(
-                "confirm_account",
-                _("You must confirm the account before approving the payout."),
-            )
-            return False
-        return valid
+    def save(self, user=None):
+        return

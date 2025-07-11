@@ -230,7 +230,7 @@ class GrantPayout(TriggerMixin, models.Model):
         related_name="payouts",
         on_delete=models.CASCADE
     )
-    provider = models.CharField(max_length=100)
+    provider = models.CharField(max_length=100, default="stripe")
     currency = models.CharField(max_length=5)
     payment = models.ForeignKey(
         GrantPayment,

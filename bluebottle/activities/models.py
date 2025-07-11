@@ -489,8 +489,8 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         return self.question
 
     class Meta(object):
-        verbose_name = _("Question")
-        verbose_name_plural = _("Questions")
+        verbose_name = _("Form question")
+        verbose_name_plural = _("Form questions")
 
 
 class ActivityAnswer(PolymorphicModel):

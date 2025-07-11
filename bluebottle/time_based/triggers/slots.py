@@ -330,7 +330,7 @@ def activity_is_finished(effect):
     """
     activity is finished. All slots are either finished or full
     """
-    if effect.instance.start > now():
+    if effect.instance.start and effect.instance.start > now():
         return False
     result = (
         effect.instance.activity.slots.exclude(
@@ -361,6 +361,17 @@ def activity_has_no_participants(effect):
     Activity has no accepted participants.
     """
     return not activity_has_participants(effect)
+
+
+def all_slots_cancelled(effect):
+    """
+    all slots are cancelled
+    """
+    return effect.instance.activity.slots.exclude(
+        status__in=['cancelled', 'deleted', 'expired']
+    ).exclude(
+        id=effect.instance.id,
+    ).count() == 0
 
 
 @register(DateActivitySlot)
@@ -496,7 +507,7 @@ class DateActivitySlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.cancel,
-                    conditions=[activity_is_finished, ]
+                    conditions=[all_slots_cancelled]
                 ),
             ],
         ),

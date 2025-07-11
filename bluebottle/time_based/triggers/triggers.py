@@ -281,7 +281,7 @@ def all_slots_cancelled(effect):
     all slots are cancelled
     """
     return effect.instance.activity.slots.exclude(
-        status__in=['cancelled', 'deleted']
+        status__in=['cancelled', 'deleted', 'expired']
     ).exclude(
         id=effect.instance.id,
     ).count() == 0

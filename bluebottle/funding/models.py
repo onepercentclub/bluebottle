@@ -16,6 +16,9 @@ from moneyed import Money
 from polymorphic.models import PolymorphicModel
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
+from multiselectfield import MultiSelectField
+from djchoices import DjangoChoices, ChoiceItem
+
 from bluebottle.activities.models import Activity, Contribution, Contributor
 from bluebottle.clients import properties
 from bluebottle.files.fields import ImageField, PrivateDocumentField
@@ -780,6 +783,21 @@ class BankAccount(TriggerMixin, PolymorphicModel):
         ordering = ('id',)
 
 
+class BusinessTypeChoices(DjangoChoices):
+    company = ChoiceItem(
+        'company',
+        label=_("Commercial company")
+    )
+    individual = ChoiceItem(
+        'individual',
+        label=_("Individual person")
+    )
+    non_profit = ChoiceItem(
+        'non_profit',
+        label=_("Non-profit organization")
+    )
+
+
 class FundingPlatformSettings(BasePlatformSettings):
 
     anonymous_donations = models.BooleanField(
@@ -814,6 +832,12 @@ class FundingPlatformSettings(BasePlatformSettings):
         null=True,
         blank=True,
         help_text=_('Change this if you want to use something else then the platform name for matching amounts.')
+    )
+
+    business_types = MultiSelectField(
+        max_length=300,
+        choices=BusinessTypeChoices.choices,
+        default=[BusinessTypeChoices.individual]
     )
 
     @property

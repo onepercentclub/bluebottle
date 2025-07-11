@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 from builtins import object
+from django.urls import reverse
+
+from bluebottle.utils.fields import MoneyField
 
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import SET_NULL
@@ -20,27 +24,34 @@ from bluebottle.clients import properties
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import TargetValidator
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 logger = logging.getLogger(__name__)
 
 
-class GrantProvider(models.Model):
+class GrantProvider(TriggerMixin, models.Model):
     """
     A provider of grants, e.g. a foundation or government body.
     """
 
     FREQUENCY_CHOICES = (
-        ("weekly", _("Weekly")),
-        ("biweekly", _("Biweekly")),
-        ("monthly", _("Monthly")),
-        ("quarterly", _("Quarterly")),
-        ("yearly", _("Yearly")),
+        ("1", _("Every week")),
+        ("2", _("Every two weeks")),
+        ("4", _("Every four weeks")),
     )
 
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_("Finance manager"),
+        help_text=_("This person will receive the payment requests."),
+        related_name='grant_providers',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+
+    description = QuillField(blank=True, null=True)
     stripe_customer_id = models.CharField(max_length=200, blank=True, null=True)
     payment_frequency = models.CharField(
         max_length=100, choices=FREQUENCY_CHOICES, default="weekly"
@@ -56,6 +67,31 @@ class GrantProvider(models.Model):
     def __str__(self):
         return self.name or f"Grant Provider #{self.pk}"
 
+    def create_payment(self):
+        """
+        Create a payment for this provider with all approved payouts that don't have a payment yet.
+        """
+        # Get all grants with approved payouts that don't have a payment yet
+        grants = GrantDonor.objects.filter(
+            fund__grant_provider=self,
+            payout__status="approved",
+            payout__payment=None,
+        )
+
+        if not grants.exists():
+            return None
+
+        # Create a new payment
+        payment = GrantPayment.objects.create(grant_provider=self)
+
+        # Link all approved payouts to this payment
+        for grant in grants:
+            payout = grant.payout
+            payout.payment = payment
+            payout.save()
+        payment.states.prepare(save=True)
+        return payment
+
 
 class GrantPayment(TriggerMixin, models.Model):
     """
@@ -65,7 +101,10 @@ class GrantPayment(TriggerMixin, models.Model):
     total = MoneyField(default=Money(0, "EUR"), null=True, blank=True)
     status = models.CharField(max_length=40)
     grant_provider = models.ForeignKey(
-        GrantProvider, null=True, on_delete=models.SET_NULL
+        GrantProvider,
+        related_name="payments",
+        null=True,
+        on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
@@ -101,9 +140,12 @@ class GrantPayment(TriggerMixin, models.Model):
         if self.checkout_id:
             stripe = get_stripe()
             session = stripe.checkout.Session.retrieve(self.checkout_id)
-            if session.status == "complete":
-                self.states.succeed()
-                self.save()
+            if session.payment_intent:
+                intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                if intent.status == "succeeded":
+                    self.states.succeed(save=True)
+                if intent.status == "requires_action":
+                    self.states.wait(save=True)
         return None
 
     def generate_payment_link(self):
@@ -161,7 +203,10 @@ class GrantPayment(TriggerMixin, models.Model):
         init_args["payment_method_types"] = ["customer_balance", "ideal", "card"]
         init_args["line_items"] = line_items
         init_args["customer"] = self.grant_provider.stripe_customer_id
-        init_args["success_url"] = get_current_host()
+        init_args["success_url"] = (
+            get_current_host() +
+            reverse('admin:grant_management_grantpayment_change', args=(self.pk,))
+        )
         checkout = stripe.checkout.Session.create(mode="payment", **init_args)
         self.checkout_id = checkout.id
         self.payment_link = checkout.url
@@ -172,6 +217,10 @@ class GrantPayment(TriggerMixin, models.Model):
             for payout in self.payouts.all():
                 self.total.amount += payout.total_amount
         super().save(run_triggers, *args, **kwargs)
+
+    def get_admin_url(self):
+        from django.urls import reverse
+        return get_current_host() + reverse('admin:grant_management_grantpayment_change', args=[self.pk])
 
 
 class GrantPayout(TriggerMixin, models.Model):
@@ -256,7 +305,6 @@ class GrantPayout(TriggerMixin, models.Model):
 
 
 class GrantApplication(Activity):
-
     target = MoneyField(default=Money(0, 'EUR'), null=True, blank=True)
 
     impact_location = models.ForeignKey(
@@ -373,6 +421,17 @@ class GrantFund(models.Model):
     class Meta:
         verbose_name = _('Grant fund')
         verbose_name_plural = _('Grant funds')
+        permissions = (
+            ('api_read_grantfund', 'Can view grant application through the API'),
+            ('api_add_grantfund', 'Can add funding through the API'),
+            ('api_change_grantfund', 'Can change funding through the API'),
+            ('api_delete_grantfund', 'Can delete funding through the API'),
+
+            ('api_read_own_grantfund', 'Can view own funding through the API'),
+            ('api_add_own_grantfund', 'Can add own funding through the API'),
+            ('api_change_own_grantfund', 'Can change own funding through the API'),
+            ('api_delete_own_grantfund', 'Can delete own funding through the API'),
+        )
 
     def __str__(self):
         return self.name or f'Grant fund #{self.pk}'
@@ -383,39 +442,35 @@ class GrantFund(models.Model):
 
         super().save(*args, **kwargs)
 
-    def credit_items(self, statuses=['final']):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit, status__in=statuses)
-
-    def debit_items(self, statuses=['final']):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit, status__in=statuses)
+    @property
+    def credit_items(self):
+        return self.ledger_items.filter(type=LedgerItemChoices.credit)
 
     @property
+    def debit_items(self):
+        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+
+    @property
+    @admin.display(description='Total amount paid out')
     def total_credit(self):
-        return self.credit_items().aggregate(total=Sum('amount'))['total'] or 0
-    total_credit.fget.short_description = _('Total payed out')
+        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
 
     @property
+    @admin.display(description='Total budget')
     def total_debit(self):
-        return self.debit_items().aggregate(total=Sum('amount'))['total'] or 0
-    total_debit.fget.short_description = _('Total budget')
+        return self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
 
     @property
-    def total_pending_credit(self):
-        return self.credit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
+    @admin.display(description='Total amount pending')
+    def total_pending(self):
+        return self.ledger_items.filter(
+            status='pending'
+        ).aggregate(total=Sum('amount'))['total'] or 0
 
     @property
-    def total_pending_debit(self):
-        return self.debit_items(['pending', 'final']).aggregate(total=Sum('amount'))['total'] or 0
-
-    @property
+    @admin.display(description='Current balance (includes pending)')
     def balance(self):
         return self.total_debit - self.total_credit
-    balance.fget.short_description = _('Balance')
-
-    @property
-    def pending_balance(self):
-        return self.total_pending_debit - self.total_pending_credit
-    pending_balance.fget.short_description = _('Pending balance')
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"
@@ -469,6 +524,17 @@ class GrantDonor(Contributor):
     class Meta:
         verbose_name = _('Grant')
         verbose_name_plural = _('Grants')
+        permissions = (
+            ('api_read_grantdonor', 'Can view grant application through the API'),
+            ('api_add_grantdonor', 'Can add funding through the API'),
+            ('api_change_grantdonor', 'Can change funding through the API'),
+            ('api_delete_grantdonor', 'Can delete funding through the API'),
+
+            ('api_read_own_grantdonor', 'Can view own funding through the API'),
+            ('api_add_own_grantdonor', 'Can add own funding through the API'),
+            ('api_change_own_grantdonor', 'Can change own funding through the API'),
+            ('api_delete_own_grantdonor', 'Can delete own funding through the API'),
+        )
 
     class JSONAPIMeta(object):
         resource_name = "contributors/grants"
@@ -476,6 +542,9 @@ class GrantDonor(Contributor):
     def clean(self):
         if str(self.amount.currency) != self.fund.currency:
             raise ValidationError({'amount': _('Currency should match fund currency')})
+
+        if not self.pk and self.amount.amount > self.fund.balance:
+            raise ValidationError({'amount': _('Insufficient funds')})
 
         super().clean()
 
@@ -512,5 +581,5 @@ class GrantDeposit(TriggerMixin, models.Model):
 
         super().clean()
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+
+from .periodic_tasks import *  # noqa

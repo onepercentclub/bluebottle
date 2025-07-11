@@ -207,6 +207,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     @property
     def required_fields(self):
         from bluebottle.initiatives.models import InitiativePlatformSettings
+
         fields = ['theme']
         if Location.objects.count():
             fields.append("office_location")
@@ -214,7 +215,23 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
                 fields.append("office_restriction")
         if not self.initiative_id:
             fields.append("image")
+
         return fields
+
+    @property
+    def required(self):
+        for field in super().required:
+            yield field
+
+        for question in self.questions.filter(required=True):
+            try:
+                self.answers.get(question=question)
+            except ActivityAnswer.DoesNotExist:
+                yield f'answers.{question.id}'
+
+    @property
+    def questions(self):
+        return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
 
     class Meta(object):
         verbose_name = _("Activity")
@@ -472,8 +489,8 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
         return self.question
 
     class Meta(object):
-        verbose_name = _("Question")
-        verbose_name_plural = _("Questions")
+        verbose_name = _("Form question")
+        verbose_name_plural = _("Form questions")
 
 
 class ActivityAnswer(PolymorphicModel):
@@ -505,6 +522,19 @@ class SegmentAnswer(ActivityAnswer):
 
     class JSONAPIMeta:
         resource_name = 'segment-answers'
+
+    def save(self, *args, **kwargs):
+        current_segments = self.activity.segments.filter(
+            segment_type=self.question.segment_type
+        ).exclude(pk=self.segment.pk)
+
+        for segment in current_segments:
+            self.activity.segments.remove(segment)
+
+        if self.segment not in self.activity.segments.all():
+            self.activity.segments.add(self.segment)
+
+        super().save(*args, **kwargs)
 
 
 class FileUploadQuestion(ActivityQuestion, TranslatableModel):

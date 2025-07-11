@@ -19,6 +19,7 @@ from bluebottle.fsm.admin import (
     StateMachineAdminMixin,
     StateMachineFilter,
 )
+from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
     GrantDeposit,
@@ -29,11 +30,8 @@ from bluebottle.grant_management.models import (
     GrantProvider,
     LedgerItem,
 )
-from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import InitiativePlatformSettings
-from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.segments.models import SegmentType
-from bluebottle.updates.admin import UpdateInline
 from bluebottle.utils.admin import (
     export_as_csv_action,
 )
@@ -127,9 +125,10 @@ class GrantFundAdmin(admin.ModelAdmin):
     raw_id_fields = ['organization']
     search_fields = ['name', 'description']
     list_display = [
-        'name', 'balance', 'total_debit', 'total_credit', 'organization', 'approved_grants'
+        'name', 'balance', 'total_pending',
+        'organization', 'approved_grants'
     ]
-    readonly_fields = ['balance', 'total_debit', 'total_credit']
+    readonly_fields = ['balance', 'total_pending', 'total_debit', 'total_credit']
 
     def has_delete_permission(self, request, obj=None):
         return obj and obj.total_debit == 0
@@ -290,6 +289,7 @@ class GrantProviderAdmin(admin.ModelAdmin):
     list_display = ["name"]
     inlines = [GrantPaymentInline, GrantFundInline]
     change_form_template = "admin/grant_management/grantprovider/change_form.html"
+    raw_id_fields = ['owner']
 
     def get_urls(self):
         urls = super().get_urls()
@@ -309,27 +309,18 @@ class GrantProviderAdmin(admin.ModelAdmin):
                 reverse("admin:grant_management_grantprovider_changelist")
             )
 
-        grants = GrantDonor.objects.filter(
-            fund__grant_provider=provider,
-            payout__status="approved",
-            payout__payment=None,
-        )
-
-        created_count = 0
-        for grant in grants:
-            payout = grant.payout
-            payment, created = GrantPayment.objects.get_or_create(
-                grant_provider=provider, status="new"
+        result = provider.create_payment()
+        if result:
+            self.message_user(
+                request, "Successfully created grant payment request."
             )
-            if created:
-                created_count += 1
-            payout.payment = payment
-            payout.save()
-
-        self.message_user(
-            request, f"Successfully created {created_count} grant payments."
-        )
-
+        else:
+            self.message_user(
+                request,
+                "Could not create a grant payment request. "
+                "No approved payouts found for this provider?",
+                level=messages.ERROR
+            )
         return HttpResponseRedirect(
             reverse("admin:grant_management_grantprovider_change", args=[pk])
         )
@@ -352,10 +343,16 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
     fields = readonly_fields
 
     def get_payment_link(self, obj):
-        if obj.payment_link:
-            title = _("payment link")
+        if obj.status == 'pending':
+            if not obj.checkout_link:
+                title = _("Generate payment link")
+                url = reverse('admin:grant_management_grantpayment_generate_payment_link', args=(obj.id,))
+                return format_html(
+                    f'<a class="link" href="{url}">{title}</a>'
+                )
+            title = _("Pay now")
             return format_html(
-                f'<a href="{obj.payment_link}" target="_blank">{title}</a>'
+                f'<a class="button default" href="{obj.checkout_link }" target="_blank">{title}</a>'
             )
         return "-"
 
@@ -414,7 +411,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
 
 @admin.register(GrantApplication)
 class GrantApplicationAdmin(ActivityChildAdmin):
-    inlines = [GrantInline, GrantPayoutInline, UpdateInline, MessageAdminInline]
+    inlines = (GrantInline, GrantPayoutInline) + ActivityChildAdmin.inlines
 
     base_model = GrantApplication
     list_filter = [

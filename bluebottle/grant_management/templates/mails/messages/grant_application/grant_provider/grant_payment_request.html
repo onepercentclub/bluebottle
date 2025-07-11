@@ -1,0 +1,40 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+A grant payment request of {{ total }} is ready on {{ site_name }}.<br>
+
+Here's a summary of the payment request:
+{% endblocktrans %}
+<br><br>
+{% for payout in payouts %}
+    <table class="padded">
+        <tr>
+            <td>
+                {% trans 'Grant application' %}
+            </td>
+            <td>
+                {{ payout.title }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {% trans 'Grant fund' %}
+            </td>
+            <td>
+                {{ payout.fund }}
+            </td>
+        </tr>
+        <tr>
+            <td>
+                {% trans 'Amount' %}
+            </td>
+            <td>
+                {{ payout.amount }}
+            </td>
+        </tr>
+    </table>
+{% endfor %}
+
+{% endblock %}

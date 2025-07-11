@@ -800,7 +800,8 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'stripe_publishable_key',
             'public_accounts',
             'matching_name',
-            'enable_iban_check'
+            'business_types',
+            'enable_iban_check',
         )
 
 

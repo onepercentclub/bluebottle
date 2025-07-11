@@ -1,3 +1,6 @@
+from django.core import mail
+from moneyed import Money
+
 from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivitySubmittedNotification,
     ActivityApprovedNotification, ActivityNeedsWorkNotification
@@ -14,13 +17,13 @@ from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationRejectedMessage,
     GrantApplicationCancelledMessage
 )
+from bluebottle.grant_management.models import GrantPayment
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
 
 from django.test.utils import override_settings
 
-from djmoney.money import Money
 import mock
 import munch
 import stripe
@@ -35,7 +38,7 @@ from bluebottle.grant_management.tests.factories import (
     GrantDepositFactory,
     GrantFundFactory,
     GrantDonorFactory,
-    GrantPaymentFactory
+    GrantPaymentFactory, GrantProviderFactory, GrantPayoutFactory
 )
 from bluebottle.funding_stripe.tests.factories import (
     StripePayoutAccountFactory,
@@ -163,7 +166,7 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.status, 'cancelled')
         self.assertEqual(self.model.ledger_item.status, 'removed')
-        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.balance, 1000)
 
 
 class GrantDonorTriggerTestCase(TriggerTestCase):
@@ -191,8 +194,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def get_bank_account(self):
         with mock.patch(
@@ -218,8 +221,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def test_paid_existing_payout_account(self):
         bank_account = self.get_bank_account()
@@ -233,8 +236,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
 
 class GrantPaymentTriggerTestCase(TriggerTestCase):
@@ -282,8 +285,8 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.donor.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 1000)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.balance, 0)
+        self.assertEqual(self.fund.total_pending, 1000)
 
     def test_succeed(self):
         with mock.patch(
@@ -315,7 +318,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
         self.assertEqual(self.donor.ledger_item.status, 'final')
 
         self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.pending_balance, 0)
+        self.assertEqual(self.fund.total_pending, 0)
 
 
 @override_settings(
@@ -355,3 +358,58 @@ class GrantApplicationPayoutAccountTriggersTestCase(TriggerTestCase):
             self.assertNotificationEffect(GrantApplicationPayoutAccountVerified)
             self.assertNoNotificationEffect(FundingPayoutAccountVerified)
             self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
+
+
+class GrantPaymentTriggersTestCase(TriggerTestCase):
+    def setUp(self):
+        finance_manager = BlueBottleUserFactory.create()
+        self.provider = GrantProviderFactory.create(
+            name="Test Provider",
+            owner=finance_manager
+        )
+        fund = GrantFundFactory.create(
+            name="Test Fund",
+            grant_provider=self.provider
+        )
+
+        grant_application1 = GrantApplicationFactory.create(
+            title="Save the world!",
+            status='granted'
+        )
+        payout1 = GrantPayoutFactory.create(
+            activity=grant_application1,
+            status='approved',
+        )
+        GrantDonorFactory.create(
+            payout=payout1,
+            activity=grant_application1,
+            fund=fund,
+            amount=Money(2000, 'EUR')
+        )
+
+        grant_application2 = GrantApplicationFactory.create(
+            title="Save the world!",
+            status='granted'
+        )
+        payout2 = GrantPayoutFactory.create(
+            activity=grant_application2,
+            status='approved'
+        )
+
+        GrantDonorFactory.create(
+            payout=payout2,
+            activity=grant_application2,
+            fund=fund,
+            amount=Money(1500, 'EUR')
+        )
+
+    def test_create(self):
+        mail.outbox = []
+        self.provider.create_payment()
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(
+            mail.outbox[0].subject,
+            u'A grant payment request is ready on Test'
+        )
+        payment = GrantPayment.objects.first()
+        self.assertEqual(payment.status, 'pending')

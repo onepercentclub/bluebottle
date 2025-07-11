@@ -2,54 +2,76 @@ import re
 from django import forms
 from django.contrib import admin, messages
 from django.db import connection
-from django.http.response import HttpResponseRedirect, HttpResponseForbidden
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import re_path
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _, ngettext
-from django_admin_inline_paginator.admin import PaginationFormSetBase, TabularInlinePaginated
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
+from django_admin_inline_paginator.admin import (
+    PaginationFormSetBase,
+    TabularInlinePaginated,
+)
 from parler.admin import TranslatableAdmin, TranslatableModelForm
 from polymorphic.admin import (
-    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
-    StackedPolymorphicInline, PolymorphicInlineSupportMixin)
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+    StackedPolymorphicInline,
+)
 from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
-    Activity, Contributor, Organizer, Contribution, EffortContribution, Team,
-    ActivityQuestion, TextQuestion, SegmentQuestion, FileUploadQuestion,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
+    Activity,
+    ActivityAnswer,
+    ActivityQuestion,
+    Contribution,
+    Contributor,
+    EffortContribution,
+    FileUploadAnswer,
+    FileUploadQuestion,
+    Organizer,
+    SegmentAnswer,
+    SegmentQuestion,
+    Team,
+    TextAnswer,
+    TextQuestion,
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.collect.models import CollectContributor, CollectActivity
+from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
-from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.funding.models import Donor, Funding, MoneyContribution
 from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import GrantApplication, GrantDonor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
-    DeadlineActivity,
     DateParticipant,
-    ScheduleActivity,
-    TimeContribution,
+    DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
+    PeriodicParticipant,
+    RegisteredDateActivity,
+    RegisteredDateParticipant,
+    ScheduleActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
-    PeriodicParticipant, RegisteredDateActivity, RegisteredDateParticipant,
+    TimeContribution,
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
@@ -522,11 +544,12 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
 class ActivityChildAdmin(
     PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin
+    RegionManagerAdminMixin, ActivitySegmentAdminMixin,
+    BulkAddMixin, StateMachineAdmin
 ):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
-    inlines = (UpdateInline, ActivityAnswerInline)
+    inlines = (UpdateInline, ActivityAnswerInline, MessageAdminInline)
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Follow, Message, Update]
@@ -742,11 +765,17 @@ class ActivityChildAdmin(
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        for field in required:
-            field = field.split('.')[0]
-            errors.append(
-                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            )
+        for dotted_field in required:
+            field = dotted_field.split('.')[0]
+            if field == 'answers':
+                question = ActivityQuestion.objects.get(pk=dotted_field.split('.')[1])
+                errors.append(
+                    f'"{question.name}" is required'
+                )
+            else:
+                errors.append(
+                    _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+                )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))

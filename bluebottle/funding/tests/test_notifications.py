@@ -1,9 +1,8 @@
-from bluebottle.funding.messages.activity_manager import (
-    FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
-    FundingRejectedMessage
-)
-from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingApprovedMessage, \
+    FundingNeedsWorkMessage, FundingRejectedMessage
+from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.tests.factories import FundingFactory
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 

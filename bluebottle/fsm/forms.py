@@ -70,7 +70,11 @@ class StateMachineModelForm(forms.ModelForm, metaclass=StateMachineModelFormMeta
         for field in self.data:
             if field.startswith('force_'):
                 force_data = field.replace('force_', '')
-                if hasattr(self, 'cleaned_data') and field in self.cleaned_data:
+                if (
+                    hasattr(self, 'cleaned_data') and
+                    field in self.cleaned_data and
+                    self.cleaned_data[field]
+                ):
                     setattr(self.instance, force_data, self.cleaned_data[field])
         return super(StateMachineModelForm, self).save(commit=commit)
 

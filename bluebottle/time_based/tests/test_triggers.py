@@ -236,13 +236,13 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.slot.start = now() + timedelta(days=2)
         self.slot.save()
 
-        self.assertEqual(self.slot.status, 'open')
+        self.assertStatus(self.slot, 'open')
 
     def test_start(self):
+        self.assertStatus(self.slot, "open")
         self.slot.start = now() - timedelta(hours=1)
         self.slot.save()
-
-        self.assertEqual(self.slot.status, "running")
+        self.assertStatus(self.slot, "running")
 
     def test_finish_one_slot_no_participants(self):
         self.slot.start = now() - timedelta(days=1)

@@ -5,15 +5,17 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.utils.utils import update_group_permissions
 
+anonymous_permissions = [
+    "api_read_registereddateactivity",
+    "view_registereddateparticipant",
+]
 permissions = [
     # RegisteredDateActivity permissions
-    "api_read_registereddateactivity",
     "api_read_own_registereddateactivity",
     "api_add_own_registereddateactivity",
     "api_change_own_registereddateactivity",
     "api_delete_own_registereddateactivity",
     # RegisteredDateParticipant permissions
-    "view_registereddateparticipant",
     "api_read_registereddateparticipant",
     "api_change_registereddateparticipant",
 ]
@@ -23,8 +25,9 @@ def add_group_permissions(apps, schema_editor):
     tenant = Client.objects.get(schema_name=connection.tenant.schema_name)
     with LocalTenant(tenant):
         group_perms = {
-            "Authenticated": {"perms": permissions},
-            "Partner": {"perms": permissions},
+            "Anonymous": {"perms": anonymous_permissions},
+            "Authenticated": {"perms": anonymous_permissions + permissions},
+            "Partner": {"perms": anonymous_permissions + permissions},
         }
 
         update_group_permissions("time_based", group_perms, apps)

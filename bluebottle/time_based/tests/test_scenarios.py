@@ -106,7 +106,7 @@ class DateParticipantScenarioTestCase(BluebottleTestCase):
         assert_participant_status(self, self.slot2, self.supporter, status='accepted')
         assert_participant_status(self, self.slot3, self.supporter, status='accepted')
         assert_participant_status(self, self.slot4, self.supporter, status='accepted')
-        self.assertEqual(len(mail.outbox), 8)
+        self.assertEqual(len(mail.outbox), 7)
 
     def test_user_joins_review_activity_accepted(self):
         slot = self.activity.slots.first()

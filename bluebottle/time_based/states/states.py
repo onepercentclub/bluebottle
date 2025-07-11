@@ -145,11 +145,6 @@ class DateStateMachine(TimeBasedStateMachine):
     )
 
 
-@register(RegisteredDateActivity)
-class RegisteredDateStateMachine(TimeBasedStateMachine):
-    pass
-
-
 class RegistrationActivityStateMachine(TimeBasedStateMachine):
     def can_succeed(self):
         return len(self.instance.active_participants) > 0
@@ -211,6 +206,7 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
             TimeBasedStateMachine.draft,
             TimeBasedStateMachine.needs_work,
             TimeBasedStateMachine.expired,
+            TimeBasedStateMachine.open,
             planned,
         ],
     )
@@ -241,7 +237,7 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
     publish = None
 
     approve = ActivityStateMachine.approve.extend(
-        description=_('Approve activity, so it will be planned on the platform.'),
+        description=_('Approve activity, so it will be registered on the platform.'),
         target=planned,
     )
 
@@ -251,12 +247,6 @@ class RegisteredDateActivityStateMachine(TimeBasedStateMachine):
             ActivityStateMachine.succeeded,
             planned,
         ],
-    )
-
-    reopen = TimeBasedStateMachine.reopen.extend(
-        target=planned,
-        name=_("Reopen"),
-        description=_('Reopen activity, so it will be planned on the platform.'),
     )
 
 

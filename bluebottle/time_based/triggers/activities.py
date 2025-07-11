@@ -7,7 +7,7 @@ from bluebottle.activities.messages.activity_manager import (
     ActivityExpiredNotification,
     ActivityRejectedNotification,
     ActivityRestoredNotification,
-    ActivitySucceededNotification, ActivityApprovedNotification, ActivitySubmittedNotification,
+    ActivitySucceededNotification,
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification
@@ -25,7 +25,11 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
-from bluebottle.time_based.messages.activity_manager import ActivityRegisteredNotification
+from bluebottle.time_based.messages.activity_manager import (
+    PastActivityRegisteredNotification,
+    PastActivityApprovedNotification,
+    PastActivitySubmittedNotification
+)
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.models import (
     DateActivity,
@@ -258,7 +262,6 @@ class TimeBasedTriggers(ActivityTriggers):
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail)
             ]
         ),
-
         TransitionTrigger(
             TimeBasedStateMachine.cancel,
             effects=[
@@ -592,7 +595,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     ActivityRegisteredReviewerNotification
                 ),
                 NotificationEffect(
-                    ActivityRegisteredNotification
+                    PastActivityRegisteredNotification
                 ),
                 TransitionEffect(
                     RegisteredDateActivityStateMachine.succeed,
@@ -607,7 +610,7 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             RegisteredDateActivityStateMachine.submit,
             effects=[
                 NotificationEffect(
-                    ActivitySubmittedNotification,
+                    PastActivitySubmittedNotification,
                 ),
                 NotificationEffect(
                     ActivitySubmittedReviewerNotification,
@@ -615,10 +618,27 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             ]
         ),
         TransitionTrigger(
+            RegisteredDateActivityStateMachine.auto_publish,
+            effects=[
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.succeed,
+                    conditions=[
+                        start_has_passed
+                    ]
+                ),
+                TransitionEffect(
+                    RegisteredDateActivityStateMachine.register,
+                    conditions=[
+                        start_is_not_passed
+                    ]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegisteredDateActivityStateMachine.approve,
             effects=[
                 NotificationEffect(
-                    ActivityApprovedNotification
+                    PastActivityApprovedNotification
                 ),
                 RelatedTransitionEffect(
                     'organizer',
@@ -650,6 +670,10 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
             effects=[
                 NotificationEffect(ActivityRejectedNotification),
                 RelatedTransitionEffect(
+                    'participants',
+                    RegisteredDateParticipantStateMachine.fail
+                ),
+                RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.fail,
                 ),
@@ -658,6 +682,10 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
         TransitionTrigger(
             RegisteredDateActivityStateMachine.succeed,
             effects=[
+                RelatedTransitionEffect(
+                    'organizer',
+                    OrganizerStateMachine.succeed,
+                ),
                 RelatedTransitionEffect(
                     'participants',
                     RegisteredDateParticipantStateMachine.succeed
@@ -695,24 +723,6 @@ class RegisteredDateActivityTriggers(TimeBasedTriggers):
                     'participants',
                     RegisteredDateParticipantStateMachine.restore
                 )
-            ]
-        ),
-        ModelChangedTrigger(
-            'start',
-            effects=[
-                RescheduleRelatedTimeContributionsEffect,
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.reopen,
-                    conditions=[
-                        start_is_not_passed
-                    ]
-                ),
-                TransitionEffect(
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[
-                        start_has_passed,
-                    ]
-                ),
             ]
         ),
         ModelChangedTrigger(

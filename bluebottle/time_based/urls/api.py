@@ -4,7 +4,7 @@ from bluebottle.time_based.views import (
     TimeContributionDetail,
     SkillList,
     SkillDetail,
-    SlotParticipantExportView, PeriodActivityDetailView, RegistrationDocumentDetail
+    SlotParticipantExportView, PeriodActivityDetailView, RegistrationDocumentDetail, DateSlotTransitionList
 )
 
 urlpatterns = [
@@ -18,6 +18,12 @@ urlpatterns = [
         r'^/slot/export/(?P<pk>[\d]+)$',
         SlotParticipantExportView.as_view(),
         name='slot-participant-export'
+    ),
+
+    re_path(
+        r'^/slot/transitions$',
+        DateSlotTransitionList.as_view(),
+        name='slot-transition-list'
     ),
 
     re_path(

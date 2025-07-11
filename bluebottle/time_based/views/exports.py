@@ -69,6 +69,14 @@ class RegisteredDateParticipantExportView(TimeBasedExportView):
     model = RegisteredDateActivity
     participant_model = RegisteredDateParticipant
 
+    fields = (
+        ('user__email', 'Email'),
+        ('user__full_name', 'Name'),
+        ('created', 'Registration Date'),
+        ('status', 'Status'),
+        ('activity__start', 'Contribution Date')
+    )
+
 
 class ScheduleParticipantExportView(TimeBasedExportView):
     model = ScheduleActivity
@@ -182,7 +190,7 @@ class DateParticipantExportView(TimeBasedExportView):
                 c += 1
             r = 0
 
-            for participant in slot.slot_participants.all():
+            for participant in slot.participants.all():
                 row = self.get_row(participant)
                 r += 1
                 worksheet.write_row(r, 0, row)

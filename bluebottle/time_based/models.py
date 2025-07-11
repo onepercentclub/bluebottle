@@ -801,7 +801,7 @@ class PeriodicActivity(RegistrationActivity):
 
 
 class RegisteredDateActivity(TimeBasedActivity):
-    url_pattern = "{}/{}/activities/details/registered/{}/{}"
+    url_pattern = "{}/{}/activities/details/registered-date/{}/{}"
 
     duration = models.DurationField(
         _("Activity duration"),
@@ -849,6 +849,15 @@ class RegisteredDateActivity(TimeBasedActivity):
     @property
     def activity_date(self):
         return self.start
+
+    def get_absolute_url(self):
+        domain = get_current_host()
+        language = get_current_language()
+        return u"{}/{}/activities/details/registered-date/{}/{}".format(
+            domain, language,
+            self.pk,
+            self.slug
+        )
 
     class Meta:
         verbose_name = _("Past date activity")
@@ -968,6 +977,10 @@ class DateParticipant(Participant):
     document = PrivateDocumentField(
         blank=True, null=True, view_name="date-participant-document"
     )
+
+    @property
+    def answer(self):
+        return self.registration.answer
 
     class Meta:
         verbose_name = _("Participant to date activity slot")
@@ -1875,7 +1888,7 @@ class BaseScheduleSlot(TriggerMixin, Slot):
     )
 
     online_meeting_url = models.TextField(
-        _("online meeting link"), blank=True, default=""
+        _("online meeting link"), blank=True, default="", null=True
     )
 
     location = models.ForeignKey(

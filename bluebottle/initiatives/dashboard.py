@@ -23,7 +23,7 @@ class RecentlySubmittedInitiatives(DashboardModule):
         initiatives = Initiative.objects.filter(
             status='submitted'
         ).annotate(
-            transition_date=Subquery(recent_log_entries())
+            transition_date=Subquery(recent_log_entries(polymorpic=False))
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
@@ -41,7 +41,7 @@ class RecentlyPublishedInitiatives(DashboardModule):
         initiatives = Initiative.objects.filter(
             status='approved'
         ).annotate(
-            transition_date=Subquery(recent_log_entries())
+            transition_date=Subquery(recent_log_entries(polymorpic=False))
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)

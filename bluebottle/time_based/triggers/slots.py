@@ -61,26 +61,44 @@ class PeriodicSlotTriggers(TriggerManager):
 
 
 def slot_is_finished(effect):
+    """
+    Slot is finished. The end date/time has passed.
+    """
     return effect.instance.end and effect.instance.end < now()
 
 
 def slot_has_started(effect):
+    """
+    Slot has started. The start date/time has passed.
+    """
     return not effect.instance.start or effect.instance.start < now()
 
 
 def slot_has_not_started(effect):
+    """
+    Slot has not started. The start date/time has not passed.
+    """
     return effect.instance.start and effect.instance.start > now()
 
 
 def slot_is_not_finished(effect):
+    """
+    Slot is not finished. The end date/time has not passed.
+    """
     return effect.instance.end and effect.instance.end > now()
 
 
 def slot_is_scheduled(effect):
+    """
+    Slot is scheduled. It has a start date/time and a duration.
+    """
     return effect.instance.end
 
 
 def slot_has_no_end(effect):
+    """
+    Slot has no end date/time.
+    """
     return not effect.instance.end
 
 

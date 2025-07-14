@@ -196,7 +196,7 @@ class BaseRelatedTransitionEffect(Effect):
             conditions = []
             for c in self.conditions:
                 try:
-                    conditions.append(c.__doc__)
+                    conditions.append(c.__doc__ or str(c))
                 except TypeError:
                     conditions.append(str(c))
             return _('{transition} related {object} if {conditions}').format(

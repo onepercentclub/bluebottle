@@ -61,18 +61,44 @@ class PeriodicSlotTriggers(TriggerManager):
 
 
 def slot_is_finished(effect):
+    """
+    Slot is finished. The end date/time has passed.
+    """
     return effect.instance.end and effect.instance.end < now()
 
 
+def slot_has_started(effect):
+    """
+    Slot has started. The start date/time has passed.
+    """
+    return not effect.instance.start or effect.instance.start < now()
+
+
+def slot_has_not_started(effect):
+    """
+    Slot has not started. The start date/time has not passed.
+    """
+    return effect.instance.start and effect.instance.start > now()
+
+
 def slot_is_not_finished(effect):
+    """
+    Slot is not finished. The end date/time has not passed.
+    """
     return effect.instance.end and effect.instance.end > now()
 
 
 def slot_is_scheduled(effect):
+    """
+    Slot is scheduled. It has a start date/time and a duration.
+    """
     return effect.instance.end
 
 
 def slot_has_no_end(effect):
+    """
+    Slot has no end date/time.
+    """
     return not effect.instance.end
 
 
@@ -172,7 +198,7 @@ class ScheduleSlotTriggers(TriggerManager):
 
 
 def slot_is_complete(effect):
-    return (
+    return bool(
         effect.instance.start
         and effect.instance.duration
         and (effect.instance.is_online is True or effect.instance.location)
@@ -383,11 +409,9 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
-                    conditions=[slot_is_complete]
-                ),
-                TransitionEffect(
-                    DateActivitySlotStateMachine.finish,
-                    conditions=[slot_is_finished]
+                    conditions=[
+                        slot_is_complete,
+                    ]
                 ),
             ],
         ),
@@ -395,21 +419,24 @@ class DateActivitySlotTriggers(TriggerManager):
         TransitionTrigger(
             DateActivitySlotStateMachine.mark_complete,
             effects=[
-                RelatedTransitionEffect(
-                    "activity",
-                    DateStateMachine.succeed,
-                    conditions=[activity_is_finished, activity_has_participants]
+                TransitionEffect(
+                    DateActivitySlotStateMachine.finish,
+                    conditions=[
+                        slot_is_finished
+                    ]
                 ),
-                RelatedTransitionEffect(
-                    "activity",
-                    DateStateMachine.expire,
-                    conditions=[activity_is_finished, activity_has_no_participants]
+                TransitionEffect(
+                    DateActivitySlotStateMachine.start,
+                    conditions=[
+                        slot_has_started,
+                        slot_is_not_finished
+                    ]
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.reopen,
                     conditions=[
-                        activity_is_not_finished
+                        slot_has_not_started
                     ]
                 ),
             ],
@@ -536,11 +563,18 @@ class DateActivitySlotTriggers(TriggerManager):
                     DateActivitySlotStateMachine.finish,
                     conditions=[slot_is_finished]
                 ),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.start,
+                    conditions=[
+                        slot_is_started,
+                        slot_is_not_finished
+                    ]
+                ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.lock,
                     conditions=[slot_is_full]
                 ),
+                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset),
                 RelatedTransitionEffect(
                     'activity',
                     DateStateMachine.reopen
@@ -562,7 +596,22 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_complete,
-                    conditions=[slot_is_complete]
+                    conditions=[
+                        slot_is_complete,
+                    ]
+                ),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.start,
+                    conditions=[
+                        slot_is_started,
+                        slot_is_not_finished
+                    ]
+                ),
+                TransitionEffect(
+                    DateActivitySlotStateMachine.finish,
+                    conditions=[
+                        slot_is_finished
+                    ]
                 ),
                 TransitionEffect(
                     DateActivitySlotStateMachine.mark_incomplete,
@@ -592,7 +641,10 @@ class DateActivitySlotTriggers(TriggerManager):
                 RescheduleDateSlotContributions,
                 TransitionEffect(
                     DateActivitySlotStateMachine.start,
-                    conditions=[slot_is_started, slot_is_not_finished]
+                    conditions=[
+                        slot_is_started,
+                        slot_is_not_finished
+                    ]
                 ),
 
                 TransitionEffect(
@@ -602,7 +654,9 @@ class DateActivitySlotTriggers(TriggerManager):
 
                 TransitionEffect(
                     DateActivitySlotStateMachine.reschedule,
-                    conditions=[slot_is_not_started]
+                    conditions=[
+                        slot_is_not_started
+                    ]
                 ),
             ]
         ),

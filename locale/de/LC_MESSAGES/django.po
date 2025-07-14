@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-25 09:36+0200\n"
-"PO-Revision-Date: 2025-06-25 07:43\n"
+"POT-Creation-Date: 2025-07-14 09:55+0200\n"
+"PO-Revision-Date: 2025-07-14 07:57\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -317,7 +317,7 @@ msgstr "Update von '{title}'"
 #: bluebottle/activities/messages.py:84
 #: bluebottle/activities/messages/activity_manager.py:15
 #: bluebottle/activities/messages/participant.py:47
-#: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:56
+#: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
 #: bluebottle/time_based/messages.py:423 bluebottle/time_based/messages.py:447
 #: bluebottle/time_based/messages.py:747 bluebottle/time_based/messages.py:774
 #: bluebottle/time_based/messages.py:857 bluebottle/time_based/messages.py:880
@@ -433,7 +433,7 @@ msgstr "beginnt sofort"
 #: bluebottle/activities/messages.py:315 bluebottle/activities/messages.py:423
 #: bluebottle/activities/messages.py:447 bluebottle/activities/messages.py:469
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
-#: bluebottle/deeds/messages.py:33 bluebottle/deeds/messages.py:77
+#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
 #: bluebottle/time_based/messages.py:84 bluebottle/time_based/messages.py:127
 #: bluebottle/time_based/messages.py:166 bluebottle/time_based/messages.py:205
 #: bluebottle/time_based/messages.py:228 bluebottle/time_based/messages.py:267
@@ -905,7 +905,6 @@ msgstr "Die Aktivität akzeptiert neue Beiträge."
 #: bluebottle/activities/states.py:72 bluebottle/deeds/states.py:48
 #: bluebottle/funding/states.py:492
 #: bluebottle/time_based/states/participants.py:451
-#: bluebottle/time_based/states/slots.py:160
 msgid "succeeded"
 msgstr "erfolgreich"
 
@@ -2239,7 +2238,7 @@ msgstr "\n"
 "                  "
 
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:47
-#: bluebottle/geo/admin.py:78
+#: bluebottle/geo/admin.py:79
 #: bluebottle/geo/templates/admin/geo/location/change_form.html:6
 #: bluebottle/organizations/templates/admin/merge_preview.html:36
 #: bluebottle/segments/admin.py:56
@@ -2645,7 +2644,7 @@ msgstr "Haupt"
 msgid "About"
 msgstr "Über"
 
-#: bluebottle/cms/models.py:116 bluebottle/geo/admin.py:133
+#: bluebottle/cms/models.py:116 bluebottle/geo/admin.py:134
 #: bluebottle/geo/admin.py:185
 msgid "Info"
 msgstr "Info"
@@ -3110,29 +3109,29 @@ msgstr "Sammelbeitrag erstellen"
 msgid "Set end date, if no deadline is specified"
 msgstr "Enddatum angeben, wenn kein Termin angegeben ist"
 
-#: bluebottle/collect/messages.py:9 bluebottle/deeds/messages.py:9
+#: bluebottle/collect/messages.py:9 bluebottle/deeds/messages.py:10
 #, python-brace-format
 msgctxt "email"
 msgid "The date for the activity \"{title}\" has changed"
 msgstr "Das Datum für die Aktivität \"{title}\" hat sich geändert"
 
-#: bluebottle/collect/messages.py:21 bluebottle/deeds/messages.py:21
+#: bluebottle/collect/messages.py:21 bluebottle/deeds/messages.py:22
 msgctxt "email"
 msgid "Today"
 msgstr "Heute"
 
-#: bluebottle/collect/messages.py:26 bluebottle/deeds/messages.py:26
+#: bluebottle/collect/messages.py:26 bluebottle/deeds/messages.py:27
 msgctxt "email"
 msgid "Runs indefinitely"
 msgstr "Läuft unbegrenzt"
 
-#: bluebottle/collect/messages.py:44 bluebottle/deeds/messages.py:44
+#: bluebottle/collect/messages.py:44 bluebottle/deeds/messages.py:45
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" will start tomorrow!"
 msgstr "Ihre Aktivität \"{title}\" wird morgen beginnen!"
 
-#: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:67
+#: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:68
 #: bluebottle/time_based/messages.py:480
 #: bluebottle/time_based/messages/messages.py:480
 #: bluebottle/time_based/messages/registrations.py:148
@@ -4337,28 +4336,28 @@ msgstr "Währung stimmt nicht mit einer der Aktivitäten Währungen überein"
 msgid "The deadline should not be more then 60 days in the future"
 msgstr "Die Frist sollte in Zukunft nicht mehr als 60 Tage betragen"
 
-#: bluebottle/funding/serializers.py:437 bluebottle/funding/serializers.py:603
+#: bluebottle/funding/serializers.py:440 bluebottle/funding/serializers.py:608
 msgid "Pledge"
 msgstr "Versprechen"
 
-#: bluebottle/funding/serializers.py:473
+#: bluebottle/funding/serializers.py:476
 msgid "The selected reward is not related to this activity"
 msgstr "Die ausgewählte Belohnung ist nicht mit dieser Aktivität verbunden"
 
-#: bluebottle/funding/serializers.py:489
+#: bluebottle/funding/serializers.py:492
 msgid "The amount must be higher or equal to the amount of the reward."
 msgstr "Der Betrag muss höher oder gleich der Höhe der Belohnung sein."
 
-#: bluebottle/funding/serializers.py:498
+#: bluebottle/funding/serializers.py:501
 msgid "User can only be set, not changed."
 msgstr "Benutzer kann nur gesetzt und nicht geändert werden."
 
-#: bluebottle/funding/serializers.py:642
+#: bluebottle/funding/serializers.py:647
 #, python-brace-format
 msgid "Amount must be at least {amount} {currency}"
 msgstr "Betrag muss mindestens {amount} {currency} sein"
 
-#: bluebottle/funding/serializers.py:649
+#: bluebottle/funding/serializers.py:654
 #, python-brace-format
 msgid "Amount cannot exceed {amount} {currency}"
 msgstr "Betrag darf {amount} {currency} nicht überschreiten"
@@ -5743,41 +5742,40 @@ msgstr "Vitepay Bankkonten"
 msgid "payment for {activity_title} on {tenant_name}"
 msgstr "Zahlung für {activity_title} am {tenant_name}"
 
-#: bluebottle/geo/admin.py:37
+#: bluebottle/geo/admin.py:38
 #: bluebottle/time_based/templates/mails/messages/partial/team_slot.html:14
 msgid "Location"
 msgstr "Standort"
 
-#: bluebottle/geo/admin.py:48
+#: bluebottle/geo/admin.py:49
 msgid "My location ({})"
 msgstr "Mein Standort ({})"
 
-#: bluebottle/geo/admin.py:73 bluebottle/segments/admin.py:51
+#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:51
 msgid "Merge with"
 msgstr "Zusammenführen mit"
 
-#: bluebottle/geo/admin.py:74 bluebottle/segments/admin.py:52
+#: bluebottle/geo/admin.py:75 bluebottle/segments/admin.py:52
 msgid "Choose location to merge with"
 msgstr "Wählen Sie einen Ort zum Zusammenführen"
 
-#: bluebottle/geo/admin.py:122 bluebottle/initiatives/models.py:282
+#: bluebottle/geo/admin.py:123 bluebottle/initiatives/models.py:282
 #: bluebottle/initiatives/models.py:294
 msgid "Office group"
 msgstr "Bürogruppe"
 
-#: bluebottle/geo/admin.py:129 bluebottle/initiatives/models.py:283
+#: bluebottle/geo/admin.py:130 bluebottle/initiatives/models.py:283
 #: bluebottle/initiatives/models.py:295
 msgid "Office region"
 msgstr "Büroregion"
 
-#: bluebottle/geo/admin.py:146 bluebottle/geo/admin.py:184
-#: bluebottle/geo/admin.py:197
-msgid "Map"
-msgstr "Karte"
-
 #: bluebottle/geo/admin.py:147 bluebottle/segments/admin.py:94
 msgid "SSO"
 msgstr "SSO"
+
+#: bluebottle/geo/admin.py:184 bluebottle/geo/admin.py:197
+msgid "Map"
+msgstr "Karte"
 
 #: bluebottle/geo/models.py:36
 msgid "numeric code"
@@ -9777,6 +9775,10 @@ msgstr "läuft"
 msgid "The slot is currently taking place."
 msgstr "Der Slot findet gerade statt."
 
+#: bluebottle/time_based/states/slots.py:160
+msgid "finished"
+msgstr ""
+
 #: bluebottle/time_based/states/slots.py:162
 msgid "The slot has ended."
 msgstr "Der Slot ist beendet."
@@ -11951,18 +11953,19 @@ msgstr[1] "Sekunden"
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
-#: tenants/crowdfunding-voornatuur/settings.py:26
+#: tenants/crowdfunding-voornatuur/settings.py:26 tenants/dll/settings.py:30
 #: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
 #: tenants/gent/settings.py:25 tenants/goes/settings.py:25
 #: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:26
 #: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
 #: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
-#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
+#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:23
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
 #: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
@@ -11990,23 +11993,28 @@ msgstr "Niederländisch"
 #: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
 #: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
 #: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
 #: tenants/innovating-justice/settings.py:25
 #: tenants/join-rabo-foundation/settings.py:27
 #: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
 #: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
+#: tenants/maximising-potential/settings.py:27 tenants/navara/settings.py:27
 #: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
 #: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
 #: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
+#: tenants/onepercent/settings.py:24 tenants/partos/settings.py:26
 #: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
 #: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
 #: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Englisch"
+
+#: tenants/goodup-nl/settings.py:27
+msgid "Nederlands"
+msgstr ""
 
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"

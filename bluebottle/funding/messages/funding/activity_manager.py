@@ -23,7 +23,11 @@ class FundingActivityManagerMessage(TransitionMessage):
 
 class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
     subject = _("You have a new donation!💰")
-    template = 'messages/activity_manager/donation_success_owner'
+    template = 'messages/funding/activity_manager/donation_success_owner'
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
 
     def get_recipients(self):
         """the activity organizer"""

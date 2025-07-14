@@ -1365,8 +1365,6 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['platform']['currencies'])
-
         self.assertTrue(
             {
                 'provider': 'stripe',

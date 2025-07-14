@@ -185,6 +185,13 @@ class DonorTriggerTests(BluebottleTestCase):
         self.donor.refresh_from_db()
         self.assertEqual(self.donor.status, 'activity_refunded')
 
+    def test_donor_deleted(self):
+        self.assertEqual(self.funding.amount_donated, Money(500, 'EUR'))
+
+        self.donor.delete()
+
+        self.assertEqual(self.funding.amount_donated, Money(0, 'EUR'))
+
 
 class FundingTriggersTestCase(TriggerTestCase):
     factory = FundingFactory

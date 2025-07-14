@@ -41,7 +41,7 @@ TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul',
 ATTRIBUTES = {
     'a': ['target', 'href', 'rel'],
     'img': ['src', 'alt', 'width', 'height', 'align'],
-    'li': ['data-list']
+    'li': ['data-list', 'class']
 }
 EMPTY = ['hr', 'a', 'br', 'img']
 

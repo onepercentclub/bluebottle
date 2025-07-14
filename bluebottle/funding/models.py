@@ -907,7 +907,7 @@ class IbanCheck(models.Model):
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()
-        if self.matched == 'close_match':
+        if self.matched == 'close_match' or self.matched == 'mistype':
             self.name = self.result.get('nameSuggestion', self.name)
             self.token = self.get_stripe_token()
         if self.matched == 'match':

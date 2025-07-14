@@ -442,6 +442,12 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot2, "cancelled")
         self.assertStatus(self.activity, "cancelled")
 
+    def test_cancel_last_slot(self):
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
+        self.slot2.states.cancel(save=True)
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.activity, "open")
+
     def test_cancel_multiple_slots_succeed(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
 

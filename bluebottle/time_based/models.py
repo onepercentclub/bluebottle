@@ -144,7 +144,8 @@ class TimeBasedActivity(Activity):
                 DeadlineParticipant,
                 PeriodicParticipant,
                 ScheduleParticipant,
-                TeamScheduleParticipant
+                TeamScheduleParticipant,
+                RegisteredDateParticipant
             )
         else:
             return Contributor.objects.none()
@@ -166,7 +167,7 @@ class TimeBasedActivity(Activity):
     @property
     def accepted_participants(self):
         return self.participants.filter(
-            status__in=["accepted", "succeeded"]
+            status__in=["accepted", "succeeded", "scheduled"]
         )
 
     @property

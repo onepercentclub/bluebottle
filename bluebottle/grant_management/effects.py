@@ -42,7 +42,6 @@ class PrepareGrantApplicationPayoutsEffect(Effect):
             status="granted",
             bank_account__connect_account=self.instance
         )
-
         for application in applications:
             GrantPayout.generate(application)
 

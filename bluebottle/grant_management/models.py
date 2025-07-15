@@ -257,7 +257,7 @@ class GrantPayout(TriggerMixin, models.Model):
                 payout.delete()
             elif payout.grants.count() == 0:
                 raise AssertionError('Payout without donations already started!')
-        ready_grants = activity.grants.filter(status='new', grantdonor__payout__isnull=True)
+        ready_grants = GrantDonor.objects.filter(activity=activity, payout__isnull=True)
         groups = set([
             don.amount_currency for don in
             ready_grants
@@ -453,19 +453,22 @@ class GrantFund(models.Model):
     @property
     @admin.display(description='Total amount paid out')
     def total_credit(self):
-        return self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
+        amount = self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return Money(amount, currency=self.currency)
 
     @property
     @admin.display(description='Total budget')
     def total_debit(self):
-        return self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
+        amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
+        return Money(amount, currency=self.currency)
 
     @property
     @admin.display(description='Total amount pending')
     def total_pending(self):
-        return self.ledger_items.filter(
+        amount = self.ledger_items.filter(
             status='pending'
         ).aggregate(total=Sum('amount'))['total'] or 0
+        return Money(amount, currency=self.currency)
 
     @property
     @admin.display(description='Current balance (includes pending)')

@@ -119,5 +119,5 @@ class GrantPaymentNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.obj.grant_provider.owner])
         self.assertSubject('A grant payment request is ready on Test')
-        self.assertActionLink('https://testserver' + self.obj.get_admin_url())
+        self.assertActionLink(self.obj.get_admin_url())
         self.assertActionTitle('Pay now')

@@ -1,5 +1,4 @@
 from django.utils.translation import pgettext
-from djmoney.money import Money
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -24,7 +23,7 @@ class GrantPaymentRequestMessage(TransitionMessage):
 
     def get_context(self, recipient):
         context = super(GrantPaymentRequestMessage, self).get_context(recipient)
-        context['total'] = Money(self.obj.total.amount.amount, self.obj.total.amount.currency)
+        context['total'] = self.obj.total.amount
         context['payouts'] = [
             self.payout_details(payout)
             for payout in self.obj.payouts.all()

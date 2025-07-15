@@ -23,7 +23,11 @@ class FundingActivityManagerMessage(TransitionMessage):
 
 class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
     subject = _("You have a new donation!💰")
-    template = 'messages/activity_manager/donation_success_owner'
+    template = 'messages/funding/activity_manager/donation_success_owner'
+
+    @property
+    def action_link(self):
+        return self.obj.activity.get_absolute_url()
 
     def get_recipients(self):
         """the activity organizer"""
@@ -80,31 +84,48 @@ class FundingCancelledMessage(FundingActivityManagerMessage):
     template = 'messages/funding/activity_manager/funding_cancelled'
 
 
-class FundingPayoutAccountRejected(FundingActivityManagerMessage):
+class BaseFundingPayoutAccountMessage(FundingActivityManagerMessage):
+
+    @property
+    def activity(self):
+        return self.obj.funding.last()
+
+    @property
+    def action_link(self):
+        return self.activity.get_absolute_url()
+
+    def get_recipients(self):
+        """the activity organizer"""
+        if self.activity:
+            return [self.activity.owner]
+        return []
+
+
+class FundingPayoutAccountRejected(BaseFundingPayoutAccountMessage):
     subject = _(u'Action required for your crowdfunding campaign')
     template = 'messages/funding/activity_manager/payout_account_rejected'
 
 
-class FundingPayoutAccountMarkedIncomplete(FundingActivityManagerMessage):
+class FundingPayoutAccountMarkedIncomplete(BaseFundingPayoutAccountMessage):
     subject = _("Action required for your crowdfunding campaign")
     template = "messages/funding/activity_manager/payout_account_marked_incomplete"
 
 
-class FundingPayoutAccountVerified(FundingActivityManagerMessage):
+class FundingPayoutAccountVerified(BaseFundingPayoutAccountMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/funding/activity_manager/payout_account_verified'
 
 
-class FundingPublicPayoutAccountRejected(FundingPayoutAccountRejected):
+class FundingPublicPayoutAccountRejected(BaseFundingPayoutAccountMessage):
     subject = _(u'Action required for your identity verification')
     template = 'messages/funding/activity_manager/public_payout_account_rejected'
 
 
-class FundingPublicPayoutAccountMarkedIncomplete(FundingPayoutAccountMarkedIncomplete):
+class FundingPublicPayoutAccountMarkedIncomplete(BaseFundingPayoutAccountMessage):
     subject = _("Action required for identity verification")
     template = "messages/funding/activity_manager/public_payout_account_marked_incomplete"
 
 
-class FundingPublicPayoutAccountVerified(TransitionMessage):
+class FundingPublicPayoutAccountVerified(BaseFundingPayoutAccountMessage):
     subject = _(u'Your identity has been verified')
     template = 'messages/funding/activity_manager/public_payout_account_verified'

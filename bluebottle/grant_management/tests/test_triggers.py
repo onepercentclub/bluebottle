@@ -157,7 +157,7 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.status, 'final')
         self.assertEqual(self.model.ledger_item.status, 'final')
-        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
 
     def test_cancel(self):
         self.model.states.cancel(save=True)
@@ -166,7 +166,7 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.status, 'cancelled')
         self.assertEqual(self.model.ledger_item.status, 'removed')
-        self.assertEqual(self.fund.balance, 1000)
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
 
 
 class GrantDonorTriggerTestCase(TriggerTestCase):
@@ -177,13 +177,18 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         GrantDepositFactory.create(
             fund=self.fund,
-            amount=Money(1000, 'EUR')
+            amount=Money(1500, 'EUR')
         )
-        self.application = GrantApplicationFactory.create(status='submitted', initiative=None)
+        self.application = GrantApplicationFactory.create(
+            status='submitted',
+            initiative=None,
+            target=Money(500, 'EUR')
+        )
         self.defaults = {
             'activity': self.application,
+            'amount': Money(500, 'EUR'),
             'fund': self.fund,
-            'amount': self.fund.balance
+            'payout': None
         }
         self.application.states.approve(save=True)
 
@@ -194,8 +199,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.total_pending, 1000)
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def get_bank_account(self):
         with mock.patch(
@@ -221,8 +226,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.total_pending, 1000)
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def test_paid_existing_payout_account(self):
         bank_account = self.get_bank_account()
@@ -236,8 +241,8 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.total_pending, 1000)
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
 
 class GrantPaymentTriggerTestCase(TriggerTestCase):
@@ -249,26 +254,33 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
             fund=self.fund,
             amount=Money(1000, 'EUR')
         )
-        self.application = GrantApplicationFactory.create(initiative=None, status='submitted')
-        self.application.states.approve(save=True)
+        self.application = GrantApplicationFactory.create(
+            initiative=None,
+            status='submitted'
+        )
 
-        self.donor = GrantDonorFactory.create(activity=self.application, fund=self.fund, amount=Money(1000, 'EUR'))
+        self.donor = GrantDonorFactory.create(
+            activity=self.application,
+            fund=self.fund,
+            amount=Money(1000, 'EUR'),
+            payout=None
+        )
 
         with mock.patch(
             "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC
         ):
             payout_account = StripePayoutAccountFactory.create(
-                status="pending", account_id="test-account-id"
+                status="pending",
+                account_id="test-account-id"
             )
-            payout_account.states.verify(save=True)
-
             self.application.bank_account = ExternalAccountFactory.create(
                 connect_account=payout_account
             )
+            payout_account.states.verify(save=True)
+
             self.application.save()
 
         self.payout = self.application.payouts.get()
-
         self.defaults = {}
         self.create()
 
@@ -285,8 +297,8 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.donor.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.total_pending, 1000)
+        self.assertEqual(self.fund.balance, Money(0, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(1000, 'EUR'))
 
     def test_succeed(self):
         with mock.patch(
@@ -317,8 +329,8 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
         self.donor.ledger_item.refresh_from_db()
         self.assertEqual(self.donor.ledger_item.status, 'final')
 
-        self.assertEqual(self.fund.balance, 0)
-        self.assertEqual(self.fund.total_pending, 0)
+        self.assertEqual(self.fund.balance, Money(0, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(0, 'EUR'))
 
 
 @override_settings(

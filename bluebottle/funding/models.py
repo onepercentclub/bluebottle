@@ -479,8 +479,20 @@ class Payout(TriggerMixin, models.Model):
 
     @classmethod
     def generate(cls, activity):
+        from bluebottle.grant_management.models import GrantApplication
 
-        ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
+        if isinstance(activity, Funding):
+            from .states import PayoutStateMachine
+            for payout in cls.objects.filter(activity=activity):
+                if payout.status == PayoutStateMachine.new.value:
+                    payout.delete()
+                elif payout.donations.count() == 0:
+                    raise AssertionError('Payout without donations already started!')
+
+            ready_donations = activity.donations.filter(status='succeeded', donor__payout__isnull=True)
+        elif isinstance(activity, GrantApplication):
+            ready_donations = activity.grants.filter(status='new', donor__payout__isnull=True)
+
         groups = set([
             (don.payout_amount_currency, don.payment.provider) for don in
             ready_donations
@@ -902,7 +914,7 @@ class IbanCheck(models.Model):
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()
-        if self.matched == 'close_match':
+        if self.matched == 'close_match' or self.matched == 'mistype':
             self.name = self.result.get('nameSuggestion', self.name)
             self.token = self.get_stripe_token()
         if self.matched == 'match':

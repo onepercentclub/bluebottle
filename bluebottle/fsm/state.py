@@ -85,7 +85,7 @@ class BaseTransition(object):
         ):
             raise TransitionNotPossible(
                 _('Cannot transition from {} to {}').format(
-                    machine.state, self.target)
+                    machine.state, self.target.value)
             )
 
     def on_execute(self, machine):

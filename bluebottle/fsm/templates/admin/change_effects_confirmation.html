@@ -43,21 +43,7 @@ delete-selected-confirmation{% endblock %}
             <div
             {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
             {% if field.name == 'send_messages' %}
-            {% if has_notifications %}
-            <div class="field-box">
-                <span class="checkbox">
-                    <label>
-                        Send e-mail notifications
-                    </label>
-                    <input type="checkbox" name="send_messages" id="id_send_messages" checked="">
-                    <label for="id_send_messages"></label>
-                    <span class="checkbox_help">
-                        {% trans "Unselect to transition without sending notifications"%}
-                    </span>
-                </span>
-
-            </div>
-            {% endif %}
+                {% include "admin/send_mail_check_box.html" %}
             {% else %}
             {{ field.errors }}
             {{ field.label_tag }}
@@ -74,6 +60,8 @@ delete-selected-confirmation{% endblock %}
 
         </div>
         </div>
+        {% empty %}
+            {% include "admin/send_mail_check_box.html" %}
         {% endfor %}
     </fieldset>
     <br/>

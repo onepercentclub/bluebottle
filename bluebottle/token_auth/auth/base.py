@@ -52,17 +52,17 @@ class BaseTokenAuthentication():
         name = data.get("location.name", data.get("location.slug", None))
 
         if name and not user.location_verified:
-            try:
-                location = Location.objects.extra(
-                    where=["%s ILIKE ANY (alternate_names)"],
-                    params=[
-                        name.lower(),
-                    ],
-                ).get()
+            location = Location.objects.extra(
+                where=["%s ILIKE ANY (alternate_names)"],
+                params=[
+                    name.lower(),
+                ],
+            ).first()
 
+            if location:
                 user.location = location
                 user.save()
-            except Location.DoesNotExist:
+            else:
                 if MemberPlatformSettings.load().create_locations:
                     location = Location.objects.create(name=name)
                     user.location = location

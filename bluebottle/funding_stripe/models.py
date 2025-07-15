@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from djmoney.money import Money
 
+from djchoices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
@@ -327,15 +329,30 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+class VerificationMethod(DjangoChoices):
+    company = ChoiceItem(
+        'personal',
+        label=_("Personal")
+    )
+    link = ChoiceItem(
+        'link',
+        label=_("Link")
+    )
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
         max_length=100,
-        blank=True,
+        null=True,
         choices=BusinessTypeChoices.choices,
-        default=BusinessTypeChoices.individual
 
+    )
+    verification_method = models.CharField(
+        max_length=100,
+        null=True,
+        choices=VerificationMethod.choices,
     )
 
     verified = models.BooleanField(default=False)

@@ -909,8 +909,9 @@ class IbanCheck(models.Model):
         return token.id
 
     def check_iban(self):
-        from bluebottle.funding.adapters.abn_amro import AbnAmroAdapter
-        adapter = AbnAmroAdapter()
+        from bluebottle.funding.adapters.rabobank import RabobankAdapter
+        adapter = RabobankAdapter()
+
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()

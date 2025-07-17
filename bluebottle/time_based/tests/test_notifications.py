@@ -17,7 +17,7 @@ from bluebottle.time_based.messages import (
 from bluebottle.time_based.messages.activity_manager import PastActivityRegisteredNotification
 from bluebottle.time_based.messages.participants import RegisteredActivityParticipantAddedNotification
 from bluebottle.time_based.messages.registrations import ManagerRegistrationCreatedNotification, \
-    ManagerRegistrationCreatedReviewNotification
+    ManagerRegistrationCreatedReviewNotification, DateUserJoinedNotification
 from bluebottle.time_based.messages.reviewer import ActivityRegisteredReviewerNotification
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory, DateParticipantFactory, DateActivitySlotFactory,
@@ -119,6 +119,20 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('You are registered for a time slot for the activity')
         self.assertActionLink(self.obj.slot.get_absolute_url())
         self.assertActionTitle('View activity')
+
+    def test_participant_registered_with_review_link(self):
+        self.activity.review_link = 'https://example.com'
+        self.activity.save()
+        participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.obj = participant.registration
+        self.message_class = DateUserJoinedNotification
+        self.create()
+        self.assertBodyContains('https://example.com')
+        self.assertBodyContains('Revisit the external link')
 
     def test_slot_participant_withdrew_notification(self):
         self.obj = DateParticipantFactory.create(

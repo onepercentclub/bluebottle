@@ -53,6 +53,7 @@ class UserRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
+        'review_link': 'activity.review_link',
     }
 
     def get_context(self, recipient):

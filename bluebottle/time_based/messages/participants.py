@@ -41,6 +41,7 @@ class UserParticipantNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'name': 'user.full_name',
+        'review_link': 'activity.review_link',
     }
 
     @property

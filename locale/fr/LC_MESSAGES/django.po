@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-14 09:55+0200\n"
-"PO-Revision-Date: 2025-07-14 07:57\n"
+"POT-Creation-Date: 2025-07-17 07:55+0200\n"
+"PO-Revision-Date: 2025-07-17 06:07\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -629,7 +629,7 @@ msgid "A new activity has been published on {site_name}"
 msgstr "Une nouvelle activité a été publiée sur {site_name}"
 
 #: bluebottle/activities/models.py:30 bluebottle/notifications/models.py:60
-#: bluebottle/time_based/models.py:1513
+#: bluebottle/time_based/models.py:1514
 msgid "Teams"
 msgstr "Équipes"
 
@@ -765,7 +765,7 @@ msgid "Contribution"
 msgstr "Contribution"
 
 #: bluebottle/activities/models.py:319 bluebottle/activities/models.py:382
-#: bluebottle/funding/models.py:580 bluebottle/time_based/models.py:1067
+#: bluebottle/funding/models.py:580 bluebottle/time_based/models.py:1068
 msgid "Contributions"
 msgstr "Contributions"
 
@@ -805,7 +805,7 @@ msgstr "Organisateur d'activité"
 msgid "Deed participant"
 msgstr "Deed participant"
 
-#: bluebottle/activities/models.py:375 bluebottle/time_based/models.py:1048
+#: bluebottle/activities/models.py:375 bluebottle/time_based/models.py:1049
 msgid "Contribution type"
 msgstr "Type de contribution"
 
@@ -813,11 +813,11 @@ msgstr "Type de contribution"
 msgid "Effort"
 msgstr "Effort"
 
-#: bluebottle/activities/models.py:415 bluebottle/time_based/models.py:1512
+#: bluebottle/activities/models.py:415 bluebottle/time_based/models.py:1513
 msgid "Team"
 msgstr "Équipe"
 
-#: bluebottle/activities/models.py:425 bluebottle/time_based/models.py:1537
+#: bluebottle/activities/models.py:425 bluebottle/time_based/models.py:1538
 #, python-brace-format
 msgid "Team {name}"
 msgstr "Équipe {name}"
@@ -2491,7 +2491,7 @@ msgstr "Image du logo de la catégorie"
 #: bluebottle/offices/models.py:9 bluebottle/offices/models.py:25
 #: bluebottle/organizations/models.py:21 bluebottle/organizations/models.py:72
 #: bluebottle/segments/models.py:22 bluebottle/segments/models.py:95
-#: bluebottle/time_based/models.py:1087
+#: bluebottle/time_based/models.py:1088
 msgid "name"
 msgstr "Nom"
 
@@ -2500,7 +2500,7 @@ msgstr "Nom"
 #: bluebottle/geo/models.py:122 bluebottle/geo/models.py:160
 #: bluebottle/initiatives/models.py:521 bluebottle/offices/models.py:10
 #: bluebottle/offices/models.py:26 bluebottle/organizations/models.py:23
-#: bluebottle/time_based/models.py:1088
+#: bluebottle/time_based/models.py:1089
 msgid "description"
 msgstr "Libellé"
 
@@ -2514,7 +2514,7 @@ msgstr "Catégories"
 
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:422
 #: bluebottle/initiatives/models.py:37 bluebottle/pages/models.py:60
-#: bluebottle/time_based/models.py:285
+#: bluebottle/time_based/models.py:286
 msgid "title"
 msgstr "Titre:"
 
@@ -3137,14 +3137,14 @@ msgstr "Votre activité \"{title}\" commencera demain !"
 #: bluebottle/time_based/messages/registrations.py:158
 #: bluebottle/time_based/messages/registrations.py:168
 #: bluebottle/time_based/messages/registrations.py:183
-#: bluebottle/time_based/messages/registrations.py:188
+#: bluebottle/time_based/messages/registrations.py:189
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
 msgstr "Vous avez rejoint l'activité \"{title}\""
 
 #: bluebottle/collect/models.py:18 bluebottle/funding_stripe/states.py:157
-#: bluebottle/initiatives/models.py:517 bluebottle/time_based/models.py:1084
+#: bluebottle/initiatives/models.py:517 bluebottle/time_based/models.py:1085
 msgid "disabled"
 msgstr "désactivée"
 
@@ -3180,8 +3180,8 @@ msgstr "Eléments"
 msgid "item"
 msgstr "Élément"
 
-#: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:309
-#: bluebottle/time_based/models.py:531 bluebottle/time_based/models.py:1902
+#: bluebottle/collect/models.py:68 bluebottle/time_based/models.py:310
+#: bluebottle/time_based/models.py:532 bluebottle/time_based/models.py:1903
 msgid "location hint"
 msgstr "indice de localisation"
 
@@ -4033,7 +4033,7 @@ msgid "Remove anonymous donation"
 msgstr "Supprimer le don anonyme"
 
 #: bluebottle/funding/filters.py:17 bluebottle/funding/filters.py:44
-#: bluebottle/time_based/admin.py:1145 bluebottle/time_based/models.py:206
+#: bluebottle/time_based/admin.py:1145 bluebottle/time_based/models.py:207
 msgid "All"
 msgstr "Tous"
 
@@ -4169,8 +4169,8 @@ msgstr "date limite"
 msgid "If you enter a deadline, leave the duration field empty. This will override the duration."
 msgstr "Si vous entrez un délai, laissez le champ de durée vide. Cela remplacera la durée."
 
-#: bluebottle/funding/models.py:149 bluebottle/time_based/models.py:425
-#: bluebottle/time_based/models.py:1856 bluebottle/time_based/models.py:1884
+#: bluebottle/funding/models.py:149 bluebottle/time_based/models.py:426
+#: bluebottle/time_based/models.py:1857 bluebottle/time_based/models.py:1885
 msgid "duration"
 msgstr "durée"
 
@@ -6223,7 +6223,7 @@ msgstr "N'importe quel utilisateur authentifié peut démarrer une activité dan
 msgid "Online / In-person"
 msgstr "En ligne / En personne"
 
-#: bluebottle/initiatives/models.py:277 bluebottle/time_based/models.py:1098
+#: bluebottle/initiatives/models.py:277 bluebottle/time_based/models.py:1099
 msgid "Skill"
 msgstr "Compétence"
 
@@ -6267,7 +6267,7 @@ msgstr "Activité planifiée"
 msgid "Periodic Activity"
 msgstr "Activité périodique"
 
-#: bluebottle/initiatives/models.py:321 bluebottle/time_based/models.py:863
+#: bluebottle/initiatives/models.py:321 bluebottle/time_based/models.py:864
 msgid "Past date activity"
 msgstr ""
 
@@ -6737,19 +6737,19 @@ msgstr "Afficher toutes les contributions"
 msgid "All contributions"
 msgstr "Toutes les contributions"
 
-#: bluebottle/members/admin.py:742 bluebottle/time_based/models.py:239
+#: bluebottle/members/admin.py:742 bluebottle/time_based/models.py:240
 msgid "Activity on a date"
 msgstr "Activité sur une date"
 
-#: bluebottle/members/admin.py:747 bluebottle/time_based/models.py:761
+#: bluebottle/members/admin.py:747 bluebottle/time_based/models.py:762
 msgid "Recurring activity"
 msgstr "Activité récurrente"
 
-#: bluebottle/members/admin.py:752 bluebottle/time_based/models.py:614
+#: bluebottle/members/admin.py:752 bluebottle/time_based/models.py:615
 msgid "Flexible activity"
 msgstr "Activité flexible"
 
-#: bluebottle/members/admin.py:757 bluebottle/time_based/models.py:710
+#: bluebottle/members/admin.py:757 bluebottle/time_based/models.py:711
 msgid "Schedule activity"
 msgstr "Planifier l'activité"
 
@@ -8162,7 +8162,7 @@ msgid "Participants/Teams"
 msgstr "Participants/équipes"
 
 #: bluebottle/time_based/admin.py:889 bluebottle/time_based/admin.py:1382
-#: bluebottle/time_based/models.py:476
+#: bluebottle/time_based/models.py:477
 msgid "Slot"
 msgstr "Emplacement"
 
@@ -8225,8 +8225,8 @@ msgstr "jour x du mois"
 msgid "Repeat"
 msgstr "Répéter"
 
-#: bluebottle/time_based/admin.py:1179 bluebottle/time_based/models.py:541
-#: bluebottle/time_based/models.py:667
+#: bluebottle/time_based/admin.py:1179 bluebottle/time_based/models.py:542
+#: bluebottle/time_based/models.py:668
 msgid "End date"
 msgstr "Date de fin"
 
@@ -8275,11 +8275,11 @@ msgstr "Participants acceptés"
 msgid "%(dates)s time slots created"
 msgstr "Créé des créneaux horaires %(dates)s"
 
-#: bluebottle/time_based/admin.py:1457 bluebottle/time_based/models.py:490
+#: bluebottle/time_based/admin.py:1457 bluebottle/time_based/models.py:491
 msgid "slot"
 msgstr "emplacement"
 
-#: bluebottle/time_based/admin.py:1458 bluebottle/time_based/models.py:491
+#: bluebottle/time_based/admin.py:1458 bluebottle/time_based/models.py:492
 msgid "slots"
 msgstr "créneaux"
 
@@ -8775,20 +8775,20 @@ msgctxt "email"
 msgid "months"
 msgstr "mois"
 
-#: bluebottle/time_based/messages/registrations.py:193
+#: bluebottle/time_based/messages/registrations.py:194
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
 msgstr "Une nouvelle équipe a appliqué à votre activité \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:198
+#: bluebottle/time_based/messages/registrations.py:199
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
 msgstr "Vous avez une nouvelle équipe pour votre activité \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:203
-#: bluebottle/time_based/messages/registrations.py:208
+#: bluebottle/time_based/messages/registrations.py:204
+#: bluebottle/time_based/messages/registrations.py:209
 #, python-brace-format
 msgctxt "email"
 msgid "You have registered your team on \"{site_name}\""
@@ -8886,7 +8886,7 @@ msgctxt "email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
 msgstr "La date ou la localisation de votre équipe a été modifiée pour l'activité \"{title}\""
 
-#: bluebottle/time_based/models.py:46 bluebottle/time_based/models.py:289
+#: bluebottle/time_based/models.py:46 bluebottle/time_based/models.py:290
 msgid "attendee limit"
 msgstr "limite de participants"
 
@@ -8966,31 +8966,31 @@ msgstr "Temps de préparation"
 msgid "Time-based activity"
 msgstr "Activité basée sur le temps"
 
-#: bluebottle/time_based/models.py:207
+#: bluebottle/time_based/models.py:208
 msgid "Free"
 msgstr "Gratuit"
 
-#: bluebottle/time_based/models.py:212 bluebottle/time_based/models.py:298
-#: bluebottle/time_based/models.py:1891
+#: bluebottle/time_based/models.py:213 bluebottle/time_based/models.py:299
+#: bluebottle/time_based/models.py:1892
 msgid "online meeting link"
 msgstr "lien de réunion en ligne"
 
-#: bluebottle/time_based/models.py:240
+#: bluebottle/time_based/models.py:241
 msgid "Activities on a date"
 msgstr "Activités à une date"
 
-#: bluebottle/time_based/models.py:292 bluebottle/time_based/models.py:524
-#: bluebottle/time_based/models.py:1887
+#: bluebottle/time_based/models.py:293 bluebottle/time_based/models.py:525
+#: bluebottle/time_based/models.py:1888
 msgid "is online"
 msgstr "est en ligne"
 
-#: bluebottle/time_based/models.py:304 bluebottle/time_based/models.py:527
-#: bluebottle/time_based/models.py:685 bluebottle/time_based/models.py:822
-#: bluebottle/time_based/models.py:1896
+#: bluebottle/time_based/models.py:305 bluebottle/time_based/models.py:528
+#: bluebottle/time_based/models.py:686 bluebottle/time_based/models.py:823
+#: bluebottle/time_based/models.py:1897
 msgid "location"
 msgstr "Localisation"
 
-#: bluebottle/time_based/models.py:346 bluebottle/time_based/models.py:1802
+#: bluebottle/time_based/models.py:347 bluebottle/time_based/models.py:1803
 #: bluebottle/time_based/views/mixins.py:117
 #: bluebottle/time_based/views/views.py:123
 #, python-brace-format
@@ -8999,323 +8999,323 @@ msgid "\n"
 msgstr "\n"
 "Rejoignez: {url}"
 
-#: bluebottle/time_based/models.py:399 bluebottle/time_based/models.py:1833
+#: bluebottle/time_based/models.py:400 bluebottle/time_based/models.py:1834
 #: bluebottle/time_based/templates/mails/messages/partial/slot.html:16
 msgid "Anywhere/Online"
 msgstr "Partout en ligne"
 
-#: bluebottle/time_based/models.py:424 bluebottle/time_based/models.py:1782
-#: bluebottle/time_based/models.py:1882
+#: bluebottle/time_based/models.py:425 bluebottle/time_based/models.py:1783
+#: bluebottle/time_based/models.py:1883
 msgid "start date and time"
 msgstr "date et heure de début"
 
-#: bluebottle/time_based/models.py:510
+#: bluebottle/time_based/models.py:511
 msgid "in total"
 msgstr "au total"
 
-#: bluebottle/time_based/models.py:511 bluebottle/time_based/models.py:734
+#: bluebottle/time_based/models.py:512 bluebottle/time_based/models.py:735
 msgid "per day"
 msgstr "par jour"
 
-#: bluebottle/time_based/models.py:512 bluebottle/time_based/models.py:735
+#: bluebottle/time_based/models.py:513 bluebottle/time_based/models.py:736
 msgid "per week"
 msgstr "par semaine"
 
-#: bluebottle/time_based/models.py:513 bluebottle/time_based/models.py:736
+#: bluebottle/time_based/models.py:514 bluebottle/time_based/models.py:737
 msgid "per month"
 msgstr "par mois"
 
-#: bluebottle/time_based/models.py:528
+#: bluebottle/time_based/models.py:529
 msgid "You can enter a specific address, city or wider region."
 msgstr "Vous pouvez entrer une adresse spécifique, une ville ou une région plus vaste."
 
-#: bluebottle/time_based/models.py:534 bluebottle/time_based/models.py:660
-#: bluebottle/time_based/models.py:814
+#: bluebottle/time_based/models.py:535 bluebottle/time_based/models.py:661
+#: bluebottle/time_based/models.py:815
 msgid "Start date"
 msgstr "Date de début"
 
-#: bluebottle/time_based/models.py:535
+#: bluebottle/time_based/models.py:536
 msgid "When does the period start during which participants can take part in your activity?"
 msgstr "Quand commence la période pendant laquelle les participants peuvent participer à votre activité ?"
 
-#: bluebottle/time_based/models.py:542
+#: bluebottle/time_based/models.py:543
 msgid "When does the period end?"
 msgstr "Quand la période se termine-t-elle?"
 
-#: bluebottle/time_based/models.py:554
+#: bluebottle/time_based/models.py:555
 msgid "Online Meeting URL"
 msgstr "URL de la réunion en ligne"
 
-#: bluebottle/time_based/models.py:603 bluebottle/time_based/models.py:674
-#: bluebottle/time_based/models.py:749 bluebottle/time_based/models.py:807
+#: bluebottle/time_based/models.py:604 bluebottle/time_based/models.py:675
+#: bluebottle/time_based/models.py:750 bluebottle/time_based/models.py:808
 msgid "Activity duration"
 msgstr "Durée de l'activité"
 
-#: bluebottle/time_based/models.py:604 bluebottle/time_based/models.py:750
+#: bluebottle/time_based/models.py:605 bluebottle/time_based/models.py:751
 msgid "How much time will a participant contribute?"
 msgstr "Combien de temps un participant contribuera-t-il ?"
 
-#: bluebottle/time_based/models.py:615
+#: bluebottle/time_based/models.py:616
 msgid "Flexible activities"
 msgstr "Activités flexibles"
 
-#: bluebottle/time_based/models.py:661
+#: bluebottle/time_based/models.py:662
 msgid "Start of the period during which participants/teams can take part in your activity."
 msgstr "Début de la période pendant laquelle les participants/équipes peuvent participer à votre activité."
 
-#: bluebottle/time_based/models.py:668
+#: bluebottle/time_based/models.py:669
 msgid "End of the period during which participants/teams can take part in your activity."
 msgstr "Fin de la période pendant laquelle les participants/équipes peuvent participer à votre activité."
 
-#: bluebottle/time_based/models.py:676
+#: bluebottle/time_based/models.py:677
 msgid "How much time a participant is expected to contribute. This will be an estimate since the exact hours will be based on the start/end time set for each participant or team."
 msgstr "Combien de temps un participant doit contribuer. Ce sera une estimation puisque les heures exactes seront basées sur l'heure de début et de fin fixée pour chaque participant ou équipe."
 
-#: bluebottle/time_based/models.py:687
+#: bluebottle/time_based/models.py:688
 msgid "If the activity takes place in multiple locations then add the region. You will be able to add specific locations to individual participants when they are scheduled."
 msgstr "Si l'activité se déroule à plusieurs endroits, ajoutez la région. Vous pourrez ajouter des emplacements spécifiques aux participants individuels quand ils seront programmés."
 
-#: bluebottle/time_based/models.py:711
+#: bluebottle/time_based/models.py:712
 msgid "Schedule activities"
 msgstr "Planifier des activités"
 
-#: bluebottle/time_based/models.py:741
+#: bluebottle/time_based/models.py:742
 msgid "Period"
 msgstr "Période"
 
-#: bluebottle/time_based/models.py:742
+#: bluebottle/time_based/models.py:743
 msgid "When should the activity be repeated?"
 msgstr "Quand l'activité doit-elle être répétée ?"
 
-#: bluebottle/time_based/models.py:762
+#: bluebottle/time_based/models.py:763
 msgid "Recurring activities"
 msgstr "Activités récurrentes"
 
-#: bluebottle/time_based/models.py:808
+#: bluebottle/time_based/models.py:809
 msgid "How much time did/will a participant contribute?"
 msgstr ""
 
-#: bluebottle/time_based/models.py:815
+#: bluebottle/time_based/models.py:816
 msgid "Start of the activity."
 msgstr ""
 
-#: bluebottle/time_based/models.py:818
+#: bluebottle/time_based/models.py:819
 msgid "Make sure the value is in the past"
 msgstr ""
 
-#: bluebottle/time_based/models.py:824
+#: bluebottle/time_based/models.py:825
 msgid "If the activity took place in multiple locations then add the region."
 msgstr ""
 
-#: bluebottle/time_based/models.py:864
+#: bluebottle/time_based/models.py:865
 msgid "Past date activities"
 msgstr ""
 
-#: bluebottle/time_based/models.py:986
+#: bluebottle/time_based/models.py:987
 msgid "Participant to date activity slot"
 msgstr "Plage d'activité des participants jusqu'à la date"
 
-#: bluebottle/time_based/models.py:987
+#: bluebottle/time_based/models.py:988
 msgid "Participants to date activity slot"
 msgstr "Participants jusqu'à la date du créneau d'activité"
 
-#: bluebottle/time_based/models.py:1019
+#: bluebottle/time_based/models.py:1020
 msgid "Participant during a period"
 msgstr "Participant pendant une période"
 
-#: bluebottle/time_based/models.py:1020
+#: bluebottle/time_based/models.py:1021
 msgid "Participants during a period"
 msgstr "Participants pendant une période"
 
-#: bluebottle/time_based/models.py:1038
+#: bluebottle/time_based/models.py:1039
 msgid "activity on a date"
 msgstr "activité sur une date"
 
-#: bluebottle/time_based/models.py:1039
+#: bluebottle/time_based/models.py:1040
 msgid "activity over a period"
 msgstr "activité sur une période"
 
-#: bluebottle/time_based/models.py:1040
+#: bluebottle/time_based/models.py:1041
 msgid "preparation"
 msgstr "Préparation"
 
-#: bluebottle/time_based/models.py:1045
+#: bluebottle/time_based/models.py:1046
 msgid "value"
 msgstr "valeur"
 
-#: bluebottle/time_based/models.py:1066
+#: bluebottle/time_based/models.py:1067
 msgid "Time contribution"
 msgstr "Contribution de temps"
 
-#: bluebottle/time_based/models.py:1071
+#: bluebottle/time_based/models.py:1072
 #, python-brace-format
 msgid "Contribution {name} {date}"
 msgstr "Contribution {name} {date}"
 
-#: bluebottle/time_based/models.py:1075
+#: bluebottle/time_based/models.py:1076
 #, python-brace-format
 msgid "Contribution {date}"
 msgstr "Contribution {date}"
 
-#: bluebottle/time_based/models.py:1081
+#: bluebottle/time_based/models.py:1082
 msgid "expertise based"
 msgstr "basé sur l'expertise"
 
-#: bluebottle/time_based/models.py:1082
+#: bluebottle/time_based/models.py:1083
 msgid "Is this skill expertise based, or could anyone do it?"
 msgstr "Cette expertise est-elle basée sur des compétences ou pourrait-elle le faire ?"
 
-#: bluebottle/time_based/models.py:1099
+#: bluebottle/time_based/models.py:1100
 msgid "Skills"
 msgstr "Compétences"
 
-#: bluebottle/time_based/models.py:1136
+#: bluebottle/time_based/models.py:1137
 #, python-brace-format
 msgid "Candidate {name} for {activity}"
 msgstr "Candidat {name} pour {activity}"
 
-#: bluebottle/time_based/models.py:1137
+#: bluebottle/time_based/models.py:1138
 #, python-brace-format
 msgid "Candidate {name}"
 msgstr "Candidat {name}"
 
-#: bluebottle/time_based/models.py:1140
+#: bluebottle/time_based/models.py:1141
 msgid "Candidate"
 msgstr "Candidat"
 
-#: bluebottle/time_based/models.py:1141
+#: bluebottle/time_based/models.py:1142
 msgid "Candidates"
 msgstr "Candidats"
 
-#: bluebottle/time_based/models.py:1153
+#: bluebottle/time_based/models.py:1154
 msgid "Candidate for date activities"
 msgstr "Candidat pour les activités de date"
 
-#: bluebottle/time_based/models.py:1154
+#: bluebottle/time_based/models.py:1155
 msgid "Candidates for date activities"
 msgstr "Candidats pour les activités de date"
 
-#: bluebottle/time_based/models.py:1198
+#: bluebottle/time_based/models.py:1199
 msgid "Candidate for flexible activities"
 msgstr "Candidat pour des activités flexibles"
 
-#: bluebottle/time_based/models.py:1199
+#: bluebottle/time_based/models.py:1200
 msgid "Candidates for flexible activities"
 msgstr "Candidats pour des activités flexibles"
 
-#: bluebottle/time_based/models.py:1240
+#: bluebottle/time_based/models.py:1241
 msgid "Candidate for schedule activities"
 msgstr "Candidat pour les activités de l'horaire"
 
-#: bluebottle/time_based/models.py:1241
+#: bluebottle/time_based/models.py:1242
 msgid "Candidates for schedule activities"
 msgstr "Candidats pour les activités de l'horaire"
 
-#: bluebottle/time_based/models.py:1285
+#: bluebottle/time_based/models.py:1286
 msgid "Candidate for recurring activities"
 msgstr "Candidat pour les activités récurrentes"
 
-#: bluebottle/time_based/models.py:1286
+#: bluebottle/time_based/models.py:1287
 msgid "Candidates for recurring activities"
 msgstr "Candidats pour les activités récurrentes"
 
-#: bluebottle/time_based/models.py:1349
+#: bluebottle/time_based/models.py:1350
 msgid "Participant to flexible activities"
 msgstr "Participant à des activités flexibles"
 
-#: bluebottle/time_based/models.py:1350
+#: bluebottle/time_based/models.py:1351
 msgid "Participants to flexible activities"
 msgstr "Participants à des activités flexibles"
 
-#: bluebottle/time_based/models.py:1387
+#: bluebottle/time_based/models.py:1388
 msgid "Participant to past date activity"
 msgstr ""
 
-#: bluebottle/time_based/models.py:1388
+#: bluebottle/time_based/models.py:1389
 msgid "Participants to past date activity"
 msgstr ""
 
-#: bluebottle/time_based/models.py:1430
+#: bluebottle/time_based/models.py:1431
 #, python-brace-format
 msgid "Regsitration Team {name} for {activity}"
 msgstr "Équipe de Regsitration {name} pour {activity}"
 
-#: bluebottle/time_based/models.py:1431
+#: bluebottle/time_based/models.py:1432
 #, python-brace-format
 msgid "Regsitration Team {name}"
 msgstr "Équipe de Regsitration {name}"
 
-#: bluebottle/time_based/models.py:1434
+#: bluebottle/time_based/models.py:1435
 msgid "Team for schedule activities"
 msgstr "Équipe pour les activités du calendrier"
 
-#: bluebottle/time_based/models.py:1435
+#: bluebottle/time_based/models.py:1436
 msgid "Teams for schedule activities"
 msgstr "Équipes pour les activités de planification"
 
-#: bluebottle/time_based/models.py:1488
+#: bluebottle/time_based/models.py:1489
 msgid "Team captain"
 msgstr "Capitaine de l'équipe"
 
-#: bluebottle/time_based/models.py:1570
+#: bluebottle/time_based/models.py:1571
 msgid "Team member"
 msgstr "Membre de l'équipe"
 
-#: bluebottle/time_based/models.py:1571
+#: bluebottle/time_based/models.py:1572
 msgid "Team members"
 msgstr "Membres de l'équipe"
 
-#: bluebottle/time_based/models.py:1596
+#: bluebottle/time_based/models.py:1597
 #, python-brace-format
 msgid "Team member {name}"
 msgstr "Membre de l'équipe {name}"
 
-#: bluebottle/time_based/models.py:1617
+#: bluebottle/time_based/models.py:1618
 msgid "Participant to schedule activities"
 msgstr "Participant pour planifier des activités"
 
-#: bluebottle/time_based/models.py:1618
+#: bluebottle/time_based/models.py:1619
 msgid "Participants to schedule activities"
 msgstr "Participants pour planifier des activités"
 
-#: bluebottle/time_based/models.py:1680
+#: bluebottle/time_based/models.py:1681
 msgid "Team member participation"
 msgstr "Participation des membres de l'équipe"
 
-#: bluebottle/time_based/models.py:1681
+#: bluebottle/time_based/models.py:1682
 msgid "Team member participations"
 msgstr "Participations des membres de l'équipe"
 
-#: bluebottle/time_based/models.py:1760
+#: bluebottle/time_based/models.py:1761
 msgid "Slot participant"
 msgstr "Slot participant"
 
-#: bluebottle/time_based/models.py:1761
+#: bluebottle/time_based/models.py:1762
 msgid "Slot participants"
 msgstr "Participants au créneau"
 
-#: bluebottle/time_based/models.py:1857
+#: bluebottle/time_based/models.py:1858
 msgid "end date and time"
 msgstr "date et heure de fin"
 
-#: bluebottle/time_based/models.py:1915
+#: bluebottle/time_based/models.py:1916
 #, python-brace-format
 msgid "Slot {start}"
 msgstr "Emplacement {start}"
 
-#: bluebottle/time_based/models.py:1950
+#: bluebottle/time_based/models.py:1951
 msgid "Team duration"
 msgstr "Durée de l'équipe"
 
-#: bluebottle/time_based/models.py:1951
+#: bluebottle/time_based/models.py:1952
 msgid "How much time the team is expected to contribute."
 msgstr "Combien de temps est attendu de l'équipe pour contribuer."
 
-#: bluebottle/time_based/models.py:1978
+#: bluebottle/time_based/models.py:1979
 msgid "Participant to recurring activities"
 msgstr "Participant aux activités récurrentes"
 
-#: bluebottle/time_based/models.py:1979
+#: bluebottle/time_based/models.py:1980
 msgid "Participants to recurring activities"
 msgstr "Participants aux activités récurrentes"
 
@@ -10976,7 +10976,6 @@ msgstr "\n"
 "<p>Vous avez retiré de l'activité \"%(title)s\".</p>\n"
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:16
-#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:16
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:16
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:16
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:16
@@ -11005,7 +11004,6 @@ msgid "The activity manager will review your application."
 msgstr "Le gestionnaire d'activités examinera votre demande."
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_applied.html:23
-#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:19
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:23
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:19
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:23
@@ -11033,28 +11031,9 @@ msgstr "\n"
 "      Vous avez rejoint une activité sur <b>%(site_name)s!</b>\n"
 "    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:20
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:20
-#, python-format
-msgid "\n"
-"                    You are expected to contribute %(duration)s hour(s) every %(period)s.\n"
-"                "
-msgstr "\n"
-"                    Vous êtes censé contribuer %(duration)s heure(s) tous les %(period)s.\n"
-"                "
-
-#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:25
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
-#: bluebottle/updates/models.py:69
-msgid "Update"
-msgstr "Mise à jour"
-
-#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:26
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:30
-#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:26
-msgid "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page."
-msgstr "Si vous souhaitez arrêter de contribuer à l’activité, assurez-vous d’arrêter votre participation de la page de détails de l’activité."
+#: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:16
+msgid "You can participate at the place and time indicated below:"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:25
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:21
@@ -11200,6 +11179,17 @@ msgstr "\n"
 "                    Lorsque vous êtes accepté, vous êtes censé contribuer %(duration)s heure(s) tous les %(period)s.\n"
 "                "
 
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
+#: bluebottle/updates/models.py:69
+msgid "Update"
+msgstr "Mise à jour"
+
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:30
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:26
+msgid "If you would like to stop contributing to the activity, make sure you stop your participation from the activity detail page."
+msgstr "Si vous souhaitez arrêter de contribuer à l’activité, assurez-vous d’arrêter votre participation de la page de détails de l’activité."
+
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:38
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:35
 msgctxt "email"
@@ -11209,6 +11199,15 @@ msgid "\n"
 msgstr "\n"
 "        Nos partenaires comptent sur votre participation. Arrêter à la dernière minute ou ne pas se présenter affectera leur planification. Si vous ne pouvez pas participer, veuillez vous arrêter à temps pour que nous puissions trouver une solution appropriée.\n"
 "      "
+
+#: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:20
+#, python-format
+msgid "\n"
+"                    You are expected to contribute %(duration)s hour(s) every %(period)s.\n"
+"                "
+msgstr "\n"
+"                    Vous êtes censé contribuer %(duration)s heure(s) tous les %(period)s.\n"
+"                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6
 #, python-format

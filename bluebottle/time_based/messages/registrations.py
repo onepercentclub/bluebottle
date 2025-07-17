@@ -182,6 +182,7 @@ class DateUserAppliedNotification(UserRegistrationNotification):
 class DateUserJoinedNotification(UserRegistrationNotification):
     subject = pgettext('email', 'You have joined the activity "{title}"')
     template = 'messages/registrations/date/user_joined'
+    delay = 1
 
 
 class PeriodicUserJoinedNotification(UserRegistrationNotification):

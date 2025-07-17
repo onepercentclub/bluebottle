@@ -12,6 +12,15 @@
         {% block message %}{% endblock %}
     {% endif %}
     {% block additional %} {% endblock %}
+
+    {% if review_link %}
+        <p>
+            {% blocktrans %}
+                <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+
 {% endblock %}
 
 {% block action %}

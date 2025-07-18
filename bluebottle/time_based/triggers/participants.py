@@ -1193,14 +1193,14 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[
-                        applicant_is_accepted,
+                        review_disabled,
                         is_participant
                     ]
                 ),
                 NotificationEffect(
                     ParticipantSlotParticipantRegisteredNotification,
                     conditions=[
-                        applicant_is_accepted,
+                        review_disabled,
                         is_participant
                     ]
                 ),

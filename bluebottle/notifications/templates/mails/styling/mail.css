@@ -1207,7 +1207,8 @@ div.info-box::before {
 }
 
 div.slot-info {
-    background: #ccc;
-    padding: 8px;
+    background: #eee;
+    padding: 16px;
     margin-bottom: 16px;
+    border-radius: 8px;
 }

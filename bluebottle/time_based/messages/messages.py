@@ -31,6 +31,8 @@ def get_slot_info(slot):
         'online_meeting_url': slot.online_meeting_url,
         'location': slot.location.formatted_address if slot.location else '',
         'location_hint': slot.location_hint,
+        'start': start,
+        'end': end,
         'start_date': defaultfilters.date(start),
         'start_time': defaultfilters.time(start),
         'end_time': defaultfilters.time(end),

@@ -1,44 +1,61 @@
 import json
+from datetime import timedelta
+from io import BytesIO
+
 import mock
 import munch
 import stripe
-from datetime import timedelta
 from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils.timezone import now
-from io import BytesIO
 from moneyed import Money
 from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding, PaymentCurrency
+from bluebottle.funding.models import (
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    PaymentCurrency,
+)
 from bluebottle.funding.serializers import IbanCheckSerializer
 from bluebottle.funding.tests.factories import (
+    BudgetLineFactory,
+    DonorFactory,
     FundingFactory,
     PlainPayoutAccountFactory,
     RewardFactory,
-    DonorFactory,
-    BudgetLineFactory,
 )
 from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_flutterwave.tests.factories import (
-    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
+    FlutterwaveBankAccountFactory,
+    FlutterwavePaymentFactory,
+    FlutterwavePaymentProviderFactory,
 )
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import (
-    LipishaBankAccountFactory, LipishaPaymentFactory, LipishaPaymentProviderFactory
+    LipishaBankAccountFactory,
+    LipishaPaymentFactory,
+    LipishaPaymentProviderFactory,
 )
 from bluebottle.funding_pledge.tests.factories import (
-    PledgeBankAccountFactory, PledgePaymentProviderFactory
+    PledgeBankAccountFactory,
+    PledgePaymentFactory,
+    PledgePaymentProviderFactory,
 )
-from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
-from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
-    StripeSourcePaymentFactory, ExternalAccountFactory, StripePayoutAccountFactory
+from bluebottle.funding_stripe.tests.factories import (
+    ExternalAccountFactory,
+    StripePaymentProviderFactory,
+    StripePayoutAccountFactory,
+    StripeSourcePaymentFactory,
+)
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
-    VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
+    VitepayBankAccountFactory,
+    VitepayPaymentFactory,
+    VitepayPaymentProviderFactory,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
@@ -46,7 +63,7 @@ from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
 from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
+from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -1348,8 +1365,6 @@ class CurrencySettingsTestCase(BluebottleTestCase):
     def test_currency_settings(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data['platform']['currencies'])
-
         self.assertTrue(
             {
                 'provider': 'stripe',
@@ -1692,6 +1707,29 @@ class PayoutDetailTestCase(BluebottleTestCase):
         payout.refresh_from_db()
         self.assertEqual(payout.status, 'scheduled')
 
+    def test_put_twice(self):
+        self.test_put()
+        payout = self.funding.payouts.first()
+
+        response = self.client.put(
+            self.get_payout_url(payout),
+            data=json.dumps({
+                'data': {
+                    'id': payout.pk,
+                    'type': 'funding/payouts',
+                    'attributes': {
+                        'status': 'scheduled'
+                    }
+                }
+            }),
+            HTTP_AUTHORIZATION='Token {}'.format(self.token.key)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        payout.refresh_from_db()
+        self.assertEqual(payout.status, 'scheduled')
+
 
 class FundingAPIPermissionsTestCase(BluebottleTestCase):
 
@@ -1791,12 +1829,14 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
         data = response.json()
 
         self.assertEquals(
-            data['platform']['funding'],
+            data["platform"]["funding"],
             {
                 "allow_anonymous_rewards": True,
                 "anonymous_donations": True,
+                "business_types": ["individual"],
+                "enable_iban_check": False,
                 "matching_name": "Dagobert Duck",
-                'public_accounts': False,
+                "public_accounts": False,
                 "stripe_publishable_key": "test-pub-key",
             },
         )
@@ -1838,6 +1878,13 @@ class IbanCheckTestCase(APITestCase):
         self.user = BlueBottleUserFactory.create()
 
     def test_valid(self):
+        # Mock ABN Amro API response for valid match
+        abn_amro_response = {"nameMatchResult": "match", "nameSuggestion": "Nadine Bok"}
+
+        # Mock Stripe token creation
+        stripe_token = stripe.Token("tok_test_token")
+        stripe_token.id = "tok_test_token_id"
+
         data = {
             'data': {
                 'type': 'funding/iban-check',
@@ -1847,10 +1894,19 @@ class IbanCheckTestCase(APITestCase):
                 }
             }
         }
-        self.perform_create(
-            user=self.user,
-            data=data
-        )
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                with mock.patch("stripe.Token.create", return_value=stripe_token):
+                    self.perform_create(user=self.user, data=data)
+
         self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
         data = self.response.json()['data']
         self.assertEqual(
@@ -1862,6 +1918,9 @@ class IbanCheckTestCase(APITestCase):
         )
 
     def test_invalid(self):
+        # Mock ABN Amro API response for no match
+        abn_amro_response = {"nameMatchResult": "no_match"}
+
         data = {
             'data': {
                 'type': 'funding/iban-check',
@@ -1871,16 +1930,66 @@ class IbanCheckTestCase(APITestCase):
                 }
             }
         }
-        self.perform_create(
-            user=self.user,
-            data=data
-        )
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                self.perform_create(user=self.user, data=data)
+
         self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
         data = self.response.json()['data']
         self.assertEqual(
             data['attributes']['matched'],
             'no_match'
         )
-        self.assertIsNone(
-            data['attributes']['token'],
+
+    def test_close_match(self):
+        # Mock ABN Amro API response for close match
+        abn_amro_response = {
+            "nameMatchResult": "mistype",
+            "nameSuggestion": "Nadine Bok",
+        }
+
+        # Mock Stripe token creation
+        stripe_token = stripe.Token("tok_test_token")
+        stripe_token.id = "tok_test_token_id"
+
+        data = {
+            "data": {
+                "type": "funding/iban-check",
+                "attributes": {
+                    "iban": "NL78RABO5394792070",
+                    "name": "Nadine Bock",  # Slightly different name
+                },
+            }
+        }
+
+        with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.requests.post"
+        ) as mock_abn_amro:
+            mock_abn_amro.return_value.json.return_value = abn_amro_response
+            mock_abn_amro.return_value.raise_for_status.return_value = None
+            with mock.patch(
+                "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
+                return_value='some-token'
+            ):
+                with mock.patch("stripe.Token.create", return_value=stripe_token):
+                    self.perform_create(user=self.user, data=data)
+
+        self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
+        data = self.response.json()["data"]
+        self.assertEqual(
+            data["attributes"]["matched"],
+            "mistype",
         )
+        self.assertIsNotNone(
+            data["attributes"]["token"],
+        )
+        # Check that the name was updated with the suggestion
+        self.assertEqual(data["attributes"]["name"], "Nadine Bok")

@@ -166,7 +166,13 @@ class DateRegistrationTriggerTestCase(
         )
 
     def test_initial(self):
-        super().test_initial()
+        self.create()
+        self.assertEqual(self.registration.status, "accepted")
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'You have joined the activity "{}"'.format(self.activity.title),
+        )
+
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "accepted")
@@ -178,7 +184,7 @@ class DateRegistrationTriggerTestCase(
         self.assertStatus(self.participant, "new")
 
     def test_initial_past(self):
-        super().test_initial()
+        self.test_initial()
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
@@ -210,7 +216,7 @@ class DateRegistrationTriggerTestCase(
         self.slot.capacity = 1
         self.slot.save()
 
-        super().test_initial()
+        self.test_initial()
 
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "accepted")

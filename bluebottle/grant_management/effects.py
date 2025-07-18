@@ -42,7 +42,6 @@ class PrepareGrantApplicationPayoutsEffect(Effect):
             status="granted",
             bank_account__connect_account=self.instance
         )
-
         for application in applications:
             GrantPayout.generate(application)
 
@@ -75,3 +74,12 @@ class GenerateGrantPaymentEffect(Effect):
 
     def post_save(self, **kwargs):
         self.instance.create_payment()
+
+
+class PrepareGrantPaymentEffect(Effect):
+    conditions = []
+    title = _("Generate grant payment")
+    template = "admin/generate_grant_payment_effect.html"
+
+    def post_save(self, **kwargs):
+        self.instance.save()

@@ -404,6 +404,7 @@ class FundingSerializer(BaseActivitySerializer):
             'bank_account',
             'co_financers',
             'co_financers.user',
+            'co_financers.user.avatar',
             'partner_organization',
             'impact_location'
         ]
@@ -413,6 +414,8 @@ class FundingSerializer(BaseActivitySerializer):
         BaseActivitySerializer.included_serializers.serializers,
         **{
             'co_financers': 'bluebottle.funding.serializers.DonorSerializer',
+            'co_financers.user': 'bluebottle.initiatives.serializers.MemberSerializer',
+            'co_financers.user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
             'rewards': 'bluebottle.funding.serializers.RewardSerializer',
             'budget_lines': 'bluebottle.funding.serializers.BudgetLineSerializer',
             'bank_account': 'bluebottle.funding.serializers.BankAccountSerializer',
@@ -557,6 +560,7 @@ class DonorSerializer(BaseContributorSerializer):
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.FundingSerializer',
         'user': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'user.avatar': 'bluebottle.initiatives.serializers.AvatarImageSerializer',
         'reward': 'bluebottle.funding.serializers.RewardSerializer',
         'updates': 'bluebottle.updates.serializers.UpdateSerializer',
         'payment_methods': 'bluebottle.funding.serializers.PaymentMethodSerializer',
@@ -578,6 +582,7 @@ class DonorSerializer(BaseContributorSerializer):
         resource_name = 'contributors/donations'
         included_resources = [
             'user',
+            'user__avatar',
             'activity',
             'reward',
             'payment_methods',
@@ -801,7 +806,7 @@ class FundingPlatformSettingsSerializer(ModelSerializer):
             'public_accounts',
             'matching_name',
             'business_types',
-            'enable_iban_check'
+            'enable_iban_check',
         )
 
 

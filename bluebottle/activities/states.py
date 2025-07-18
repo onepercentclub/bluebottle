@@ -247,7 +247,7 @@ class ActivityStateMachine(ModelStateMachine):
         open,
         name=_("Approve"),
         automatic=False,
-        permissions=is_staff,
+        permission=is_staff,
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),

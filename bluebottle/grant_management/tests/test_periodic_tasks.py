@@ -1,10 +1,8 @@
 from datetime import timedelta
-from unittest.mock import patch
-
 from django.utils import timezone
 from djmoney.money import Money
+from unittest.mock import patch
 
-from bluebottle.grant_management import periodic_tasks
 from bluebottle.grant_management.models import GrantPayment
 from bluebottle.grant_management.tasks import grant_provider_tasks
 from bluebottle.grant_management.tests.factories import (
@@ -55,12 +53,15 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
 
     def run_periodic_task_for_week(self, week_number):
         """Run the periodic task for a specific week"""
-        with patch.object(periodic_tasks, "now") as mock_now:
+        with patch("bluebottle.grant_management.periodic_tasks.now") as mock_now:
             # Mock the current date to be in the specified week
-            mock_date = timezone.now() + timedelta(weeks=week_number)
-            mock_now.return_value = mock_date
 
-            # Run the grant_provider_tasks function
+            mock_date = timezone.now().replace(
+                year=timezone.now().year,
+                month=1,
+                day=1,
+            ) + timedelta(weeks=(week_number - 1))
+            mock_now.return_value = mock_date
             grant_provider_tasks()
 
     def test_weekly_schedule_frequency_1(self):
@@ -85,7 +86,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
             # Verify the payment is linked to the provider
             latest_payment = GrantPayment.objects.latest("created")
             self.assertEqual(latest_payment.grant_provider, self.provider)
-            self.assertEqual(latest_payment.status, "new")
+            self.assertEqual(latest_payment.status, "pending")
             self.assertEqual(latest_payment.payouts.count(), 3)
 
     def test_biweekly_schedule_frequency_2(self):
@@ -96,6 +97,10 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
         for week in range(1, 9):
             self.create_approved_payouts()
             initial_payment_count = GrantPayment.objects.count()
+
+            GrantPayment.objects.all().update(
+                created=timezone.now() - timedelta(days=8)
+            )
 
             # Run periodic task for this week
             self.run_periodic_task_for_week(week)
@@ -111,7 +116,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
                 # Verify the payment is linked to the provider
                 latest_payment = GrantPayment.objects.latest("created")
                 self.assertEqual(latest_payment.grant_provider, self.provider)
-                self.assertEqual(latest_payment.status, "new")
+                self.assertEqual(latest_payment.status, "pending")
                 self.assertEqual(latest_payment.payouts.count(), 6)
             else:
                 self.assertEqual(
@@ -143,7 +148,7 @@ class GrantProviderScheduledTasksTestCase(BluebottleTestCase):
                 # Verify the payment is linked to the provider
                 latest_payment = GrantPayment.objects.latest("created")
                 self.assertEqual(latest_payment.grant_provider, self.provider)
-                self.assertEqual(latest_payment.status, "new")
+                self.assertEqual(latest_payment.status, "pending")
                 self.assertEqual(latest_payment.payouts.count(), 12)
             else:
                 self.assertEqual(

@@ -7,9 +7,9 @@
         {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
     </p>
     {% block message %}
-    {% endblock %}
+    {% endblock message %}
 {% endblock %}
 
 {% block action %}
-<a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
+    <a href="{% message_url action_link %}" class="action-email">{{ action_title }}</a>
 {% endblock %}`

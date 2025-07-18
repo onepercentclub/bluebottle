@@ -584,6 +584,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.initiative.story = json.dumps({
             'html': (
                 '<p>Test</p><img src="/media/test.jpg">'
+                '<ul><li class="bla">List</li></ul>'
                 '<script type="javascript">alert("bla")</script>'
             ),
             'delta': ''
@@ -596,7 +597,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json()['data']['attributes']['story'],
-            '<p>Test</p><img src="/media/test.jpg">'
+            '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>'
         )
 
 
@@ -1379,8 +1380,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_activities'],
             [
-                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select a date'},
-                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select a distance'},
+                {'type': 'date', 'name': 'Date', 'highlight': False, 'placeholder': 'Select date'},
+                {'type': 'distance', 'name': 'Distance', 'highlight': False, 'placeholder': 'Select distance'},
                 {'type': 'is_online', 'name': 'Online / In-person', 'highlight': False, 'placeholder': 'Make a choice'}
             ]
 
@@ -1388,8 +1389,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'}
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'}
             ]
 
         )
@@ -1407,8 +1408,8 @@ class InitiativePlatformSettingsApiTestCase(APITestCase):
         self.assertEqual(
             data['platform']['initiatives']['search_filters_initiatives'],
             [
-                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select a theme'},
-                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select a country'},
-                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select a --------'}
+                {'type': 'theme', 'name': 'Theme', 'highlight': False, 'placeholder': 'Select theme'},
+                {'type': 'country', 'name': 'Country', 'highlight': False, 'placeholder': 'Select country'},
+                {'type': 'old_filter', 'name': '--------', 'highlight': False, 'placeholder': 'Select --------'}
             ]
         )

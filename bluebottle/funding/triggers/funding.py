@@ -7,7 +7,7 @@ from bluebottle.activities.triggers import ContributorTriggers
 from bluebottle.follow.effects import FollowActivityEffect, UnFollowActivityEffect
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    ModelChangedTrigger, TransitionTrigger, register, TriggerManager
+    ModelDeletedTrigger, ModelChangedTrigger, TransitionTrigger, register, TriggerManager
 )
 from bluebottle.funding.effects import (
     GeneratePayoutsEffect, GenerateDonorWallpostEffect,
@@ -341,6 +341,12 @@ class DonorTriggers(ContributorTriggers):
                 UpdateDonationValueEffect
             ]
         ),
+
+        ModelDeletedTrigger(
+            effects=[
+                UpdateFundingAmountsEffect,
+            ]
+        )
 
     ]
 

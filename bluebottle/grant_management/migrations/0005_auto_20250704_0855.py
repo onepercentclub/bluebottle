@@ -14,27 +14,16 @@ def add_group_permissions(apps, schema_editor):
         group_perms = {
             "Staff": {
                 "perms": (
-                    "add_grantprovider",
-                    "change_grantprovider",
-                    "delete_grantprovider",
-                    "add_grantpayment",
                     "change_grantpayment",
                     "delete_grantpayment",
-                    "add_grantpayout",
                     "change_grantpayout",
                     "delete_grantpayout",
                     "add_grantfund",
                     "change_grantfund",
                     "delete_grantfund",
-                    "add_ledgeritem",
-                    "change_ledgeritem",
-                    "delete_ledgeritem",
                     "add_grantdonor",
                     "change_grantdonor",
                     "delete_grantdonor",
-                    "add_grantdeposit",
-                    "change_grantdeposit",
-                    "delete_grantdeposit",
                 )
             },
             "Anonymous": {

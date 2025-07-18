@@ -618,7 +618,8 @@ class ActivityChildAdmin(
         'image',
         'video_url',
         'organization',
-        'theme'
+        'theme',
+        'categories',
     )
 
     status_fields = (
@@ -727,9 +728,9 @@ class ActivityChildAdmin(
                     self.office_fields += (
                         'office_restriction',
                     )
-            fieldsets.append((
-                _('Office'), {'fields': self.office_fields}
-            ))
+                fieldsets.append((
+                    _('Office'), {'fields': self.office_fields}
+                ))
 
         if SegmentType.objects.count():
             fieldsets.append((
@@ -765,11 +766,17 @@ class ActivityChildAdmin(
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        for field in required:
-            field = field.split('.')[0]
-            errors.append(
-                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            )
+        for dotted_field in required:
+            field = dotted_field.split('.')[0]
+            if field == 'answers':
+                question = ActivityQuestion.objects.get(pk=dotted_field.split('.')[1])
+                errors.append(
+                    f'"{question.name}" is required'
+                )
+            else:
+                errors.append(
+                    _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+                )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
@@ -985,6 +992,11 @@ class ActivityAdminInline(StackedPolymorphicInline):
         fields = readonly_fields
         model = ScheduleActivity
 
+    class RegisteredDateInline(ActivityInlineChild):
+        readonly_fields = ["activity_link", "start", "state_name"]
+        fields = readonly_fields
+        model = RegisteredDateActivity
+
     child_inlines = (
         FundingInline,
         DeadlineInline,
@@ -992,7 +1004,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
         ScheduleInline,
         DateInline,
         DeedInline,
-        CollectActivityInline
+        CollectActivityInline,
+        RegisteredDateInline
     )
 
     pagination_key = 'page'

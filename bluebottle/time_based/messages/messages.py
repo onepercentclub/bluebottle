@@ -759,7 +759,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
     template = 'messages/manager/slot_participant_withdrew'
     context = {
         'title': 'activity.title',
-        'participant_name': 'participant.user.full_name',
+        'participant_name': 'user.full_name',
     }
 
     def get_context(self, recipient):
@@ -769,7 +769,7 @@ class ManagerSlotParticipantWithdrewNotification(TransitionMessage):
 
     @property
     def action_link(self):
-        return self.obj.slot.activity.get_absolute_url()
+        return self.obj.slot.get_absolute_url()
 
     action_title = pgettext('email', 'Open your activity')
 

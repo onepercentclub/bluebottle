@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
-from pendulum import now
 
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info

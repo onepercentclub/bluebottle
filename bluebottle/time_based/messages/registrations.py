@@ -186,6 +186,7 @@ class DateUserBaseNotification(UserRegistrationNotification):
             ).all()
         ]
         return context
+    delay = 60
 
 
 class DateUserJoinedNotification(DateUserBaseNotification):

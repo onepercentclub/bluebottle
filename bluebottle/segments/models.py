@@ -69,7 +69,7 @@ class SegmentType(models.Model):
     )
 
     admin_user_filter = models.BooleanField(
-        _('Admin as user filter'),
+        _('Admin user filter'),
         help_text=_('Show this as a filter in admin user overview. This also adds it as a segment manager option.'),
         default=False,
     )

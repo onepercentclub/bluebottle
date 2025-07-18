@@ -444,26 +444,26 @@ class GrantFund(models.Model):
 
     @property
     def credit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit)
+        return self.ledger_items.filter(type=LedgerItemChoices.credit).filter(status='final')
 
     @property
     def debit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+        return self.ledger_items.filter(type=LedgerItemChoices.debit).filter(status='final')
 
     @property
-    @admin.display(description='Total amount paid out')
+    @admin.display(description='Life-titem total amount paid out')
     def total_credit(self):
         amount = self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Total budget')
+    @admin.display(description='Life-time total budget')
     def total_debit(self):
         amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Total amount pending')
+    @admin.display(description='Total amount pending (grant payments waiting completion / approval)')
     def total_pending(self):
         amount = self.ledger_items.filter(
             status='pending'
@@ -471,9 +471,12 @@ class GrantFund(models.Model):
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Current balance (includes pending)')
+    @admin.display(description='Current balance')
     def balance(self):
         return self.total_debit - self.total_credit
+
+    def eventual_balance(self):
+        return self.total_debit - self.total_credit - self.total_pending
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"
@@ -546,7 +549,7 @@ class GrantDonor(Contributor):
         if str(self.amount.currency) != self.fund.currency:
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
-        if not self.pk and self.amount.amount > self.fund.balance:
+        if not self.pk and self.amount.amount > self.fund.eventual_balance:
             raise ValidationError({'amount': _('Insufficient funds')})
 
         super().clean()

@@ -166,7 +166,8 @@ class GrantDepositTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.status, 'cancelled')
         self.assertEqual(self.model.ledger_item.status, 'removed')
-        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.balance, Money(0, 'EUR'))
+        self.assertEqual(self.fund.total_pending, Money(0, 'EUR'))
 
 
 class GrantDonorTriggerTestCase(TriggerTestCase):
@@ -199,7 +200,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.model.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.balance, Money(1500, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def get_bank_account(self):
@@ -226,7 +227,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.balance, Money(1500, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
     def test_paid_existing_payout_account(self):
@@ -241,7 +242,7 @@ class GrantDonorTriggerTestCase(TriggerTestCase):
         payout = self.application.payouts.get()
         self.assertEqual(payout.status, 'new')
 
-        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
+        self.assertEqual(self.fund.balance, Money(1500, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(500, 'EUR'))
 
 
@@ -297,7 +298,7 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
 
         self.assertEqual(self.donor.ledger_item.status, 'pending')
 
-        self.assertEqual(self.fund.balance, Money(0, 'EUR'))
+        self.assertEqual(self.fund.balance, Money(1000, 'EUR'))
         self.assertEqual(self.fund.total_pending, Money(1000, 'EUR'))
 
     def test_succeed(self):

@@ -193,8 +193,10 @@ class SendMailTestCase(BluebottleTestCase):
     def test_no_template(self, logger):
         send_mail(to=self.user)
         self.assertTrue(logger.error.called)
-        self.assertEqual(logger.error.call_args[0][0],
-                         'Exception while rendering email template: None.html')
+        self.assertEqual(
+            logger.error.call_args[0][0],
+            'Exception while rendering email template: None.html, in None'
+        )
 
     @mock.patch('bluebottle.common.tasks._send_celery_mail')
     @override_settings(LANGUAGE_CODE='nl',

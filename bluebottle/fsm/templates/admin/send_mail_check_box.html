@@ -1,0 +1,18 @@
+{% load i18n %}
+
+{% if has_notifications %}
+    <div class="field-box">
+        <span class="checkbox">
+            <label for="id_send_messages">
+                Send e-mail notifications
+            </label>
+            <input type="checkbox" name="send_messages" id="id_send_messages" checked="">
+            <label for="id_send_messages" class="checkbox-label"></label>
+            <span class="checkbox_help">
+                <label for="id_send_messages" style='width: auto'>
+                    {% trans "Unselect to continue without sending notifications"%}
+                </label>
+            </span>
+        </span>
+    </div>
+{% endif %}

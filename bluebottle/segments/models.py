@@ -68,6 +68,18 @@ class SegmentType(models.Model):
         default=False
     )
 
+    admin_user_filter = models.BooleanField(
+        _('Admin user filter'),
+        help_text=_('Show this as a filter in admin user overview. This also adds it as a segment manager option.'),
+        default=False,
+    )
+
+    admin_activity_filter = models.BooleanField(
+        _('Admin activity filter'),
+        help_text=_('Show this as a filter in admin activity overview. This also adds it as a segment manager option.'),
+        default=False,
+    )
+
     @property
     def field_name(self):
         return 'segment__' + self.slug.replace('-', '_')

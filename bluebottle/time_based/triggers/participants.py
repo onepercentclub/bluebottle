@@ -39,6 +39,7 @@ from bluebottle.time_based.messages.participants import (
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
+    UserDateParticipantWithdrewNotification,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -1299,6 +1300,9 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 ),
                 NotificationEffect(
                     ManagerSlotParticipantWithdrewNotification,
+                ),
+                NotificationEffect(
+                    UserDateParticipantWithdrewNotification
                 ),
                 SlotParticipantUnFollowActivityEffect,
             ],

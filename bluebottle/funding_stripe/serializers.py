@@ -99,6 +99,7 @@ class ConnectAccountSerializer(ModelSerializer):
             "country",
             "current_status",
             "business_type",
+            "verification_method",
             "tos_accepted",
             "service_agreement",
         )

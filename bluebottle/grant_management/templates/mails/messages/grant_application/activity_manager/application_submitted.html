@@ -3,16 +3,19 @@
 
 {% block message %}
 {% blocktrans context 'email' %}
-Your grant application <i>{{ title }}</i> has been submitted on {{ site_name }}.<br>
+Your grant application <i>"{{ title }}"</i> has been submitted on {{ site_name }}.<br>
 <br>
-<b>What’s next?</b>
+<b>Here's what happens next:</b>
 <ul>
     <li>
-        The platform manager will review your application.
+        Your application will be reviewed by the platform manager.
     </li>
     <li>
-        If your application is approved, you will need to enter your bank details and complete the verification process.
+        Once approved, you’ll need to enter your bank details and complete the Know Your Customer (KYC) check to receive the grant.
     </li>
 </ul>
+<p>
+    You will not be able to edit the application when it is in review.
+</p>
 {% endblocktrans %}
 {% endblock %}

@@ -41,6 +41,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectVerificationLinkSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.grant_management.models import GrantPayment
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView,
@@ -504,6 +505,27 @@ class IntentWebHookView(View):
             except Donor.payment.RelatedObjectDoesNotExist:
                 payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
                 return payment
+
+
+class SessionWebHookView(View):
+    def post(self, request, **kwargs):
+        payload = request.body
+        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+        stripe = get_stripe()
+
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, signature_header, stripe.webhook_secret_intents
+            )
+        except stripe.error.SignatureVerificationError:
+            # Invalid signature
+            return HttpResponse('Signature failed to verify', status=400)
+
+        if event.type.startswith('checkout.session'):
+            session_id = event.data.object.id
+            payment = GrantPayment.objects.filter(checkout_id=session_id).first()
+            if payment:
+                payment.check_status()
 
 
 class SourceWebHookView(View):

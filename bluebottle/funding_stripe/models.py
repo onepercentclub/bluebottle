@@ -19,7 +19,8 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices
+    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
+    FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
@@ -330,8 +331,8 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
-class VerificationMethod(DjangoChoices):
-    company = ChoiceItem(
+class VerificationMethodChoices(DjangoChoices):
+    personal = ChoiceItem(
         'personal',
         label=_("Personal")
     )
@@ -353,7 +354,7 @@ class StripePayoutAccount(PayoutAccount):
     verification_method = models.CharField(
         max_length=100,
         null=True,
-        choices=VerificationMethod.choices,
+        choices=VerificationMethodChoices.choices,
     )
 
     verified = models.BooleanField(default=False)
@@ -398,6 +399,15 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()
+
+        settings = FundingPlatformSettings.load()
+
+        if len(settings.business_types) == 1:
+            self.business_type = settings.business_types[0]
+
+        if self.business_type == 'personal':
+            self.verification_method = VerificationMethodChoices.personal
+
 
         if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():

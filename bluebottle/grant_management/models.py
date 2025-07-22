@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.urls import reverse
@@ -150,7 +150,18 @@ class GrantPayment(TriggerMixin, models.Model):
     def generate_payment_link(self):
         stripe = get_stripe()
         currency = str(self.total.currency)
-        init_args = {}
+        metadata = {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "grant_payment_id": self.id,
+            "grant_provider": self.grant_provider.name,
+        }
+        init_args = {
+            'payment_intent_data': {
+                'metadata': metadata
+            },
+            'metadata': metadata
+        }
         bank_transfer_type = "eu_bank_transfer"
         if currency == "USD":
             bank_transfer_type = "us_bank_transfer"

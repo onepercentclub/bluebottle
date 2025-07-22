@@ -2,6 +2,7 @@
 import logging
 from builtins import object
 from django.urls import reverse
+from stripe import InvalidRequestError
 
 from bluebottle.utils.fields import MoneyField
 
@@ -583,6 +584,28 @@ class GrantDeposit(TriggerMixin, models.Model):
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
         super().clean()
+
+
+class GrantPaymentIntent(models.Model):
+    intent_id = models.CharField(max_length=30)
+    payment = models.ForeignKey(GrantPayment, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def intent(self):
+        stripe = get_stripe()
+        # TODO: Determine beforehand if we need to use stripe_account here.
+        try:
+            return stripe.PaymentIntent.retrieve(
+                self.intent_id,
+            )
+        except InvalidRequestError:
+            return stripe.PaymentIntent.retrieve(
+                self.intent_id,
+            )
+
+    def __str__(self):
+        return self.intent_id
 
 
 from .periodic_tasks import *  # noqa

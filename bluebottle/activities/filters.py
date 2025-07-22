@@ -254,9 +254,9 @@ class StatusFacet(Facet):
         if filter_values == ["draft"]:
             return Terms(status=["draft", "needs_work", "submitted"])
         if filter_values == ["open"]:
-            return Terms(status=["open", "running", "full", "on_hold"])
+            return Terms(status=["open", "running", "full", "on_hold", "granted"])
         if filter_values == ["succeeded"]:
-            return Terms(status=["succeeded", "partially_funded", "granted"])
+            return Terms(status=["succeeded", "partially_funded"])
         if filter_values == ["failed"]:
             return Terms(
                 status=["refunded", "rejected", "expired", "failed", "cancelled"]

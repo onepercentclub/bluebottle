@@ -515,7 +515,7 @@ class SessionWebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_intents
+                payload, signature_header, stripe.webhook_secret_checkout
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature

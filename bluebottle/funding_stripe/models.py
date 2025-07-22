@@ -274,12 +274,12 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('The secret for payment intents webhook.')
     )
 
-    webhook_secret_sources = models.CharField(
+    webhook_secret_checkout = models.CharField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_('Stripe payment sources webhook secret'),
-        help_text=_('The secret for payment sources webhook.')
+        verbose_name=_('Stripe payment checkout session webhook secret'),
+        help_text=_('The secret for payment checkout session webhook.')
     )
 
     currency = models.CharField(

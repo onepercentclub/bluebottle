@@ -19,7 +19,8 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices
+    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
+    FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
@@ -330,8 +331,8 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
-class VerificationMethod(DjangoChoices):
-    company = ChoiceItem(
+class VerificationMethodChoices(DjangoChoices):
+    personal = ChoiceItem(
         'personal',
         label=_("Personal")
     )
@@ -353,7 +354,7 @@ class StripePayoutAccount(PayoutAccount):
     verification_method = models.CharField(
         max_length=100,
         null=True,
-        choices=VerificationMethod.choices,
+        choices=VerificationMethodChoices.choices,
     )
 
     verified = models.BooleanField(default=False)
@@ -398,6 +399,14 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()
+
+        settings = FundingPlatformSettings.load()
+
+        if len(settings.business_types) == 1:
+            self.business_type = settings.business_types[0]
+
+        if self.business_type == 'personal':
+            self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():
@@ -475,6 +484,7 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data, save=True):
+
         self.requirements = data.requirements.eventually_due
 
         if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
@@ -483,19 +493,11 @@ class StripePayoutAccount(PayoutAccount):
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            try:
-                self.verified = (
-                    data.requirements.currently_due == [] and
-                    data.requirements.past_due == [] and
-                    data.requirements.pending_verification == [] and
-                    data.future_requirements.currently_due == [] and
-                    data.future_requirements.past_due == [] and
-                    data.future_requirements.pending_verification == [] and
-                    data.charges_enabled and
-                    data.payouts_enabled
-                )
-            except AttributeError:
-                pass
+            stripe = get_stripe()
+            persons = stripe.Account.persons(data.id)
+            self.verified = len(persons) and all(
+                person.verification.status == 'verified' for person in persons
+            )
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

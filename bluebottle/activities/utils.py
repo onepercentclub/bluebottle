@@ -290,7 +290,7 @@ class BaseActivitySerializer(ModelSerializer):
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
-        'answers': 'bluebottle.activities.utils.ActivityAnswerSerializer',
+        'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
         'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
         'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',

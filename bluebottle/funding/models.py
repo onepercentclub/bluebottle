@@ -208,7 +208,6 @@ class Funding(Activity):
             "title",
             "description.html",
             "target",
-            "bank_account",
         ]
 
         if not self.duration:

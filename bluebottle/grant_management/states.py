@@ -24,7 +24,7 @@ from bluebottle.grant_management.models import (
 class GrantApplicationStateMachine(ActivityStateMachine):
     granted = State(_("Granted"), "granted", _("The grant application was approved, now waiting bank details."))
     succeeded = State(
-        _("Completed"), "completed", _("The grant application was approved and has been paid out to the applicant.")
+        _("Completed"), "succeeded", _("The grant application was approved and has been paid out to the applicant.")
     )
 
     def has_no_payouts(self):

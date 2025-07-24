@@ -103,12 +103,12 @@ class UpcomingFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
             settings = InitiativePlatformSettings.objects.get()
-            statuses = ["open", "running"]
+            statuses = ["open", "running", "granted"]
             if settings.include_full_activities:
                 statuses.append("full")
             return Terms(status=statuses)
         if filter_values == ["0"]:
-            return Terms(status=["succeeded", "partially_funded", "refunded", "granted"])
+            return Terms(status=["succeeded", "partially_funded", "refunded"])
 
 
 class DraftFacet(Facet):
@@ -254,9 +254,9 @@ class StatusFacet(Facet):
         if filter_values == ["draft"]:
             return Terms(status=["draft", "needs_work", "submitted"])
         if filter_values == ["open"]:
-            return Terms(status=["open", "running", "full", "on_hold"])
+            return Terms(status=["open", "running", "full", "on_hold", "granted"])
         if filter_values == ["succeeded"]:
-            return Terms(status=["succeeded", "partially_funded", "granted"])
+            return Terms(status=["succeeded", "partially_funded"])
         if filter_values == ["failed"]:
             return Terms(
                 status=["refunded", "rejected", "expired", "failed", "cancelled"]
@@ -519,7 +519,7 @@ class ActivitySearch(Search):
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(
                 Terms(
-                    status=["succeeded", "open", "full", "partially_funded", "refunded", "granted"]
+                    status=["succeeded", "open", "full", "partially_funded", "refunded"]
                 )
             )
 

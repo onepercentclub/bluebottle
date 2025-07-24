@@ -29,11 +29,5 @@
 
 
 {% block end_message %}
-    <p>
-        <i>
-            {% blocktrans context 'email' %}
-                If your team is unable to participate, please withdraw via the activity page so that another team can take your place. 
-            {% endblocktrans %}
-        </i>
-    </p>
+  {% include 'mails/messages/partial/withdraw_notification.html' %}
 {% endblock %}

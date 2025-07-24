@@ -6,5 +6,8 @@
 
 <p>Head over to the activity page for more information.</p>
 
-<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
 {% endblocktrans %}{% endblock %}
+
+{% block end_message %}
+  {% include 'mails/messages/partial/withdraw_notification.html' %}
+{% endblock %}

@@ -57,6 +57,7 @@ class StripePaymentTransitionsTestCase(BluebottleTestCase):
     def test_change_business_type(self):
         self.payout_account.business_type = 'company'
         stripe_payout_account = stripe.Account('some account id')
+        stripe_payout_account.individual = munch.munchify({'verification': {'status': 'verified'}})
         stripe_payout_account.requirements = munch.munchify({'eventually_due': []})
         stripe_payout_account.charges_enabled = True
         stripe_payout_account.payouts_enabled = True

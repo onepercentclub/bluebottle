@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='stripepayoutaccount',
             name='verificationMethod',
-            field=models.CharField(blank=True, choices=[('personal', 'Personal'), ('link', 'Link')], max_length=100),
+            field=models.CharField(blank=True, null=True, choices=[('personal', 'Personal'), ('link', 'Link')], max_length=100),
         ),
         migrations.AlterField(
             model_name='stripepayoutaccount',

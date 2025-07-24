@@ -852,7 +852,12 @@ class ActivityChildAdmin(
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ActivityAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Activity
     child_models = (
         Funding,

@@ -346,6 +346,7 @@ class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
+        _('Verification type'),
         max_length=100,
         null=True,
         choices=BusinessTypeChoices.choices,

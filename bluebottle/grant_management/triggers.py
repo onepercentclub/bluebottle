@@ -175,7 +175,11 @@ class GrantPayoutTriggers(TriggerManager):
         TransitionTrigger(
             GrantPayoutStateMachine.succeed,
             effects=[
-                SetDateEffect('date_completed')
+                SetDateEffect('date_completed'),
+                RelatedTransitionEffect(
+                    'activity',
+                    GrantApplicationStateMachine.succeed
+                )
             ]
         ),
     ]

@@ -31,9 +31,5 @@
 
 
 {% block end_message %}
-  <div class="info-box">
-      {% blocktrans context 'email' %}
-        Our partners are counting on your participation. Stopping at the last moment or not showing up will affect their planning. If you are unable to participate, please stop in time so we can find a suitable solution.
-      {% endblocktrans %}
-  </div>
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}

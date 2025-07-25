@@ -1,3 +1,4 @@
+from bluebottle.grant_management.models import GrantPayout
 from django.contrib import admin
 from django.db.models import Q
 
@@ -34,13 +35,24 @@ def create_segment_filter(segment_type, filter_on="activity"):
     return SegmentTypeFilter
 
 
+def segment_filter(queryset, user):
+    model = queryset.model
+    if user.segment_manager.count():
+        if model == GrantPayout:
+            return queryset.filter(
+                Q(activity__segments__in=user.segment_manager.all())
+            ).distinct()
+
+        return queryset.filter(
+            Q(segments__in=user.segment_manager.all())
+        ).distinct()
+    return queryset
+
+
 class ActivitySegmentAdminMixin:
     def get_queryset(self, request):
         queryset = super(ActivitySegmentAdminMixin, self).get_queryset(request)
-        if request.user.segment_manager.count():
-            return queryset.filter(
-                Q(segments__in=request.user.segment_manager.all())
-            ).distinct()
+        queryset = segment_filter(queryset, request.user)
         return queryset
 
     def get_list_filter(self, request):

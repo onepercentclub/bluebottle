@@ -402,10 +402,10 @@ class StripePayoutAccount(PayoutAccount):
 
         settings = FundingPlatformSettings.load()
 
-        if len(settings.business_types) == 1:
+        if len(settings.business_types) == 1 and not self.business_type:
             self.business_type = settings.business_types[0]
 
-        if self.business_type == 'personal':
+        if self.business_type == BusinessTypeChoices.individual:
             self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:

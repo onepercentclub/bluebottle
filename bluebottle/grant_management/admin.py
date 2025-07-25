@@ -1,6 +1,8 @@
 from __future__ import division
 
 import logging
+
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.template import loader
@@ -140,7 +142,7 @@ class GrantFundAdmin(admin.ModelAdmin):
 
 
 @admin.register(GrantPayout)
-class GrantPayoutAdmin(StateMachineAdmin):
+class GrantPayoutAdmin(ActivitySegmentAdminMixin, StateMachineAdmin):
     readonly_fields = [
         "total_amount",
         "currency",

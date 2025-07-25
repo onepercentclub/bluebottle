@@ -192,6 +192,10 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             effects=[
                 FollowActivityEffect,
                 RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.reset,
+                ),
+                RelatedTransitionEffect(
                     "activity",
                     DeadlineActivityStateMachine.succeed,
                     conditions=[activity_is_expired],
@@ -1164,6 +1168,14 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """Review not needed"""
         return not effect.instance.activity.review
 
+    def slot_is_in_future(effect):
+        """Check if the slot is in the future."""
+        return effect.instance.slot.start > now()
+
+    def slot_is_in_past(effect):
+        """Check if the slot is in the past."""
+        return effect.instance.slot.start < now()
+
     triggers = [
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
@@ -1263,7 +1275,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'activity',
                     DateStateMachine.succeed,
                     conditions=[activity_is_expired]
-                )
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
             ],
         ),
 
@@ -1361,6 +1377,36 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            DateParticipantStateMachine.restore,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[
+                        slot_is_in_future
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        slot_is_in_past
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
             ],

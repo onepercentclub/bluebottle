@@ -395,9 +395,7 @@ def all_slots_cancelled(effect):
     """
     return effect.instance.activity.slots.exclude(
         status__in=['cancelled', 'deleted', 'expired']
-    ).exclude(
-        id=effect.instance.id,
-    ).count() == 0
+    ).exclude(id=effect.instance.id).count() == 0
 
 
 @register(DateActivitySlot)
@@ -495,7 +493,7 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    DateParticipantStateMachine.finish
+                    DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
                     "activity",
@@ -513,7 +511,6 @@ class DateActivitySlotTriggers(TriggerManager):
             DateActivitySlotStateMachine.cancel,
             effects=[
                 NotificationEffect(SlotCancelledNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect(
                     "participants",
                     DateParticipantStateMachine.cancel,
@@ -551,9 +548,19 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'activity',
-                    DateStateMachine.unlock
+                    DateStateMachine.reopen,
+                    conditions=[activity_is_not_finished]
                 ),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.restore,
+                    conditions=[slot_is_not_finished]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished]
+                )
             ],
         ),
         TransitionTrigger(

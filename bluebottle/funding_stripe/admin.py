@@ -90,7 +90,6 @@ class StripePayoutAccountForm(StateMachineModelForm):
             (country.code, country.name) for country in countries
         ]
 
-        self.base_fields['business_type'].required = True
         super().__init__(*args, **kwargs)
 
 
@@ -106,13 +105,15 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
         'requirements_list',
         'verification_link',
         'stripe_link',
-        'funding'
+        'grant_application',
     ]
 
     search_fields = ["account_id"]
     list_display = ["id", "account_id", "owner", "status"]
 
-    fields = PayoutAccountChildAdmin.fields + ['country', 'business_type', 'account_id']
+    fields = PayoutAccountChildAdmin.fields + [
+        'country', 'business_type', 'verification_method', 'account_id'
+    ]
 
     def get_status_fields(self, request, obj):
         return super().get_status_fields(request, obj) + [
@@ -123,7 +124,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def get_basic_fields(self, request, obj):
         fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'country', 'funding', 'verification_link'
+            'business_type', 'verification_method', 'country', 'verification_link'
         ]
         return fields
 

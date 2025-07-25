@@ -571,6 +571,8 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         self.account = PlainPayoutAccountFactory.create()
+        self.bank_account = BankAccountFactory.create(connect_account=self.account)
+        self.activity = FundingFactory.create(bank_account=self.bank_account)
 
     def test_initial(self):
         self.assertEqual(self.account.status, 'new')

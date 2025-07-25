@@ -20,7 +20,7 @@ from bluebottle.geo.models import Place
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileMimetypeValidator, validate_file_infection
 from ..offices.models import OfficeSubRegion
-from ..segments.models import SegmentType
+from ..segments.models import SegmentType, Segment
 
 
 class MemberPlatformSettings(BasePlatformSettings):
@@ -295,6 +295,16 @@ class Member(BlueBottleBaseUser):
         help_text=_(
             "Select one or more groups to filter on. "
             "The user will only see data related to those selected groups. Leave empty to show all data."
+        ),
+        blank=True,
+    )
+
+    segment_manager = models.ManyToManyField(
+        Segment,
+        verbose_name=_("Segments managed"),
+        help_text=_(
+            "Select one or more segments to filter on. "
+            "The user will only get updates for activities with the selected segments."
         ),
         blank=True,
     )

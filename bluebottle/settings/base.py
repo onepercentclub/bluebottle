@@ -358,6 +358,7 @@ TENANT_APPS = (
     'bluebottle.deeds',
     'bluebottle.events',
     'bluebottle.assignments',
+    'bluebottle.grant_management',
     'bluebottle.funding',
     'bluebottle.funding_pledge',
     'bluebottle.funding_stripe',
@@ -805,3 +806,12 @@ TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
 TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True
 
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'), )
+
+IBAN_CHECK_API = {
+    "token_url": "https://auth-mtls-sandbox.abnamro.com/as/token.oauth2",
+    "base_url": "https://api-sandbox.abnamro.com",
+    "client_id": "client-id",
+    "api_key": "api-key",
+    "private_key": "path-to-private-key",
+    "public_cert": "path-to-public-cert",
+}

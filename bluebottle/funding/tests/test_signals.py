@@ -14,15 +14,10 @@ class TestDonationSignalsTestCase(BluebottleTestCase):
         self.funding = FundingFactory.create(target=Money(5000, 'EUR'), status='open')
 
     def test_successful_donation(self):
-        """
-        Test that a SystemWallpost is created for the project wall
-        when a user does a successful donation
-        """
         self.donation = DonorFactory(
             amount=Money(35, 'EUR'),
             user=self.user,
             activity=self.funding
         )
-        self.donation.states.succeed()
-        self.donation.save()
+        self.donation.states.succeed(save=True)
         self.assertEqual(len(mail.outbox), 2)

@@ -80,7 +80,7 @@ class ConnectAccountSerializer(ModelSerializer):
     included_serializers = {
         'external_accounts': 'bluebottle.funding_stripe.serializers.ExternalAccountSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'owner': 'bluebottle.initiatives.serializers.CurrentMemberSerializer',
     }
 
     class Meta(object):
@@ -99,6 +99,7 @@ class ConnectAccountSerializer(ModelSerializer):
             "country",
             "current_status",
             "business_type",
+            "verification_method",
             "tos_accepted",
             "service_agreement",
         )
@@ -122,6 +123,16 @@ class ConnectAccountSessionSerializer(serializers.Serializer):
 
     class JSONAPIMeta(object):
         resource_name = 'payout-accounts/stripe-sessions'
+
+
+class ConnectVerificationLinkSerializer(serializers.Serializer):
+    link = serializers.CharField(source="url")
+
+    class Meta(object):
+        fields = ("id", "link", )
+
+    class JSONAPIMeta(object):
+        resource_name = 'payout-accounts/stripe-verification-links'
 
 
 class StripeSourcePaymentSerializer(PaymentSerializer):

@@ -1,3 +1,5 @@
+from django.db.utils import ProgrammingError
+
 from builtins import object, str
 
 from adminsortable.models import SortableMixin
@@ -10,7 +12,6 @@ from django.urls import reverse
 from django.utils.functional import lazy
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
-from djchoices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 from parler.models import TranslatedFields
@@ -297,22 +298,19 @@ INITIATIVE_SEARCH_FILTERS = (
 
 
 def get_search_filters(filters):
-    if connection.tenant.schema_name != "public":
-        for segment in SegmentType.objects.all():
-            filters = filters + ((f"segment.{segment.slug}", segment.name),)
-    return filters
-
-
-class CreateFlowChoices(DjangoChoices):
-    initiative = ChoiceItem(
-        "initiative", label=_("Start the create flow by creating an initiative")
-    )
-    acitivity = ChoiceItem("activity", label=_("Directly create an activity"))
+    try:
+        if connection.tenant.schema_name != "public":
+            for segment in SegmentType.objects.all():
+                filters = filters + ((f"segment.{segment.slug}", segment.name),)
+        return filters
+    except ProgrammingError:
+        return []
 
 
 class InitiativePlatformSettings(BasePlatformSettings):
     ACTIVITY_TYPES = (
         ("funding", _("Funding")),
+        ("grantapplication", _("Grant Application")),
         ("periodactivity", _("Activity during a period")),
         ("dateactivity", _("Activity on a specific date")),
         ("deadlineactivity", _("Activity within a deadline")),
@@ -416,13 +414,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
-    create_flow = models.CharField(
-        _("Create flow"),
-        default=CreateFlowChoices.initiative,
-        choices=CreateFlowChoices.choices,
-        max_length=100,
-    )
-
     @property
     def deeds_enabled(self):
         return "deed" in self.activity_types
@@ -434,6 +425,10 @@ class InitiativePlatformSettings(BasePlatformSettings):
     @property
     def funding_enabled(self):
         return "funding" in self.activity_types
+
+    @property
+    def grant_application_enabled(self):
+        return "grantapplication" in self.activity_types
 
     class Meta(object):
         verbose_name_plural = _("initiative settings")

@@ -309,6 +309,21 @@ class ActivityStateMachine(ModelStateMachine):
         permission=is_owner,
     )
 
+    reopen = Transition(
+        [
+            rejected,
+            cancelled,
+            deleted,
+            expired
+        ],
+        open,
+        name=_("Reopen"),
+        description=_(
+            "Open the activity again, e.g. when a slot reopens."
+        ),
+        automatic=True,
+    )
+
     expire = Transition(
         [open, submitted, succeeded],
         expired,

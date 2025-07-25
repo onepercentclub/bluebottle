@@ -2,7 +2,7 @@ from django.urls import re_path
 
 from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
-    IntentWebHookView, SourceWebHookView,
+    IntentWebHookView,
     ConnectWebHookView,
     ExternalAccountList, ExternalAccountDetails,
     StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
@@ -85,11 +85,6 @@ urlpatterns = [
         r'^/intent-webhook$',
         IntentWebHookView.as_view(),
         name='stripe-intent-webhook'
-    ),
-    re_path(
-        r'^/source-webhook$',
-        SourceWebHookView.as_view(),
-        name='stripe-source-webhook'
     ),
     re_path(
         r'^/connect-webhook$',

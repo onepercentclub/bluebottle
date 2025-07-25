@@ -6,6 +6,7 @@ import mock
 import munch
 import stripe
 from django.contrib.auth.models import Group
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
 from moneyed import Money
@@ -1867,6 +1868,15 @@ class FundingAnonymousDonationsTestCase(APITestCase):
         self.assertFalse('user' in self.response.json()['data']['relationships'])
 
 
+@override_settings(
+    RABOBANK={
+        'public_cert': '',
+        'private_key': '',
+        'client_id': '',
+        'client_secret': '',
+        'iban_check_url': '',
+    }
+)
 class IbanCheckTestCase(APITestCase):
     url_name = 'funding-iban-check'
     serializer = IbanCheckSerializer

@@ -103,12 +103,12 @@ class UpcomingFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
             settings = InitiativePlatformSettings.objects.get()
-            statuses = ["open", "running"]
+            statuses = ["open", "running", "granted"]
             if settings.include_full_activities:
                 statuses.append("full")
             return Terms(status=statuses)
         if filter_values == ["0"]:
-            return Terms(status=["succeeded", "partially_funded", "refunded", "granted"])
+            return Terms(status=["succeeded", "partially_funded", "refunded"])
 
 
 class DraftFacet(Facet):
@@ -519,7 +519,7 @@ class ActivitySearch(Search):
         if "initiative.id" not in self._filters and "status" not in self._filters:
             search = search.filter(
                 Terms(
-                    status=["succeeded", "open", "full", "partially_funded", "refunded", "granted"]
+                    status=["succeeded", "open", "full", "partially_funded", "refunded"]
                 )
             )
 

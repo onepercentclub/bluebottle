@@ -495,7 +495,7 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 RelatedTransitionEffect(
                     "participants",
-                    DateParticipantStateMachine.finish
+                    DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
                     "activity",
@@ -553,7 +553,16 @@ class DateActivitySlotTriggers(TriggerManager):
                     'activity',
                     DateStateMachine.unlock
                 ),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.restore,
+                    conditions=[slot_is_not_finished]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished]
+                )
             ],
         ),
         TransitionTrigger(

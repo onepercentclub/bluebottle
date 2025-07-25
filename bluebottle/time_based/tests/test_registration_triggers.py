@@ -211,6 +211,16 @@ class DateRegistrationTriggerTestCase(
         super().test_reject()
         self.assertStatus(self.registration, "rejected")
         self.assertStatus(self.participant, "rejected")
+        self.assertStatus(self.participant.contributions.first(), "failed")
+
+    def test_reject_after_succeed(self):
+        super().test_accept()
+        self.slot.start = now() - timedelta(days=3)
+        self.slot.save()
+        self.registration.states.reject(save=True)
+        self.assertStatus(self.registration, "rejected")
+        self.assertStatus(self.participant, "rejected")
+        self.assertStatus(self.participant.contributions.first(), "failed")
 
     def test_fill(self):
         self.slot.capacity = 1

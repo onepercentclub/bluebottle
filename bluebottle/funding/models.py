@@ -795,10 +795,6 @@ class BankAccount(TriggerMixin, PolymorphicModel):
 
 
 class BusinessTypeChoices(DjangoChoices):
-    company = ChoiceItem(
-        'company',
-        label=_("Commercial company")
-    )
     individual = ChoiceItem(
         'individual',
         label=_("Individual person")
@@ -806,6 +802,11 @@ class BusinessTypeChoices(DjangoChoices):
     non_profit = ChoiceItem(
         'non_profit',
         label=_("Non-profit organization")
+    )
+
+    company = ChoiceItem(
+        'company',
+        label=_("Commercial company")
     )
 
 
@@ -846,6 +847,7 @@ class FundingPlatformSettings(BasePlatformSettings):
     )
 
     business_types = MultiSelectField(
+        _('verification types'),
         max_length=300,
         choices=BusinessTypeChoices.choices,
         default=[BusinessTypeChoices.individual]

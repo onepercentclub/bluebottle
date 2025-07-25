@@ -50,7 +50,8 @@ class TimeBasedStateMachine(ActivityStateMachine):
         [
             full,
             ActivityStateMachine.succeeded,
-            ActivityStateMachine.expired
+            ActivityStateMachine.expired,
+            ActivityStateMachine.cancelled
         ],
         ActivityStateMachine.open,
         name=_("Reopen"),

@@ -250,11 +250,13 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.initiative = InitiativeFactory(owner=self.user)
 
         self.activity = DateActivityFactory.create(
-            initiative=self.initiative, registration_deadline=None, review=False
+            initiative=self.initiative,
+            registration_deadline=None,
+            review=False,
+            slots=[]
         )
         self.initiative.states.submit()
         self.initiative.states.approve(save=True)
-        self.activity.states.publish(save=True)
         self.slot1 = DateActivitySlotFactory.create(
             activity=self.activity,
             start=now() + timedelta(days=2),
@@ -263,6 +265,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
             activity=self.activity,
             start=now() + timedelta(days=3),
         )
+        self.activity.states.publish(save=True)
         self.participant = DateParticipantFactory.create(
             activity=self.activity,
             slot=self.slot1,
@@ -282,6 +285,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_cancel_future(self):
         self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "accepted")
         self.assertStatus(self.participant.contributions.get(), "new")
         self.assertStatus(self.splitter, "withdrawn")
@@ -289,6 +293,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.slot1.states.cancel(save=True)
         self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "cancelled")
         self.assertStatus(self.participant.contributions.get(), "failed")
         self.assertStatus(self.splitter, "withdrawn")
@@ -296,16 +301,32 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.slot1.states.restore(save=True)
         self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "accepted")
         self.assertStatus(self.participant.contributions.get(), "new")
         self.assertStatus(self.splitter, "withdrawn")
         self.assertStatus(self.splitter.contributions.get(), "failed")
+
+    def test_cancel_all_slots(self):
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.activity, "open")
+
+        self.slot2.states.cancel(save=True)
+        self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.activity, "cancelled")
+
+        self.slot1.states.restore(save=True)
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.activity, "open")
 
     def test_cancel_past(self):
         self.slot1.start = now() - timedelta(days=2)
         self.slot1.save()
 
         self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "succeeded")
         self.assertStatus(self.participant.contributions.get(), "succeeded")
         self.assertStatus(self.splitter, "withdrawn")
@@ -313,6 +334,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.slot1.states.cancel(save=True)
         self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "cancelled")
         self.assertStatus(self.participant.contributions.get(), "failed")
         self.assertStatus(self.splitter, "withdrawn")
@@ -320,6 +342,7 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.slot1.states.restore(save=True)
         self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.activity, "open")
         self.assertStatus(self.participant, "succeeded")
         self.assertStatus(self.participant.contributions.get(), "succeeded")
         self.assertStatus(self.splitter, "withdrawn")

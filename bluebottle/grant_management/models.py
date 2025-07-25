@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
 from builtins import object
-from django.urls import reverse
 
-from bluebottle.utils.fields import MoneyField
-
+from django.contrib import admin
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.contrib import admin
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -24,6 +22,7 @@ from bluebottle.clients import properties
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.funding.validators import TargetValidator
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import get_current_host, get_current_language
 
 logger = logging.getLogger(__name__)
@@ -151,7 +150,18 @@ class GrantPayment(TriggerMixin, models.Model):
     def generate_payment_link(self):
         stripe = get_stripe()
         currency = str(self.total.currency)
-        init_args = {}
+        metadata = {
+            "tenant_name": connection.tenant.client_name,
+            "tenant_domain": connection.tenant.domain_url,
+            "grant_payment_id": self.id,
+            "grant_provider": self.grant_provider.name,
+        }
+        init_args = {
+            'payment_intent_data': {
+                'metadata': metadata
+            },
+            'metadata': metadata
+        }
         bank_transfer_type = "eu_bank_transfer"
         if currency == "USD":
             bank_transfer_type = "us_bank_transfer"
@@ -444,26 +454,26 @@ class GrantFund(models.Model):
 
     @property
     def credit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.credit)
+        return self.ledger_items.filter(type=LedgerItemChoices.credit).filter(status='final')
 
     @property
     def debit_items(self):
-        return self.ledger_items.filter(type=LedgerItemChoices.debit)
+        return self.ledger_items.filter(type=LedgerItemChoices.debit).filter(status='final')
 
     @property
-    @admin.display(description='Total amount paid out')
+    @admin.display(description='Life-titem total amount paid out')
     def total_credit(self):
         amount = self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Total budget')
+    @admin.display(description='Life-time total budget')
     def total_debit(self):
         amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Total amount pending')
+    @admin.display(description='Total amount pending (grant payments waiting completion / approval)')
     def total_pending(self):
         amount = self.ledger_items.filter(
             status='pending'
@@ -471,9 +481,12 @@ class GrantFund(models.Model):
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Current balance (includes pending)')
+    @admin.display(description='Current balance')
     def balance(self):
         return self.total_debit - self.total_credit
+
+    def eventual_balance(self):
+        return self.total_debit - self.total_credit - self.total_pending
 
     class JSONAPIMeta(object):
         resource_name = "activities/grant-funds"
@@ -546,7 +559,7 @@ class GrantDonor(Contributor):
         if str(self.amount.currency) != self.fund.currency:
             raise ValidationError({'amount': _('Currency should match fund currency')})
 
-        if not self.pk and self.amount.amount > self.fund.balance:
+        if not self.pk and self.amount.amount > self.fund.eventual_balance:
             raise ValidationError({'amount': _('Insufficient funds')})
 
         super().clean()

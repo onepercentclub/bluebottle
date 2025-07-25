@@ -2,13 +2,13 @@ from django.urls import re_path
 
 from bluebottle.funding_stripe.views import (
     StripeSourcePaymentList, StripePaymentIntentList,
-    IntentWebHookView, SourceWebHookView,
+    IntentWebHookView,
     ConnectWebHookView,
     ExternalAccountList, ExternalAccountDetails,
     StripePaymentList, ConnectAccountDetails, ConnectAccountList, StripePaymentIntentDetail,
     ConnectAccountSession, ConnectVerificationLink,
     CountrySpecList,
-    CountrySpecDetail, StripeBankTransferList, StripeBankTransferDetail,
+    CountrySpecDetail, StripeBankTransferList, StripeBankTransferDetail, SessionWebHookView,
 )
 
 urlpatterns = [
@@ -87,14 +87,14 @@ urlpatterns = [
         name='stripe-intent-webhook'
     ),
     re_path(
-        r'^/source-webhook$',
-        SourceWebHookView.as_view(),
-        name='stripe-source-webhook'
-    ),
-    re_path(
         r'^/connect-webhook$',
         ConnectWebHookView.as_view(),
         name="stripe-connect-webhook"
+    ),
+    re_path(
+        r'^/session-webhook$',
+        SessionWebHookView.as_view(),
+        name='stripe-session-webhook'
     ),
     re_path(r"^/country-specs$", CountrySpecList.as_view(), name="country-specs"),
     re_path(

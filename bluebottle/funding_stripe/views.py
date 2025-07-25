@@ -41,6 +41,7 @@ from bluebottle.funding_stripe.serializers import (
     ConnectVerificationLinkSerializer
 )
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.grant_management.models import GrantPayment
 from bluebottle.utils.permissions import IsOwner
 from bluebottle.utils.views import (
     ListAPIView,
@@ -506,7 +507,7 @@ class IntentWebHookView(View):
                 return payment
 
 
-class SourceWebHookView(View):
+class SessionWebHookView(View):
     def post(self, request, **kwargs):
         payload = request.body
         signature_header = request.META['HTTP_STRIPE_SIGNATURE']
@@ -514,87 +515,17 @@ class SourceWebHookView(View):
 
         try:
             event = stripe.Webhook.construct_event(
-                payload, signature_header, stripe.webhook_secret_sources
+                payload, signature_header, stripe.webhook_secret_checkout
             )
         except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse('Signature failed to verify', status=400)
 
-        try:
-            if event.type == 'source.canceled':
-                payment = self.get_payment_from_source(event.data.object.id)
-                payment.states.cancel(save=True)
-                return HttpResponse('Updated payment')
-
-            if event.type == 'source.failed':
-                payment = self.get_payment_from_source(event.data.object.id)
-                if payment.status != payment.states.failed.value:
-                    payment.states.fail(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'source.chargeable':
-                payment = self.get_payment_from_source(event.data.object.id)
-                payment.do_charge()
-                payment.save()
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.failed':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != payment.states.failed.value:
-                    payment.states.fail(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.succeeded':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    transfer = stripe.Transfer.retrieve(event.data.object.transfer)
-                    payment.donation.payout_amount = Money(
-                        transfer.amount / 100.0, transfer.currency
-                    )
-                    payment.donation.save()
-                    payment.states.succeed(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.pending':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                payment.states.authorize(save=True)
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.refunded':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.id)
-                payment.states.refund(save=True)
-
-                return HttpResponse('Updated payment')
-
-            if event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
-                if event.data.object.payment_intent:
-                    return HttpResponse('Not a source payment')
-                payment = self.get_payment_from_charge(event.data.object.charge)
-                payment.states.dispute(save=True)
-                return HttpResponse('Updated payment')
-
-        except StripePayment.DoesNotExist:
-            return HttpResponse('Payment not found', status=400)
-
-        return HttpResponse('Skipped')
-
-    def get_payment_from_source(self, source_token):
-        return StripeSourcePayment.objects.get(source_token=source_token)
-
-    def get_payment_from_charge(self, charge_token):
-        return StripeSourcePayment.objects.get(charge_token=charge_token)
+        if event.type.startswith('checkout.session'):
+            session_id = event.data.object.id
+            payment = GrantPayment.objects.filter(checkout_id=session_id).first()
+            if payment:
+                payment.check_status()
 
 
 class ConnectWebHookView(View):

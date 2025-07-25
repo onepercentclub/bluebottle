@@ -72,6 +72,7 @@ class FundingStateMachine(ActivityStateMachine):
 
     def kyc_is_valid(self):
         return (
+            self.instance.bank_account is not None and
             self.instance.payout_account
             and self.instance.payout_account.status == "verified"
         )

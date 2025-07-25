@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from djmoney.money import Money
 
+from djchoices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
@@ -17,7 +19,8 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices
+    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
+    FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
@@ -274,12 +277,12 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('The secret for payment intents webhook.')
     )
 
-    webhook_secret_sources = models.CharField(
+    webhook_secret_checkout = models.CharField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_('Stripe payment sources webhook secret'),
-        help_text=_('The secret for payment sources webhook.')
+        verbose_name=_('Stripe payment checkout session webhook secret'),
+        help_text=_('The secret for payment checkout session webhook.')
     )
 
     currency = models.CharField(
@@ -328,15 +331,30 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
+class VerificationMethodChoices(DjangoChoices):
+    personal = ChoiceItem(
+        'personal',
+        label=_("Personal")
+    )
+    link = ChoiceItem(
+        'link',
+        label=_("Link")
+    )
+
+
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
     country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
         max_length=100,
-        blank=True,
+        null=True,
         choices=BusinessTypeChoices.choices,
-        default=BusinessTypeChoices.individual
 
+    )
+    verification_method = models.CharField(
+        max_length=100,
+        null=True,
+        choices=VerificationMethodChoices.choices,
     )
 
     verified = models.BooleanField(default=False)
@@ -381,6 +399,14 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()
+
+        settings = FundingPlatformSettings.load()
+
+        if len(settings.business_types) == 1 and not self.business_type:
+            self.business_type = settings.business_types[0]
+
+        if self.business_type == BusinessTypeChoices.individual:
+            self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():
@@ -458,6 +484,7 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data, save=True):
+
         self.requirements = data.requirements.eventually_due
 
         if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
@@ -466,19 +493,11 @@ class StripePayoutAccount(PayoutAccount):
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            try:
-                self.verified = (
-                    data.requirements.currently_due == [] and
-                    data.requirements.past_due == [] and
-                    data.requirements.pending_verification == [] and
-                    data.future_requirements.currently_due == [] and
-                    data.future_requirements.past_due == [] and
-                    data.future_requirements.pending_verification == [] and
-                    data.charges_enabled and
-                    data.payouts_enabled
-                )
-            except AttributeError:
-                pass
+            stripe = get_stripe()
+            persons = stripe.Account.persons(data.id)
+            self.verified = len(persons) and all(
+                person.verification.status == 'verified' for person in persons
+            )
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

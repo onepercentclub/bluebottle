@@ -9,21 +9,14 @@ JET_DEFAULT_THEME = "goodup"
 
 JET_SIDE_MENU_ITEMS = [
     {
-        "label": _("Initiatives"),
-        "app_label": "initiatives",
-        "permissions": ["initiatives.change_initiative"],
+        "label": _("Initiatives & Activity"),
+        "app_label": "activities",
+        "permissions": ["activities.change_activities"],
         "items": [
             {
                 "name": "initiatives.initiative",
                 "permissions": ["initiatives.change_initiative"],
             },
-        ],
-    },
-    {
-        "label": _("Activity settings"),
-        "app_label": "activities",
-        "permissions": ["activities.change_activities"],
-        "items": [
             {
                 "name": "activities.activity",
                 "permissions": ["activities.change_activity"],

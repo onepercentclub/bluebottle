@@ -17,7 +17,7 @@ from bluebottle.time_based.tests.factories import (
     ScheduleParticipantFactory,
     ScheduleSlotFactory,
     TeamScheduleRegistrationFactory,
-    TeamMemberFactory,
+    TeamMemberFactory, DateActivityFactory, DateActivitySlotFactory, DateParticipantFactory,
 )
 
 
@@ -239,3 +239,88 @@ class TeamScheduleSlotTriggerTestCase(BluebottleTestCase):
 
         self.assertStatus("scheduled")
         self.assertStatus("scheduled", self.registration.team)
+
+
+class DateActivitySlotTriggerTestCase(BluebottleTestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin_user = BlueBottleUserFactory.create(is_staff=True)
+        self.user = BlueBottleUserFactory()
+
+        self.initiative = InitiativeFactory(owner=self.user)
+
+        self.activity = DateActivityFactory.create(
+            initiative=self.initiative, registration_deadline=None, review=False
+        )
+        self.initiative.states.submit()
+        self.initiative.states.approve(save=True)
+        self.activity.states.publish(save=True)
+        self.slot1 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=2),
+        )
+        self.slot2 = DateActivitySlotFactory.create(
+            activity=self.activity,
+            start=now() + timedelta(days=3),
+        )
+        self.participant = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot1,
+        )
+
+        self.splitter = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.slot1,
+        )
+        self.splitter.states.withdraw(save=True)
+
+        mail.outbox = []
+
+    def assertStatus(self, obj, status):
+        obj.refresh_from_db()
+        self.assertEqual(obj.status, status)
+
+    def test_cancel_future(self):
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+        self.slot1.states.restore(save=True)
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+    def test_cancel_past(self):
+        self.slot1.start = now() - timedelta(days=2)
+        self.slot1.save()
+
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")
+
+        self.slot1.states.restore(save=True)
+        self.assertStatus(self.slot1, "finished")
+        self.assertStatus(self.participant, "succeeded")
+        self.assertStatus(self.participant.contributions.get(), "succeeded")
+        self.assertStatus(self.splitter, "withdrawn")
+        self.assertStatus(self.splitter.contributions.get(), "failed")

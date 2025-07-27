@@ -33,6 +33,21 @@ class GenerateDepositLedgerItem(Effect):
         self.instance.save()
 
 
+class UpdateLedgerItemEffect(Effect):
+    title = _("Update ledger item")
+    template = "admin/update_ledger_item.html"
+
+    def post_save(self, **kwargs):
+        ledger_item = self.instance.ledger_items.last()
+        if ledger_item:
+            ledger_item.amount = self.instance.amount
+            ledger_item.fund = self.instance.fund
+            ledger_item.save()
+
+    def __str__(self):
+        return "Update ledger item"
+
+
 class PrepareGrantApplicationPayoutsEffect(Effect):
     title = _("Create payouts for connected grant applications that where granted")
     template = "admin/create_grant_application_payouts.html"

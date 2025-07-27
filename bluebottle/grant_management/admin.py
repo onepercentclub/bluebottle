@@ -43,15 +43,32 @@ logger = logging.getLogger(__name__)
 
 @admin.register(GrantDonor)
 class GrantDonorAdmin(ContributorChildAdmin):
-    raw_id_fields = ContributorChildAdmin.raw_id_fields + ('payout',)
+    list_display = ['activity', 'amount']
+    fields = ['activity', 'states', 'amount', 'fund']
+
+    def get_readonly_fields(self, request, obj=None):
+        if not self.has_delete_permission(request, obj):
+            return ['activity', 'amount', 'fund']
+        return ['activity']
+
+    def has_delete_permission(self, request, obj=None):
+        payout = obj and obj.activity and obj.activity.payouts.first()
+        if payout and payout.status in ['approved', 'succeeded']:
+            return False
+        return True
 
 
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
     readonly_fields = ["created", "state_name", "contributor_date", "activity"]
-    raw_id_fields = ['fund']
     fields = ['amount', 'fund'] + readonly_fields
+
+    def has_change_permission(self, request, obj=None):
+        payout = obj and obj.payouts.first()
+        if payout and payout.status in ['approved', 'succeeded']:
+            return False
+        return True
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -161,6 +178,8 @@ class GrantPayoutAdmin(ActivitySegmentAdminMixin, StateMachineAdmin):
 
     list_display = ['activity', 'total_amount', 'state_name', 'created']
 
+    inlines = [GrantDonorInline]
+
     def partner_organization(self, obj):
         if obj.activity and obj.activity.organization:
             url = reverse('admin:organizations_organization_change', args=(obj.activity.organization.id,))
@@ -210,7 +229,6 @@ class GrantPayoutAdmin(ActivitySegmentAdminMixin, StateMachineAdmin):
                         "date_completed",
                         "status",
                         "states",
-                        "provider"
                     ],
                 },
             ),
@@ -239,6 +257,7 @@ class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
         "total_amount",
         "provider",
         "currency",
+        "state_name",
         "date_approved",
         "date_started",
         "date_completed",

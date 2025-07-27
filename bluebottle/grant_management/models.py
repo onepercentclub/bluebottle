@@ -576,6 +576,9 @@ class GrantDonor(Contributor):
             )
             self.save()
 
+    def __str__(self):
+        return f'{self.activity.title} - {self.amount}'
+
 
 class GrantDeposit(TriggerMixin, models.Model):
     status = models.CharField(max_length=40)

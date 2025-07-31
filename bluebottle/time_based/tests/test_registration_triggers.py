@@ -162,20 +162,25 @@ class DateRegistrationTriggerTestCase(
             user=self.user,
             registration=self.registration,
             slot=self.slot,
-            activity=self.activity
+            activity=self.activity,
+            as_user=self.user,
         )
 
     def test_initial(self):
         self.create()
-        self.assertEqual(self.registration.status, "accepted")
-        self.assertEqual(
-            mail.outbox[0].subject,
-            'You have joined the activity "{}"'.format(self.activity.title),
-        )
 
         self.assertEqual(self.registration.participants.count(), 1)
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "accepted")
+
+        self.assertEqual(
+            mail.outbox[0].subject,
+            'A participant has registered for a time slot for your activity "{}"'.format(self.activity.title),
+        )
+        self.assertEqual(
+            mail.outbox[1].subject,
+            'You\'ve registered for a time slot for the activity "{}"'.format(self.activity.title),
+        )
 
     def test_initial_review(self):
         super().test_initial_review()

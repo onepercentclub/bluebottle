@@ -379,7 +379,7 @@ def activity_has_participants(effect):
     """
     Activity has accepted participants.
     """
-    return effect.instance.activity.accepted_participants.count() > 0
+    return effect.instance.activity.active_participants.count() > 0
 
 
 def activity_has_no_participants(effect):
@@ -492,18 +492,24 @@ class DateActivitySlotTriggers(TriggerManager):
             DateActivitySlotStateMachine.finish,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
+                    "accepted_and_new_participants",
                     DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_is_finished, activity_has_participants]
+                    conditions=[
+                        activity_is_finished,
+                        activity_has_participants
+                    ]
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.expire,
-                    conditions=[activity_is_finished, activity_has_no_participants]
+                    conditions=[
+                        activity_is_finished,
+                        activity_has_no_participants
+                    ]
                 ),
             ],
         ),

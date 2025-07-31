@@ -14,12 +14,10 @@ The activity will take place tomorrow!
 Read the latest updates on the activity page.
 {% endblocktrans %}
 </p>
-<p>
-<i>
-{% blocktrans context 'email' %}
-If you are unable to participate, please withdraw via the activity page so that others can take your place.
-{% endblocktrans %}
-</i>
-</p>
 
+{% endblock %}
+
+
+{% block end_message %}
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
 {% endblock %}

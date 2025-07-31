@@ -7,5 +7,10 @@
 
 <p>The activity starts {{start}} and {{end}}.</p>
 
-<p>If you are unable to participate, please withdraw via the activity page so that others can take your place.</p>
 {% endblocktrans %}{% endblock %}
+
+
+{% block end_message %}
+  {% include 'mails/messages/partials/withdraw_notification.html' %}
+{% endblock %}
+

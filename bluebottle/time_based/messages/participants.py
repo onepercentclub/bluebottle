@@ -41,6 +41,7 @@ class UserParticipantNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'name': 'user.full_name',
+        'review_link': 'activity.review_link',
     }
 
     @property
@@ -68,6 +69,20 @@ class UserParticipantWithdrewNotification(UserParticipantNotification):
     """
     subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
     template = 'messages/participants/user_participant_withdrew'
+
+
+class UserDateParticipantWithdrewNotification(UserParticipantNotification):
+    """
+    The participant was removed from the activity
+    """
+    subject = pgettext('email', 'You have withdrawn from the activity "{title}"')
+    template = 'messages/participants/user_date_participant_withdrew'
+
+    def get_context(self, recipient):
+        context = super(UserDateParticipantWithdrewNotification, self).get_context(recipient)
+        if self.obj.slot and self.obj.slot.start:
+            context['slot'] = get_slot_info(self.obj.slot)
+        return context
 
 
 class UserScheduledNotification(UserParticipantNotification):

@@ -343,6 +343,15 @@ def activity_has_no_open_slot(effect):
     ) == 0
 
 
+def all_upcoming_slots_full(effect):
+    upcoming_slots = effect.instance.activity.slots.exclude(
+        id=effect.instance.id
+    ).filter(
+        status__in=['open', 'full']
+    ).filter(start__gte=now())
+    return upcoming_slots.count() and upcoming_slots.count() == upcoming_slots.filter(status='full').count()
+
+
 def activity_has_finished_slot(effect):
     """
     activity has finished slots. All slots are either finished or full
@@ -350,6 +359,31 @@ def activity_has_finished_slot(effect):
     return len(
         effect.instance.activity.slots.filter(status='finished')
     ) > 0
+
+
+def activity_has_open_slots(effect):
+    """
+    activity has open slots. At least one slot is still open
+    """
+    return effect.instance.activity.slots.exclude(pk=effect.instance.pk).filter(status='open').count()
+
+
+def activity_has_succeeded_slots(effect):
+    """
+    activity has succeeded slots. At least one slot is succeeded
+    """
+    return effect.instance.activity.slots.exclude(
+        pk=effect.instance.pk
+    ).filter(status='finished').count() > 0
+
+
+def activity_has_no_upcoming_slots(effect):
+    """
+    activity has no open slots. All slots are either finished or full
+    """
+    return effect.instance.activity.slots.exclude(
+        pk=effect.instance.pk
+    ).filter(status__in=['open', 'full']).count() == 0
 
 
 def activity_is_finished(effect):
@@ -379,7 +413,7 @@ def activity_has_participants(effect):
     """
     Activity has accepted participants.
     """
-    return effect.instance.activity.accepted_participants.count() > 0
+    return effect.instance.activity.participants.count() > 0
 
 
 def activity_has_no_participants(effect):
@@ -395,9 +429,7 @@ def all_slots_cancelled(effect):
     """
     return effect.instance.activity.slots.exclude(
         status__in=['cancelled', 'deleted', 'expired']
-    ).exclude(
-        id=effect.instance.id,
-    ).count() == 0
+    ).exclude(id=effect.instance.id).count() == 0
 
 
 @register(DateActivitySlot)
@@ -494,18 +526,24 @@ class DateActivitySlotTriggers(TriggerManager):
             DateActivitySlotStateMachine.finish,
             effects=[
                 RelatedTransitionEffect(
-                    "participants",
-                    DateParticipantStateMachine.finish
+                    "active_and_new_participants",
+                    DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_is_finished, activity_has_participants]
+                    conditions=[
+                        activity_is_finished,
+                        activity_has_participants
+                    ]
                 ),
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.expire,
-                    conditions=[activity_is_finished, activity_has_no_participants]
+                    conditions=[
+                        activity_is_finished,
+                        activity_has_no_participants
+                    ]
                 ),
             ],
         ),
@@ -513,24 +551,26 @@ class DateActivitySlotTriggers(TriggerManager):
             DateActivitySlotStateMachine.cancel,
             effects=[
                 NotificationEffect(SlotCancelledNotification),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect(
-                    "participants",
+                    "active_and_new_participants",
                     DateParticipantStateMachine.cancel,
                 ),
 
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.lock,
-                    conditions=[activity_has_no_open_slot]
+                    conditions=[
+                        all_upcoming_slots_full
+                    ]
                 ),
-
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_has_finished_slot]
+                    conditions=[
+                        activity_has_no_upcoming_slots,
+                        activity_has_succeeded_slots
+                    ]
                 ),
-
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.cancel,
@@ -551,9 +591,19 @@ class DateActivitySlotTriggers(TriggerManager):
                 ),
                 RelatedTransitionEffect(
                     'activity',
-                    DateStateMachine.unlock
+                    DateStateMachine.reopen,
+                    conditions=[activity_is_not_finished]
                 ),
-                ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.reset)
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.restore,
+                    conditions=[slot_is_not_finished]
+                ),
+                RelatedTransitionEffect(
+                    'participants',
+                    DateParticipantStateMachine.succeed,
+                    conditions=[slot_is_finished]
+                )
             ],
         ),
         TransitionTrigger(

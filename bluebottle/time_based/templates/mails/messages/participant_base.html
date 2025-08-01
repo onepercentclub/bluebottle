@@ -12,6 +12,15 @@
         {% block message %}{% endblock %}
     {% endif %}
     {% block additional %} {% endblock %}
+
+    {% if review_link %}
+        <p>
+            {% blocktrans %}
+                <a href="{{ review_link }}">Revisit the external link</a> that was shown when you signed up for this activity.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
+
 {% endblock %}
 
 {% block action %}
@@ -20,10 +29,3 @@
 {% endblock %}`
 
 
-{% block end_message %}
-  <div class="info-box">
-      {% blocktrans context 'email' %}
-        Our partners are counting on your participation. Withdrawing at the last moment or not showing up will affect their planning. If you are unable to participate, please withdraw in time so we can find a suitable solution.
-      {% endblocktrans %}
-  </div>
-{% endblock %}

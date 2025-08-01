@@ -39,6 +39,7 @@ from bluebottle.time_based.messages.participants import (
     UserParticipantRemovedNotification,
     UserParticipantWithdrewNotification,
     ManagerParticipantWithdrewNotification, UserScheduledNotification, RegisteredActivityParticipantAddedNotification,
+    UserDateParticipantWithdrewNotification,
 )
 from bluebottle.time_based.states import (
     ParticipantStateMachine,
@@ -191,6 +192,10 @@ class RegistrationParticipantTriggers(ContributorTriggers):
             RegistrationParticipantStateMachine.restore,
             effects=[
                 FollowActivityEffect,
+                RelatedTransitionEffect(
+                    'contributions',
+                    ContributionStateMachine.reset,
+                ),
                 RelatedTransitionEffect(
                     "activity",
                     DeadlineActivityStateMachine.succeed,
@@ -1164,6 +1169,14 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """Review not needed"""
         return not effect.instance.activity.review
 
+    def slot_is_in_future(effect):
+        """Check if the slot is in the future."""
+        return effect.instance.slot.start > now()
+
+    def slot_is_in_past(effect):
+        """Check if the slot is in the past."""
+        return effect.instance.slot.start < now()
+
     triggers = [
         TransitionTrigger(
             DateParticipantStateMachine.initiate,
@@ -1193,14 +1206,14 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[
-                        applicant_is_accepted,
+                        review_disabled,
                         is_participant
                     ]
                 ),
                 NotificationEffect(
                     ParticipantSlotParticipantRegisteredNotification,
                     conditions=[
-                        applicant_is_accepted,
+                        review_disabled,
                         is_participant
                     ]
                 ),
@@ -1263,7 +1276,11 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                     'activity',
                     DateStateMachine.succeed,
                     conditions=[activity_is_expired]
-                )
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                ),
             ],
         ),
 
@@ -1300,8 +1317,20 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ManagerSlotParticipantWithdrewNotification,
                 ),
+                NotificationEffect(
+                    UserDateParticipantWithdrewNotification
+                ),
                 SlotParticipantUnFollowActivityEffect,
             ],
+        ),
+        TransitionTrigger(
+            DateParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+            ]
         ),
 
         TransitionTrigger(
@@ -1361,6 +1390,36 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 NotificationEffect(
                     ManagerSlotParticipantRegisteredNotification,
                     conditions=[applicant_is_accepted]
+                ),
+                FollowActivityEffect,
+            ],
+        ),
+        TransitionTrigger(
+            DateParticipantStateMachine.restore,
+            effects=[
+                CheckPreparationTimeContributionEffect,
+                TransitionEffect(
+                    DateParticipantStateMachine.accept,
+                    conditions=[registration_is_accepted]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.reset,
+                    conditions=[
+                        slot_is_in_future
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.succeed,
+                    conditions=[
+                        slot_is_in_past
+                    ]
+                ),
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.lock,
+                    conditions=[participant_slot_will_be_full]
                 ),
                 FollowActivityEffect,
             ],
@@ -1446,11 +1505,6 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                RelatedTransitionEffect(
-                    'activity',
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[activity_will_be_expired],
-                )
             ]
         ),
         TransitionTrigger(

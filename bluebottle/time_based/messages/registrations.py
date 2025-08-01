@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.time_based.messages import get_slot_info
 from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
 from bluebottle.utils.widgets import duration_to_hours
 
@@ -53,6 +54,7 @@ class UserRegistrationNotification(TransitionMessage):
     context = {
         'title': 'activity.title',
         'applicant_name': 'user.full_name',
+        'review_link': 'activity.review_link',
     }
 
     def get_context(self, recipient):
@@ -174,14 +176,27 @@ class PeriodicUserAppliedNotification(UserRegistrationNotification):
     template = 'messages/registrations/periodic/user_applied'
 
 
-class DateUserAppliedNotification(UserRegistrationNotification):
-    subject = pgettext('email', 'You have applied to the activity "{title}"')
-    template = 'messages/registrations/date/user_applied'
+class DateUserBaseNotification(UserRegistrationNotification):
+    def get_context(self, recipient):
+        context = super(DateUserBaseNotification, self).get_context(recipient)
+        context['slots'] = [
+            get_slot_info(p.slot) for p in self.obj.participants.filter(
+                status__in=['new', 'accepted', 'succeeded'],
+                slot__start__gte=now(),
+            ).all()
+        ]
+        return context
+    delay = 60
 
 
-class DateUserJoinedNotification(UserRegistrationNotification):
+class DateUserJoinedNotification(DateUserBaseNotification):
     subject = pgettext('email', 'You have joined the activity "{title}"')
     template = 'messages/registrations/date/user_joined'
+
+
+class DateUserAppliedNotification(DateUserBaseNotification):
+    subject = pgettext('email', 'You have applied to the activity "{title}"')
+    template = 'messages/registrations/date/user_applied'
 
 
 class PeriodicUserJoinedNotification(UserRegistrationNotification):

@@ -1,0 +1,9 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+        Congratulations, your funding deadline for "{{ title }}" has passed and you've successfully reached your funding goal!<br>
+        Head over to your campaign page and thank your awesome backers for their donations and support.<br>
+    {% endblocktrans %}
+{% endblock message %}

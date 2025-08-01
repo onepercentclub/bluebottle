@@ -10,6 +10,7 @@ SCORE_MAP = {
     'on_hold': 0.6,
     'succeeded': 0.5,
     'partially_funded': 0.5,
+    'granted': 0.5,
     'refundend': 0.3,
 }
 

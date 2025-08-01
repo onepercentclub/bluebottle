@@ -1,0 +1,13 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for provider in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <a href="{% url provider.url  %}" >{{ provider.name }}</a>
+        <br>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

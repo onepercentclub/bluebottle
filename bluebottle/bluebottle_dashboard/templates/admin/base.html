@@ -20,7 +20,19 @@
 {% block pretitle %}
     {% if user.is_authenticated %}
         <div class="site-title">
-            {{ tenant.name }}
+            {% if user.segment_manager.count < 3 %}
+                {% for segment in user.segment_manager.all %}
+                    <span class="segment-label segment-label-{{ segment.slug }}">{{ segment.name }}</span> &middot;
+                {% endfor %}
+            {% endif %}
+            {% if user.subregion_manager.count < 3 %}
+                {% for subregion in user.subregion_manager.all %}
+                    <span class="segment-label segment-label-{{ segment.slug }}">{{ subregion.name }}</span> &middot;
+                {% endfor %}
+            {% endif %}
+            {% if tenant %}
+                <span class="segment-label segment-label-{{ tenant.slug }}">{{ tenant.name }}</span>
+            {% endif %}
         </div>
     {% else %}
         <div class="site-title site-title-login">

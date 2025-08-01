@@ -368,8 +368,16 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
     def accepted_participants(self):
         if self.pk:
             return self.participants.filter(
-                status__in=['accepted', 'new', 'succeeded'],
-                registration__status='accepted'
+                status__in=['accepted', 'succeeded']
+            )
+        else:
+            return []
+
+    @property
+    def active_and_new_participants(self):
+        if self.pk:
+            return self.participants.filter(
+                status__in=['new', 'accepted', 'succeeded']
             )
         else:
             return []
@@ -904,7 +912,6 @@ class RegisteredDateActivity(TimeBasedActivity):
 
 
 class Participant(Contributor):
-
     registration = models.ForeignKey(
         'time_based.Registration',
         on_delete=models.SET_NULL,
@@ -1042,7 +1049,6 @@ class ContributionTypeChoices(DjangoChoices):
 
 
 class TimeContribution(Contribution):
-
     value = models.DurationField(_('value'))
 
     contribution_type = models.CharField(
@@ -1422,7 +1428,6 @@ class RegisteredDateParticipant(Contributor):
 
 
 class TeamScheduleRegistration(Registration):
-
     class JSONAPIMeta(object):
         resource_name = 'contributors/time-based/team-schedule-registrations'
 
@@ -1652,7 +1657,6 @@ class ScheduleParticipant(Participant, Contributor):
 
 
 class TeamScheduleParticipant(Participant, Contributor):
-
     registration = models.ForeignKey(
         'time_based.TeamScheduleRegistration',
         related_name='participants',
@@ -1721,7 +1725,6 @@ class TeamScheduleParticipant(Participant, Contributor):
 
 
 class OldSlotParticipant(TriggerMixin, models.Model):
-
     slot = models.ForeignKey(
         DateActivitySlot, related_name='slot_participants', on_delete=models.CASCADE
     )

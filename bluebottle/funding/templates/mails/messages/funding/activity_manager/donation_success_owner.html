@@ -1,0 +1,10 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+    {% blocktrans context 'email' %}
+    Nice! You just received a new donation. Why not head over to your campaign page and say thanks?
+    {% endblocktrans %}
+    <br><br>
+    {% include 'mails/messages/partials/donation_receipt.html' %}
+{% endblock message %}

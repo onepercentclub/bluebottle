@@ -7,12 +7,11 @@ JET_APP_INDEX_DASHBOARD = (
 
 JET_DEFAULT_THEME = "goodup"
 
-
 JET_SIDE_MENU_ITEMS = [
     {
-        "label": _("Initiatives"),
-        "app_label": "initiatives",
-        "permissions": ["initiatives.change_initiative"],
+        "label": _("Initiatives & Activity"),
+        "app_label": "activities",
+        "permissions": ["activities.change_activities"],
         "items": [
             {
                 "name": "initiatives.initiative",
@@ -29,6 +28,10 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "activities.contribution",
                 "permissions": ["activities.change_contribution"],
+            },
+            {
+                "name": "activities.activityquestion",
+                "permissions": ["activities.change_activityquestion"],
             },
             {
                 "name": "impact.impacttype",
@@ -125,7 +128,37 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "funding.bankaccount",
                 "permissions": ["funding.change_bankaccount"],
             },
-            {"name": "funding.payout", "permissions": ["funding.change_payout"]},
+            {
+                "name": "funding.payout", "permissions": ["funding.change_payout"],
+            },
+        ],
+    },
+    {
+        "label": _("Grant management"),
+        "app_label": "grant_management",
+        "permissions": ["funding.change_grantapplication"],
+        "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
+        "items": [
+            {
+                "name": "grant_management.grantprovider",
+                "permissions": ["grant_management.change_grantprovider"],
+            },
+            {
+                "name": "grant_management.grantfund",
+                "permissions": ["grant_management.change_grantfund"],
+            },
+            {
+                "name": "grant_management.grantapplication",
+                "permissions": ["grant_management.change_grantapplication"],
+            },
+            {
+                "name": "grant_management.grantpayout",
+                "permissions": ["grant_management.change_grantpayout"],
+            },
+            {
+                "name": "grant_management.grantpayment",
+                "permissions": ["grant_management.change_grantpayment"],
+            },
         ],
     },
     {
@@ -272,6 +305,5 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
 ]
-
 
 JET_SIDE_MENU_COMPACT = False

@@ -343,6 +343,11 @@ def activity_has_no_open_slot(effect):
     ) == 0
 
 
+def all_upcoming_slots_full(effect):
+    upcoming_slots = effect.instance.activity.slots.filter(start__gte=now())
+    return upcoming_slots.count() and upcoming_slots.count() == upcoming_slots.filter(status='full').count()
+
+
 def activity_has_finished_slot(effect):
     """
     activity has finished slots. All slots are either finished or full
@@ -379,7 +384,7 @@ def activity_has_participants(effect):
     """
     Activity has accepted participants.
     """
-    return effect.instance.activity.active_participants.count() > 0
+    return effect.instance.activity.participants.count() > 0
 
 
 def activity_has_no_participants(effect):
@@ -492,7 +497,7 @@ class DateActivitySlotTriggers(TriggerManager):
             DateActivitySlotStateMachine.finish,
             effects=[
                 RelatedTransitionEffect(
-                    "accepted_and_new_participants",
+                    "accepted_participants",
                     DateParticipantStateMachine.succeed
                 ),
                 RelatedTransitionEffect(
@@ -525,13 +530,18 @@ class DateActivitySlotTriggers(TriggerManager):
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.lock,
-                    conditions=[activity_has_no_open_slot]
+                    conditions=[
+                        all_upcoming_slots_full
+                    ]
                 ),
 
                 RelatedTransitionEffect(
                     "activity",
                     DateStateMachine.succeed,
-                    conditions=[activity_has_finished_slot]
+                    conditions=[
+                        activity_has_finished_slot,
+                        activity_has_no_open_slot
+                    ]
                 ),
 
                 RelatedTransitionEffect(

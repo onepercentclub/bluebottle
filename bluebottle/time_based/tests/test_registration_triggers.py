@@ -193,6 +193,7 @@ class DateRegistrationTriggerTestCase(
         self.slot.start = now() - timedelta(days=3)
         self.slot.save()
         self.assertEqual(self.registration.participants.count(), 1)
+        self.assertStatus(self.slot, "finished")
         self.assertStatus(self.registration, "accepted")
         self.assertStatus(self.participant, "succeeded")
 

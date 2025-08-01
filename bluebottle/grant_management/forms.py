@@ -21,11 +21,13 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         queryset=GrantFund.objects.all(),
         label=_("Grant Fund"),
         help_text=_("Select the grant fund for this donation"),
+        required=True
     )
 
     amount = MoneyFormField(
         label=_("Amount"),
         help_text=_("Enter the grant amount"),
+        required=True,
     )
 
     def save(self, user=None):

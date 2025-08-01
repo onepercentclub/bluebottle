@@ -1323,6 +1323,15 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 SlotParticipantUnFollowActivityEffect,
             ],
         ),
+        TransitionTrigger(
+            DateParticipantStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    'contributions',
+                    TimeContributionStateMachine.fail,
+                ),
+            ]
+        ),
 
         TransitionTrigger(
             DateParticipantStateMachine.reapply,
@@ -1496,11 +1505,6 @@ class RegisteredDateParticipantTriggers(ContributorTriggers):
                     'contributions',
                     TimeContributionStateMachine.fail,
                 ),
-                RelatedTransitionEffect(
-                    'activity',
-                    RegisteredDateActivityStateMachine.succeed,
-                    conditions=[activity_will_be_expired],
-                )
             ]
         ),
         TransitionTrigger(

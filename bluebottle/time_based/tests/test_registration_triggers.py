@@ -145,7 +145,6 @@ class DateRegistrationTriggerTestCase(
 
     def setUp(self):
         super().setUp()
-
         self.slot = DateActivitySlotFactory.create(
             activity=self.activity,
             start=now() + timedelta(days=2)

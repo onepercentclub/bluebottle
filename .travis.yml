@@ -1,5 +1,5 @@
-dist: focal
-sudo: false
+dist: jammy
+sudo: required
 language: python
 addons:
   postgresql: "13"
@@ -13,9 +13,8 @@ addons:
       - postgresql-client-13
       - postgresql-13-postgis-2.5
       - postgis
-cache: pip
-  - "$HOME/.cache/pip/"
-  - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"
+cache:
+  pip: true
 python:
   - 3.9
 services:

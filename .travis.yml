@@ -10,9 +10,9 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
-      - postgresql
-      - postgresql-client
-      - postgresql-postgis
+      - postgresql-14
+      - postgresql-client-14
+      - postgresql-14-postgis-3
       - postgis
 cache:
   pip: true

@@ -2,7 +2,7 @@ dist: jammy
 sudo: required
 language: python
 addons:
-  postgresql: "13"
+  postgresql: "14"
   apt:
     packages:
       - libxmlsec1
@@ -10,9 +10,9 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
-      - postgresql-13
-      - postgresql-client-13
-      - postgresql-13-postgis-3
+      - postgresql
+      - postgresql-client
+      - postgresql-postgis
       - postgis
 cache:
   pip: true
@@ -25,7 +25,7 @@ env:
   global:
     - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/13/main/pg_hba.conf
+  - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/14/main/pg_hba.conf
   - sudo service postgresql@13-main restart
   - sleep 1
   - psql -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"

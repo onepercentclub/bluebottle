@@ -7,7 +7,7 @@ from bluebottle.fsm.triggers import (
 from bluebottle.funding.effects import (
     SubmitPayoutEffect, SetDateEffect, ClearPayoutDatesEffect
 )
-from bluebottle.grant_management.effects import DisburseFundsEffect, CreatePayoutEffect, UpdateLedgerItemEffect
+from bluebottle.grant_management.effects import DisburseFundsEffect, CreatePayoutEffect
 from bluebottle.grant_management.effects import GenerateDepositLedgerItem
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationNeedsWorkMessage, GrantApplicationRejectedMessage, GrantApplicationCancelledMessage, \
@@ -60,29 +60,29 @@ class GrantDepositTriggers(TriggerManager):
 @register(GrantDonor)
 class GrantDonorTriggers(TriggerManager):
     triggers = [
-        TransitionTrigger(
-            GrantDonorStateMachine.initiate,
-            effects=[
-                RelatedTransitionEffect(
-                    'activity',
-                    GrantApplicationStateMachine.approve
-                ),
-            ]
-        ),
-
-        TransitionTrigger(
-            GrantDonorStateMachine.succeed,
-            effects=[
-                RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
-
-            ]
-        ),
-        ModelChangedTrigger(
-            ['amount', 'fund'],
-            effects=[
-                UpdateLedgerItemEffect
-            ]
-        ),
+        # TransitionTrigger(
+        #     GrantDonorStateMachine.initiate,
+        #     effects=[
+        #         RelatedTransitionEffect(
+        #             'activity',
+        #             GrantApplicationStateMachine.approve
+        #         ),
+        #     ]
+        # ),
+        #
+        # TransitionTrigger(
+        #     GrantDonorStateMachine.succeed,
+        #     effects=[
+        #         RelatedTransitionEffect('ledger_items', LedgerItemStateMachine.finalise)
+        #
+        #     ]
+        # ),
+        # ModelChangedTrigger(
+        #     ['amount', 'fund'],
+        #     effects=[
+        #         UpdateLedgerItemEffect
+        #     ]
+        # ),
     ]
 
 
@@ -138,7 +138,7 @@ class GrantApplicationTriggers(ActivityTriggers):
             ]
         ),
         ModelChangedTrigger(
-            'bank_account',
+            ['bank_account'],
             effects=[
                 CreatePayoutEffect,
             ]

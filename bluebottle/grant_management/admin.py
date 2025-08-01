@@ -61,20 +61,17 @@ class GrantDonorAdmin(ContributorChildAdmin):
 class GrantInline(StateMachineAdminMixin, admin.StackedInline):
     model = GrantDonor
     extra = 0
-    readonly_fields = ["created", "state_name", "contributor_date", "activity"]
-    fields = ['amount', 'fund'] + readonly_fields
+    readonly_fields = ['edit', 'amount', 'fund', "created", "state_name", "contributor_date", "activity"]
+    fields = readonly_fields
 
     def has_change_permission(self, request, obj=None):
-        payout = obj and obj.payouts.first()
-        if payout and payout.status in ['approved', 'succeeded']:
-            return False
-        return True
+        return False
 
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        if obj and isinstance(obj, GrantApplication) and obj.target:
-            formset.form.base_fields["amount"].initial = obj.target
-        return formset
+    def edit(self, obj):
+        if not obj:
+            return "-"
+        url = reverse("admin:grant_management_grantdonor_change", args=(obj.id,))
+        return format_html('<a href="{}">{}</a>', url, _("Edit"))
 
 
 class GrantTabularInline(StateMachineAdminMixin, TabularInlinePaginated):

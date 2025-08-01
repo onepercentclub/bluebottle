@@ -37,34 +37,35 @@ delete-selected-confirmation{% endblock %}
         {% blocktrans %}You are about to <b>{{ action_text }}</b> for <b>{{ obj }}</b>.{% endblocktrans %}
     </p>
     {% endif %}
-    <fieldset class="module aligned">
-        {% for field in form %}
-        <div class="form-row{% if field.errors %} errors{% endif %}">
-            <div
-            {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
-            {% if field.name == 'send_messages' %}
+    {% for field in form %}
+        <fieldset class="module aligned">
+            <div class="form-row{% if field.errors %} errors{% endif %}">
+                <div {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
+                    {% if field.name == 'send_messages' %}
+                        {% include "admin/send_mail_check_box.html" %}
+                    {% else %}
+                        {{ field.errors }}
+                        {{ field.label_tag }}
+                        {% if field.is_readonly %}
+                            <p>{{ field.contents|linebreaksbr }}</p>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+    {% empty %}
+        {% if has_notifications %}
+            <fieldset class="module aligned">
                 {% include "admin/send_mail_check_box.html" %}
-            {% else %}
-            {{ field.errors }}
-            {{ field.label_tag }}
-            {% if field.is_readonly %}
-            <p>{{ field.contents|linebreaksbr }}</p>
-            {% else %}
-            {{ field }}
-            {% endif %}
-            {% if field.help_text %}
-            <p class="help">{{ field.help_text|safe }}</p>
-            {% endif %}
-
-            {% endif %}
-
-        </div>
-        </div>
-        {% empty %}
-            {% include "admin/send_mail_check_box.html" %}
-        {% endfor %}
-    </fieldset>
-    <br/>
+            </fieldset>
+            <br/>
+        {% endif %}
+    {% endfor %}
 
 
     <p>

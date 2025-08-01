@@ -52,8 +52,7 @@ class Organization(ValidatedModelMixin, models.Model):
 
     def __str__(self):
         if self.verified:
-            return _(f'{self.name} (verified)')
-
+            return f'{self.name} (verified)'
         else:
             return self.name
 

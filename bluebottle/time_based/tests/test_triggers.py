@@ -219,7 +219,6 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
         self.initiative.states.submit(save=True)
         self.initiative.states.approve(save=True)
-
         self.activity.refresh_from_db()
 
     def assertStatus(self, obj, status):
@@ -436,12 +435,13 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_cancel(self):
         registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
-        DateParticipantFactory.create(registration=registration, slot=self.activity.slots.get())
-
+        participant = DateParticipantFactory.create(registration=registration, slot=self.slot)
         mail.outbox = []
         self.slot.title = "Session 1"
         self.slot.states.cancel(save=True)
-        self.assertEqual(self.slot.status, "cancelled")
+        self.assertStatus(self.slot, "cancelled")
+        self.assertStatus(participant, "cancelled")
+        self.assertStatus(participant.contributions.first(), "failed")
         self.assertEqual(len(mail.outbox), 3)
 
         self.assertEqual(
@@ -471,17 +471,21 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
 
     def test_cancel_multiple_slots_succeed(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity)
-
         registration = DateRegistrationFactory.create(activity=self.activity, status='accepted')
-        DateParticipantFactory.create(registration=registration, activity=self.activity)
-
+        DateParticipantFactory.create(
+            registration=registration,
+            activity=self.activity,
+            slot=self.slot
+        )
         self.slot.start = now() - timedelta(days=1)
         self.slot.save()
+
         self.assertStatus(self.slot, "finished")
         self.assertStatus(self.activity, "open")
 
         self.slot2.states.cancel(save=True)
         self.assertStatus(self.slot2, "cancelled")
+        self.assertStatus(self.slot, "finished")
         self.assertStatus(self.activity, "succeeded")
 
     def test_cancel_with_cancelled_activity(self):

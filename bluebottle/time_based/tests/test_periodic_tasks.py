@@ -413,6 +413,41 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(slot.status, 'finished')
         self.assertEqual(activity.status, 'expired')
 
+    def test_past_unreviewed(self):
+        activity = DateActivityFactory.create(
+            owner=BlueBottleUserFactory.create(),
+            status='open',
+            review=True,
+            slots=[]
+        )
+
+        slot = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now() + timedelta(days=1),
+            capacity=5,
+            duration=timedelta(hours=3)
+        )
+
+        participant = DateParticipantFactory.create(
+            activity=activity,
+            slot=slot
+
+        )
+
+        registration = participant.registration
+
+        self.assertEqual(slot.status, 'open')
+        self.assertEqual(activity.status, 'open')
+        self.assertEqual(participant.status, 'new')
+        self.assertEqual(registration.status, 'new')
+
+        self.run_task(now() + timedelta(days=2))
+
+        self.assertStatus(slot, 'finished')
+        self.assertStatus(activity, 'succeeded')
+        self.assertStatus(participant, 'succeeded')
+        self.assertStatus(registration, 'new')
+
     def test_finished_expired_slot_with_succeeded_slot(self):
         activity = DateActivityFactory.create(
             owner=BlueBottleUserFactory.create(),

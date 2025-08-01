@@ -566,7 +566,6 @@ class GrantDonor(Contributor):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         if not self.ledger_items.exists():
             self.ledger_item = LedgerItem.objects.create(
                 fund=self.fund,

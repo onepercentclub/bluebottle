@@ -1,8 +1,8 @@
-dist: focal
-sudo: false
+dist: jammy
+sudo: required
 language: python
 addons:
-  postgresql: "13"
+  postgresql: "14"
   apt:
     packages:
       - libxmlsec1
@@ -10,12 +10,12 @@ addons:
       - libgdal-dev
       - swig
       - openjdk-8-jdk-headless
-      - postgresql-client-13
-      - postgresql-13-postgis-2.5
+      - postgresql-14
+      - postgresql-client-14
+      - postgresql-14-postgis-3
       - postgis
-cache: pip
-  - "$HOME/.cache/pip/"
-  - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"
+cache:
+  pip: true
 python:
   - 3.9
 services:
@@ -25,14 +25,13 @@ env:
   global:
     - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 before_install:
-  - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/*/main/pg_hba.conf
-  - sudo service postgresql restart
+  - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/14/main/pg_hba.conf
+  - sudo service postgresql@14-main restart
   - sleep 1
-  - postgres --version
-  - createdb test_bluebottle_test
-  - psql test_bluebottle_test < testdata.sql
-  - psql -c "CREATE USER testuser WITH PASSWORD 'password'"
-  - psql -c "ALTER ROLE testuser SUPERUSER"
+  - psql -U postgres -c "CREATE USER testuser WITH PASSWORD 'password';"
+  - psql -U postgres -c "ALTER ROLE testuser SUPERUSER;"
+  - createdb test_bluebottle_test -U testuser
+  - psql -U testuser test_bluebottle_test < testdata.sql
 install:
   - pip install pip==20.2.1
   - pip install setuptools==58.2.0

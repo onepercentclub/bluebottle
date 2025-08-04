@@ -667,7 +667,7 @@ class ActivityChildAdmin(
                     'office_location__subregion__region'
                 ]
 
-        if settings.team_activities:
+        if settings.team_activities and self.model in (Activity, ScheduleActivity):
             filters = filters + ['team_activity']
 
         return filters

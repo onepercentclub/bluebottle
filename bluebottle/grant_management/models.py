@@ -461,13 +461,13 @@ class GrantFund(models.Model):
         return self.ledger_items.filter(type=LedgerItemChoices.debit).filter(status='final')
 
     @property
-    @admin.display(description='Life-titem total amount paid out')
+    @admin.display(description='Lifetime payout total')
     def total_credit(self):
         amount = self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Life-time total budget')
+    @admin.display(description='Lifetime budget total')
     def total_debit(self):
         amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)

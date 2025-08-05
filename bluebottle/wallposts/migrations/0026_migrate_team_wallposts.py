@@ -38,6 +38,9 @@ class Migration(migrations.Migration):
         ("time_based", "0127_migrate_team_activities"),
         ("wallposts", "0025_migrate_periodic_wallposts"),
     ]
+    run_before = [
+        ("time_based", "0140_registereddateactivity_and_more"),
+    ]
 
     operations = [
         migrations.RunPython(migrate_schedule_wallposts, migrations.RunPython.noop)

@@ -38,6 +38,9 @@ class Migration(migrations.Migration):
         ("time_based", "0101_auto_20240304_1439"),
         ("wallposts", "0024_migrate_deadline_wallposts"),
     ]
+    run_before = [
+        ("time_based", "0140_registereddateactivity_and_more"),
+    ]
 
     operations = [
         migrations.RunPython(migrate_periodic_wallposts, migrations.RunPython.noop)

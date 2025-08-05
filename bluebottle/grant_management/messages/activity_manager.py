@@ -12,6 +12,11 @@ class GrantApplicationManagerMessage(TransitionMessage):
 
     action_title = pgettext('email', 'View application')
 
+    def get_context(self, recipient):
+        context = super(GrantApplicationManagerMessage, self).get_context(recipient)
+        context['partner_organization'] = self.obj.organization and self.obj.organization.name
+        return context
+
     @property
     def action_link(self):
         return self.obj.get_absolute_url()

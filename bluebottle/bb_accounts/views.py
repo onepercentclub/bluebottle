@@ -34,7 +34,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.initiatives.serializers import (
     MemberSerializer, CurrentMemberSerializer, AvatarImageSerializer
 )
-from bluebottle.members.messages import SignUptokenMessage
+from bluebottle.members.messages import SignUpTokenMessage
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.members.models import UserActivity
 from bluebottle.members.serializers import (
@@ -242,7 +242,7 @@ class SignUpToken(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         instance = serializer.save()
         token = TimestampSigner().sign(instance.pk)
-        SignUptokenMessage(
+        SignUpTokenMessage(
             instance,
             custom_message={
                 'token': token,

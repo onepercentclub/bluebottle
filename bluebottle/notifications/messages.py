@@ -198,25 +198,25 @@ class TransitionMessage(object):
                 subject = str(self.subject.format(**context))
 
                 body_html = None
-                body_txt = None
+                insert_method = None
 
                 if not custom_message and custom_template:
                     custom_template.set_current_language(recipient.primary_language)
                     try:
                         subject = custom_template.subject.format(**context)
                         body_html = format_html(custom_template.body_html.html, **context)
-                        body_txt = custom_template.body_txt.format(**context)
+                        insert_method = custom_template.insert_method
                     except custom_template.DoesNotExist:
                         # Translation for current language not set, use default.
                         pass
 
                 yield Message(
+                    insert_method=insert_method,
                     template=self.get_template(),
                     subject=subject,
                     content_object=self.obj,
                     recipient=recipient,
                     body_html=body_html,
-                    body_txt=body_txt,
                     bcc=self.get_bcc_addresses(),
                     custom_message=custom_message
                 )
@@ -257,5 +257,4 @@ def compose_and_send(message, tenant):
         try:
             message.compose_and_send()
         except Exception as e:
-            print('!!!!!', e)
             logger.error(e)

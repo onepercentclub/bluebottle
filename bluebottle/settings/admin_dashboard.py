@@ -252,9 +252,8 @@ JET_SIDE_MENU_ITEMS = [
     },
     {
         "label": _("Settings"),
-        "permissions": ["terms.change_terms"],
+        "permissions": ["cms.siteplatformsettings"],
         "items": [
-            {"name": "terms.terms", "permissions": ["terms.change_terms"]},
             {
                 "name": "cms.siteplatformsettings",
                 "permissions": ["cms.change_siteplatformsettings"],

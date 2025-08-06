@@ -3,11 +3,20 @@
 {% load message_url %}
 
 {% block content %}
-    <p>
-        {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
-    </p>
-    {% block message %}
-    {% endblock message %}
+    {% if body_html and insert_method == 'replace' %}
+        {{ body_html }}
+    {% else %}
+        <p>
+            {% blocktrans context 'email' %}Hi {{ recipient_name }},{% endblocktrans %}
+        </p>
+        {% block message %}
+        {% endblock message %}
+        {% if body_html and insert_method == 'append' %}
+            <p>
+            {{ body_html }}
+            </p>
+        {% endif %}
+    {% endif %}
 {% endblock %}
 
 {% block action %}

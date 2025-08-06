@@ -28,7 +28,7 @@ from bluebottle.funding.validators import (
     DeadlineMaxValidator,
     DeadlineValidator,
     KYCReadyValidator,
-    TargetValidator,
+    TargetValidator, TosAcceptedValidator,
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.exchange_rates import convert
@@ -179,6 +179,7 @@ class Funding(Activity):
         TargetValidator,
         BudgetLineValidator,
         KYCReadyValidator,
+        TosAcceptedValidator
     ]
 
     auto_approve = False

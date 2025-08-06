@@ -340,7 +340,8 @@ class BaseActivitySerializer(ModelSerializer):
             'admin_url',
             'partner_organization',
             'theme',
-            'answers'
+            'answers',
+            'tos_accepted'
         )
 
         meta_fields = (

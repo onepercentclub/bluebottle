@@ -71,7 +71,7 @@ def no_review_needed(effect):
 def is_user(effect):
     """Is user"""
     user = effect.options.get("user")
-    return effect.instance.user == user
+    return user and effect.instance.user_id == user.id
 
 
 def is_admin(effect):

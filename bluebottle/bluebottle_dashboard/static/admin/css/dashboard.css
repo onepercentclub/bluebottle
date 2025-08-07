@@ -494,12 +494,12 @@ div.inline.radiolist {
 }
 
 .form-row.vLargeTextField {
-    padding: 0;
+    padding: 8px;
 }
 
 
 .colM .aligned .vLargeTextField {
-    padding: 0;
+    padding: 8px;
 }
 
 

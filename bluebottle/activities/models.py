@@ -183,6 +183,12 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     auto_approve = True
 
+    tos_accepted = models.BooleanField(
+        _("Terms of Service accepted"),
+        default=False,
+        help_text=_("Has the user accepted the terms of service for this activity?")
+    )
+
     @property
     def owners(self):
         if self.owner_id:

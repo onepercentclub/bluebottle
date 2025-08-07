@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
 from rest_framework_json_api.relations import (
     ResourceRelatedField, SerializerMethodResourceRelatedField, HyperlinkedRelatedField
 )
@@ -542,6 +543,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
     search_filters_activities = ActivitySearchFilterSerializer(many=True)
     search_filters_initiatives = InitiativeSearchFilterSerializer(many=True)
 
+    terms_of_service_page = SlugRelatedField(read_only=True, slug_field='slug')
+
     def get_has_locations(self, obj):
         return Location.objects.count()
 
@@ -568,6 +571,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_open_initiatives',
             'has_locations',
             'enable_matching_emails',
+            'terms_of_service',
+            'terms_of_service_page'
         )
 
 

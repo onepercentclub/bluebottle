@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.activities.models import Activity, Contributor, EffortContribution
 from bluebottle.activities.models import Organizer
 from bluebottle.deeds.validators import EndDateValidator
+from bluebottle.funding.validators import TosAcceptedValidator
 
 
 class Deed(Activity):
@@ -46,7 +47,10 @@ class Deed(Activity):
     class JSONAPIMeta(object):
         resource_name = 'activities/deeds'
 
-    validators = [EndDateValidator]
+    validators = [
+        EndDateValidator,
+        TosAcceptedValidator
+    ]
 
     @property
     def required_fields(self):

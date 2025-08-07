@@ -18,6 +18,7 @@ from timezonefinder import TimezoneFinder
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.files.fields import PrivateDocumentField
 from bluebottle.fsm.triggers import TriggerMixin
+from bluebottle.funding.validators import TosAcceptedValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.validators import (
     PeriodActivityRegistrationDeadlineValidator,
@@ -218,7 +219,8 @@ class DateActivity(TimeBasedActivity):
 
     validators = [
         CompletedSlotsValidator,
-        HasSlotValidator
+        HasSlotValidator,
+        TosAcceptedValidator
     ]
 
     @property
@@ -599,6 +601,7 @@ class RegistrationActivity(TimeBasedActivity):
         PeriodActivityRegistrationDeadlineValidator,
         PeriodActivityStartDeadlineValidator,
         RegistrationLinkValidator,
+        TosAcceptedValidator
     ]
 
     class Meta:

@@ -338,6 +338,27 @@ class InitiativePlatformSettings(BasePlatformSettings):
             "Require initiators to specify a partner organisation when creating an initiative."
         ),
     )
+
+    terms_of_service = models.TextField(
+        _("Terms of Service"),
+        blank=True,
+        help_text=_(
+            "Terms of service that is shown to users when they create an activity."
+        ),
+    )
+
+    terms_of_service_page = models.ForeignKey(
+        "pages.Page",
+        verbose_name=_("Terms of Service page"),
+        help_text=_(
+            "For a more extensive terms of service, you can create a page. A link will be shown next to the ToS above."
+        ),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="initiatives_terms_of_service_page",
+    )
+
     initiative_search_filters = MultiSelectField(
         max_length=1000, choices=INITIATIVE_SEARCH_FILTERS
     )
@@ -431,8 +452,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         return "grantapplication" in self.activity_types
 
     class Meta(object):
-        verbose_name_plural = _("initiative settings")
-        verbose_name = _("initiative settings")
+        verbose_name_plural = _("Activity & initiative settings")
+        verbose_name = _("Activity & initiative settings")
 
 
 class SearchFilter(SortableMixin, models.Model):

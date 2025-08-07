@@ -680,10 +680,12 @@ class ActivityChildAdmin(
         return fields
 
     def get_status_fields(self, request, obj):
+        settings = InitiativePlatformSettings.load()
         fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
             fields = ('valid',) + fields
-
+        if settings.terms_of_service:
+            fields += ('tos_accepted',)
         return fields
 
     def get_detail_fields(self, request, obj):

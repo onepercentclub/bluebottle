@@ -99,6 +99,6 @@ class TosAcceptedValidator(Validator):
 
     def is_valid(self):
         settings = InitiativePlatformSettings.load()
-        if not settings.terms_of_service_required:
+        if not settings.terms_of_service:
             return True
         return self.instance.tos_accepted is True

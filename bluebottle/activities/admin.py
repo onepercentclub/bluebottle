@@ -606,7 +606,6 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'tos_accepted'
     ]
 
     office_fields = (
@@ -685,7 +684,7 @@ class ActivityChildAdmin(
         fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
             fields = ('valid',) + fields
-        if settings.terms_of_service_required:
+        if settings.terms_of_service:
             fields += ('tos_accepted',)
         return fields
 

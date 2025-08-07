@@ -307,6 +307,29 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.splitter, "withdrawn")
         self.assertStatus(self.splitter.contributions.get(), "failed")
 
+    def test_cancel_future_with_past_success(self):
+        self.slot2.start = now() - timedelta(days=2)
+        self.slot2.save()
+        self.assertStatus(self.slot2, "finished")
+        self.assertStatus(self.activity, "open")
+
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
+        self.slot1.states.cancel(save=True)
+        self.assertStatus(self.slot1, "cancelled")
+        self.assertStatus(self.activity, "succeeded")
+        self.assertStatus(self.participant, "cancelled")
+        self.assertStatus(self.participant.contributions.get(), "failed")
+
+        self.slot1.states.restore(save=True)
+        self.assertStatus(self.slot1, "open")
+        self.assertStatus(self.activity, "open")
+        self.assertStatus(self.participant, "accepted")
+        self.assertStatus(self.participant.contributions.get(), "new")
+
     def test_cancel_all_slots(self):
         self.slot1.states.cancel(save=True)
         self.assertStatus(self.slot1, "cancelled")

@@ -232,9 +232,8 @@ class DateActivity(TimeBasedActivity):
 
     @property
     def active_durations(self):
-        return self.durations.filter(
-            contributor__status__in=('new', 'accepted')
-        )
+        # Avoid the effects of activity setting duration status directly, participants should do that
+        return []
 
     class Meta:
         verbose_name = _("Activity on a date")

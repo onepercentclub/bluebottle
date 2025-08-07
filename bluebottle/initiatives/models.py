@@ -339,11 +339,6 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
-    terms_of_service_required = models.BooleanField(
-        default=False,
-        help_text=_("Require users to agree to the terms of service when creating an activity."),
-    )
-
     terms_of_service = models.TextField(
         _("Terms of Service"),
         blank=True,

@@ -321,7 +321,6 @@ class InitiativePlatformSettingsAdmin(
             _("Terms of service"),
             {
                 "fields": (
-                    "terms_of_service_required",
                     "terms_of_service",
                     "terms_of_service_page",
                 )

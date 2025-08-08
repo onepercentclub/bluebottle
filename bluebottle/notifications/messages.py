@@ -198,7 +198,7 @@ class TransitionMessage(object):
                 subject = str(self.subject.format(**context))
 
                 body_html = None
-                insert_method = None
+                insert_method = 'append'
 
                 if not custom_message and custom_template:
                     custom_template.set_current_language(recipient.primary_language)

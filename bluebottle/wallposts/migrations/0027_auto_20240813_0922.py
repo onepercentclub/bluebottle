@@ -24,6 +24,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('wallposts', '0026_migrate_team_wallposts'),
+        ('updates', '0001_initial'),
+    ]
+    run_before = [
+        ("time_based", "0140_registereddateactivity_and_more"),
     ]
 
     operations = [

@@ -302,6 +302,7 @@ class ActivityDocument(Document):
             "funding": "funding",
             "collectactivity": "collect",
             "deed": "deed",
+            "grantapplication": "funding",
         }
         return mapping[str(instance.__class__.__name__.lower())]
 

@@ -25,6 +25,8 @@ class Organization(ValidatedModelMixin, models.Model):
     created = models.DateTimeField(_('created'), auto_now_add=True)
     updated = models.DateTimeField(_('updated'), auto_now=True)
 
+    verified = models.BooleanField(_('Verified'), default=False)
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
@@ -49,7 +51,10 @@ class Organization(ValidatedModelMixin, models.Model):
     required_fields = ['name']
 
     def __str__(self):
-        return self.name
+        if self.verified:
+            return f'{self.name} (verified)'
+        else:
+            return self.name
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)

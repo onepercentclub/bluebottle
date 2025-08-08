@@ -2,72 +2,104 @@
 {% load i18n l10n admin_urls static %}
 
 {% block extrahead %}
-    {{ block.super }}
-    {{ media }}
-    <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
+{{ block.super }}
+{{ media }}
+<script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
 {% endblock %}
 
 {% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation
-    delete-selected-confirmation{% endblock %}
+delete-selected-confirmation{% endblock %}
 
 {% block breadcrumbs %}
-    <div class="breadcrumbs">
-        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
-        &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-        &rsaquo; {% trans 'Confirm side effects' %}
-    </div>
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% trans 'Confirm side effects' %}
+</div>
 {% endblock %}
 
 {% block content %}
+<form method="post" id="confirm">{% csrf_token %}
     <h2>{% trans "Confirm action" %}</h2>
     {% if transition %}
-        <p>
-            {% blocktrans with transition_target=transition.target.name.title %}You are about to transition "{{ obj }}" to <b>{{ transition_target }}</b>.{% endblocktrans %}
-            <span class="et bb-icon-info">
+    <p>
+        {% blocktrans with transition_target=transition.target.name.title %}You are about to transition "{{ obj }}" to
+        <b>{{ transition_target }}</b>.{% endblocktrans %}
+        <span class="et bb-icon-info">
                 <span class="et-right">
                     {{ transition.target.description }}
                 </span>
             </span>
-        </p>
+    </p>
     {% else %}
-        <p>
-            {% blocktrans %}You are about to <b>{{ action_text }}</b> for <b>{{ obj }}</b>.{% endblocktrans %}
-        </p>
+    <p>
+        {% blocktrans %}You are about to <b>{{ action_text }}</b> for <b>{{ obj }}</b>.{% endblocktrans %}
+    </p>
     {% endif %}
-    <i>{{ action. }}</i>
-    {% if effects|length %}
-        {% blocktrans %}That will have these effects:{% endblocktrans %}
+    {% for field in form %}
+        <fieldset class="module aligned">
+            <div class="form-row{% if field.errors %} errors{% endif %}">
+                <div {% if field.is_checkbox %} class="checkbox-row" {% endif %}>
+                    {% if field.name == 'send_messages' %}
+                        {% include "admin/send_mail_check_box.html" %}
+                    {% else %}
+                        {{ field.errors }}
+                        {{ field.label_tag }}
+                        {% if field.is_readonly %}
+                            <p>{{ field.contents|linebreaksbr }}</p>
+                        {% else %}
+                            {{ field }}
+                        {% endif %}
+                        {% if field.help_text %}
+                            <p class="help">{{ field.help_text|safe }}</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </fieldset>
+    {% empty %}
+        {% if has_notifications %}
+            <fieldset class="module aligned">
+                {% include "admin/send_mail_check_box.html" %}
+            </fieldset>
+            <br/>
+        {% endif %}
+    {% endfor %}
+
+
+    <p>
+        {% blocktrans %}Here is what will happen when you confirm this action:{% endblocktrans %}
+    </p>
+    <fieldset class="module">
+
+        <i>{{ action. }}</i>
+        {% if effects|length %}
         <ul></ul>
         <ul>
             {% for effect in effects %}
-                <li>
-                    {{effect}}
-                </li>
+            <li>
+                {{effect}}
+            </li>
             {% endfor %}
         </ul>
-    {% endif %}
+        {% endif %}
+    </fieldset>
 
-    <form method="post" id="confirm">{% csrf_token %}
-        <div>
-            {% for name, value in post.items %}
-                <input type="hidden" name="{{ name }}" value="{{ value }}">
-            {% endfor %}
-            {% for obj in queryset.items %}
-                <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
-            {% endfor %}
-            {% if has_notifications %}
-                <div>
-                    <input type="checkbox" name="send_messages" checked id="id_send_messages">
-                    <label for="id_send_messages">{% trans "Send messages" %}</label><br>
-                </div>
-            {% endif %}
-            <br>
-            <br>
-            <input type="hidden" name="action" value="transition_selected"/>
-            <input type="hidden" name="post" value="yes"/>
-            <input type="submit" name="confirm" value="{% trans "Yes, I'm sure" %}"/>
-            <a href="{{ cancel_url }}" class="button cancel-link">{% trans "No, take me back" %}</a>
-        </div>
-    </form>
+    <div>
+
+        {% for name, value in post.items %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+        {% endfor %}
+        {% for obj in queryset.items %}
+        <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk|unlocalize }}"/>
+        {% endfor %}
+        <br>
+        <br>
+        <input type="hidden" name="action" value="transition_selected"/>
+        <input type="hidden" name="post" value="yes"/>
+        <input type="submit" name="confirm" value="{% trans " Yes, I'm sure" %}"/>
+        <a href="{{ cancel_url }}" class="button cancel-link">{% trans "No, take me back" %}</a>
+    </div>
+</form>
 {% endblock %}

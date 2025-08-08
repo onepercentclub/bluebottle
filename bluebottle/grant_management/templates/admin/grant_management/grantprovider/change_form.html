@@ -1,0 +1,13 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{% if original %}
+<li>
+    <a href="{% url 'admin:funding_grantprovider_create_payments' original.pk %}" class="default">
+        {% trans "Create payment" %}
+    </a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}

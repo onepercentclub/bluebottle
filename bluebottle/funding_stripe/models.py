@@ -6,8 +6,10 @@ from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from djchoices import DjangoChoices, ChoiceItem
 from djmoney.money import Money
+
+from djchoices import DjangoChoices, ChoiceItem
+
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
@@ -17,9 +19,12 @@ from stripe.error import AuthenticationError, StripeError
 from bluebottle.funding.exception import PaymentException
 from bluebottle.funding.models import Donor, Funding
 from bluebottle.funding.models import (
-    Payment, PaymentProvider, PayoutAccount, BankAccount)
+    Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
+    FundingPlatformSettings
+)
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host
+from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
 
@@ -272,12 +277,12 @@ class StripePaymentProvider(PaymentProvider):
         help_text=_('The secret for payment intents webhook.')
     )
 
-    webhook_secret_sources = models.CharField(
+    webhook_secret_checkout = models.CharField(
         max_length=200,
         null=True,
         blank=True,
-        verbose_name=_('Stripe payment sources webhook secret'),
-        help_text=_('The secret for payment sources webhook.')
+        verbose_name=_('Stripe payment checkout session webhook secret'),
+        help_text=_('The secret for payment checkout session webhook.')
     )
 
     currency = models.CharField(
@@ -326,30 +331,31 @@ STRIPE_EUROPEAN_COUNTRY_CODES = [
 ]
 
 
-class BusinessTypeChoices(DjangoChoices):
-    company = ChoiceItem(
-        'company',
-        label=_("Commercial company")
+class VerificationMethodChoices(DjangoChoices):
+    personal = ChoiceItem(
+        'personal',
+        label=_("Personal")
     )
-    individual = ChoiceItem(
-        'individual',
-        label=_("Individual person")
-    )
-    non_profit = ChoiceItem(
-        'non_profit',
-        label=_("Non-profit organization")
+    link = ChoiceItem(
+        'link',
+        label=_("Link")
     )
 
 
 class StripePayoutAccount(PayoutAccount):
     account_id = models.CharField(max_length=40, null=True, blank=True, help_text=_("Starts with 'acct_...'"))
-    country = models.CharField(max_length=2)
+    country = models.CharField(max_length=2, null=True)
     business_type = models.CharField(
+        _('Verification type'),
         max_length=100,
-        blank=True,
+        null=True,
         choices=BusinessTypeChoices.choices,
-        default=BusinessTypeChoices.individual
 
+    )
+    verification_method = models.CharField(
+        max_length=100,
+        null=True,
+        choices=VerificationMethodChoices.choices,
     )
 
     verified = models.BooleanField(default=False)
@@ -361,6 +367,14 @@ class StripePayoutAccount(PayoutAccount):
     tos_accepted = models.BooleanField(default=False)
 
     provider = 'stripe'
+
+    @property
+    def crowdfunding_campaigns(self):
+        return Funding.objects.filter(bank_account__connect_account=self).all()
+
+    @property
+    def grant_applications(self):
+        return GrantApplication.objects.filter(bank_account__connect_account=self).all()
 
     @property
     def account_settings(self):
@@ -386,6 +400,14 @@ class StripePayoutAccount(PayoutAccount):
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()
+
+        settings = FundingPlatformSettings.load()
+
+        if len(settings.business_types) == 1 and not self.business_type:
+            self.business_type = settings.business_types[0]
+
+        if self.business_type == BusinessTypeChoices.individual:
+            self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
             if Funding.objects.filter(owner=self.owner).count():
@@ -427,10 +449,11 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def service_agreement(self):
-        if 'card_payments' in self.capabilities:
-            return 'full'
-        else:
-            return 'recipient'
+        if self.country:
+            if 'card_payments' in self.capabilities:
+                return 'full'
+            else:
+                return 'recipient'
 
     @property
     def capabilities(self):
@@ -462,6 +485,7 @@ class StripePayoutAccount(PayoutAccount):
         return account_link.url
 
     def update(self, data, save=True):
+
         self.requirements = data.requirements.eventually_due
 
         if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
@@ -470,22 +494,21 @@ class StripePayoutAccount(PayoutAccount):
         try:
             self.verified = data.individual.verification.status == "verified"
         except AttributeError:
-            try:
-                self.verified = (
-                    data.requirements.currently_due == [] and
-                    data.requirements.past_due == [] and
-                    data.requirements.pending_verification == [] and
-                    data.future_requirements.currently_due == [] and
-                    data.future_requirements.past_due == [] and
-                    data.future_requirements.pending_verification == [] and
-                    data.charges_enabled and
-                    data.payouts_enabled
-                )
-            except AttributeError:
-                pass
+            stripe = get_stripe()
+            persons = stripe.Account.persons(data.id)
+            self.verified = len(persons) and all(
+                person.verification.status == 'verified' for person in persons
+            )
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
+
+        if (
+            self.verified and self.payouts_enabled
+            and self.payments_enabled
+            and self.status != self.states.verified.value
+        ):
+            self.states.verify()
 
         if self.id and save:
             self.save()
@@ -521,15 +544,11 @@ class StripePayoutAccount(PayoutAccount):
         self.set_external_accounts()
 
     def set_external_accounts(self):
-        external_account_ids = [
-            external_account.id for external_account
-            in self.account.external_accounts.data
-        ]
-        for bank_account in self.external_accounts.all():
-            if bank_account.account_id not in external_account_ids:
-                bank_account.delete()
-
-        for external_account in self.account.external_accounts.data:
+        stripe = get_stripe()
+        external_accounts = stripe.Account.list_external_accounts(
+            self.account_id,
+        )
+        for external_account in external_accounts:
             status = 'new'
             if (
                 self.status == 'verified' and
@@ -545,8 +564,16 @@ class StripePayoutAccount(PayoutAccount):
             ExternalAccount.objects.update_or_create(
                 connect_account=self,
                 account_id=external_account.id,
-                defaults={'status': status}
+                defaults={
+                    'status': status,
+                    'currency': external_account.currency,
+                }
             )
+        external_ids = [
+            external_account.id for external_account in external_accounts
+        ]
+        # Remove external accounts that are no longer in Stripe
+        ExternalAccount.objects.exclude(account_id__in=external_ids).filter(connect_account=self).delete()
 
     class Meta(object):
         verbose_name = _('stripe payout account')

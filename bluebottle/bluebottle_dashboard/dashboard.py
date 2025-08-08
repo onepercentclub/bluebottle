@@ -11,6 +11,7 @@ from bluebottle.activities.dashboard import (
     UnPublishedActivities
 )
 from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
+from bluebottle.grant_management.dashboard import GrantPayoutsReadForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import (
     MyReviewingInitiatives, RecentlyPublishedInitiatives, RecentlySubmittedInitiatives
 )
@@ -41,6 +42,7 @@ class CustomIndexDashboard(Dashboard):
 
         # Payouts
         self.children.append(PayoutsReadForApprovalDashboardModule())
+        self.children.append(GrantPayoutsReadForApprovalDashboardModule())
 
         # Other
         self.children.append(modules.RecentActions(

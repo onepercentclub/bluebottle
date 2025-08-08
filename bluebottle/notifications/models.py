@@ -22,7 +22,7 @@ class Message(models.Model):
     template = models.CharField(max_length=100)
     subject = models.CharField(max_length=200)
     body_html = models.TextField(blank=True, null=True)
-    body_txt = models.TextField(blank=True, null=True)
+    insert_method = models.CharField(max_length=10, default='append')
     custom_message = models.TextField(blank=True, null=True)
     bcc = ArrayField(
         models.CharField(max_length=200, null=True),
@@ -85,15 +85,33 @@ class NotificationModelMixin(object):
 class MessageTemplate(TranslatableModel):
 
     MESSAGES = (
-        ('bluebottle.members.messages.AccountActivationMessage', _('Member activated')),
+        (
+            'bluebottle.members.messages.AccountActivationMessage',
+            _('Member activated')
+        ),
+        (
+            'bluebottle.grant_management.messages.activity_manager.GrantApplicationApprovedMessage',
+            _('Grant application approved')
+        ),
     )
 
     message = models.CharField(
-        _('Message'), choices=MESSAGES,
+        _('Mail'), choices=MESSAGES,
         unique=True, max_length=500)
+
+    INSERT_METHODS = (
+        ('replace', _('Replace the entire message')),
+        ('append', _('Append this to the original message')),
+    )
+
+    insert_method = models.CharField(
+        _('Insert method'),
+        max_length=20,
+        choices=INSERT_METHODS,
+        default='append'
+    )
 
     translations = TranslatedFields(
         subject=models.CharField(_('Subject'), max_length=200),
-        body_html=QuillField(_('Body (html)'), blank=True),
-        body_txt=models.TextField(_('Body (text)'), blank=True)
+        body_html=QuillField(_('Message'), blank=True),
     )

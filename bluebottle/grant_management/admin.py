@@ -1,6 +1,7 @@
 from __future__ import division
 
 import logging
+from django import forms
 
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin, messages
@@ -134,6 +135,20 @@ class GrantDepositInline(StateMachineAdminMixin, admin.StackedInline):
         return formset
 
 
+class GrantFundForm(forms.ModelForm):
+    class Meta:
+        model = GrantFund
+        fields = '__all__'
+        help_texts = {
+            'total_debit': _("The total amount of money that has been added to this fund over time."),
+            'balance': _("The amount you can still use for new grants, pending payments are already deducted."),
+            'total_pending': _("Amount for approved grants waiting to be paid out."),
+            'total_credit': _("The total amount that has been paid out from this fund."),
+            'pending_applications': _("Grant applications that are submitted or approved, but not yet paid out."),
+            'paid_applications': _("Grant applications that have been paid out."),
+        }
+
+
 @admin.register(GrantFund)
 class GrantFundAdmin(admin.ModelAdmin):
     inlines = [GrantTabularInline, LedgerItemInline, GrantDepositInline]
@@ -144,7 +159,12 @@ class GrantFundAdmin(admin.ModelAdmin):
         'name', 'balance', 'total_pending',
         'organization', 'approved_grants'
     ]
-    readonly_fields = ['balance', 'total_pending', 'total_debit', 'total_credit']
+    form = GrantFundForm
+    readonly_fields = [
+        'balance', 'total_pending',
+        'total_debit', 'total_credit',
+        'pending_applications', 'paid_applications'
+    ]
 
     def has_delete_permission(self, request, obj=None):
         return obj and obj.total_debit == 0
@@ -153,6 +173,22 @@ class GrantFundAdmin(admin.ModelAdmin):
         return obj.grants.count()
 
     approved_grants.short_description = _('Approved grants')
+
+    fieldsets = [
+        (_('General'), {
+            'fields': [
+                'name', 'grant_provider',
+                'currency', 'description', 'organization',
+            ],
+        }),
+        (_('Fund balance'), {
+            'fields': [
+                'total_debit', 'balance',
+                'total_pending', 'total_credit',
+                'pending_applications', 'paid_applications',
+            ],
+        })
+    ]
 
 
 @admin.register(GrantPayout)

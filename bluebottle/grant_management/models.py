@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.db import models, connection
+from django.db import connection, models
 from django.db.models import SET_NULL
 from django.db.models.aggregates import Sum
 from django.urls import reverse
@@ -462,19 +462,24 @@ class GrantFund(models.Model):
         return self.ledger_items.filter(type=LedgerItemChoices.debit).filter(status='final')
 
     @property
-    @admin.display(description='Lifetime payout total')
+    @admin.display(description=_('Total paid out'))
     def total_credit(self):
         amount = self.credit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Lifetime budget total')
+    @admin.display(description=_('Paid out applications'))
+    def paid_applications(self):
+        return self.credit_items.count()
+
+    @property
+    @admin.display(description=_("Total budget"))
     def total_debit(self):
         amount = self.debit_items.aggregate(total=Sum('amount'))['total'] or 0
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Total amount pending (grant payments waiting completion / approval)')
+    @admin.display(description=_("Pending payments"))
     def total_pending(self):
         amount = self.ledger_items.filter(
             status='pending'
@@ -482,7 +487,14 @@ class GrantFund(models.Model):
         return Money(amount, currency=self.currency)
 
     @property
-    @admin.display(description='Current balance')
+    @admin.display(description=_("Pending applications"))
+    def pending_applications(self):
+        return self.ledger_items.filter(
+            status='pending'
+        ).count()
+
+    @property
+    @admin.display(description=_("Available budget"))
     def balance(self):
         return self.total_debit - self.total_credit
 

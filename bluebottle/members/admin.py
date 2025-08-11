@@ -59,7 +59,6 @@ from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
-from ..segments.filters import MemberSegmentAdminMixin
 
 
 class MemberForm(forms.ModelForm, metaclass=SegmentAdminFormMetaClass):
@@ -411,7 +410,7 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(MemberSegmentAdminMixin, RegionManagerAdminMixin, UserAdmin):
+class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 

@@ -57,7 +57,6 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -544,7 +543,7 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
 class ActivityChildAdmin(
     PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, ActivitySegmentAdminMixin,
+    RegionManagerAdminMixin,
     BulkAddMixin, StateMachineAdmin
 ):
     base_model = Activity
@@ -857,7 +856,6 @@ class ActivityChildAdmin(
 class ActivityAdmin(
     PolymorphicParentModelAdmin,
     RegionManagerAdminMixin,
-    ActivitySegmentAdminMixin,
     StateMachineAdmin
 ):
     base_model = Activity

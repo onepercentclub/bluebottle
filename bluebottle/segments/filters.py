@@ -1,8 +1,15 @@
+from bluebottle.updates.models import Update
+
+from bluebottle.activities.models import Contribution, Contributor, Team
+from bluebottle.funding.models import Payout
 from bluebottle.grant_management.models import GrantPayout
 from django.contrib import admin
 from django.db.models import Q
 
-from bluebottle.segments.models import Segment, SegmentType
+from bluebottle.initiatives.models import Initiative
+from bluebottle.members.models import Member
+from bluebottle.segments.models import Segment
+from bluebottle.time_based.models import Slot, TeamMember
 
 
 def create_segment_filter(segment_type, filter_on="activity"):
@@ -37,15 +44,68 @@ def create_segment_filter(segment_type, filter_on="activity"):
 
 def segment_filter(queryset, user):
     model = queryset.model
-    if user.segment_manager.count():
-        if model == GrantPayout:
-            return queryset.filter(
-                Q(activity__segments__in=user.segment_manager.all())
+    activity_managed_segments = user.segment_manager.filter(segment_type__admin_activity_filter=True).all()
+    member_managed_segments = user.segment_manager.filter(segment_type__admin_user_filter=True).all()
+    if member_managed_segments.count() and model == Member:
+        segments_filter = (
+            Q(segments__in=member_managed_segments) |
+            Q(segments__segment_type__admin_user_filter=False)
+        )
+        self_filter = Q(id=user.id)
+        queryset = queryset.filter(
+            segments_filter | self_filter
+        ).distinct()
+    elif activity_managed_segments.count():
+        if model == Member:
+            pass
+        elif model == Initiative:
+            print('Filtering initiatives')
+            segments_filter = (
+                Q(activities__segments__in=activity_managed_segments) &
+                Q(activities__segments__segment_type__admin_activity_filter=True)
+            )
+            self_filter = Q(owner=user)
+            queryset = queryset.filter(segments_filter | self_filter).distinct()
+        elif model == GrantPayout:
+            queryset = queryset.filter(
+                (
+                    Q(activity__segments__in=activity_managed_segments) &
+                    Q(activity__segments__segment_type__admin_activity_filter=True)
+                )
+            ).distinct()
+        elif issubclass(model, Contribution):
+            segments_filter = (
+                Q(contributor__activity__segments__in=activity_managed_segments) &
+                Q(contributor__activity__segments__segment_type__admin_activity_filter=True)
+            )
+            self_filter = Q(contributor__activity__owner=user)
+            queryset = queryset.filter(segments_filter | self_filter).distinct()
+        elif model == TeamMember:
+            segments_filter = (
+                Q(team__activity__segments__in=activity_managed_segments) &
+                Q(team__activity__segments__segment_type__admin_activity_filter=True)
+            )
+            self_filter = Q(team__activity__owner=user)
+            queryset = queryset.filter(segments_filter | self_filter).distinct()
+        elif (
+                issubclass(model, Contributor)
+                or issubclass(model, Slot)
+                or model in [Team, Update, Payout, GrantPayout]
+        ):
+            segments_filter = (
+                Q(activity__segments__in=activity_managed_segments) &
+                Q(activity__segments__segment_type__admin_activity_filter=True)
+            )
+            self_filter = Q(activity__owner=user)
+            queryset = queryset.filter(segments_filter | self_filter).distinct()
+        else:
+            queryset = queryset.filter(
+                (
+                    Q(segments__in=activity_managed_segments) &
+                    Q(segments__segment_type__admin_activity_filter=True)
+                ) | Q(segments__segment_type__admin_activity_filter=False)
             ).distinct()
 
-        return queryset.filter(
-            Q(segments__in=user.segment_manager.all())
-        ).distinct()
     return queryset
 
 
@@ -54,16 +114,6 @@ class ActivitySegmentAdminMixin:
         queryset = super(ActivitySegmentAdminMixin, self).get_queryset(request)
         queryset = segment_filter(queryset, request.user)
         return queryset
-
-    def get_list_filter(self, request):
-        filters = super().get_list_filter(request)
-        if not request.user.segment_manager.count() == 1:
-            for segment_type in SegmentType.objects.filter(
-                admin_activity_filter=True,
-            ).all():
-                segment_filter = create_segment_filter(segment_type)
-                filters = filters + [segment_filter]
-        return filters
 
 
 class MemberSegmentAdminMixin:
@@ -76,13 +126,3 @@ class MemberSegmentAdminMixin:
                 | Q(id=request.user.id)
             ).distinct()
         return queryset
-
-    def get_list_filter(self, request):
-        filters = super().get_list_filter(request)
-        if not request.user.segment_manager.count() == 1:
-            for segment_type in SegmentType.objects.filter(
-                admin_user_filter=True
-            ).all():
-                segment_filter = create_segment_filter(segment_type, "user")
-                filters = filters + (segment_filter,)
-        return filters

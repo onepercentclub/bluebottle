@@ -1,4 +1,5 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -109,6 +110,7 @@ class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
     NotificationAdminMixin,
     RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
     StateMachineAdmin,
 ):
     prepopulated_fields = {"slug": ("title",)}

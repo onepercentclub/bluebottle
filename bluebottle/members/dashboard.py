@@ -8,6 +8,7 @@ from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
 from bluebottle.offices.admin import region_manager_filter
+from bluebottle.segments.filters import segment_filter
 
 
 class RecentMembersDashboard(DashboardModule):
@@ -20,6 +21,7 @@ class RecentMembersDashboard(DashboardModule):
         members = Member.objects.order_by('-date_joined')
         user = context.request.user
         members = region_manager_filter(members, user)
+        members = segment_filter(members, user)
         self.children = members[:self.limit]
 
 

@@ -1,6 +1,7 @@
 import functools
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+from bluebottle.segments.filters import MemberSegmentAdminMixin
 from builtins import object
 from django import forms
 from django.contrib import admin
@@ -410,7 +411,7 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
+class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 

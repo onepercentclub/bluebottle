@@ -1,4 +1,5 @@
 import re
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django import forms
 from django.contrib import admin, messages
 from django.db import connection
@@ -78,7 +79,12 @@ from bluebottle.utils.widgets import get_human_readable_duration
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributorAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contributor
     child_models = (
         Donor,
@@ -160,8 +166,11 @@ class BaseContributorInline(TabularInlinePaginated):
 
 
 class ContributorChildAdmin(
-    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, StateMachineAdmin
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
 ):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
@@ -251,7 +260,12 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributionAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -542,9 +556,12 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
 
 class ActivityChildAdmin(
-    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
     RegionManagerAdminMixin,
-    BulkAddMixin, StateMachineAdmin
+    ActivitySegmentAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin
 ):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
@@ -856,6 +873,7 @@ class ActivityChildAdmin(
 class ActivityAdmin(
     PolymorphicParentModelAdmin,
     RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
     StateMachineAdmin
 ):
     base_model = Activity

@@ -59,7 +59,6 @@ def segment_filter(queryset, user):
         if model == Member:
             pass
         elif model == Initiative:
-            print('Filtering initiatives')
             segments_filter = (
                 Q(activities__segments__in=activity_managed_segments) &
                 Q(activities__segments__segment_type__admin_activity_filter=True)
@@ -103,7 +102,7 @@ def segment_filter(queryset, user):
                 (
                     Q(segments__in=activity_managed_segments) &
                     Q(segments__segment_type__admin_activity_filter=True)
-                ) | Q(segments__segment_type__admin_activity_filter=False)
+                )
             ).distinct()
 
     return queryset
@@ -121,8 +120,5 @@ class MemberSegmentAdminMixin:
     def get_queryset(self, request):
         queryset = super(MemberSegmentAdminMixin, self).get_queryset(request)
         if request.user.segment_manager.count():
-            return queryset.filter(
-                Q(segments__in=request.user.segment_manager.all())
-                | Q(id=request.user.id)
-            ).distinct()
+            return segment_filter(queryset, request.user)
         return queryset

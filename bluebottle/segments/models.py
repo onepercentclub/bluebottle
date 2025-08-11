@@ -69,14 +69,14 @@ class SegmentType(models.Model):
     )
 
     admin_user_filter = models.BooleanField(
-        _('Admin user filter'),
-        help_text=_('Show this as a filter in admin user overview. This also adds it as a segment manager option.'),
+        _('Segment manager filter - Members'),
+        help_text=_('When enabled, members managing this segment will only see members linked to this segment.'),
         default=False,
     )
 
     admin_activity_filter = models.BooleanField(
-        _('Admin activity filter'),
-        help_text=_('Show this as a filter in admin activity overview. This also adds it as a segment manager option.'),
+        _('Segment manager filter - Activities'),
+        help_text=_('When enabled, members managing this segment will only see activities linked to this segment.'),
         default=False,
     )
 

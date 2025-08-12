@@ -5,6 +5,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
 from bluebottle.offices.admin import region_manager_filter
+from bluebottle.segments.filters import segment_filter
 from bluebottle.updates.models import Update
 
 
@@ -19,6 +20,7 @@ class RecentUpdates(DashboardModule):
         updates = Update.objects.order_by('-created')
         user = context['request'].user
         updates = region_manager_filter(updates, user)
+        updates = segment_filter(updates, user)
         self.children = updates[:self.limit]
 
 

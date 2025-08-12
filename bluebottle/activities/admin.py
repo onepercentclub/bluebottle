@@ -1,4 +1,5 @@
 import re
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django import forms
 from django.contrib import admin, messages
 from django.db import connection
@@ -57,7 +58,6 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -79,7 +79,12 @@ from bluebottle.utils.widgets import get_human_readable_duration
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributorAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contributor
     child_models = (
         Donor,
@@ -161,8 +166,11 @@ class BaseContributorInline(TabularInlinePaginated):
 
 
 class ContributorChildAdmin(
-    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, StateMachineAdmin
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
 ):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
@@ -252,7 +260,12 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributionAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -543,9 +556,12 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
 
 class ActivityChildAdmin(
-    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, ActivitySegmentAdminMixin,
-    BulkAddMixin, StateMachineAdmin
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin
 ):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']

@@ -1,3 +1,4 @@
+from bluebottle.grant_management.models import GrantPayout
 from django.contrib import admin
 from django.db.models import Q
 from django.urls import reverse
@@ -137,7 +138,7 @@ def region_manager_filter(queryset, user):
         elif (
             issubclass(model, Contributor)
             or issubclass(model, Slot)
-            or model in [Team, Update, Payout]
+            or model in [Team, Update, Payout, GrantPayout]
         ):
             subregion_filter = Q(activity__office_location__subregion__in=user.subregion_manager.all())
             owner_filter = Q(activity__owner__location__subregion__in=user.subregion_manager.all())

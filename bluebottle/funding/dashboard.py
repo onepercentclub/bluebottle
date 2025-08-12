@@ -6,6 +6,7 @@ from jet.dashboard.modules import DashboardModule
 
 from bluebottle.funding.models import Funding, Payout, PaymentProvider
 from bluebottle.offices.admin import region_manager_filter
+from bluebottle.segments.filters import segment_filter
 
 
 class RecentFunding(DashboardModule):
@@ -19,6 +20,7 @@ class RecentFunding(DashboardModule):
         activities = Funding.objects.filter(status='submitted').order_by('-created')
         user = context.request.user
         activities = region_manager_filter(activities, user)
+        activities = segment_filter(activities, user)
         self.children = activities[:self.limit]
 
 
@@ -33,10 +35,11 @@ class PayoutsReadForApprovalDashboardModule(DashboardModule):
         payouts = Payout.objects.filter(status='new').order_by('created')
         user = context.request.user
         payouts = region_manager_filter(payouts, user)
+        payouts = segment_filter(payouts, user)
         self.children = payouts[:self.limit]
 
 
-class BankaccountsDashboardModule(DashboardModule):
+class BankAccountsDashboardModule(DashboardModule):
     title = _('Bank account lists')
     template = 'dashboard/bank_account_lists.html'
 
@@ -76,5 +79,5 @@ class AppIndexDashboard(DefaultAppIndexDashboard):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentFunding())
         self.children.append(PayoutsReadForApprovalDashboardModule())
-        self.children.append(BankaccountsDashboardModule())
+        self.children.append(BankAccountsDashboardModule())
         self.children.append(PaymentDashboardModule())

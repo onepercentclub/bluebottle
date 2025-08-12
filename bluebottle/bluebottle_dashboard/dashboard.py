@@ -1,5 +1,4 @@
 import importlib
-
 from django.utils.translation import gettext_lazy as _
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
@@ -10,8 +9,9 @@ from bluebottle.activities.dashboard import (
     RecentContributors,
     UnPublishedActivities
 )
-from bluebottle.funding.dashboard import RecentFunding, PayoutsReadForApprovalDashboardModule
-from bluebottle.grant_management.dashboard import GrantPayoutsReadForApprovalDashboardModule
+from bluebottle.funding.dashboard import RecentFunding, PayoutsReadyForApprovalDashboardModule
+from bluebottle.grant_management.dashboard import GrantPayoutsReadyForApprovalDashboardModule, \
+    GrantApplicationsReadyForApprovalDashboardModule
 from bluebottle.initiatives.dashboard import (
     MyReviewingInitiatives, RecentlyPublishedInitiatives, RecentlySubmittedInitiatives
 )
@@ -36,13 +36,14 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(RecentlyPublishedActivities())
         self.children.append(RecentFunding())
         self.children.append(RecentContributors())
+        self.children.append(GrantApplicationsReadyForApprovalDashboardModule())
 
-        # Wallposts
+        # Updates
         self.children.append(RecentUpdates())
 
         # Payouts
-        self.children.append(PayoutsReadForApprovalDashboardModule())
-        self.children.append(GrantPayoutsReadForApprovalDashboardModule())
+        self.children.append(PayoutsReadyForApprovalDashboardModule())
+        self.children.append(GrantPayoutsReadyForApprovalDashboardModule())
 
         # Other
         self.children.append(modules.RecentActions(

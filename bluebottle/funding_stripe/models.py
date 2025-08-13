@@ -400,7 +400,6 @@ class StripePayoutAccount(PayoutAccount):
 
     def prefill_business_profile(self):
         business_profile = self.account.business_profile
-        individual = self.account.individual
         email = self.account.email
         if self.account_id and self.business_type:
             stripe = get_stripe()
@@ -423,20 +422,16 @@ class StripePayoutAccount(PayoutAccount):
             if self.business_type == BusinessTypeChoices.individual:
                 if not business_profile.url:
                     business_profile.url = 'https://goodup.com'
-                if not individual.first_name:
-                    stripe.Account.modify_person(
+                    stripe.Account.modify(
                         self.account_id,
-                        individual.id,
-                        first_name=self.owner.first_name,
-                        last_name=self.owner.last_name,
+                        business_profile=business_profile,
                     )
                 if not email:
                     email = self.owner.email
-                stripe.Account.modify(
-                    self.account_id,
-                    business_profile=business_profile,
-                    email=email,
-                )
+                    stripe.Account.modify(
+                        self.account_id,
+                        email=email,
+                    )
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()

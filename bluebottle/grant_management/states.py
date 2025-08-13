@@ -69,7 +69,10 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         ],
         granted,
         name=_("Approve"),
-        description=_("Approve this application."),
+        description=_(
+            "Approve this application. In the next step you can "
+            "change the granted amount and the fund allocation."
+        ),
         automatic=False,
         permission=can_approve,
         form=GrantApplicationApproveForm,

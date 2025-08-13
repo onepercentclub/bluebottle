@@ -23,7 +23,7 @@ from bluebottle.funding.models import (
     FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host
+from bluebottle.utils.utils import get_current_host, get_tenant_name
 from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
@@ -400,18 +400,43 @@ class StripePayoutAccount(PayoutAccount):
 
     def prefill_business_profile(self):
         business_profile = self.account.business_profile
+        individual = self.account.individual
+        email = self.account.email
         if self.account_id and self.business_type:
-
+            stripe = get_stripe()
             if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
                 business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
-            if not business_profile.product_description:
-                business_profile.product_description = "Not applicable - raising funds for a do-good project"
+                stripe.Account.modify(
+                    self.account_id,
+                    business_profile=business_profile,
+                )
 
-            stripe = get_stripe()
-            stripe.Account.modify(
-                self.account_id,
-                business_profile=business_profile,
-            )
+            if not business_profile.product_description:
+                platform = get_tenant_name()
+                business_profile.product_description = (
+                    f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
+                )
+                stripe.Account.modify(
+                    self.account_id,
+                    business_profile=business_profile,
+                )
+            if self.business_type == BusinessTypeChoices.individual:
+                if not business_profile.url:
+                    business_profile.url = 'https://goodup.com'
+                if not individual.first_name:
+                    stripe.Account.modify_person(
+                        self.account_id,
+                        individual.id,
+                        first_name=self.owner.first_name,
+                        last_name=self.owner.last_name,
+                    )
+                if not email:
+                    email = self.owner.email
+                stripe.Account.modify(
+                    self.account_id,
+                    business_profile=business_profile,
+                    email=email,
+                )
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()

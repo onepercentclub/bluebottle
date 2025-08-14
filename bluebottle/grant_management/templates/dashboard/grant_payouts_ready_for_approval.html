@@ -7,7 +7,7 @@
         <span class="float-right" title="Date submitted">
             {{ payout.activity.deadline|date }}<br>
         </span>
-        <a href="{% url 'admin:funding_payout_change' payout.id %}" >{{ payout.activity }}</a>
+        <a href="{% url 'admin:grant_management_grantpayout_change' payout.id %}" >{{ payout.activity }}</a>
         <br>
         <b>{{ payout.activity.owner.full_name }}</b>
         <br>

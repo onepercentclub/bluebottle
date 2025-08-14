@@ -343,20 +343,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         _("Terms of Service"),
         blank=True,
         help_text=_(
-            "Terms of service that is shown to users when they create an activity."
+            "Terms of service that is shown to users when they are on the create form."
         ),
-    )
-
-    terms_of_service_page = models.ForeignKey(
-        "pages.Page",
-        verbose_name=_("Terms of Service page"),
-        help_text=_(
-            "For a more extensive terms of service, you can create a page. A link will be shown next to the ToS above."
-        ),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="initiatives_terms_of_service_page",
     )
 
     initiative_search_filters = MultiSelectField(

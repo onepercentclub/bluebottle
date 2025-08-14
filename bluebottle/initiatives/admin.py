@@ -282,7 +282,6 @@ class InitiativePlatformSettingsAdmin(
     NonSortableParentAdmin, BasePlatformSettingsAdmin
 ):
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
-    raw_id_fields = ['terms_of_service_page']
 
     fieldsets = (
         (
@@ -324,7 +323,6 @@ class InitiativePlatformSettingsAdmin(
             {
                 "fields": (
                     "terms_of_service",
-                    "terms_of_service_page",
                 )
             },
         ),

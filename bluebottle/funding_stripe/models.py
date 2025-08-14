@@ -23,7 +23,7 @@ from bluebottle.funding.models import (
     FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host
+from bluebottle.utils.utils import get_current_host, get_tenant_name
 from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
@@ -398,6 +398,41 @@ class StripePayoutAccount(PayoutAccount):
             "member_id": self.owner.pk,
         }
 
+    def prefill_business_profile(self):
+        business_profile = self.account.business_profile
+        email = self.account.email
+        if self.account_id and self.business_type:
+            stripe = get_stripe()
+            if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
+                business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
+                stripe.Account.modify(
+                    self.account_id,
+                    business_profile=business_profile,
+                )
+
+            if not business_profile.product_description:
+                platform = get_tenant_name()
+                business_profile.product_description = (
+                    f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
+                )
+                stripe.Account.modify(
+                    self.account_id,
+                    business_profile=business_profile,
+                )
+            if self.business_type == BusinessTypeChoices.individual:
+                if not business_profile.url:
+                    business_profile.url = 'https://goodup.com'
+                    stripe.Account.modify(
+                        self.account_id,
+                        business_profile=business_profile,
+                    )
+                if not email:
+                    email = self.owner.email
+                    stripe.Account.modify(
+                        self.account_id,
+                        email=email,
+                    )
+
     def save(self, *args, **kwargs):
         stripe = get_stripe()
 
@@ -410,29 +445,20 @@ class StripePayoutAccount(PayoutAccount):
             self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
-            if Funding.objects.filter(owner=self.owner).count():
-                url = (
-                    Funding.objects.filter(owner=self.owner).first().get_absolute_url()
-                )
-            else:
-                url = "https://{}".format(connection.tenant.domain_url)
-
-            if "localhost" in url:
-                url = "https://goodup.com"
-
             account = stripe.Account.create(
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
                 business_type=self.business_type,
                 capabilities=self.capabilities,
-                business_profile={"url": url, "mcc": "8398"},
                 metadata=self.metadata,
                 tos_acceptance={'service_agreement': self.service_agreement},
             )
 
             self.account_id = account.id
             self.update(account)
+
+        self.prefill_business_profile()
 
         super().save(*args, **kwargs)
 

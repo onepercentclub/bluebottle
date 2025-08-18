@@ -17,6 +17,9 @@ from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import BankAccount
 from bluebottle.funding.serializers import BankAccountSerializer
 from bluebottle.funding_stripe.models import StripePayoutAccount
+
+from bluebottle.geo.models import Geolocation
+
 from bluebottle.grant_management.models import (
     GrantApplication, GrantDonor, GrantFund, GrantPayout,
 )
@@ -101,7 +104,7 @@ class GrantPayoutSerializer(ModelSerializer):
             'activity',
             'method',
             'currency',
-            'donations'
+            'donations',
         )
         model = GrantPayout
 
@@ -178,6 +181,12 @@ class GrantApplicationSerializer(BaseActivitySerializer):
         allow_null=True
     )
 
+    impact_location = ResourceRelatedField(
+        queryset=Geolocation.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+
     def get_fields(self):
         fields = super(GrantApplicationSerializer, self).get_fields()
 
@@ -203,6 +212,7 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             "bank_account",
             "payout_account",
             "answers",
+            'impact_location',
         )
 
     class JSONAPIMeta(BaseActivitySerializer.JSONAPIMeta):
@@ -215,7 +225,8 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             'answers',
             'answers.segment',
             'answers.question'
-            'answers.file'
+            'answers.file',
+            'impact_location'
 
         ]
 
@@ -231,5 +242,6 @@ class GrantApplicationSerializer(BaseActivitySerializer):
             'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
             'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
             'answers.question': 'bluebottle.activities.serializers.ActivityQuestionSerializer',
+            'impact_location': 'bluebottle.geo.serializers.GeolocationSerializer',
         }
     )

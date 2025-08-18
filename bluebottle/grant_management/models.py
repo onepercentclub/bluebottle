@@ -73,7 +73,7 @@ class GrantProvider(TriggerMixin, models.Model):
         # Get all grants with approved payouts that don't have a payment yet
         grants = GrantDonor.objects.filter(
             fund__grant_provider=self,
-            payout__status="approved",
+            payout__status__in=["approved", "scheduled"],
             payout__payment=None,
         )
 

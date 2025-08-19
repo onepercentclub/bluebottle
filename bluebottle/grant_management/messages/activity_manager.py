@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 
+from bluebottle.funding_stripe.models import StripePayoutAccount
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -13,6 +15,9 @@ class GrantApplicationManagerMessage(TransitionMessage):
     action_title = pgettext('email', 'View application')
 
     def get_context(self, recipient):
+        if isinstance(self.obj, StripePayoutAccount):
+            self.obj = self.obj.funding.first() or self.obj.grant_application.first()
+
         context = super(GrantApplicationManagerMessage, self).get_context(recipient)
         context['partner_organization'] = self.obj.organization and self.obj.organization.name
         return context

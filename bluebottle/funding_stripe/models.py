@@ -399,39 +399,40 @@ class StripePayoutAccount(PayoutAccount):
         }
 
     def prefill_business_profile(self):
-        business_profile = self.account.business_profile
-        email = self.account.email
         if self.account_id and self.business_type:
-            stripe = get_stripe()
-            if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
-                business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
-                stripe.Account.modify(
-                    self.account_id,
-                    business_profile=business_profile,
-                )
-
-            if not business_profile.product_description:
-                platform = get_tenant_name()
-                business_profile.product_description = (
-                    f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
-                )
-                stripe.Account.modify(
-                    self.account_id,
-                    business_profile=business_profile,
-                )
-            if self.business_type == BusinessTypeChoices.individual:
-                if not business_profile.url:
-                    business_profile.url = 'https://goodup.com'
+            business_profile = getattr(self.account, 'business_profile', None)
+            email = getattr(self.account, 'email', None)
+            if business_profile:
+                stripe = get_stripe()
+                if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
+                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
                     stripe.Account.modify(
                         self.account_id,
                         business_profile=business_profile,
                     )
-                if not email:
-                    email = self.owner.email
+
+                if not business_profile.product_description:
+                    platform = get_tenant_name()
+                    business_profile.product_description = (
+                        f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
+                    )
                     stripe.Account.modify(
                         self.account_id,
-                        email=email,
+                        business_profile=business_profile,
                     )
+                if self.business_type == BusinessTypeChoices.individual:
+                    if not business_profile.url:
+                        business_profile.url = 'https://goodup.com'
+                        stripe.Account.modify(
+                            self.account_id,
+                            business_profile=business_profile,
+                        )
+                    if not email:
+                        email = self.owner.email
+                        stripe.Account.modify(
+                            self.account_id,
+                            email=email,
+                        )
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()

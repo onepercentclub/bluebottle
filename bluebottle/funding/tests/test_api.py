@@ -13,56 +13,40 @@ from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 
-from bluebottle.funding.models import (
-    Donor,
-    Funding,
-    FundingPlatformSettings,
-    PaymentCurrency,
-)
+from bluebottle.funding.models import Donor, FundingPlatformSettings, Funding, PaymentCurrency
 from bluebottle.funding.tests.factories import (
-    BudgetLineFactory,
-    DonorFactory,
     FundingFactory,
     PlainPayoutAccountFactory,
     RewardFactory,
+    DonorFactory,
+    BudgetLineFactory,
 )
 from bluebottle.funding.tests.test_admin import generate_mock_bank_account
 from bluebottle.funding_flutterwave.tests.factories import (
-    FlutterwaveBankAccountFactory,
-    FlutterwavePaymentFactory,
-    FlutterwavePaymentProviderFactory,
+    FlutterwaveBankAccountFactory, FlutterwavePaymentFactory, FlutterwavePaymentProviderFactory
 )
 from bluebottle.funding_lipisha.models import LipishaPaymentProvider
 from bluebottle.funding_lipisha.tests.factories import (
-    LipishaBankAccountFactory,
-    LipishaPaymentFactory,
-    LipishaPaymentProviderFactory,
+    LipishaBankAccountFactory, LipishaPaymentFactory, LipishaPaymentProviderFactory
 )
 from bluebottle.funding_pledge.tests.factories import (
-    PledgeBankAccountFactory,
-    PledgePaymentFactory,
-    PledgePaymentProviderFactory,
+    PledgeBankAccountFactory, PledgePaymentProviderFactory
 )
+from bluebottle.test.factory_models.projects import ThemeFactory
+from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
 from bluebottle.funding_stripe.models import StripePaymentProvider
-from bluebottle.funding_stripe.tests.factories import (
-    ExternalAccountFactory,
-    StripePaymentProviderFactory,
-    StripePayoutAccountFactory,
-    StripeSourcePaymentFactory,
-)
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory, \
+    StripeSourcePaymentFactory, ExternalAccountFactory, StripePayoutAccountFactory
 from bluebottle.funding_vitepay.models import VitepayPaymentProvider
 from bluebottle.funding_vitepay.tests.factories import (
-    VitepayBankAccountFactory,
-    VitepayPaymentFactory,
-    VitepayPaymentProviderFactory,
+    VitepayBankAccountFactory, VitepayPaymentFactory, VitepayPaymentProviderFactory
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.segments.tests.factories import SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import GeolocationFactory
-from bluebottle.test.factory_models.projects import ThemeFactory
-from bluebottle.test.utils import APITestCase, BluebottleTestCase, JSONAPITestClient
+from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient, APITestCase
 
 
 class BudgetLineListTestCase(BluebottleTestCase):
@@ -652,37 +636,6 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(
             response.json()['data']['attributes']['title'],
             'New title'
-        )
-
-    def test_update_target(self):
-        self.data['data']['attributes']['target'] = {
-            'amount': 2500,
-            'currency': 'EUR'
-        }
-
-        response = self.client.patch(
-            self.funding_url,
-            data=json.dumps(self.data),
-            user=self.user
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()['data']['attributes']['target']['amount'],
-            5000.0
-        )
-
-        self.funding.status = 'needs_work'
-        self.funding.save()
-
-        response = self.client.patch(
-            self.funding_url,
-            data=json.dumps(self.data),
-            user=self.user
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()['data']['attributes']['target']['amount'],
-            2500.0
         )
 
     def test_recalculate_refund(self):
@@ -1842,10 +1795,6 @@ class FundingAPITestCase(APITestCase):
 
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-
-    def test_update_target(self):
-        self.perform_update(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
 

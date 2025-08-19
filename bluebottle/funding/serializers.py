@@ -55,7 +55,7 @@ from bluebottle.funding_pledge.serializers import (
     PayoutPledgeBankAccountSerializer,
     PledgeBankAccountSerializer,
 )
-from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
+from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount
 from bluebottle.funding_stripe.serializers import (
     ConnectAccountSerializer,
     ExternalAccountSerializer,
@@ -371,6 +371,18 @@ class FundingSerializer(BaseActivitySerializer):
     def get_co_financers(self, instance):
         return instance.contributors.instance_of(Donor).\
             filter(user__is_co_financer=True, status='succeeded').all()
+
+    def validate(self, data):
+        """
+        Ignore changes to target and deadline when status is not 'draft' or 'needs_work'
+        """
+        if self.instance and self.instance.status not in ['draft', 'needs_work']:
+            # Remove target and deadline from data if they're being changed
+            if 'target' in data and data['target'] != self.instance.target:
+                data.pop('target')
+            if 'deadline' in data and data['deadline'] != self.instance.deadline:
+                data.pop('deadline')
+        return data
 
     class Meta(BaseActivitySerializer.Meta):
         model = Funding

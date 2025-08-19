@@ -425,7 +425,6 @@ class FundingDetailTestCase(BluebottleTestCase):
                 "type": "activities/fundings",
                 "attributes": {
                     "title": "New title",
-                    "deadline": None,
                 },
             }
         }

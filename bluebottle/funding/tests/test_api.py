@@ -558,7 +558,6 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(export_response.status_code, 200)
 
     def test_get_bank_account(self):
-
         self.funding.bank_account = generate_mock_bank_account()
 
         self.funding.save()
@@ -665,11 +664,9 @@ class FundingDetailTestCase(BluebottleTestCase):
             data=json.dumps(self.data),
             user=self.user
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()['data']['attributes']['target']['amount'],
-            5000.0
-        )
+        self.assertEqual(response.status_code, 400)
+        self.funding.refresh_from_db()
+        self.funding.target = Money(5000, 'EUR')
 
         self.funding.status = 'needs_work'
         self.funding.save()
@@ -680,10 +677,8 @@ class FundingDetailTestCase(BluebottleTestCase):
             user=self.user
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.json()['data']['attributes']['target']['amount'],
-            2500.0
-        )
+        self.funding.refresh_from_db()
+        self.funding.target = Money(2500, 'EUR')
 
     def test_recalculate_refund(self):
         self.funding.status = 'succeeded'
@@ -1842,10 +1837,6 @@ class FundingAPITestCase(APITestCase):
 
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
-        self.assertStatus(status.HTTP_200_OK)
-
-    def test_update_target(self):
-        self.perform_update(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
 

@@ -150,7 +150,8 @@ class DateActivityStatisticsTest(StatisticsTest):
         DateParticipantFactory.create(
             registration=registration, slot=self.activity.slots.get()
         )
-        self.activity.states.succeed(save=True)
+        self.slot.start = now() - timedelta(days=1)
+        self.slot.save()
 
         self.assertEqual(
             self.stats.activities_online, 0

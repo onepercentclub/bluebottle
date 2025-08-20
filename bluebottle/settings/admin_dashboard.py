@@ -136,7 +136,7 @@ JET_SIDE_MENU_ITEMS = [
     {
         "label": _("Grant management"),
         "app_label": "grant_management",
-        "permissions": ["funding.change_grantapplication"],
+        "permissions": ["grant_management.change_grantapplication"],
         "enabled": "initiatives.InitiativePlatformSettings.grant_application_enabled",
         "items": [
             {

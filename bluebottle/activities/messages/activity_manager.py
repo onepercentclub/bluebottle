@@ -109,3 +109,13 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
     }
 
     action_title = pgettext('email', 'Publish your activity')
+
+
+class TermsOfServiceNotification(TransitionMessage):
+    subject = pgettext('email', 'Terms of service')
+    template = 'messages/activity_manager/terms_of_service'
+    send_once = True
+
+    context = {
+        'title': 'title',
+    }

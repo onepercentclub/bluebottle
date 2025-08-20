@@ -89,10 +89,6 @@ class MessageTemplate(TranslatableModel):
             'bluebottle.members.messages.AccountActivationMessage',
             _('Member activated')
         ),
-        (
-            'bluebottle.grant_management.messages.activity_manager.GrantApplicationApprovedMessage',
-            _('Grant application approved')
-        ),
     )
 
     message = models.CharField(

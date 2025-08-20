@@ -323,6 +323,9 @@ class InitiativePlatformSettingsAdmin(
             {
                 "fields": (
                     "terms_of_service",
+                    "mail_terms_of_service",
+                    "bcc_terms_of_service",
+                    "terms_of_service_mail_text",
                 )
             },
         ),

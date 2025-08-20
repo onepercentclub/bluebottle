@@ -5,7 +5,7 @@ from bluebottle.activities.effects import (
 )
 from bluebottle.activities.messages.activity_manager import (
     ActivityPublishedNotification, ActivitySubmittedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification
+    ActivityApprovedNotification, ActivityNeedsWorkNotification, TermsOfServiceNotification
 )
 from bluebottle.activities.messages.reviewer import (
     ActivitySubmittedReviewerNotification,
@@ -59,6 +59,14 @@ def is_not_funding(effect):
     return not isinstance(effect.instance, Funding)
 
 
+def should_mail_tos(effect):
+    """
+    Should mail the terms of service
+    """
+    settings = InitiativePlatformSettings.load()
+    return settings.mail_terms_of_service
+
+
 class ActivityTriggers(TriggerManager):
     triggers = [
         TransitionTrigger(
@@ -106,6 +114,10 @@ class ActivityTriggers(TriggerManager):
                 NotificationEffect(
                     ActivityApprovedNotification,
                     conditions=[is_not_funding]
+                ),
+                NotificationEffect(
+                    TermsOfServiceNotification,
+                    conditions=[should_mail_tos]
                 )
             ]
         ),

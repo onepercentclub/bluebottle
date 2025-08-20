@@ -156,6 +156,17 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 UnFollowActivityEffect,
             ]
+        ),
+
+        TransitionTrigger(
+            RegistrationStateMachine.withdraw,
+            effects=[
+                RelatedTransitionEffect(
+                    'participants',
+                    RegistrationParticipantStateMachine.withdraw,
+                ),
+                UnFollowActivityEffect,
+            ]
         )
 
     ]

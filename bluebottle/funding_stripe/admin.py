@@ -112,7 +112,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
     list_display = ["id", "account_id", "owner", "status"]
 
     fields = PayoutAccountChildAdmin.fields + [
-        'country', 'business_type', 'verification_method', 'account_id'
+        'country', 'business_type', 'account_id'
     ]
 
     def get_status_fields(self, request, obj):
@@ -124,7 +124,7 @@ class StripePayoutAccountAdmin(PayoutAccountChildAdmin):
 
     def get_basic_fields(self, request, obj):
         fields = super().get_basic_fields(request, obj) + [
-            'business_type', 'verification_method', 'country', 'verification_link'
+            'business_type', 'country', 'verification_link'
         ]
         return fields
 

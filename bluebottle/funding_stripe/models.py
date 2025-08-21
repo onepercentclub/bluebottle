@@ -336,10 +336,6 @@ class VerificationMethodChoices(DjangoChoices):
         'personal',
         label=_("Personal")
     )
-    link = ChoiceItem(
-        'link',
-        label=_("Link")
-    )
 
 
 class StripePayoutAccount(PayoutAccount):
@@ -356,6 +352,7 @@ class StripePayoutAccount(PayoutAccount):
         max_length=100,
         null=True,
         choices=VerificationMethodChoices.choices,
+        default=VerificationMethodChoices.personal,
     )
 
     verified = models.BooleanField(default=False)

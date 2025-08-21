@@ -51,6 +51,7 @@ class CollectType(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _('items')
         verbose_name_plural = _('item')
+        ordering = ('pk',)
         permissions = (
             ('api_read_collecttype', 'Can view collect items through API'),
         )

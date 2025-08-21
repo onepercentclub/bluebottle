@@ -425,7 +425,6 @@ class FundingDetailTestCase(BluebottleTestCase):
                 "type": "activities/fundings",
                 "attributes": {
                     "title": "New title",
-                    "deadline": None,
                 },
             }
         }
@@ -694,6 +693,8 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(len(response.json()["data"]["meta"]["transitions"]), 0)
 
     def test_update_bank_account(self):
+        self.funding.status = 'needs_work'
+        self.funding.save()
         external_account = generate_mock_bank_account()
         connect_account = stripe.Account("some-connect-id")
         connect_account.update(

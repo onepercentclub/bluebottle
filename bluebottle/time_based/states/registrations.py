@@ -26,6 +26,12 @@ class RegistrationStateMachine(ModelStateMachine):
         _("This person is not selected for the activity.")
     )
 
+    withdrawn = State(
+        _('Withdrawn'),
+        'withdrawn',
+        _("This person did not participate.")
+    )
+
     def can_accept_registration(self, user):
         """can accept participant"""
         return (
@@ -33,6 +39,10 @@ class RegistrationStateMachine(ModelStateMachine):
             user.is_superuser or
             user.is_staff
         )
+
+    def is_user(self, user):
+        """is participant"""
+        return self.instance.user == user
 
     initiate = Transition(
         EmptyState(),
@@ -80,6 +90,22 @@ class RegistrationStateMachine(ModelStateMachine):
         automatic=False,
         permission=can_accept_registration,
         form=RegistrationRejectForm
+    )
+
+    withdraw = Transition(
+        [
+            new,
+            accepted,
+        ],
+        withdrawn,
+        name=_("Withdraw"),
+        passed_label=_("withdrawn"),
+        description=_(
+            "Cancel your participation in the activity. Participation hours will not be counted."
+        ),
+        automatic=False,
+        permission=is_user,
+        hide_from_admin=True,
     )
 
 

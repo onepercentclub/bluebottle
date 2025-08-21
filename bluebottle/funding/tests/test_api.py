@@ -427,7 +427,6 @@ class FundingDetailTestCase(BluebottleTestCase):
                 "type": "activities/fundings",
                 "attributes": {
                     "title": "New title",
-                    "deadline": None,
                 },
             }
         }
@@ -653,6 +652,37 @@ class FundingDetailTestCase(BluebottleTestCase):
         self.assertEqual(
             response.json()['data']['attributes']['title'],
             'New title'
+        )
+
+    def test_update_target(self):
+        self.data['data']['attributes']['target'] = {
+            'amount': 2500,
+            'currency': 'EUR'
+        }
+
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['attributes']['target']['amount'],
+            5000.0
+        )
+
+        self.funding.status = 'needs_work'
+        self.funding.save()
+
+        response = self.client.patch(
+            self.funding_url,
+            data=json.dumps(self.data),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()['data']['attributes']['target']['amount'],
+            2500.0
         )
 
     def test_recalculate_refund(self):
@@ -1810,6 +1840,10 @@ class FundingAPITestCase(APITestCase):
 
     def test_get_owner(self):
         self.perform_get(user=self.activity.owner)
+        self.assertStatus(status.HTTP_200_OK)
+
+    def test_update_target(self):
+        self.perform_update(user=self.activity.owner)
         self.assertStatus(status.HTTP_200_OK)
 
 

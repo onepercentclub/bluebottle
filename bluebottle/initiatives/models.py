@@ -347,6 +347,32 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    mail_terms_of_service = models.BooleanField(
+        _("Send email with terms of service"),
+        default=False,
+        help_text=_(
+            "Send an email with the terms of service when their application is accepted."
+
+        ),
+    )
+
+    terms_of_service_mail_text = models.TextField(
+        _("Terms of Service - Email"),
+        blank=True,
+        help_text=_(
+            "Leave emtpy to use the Terms of Service as above. "
+            "You can use placeholders like in custom email templates."
+        ),
+    )
+
+    bcc_terms_of_service = models.EmailField(
+        _("BCC email with terms of service"),
+        blank=True,
+        help_text=_(
+            "Email address to send a BCC of the terms of service email to."
+        ),
+    )
+
     initiative_search_filters = MultiSelectField(
         max_length=1000, choices=INITIATIVE_SEARCH_FILTERS
     )

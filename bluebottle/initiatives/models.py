@@ -393,7 +393,7 @@ class InitiativePlatformSettings(BasePlatformSettings):
     enable_participant_exports = models.BooleanField(
         default=False,
         help_text=_(
-            "Add a link to activities so managers van download a contributor list."
+            "Add a link to activities so managers can download a contributor list."
         ),
     )
     enable_matching_emails = models.BooleanField(

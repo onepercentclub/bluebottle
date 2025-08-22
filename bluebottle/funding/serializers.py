@@ -379,9 +379,13 @@ class FundingSerializer(BaseActivitySerializer):
         if self.instance and self.instance.status not in ['draft', 'needs_work']:
             # Remove target and deadline from data if they're being changed
             if 'target' in data and data['target'] != self.instance.target:
-                data.pop('target')
+                raise ValidationError(
+                    {'target': _('Target cannot be changed after the funding has been published.')}
+                )
             if 'deadline' in data and data['deadline'] != self.instance.deadline:
-                data.pop('deadline')
+                raise ValidationError(
+                    {'target': _('Deadline cannot be changed after the funding has been published.')}
+                )
         return data
 
     class Meta(BaseActivitySerializer.Meta):

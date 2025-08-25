@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.models import Validator
 
 
@@ -89,3 +90,28 @@ class BudgetValidator(Validator):
         if self.instance.target.amount != self.instance.total_budget.amount:
             return False
         return True
+
+
+class TosAcceptedValidator(Validator):
+    code = 'tos_accepted'
+    message = _('Please accepted the conditions')
+    field = 'tos_accepted'
+
+    def is_valid(self):
+        settings = InitiativePlatformSettings.load()
+        if not settings.terms_of_service:
+            return True
+        return self.instance.tos_accepted is True
+
+
+class IbanCheckValidator(Validator):
+    code = 'iban_checked'
+    message = _('Make sure to use a bank account that matches the account holder name.')
+    field = 'iban_checked'
+
+    def is_valid(self):
+        from bluebottle.funding.models import FundingPlatformSettings
+        settings = FundingPlatformSettings.load()
+        if not settings.enable_iban_check:
+            return True
+        return self.instance.bank_account and self.instance.bank_account.iban_verified is True

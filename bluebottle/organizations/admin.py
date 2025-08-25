@@ -59,12 +59,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationInitiativeInline, )
     form = OrganizationForm
 
-    list_display = ('name', 'website', 'created')
+    list_display = ('name', 'website', 'verified', 'created')
     list_filter = (
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
-    fields = ('name', 'website', 'description', 'logo')
+    fields = ('name', 'website', 'description', 'verified', 'logo')
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),

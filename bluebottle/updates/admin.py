@@ -1,3 +1,4 @@
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 
@@ -15,7 +16,10 @@ class ReplyInline(admin.TabularInline):
 
 
 @admin.register(Update)
-class UpdateAdmin(admin.ModelAdmin):
+class UpdateAdmin(
+    ActivitySegmentAdminMixin,
+    admin.ModelAdmin
+):
     readonly_fields = ['created', 'notify']
     inlines = [UpdateImageInline]
 

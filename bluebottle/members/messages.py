@@ -12,7 +12,7 @@ class AccountActivationMessage(TransitionMessage):
         yield self.obj
 
 
-class SignUptokenMessage(TransitionMessage):
+class SignUpTokenMessage(TransitionMessage):
     subject = _(u'Activate your account for {site_name}')
     template = 'messages/sign_up_token'
 

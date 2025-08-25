@@ -1,6 +1,5 @@
 import hashlib
 from builtins import object
-
 from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
@@ -568,7 +567,7 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'enable_open_initiatives',
             'has_locations',
             'enable_matching_emails',
-            'create_flow'
+            'terms_of_service',
         )
 
 

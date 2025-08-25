@@ -1,0 +1,14 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+<p>
+    <h3>
+        {% blocktrans context 'email' %}
+            Terms of Service for {{ title }}
+        {% endblocktrans %}
+    </h3>
+    <p>
+        {{ terms_of_service }}
+    </p>
+{% endblock message %}

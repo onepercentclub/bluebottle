@@ -1,4 +1,5 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -109,6 +110,7 @@ class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
     NotificationAdminMixin,
     RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
     StateMachineAdmin,
 ):
     prepopulated_fields = {"slug": ("title",)}
@@ -313,6 +315,17 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "enable_reviewing",
+                )
+            },
+        ),
+        (
+            _("Terms of service"),
+            {
+                "fields": (
+                    "terms_of_service",
+                    "mail_terms_of_service",
+                    "bcc_terms_of_service",
+                    "terms_of_service_mail_text",
                 )
             },
         ),

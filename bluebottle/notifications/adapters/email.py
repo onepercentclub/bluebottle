@@ -17,6 +17,6 @@ class EmailMessageAdapter(BaseMessageAdapter):
             obj=self.message.content_object,
             custom_message=self.message.custom_message,
             body_html=self.message.body_html,
-            body_txt=self.message.body_txt,
+            insert_method=self.message.insert_method,
             **context
         )

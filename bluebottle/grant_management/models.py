@@ -20,7 +20,7 @@ from moneyed import Money
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.clients import properties
 from bluebottle.fsm.triggers import TriggerMixin
-from bluebottle.funding.validators import TargetValidator, TosAcceptedValidator, IbanCheckValidator
+from bluebottle.funding.validators import TargetValidator, TosAcceptedValidator
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -335,7 +335,6 @@ class GrantApplication(Activity):
     validators = [
         TargetValidator,
         TosAcceptedValidator,
-        IbanCheckValidator
     ]
 
     activity_type = _('Grant application')

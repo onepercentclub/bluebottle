@@ -221,8 +221,23 @@ class GrantPaymentStateMachine(ModelStateMachine):
 @register(GrantPayout)
 class GrantPayoutStateMachine(PayoutStateMachine):
 
+    def iban_is_valid(self, user=None):
+        """iban is valid"""
+        from bluebottle.funding.models import FundingPlatformSettings
+        platform_settings = FundingPlatformSettings.load()
+        if not platform_settings.enable_iban_check:
+            return True
+        return (
+            self.instance.activity and
+            self.instance.activity.bank_account and
+            self.instance.activity.bank_account.iban_verified
+        )
+
     approve = PayoutStateMachine.approve.extend(
-        form=GrantPayoutApproveForm
+        form=GrantPayoutApproveForm,
+        conditions=[
+            iban_is_valid
+        ]
     )
 
 

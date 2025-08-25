@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.forms import CharField, ModelChoiceField, Textarea
 from django.utils.translation import gettext_lazy as _
 
@@ -29,6 +30,16 @@ class GrantApplicationApproveForm(TransitionConfirmationForm):
         help_text=_("Enter the grant amount"),
         required=True,
     )
+
+    def clean(self):
+        amount = self.cleaned_data['amount']
+        fund = self.cleaned_data['fund']
+
+        if str(amount.currency) != fund.currency:
+            raise ValidationError({'amount': _('Currency should match fund currency')})
+
+        if amount.amount > fund.eventual_balance().amount:
+            raise ValidationError({'amount': _('Insufficient funds')})
 
     def save(self, user=None):
         """

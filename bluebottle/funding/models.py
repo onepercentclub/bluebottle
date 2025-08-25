@@ -749,6 +749,12 @@ class BankAccount(TriggerMixin, PolymorphicModel):
         on_delete=models.CASCADE
     )
 
+    @property
+    def iban_verified(self):
+        if self.iban_checks.filter(matched__in=['match', 'mistype']).exists():
+            return True
+        return False
+
     status = models.CharField(max_length=40)
 
     @property
@@ -868,11 +874,16 @@ class FundingPlatformSettings(BasePlatformSettings):
 
 
 class IbanCheck(models.Model):
+
     MATCH_CHOICES = (
         ('match', _('Match')),
-        ('mistype', _('Almost matched')),
+        ('mistype', _('Mistype')),
+        ('close_match', _('Close match')),
         ('no_match', _('No match')),
     )
+
+    fingerprint = models.CharField(max_length=100, blank=True, null=True)
+
     iban = ''
     token = ''
     suggestion = ''
@@ -908,7 +919,7 @@ class IbanCheck(models.Model):
                 "account_number": iban,
             }
         )
-        return token.id
+        return token
 
     def check_iban(self):
         from bluebottle.funding.adapters.rabobank import RabobankAdapter
@@ -917,11 +928,18 @@ class IbanCheck(models.Model):
         result = adapter.check_iban_name(self.iban, self.name)
         self.result = result
         self.matched = result.get('nameMatchResult', 'no_match').lower()
+
         if self.matched == 'close_match' or self.matched == 'mistype':
             self.name = self.result.get('nameSuggestion', self.name)
-            self.token = self.get_stripe_token()
+            token = self.get_stripe_token()
+            self.token = token.id
+            self.fingerprint = token.bank_account.fingerprint
+            print(token)
         if self.matched == 'match':
-            self.token = self.get_stripe_token()
+            token = self.get_stripe_token()
+            print(token)
+            self.token = token.id
+            self.fingerprint = token.bank_account.fingerprint
         self.save()
 
 

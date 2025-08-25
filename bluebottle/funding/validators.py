@@ -102,3 +102,16 @@ class TosAcceptedValidator(Validator):
         if not settings.terms_of_service:
             return True
         return self.instance.tos_accepted is True
+
+
+class IbanCheckValidator(Validator):
+    code = 'iban_checked'
+    message = _('Make sure to use a bank account that matches the account holder name.')
+    field = 'iban_checked'
+
+    def is_valid(self):
+        from bluebottle.funding.models import FundingPlatformSettings
+        settings = FundingPlatformSettings.load()
+        if not settings.enable_iban_check:
+            return True
+        return self.instance.bank_account and self.instance.bank_account.iban_verified is True

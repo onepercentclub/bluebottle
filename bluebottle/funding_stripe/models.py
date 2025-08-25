@@ -17,7 +17,7 @@ from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor, Funding, IbanCheck
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
     FundingPlatformSettings
@@ -639,6 +639,14 @@ class ExternalAccount(BankAccount):
     @property
     def ready(self):
         return self.connect_account.verified
+
+    @property
+    def iban_verified(self):
+        checks = IbanCheck.objects.filter(
+            fingerprint=self.account.fingerprint,
+            matched__in=['match', 'close_match', 'mistype']
+        )
+        return checks.exists()
 
     @property
     def metadata(self):

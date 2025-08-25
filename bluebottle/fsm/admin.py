@@ -154,7 +154,6 @@ class StateMachineAdminMixin(object):
             return HttpResponseRedirect(link)
 
         if 'confirm' in request.POST and request.POST['confirm']:
-
             if form.is_valid():
                 send_messages = form.cleaned_data['send_messages']
                 getattr(state_machine, transition_name)(
@@ -170,8 +169,6 @@ class StateMachineAdminMixin(object):
                     messages.warning(request, 'Effect failed: {}'.format(e))
 
                 return HttpResponseRedirect(link)
-            else:
-                messages.error(request, "Form is not valid: {}".format(form.errors))
 
         # Execute the transition
         getattr(state_machine, transition_name)()

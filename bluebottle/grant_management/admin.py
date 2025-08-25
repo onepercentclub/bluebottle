@@ -21,6 +21,7 @@ from bluebottle.fsm.admin import (
     StateMachineAdminMixin,
     StateMachineFilter,
 )
+from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.geo.models import Location
 from bluebottle.grant_management.models import (
     GrantApplication,
@@ -219,11 +220,16 @@ class GrantPayoutAdmin(StateMachineAdmin):
         return None
 
     def bank_details(self, obj):
+        enable_iban_check = FundingPlatformSettings.load().enable_iban_check
         try:
             template = loader.get_template(
                 'admin/funding_stripe/stripebankaccount/detail_fields.html'
             )
-            return template.render({'info': obj.activity.bank_account.account})
+            return template.render({
+                'info': obj.activity.bank_account.account,
+                'bank_account': obj.activity.bank_account,
+                'enable_iban_check': enable_iban_check
+            })
         except StripeError as e:
             return "Error retrieving details: {}".format(e)
     bank_details.short_description = _('Bank details')

@@ -644,6 +644,7 @@ class ExternalAccount(BankAccount):
     def iban_verified(self):
         checks = IbanCheck.objects.filter(
             fingerprint=self.account.fingerprint,
+            name=self.account.account_holder_name,
             matched__in=['match', 'close_match', 'mistype']
         )
         return checks.exists()

@@ -749,12 +749,6 @@ class BankAccount(TriggerMixin, PolymorphicModel):
         on_delete=models.CASCADE
     )
 
-    @property
-    def iban_verified(self):
-        if self.iban_checks.filter(matched__in=['match', 'mistype']).exists():
-            return True
-        return False
-
     status = models.CharField(max_length=40)
 
     @property
@@ -908,7 +902,7 @@ class IbanCheck(models.Model):
     def get_stripe_token(self):
         stripe = get_stripe()
         iban = self.iban
-        # For testing we convert Surepay test number Stripe test number
+        # For testing we convert Surepay test number to Stripe test number
         if iban == 'NL78RABO5394792070':
             iban = 'NL39RABO0300065264'
         token = stripe.Token.create(
@@ -934,10 +928,8 @@ class IbanCheck(models.Model):
             token = self.get_stripe_token()
             self.token = token.id
             self.fingerprint = token.bank_account.fingerprint
-            print(token)
         if self.matched == 'match':
             token = self.get_stripe_token()
-            print(token)
             self.token = token.id
             self.fingerprint = token.bank_account.fingerprint
         self.save()

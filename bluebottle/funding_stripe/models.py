@@ -402,9 +402,10 @@ class StripePayoutAccount(PayoutAccount):
             if business_profile:
                 stripe = get_stripe()
                 if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
-                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
+                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowdfunding
                     stripe.Account.modify(
                         self.account_id,
+                        company={"structure": "unincorporated_non_profit"},
                         business_profile=business_profile,
                     )
 
@@ -443,11 +444,18 @@ class StripePayoutAccount(PayoutAccount):
             self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
+            business_profile = {
+                "mcc": "8398",
+                "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
+            }
             account = stripe.Account.create(
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type=self.business_type,
+                business_type=self.business_type or 'non_profit',
+                company={"structure": "unincorporated_non_profit"},
+                business_profile=business_profile,
+
                 capabilities=self.capabilities,
                 metadata=self.metadata,
                 tos_acceptance={'service_agreement': self.service_agreement},
@@ -456,7 +464,7 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id = account.id
             self.update(account)
 
-        self.prefill_business_profile()
+        # self.prefill_business_profile()
 
         super().save(*args, **kwargs)
 

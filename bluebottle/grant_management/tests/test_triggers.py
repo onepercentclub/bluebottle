@@ -266,7 +266,6 @@ class GrantPaymentTriggerTestCase(TriggerTestCase):
             amount=Money(1000, 'EUR'),
             payout=None
         )
-        self.application.states.approve(save=True)
 
         with mock.patch(
             "stripe.CountrySpec.retrieve", return_value=COUNTRY_SPEC

@@ -928,7 +928,6 @@ class IbanCheck(models.Model):
             token = self.get_stripe_token()
             self.token = token.id
             self.fingerprint = token.bank_account.fingerprint
-            print(token)
         if self.matched == 'match':
             token = self.get_stripe_token()
             self.token = token.id

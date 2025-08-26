@@ -228,8 +228,8 @@ class GrantPayoutStateMachine(PayoutStateMachine):
         if not platform_settings.enable_iban_check:
             return True
         return (
-            self.instance.activity and
-            self.instance.activity.bank_account and
+            self.instance.activity_id and
+            self.instance.activity.bank_account_id and
             self.instance.activity.bank_account.iban_verified
         )
 

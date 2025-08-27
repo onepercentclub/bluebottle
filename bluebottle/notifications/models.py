@@ -58,6 +58,7 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('whatsapp', _('Whatsapp')),
         ('teams', _('Teams')),
         ('email', _('Email')),
+        ('qrcode', _('QR code')),
     )
 
     share_options = MultiSelectField(

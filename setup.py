@@ -109,6 +109,7 @@ install_requires = [
     'python-memcached==1.58',
     'python-social-auth==0.3.6',
     'python3-saml==1.9.0',
+    'qrcode==7.4.2',
     'rave-python==1.0.2',
     'raven==6.1.0',
     'regex==2017.05.26',

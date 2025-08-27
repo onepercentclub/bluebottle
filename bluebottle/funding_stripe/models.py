@@ -101,9 +101,9 @@ class StripePayment(Payment):
             # No charge. Do we still need to charge?
             self.states.fail(save=True)
         elif (
-            intent.latest_charge and
-            stripe.Charge.retrieve(intent.latest_charge).refunded and
-            self.status != self.states.refunded.value
+                intent.latest_charge and
+                stripe.Charge.retrieve(intent.latest_charge).refunded and
+                self.status != self.states.refunded.value
         ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
@@ -403,9 +403,9 @@ class StripePayoutAccount(PayoutAccount):
             if business_profile:
                 stripe = get_stripe()
                 if (
-                    self.business_type == BusinessTypeChoices.company
-                    and company
-                    and company.structure == "incorporated_non_profit"
+                        self.business_type == BusinessTypeChoices.company
+                        and company
+                        and company.structure == "incorporated_non_profit"
                 ):
                     stripe.Account.modify(
                         self.account_id,
@@ -459,12 +459,17 @@ class StripePayoutAccount(PayoutAccount):
                 "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
                 "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
             }
+            if self.business_type == BusinessTypeChoices.individual:
+                company = None
+            else:
+                company = {"structure": "incorporated_non_profit"}
+
             account = stripe.Account.create(
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
                 business_type=self.business_type or BusinessTypeChoices.non_profit,
-                company={"structure": "incorporated_non_profit"},
+                company=company,
                 business_profile=business_profile,
                 capabilities=self.capabilities,
                 metadata=self.metadata,
@@ -546,9 +551,9 @@ class StripePayoutAccount(PayoutAccount):
         self.payouts_enabled = data.payouts_enabled
 
         if (
-            self.verified and self.payouts_enabled
-            and self.payments_enabled
-            and self.status != self.states.verified.value
+                self.verified and self.payouts_enabled
+                and self.payments_enabled
+                and self.status != self.states.verified.value
         ):
             self.states.verify()
 
@@ -593,13 +598,13 @@ class StripePayoutAccount(PayoutAccount):
         for external_account in external_accounts:
             status = 'new'
             if (
-                self.status == 'verified' and
-                external_account.requirements.currently_due == [] and
-                external_account.requirements.past_due == [] and
-                external_account.requirements.pending_verification == [] and
-                external_account.future_requirements.currently_due == [] and
-                external_account.future_requirements.past_due == [] and
-                external_account.future_requirements.pending_verification == []
+                    self.status == 'verified' and
+                    external_account.requirements.currently_due == [] and
+                    external_account.requirements.past_due == [] and
+                    external_account.requirements.pending_verification == [] and
+                    external_account.future_requirements.currently_due == [] and
+                    external_account.future_requirements.past_due == [] and
+                    external_account.future_requirements.pending_verification == []
             ):
                 status = 'verified'
 

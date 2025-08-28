@@ -28,8 +28,9 @@ class TenantCelerySignalProcessor(RealTimeSignalProcessor):
         self.related_models = []
 
         for doc in registry.get_documents():
-            for related_model in doc.Django.related_models:
-                self.related_models.append(related_model)
+            if hasattr(doc, 'Django') and hasattr(doc.Django, 'related_models'):
+                for related_model in doc.Django.related_models:
+                    self.related_models.append(related_model)
 
         super().__init__(*args, **kwargs)
 

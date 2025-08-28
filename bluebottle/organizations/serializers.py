@@ -32,7 +32,7 @@ class OrganizationSerializer(NoCommitMixin, ModelSerializer):
         model = Organization
         fields = (
             'id', 'name', 'slug', 'description', 'website', 'owner', 'logo',
-            'required', 'errors',
+            'required', 'errors', 'verified',
         )
 
         meta_fields = ['created', 'updated', 'errors', 'required', 'permissions']

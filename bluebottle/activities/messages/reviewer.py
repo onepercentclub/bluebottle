@@ -29,6 +29,11 @@ class ReviewerActivityNotification(TransitionMessage):
                 Q(subregion_manager=self.obj.office_location.subregion)
                 | Q(subregion_manager__isnull=True)
             )
+        if self.obj.segments.exists():
+            recipients = recipients.filter(
+                Q(segment_manager__in=self.obj.segments.all())
+                | Q(segment_manager__isnull=True)
+            )
         return list(recipients)
 
 

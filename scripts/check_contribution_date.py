@@ -82,7 +82,6 @@ def run(*args):
 
                     else:
                         print('!!!!!!!!!!!!!!! missing type')
-                        __import__('ipdb').set_trace()
 
                 if isinstance(contribution, MoneyContribution):
                     if not is_almost_equal(contribution.start, contributor.created):

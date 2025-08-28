@@ -1,23 +1,22 @@
 import functools
-from builtins import object
-
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+from bluebottle.segments.filters import MemberSegmentAdminMixin
+from builtins import object
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import default_token_generator
-from django.db import connection
-from django.db import models
-from django.db.models import Q, Count
+from django.db import connection, models
+from django.db.models import Count, Q
 from django.forms import BaseInlineFormSet
 from django.forms.widgets import Select
 from django.http import HttpResponse
-from django.http.response import HttpResponseRedirect, HttpResponseForbidden
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import reverse, NoReverseMatch, re_path
+from django.urls import NoReverseMatch, re_path, reverse
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
@@ -37,27 +36,24 @@ from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.forms import (
     LoginAsConfirmationForm,
+    SendPasswordResetMailConfirmationForm,
     SendWelcomeMailConfirmationForm,
-    SendPasswordResetMailConfirmationForm
 )
-from bluebottle.members.models import (
-    MemberPlatformSettings,
-    UserActivity,
-)
+from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
-from bluebottle.segments.models import SegmentType
+from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.time_based.models import (
     DateParticipant,
-    PeriodicParticipant,
     DeadlineParticipant,
+    PeriodicParticipant,
     ScheduleParticipant,
     TeamScheduleParticipant,
 )
 from bluebottle.utils.admin import (
-    export_as_csv_action,
     BasePlatformSettingsAdmin,
     admin_info_box,
+    export_as_csv_action,
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
@@ -415,8 +411,8 @@ class MemberMessagesInline(TabularInlinePaginated):
             return obj.content_object or 'Related object'
 
 
-class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
-    raw_id_fields = ('partner_organization', 'place', 'location')
+class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
+    raw_id_fields = ('partner_organization', 'place', 'location', 'avatar')
     date_hierarchy = 'date_joined'
 
     formfield_overrides = {
@@ -426,6 +422,14 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
     def get_form(self, request, *args, **kwargs):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "segment_manager":
+            kwargs["queryset"] = Segment.objects.filter(
+                models.Q(segment_type__admin_user_filter=True)
+                | models.Q(segment_type__admin_activity_filter=True)
+            )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     permission_fields = [
         'is_active',
@@ -443,6 +447,8 @@ class MemberAdmin(RegionManagerAdminMixin, UserAdmin):
         fields = self.permission_fields.copy()
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'subregion_manager')
+        if Segment.objects.count():
+            fields.insert(5, "segment_manager")
         return fields
 
     def get_fieldsets(self, request, obj=None):

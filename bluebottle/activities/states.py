@@ -130,6 +130,8 @@ class ActivityStateMachine(ModelStateMachine):
             return False
         if not InitiativePlatformSettings.load().enable_reviewing:
             return False
+        if InitiativePlatformSettings.load().terms_of_service and not self.instance.tos_accepted:
+            return False
         if not self.instance.initiative_id:
             return True
         if self.instance.initiative.status in ["submitted"]:

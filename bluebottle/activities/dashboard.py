@@ -9,6 +9,7 @@ from jet.dashboard.modules import DashboardModule
 from bluebottle.bluebottle_dashboard.utils import recent_log_entries
 from bluebottle.activities.models import Activity, Contributor
 from bluebottle.offices.admin import region_manager_filter
+from bluebottle.segments.filters import segment_filter
 
 
 class UnPublishedActivities(DashboardModule):
@@ -22,6 +23,7 @@ class UnPublishedActivities(DashboardModule):
         activities = Activity.objects.filter(status__in=['draft', 'needs_work']).order_by('-created')
         user = context.request.user
         activities = region_manager_filter(activities, user)
+        activities = segment_filter(activities, user)
         self.children = activities[:self.limit]
 
 
@@ -40,6 +42,7 @@ class RecentlySubmittedActivities(DashboardModule):
         ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
+        activities = segment_filter(activities, user)
         self.children = activities[:self.limit]
 
 
@@ -58,6 +61,7 @@ class RecentlyPublishedActivities(DashboardModule):
         ).order_by('-transition_date')
         user = context.request.user
         activities = region_manager_filter(activities, user)
+        activities = segment_filter(activities, user)
         self.children = activities[:self.limit]
 
 
@@ -72,6 +76,7 @@ class RecentContributors(DashboardModule):
         contributors = Contributor.objects.order_by('-created')
         user = context.request.user
         contributors = region_manager_filter(contributors, user)
+        contributors = segment_filter(contributors, user)
         self.children = contributors[:self.limit]
 
 

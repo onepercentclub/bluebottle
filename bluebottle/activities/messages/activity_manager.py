@@ -1,6 +1,8 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
+from django.utils.html import format_html
 
 
 class OwnerActivityNotification(TransitionMessage):
@@ -109,3 +111,27 @@ class PublishActivityReminderNotification(OwnerActivityNotification):
     }
 
     action_title = pgettext('email', 'Publish your activity')
+
+
+class TermsOfServiceNotification(OwnerActivityNotification):
+    subject = pgettext('email', 'Terms of service')
+    template = 'messages/activity_manager/terms_of_service'
+    send_once = False
+
+    def get_bcc_addresses(self):
+        settings = InitiativePlatformSettings.load()
+        if settings.bcc_terms_of_service:
+            return [settings.bcc_terms_of_service]
+
+        return []
+
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        context['partner_organization'] = (
+            self.obj.organization and self.obj.organization.name or self.obj.owner.full_name
+        )
+        settings = InitiativePlatformSettings.load()
+        template = settings.terms_of_service_mail_text or settings.terms_of_service
+        template = template.replace('\n', '<br />')
+        context['terms_of_service'] = format_html(template, **context)
+        return context

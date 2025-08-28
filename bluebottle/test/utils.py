@@ -722,8 +722,13 @@ class StateMachineTestCase(BluebottleTestCase):
 
 
 class TriggerTestCase(BluebottleTestCase):
-    def create(self):
-        self.model = self.factory.create(**self.defaults)
+    def create(self, **kwargs):
+        if kwargs:
+            defaults = dict(**self.defaults, **kwargs)
+        else:
+            defaults = dict(**self.defaults)
+
+        self.model = self.factory.create(**defaults)
 
     @contextmanager
     def execute(self, user=None, **kwargs):

@@ -9,7 +9,6 @@ MEDIA_JS = [
     static('django_quill/quill.imageCompressor.min.js'),
     static('django_quill/quill-resize-module.min.js'),
     static('django_quill/django_quill.js'),
-    static('django_quill/highlight.min.js'),
 ]
 MEDIA_CSS = [
     # syntax-highlight

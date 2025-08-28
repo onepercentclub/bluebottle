@@ -1,7 +1,7 @@
 from django.test.utils import override_settings
 
-from bluebottle.funding.messages.activity_manager import PayoutAccountMarkedIncomplete
-from bluebottle.funding.messages.platform_manager import LivePayoutAccountMarkedIncomplete
+from bluebottle.funding.messages.funding.activity_manager import FundingPayoutAccountMarkedIncomplete
+from bluebottle.funding.messages.funding.platform_manager import LivePayoutAccountMarkedIncomplete
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, ExternalAccountFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -13,7 +13,7 @@ from bluebottle.test.utils import TriggerTestCase
         'support@example.com',
     ]
 )
-class PayoutAccountTriggersTestCase(TriggerTestCase):
+class FundingPayoutAccountTriggersTestCase(TriggerTestCase):
 
     def setUp(self):
         self.owner = BlueBottleUserFactory.create()
@@ -36,7 +36,7 @@ class PayoutAccountTriggersTestCase(TriggerTestCase):
     def test_set_incomplete_draft(self):
         self.model.states.set_incomplete()
         with self.execute():
-            self.assertNotificationEffect(PayoutAccountMarkedIncomplete)
+            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNoNotificationEffect(LivePayoutAccountMarkedIncomplete)
 
     def test_disable_live(self):
@@ -47,7 +47,7 @@ class PayoutAccountTriggersTestCase(TriggerTestCase):
         self.model.states.set_incomplete()
 
         with self.execute():
-            self.assertNotificationEffect(PayoutAccountMarkedIncomplete)
+            self.assertNotificationEffect(FundingPayoutAccountMarkedIncomplete)
             self.assertNotificationEffect(
                 LivePayoutAccountMarkedIncomplete,
                 recipients=[self.staff_user, self.support_user]

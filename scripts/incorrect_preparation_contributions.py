@@ -27,7 +27,6 @@ def run(*args):
                         ):
                             print('succeeded incorrectly')
                             print(contribution.status, related_contribution_statuses)
-                            __import__('ipdb').set_trace()
 
                         if (
                             contribution.status == 'failed' and
@@ -41,7 +40,7 @@ def run(*args):
                                 contribution.save()
                                 print('should be succeeded')
                             else:
-                                __import__('ipdb').set_trace()
+                                print('Problems')
                     else:
                         print(f'no contributor for {contribution.pk}')
                 except Contributor.DoesNotExist:

@@ -1,52 +1,77 @@
 import re
-
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django import forms
-from django.urls import re_path
 from django.contrib import admin, messages
 from django.db import connection
-from django.http.response import HttpResponseRedirect, HttpResponseForbidden
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
-from django.utils.translation import gettext_lazy as _, ngettext
-from django_admin_inline_paginator.admin import PaginationFormSetBase, TabularInlinePaginated
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
+from django_admin_inline_paginator.admin import (
+    PaginationFormSetBase,
+    TabularInlinePaginated,
+)
+from parler.admin import TranslatableAdmin, TranslatableModelForm
 from polymorphic.admin import (
-    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
-    StackedPolymorphicInline, PolymorphicInlineSupportMixin)
+    PolymorphicChildModelAdmin,
+    PolymorphicChildModelFilter,
+    PolymorphicInlineSupportMixin,
+    PolymorphicParentModelAdmin,
+    StackedPolymorphicInline,
+)
 from pytz import timezone
 
 from bluebottle.activities.forms import ImpactReminderConfirmationForm
 from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
-    Activity, Contributor, Organizer, Contribution, EffortContribution, Team
+    Activity,
+    ActivityAnswer,
+    ActivityQuestion,
+    Contribution,
+    Contributor,
+    EffortContribution,
+    FileUploadAnswer,
+    FileUploadQuestion,
+    Organizer,
+    SegmentAnswer,
+    SegmentQuestion,
+    Team,
+    TextAnswer,
+    TextQuestion,
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.collect.models import CollectContributor, CollectActivity
+from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.admin import StateMachineAdmin, StateMachineFilter
 from bluebottle.fsm.forms import StateMachineModelForm, StateMachineModelFormMetaClass
-from bluebottle.funding.models import Funding, Donor, MoneyContribution
+from bluebottle.funding.models import Donor, Funding, MoneyContribution
 from bluebottle.geo.models import Location
+from bluebottle.grant_management.models import GrantApplication, GrantDonor
 from bluebottle.impact.admin import ImpactGoalInline
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
-    DeadlineActivity,
     DateParticipant,
-    ScheduleActivity,
-    TimeContribution,
+    DeadlineActivity,
     DeadlineParticipant,
     PeriodicActivity,
+    PeriodicParticipant,
+    RegisteredDateActivity,
+    RegisteredDateParticipant,
+    ScheduleActivity,
     ScheduleParticipant,
     TeamScheduleParticipant,
-    PeriodicParticipant, RegisteredDateActivity, RegisteredDateParticipant,
+    TimeContribution,
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
@@ -54,10 +79,16 @@ from bluebottle.utils.widgets import get_human_readable_duration
 
 
 @admin.register(Contributor)
-class ContributorAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributorAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contributor
     child_models = (
         Donor,
+        GrantDonor,
         Organizer,
         DateParticipant,
         DeedParticipant,
@@ -135,8 +166,11 @@ class BaseContributorInline(TabularInlinePaginated):
 
 
 class ContributorChildAdmin(
-    PolymorphicInlineSupportMixin, PolymorphicChildModelAdmin,
-    RegionManagerAdminMixin, StateMachineAdmin
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
 ):
     base_model = Contributor
     search_fields = ['user__first_name', 'user__last_name', 'activity__title']
@@ -226,7 +260,12 @@ class OrganizerAdmin(ContributorChildAdmin):
 
 
 @admin.register(Contribution)
-class ContributionAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ContributionAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Contribution
     child_models = (
         MoneyContribution,
@@ -497,10 +536,36 @@ class BulkAddMixin(object):
         )
 
 
-class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, BulkAddMixin, StateMachineAdmin):
+class ActivityAnswerInline(StackedPolymorphicInline):
+    class TextAnswerInline(StackedPolymorphicInline.Child):
+        model = TextAnswer
+
+    class SegmentAnswerInline(StackedPolymorphicInline.Child):
+        model = SegmentAnswer
+
+    class FileUploadAnswerInline(StackedPolymorphicInline.Child):
+        model = FileUploadAnswer
+
+    model = ActivityAnswer
+
+    child_inlines = (
+        TextAnswerInline,
+        SegmentAnswerInline,
+        FileUploadAnswerInline,
+    )
+
+
+class ActivityChildAdmin(
+    PolymorphicInlineSupportMixin,
+    PolymorphicChildModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    BulkAddMixin,
+    StateMachineAdmin
+):
     base_model = Activity
     raw_id_fields = ['owner', 'initiative', 'office_location', 'organization']
-    inlines = (UpdateInline,)
+    inlines = (UpdateInline, ActivityAnswerInline, MessageAdminInline)
     form = ActivityForm
 
     skip_on_duplicate = [Contributor, Follow, Message, Update]
@@ -618,7 +683,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
                     'office_location__subregion__region'
                 ]
 
-        if settings.team_activities:
+        if settings.team_activities and self.model in (Activity, ScheduleActivity):
             filters = filters + ['team_activity']
 
         return filters
@@ -631,10 +696,12 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         return fields
 
     def get_status_fields(self, request, obj):
+        settings = InitiativePlatformSettings.load()
         fields = self.status_fields
         if obj and obj.status in ('draft', 'submitted', 'needs_work'):
             fields = ('valid',) + fields
-
+        if settings.terms_of_service:
+            fields += ('tos_accepted',)
         return fields
 
     def get_detail_fields(self, request, obj):
@@ -717,11 +784,17 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
         if not errors and obj.states.initiative_is_approved() and not required:
             return '-'
 
-        for field in required:
-            field = field.split('.')[0]
-            errors.append(
-                _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
-            )
+        for dotted_field in required:
+            field = dotted_field.split('.')[0]
+            if field == 'answers':
+                question = ActivityQuestion.objects.get(pk=dotted_field.split('.')[1])
+                errors.append(
+                    f'"{question.name}" is required'
+                )
+            else:
+                errors.append(
+                    _("{} is required").format(obj._meta.get_field(field).verbose_name.title())
+                )
 
         if not obj.states.initiative_is_approved():
             errors.append(_('The initiative is not approved'))
@@ -797,10 +870,16 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin, RegionManagerAdminMixin, Bu
 
 
 @admin.register(Activity)
-class ActivityAdmin(PolymorphicParentModelAdmin, RegionManagerAdminMixin, StateMachineAdmin):
+class ActivityAdmin(
+    PolymorphicParentModelAdmin,
+    RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
+    StateMachineAdmin
+):
     base_model = Activity
     child_models = (
         Funding,
+        GrantApplication,
         DateActivity,
         Deed,
         CollectActivity,
@@ -979,3 +1058,37 @@ class BaseContributionInline(admin.TabularInline):
 
     def status_label(self, obj):
         return not obj.states.current_state.name
+
+
+@admin.register(ActivityQuestion)
+class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
+    base_form = TranslatableModelForm
+    base_model = ActivityQuestion
+    child_models = (
+        TextQuestion,
+        SegmentQuestion,
+        FileUploadQuestion
+    )
+    list_display = ['name', 'question', 'activity_types']
+
+
+class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
+    base_model = ActivityQuestion
+    fields = ['name', 'question', 'help_text', 'required', 'activity_types']
+    list_fields = ['question', 'help_text']
+
+
+@admin.register(TextQuestion)
+class TextQuestionAdmin(ActivityQuestionChildAdmin):
+    model = TextQuestion
+
+
+@admin.register(SegmentQuestion)
+class SegmentQuestionAdmin(ActivityQuestionChildAdmin):
+    model = SegmentQuestion
+    fields = ['segment_type'] + ActivityQuestionChildAdmin.fields
+
+
+@admin.register(FileUploadQuestion)
+class FileUploadQuestionAdmin(ActivityQuestionChildAdmin):
+    model = FileUploadQuestion

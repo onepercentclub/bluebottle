@@ -1,43 +1,71 @@
 from __future__ import division
 
 import logging
+from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
-
-from babel.numbers import get_currency_symbol
 from django import forms
-from django.urls import re_path
 from django.contrib import admin
-from django.contrib.admin import TabularInline, SimpleListFilter
-from django.db import models, connection
+from django.contrib.admin import SimpleListFilter, TabularInline
+from django.db import connection, models
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.template import loader
-from django.urls import reverse
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from past.utils import old_div
-from polymorphic.admin import PolymorphicChildModelAdmin
-from polymorphic.admin import PolymorphicChildModelFilter
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.activities.admin import ActivityChildAdmin, ContributorChildAdmin, ContributionChildAdmin, ActivityForm
+from bluebottle.activities.admin import (
+    ActivityChildAdmin,
+    ActivityForm,
+    ContributionChildAdmin,
+    ContributorChildAdmin
+)
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
-from bluebottle.fsm.admin import StateMachineAdmin, StateMachineAdminMixin, StateMachineFilter
+from bluebottle.fsm.admin import (
+    StateMachineAdmin,
+    StateMachineAdminMixin,
+    StateMachineFilter,
+)
 from bluebottle.fsm.forms import StateMachineModelForm
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.filters import DonorAdminStatusFilter, DonorAdminCurrencyFilter, DonorAdminPledgeFilter
+from bluebottle.funding.filters import (
+    DonorAdminCurrencyFilter,
+    DonorAdminPledgeFilter,
+    DonorAdminStatusFilter,
+)
 from bluebottle.funding.forms import RefundConfirmationForm
 from bluebottle.funding.models import (
-    Funding, Donor, Payment, PaymentProvider,
-    BudgetLine, PayoutAccount, LegacyPayment, BankAccount, PaymentCurrency, PlainPayoutAccount, Payout, Reward,
-    FundingPlatformSettings, MoneyContribution)
+    BankAccount,
+    BudgetLine,
+    Donor,
+    Funding,
+    FundingPlatformSettings,
+    LegacyPayment,
+    MoneyContribution,
+    Payment,
+    PaymentCurrency,
+    PaymentProvider,
+    Payout,
+    PayoutAccount,
+    PlainPayoutAccount,
+    Reward, IbanCheck,
+)
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
 from bluebottle.funding_lipisha.models import LipishaPayment
 from bluebottle.funding_pledge.models import PledgePayment, PledgePaymentProvider
-from bluebottle.funding_stripe.models import StripePaymentProvider, StripePayoutAccount, \
-    StripeSourcePayment, ExternalAccount, StripePayment, PaymentIntent
+from bluebottle.funding_stripe.models import (
+    ExternalAccount,
+    PaymentIntent,
+    StripePayment,
+    StripePaymentProvider,
+    StripePayoutAccount,
+    StripeSourcePayment,
+)
 from bluebottle.funding_telesom.models import TelesomPayment
 from bluebottle.funding_vitepay.models import VitepayPayment
 from bluebottle.geo.models import Location
@@ -45,7 +73,11 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.segments.models import SegmentType
 from bluebottle.updates.admin import UpdateInline
-from bluebottle.utils.admin import TotalAmountAdminChangeList, export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import (
+    BasePlatformSettingsAdmin,
+    TotalAmountAdminChangeList,
+    export_as_csv_action,
+)
 from bluebottle.utils.utils import reverse_signed
 
 logger = logging.getLogger(__name__)
@@ -544,31 +576,61 @@ class PaymentProviderAdmin(PolymorphicParentModelAdmin):
     )
 
 
-class PayoutAccountFundingLinkMixin(object):
+class PayoutAccountActivityLinkMixin(object):
     def funding_links(self, obj):
-        if len(obj.funding_set.all()):
+        if isinstance(obj, PayoutAccount):
+            fundings = Funding.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            fundings = obj.funding_set.all()
+
+        if len(fundings):
             return format_html(", ".join([
                 format_html(
                     u"<a href='{}'>{}</a>",
                     reverse('admin:funding_funding_change', args=(p.id,)),
                     p.title
-                ) for p in obj.funding_set.all()
+                ) for p in fundings
             ]))
         else:
             return _('None')
 
     funding_links.short_description = _('Funding activities')
 
+    def grant_application_links(self, obj):
+        from bluebottle.grant_management.models import GrantApplication
+        if isinstance(obj, PayoutAccount):
+            grant_applications = GrantApplication.objects.filter(bank_account__connect_account=obj).all()
+        else:
+            grant_applications = obj.grant_application_set.all()
+        if len(grant_applications):
+            return format_html(", ".join([
+                format_html(
+                    u"<a href='{}'>{}</a>",
+                    reverse('admin:grant_management_grantapplication_change', args=(p.id,)),
+                    p.title
+                ) for p in grant_applications
+            ]))
+        else:
+            return _('None')
 
-class PayoutAccountChildAdmin(PolymorphicChildModelAdmin, StateMachineAdmin):
+    grant_application_links.short_description = _('Grant applications')
+
+
+class PayoutAccountChildAdmin(PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin, StateMachineAdmin):
     base_model = PayoutAccount
     raw_id_fields = ('owner', 'partner_organization')
-    readonly_fields = ['status', 'created']
+    readonly_fields = ['status', 'created', 'funding_links', 'grant_application_links']
     fields = ['owner', 'public', 'reviewed', 'partner_organization'] + readonly_fields
     show_in_index = True
 
     def get_basic_fields(self, request, obj):
-        return ['owner', 'public', 'partner_organization']
+        fields = ['owner', 'public', 'partner_organization']
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
 
     def get_status_fields(self, request, obj):
         return ['status', 'created', ]
@@ -602,11 +664,26 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     ]
 
 
-class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixin, PolymorphicChildModelAdmin):
+class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMixin, PolymorphicChildModelAdmin):
     base_model = BankAccount
     raw_id_fields = ('connect_account',)
-    readonly_fields = ('document', 'funding_links', 'created', 'updated')
-    fields = ('funding_links', 'connect_account', 'document', 'status', 'states', 'created', 'updated')
+    readonly_fields = (
+        'document', 'funding_links', 'grant_application_links', 'created', 'updated'
+    )
+    fields = (
+        'connect_account', 'document',
+        'status', 'states', 'created', 'updated'
+    )
+
+    def get_fields(self, request, obj):
+        fields = list(super().get_fields(request, obj))
+        settings = InitiativePlatformSettings.objects.get()
+        if 'funding' in settings.activity_types:
+            fields.append('funding_links')
+        if 'grantapplication' in settings.activity_types:
+            fields.append('grant_application_links')
+        return fields
+
     show_in_index = True
 
     def document(self, obj):
@@ -625,8 +702,14 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountFundingLinkMixi
         return "_"
 
 
+@admin.register(IbanCheck)
+class IbanCheckAdmin(admin.ModelAdmin):
+    model = IbanCheck
+    readonly_fields = ['id', 'hashed_iban', 'fingerprint', 'matched', 'name', 'result']
+
+
 @admin.register(BankAccount)
-class BankAccountAdmin(PayoutAccountFundingLinkMixin, PolymorphicParentModelAdmin):
+class BankAccountAdmin(PayoutAccountActivityLinkMixin, PolymorphicParentModelAdmin):
     base_model = BankAccount
     list_display = ('created', 'polymorphic_ctype', 'status', 'owner', 'funding_links', 'public')
     list_filter = ('status', PolymorphicChildModelFilter)

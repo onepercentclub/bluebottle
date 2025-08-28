@@ -1,4 +1,5 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -22,7 +23,7 @@ from bluebottle.offices.admin import RegionManagerAdminMixin
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
     TranslatableAdminOrderingMixin,
-    export_as_csv_action,
+    export_as_csv_action, admin_info_box,
 )
 
 
@@ -109,6 +110,7 @@ class InitiativeAdmin(
     PolymorphicInlineSupportMixin,
     NotificationAdminMixin,
     RegionManagerAdminMixin,
+    ActivitySegmentAdminMixin,
     StateMachineAdmin,
 ):
     prepopulated_fields = {"slug": ("title",)}
@@ -280,6 +282,13 @@ class InitiativePlatformSettingsAdmin(
     NonSortableParentAdmin, BasePlatformSettingsAdmin
 ):
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
+    readonly_fields = ['terms_of_service_help_text']
+
+    def terms_of_service_help_text(self, obj):
+        return admin_info_box(_(
+            "When writing a custom Terms of Service for email, you can include "
+            "placeholder such as {partner_organization}, {contact_email} from the message templates."
+        ))
 
     fieldsets = (
         (
@@ -313,6 +322,18 @@ class InitiativePlatformSettingsAdmin(
                     "enable_matching_emails",
                     "include_full_activities",
                     "enable_reviewing",
+                )
+            },
+        ),
+        (
+            _("Terms of service"),
+            {
+                "fields": (
+                    "terms_of_service",
+                    "mail_terms_of_service",
+                    "bcc_terms_of_service",
+                    "terms_of_service_mail_text",
+                    "terms_of_service_help_text",
                 )
             },
         ),

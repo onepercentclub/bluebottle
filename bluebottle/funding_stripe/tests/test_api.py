@@ -664,7 +664,10 @@ class ConnectAccountDetailsTestCase(BluebottleTestCase):
 
             self.assertEqual(
                 call["business_profile"],
-                {"url": self.activity.get_absolute_url(), "mcc": "8398"},
+                {
+                    "product_description": 'Not applicable - raising funds for a do-good project on a GoodUp platform.',
+                    "mcc": "8398"
+                },
             )
             # self.assertEqual(call["individual"], {"email": self.user.email})
             self.assertEqual(

@@ -1,0 +1,21 @@
+{% extends "mails/messages/activity_base.html" %}
+{% load i18n %}
+
+{% block message %}
+{% blocktrans context 'email' %}
+Your grant application "{{title}}" has been submitted on {{ site_name }}.<br>
+<br>
+<b>Here's what happens next:</b>
+<ul>
+    <li>
+        Your application will be reviewed by the platform manager.
+    </li>
+    <li>
+        Once approved, you’ll need to enter your bank details and complete the Know Your Customer (KYC) check to receive the grant.
+    </li>
+</ul>
+<p>
+    You will not be able to edit the application when it is in review.
+</p>
+{% endblocktrans %}
+{% endblock %}

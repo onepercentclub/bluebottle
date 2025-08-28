@@ -519,3 +519,30 @@ div.inline.radiolist {
 #participants-group .field-checked .inline-deletelink {
     display: none !important;
 }
+
+
+.aligned .field-body label,
+.aligned .field-contents label{
+    display: none;
+}
+
+.aligned .field-body .inline-related label,
+.aligned .field-contents .inline-related label {
+    display: block;
+}
+
+
+.aligned .field-body .inline-related .text label,
+.aligned .field-contents .inline-related .text label{
+    display: none;
+}
+
+
+.aligned .field-body .cp-placeholderfield,
+.aligned .field-contents .cp-placeholderfield {
+    width: 100%
+}
+
+.cp-content .cp-formset-item-fields fieldset {
+    padding: 0
+}

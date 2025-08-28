@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-08-28 08:52+0200\n"
-"PO-Revision-Date: 2025-08-28 06:57\n"
+"PO-Revision-Date: 2025-08-28 08:29\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -5727,11 +5727,11 @@ msgstr "Match"
 
 #: bluebottle/funding/models.py:874 build/lib/bluebottle/funding/models.py:874
 msgid "Mistype"
-msgstr ""
+msgstr "Typefout"
 
 #: bluebottle/funding/models.py:875 build/lib/bluebottle/funding/models.py:875
 msgid "Close match"
-msgstr ""
+msgstr "Bijna match"
 
 #: bluebottle/funding/models.py:876 build/lib/bluebottle/funding/models.py:876
 msgid "No match"
@@ -7554,22 +7554,22 @@ msgstr "betwist"
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:6
 #: build/lib/bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:6
 msgid "IBAN verified"
-msgstr ""
+msgstr "IBAN geverifieerd"
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:6
 #: build/lib/bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:6
 msgid "Name matches account number"
-msgstr ""
+msgstr "Naam komt overeen met rekeningnummer"
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:8
 #: build/lib/bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:8
 msgid "IBAN NOT verified"
-msgstr ""
+msgstr "IBAN NIET geverifieerd"
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:8
 #: build/lib/bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:8
 msgid "This account was not verified."
-msgstr ""
+msgstr "Dit account is niet geverifieerd."
 
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:16
 #: build/lib/bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:16
@@ -8739,7 +8739,7 @@ msgstr "Stappen om het initiatief compleet te maken"
 #: build/lib/bluebottle/initiatives/admin.py:289
 #, python-brace-format
 msgid "When writing a custom Terms of Service for email, you can include placeholder such as {partner_organization}, {contact_email} from the message templates."
-msgstr ""
+msgstr "Wanneer je een aangepaste Algemene Voorwaarden voor e-mail schrijft, kun je variabelen gebruiken, zoals {partner_organization}, {contact_email}."
 
 #: bluebottle/initiatives/admin.py:295
 #: build/lib/bluebottle/initiatives/admin.py:295
@@ -9033,32 +9033,32 @@ msgstr "Gebruiksvoorwaarden die worden getoond tijdens het aanmaken van een acti
 #: bluebottle/initiatives/models.py:351
 #: build/lib/bluebottle/initiatives/models.py:351
 msgid "Email terms of service"
-msgstr ""
+msgstr "E-mail Algemene Voorwaarden"
 
 #: bluebottle/initiatives/models.py:354
 #: build/lib/bluebottle/initiatives/models.py:354
 msgid "Send an email with the terms of service when an application is accepted."
-msgstr ""
+msgstr "Verstuur een e-mail met de Algmene Voorwaarden wanneer een aanmelding is geaccepteerd."
 
 #: bluebottle/initiatives/models.py:359
 #: build/lib/bluebottle/initiatives/models.py:359
 msgid "Custom terms of Service for email"
-msgstr ""
+msgstr "Aangepaste Algemene Voorwaarden voor e-mail"
 
 #: bluebottle/initiatives/models.py:362
 #: build/lib/bluebottle/initiatives/models.py:362
 msgid "Leave emtpy if the Terms of Service sent by email is the same as the one above."
-msgstr ""
+msgstr "Laat leeg als de Algemene Voorwaarden die per e-mail zijn verzonden hetzelfde zijn als degene hierboven."
 
 #: bluebottle/initiatives/models.py:367
 #: build/lib/bluebottle/initiatives/models.py:367
 msgid "Bcc email with terms of service"
-msgstr ""
+msgstr "Verstuur BCC e-mail met de gebruiksvoorwaarden"
 
 #: bluebottle/initiatives/models.py:370
 #: build/lib/bluebottle/initiatives/models.py:370
 msgid "Enter the email address that should receive a Bcc (blind carbon copy) of the terms of service."
-msgstr ""
+msgstr "Voer het e-mailadres in dat een Bcc (blinde kopie) van de servicevoorwaarden moet ontvangen."
 
 #: bluebottle/initiatives/models.py:378
 #: build/lib/bluebottle/initiatives/models.py:378

@@ -325,6 +325,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("phone", _("Phone")),
     )
 
+    HOUR_REGISTRATION_OPTIONS = (
+        ("disabled", _("Disable")),
+        ("per_activity", _("Unique per activity")),
+        ("generic", _("Same for all activities")),
+    )
+
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -436,6 +442,21 @@ class InitiativePlatformSettings(BasePlatformSettings):
                 "and receive monthly emails with activities that best suit them."
             )
         ),
+    )
+
+    hour_registration = models.CharField(
+        _("Time registration"),
+        max_length=100,
+        choices=HOUR_REGISTRATION_OPTIONS,
+        default='disabled',
+        help_text=_("Time registration only applies to time-based activity types.")
+    )
+
+    hour_registration_data = models.CharField(
+        _("Time registration code/url"),
+        max_length=400,
+        blank=True, null=True,
+        help_text=_("Enter the link or code needed for time registration.")
     )
 
     enable_reviewing = models.BooleanField(

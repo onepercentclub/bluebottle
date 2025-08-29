@@ -568,6 +568,8 @@ class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
             'has_locations',
             'enable_matching_emails',
             'terms_of_service',
+            'hour_registration',
+            'hour_registration_data',
         )
 
 

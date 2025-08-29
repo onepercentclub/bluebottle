@@ -37,6 +37,7 @@ from bluebottle.fsm.admin import (
     StateMachineAdminMixin,
     StateMachineFilter,
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.offices.admin import RegionManagerAdminMixin
@@ -143,7 +144,7 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'video_url',
         'organization',
         'theme',
-        'categories'
+        'categories',
     )
 
     status_fields = (
@@ -173,6 +174,13 @@ class TimeBasedAdmin(ActivityChildAdmin):
     )
 
     readonly_fields = ActivityChildAdmin.readonly_fields + ['registration_link', 'registration_question']
+
+    def get_registration_fields(self, request, obj):
+        fields = super().get_registration_fields(request, obj)
+        settings = InitiativePlatformSettings.load()
+        if settings.hour_registration == 'per_activity':
+            fields = ('hour_registration_data',) + fields
+        return fields
 
     def registration_link(self, obj):
         return admin_info_box(
@@ -758,7 +766,7 @@ class ScheduleActivityAdmin(TimeBasedAdmin):
     registration_fields = ("team_activity", "capacity",) + TimeBasedAdmin.registration_fields
 
     def get_registration_fields(self, request, obj):
-        fields = self.registration_fields
+        fields = super().get_registration_fields(request, obj)
         if obj and obj.registrations.count():
             fields = ("team_registration_warning",) + fields
         return fields

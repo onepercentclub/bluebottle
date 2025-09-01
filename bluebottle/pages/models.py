@@ -196,6 +196,18 @@ class ImageTextRoundItem(ContentItem):
             self.text_final = None
 
 
+class TextOnlyItem(ContentItem):
+    text = PluginHtmlField(_('text'), blank=True)
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Text only')
+        verbose_name_plural = _('Text only')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
 class ScaledImageTextItem(ContentItem):
     text = PluginHtmlField(_('text'), blank=True)
     image = PluginImageField(
@@ -252,6 +264,7 @@ class Page(PublishableModel):
     )
 
     body = PlaceholderField('blog_contents', plugins=[
+        'TextOnlyPlugin',
         'TextPlugin',
         'ColumnsPlugin',
         'ActionPlugin',

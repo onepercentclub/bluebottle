@@ -75,7 +75,8 @@ class TimeBasedBaseSerializer(BaseActivitySerializer):
             'contributors',
             'registration_flow',
             'permissions',
-            'registrations'
+            'registrations',
+            'hour_registration_data'
         )
         meta_fields = BaseActivitySerializer.Meta.meta_fields + ("registration_status",)
 

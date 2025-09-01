@@ -1,7 +1,7 @@
-from datetime import timedelta
 from unittest import mock
 
 import stripe
+from datetime import timedelta
 from django.utils.timezone import now
 from djmoney.money import Money
 
@@ -12,11 +12,11 @@ from bluebottle.activities.messages.activity_manager import (
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.funding.messages.activity_manager import (
+from bluebottle.funding.messages.funding.activity_manager import (
     FundingSubmittedMessage, FundingApprovedMessage, FundingNeedsWorkMessage,
     FundingRejectedMessage
 )
-from bluebottle.funding.messages.reviewer import FundingSubmittedReviewerMessage
+from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
 from bluebottle.funding.models import FundingPlatformSettings
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory, RewardFactory, \

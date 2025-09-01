@@ -1,6 +1,5 @@
 from builtins import object
 from datetime import datetime, timedelta
-
 from dateutil.parser import parse
 from django.db import connection
 from django.utils.timezone import get_current_timezone, make_aware, now
@@ -40,7 +39,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward,
+    Reward, IbanCheck
 )
 from bluebottle.funding.permissions import CanExportSupportersPermission
 from bluebottle.funding_flutterwave.serializers import (
@@ -363,6 +362,7 @@ class FundingSerializer(BaseActivitySerializer):
             and not user.is_staff
             and not user.is_superuser
         ):
+            del fields["payout_account"]
             del fields["bank_account"]
             del fields["required"]
             del fields["errors"]
@@ -806,6 +806,26 @@ class PayoutFundingSerializer(BaseActivityListSerializer):
     }
 
 
+class FundingPlatformSettingsSerializer(ModelSerializer):
+    matching_name = serializers.SerializerMethodField()
+
+    def get_matching_name(self, obj):
+        return obj.matching_name or connection.tenant.name
+
+    class Meta(object):
+        model = FundingPlatformSettings
+
+        fields = (
+            'allow_anonymous_rewards',
+            'anonymous_donations',
+            'stripe_publishable_key',
+            'public_accounts',
+            'matching_name',
+            'business_types',
+            'enable_iban_check',
+        )
+
+
 class PayoutSerializer(ModelSerializer):
     # For Payout service
     donations = ResourceRelatedField(read_only=True, many=True)
@@ -836,23 +856,24 @@ class PayoutSerializer(ModelSerializer):
     included_serializers = {
         'activity': 'bluebottle.funding.serializers.PayoutFundingSerializer',
         'activity.bank_account': 'bluebottle.funding.serializers.PayoutBankAccountSerializer',
-        'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer'
+        'donations': 'bluebottle.funding.serializers.PayoutDonationSerializer',
     }
 
 
-class FundingPlatformSettingsSerializer(ModelSerializer):
-    matching_name = serializers.SerializerMethodField()
-
-    def get_matching_name(self, obj):
-        return obj.matching_name or connection.tenant.name
+class IbanCheckSerializer(ModelSerializer):
+    iban = serializers.CharField(
+        required=True,
+        write_only=True,
+    )
+    matched = serializers.CharField(
+        read_only=True,
+        allow_blank=True,
+        allow_null=True,
+    )
 
     class Meta(object):
-        model = FundingPlatformSettings
+        model = IbanCheck
+        fields = ('iban', 'matched', 'name', 'token', 'suggestion')
 
-        fields = (
-            'allow_anonymous_rewards',
-            'anonymous_donations',
-            'stripe_publishable_key',
-            'public_accounts',
-            'matching_name'
-        )
+    class JSONAPIMeta(object):
+        resource_name = 'funding/iban-check'

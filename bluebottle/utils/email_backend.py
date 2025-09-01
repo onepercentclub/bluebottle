@@ -187,18 +187,20 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
     })
 
     try:
-        msg = create_message(template_name=template_name,
-                             to=to,
-                             subject=subject,
-                             attachments=attachments,
-                             **kwargs)
+        msg = create_message(
+            template_name=template_name,
+            to=to,
+            subject=subject,
+            attachments=attachments,
+            **kwargs
+        )
     except Exception as e:
-        msg = None
-        print("Exception while rendering email template: {0}".format(e))
-        logger.error("Exception while rendering email template: {0}".format(e))
+        error_message = f"Exception while rendering email template: {e}, in {template_name}"
+        print(error_message)
+        logger.error(error_message)
         return
 
-    # Explicetly set CELERY usage in properties. Used primarily for
+    # Explicitly set CELERY usage in properties. Used primarily for
     # testing purposes.
     try:
         tenant = connection.tenant

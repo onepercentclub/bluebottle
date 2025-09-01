@@ -8,6 +8,7 @@ from jet.dashboard.modules import DashboardModule
 from bluebottle.bluebottle_dashboard.utils import recent_log_entries
 from bluebottle.initiatives.models import Initiative
 from bluebottle.offices.admin import region_manager_filter
+from bluebottle.segments.filters import segment_filter
 
 
 class RecentlySubmittedInitiatives(DashboardModule):
@@ -27,6 +28,7 @@ class RecentlySubmittedInitiatives(DashboardModule):
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
+        initiatives = segment_filter(initiatives, user)
         self.children = initiatives[:self.limit]
 
 
@@ -45,6 +47,7 @@ class RecentlyPublishedInitiatives(DashboardModule):
         ).order_by('transition_date')
         user = context.request.user
         initiatives = region_manager_filter(initiatives, user)
+        initiatives = segment_filter(initiatives, user)
         self.children = initiatives[:self.limit]
 
 

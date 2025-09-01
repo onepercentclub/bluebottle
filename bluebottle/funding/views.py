@@ -1,3 +1,4 @@
+import hashlib
 import re
 from django.http.response import HttpResponse
 from rest_framework.authentication import TokenAuthentication
@@ -13,13 +14,13 @@ from bluebottle.funding.authentication import ClientSecretAuthentication
 from bluebottle.funding.models import (
     Funding, Donor, Reward,
     BudgetLine, PayoutAccount, PlainPayoutAccount,
-    Payout
+    Payout, IbanCheck
 )
 from bluebottle.funding.permissions import PaymentPermission, DonorOwnerOrSucceededPermission
 from bluebottle.funding.serializers import (
     FundingSerializer, DonorSerializer, FundingTransitionSerializer,
     RewardSerializer, BudgetLineSerializer,
-    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer, PayoutSerializer,
+    DonorCreateSerializer, PayoutAccountSerializer, PlainPayoutAccountSerializer, PayoutSerializer, IbanCheckSerializer,
 )
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.segments.models import SegmentType
@@ -167,6 +168,25 @@ class PayoutDetails(JsonApiViewMixin, AutoPrefetchMixin, RetrieveUpdateAPIView):
             serializer.instance.states.fail()
         serializer.instance.save()
         return HttpResponse(200)
+
+
+class IbanCheckView(JsonApiViewMixin, CreateAPIView):
+    serializer_class = IbanCheckSerializer
+    queryset = IbanCheck.objects.all()
+    permission_classes = [IsAuthenticated, ]
+
+    def hash_iban(self, iban):
+        normalized = iban.replace(" ", "").upper()
+        return hashlib.sha256(normalized.encode()).hexdigest()
+
+    def perform_create(self, serializer):
+        iban = serializer.validated_data.pop('iban')
+        hashed_iban = self.hash_iban(iban)
+        instance = serializer.save(
+            hashed_iban=hashed_iban,
+        )
+        instance.iban = iban
+        instance.check_iban()
 
 
 class FundingTransitionList(TransitionList):

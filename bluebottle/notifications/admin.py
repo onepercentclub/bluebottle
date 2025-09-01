@@ -1,11 +1,12 @@
 from builtins import object
+
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.options import csrf_protect_m
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.forms import Textarea, TextInput
-from django.template.loader import render_to_string
 from django.db import router, transaction
+from django.forms import TextInput
+from django.template.loader import render_to_string
 from django.template.response import TemplateResponse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -104,11 +105,10 @@ class MessageTemplateAdminCreateForm(forms.ModelForm):
 
 class MessageTemplateAdminForm(TranslatableModelForm):
     subject = TranslatedField(widget=TextInput(attrs={'size': 60}))
-    body_txt = TranslatedField(widget=Textarea(attrs={'rows': 12, 'cols': 80}))
 
     class Meta(object):
         model = MessageTemplate
-        fields = ['message', 'subject', 'body_html', 'body_txt']
+        fields = ['message', 'subject', 'insert_method', 'body_html']
 
 
 @admin.register(MessageTemplate)
@@ -141,7 +141,9 @@ class MessageTemplateAdmin(TranslatableAdmin):
                 ('{site}', _('URL of the platform')),
                 ('{site_name}', _('Name of the platform')),
                 ('{first_name}', _('First name of the recipient')),
-                ('{contact_email}', _('Contact email of platform'))
+                ('{contact_email}', _('Contact email of platform')),
+                ('{partner_organization}', _('Partner organisation')),
+                ('{title}', _('Activity title')),
             ]
         }
         html = mark_safe(render_to_string("admin/notifications/placeholders.html", data))

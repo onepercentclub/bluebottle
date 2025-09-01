@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{% if original %}
+<li>
+    {% if original.status == "new" %}
+    <a href="{% url 'admin:grant_management_grantpayment_generate_payment_link' original.pk %}" class="default">
+        {% trans "Generate new payment link" %}
+    </a>
+    {% endif %}
+    <a href="{% url 'admin:grant_management_grantpayment_check_status' original.pk %}" class="default">
+        {% trans "Check status" %}
+    </a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}

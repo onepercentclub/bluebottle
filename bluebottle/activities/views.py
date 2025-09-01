@@ -355,10 +355,16 @@ class ActivityQrCode(RetrieveAPIView):
                 logo_size = qr_width // 5
                 logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
 
+                # Create a white background and paste the logo onto it
+                if logo.mode in ("RGBA", "LA"):
+                    white_bg = Image.new("RGB", logo.size, (255, 255, 255))
+                    white_bg.paste(logo, mask=logo.split()[-1])
+                    logo = white_bg
+
                 xpos = (qr_width - logo.width) // 2
                 ypos = (qr_height - logo.height) // 2
 
-                img.paste(logo, (xpos, ypos), mask=logo if logo.mode == "RGBA" else None)
+                img.paste(logo, (xpos, ypos))
         except FileNotFoundError:
             pass
 

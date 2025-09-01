@@ -68,8 +68,8 @@ class NotificationPlatformSettings(BasePlatformSettings):
     default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta(object):
-        verbose_name_plural = _('notification settings')
-        verbose_name = _('notification settings')
+        verbose_name_plural = _('Sharing settings')
+        verbose_name = _('Sharing settings')
 
 
 class NotificationModelMixin(object):

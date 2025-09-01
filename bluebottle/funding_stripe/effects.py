@@ -1,18 +1,16 @@
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
-
 from django_tools.middlewares.ThreadLocal import get_current_request
 
 from bluebottle.fsm.effects import Effect
 from bluebottle.funding.models import Funding
-from bluebottle.utils.utils import get_client_ip
-
 from bluebottle.funding_stripe.utils import get_stripe
+from bluebottle.utils.utils import get_client_ip
 
 
 class AcceptTosEffect(Effect):
     def post_save(self, **kwargs):
-        if self.instance.tos_accepted:
+        if self.instance.tos_accepted and self.instance.account_id:
             stripe = get_stripe()
 
             service_argreement = (
@@ -74,8 +72,7 @@ class UpdateBusinessTypeEffect(Effect):
         stripe = get_stripe()
         account = self.instance
 
-        if account.account_id:
-
+        if account.pk and account.account_id:
             stripe_account = stripe.Account.modify(
                 account.account_id,
                 business_type=account.business_type

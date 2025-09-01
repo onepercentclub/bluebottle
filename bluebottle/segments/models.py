@@ -68,6 +68,18 @@ class SegmentType(models.Model):
         default=False
     )
 
+    admin_user_filter = models.BooleanField(
+        _('Segment manager filter - Members'),
+        help_text=_('When enabled, members managing this segment will only see members linked to this segment.'),
+        default=False,
+    )
+
+    admin_activity_filter = models.BooleanField(
+        _('Segment manager filter - Activities'),
+        help_text=_('When enabled, members managing this segment will only see activities linked to this segment.'),
+        default=False,
+    )
+
     @property
     def field_name(self):
         return 'segment__' + self.slug.replace('-', '_')

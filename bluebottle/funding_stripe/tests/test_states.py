@@ -169,6 +169,15 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         )
 
         self.account.update(self.stripe_account)
+        self.bank_account = ExternalAccountFactory.create(
+            connect_account=self.account,
+            status='verified',
+            account_id='test-bank-account-id'
+        )
+        self.funding = FundingFactory.create(
+            bank_account=self.bank_account,
+            target=Money(1000, "EUR")
+        )
 
     def simulate_webhook(
         self,

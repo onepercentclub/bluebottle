@@ -8,6 +8,7 @@ from parler.models import TranslatedFields
 
 from bluebottle.activities.models import Activity, Contributor, Contribution
 from bluebottle.deeds.validators import EndDateValidator
+from bluebottle.funding.validators import TosAcceptedValidator
 from bluebottle.geo.models import Geolocation
 from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.utils import get_current_host, get_current_language
@@ -50,6 +51,7 @@ class CollectType(SortableTranslatableModel):
     class Meta(object):
         verbose_name = _('items')
         verbose_name_plural = _('item')
+        ordering = ('pk',)
         permissions = (
             ('api_read_collecttype', 'Can view collect items through API'),
         )
@@ -91,7 +93,10 @@ class CollectActivity(Activity):
             ('api_delete_own_collect', 'Can delete own collect campaign through the API'),
         )
 
-    validators = [EndDateValidator]
+    validators = [
+        EndDateValidator,
+        TosAcceptedValidator
+    ]
 
     class JSONAPIMeta(object):
         resource_name = 'activities/collects'

@@ -3,7 +3,9 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.states import ActivityStateMachine, ContributorStateMachine, ContributionStateMachine
 from bluebottle.fsm.state import Transition, ModelStateMachine, State, AllStates, EmptyState, register
-from bluebottle.funding.models import Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution
+from bluebottle.funding.models import (
+    Funding, Donor, Payment, Payout, PlainPayoutAccount, MoneyContribution,
+)
 
 
 @register(Funding)
@@ -59,7 +61,7 @@ class FundingStateMachine(ActivityStateMachine):
 
     def can_approve(self, user):
         """user has the permission to approve (staff member)"""
-        return user.is_staff
+        return user.is_staff or user.is_superuser
 
     def psp_allows_refunding(self):
         """PSP allows refunding through their API"""
@@ -70,6 +72,7 @@ class FundingStateMachine(ActivityStateMachine):
 
     def kyc_is_valid(self):
         return (
+            self.instance.bank_account is not None and
             self.instance.payout_account
             and self.instance.payout_account.status == "verified"
         )

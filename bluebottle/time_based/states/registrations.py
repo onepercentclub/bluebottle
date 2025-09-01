@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, ModelStateMachine
 )
+from bluebottle.time_based.forms import RegistrationRejectForm, RegistrationAcceptForm
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, DateRegistration, )
@@ -25,6 +26,12 @@ class RegistrationStateMachine(ModelStateMachine):
         _("This person is not selected for the activity.")
     )
 
+    withdrawn = State(
+        _('Withdrawn'),
+        'withdrawn',
+        _("This person did not participate.")
+    )
+
     def can_accept_registration(self, user):
         """can accept participant"""
         return (
@@ -32,6 +39,10 @@ class RegistrationStateMachine(ModelStateMachine):
             user.is_superuser or
             user.is_staff
         )
+
+    def is_user(self, user):
+        """is participant"""
+        return self.instance.user == user
 
     initiate = Transition(
         EmptyState(),
@@ -68,6 +79,7 @@ class RegistrationStateMachine(ModelStateMachine):
         passed_label=_('accepted'),
         automatic=False,
         permission=can_accept_registration,
+        form=RegistrationAcceptForm
     )
 
     reject = Transition(
@@ -77,6 +89,23 @@ class RegistrationStateMachine(ModelStateMachine):
         description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_registration,
+        form=RegistrationRejectForm
+    )
+
+    withdraw = Transition(
+        [
+            new,
+            accepted,
+        ],
+        withdrawn,
+        name=_("Withdraw"),
+        passed_label=_("withdrawn"),
+        description=_(
+            "Cancel your participation in the activity. Participation hours will not be counted."
+        ),
+        automatic=False,
+        permission=is_user,
+        hide_from_admin=True,
     )
 
 

@@ -4,7 +4,9 @@ from bluebottle.activities.views import (
     ActivityLocationList, ActivityPreviewList, ActivityDetail, ActivityTransitionList,
     RelatedActivityImageList,
     RelatedActivityImageContent, ActivityImage,
-    InviteDetailView, ContributionList, ActivityList
+    InviteDetailView, ContributionList, ActivityList,
+    ActivityQuestionList, ActivityAnswerList, ActivityAnswerDetail,
+    FileUploadAnswerDocumentView
 )
 
 urlpatterns = [
@@ -64,5 +66,29 @@ urlpatterns = [
         r'^/locations/$',
         ActivityLocationList.as_view(),
         name='activity-location-list'
+    ),
+
+    re_path(
+        r'^/questions/(?P<type>[\w\-]+)/$',
+        ActivityQuestionList.as_view(),
+        name='activity-question-list'
+    ),
+
+    re_path(
+        r'^/answers/$',
+        ActivityAnswerList.as_view(),
+        name='activity-answer-list'
+    ),
+
+    re_path(
+        r'^/answers/(?P<pk>\d+)$',
+        ActivityAnswerDetail.as_view(),
+        name='activity-answer-detail'
+    ),
+
+    re_path(
+        r'^/answers/(?P<pk>\d+)/document/(?P<type>.+)/$',
+        FileUploadAnswerDocumentView.as_view(),
+        name='file-upload-answer-document'
     ),
 ]

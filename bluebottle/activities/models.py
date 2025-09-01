@@ -1,6 +1,5 @@
 import uuid
 from builtins import object, str
-
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import SET_NULL
@@ -11,15 +10,22 @@ from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from djchoices.choices import ChoiceItem, DjangoChoices
 from future.utils import python_2_unicode_compatible
+from multiselectfield import MultiSelectField
+from parler.managers import TranslatableManager, TranslatableQuerySet
+from parler.models import TranslatableModel, TranslatedFields
+from polymorphic.managers import PolymorphicManager
 from polymorphic.models import PolymorphicModel
+from polymorphic.query import PolymorphicQuerySet
 
-from bluebottle.files.fields import ImageField
+from bluebottle.files.fields import ImageField, DocumentField
 from bluebottle.follow.models import Follow
 from bluebottle.fsm.triggers import TriggerMixin
 from bluebottle.geo.models import Location
 from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.offices.models import OfficeRestrictionChoices
 from bluebottle.organizations.models import Organization
+from bluebottle.segments.models import SegmentType, Segment
+from bluebottle.utils.managers import TranslatablePolymorphicManager
 from bluebottle.utils.models import ValidatedModelMixin
 from bluebottle.utils.utils import get_current_host, get_current_language
 
@@ -177,6 +183,12 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     auto_approve = True
 
+    tos_accepted = models.BooleanField(
+        _("Terms of Service accepted"),
+        default=False,
+        help_text=_("Has the user accepted the terms of service for this activity?")
+    )
+
     @property
     def owners(self):
         if self.owner_id:
@@ -200,6 +212,8 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def required_fields(self):
+        from bluebottle.initiatives.models import InitiativePlatformSettings
+
         fields = ['theme']
         if Location.objects.count():
             fields.append("office_location")
@@ -207,7 +221,23 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
                 fields.append("office_restriction")
         if not self.initiative_id:
             fields.append("image")
+
         return fields
+
+    @property
+    def required(self):
+        for field in super().required:
+            yield field
+
+        for question in self.questions.filter(required=True):
+            try:
+                self.answers.get(question=question)
+            except ActivityAnswer.DoesNotExist:
+                yield f'answers.{question.id}'
+
+    @property
+    def questions(self):
+        return ActivityQuestion.objects.filter(activity_types__contains=self._meta.model_name)
 
     class Meta(object):
         verbose_name = _("Activity")
@@ -428,6 +458,101 @@ class Team(TriggerMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TranslatedPolymorphicQueryset(TranslatableQuerySet, PolymorphicQuerySet):
+    pass
+
+
+class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
+    queryset_class = TranslatablePolymorphicManager
+
+
+class ActivityQuestion(PolymorphicModel, TranslatableModel):
+    objects = TranslatablePolymorphicManager()
+
+    translations = TranslatedFields(
+        name=models.CharField(
+            _('Label'),
+            help_text=_(
+                'The label for this question. This is used for validation messages e.g. "[label] is required".'
+            ),
+            max_length=255
+        ),
+        question=models.CharField(max_length=255),
+        help_text=models.TextField(null=True, blank=True)
+    )
+
+    activity_types = MultiSelectField(
+        max_length=300,
+        choices=InitiativePlatformSettings.ACTIVITY_TYPES,
+        default=[choice[0] for choice in InitiativePlatformSettings.ACTIVITY_TYPES]
+    )
+
+    required = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.question
+
+    class Meta(object):
+        verbose_name = _("Form question")
+        verbose_name_plural = _("Form questions")
+
+
+class ActivityAnswer(PolymorphicModel):
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
+
+
+class TextQuestion(ActivityQuestion, TranslatableModel):
+    class JSONAPIMeta:
+        resource_name = 'text-questions'
+
+
+class TextAnswer(ActivityAnswer):
+    answer = models.TextField()
+
+    class JSONAPIMeta:
+        resource_name = 'text-answers'
+
+
+class SegmentQuestion(ActivityQuestion, TranslatableModel):
+    segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
+
+    class JSONAPIMeta:
+        resource_name = 'segment-questions'
+
+
+class SegmentAnswer(ActivityAnswer):
+    segment = models.ForeignKey(Segment, on_delete=models.CASCADE)
+
+    class JSONAPIMeta:
+        resource_name = 'segment-answers'
+
+    def save(self, *args, **kwargs):
+        current_segments = self.activity.segments.filter(
+            segment_type=self.question.segment_type
+        ).exclude(pk=self.segment.pk)
+
+        for segment in current_segments:
+            self.activity.segments.remove(segment)
+
+        if self.segment not in self.activity.segments.all():
+            self.activity.segments.add(self.segment)
+
+        super().save(*args, **kwargs)
+
+
+class FileUploadQuestion(ActivityQuestion, TranslatableModel):
+    class JSONAPIMeta:
+        resource_name = 'file-upload-questions'
+
+
+class FileUploadAnswer(ActivityAnswer):
+    file = DocumentField(on_delete=models.CASCADE)
+
+    class JSONAPIMeta:
+        resource_name = 'file-upload-answers'
 
 
 from bluebottle.activities.signals import *  # noqa

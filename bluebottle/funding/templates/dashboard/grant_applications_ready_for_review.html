@@ -1,0 +1,19 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for application in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ application.created|date }}<br>
+        </span>
+        <a href="{% url 'admin:grant_management_grantapplication_change' application.id %}" >{{ application.title }}</a>
+        <br>
+        <b>{{ application.owner.full_name }}</b>
+        <br>
+        {% trans "Amount" %}: {{ application.target }}
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

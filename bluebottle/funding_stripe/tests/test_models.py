@@ -20,7 +20,12 @@ from bluebottle.test.utils import BluebottleTestCase
 class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
-        self.check = StripePayoutAccount(owner=BlueBottleUserFactory.create(), country='NL', account_id=account_id)
+        self.check = StripePayoutAccount(
+            owner=BlueBottleUserFactory.create(),
+            country='NL',
+            account_id=account_id,
+            status='new'
+        )
 
         self.connect_account = stripe.Account(account_id)
         self.connect_account.update(

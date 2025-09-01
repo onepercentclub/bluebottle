@@ -231,10 +231,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
         for question in self.questions.filter(required=True):
             try:
-                answer = self.answers.get(question=question)
-                if not answer.is_valid:
-                    yield f'answers.{question.id}'
-
+                self.answers.get(question=question)
             except ActivityAnswer.DoesNotExist:
                 yield f'answers.{question.id}'
 
@@ -518,28 +515,6 @@ class TextAnswer(ActivityAnswer):
     class JSONAPIMeta:
         resource_name = 'text-answers'
 
-    @property
-    def is_valid(self):
-        return len(self.answer) > 0
-
-
-class ConfirmationQuestion(ActivityQuestion, TranslatableModel):
-    text = models.TextField()
-
-    class JSONAPIMeta:
-        resource_name = 'confirmation-questions'
-
-
-class ConfirmationAnswer(ActivityAnswer):
-    confirmed = models.BooleanField(default=False)
-
-    class JSONAPIMeta:
-        resource_name = 'confirmation-answers'
-
-    @property
-    def is_valid(self):
-        return self.confirmed
-
 
 class SegmentQuestion(ActivityQuestion, TranslatableModel):
     segment_type = models.ForeignKey(SegmentType, on_delete=models.CASCADE)
@@ -553,10 +528,6 @@ class SegmentAnswer(ActivityAnswer):
 
     class JSONAPIMeta:
         resource_name = 'segment-answers'
-
-    @property
-    def is_valid(self):
-        return self.segment
 
     def save(self, *args, **kwargs):
         current_segments = self.activity.segments.filter(
@@ -582,10 +553,6 @@ class FileUploadAnswer(ActivityAnswer):
 
     class JSONAPIMeta:
         resource_name = 'file-upload-answers'
-
-    @property
-    def is_valid(self):
-        return self.file
 
 
 from bluebottle.activities.signals import *  # noqa

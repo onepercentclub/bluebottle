@@ -19,8 +19,7 @@ from rest_framework_json_api.serializers import ModelSerializer, PolymorphicMode
 
 from bluebottle.activities.models import (
     Activity, Contributor, Contribution, Organizer, EffortContribution, Team, Invite,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer,
-    ConfirmationAnswer
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
 )
 from bluebottle.clients import properties
 from bluebottle.collect.models import CollectType, CollectActivity, CollectContributor
@@ -142,15 +141,6 @@ class TextAnswerSerializer(BaseAnswerSerializer):
         resource_name = 'text-answers'
 
 
-class ConfirmationAnswerSerializer(BaseAnswerSerializer):
-    class Meta(BaseAnswerSerializer.Meta):
-        model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
-
-    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
-        resource_name = 'confirmation-answers'
-
-
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
@@ -189,7 +179,6 @@ class FileUploadAnswerSerializer(BaseAnswerSerializer):
 class ActivityAnswerSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TextAnswerSerializer,
-        ConfirmationAnswerSerializer,
         SegmentAnswerSerializer,
         FileUploadAnswerSerializer
     ]

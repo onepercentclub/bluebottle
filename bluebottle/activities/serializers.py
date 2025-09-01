@@ -21,8 +21,8 @@ from rest_framework_json_api.serializers import (
 
 from bluebottle.activities.models import (
     Activity, Contribution, Contributor, ActivityQuestion,
-    FileUploadQuestion, SegmentQuestion, TextQuestion, ConfirmationAnswer,
-    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer, ConfirmationQuestion
+    FileUploadQuestion, SegmentQuestion, TextQuestion,
+    ActivityAnswer, TextAnswer, SegmentAnswer, FileUploadAnswer
 )
 from bluebottle.collect.serializers import (
     CollectActivityListSerializer,
@@ -886,15 +886,6 @@ class TextQuestionSerializer(BaseQuestionSerializer):
         resource_name = 'text-questions'
 
 
-class ConfirmationQuestionSerializer(BaseQuestionSerializer):
-    class Meta(BaseQuestionSerializer.Meta):
-        model = ConfirmationQuestion
-        fields = BaseQuestionSerializer.Meta.fields + ('text', )
-
-    class JSONAPIMeta(BaseQuestionSerializer.JSONAPIMeta):
-        resource_name = 'confirmation-questions'
-
-
 class SegmentQuestionSerializer(BaseQuestionSerializer):
     class Meta(BaseQuestionSerializer.Meta):
         model = SegmentQuestion
@@ -920,7 +911,6 @@ class FileUploadQuestionSerializer(BaseQuestionSerializer):
 class ActivityQuestionSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TextQuestionSerializer,
-        ConfirmationQuestionSerializer,
         SegmentQuestionSerializer,
         FileUploadQuestionSerializer
     ]
@@ -963,15 +953,6 @@ class TextAnswerSerializer(BaseAnswerSerializer):
         resource_name = 'text-answers'
 
 
-class ConfirmationAnswerSerializer(BaseAnswerSerializer):
-    class Meta(BaseAnswerSerializer.Meta):
-        model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
-
-    class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
-        resource_name = 'confirmation-answers'
-
-
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
@@ -1010,7 +991,6 @@ class FileUploadAnswerSerializer(BaseAnswerSerializer):
 class ActivityAnswerSerializer(PolymorphicModelSerializer):
     polymorphic_serializers = [
         TextAnswerSerializer,
-        ConfirmationAnswerSerializer,
         SegmentAnswerSerializer,
         FileUploadAnswerSerializer
     ]

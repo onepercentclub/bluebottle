@@ -454,10 +454,13 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     hour_registration_data = models.CharField(
-        _("Hour registration code/url"),
+        _("Code / URL"),
         max_length=400,
         blank=True, null=True,
-        help_text=_("Enter the link or code needed for hour registration.")
+        help_text=_(
+            "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, "
+            "this code or link will be used for every activity and can’t be changed."
+        )
     )
 
     enable_reviewing = models.BooleanField(

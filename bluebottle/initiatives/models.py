@@ -445,18 +445,18 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     hour_registration = models.CharField(
-        _("Time registration"),
+        _("Hour registration"),
         max_length=100,
         choices=HOUR_REGISTRATION_OPTIONS,
         default='disabled',
-        help_text=_("Time registration only applies to time-based activity types.")
+        help_text=_("Hour registration only applies to time-based activity types.")
     )
 
     hour_registration_data = models.CharField(
-        _("Time registration code/url"),
+        _("Hour registration code/url"),
         max_length=400,
         blank=True, null=True,
-        help_text=_("Enter the link or code needed for time registration.")
+        help_text=_("Enter the link or code needed for hour registration.")
     )
 
     enable_reviewing = models.BooleanField(

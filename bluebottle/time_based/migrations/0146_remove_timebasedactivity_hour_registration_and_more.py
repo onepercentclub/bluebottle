@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='timebasedactivity',
             name='hour_registration_data',
-            field=models.CharField(blank=True, help_text='A link or code for participants to register their hours.', max_length=300, null=True, verbose_name='Time registration'),
+            field=models.CharField(blank=True, help_text='A link or code for participants to register their hours.', max_length=300, null=True, verbose_name='Hour registration'),
         ),
     ]

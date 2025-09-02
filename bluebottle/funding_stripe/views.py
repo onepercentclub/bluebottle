@@ -8,7 +8,6 @@ from django.urls.exceptions import Http404
 from django.core.exceptions import PermissionDenied
 from django.views.generic import View
 from django_tools.middlewares.ThreadLocal import get_current_user
-from moneyed import Money
 from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated

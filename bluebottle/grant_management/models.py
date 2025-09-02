@@ -334,7 +334,7 @@ class GrantApplication(Activity):
 
     validators = [
         TargetValidator,
-        TosAcceptedValidator
+        TosAcceptedValidator,
     ]
 
     activity_type = _('Grant application')
@@ -396,6 +396,9 @@ class GrantApplication(Activity):
         domain = get_current_host()
         language = get_current_language()
         return f"{domain}/{language}/activities/details/grant-application/{self.id}/{self.slug}"
+
+    def __str__(self):
+        return self.title or f'Grant application #{self.pk}'
 
 
 class LedgerItemChoices(DjangoChoices):

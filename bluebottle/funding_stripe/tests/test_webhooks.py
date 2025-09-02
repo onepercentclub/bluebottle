@@ -67,27 +67,45 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'currency': 'eur'
         })
 
+        charge = stripe.Charge('some charge id')
+        charge.update({
+            'status': 'succeeded',
+            'transfer': transfer.id,
+            'refunded': False
+        })
+
+        payment_intent = stripe.PaymentIntent('some intent id')
+        payment_intent.update({
+            'status': 'succeeded',
+            'latest_charge': charge.id
+        })
         with mock.patch(
             'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.succeeded', data
-            )
+            return_value=MockEvent('payment_intent.succeeded', data)
         ):
             with mock.patch(
                 'stripe.Transfer.retrieve',
                 return_value=transfer
             ):
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                # Stripe might send double success webhooks
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                with mock.patch(
+                    'stripe.Charge.retrieve',
+                    return_value=charge
+                ):
+                    with mock.patch(
+                        'stripe.PaymentIntent.retrieve',
+                        return_value=payment_intent
+                    ):
+                        response = self.client.post(
+                            self.webhook,
+                            HTTP_STRIPE_SIGNATURE='some signature'
+                        )
+                        self.assertEqual(response.status_code, status.HTTP_200_OK)
+                        # Stripe might send double success webhooks
+                        response = self.client.post(
+                            self.webhook,
+                            HTTP_STRIPE_SIGNATURE='some signature'
+                        )
+                        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.intent.refresh_from_db()
         payment = self.intent.payment
@@ -162,35 +180,14 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.donation.status, 'failed')
 
     def test_failed_second_intent_succeeds(self):
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
-            )
-        ):
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            # Stripe might send double failed webhooks
-            response = self.client.post(
-                self.webhook,
-                HTTP_STRIPE_SIGNATURE='some signature'
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+        self.test_failed()
         self.intent.refresh_from_db()
         payment = self.intent.payment
 
         donation = Donor.objects.get(pk=self.donation.pk)
 
-        self.assertEqual(donation.status, 'failed')
-        self.assertEqual(payment.status, 'failed')
-        self.donation.refresh_from_db()
-        self.assertEqual(self.donation.status, 'failed')
-
         second_intent = StripePaymentIntentFactory.create(donation=self.donation, intent_id='some-other-id')
+
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
             data = json.load(hook_file)
             data['object']['id'] = second_intent.intent_id
@@ -202,21 +199,39 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'currency': 'eur'
         })
 
+        charge = stripe.Charge('some charge id')
+        charge.update({
+            'status': 'succeeded',
+            'transfer': transfer.id,
+            'refunded': False
+        })
+
+        payment_intent = stripe.PaymentIntent('some intent id')
+        payment_intent.update({
+            'status': 'succeeded',
+            'latest_charge': charge.id
+        })
         with mock.patch(
             'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.succeeded', data
-            )
+            return_value=MockEvent('payment_intent.succeeded', data)
         ):
             with mock.patch(
                 'stripe.Transfer.retrieve',
                 return_value=transfer
             ):
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                with mock.patch(
+                    'stripe.Charge.retrieve',
+                    return_value=charge
+                ):
+                    with mock.patch(
+                        'stripe.PaymentIntent.retrieve',
+                        return_value=payment_intent
+                    ):
+                        response = self.client.post(
+                            self.webhook,
+                            HTTP_STRIPE_SIGNATURE='some signature'
+                        )
+                        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         second_intent.refresh_from_db()
         self.assertEqual(second_intent.payment.pk, payment.pk)
@@ -229,32 +244,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(payment.status, 'succeeded')
 
     def test_refund(self):
-        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
-            data = json.load(hook_file)
-            data['object']['id'] = self.intent.intent_id
-
-        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
-        transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
-
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.succeeded', data
-            )
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.test_success()
 
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
             data = json.load(hook_file)
@@ -281,33 +271,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.assertEqual(payment.status, 'refunded')
 
     def test_refund_no_intent(self):
-        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
-            data = json.load(hook_file)
-            data['object']['id'] = self.intent.intent_id
-
-        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
-        transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
-
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.succeeded', data
-            )
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+        self.test_success()
         with open('bluebottle/funding_stripe/tests/files/intent_webhook_refund.json') as hook_file:
             data = json.load(hook_file)
             data['object']['payment_intent'] = None
@@ -327,32 +291,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
             self.assertEqual(response.content, b'Not an intent payment')
 
     def test_refund_from_requested_refund(self):
-        with open('bluebottle/funding_stripe/tests/files/intent_webhook_success.json') as hook_file:
-            data = json.load(hook_file)
-            data['object']['id'] = self.intent.intent_id
-
-        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
-        transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
-            'amount': 2500,
-            'currency': 'eur'
-        })
-
-        with mock.patch(
-            'stripe.Webhook.construct_event',
-            return_value=MockEvent(
-                'payment_intent.succeeded', data
-            )
-        ):
-            with mock.patch(
-                'stripe.Transfer.retrieve',
-                return_value=transfer
-            ):
-                response = self.client.post(
-                    self.webhook,
-                    HTTP_STRIPE_SIGNATURE='some signature'
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.test_success()
 
         with mock.patch(
             'bluebottle.funding_stripe.models.StripePayment.refund',

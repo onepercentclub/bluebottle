@@ -30,6 +30,7 @@ from bluebottle.utils.models import (
     ValidatedModelMixin,
 )
 from bluebottle.utils.utils import get_current_host, get_current_language
+from django.core.exceptions import ValidationError
 
 
 @python_2_unicode_compatible
@@ -487,6 +488,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _("Activity & initiative settings")
         verbose_name = _("Activity & initiative settings")
+
+    def clean(self):
+        if self.hour_registration == "generic" and not self.hour_registration_data:
+            raise ValidationError({
+                "hour_registration_data": _(
+                    "Hour registration data is required when 'generic' hour registration is selected."
+                )
+            })
 
 
 class SearchFilter(SortableMixin, models.Model):

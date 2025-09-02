@@ -205,11 +205,16 @@ class Funding(Activity):
 
     @property
     def required_fields(self):
+        settings = FundingPlatformSettings.load()
+
         fields = super().required_fields + [
             "title",
             "description.html",
             "target",
         ]
+
+        if settings.public_accounts:
+            fields.append('bank_account')
 
         if not self.duration:
             fields.append('deadline')

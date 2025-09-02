@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-28 08:52+0200\n"
-"PO-Revision-Date: 2025-08-28 08:29\n"
+"POT-Creation-Date: 2025-09-02 09:15+0200\n"
+"PO-Revision-Date: 2025-09-02 07:17\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -7470,6 +7470,11 @@ msgstr "Begint met 'acct_...'"
 #: build/lib/bluebottle/funding_stripe/models.py:345
 msgid "Verification type"
 msgstr "Verificatietype"
+
+#: bluebottle/funding_stripe/models.py:425
+#, python-format
+msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
+msgstr "Niet van toepassing - het werven van geld voor een sociaal project op %(platform)s, een GoodUp platform."
 
 #: bluebottle/funding_stripe/models.py:626
 #: build/lib/bluebottle/funding_stripe/models.py:621

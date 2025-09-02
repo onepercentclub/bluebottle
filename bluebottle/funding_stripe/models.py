@@ -421,9 +421,9 @@ class StripePayoutAccount(PayoutAccount):
 
                 if not business_profile.product_description:
                     platform = get_tenant_name()
-                    business_profile.product_description = (
-                        f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
-                    )
+                    business_profile.product_description = _(
+                        "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
+                    ) % {"platform": platform}
                     stripe.Account.modify(
                         self.account_id,
                         business_profile=business_profile,

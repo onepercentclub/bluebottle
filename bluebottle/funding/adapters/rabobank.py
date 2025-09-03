@@ -26,7 +26,7 @@ class RabobankAdapter:
             headers=headers,
             json=payload,
             cert=(self.public_cert, self.private_key),
-            verify=True,
+            verify=False,
         )
         response.raise_for_status()
         return response.json()

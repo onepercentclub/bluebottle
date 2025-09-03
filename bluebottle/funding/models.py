@@ -907,8 +907,8 @@ class IbanCheck(models.Model):
     def get_stripe_token(self):
         stripe = get_stripe()
         iban = self.iban
-        # For testing we convert Surepay test number to Stripe test number
-        if iban == 'NL78RABO5394792070':
+
+        if stripe.api_key.startswith('sk_test'):
             iban = 'NL39RABO0300065264'
         token = stripe.Token.create(
             bank_account={

@@ -6,6 +6,7 @@ from django.utils.translation import pgettext_lazy as pgettext
 from pytz import timezone
 
 from bluebottle.clients.utils import tenant_url
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
@@ -796,6 +797,12 @@ class ManagerSlotParticipantRegisteredNotification(TransitionMessage):
     def get_context(self, recipient):
         context = super().get_context(recipient)
         context['slot'] = get_slot_info(self.obj.slot)
+        settings = InitiativePlatformSettings.load()
+        context['hour_registration'] = (
+            settings.hour_registration != 'none'
+            and self.obj.activity.hour_registration_data
+            or settings.hour_registration_data
+        )
         return context
 
     @property

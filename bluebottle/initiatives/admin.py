@@ -282,20 +282,12 @@ class InitiativePlatformSettingsAdmin(
     NonSortableParentAdmin, BasePlatformSettingsAdmin
 ):
     inlines = [ActivitySearchFilterInline, InitiativeSearchFilterInline]
-    readonly_fields = ['terms_of_service_help_text', 'hour_registration_help_text']
+    readonly_fields = ['terms_of_service_help_text']
 
     def terms_of_service_help_text(self, obj):
         return admin_info_box(_(
             "When writing a custom Terms of Service for email, you can include "
             "placeholder such as {partner_organization}, {contact_email} from the message templates."
-        ))
-
-    def hour_registration_help_text(self, obj):
-        return admin_info_box(_(
-            "If you select ‘unique per activity’, the code or link you enter here will be the "
-            "default for new activities. Activity managers can change it. Leave this field empty "
-            "if you don’t want to set a default. If you select ‘same for all activities’, "
-            "this code or link will be used for every activity and can’t be changed."
         ))
 
     fieldsets = (
@@ -350,7 +342,6 @@ class InitiativePlatformSettingsAdmin(
             {
                 "fields": (
                     "hour_registration",
-                    "hour_registration_help_text",
                     "hour_registration_data",
                 )
             },

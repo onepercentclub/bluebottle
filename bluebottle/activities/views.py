@@ -1,6 +1,6 @@
 import io
 import qrcode
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from django.core.validators import validate_email
@@ -350,21 +350,24 @@ class ActivityQrCode(RetrieveAPIView):
             settings = SitePlatformSettings.load()
             favicon = settings.favicon
             if favicon:
-                logo = Image.open(favicon.path)
-                qr_width, qr_height = img.size
-                logo_size = qr_width // 5
-                logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
+                try:
+                    logo = Image.open(favicon.path)
+                    qr_width, qr_height = img.size
+                    logo_size = qr_width // 5
+                    logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
 
-                # Create a white background and paste the logo onto it
-                if logo.mode in ("RGBA", "LA"):
-                    white_bg = Image.new("RGB", logo.size, (255, 255, 255))
-                    white_bg.paste(logo, mask=logo.split()[-1])
-                    logo = white_bg
+                    # Create a white background and paste the logo onto it
+                    if logo.mode in ("RGBA", "LA"):
+                        white_bg = Image.new("RGB", logo.size, (255, 255, 255))
+                        white_bg.paste(logo, mask=logo.split()[-1])
+                        logo = white_bg
 
-                xpos = (qr_width - logo.width) // 2
-                ypos = (qr_height - logo.height) // 2
+                    xpos = (qr_width - logo.width) // 2
+                    ypos = (qr_height - logo.height) // 2
 
-                img.paste(logo, (xpos, ypos))
+                    img.paste(logo, (xpos, ypos))
+                except UnidentifiedImageError:
+                    pass
         except FileNotFoundError:
             pass
 

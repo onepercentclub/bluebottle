@@ -2,12 +2,21 @@
 {% load i18n %}
 
 {% block message %}
-    {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
-        <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
-    {% endblocktrans %}
-  {% if period %}
-    {% include 'mails/messages/partial/periodic.html' %}
-  {% endif %}
+    <p>
+        {% blocktrans with manager=obj.activity.owner.full_name context 'email' %}
+            <p>Good news, you have been accepted for the activity "{{ title }}"!</p>
+        {% endblocktrans %}
+    </p>
+    {% if period %}
+        {% include 'mails/messages/partial/periodic.html' %}
+    {% endif %}
+    {% if hour_registration %}
+        <p>
+            {% blocktrans context 'email' %}
+                Make sure to register your hours using the code or URL found on the activity detail page.
+            {% endblocktrans %}
+        </p>
+    {% endif %}
 {% endblock %}
 
 

@@ -30,6 +30,7 @@ from bluebottle.utils.models import (
     ValidatedModelMixin,
 )
 from bluebottle.utils.utils import get_current_host, get_current_language
+from django.core.exceptions import ValidationError
 
 
 @python_2_unicode_compatible
@@ -445,18 +446,21 @@ class InitiativePlatformSettings(BasePlatformSettings):
     )
 
     hour_registration = models.CharField(
-        _("Time registration"),
+        _("Hour registration"),
         max_length=100,
         choices=HOUR_REGISTRATION_OPTIONS,
         default='disabled',
-        help_text=_("Time registration only applies to time-based activity types.")
+        help_text=_("Hour registration only applies to time-based activity types.")
     )
 
     hour_registration_data = models.CharField(
-        _("Time registration code/url"),
+        _("Code / URL"),
         max_length=400,
         blank=True, null=True,
-        help_text=_("Enter the link or code needed for time registration.")
+        help_text=_(
+            "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, "
+            "this code or link will be used for every activity and can’t be changed."
+        )
     )
 
     enable_reviewing = models.BooleanField(
@@ -487,6 +491,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _("Activity & initiative settings")
         verbose_name = _("Activity & initiative settings")
+
+    def clean(self):
+        if self.hour_registration == "generic" and not self.hour_registration_data:
+            raise ValidationError({
+                "hour_registration_data": _(
+                    "Hour registration data is required when 'generic' hour registration is selected."
+                )
+            })
 
 
 class SearchFilter(SortableMixin, models.Model):

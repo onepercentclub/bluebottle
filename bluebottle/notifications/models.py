@@ -65,7 +65,6 @@ class NotificationPlatformSettings(BasePlatformSettings):
         max_length=100, choices=SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
-    default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta(object):
         verbose_name_plural = _('Sharing settings')

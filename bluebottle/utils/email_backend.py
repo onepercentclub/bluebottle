@@ -84,52 +84,6 @@ class TenantAwareBackend(EmailBackend):
 DKIMBackend = TenantAwareBackend
 
 
-class PlainBackend(EmailBackend):
-    """
-        Support per-tenant smtp configuration and optionally
-        sign the message with a DKIM key, if present.
-    """
-
-    def open(self):
-        tenant_mail_config = getattr(properties, 'MAIL_CONFIG', None)
-
-        if tenant_mail_config:
-            # clear everything that was initialized from settings in __init__
-            # that is, use the same defaults as django
-            self.host = tenant_mail_config.get('HOST', settings.EMAIL_HOST)
-            self.port = tenant_mail_config.get('PORT', settings.EMAIL_PORT)
-            self.username = tenant_mail_config.get('USERNAME', '')
-            self.password = tenant_mail_config.get('PASSWORD', '')
-            self.use_tls = tenant_mail_config.get('TLS', settings.EMAIL_USE_TLS)
-            self.use_ssl = tenant_mail_config.get('SSL', settings.EMAIL_USE_SSL)
-
-        return super(TenantAwareBackend, self).open()
-
-    def _send(self, email_message):
-        """A helper method that does the actual sending + DKIM signing."""
-        if not email_message.recipients():
-            return False
-        try:
-            message_string = email_message.message().as_bytes()
-            signature = b""
-            try:
-                signature = dkim.sign(message_string,
-                                      properties.DKIM_SELECTOR,
-                                      properties.DKIM_DOMAIN,
-                                      properties.DKIM_PRIVATE_KEY)
-            except AttributeError:
-                pass
-
-            self.connection.sendmail(
-                email_message.from_email, email_message.recipients(),
-                signature + message_string)
-        except Exception:
-            if not self.fail_silently:
-                raise
-            return False
-        return True
-
-
 class TestMailBackend(EmailBackend):
     def _send(self, email_message):
         """ Force recipient to the current user."""

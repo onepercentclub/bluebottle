@@ -1,6 +1,8 @@
 import json
 import logging
 from builtins import object
+
+from bluebottle.utils.translation import override
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
@@ -23,7 +25,7 @@ from bluebottle.funding.models import (
     FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
-from bluebottle.utils.utils import get_current_host, get_tenant_name
+from bluebottle.utils.utils import get_current_host, get_tenant_name, get_current_language
 from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
@@ -421,10 +423,9 @@ class StripePayoutAccount(PayoutAccount):
                     )
 
                 if not business_profile.product_description:
-                    platform = get_tenant_name()
-                    business_profile.product_description = _(
-                        "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
-                    ) % {"platform": platform}
+                    language = get_current_language()
+                    with override(language):
+                        business_profile.product_description = self.product_description_value(language)
                     stripe.Account.modify(
                         self.account_id,
                         business_profile=business_profile,
@@ -444,6 +445,12 @@ class StripePayoutAccount(PayoutAccount):
                         )
                 self._account = stripe.Account.retrieve(self.account_id)
 
+    def product_description_value(self, language):
+        platform = get_tenant_name()
+        with override(language):
+            msg = _("Not applicable - raising funds for {platform}, a GoodUp platform.")
+            return msg.format(platform=platform)
+
     def save(self, *args, **kwargs):
         stripe = get_stripe()
 
@@ -456,10 +463,13 @@ class StripePayoutAccount(PayoutAccount):
             self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
-            business_profile = {
-                "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
-                "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
-            }
+            language = get_current_language()
+            with override(language):
+                business_profile = {
+                    "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
+                    "product_description": self.product_description_value(language),
+                }
+
             if self.business_type == BusinessTypeChoices.individual:
                 company = None
             else:

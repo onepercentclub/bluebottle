@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 13:45+0200\n"
-"PO-Revision-Date: 2025-09-03 11:47\n"
+"POT-Creation-Date: 2025-09-03 16:08+0200\n"
+"PO-Revision-Date: 2025-09-03 14:10\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -5029,7 +5029,7 @@ msgid "Payment"
 msgstr "Betaling"
 
 #: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:292
+#: bluebottle/funding_stripe/models.py:294
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 #: build/lib/bluebottle/funding/admin.py:122
 #: build/lib/bluebottle/funding/filters.py:39
@@ -7394,109 +7394,110 @@ msgstr "Open activiteiten die in de geblokkeerd zijn"
 msgid "Update business type at stripe"
 msgstr "Bedrijfstype bijwerken bij Stripe"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:245
 #: build/lib/bluebottle/funding_stripe/models.py:242
 msgid "Country of primary stripe account"
 msgstr "Land van primaire stripe account"
 
-#: bluebottle/funding_stripe/models.py:245
+#: bluebottle/funding_stripe/models.py:247
 #: build/lib/bluebottle/funding_stripe/models.py:244
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Normaal gesproken is dit NL, maar door het overschrijven van de stripe key, kan een andere primaire stripe account worden geselecteerd. "
 
-#: bluebottle/funding_stripe/models.py:253
+#: bluebottle/funding_stripe/models.py:255
 #: build/lib/bluebottle/funding_stripe/models.py:252
 msgid "Stripe publishable key"
 msgstr "Stripe publiceerbare sleutel"
 
-#: bluebottle/funding_stripe/models.py:254
-#: bluebottle/funding_stripe/models.py:262
+#: bluebottle/funding_stripe/models.py:256
+#: bluebottle/funding_stripe/models.py:264
 #: build/lib/bluebottle/funding_stripe/models.py:253
 #: build/lib/bluebottle/funding_stripe/models.py:261
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Dit is alleen nodig als je een specifiek Stripe account wilt gebruiken."
 
-#: bluebottle/funding_stripe/models.py:261
+#: bluebottle/funding_stripe/models.py:263
 #: build/lib/bluebottle/funding_stripe/models.py:260
 msgid "Stripe secret key"
 msgstr "Stripe secret key"
 
-#: bluebottle/funding_stripe/models.py:269
+#: bluebottle/funding_stripe/models.py:271
 #: build/lib/bluebottle/funding_stripe/models.py:268
 msgid "Stripe connect webhook secret"
 msgstr "Stripe Connect webhook secret"
 
-#: bluebottle/funding_stripe/models.py:270
+#: bluebottle/funding_stripe/models.py:272
 #: build/lib/bluebottle/funding_stripe/models.py:269
 msgid "The secret for connect webhook."
 msgstr "The secret for Connect webhook."
 
-#: bluebottle/funding_stripe/models.py:277
+#: bluebottle/funding_stripe/models.py:279
 #: build/lib/bluebottle/funding_stripe/models.py:276
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe payment intents webhook secret"
 
-#: bluebottle/funding_stripe/models.py:278
+#: bluebottle/funding_stripe/models.py:280
 #: build/lib/bluebottle/funding_stripe/models.py:277
 msgid "The secret for payment intents webhook."
 msgstr "The secret for payment intents webhook."
 
-#: bluebottle/funding_stripe/models.py:285
+#: bluebottle/funding_stripe/models.py:287
 #: build/lib/bluebottle/funding_stripe/models.py:284
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Stripe payment checkout session webhook secret"
 
-#: bluebottle/funding_stripe/models.py:286
+#: bluebottle/funding_stripe/models.py:288
 #: build/lib/bluebottle/funding_stripe/models.py:285
 msgid "The secret for payment checkout session webhook."
 msgstr "The secret for payment checkout session webhook."
 
-#: bluebottle/funding_stripe/models.py:293
+#: bluebottle/funding_stripe/models.py:295
 #: build/lib/bluebottle/funding_stripe/models.py:292
 msgid "The currency for the global account."
 msgstr "De valuta voor de globale rekening."
 
-#: bluebottle/funding_stripe/models.py:338
+#: bluebottle/funding_stripe/models.py:340
 #: build/lib/bluebottle/funding_stripe/models.py:337
 msgid "Personal"
 msgstr "Persoonlijk"
 
-#: bluebottle/funding_stripe/models.py:343
+#: bluebottle/funding_stripe/models.py:345
 #: build/lib/bluebottle/funding_stripe/models.py:342
 msgid "Starts with 'acct_...'"
 msgstr "Begint met 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:346
+#: bluebottle/funding_stripe/models.py:348
 #: build/lib/bluebottle/funding_stripe/models.py:345
 msgid "Verification type"
 msgstr "Verificatietype"
 
-#: bluebottle/funding_stripe/models.py:426
-#, python-format
-msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
-msgstr "Niet van toepassing - het werven van geld voor een sociaal project op %(platform)s, een GoodUp platform."
+#: bluebottle/funding_stripe/models.py:451
+#, python-brace-format
+msgid "Not applicable - raising funds for {platform}, a GoodUp platform."
+msgstr "Niet van toepassing - het werven van geld voor een sociaal project op {platform}, een GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:627
+#: bluebottle/funding_stripe/models.py:453
+#: bluebottle/funding_stripe/models.py:640
 #: build/lib/bluebottle/funding_stripe/models.py:621
 msgid "stripe payout account"
 msgstr "stripe uitbetalingsaccount"
 
-#: bluebottle/funding_stripe/models.py:628
+#: bluebottle/funding_stripe/models.py:641
 #: build/lib/bluebottle/funding_stripe/models.py:622
 msgid "stripe payout accounts"
 msgstr "stripe uitbetalingsaccounts"
 
-#: bluebottle/funding_stripe/models.py:639
+#: bluebottle/funding_stripe/models.py:652
 #: build/lib/bluebottle/funding_stripe/models.py:633
 msgid "Starts with 'ba_...'"
 msgstr "Begint met 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:687
+#: bluebottle/funding_stripe/models.py:700
 #: build/lib/bluebottle/funding_stripe/models.py:681
 msgid "Bank account"
 msgstr "Bankrekening"
 
-#: bluebottle/funding_stripe/models.py:688
+#: bluebottle/funding_stripe/models.py:701
 #: build/lib/bluebottle/funding_stripe/models.py:682
 msgid "Bank accounts"
 msgstr "Bankrekeningen"

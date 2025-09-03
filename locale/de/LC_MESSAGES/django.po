@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 13:45+0200\n"
-"PO-Revision-Date: 2025-09-03 11:47\n"
+"POT-Creation-Date: 2025-09-03 16:08+0200\n"
+"PO-Revision-Date: 2025-09-03 14:47\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -2145,7 +2145,8 @@ msgid "\n"
 "The activity \"%(title)s\" has been submitted by %(initiator_name)s.<br>\n"
 "Please take a moment to review this activity and decide if it's right for your platform.<br>\n"
 "%(initiator_name)s will be waiting for your review, so please respond promptly.<br>\n"
-msgstr "Die Aktivität \"%(title)s\" wurde von %(initiator_name)s eingereicht.<br>\n"
+msgstr "\n"
+"Die Aktivität \"%(title)s\" wurde von %(initiator_name)s eingereicht.<br>\n"
 "Bitte nehmen Sie sich einen Moment Zeit, um diese Aktivität zu überprüfen und zu entscheiden, ob sie für Ihre Plattform geeignet ist.<br>\n"
 "%(initiator_name)s erwartet Ihre Überprüfung, reagieren Sie bitte zeitnah.<br>\n"
 
@@ -5036,7 +5037,7 @@ msgid "Payment"
 msgstr "Zahlung"
 
 #: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:292
+#: bluebottle/funding_stripe/models.py:294
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 #: build/lib/bluebottle/funding/admin.py:122
 #: build/lib/bluebottle/funding/filters.py:39
@@ -6606,6 +6607,7 @@ msgid "\n"
 "    "
 msgstr "\n"
 "Schön! Sie haben eine neue Spende erhalten. Warum gehen Sie nicht zu Ihrer Kampagnenseite und sagen danke?\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_cancelled.html:6
 #: build/lib/bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_cancelled.html:6
@@ -7411,109 +7413,110 @@ msgstr "Offene Aktivitäten, die gewartet werden"
 msgid "Update business type at stripe"
 msgstr "Geschäftstyp im Streifen aktualisieren"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:245
 #: build/lib/bluebottle/funding_stripe/models.py:242
 msgid "Country of primary stripe account"
 msgstr "Land des primären Streifenkontos"
 
-#: bluebottle/funding_stripe/models.py:245
+#: bluebottle/funding_stripe/models.py:247
 #: build/lib/bluebottle/funding_stripe/models.py:244
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Normalerweise ist dies NL, aber durch das Überschreiben der Strip-Taste kann ein anderes Primärstreifen-Konto ausgewählt werden. "
 
-#: bluebottle/funding_stripe/models.py:253
+#: bluebottle/funding_stripe/models.py:255
 #: build/lib/bluebottle/funding_stripe/models.py:252
 msgid "Stripe publishable key"
 msgstr "Streifen publizierbarer Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:254
-#: bluebottle/funding_stripe/models.py:262
+#: bluebottle/funding_stripe/models.py:256
+#: bluebottle/funding_stripe/models.py:264
 #: build/lib/bluebottle/funding_stripe/models.py:253
 #: build/lib/bluebottle/funding_stripe/models.py:261
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Dies wird nur benötigt, wenn Sie ein bestimmtes Stripe-Konto verwenden möchten."
 
-#: bluebottle/funding_stripe/models.py:261
+#: bluebottle/funding_stripe/models.py:263
 #: build/lib/bluebottle/funding_stripe/models.py:260
 msgid "Stripe secret key"
 msgstr "Geheimer Stripe-Schlüssel"
 
-#: bluebottle/funding_stripe/models.py:269
+#: bluebottle/funding_stripe/models.py:271
 #: build/lib/bluebottle/funding_stripe/models.py:268
 msgid "Stripe connect webhook secret"
 msgstr "Webhook Geheimnis für Stripe verbinden"
 
-#: bluebottle/funding_stripe/models.py:270
+#: bluebottle/funding_stripe/models.py:272
 #: build/lib/bluebottle/funding_stripe/models.py:269
 msgid "The secret for connect webhook."
 msgstr "Das Geheimnis zum Verbinden von Webhook."
 
-#: bluebottle/funding_stripe/models.py:277
+#: bluebottle/funding_stripe/models.py:279
 #: build/lib/bluebottle/funding_stripe/models.py:276
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe Zahlungsabsichten Webhook Geheimnis"
 
-#: bluebottle/funding_stripe/models.py:278
+#: bluebottle/funding_stripe/models.py:280
 #: build/lib/bluebottle/funding_stripe/models.py:277
 msgid "The secret for payment intents webhook."
 msgstr "Das Geheimnis für Zahlung beabsichtigt webhook."
 
-#: bluebottle/funding_stripe/models.py:285
+#: bluebottle/funding_stripe/models.py:287
 #: build/lib/bluebottle/funding_stripe/models.py:284
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Stripe-Zahlungs-Checkout-Sitzungs-Webhook-Geheimnis"
 
-#: bluebottle/funding_stripe/models.py:286
+#: bluebottle/funding_stripe/models.py:288
 #: build/lib/bluebottle/funding_stripe/models.py:285
 msgid "The secret for payment checkout session webhook."
 msgstr "Das Geheimnis für das Zahlungs-Checkout-Sitzungs-Webhook."
 
-#: bluebottle/funding_stripe/models.py:293
+#: bluebottle/funding_stripe/models.py:295
 #: build/lib/bluebottle/funding_stripe/models.py:292
 msgid "The currency for the global account."
 msgstr "Die Währung für das globale Konto."
 
-#: bluebottle/funding_stripe/models.py:338
+#: bluebottle/funding_stripe/models.py:340
 #: build/lib/bluebottle/funding_stripe/models.py:337
 msgid "Personal"
 msgstr "Persönlich"
 
-#: bluebottle/funding_stripe/models.py:343
+#: bluebottle/funding_stripe/models.py:345
 #: build/lib/bluebottle/funding_stripe/models.py:342
 msgid "Starts with 'acct_...'"
 msgstr "Beginnt mit 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:346
+#: bluebottle/funding_stripe/models.py:348
 #: build/lib/bluebottle/funding_stripe/models.py:345
 msgid "Verification type"
 msgstr "Verifizierungstyp"
 
-#: bluebottle/funding_stripe/models.py:426
-#, python-format
-msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
+#: bluebottle/funding_stripe/models.py:451
+#, python-brace-format
+msgid "Not applicable - raising funds for {platform}, a GoodUp platform."
 msgstr ""
 
-#: bluebottle/funding_stripe/models.py:627
+#: bluebottle/funding_stripe/models.py:453
+#: bluebottle/funding_stripe/models.py:640
 #: build/lib/bluebottle/funding_stripe/models.py:621
 msgid "stripe payout account"
 msgstr "Streifen Auszahlungskonto"
 
-#: bluebottle/funding_stripe/models.py:628
+#: bluebottle/funding_stripe/models.py:641
 #: build/lib/bluebottle/funding_stripe/models.py:622
 msgid "stripe payout accounts"
 msgstr "Streifen Auszahlungskonten"
 
-#: bluebottle/funding_stripe/models.py:639
+#: bluebottle/funding_stripe/models.py:652
 #: build/lib/bluebottle/funding_stripe/models.py:633
 msgid "Starts with 'ba_...'"
 msgstr "Beginnt mit 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:687
+#: bluebottle/funding_stripe/models.py:700
 #: build/lib/bluebottle/funding_stripe/models.py:681
 msgid "Bank account"
 msgstr "Bankkonto"
 
-#: bluebottle/funding_stripe/models.py:688
+#: bluebottle/funding_stripe/models.py:701
 #: build/lib/bluebottle/funding_stripe/models.py:682
 msgid "Bank accounts"
 msgstr "Bankkonten"

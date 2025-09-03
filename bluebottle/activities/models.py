@@ -503,6 +503,9 @@ class ActivityAnswer(PolymorphicModel):
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(ActivityQuestion, on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ['activity', 'question']
+
 
 class TextQuestion(ActivityQuestion, TranslatableModel):
     class JSONAPIMeta:

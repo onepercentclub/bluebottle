@@ -443,6 +443,8 @@ TENANT_APPS = (
     'django_recaptcha',
     'colorfield',
     'django_quill',
+
+    'bluebottle.activity_pub',
 )
 
 
@@ -771,7 +773,7 @@ JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
 JSON_API_UNIFORM_EXCEPTIONS = True
 
 # Don't show url warnings
-SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error']
+SILENCED_SYSTEM_CHECKS = ['urls.W002', 'django_recaptcha.recaptcha_test_key_error', 'models.E006']
 
 AXES_LOCKOUT_URL = '/admin/locked/'
 AXES_FAILURE_LIMIT = 10

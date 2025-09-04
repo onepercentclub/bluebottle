@@ -1,3 +1,5 @@
+from bluebottle.utils.utils import get_client_ip
+
 from bluebottle.cms.models import SitePlatformSettings
 from django.db import connection
 from bluebottle.clients import properties
@@ -15,5 +17,7 @@ def tenant(request):
     }
     if hasattr(request, 'user') and request.user.has_perm('looker.access_looker_embeds'):
         context['looker_items'] = LookerEmbed.objects.all()
+
+    context['client_ip'] = get_client_ip(request)
 
     return context

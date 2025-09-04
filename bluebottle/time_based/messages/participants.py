@@ -1,5 +1,6 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 
@@ -43,6 +44,16 @@ class UserParticipantNotification(TransitionMessage):
         'name': 'user.full_name',
         'review_link': 'activity.review_link',
     }
+
+    def get_context(self, recipient):
+        context = super(UserParticipantNotification, self).get_context(recipient)
+        settings = InitiativePlatformSettings.load()
+        context['hour_registration'] = (
+            settings.hour_registration != 'none'
+            and self.obj.activity.hour_registration_data
+            or settings.hour_registration_data
+        )
+        return context
 
     @property
     def action_link(self):

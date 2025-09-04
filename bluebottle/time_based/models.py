@@ -111,6 +111,13 @@ class TimeBasedActivity(Activity):
         null=True, blank=True,
     )
 
+    hour_registration_data = models.CharField(
+        _('Hour registration'),
+        help_text=_('A link or code for participants to register their hours.'),
+        blank=True, null=True,
+        max_length=300,
+    )
+
     activity_type = _('Time-based activity')
 
     @property

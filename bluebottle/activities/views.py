@@ -1,13 +1,17 @@
+import io
+import qrcode
+from PIL import Image, UnidentifiedImageError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
+from django.core.validators import validate_email
 from django.db.models import Q, F
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from rest_framework import response, filters
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_json_api.views import AutoPrefetchMixin
-from django.core.validators import validate_email
-from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import ValidationError
 
 from bluebottle.activities.filters import ActivitySearchFilter
 from bluebottle.activities.models import (
@@ -30,9 +34,11 @@ from bluebottle.activities.serializers import (
 )
 from bluebottle.activities.utils import InviteSerializer
 from bluebottle.bluebottle_drf2.renderers import ElasticSearchJSONAPIRenderer
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.views import ImageContentView
 from bluebottle.members.models import MemberPlatformSettings, Member
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, TenantConditionalOpenClose
@@ -317,6 +323,59 @@ class ActivityImage(ImageContentView):
     queryset = Activity.objects
     field = 'image'
     allowed_sizes = ActivityImageSerializer.sizes
+
+
+class ActivityQrCode(RetrieveAPIView):
+
+    queryset = Activity.objects
+
+    def get(self, request, *args, **kwargs):
+        notification_settings = NotificationPlatformSettings.load()
+        if 'qrcode' not in notification_settings.share_options:
+            return HttpResponseBadRequest('QR code sharing not enabled')
+        activity = self.get_object()
+        data = activity.get_absolute_url() + "?utm_source=qr_code"
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+
+        try:
+            settings = SitePlatformSettings.load()
+            favicon = settings.favicon
+            if favicon:
+                try:
+                    logo = Image.open(favicon.path)
+                    qr_width, qr_height = img.size
+                    logo_size = qr_width // 5
+                    logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
+
+                    # Create a white background and paste the logo onto it
+                    if logo.mode in ("RGBA", "LA"):
+                        white_bg = Image.new("RGB", logo.size, (255, 255, 255))
+                        white_bg.paste(logo, mask=logo.split()[-1])
+                        logo = white_bg
+
+                    xpos = (qr_width - logo.width) // 2
+                    ypos = (qr_height - logo.height) // 2
+
+                    img.paste(logo, (xpos, ypos))
+                except UnidentifiedImageError:
+                    pass
+        except FileNotFoundError:
+            pass
+
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        return HttpResponse(buffer, content_type="image/png")
 
 
 class RelatedActivityImageList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView):

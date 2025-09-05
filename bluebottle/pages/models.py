@@ -7,6 +7,7 @@ from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
 
 
@@ -225,6 +226,18 @@ class ScaledImageTextItem(ContentItem):
         return Truncator(strip_tags(self.text)).words(20)
 
 
+class TextOnlyItem(ContentItem):
+    text = QuillField(_('text'), blank=True)
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Text only')
+        verbose_name_plural = _('Text only')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
 @python_2_unicode_compatible
 class Page(PublishableModel):
     class PageStatus(DjangoChoices):
@@ -253,6 +266,7 @@ class Page(PublishableModel):
 
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
+        'TextOnlyPlugin',
         'ColumnsPlugin',
         'ActionPlugin',
         'ImageTextPlugin',

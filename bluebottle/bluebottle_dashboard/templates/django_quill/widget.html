@@ -3,6 +3,24 @@
     .django-quill-widget-container .select2 {
         display: none;
     }
+    
+    /* Define the buttonLink icon using CSS */
+    .ql-toolbar .ql-buttonLink:before {
+        content: "🔗";
+        font-size: 16px;
+    }
+    
+    /* Or use a custom icon with background */
+    .ql-toolbar .ql-buttonLink {
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuNSA0LjVIMTMuNUMyNC4yNSAxMy41IDQuNSAxMy41VjQuNVoiIGZpbGw9IiNmZmZmZmYiLz4KPHBhdGggZD0iTTQuNSA0LjVIMTMuNUMyNC4yNSAxMy41IDQuNSAxMy41VjQuNVoiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KPHBhdGggZD0iTTcuNSA3LjVIMTAuNVYxMC41SDcuNVY3LjVaIiBmaWxsPSIjMzMzMzMzIi8+CjxwYXRoIGQ9Ik0xMS4yNSAxMS4yNUwxMy41IDEzLjUiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 18px 18px;
+    }
+    
+    .ql-toolbar .ql-buttonLink:before {
+        content: "";
+    }
 </style>
 
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
@@ -20,7 +38,6 @@
 
                 static create(value) {
                     let node = super.create(value);
-                    debugger
                     node.setAttribute('href', value);
                     node.setAttribute('target', '_blank');
                     node.classList.add('quill-button-link');
@@ -46,6 +63,9 @@
 
             Quill.register(ButtonLink);
 
+            const icons = Quill.import('ui/icons');
+            icons['buttonLink'] = '<svg stroke="currentColor" fill="none" stroke-width="0" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 5H13C13.5523 5 14 5.44772 14 6V9C14 9.55228 13.5523 10 13 10H2C1.44772 10 1 9.55228 1 9V6C1 5.44772 1.44772 5 2 5ZM0 6C0 4.89543 0.895431 4 2 4H13C14.1046 4 15 4.89543 15 6V9C15 10.1046 14.1046 11 13 11H2C0.89543 11 0 10.1046 0 9V6ZM4.5 6.75C4.08579 6.75 3.75 7.08579 3.75 7.5C3.75 7.91421 4.08579 8.25 4.5 8.25C4.91421 8.25 5.25 7.91421 5.25 7.5C5.25 7.08579 4.91421 6.75 4.5 6.75ZM6.75 7.5C6.75 7.08579 7.08579 6.75 7.5 6.75C7.91421 6.75 8.25 7.08579 8.25 7.5C8.25 7.91421 7.91421 8.25 7.5 8.25C7.08579 8.25 6.75 7.91421 6.75 7.5ZM10.5 6.75C10.0858 6.75 9.75 7.08579 9.75 7.5C9.75 7.91421 10.0858 8.25 10.5 8.25C10.9142 8.25 11.25 7.91421 11.25 7.5C11.25 7.08579 10.9142 6.75 10.5 6.75Z" fill="currentColor"></path></svg>';
+
             var config = JSON.parse('{{ config|safe|escapejs }}');
 
             async function upload(file) {
@@ -66,6 +86,7 @@
             config.modules.imageUploader = {
                 upload: upload
             }
+
             config.modules.toolbar = {
                 container: [
                     [{ 'header': [1, 2, false] }],
@@ -74,6 +95,22 @@
                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                     ['clean']
                 ],
+                handlers: {
+                    'buttonLink': function (value) {
+                        if (value) {
+                            const range = this.quill.getSelection();
+                            if (range) {
+                                this.quill.format('buttonLink', value);
+                            }
+                        } else {
+                            // Show URL input dialog
+                            const url = prompt('Enter URL for button:', '');
+                            if (url !== null && url.trim()) {
+                                this.quill.format('buttonLink', url.trim());
+                            }
+                        }
+                    }
+                }
             };
 
             Quill.register(

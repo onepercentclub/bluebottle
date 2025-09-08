@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
@@ -7,10 +8,7 @@ from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
-from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
-
-
 from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
 from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem
@@ -197,6 +195,18 @@ class ImageTextRoundItem(ContentItem):
             self.text_final = None
 
 
+class TextOnlyItem(ContentItem):
+    text = PluginHtmlField(_('text'), blank=True)
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Text only')
+        verbose_name_plural = _('Text only')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
 class ScaledImageTextItem(ContentItem):
     text = PluginHtmlField(_('text'), blank=True)
     image = PluginImageField(
@@ -221,18 +231,6 @@ class ScaledImageTextItem(ContentItem):
     class Meta(object):
         verbose_name = _('Text + Scaled Image')
         verbose_name_plural = _('Text + Scaled Image')
-
-    def __str__(self):
-        return Truncator(strip_tags(self.text)).words(20)
-
-
-class TextOnlyItem(ContentItem):
-    text = QuillField(_('text'), blank=True)
-    objects = ContentItemManager()
-
-    class Meta(object):
-        verbose_name = _('Text only')
-        verbose_name_plural = _('Text only')
 
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
@@ -265,6 +263,7 @@ class Page(PublishableModel):
     )
 
     body = PlaceholderField('blog_contents', plugins=[
+        'TextOnlyPlugin',
         'TextPlugin',
         'TextOnlyPlugin',
         'ColumnsPlugin',

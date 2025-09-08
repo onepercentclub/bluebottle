@@ -6,12 +6,46 @@
 </style>
 
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
-<div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
+<div class="vLargeTextField quill-resizable django-quill-widget-container form-row {{ class }}">
     <div id="quill-{{ id }}" class="django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
     <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden">
     <script>
 
         (function () {
+            const Link = Quill.import('formats/link');
+
+            class ButtonLink extends Link {
+                static blotName = 'buttonLink';
+                static tagName = 'a';
+
+                static create(value) {
+                    let node = super.create(value);
+                    debugger
+                    node.setAttribute('href', value);
+                    node.setAttribute('target', '_blank');
+                    node.classList.add('quill-button-link');
+                    node.classList.add('inline-flex');
+                    node.classList.add('items-center')
+                    node.classList.add('new-btn__small--pri');
+                    return node;
+                }
+                static format(name, value) {
+                    console.log('format', name, value);
+                    if (name !== this.statics.blotName || !value) {
+                        super.format(name, value);
+                    } else {
+                        this.domNode.setAttribute('href', this.constructor.sanitize(value));
+                    }
+                }
+
+                static formats(node) {
+                    console.log('formats', node);
+                    return node.getAttribute('href');
+                }
+            }
+
+            Quill.register(ButtonLink);
+
             var config = JSON.parse('{{ config|safe|escapejs }}');
 
             async function upload(file) {
@@ -32,6 +66,15 @@
             config.modules.imageUploader = {
                 upload: upload
             }
+            config.modules.toolbar = {
+                container: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic'],
+                    ['link', 'buttonLink'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['clean']
+                ],
+            };
 
             Quill.register(
                 { 'modules/imageUploader': ImageUploader },

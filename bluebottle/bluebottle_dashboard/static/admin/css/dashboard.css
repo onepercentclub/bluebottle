@@ -519,3 +519,131 @@ div.inline.radiolist {
 #participants-group .field-checked .inline-deletelink {
     display: none !important;
 }
+
+
+.aligned .field-body label,
+.aligned .field-contents label{
+    display: none;
+}
+
+.aligned .field-body .inline-related label,
+.aligned .field-contents .inline-related label {
+    display: block;
+}
+
+
+.aligned .field-body .inline-related .text label,
+.aligned .field-contents .inline-related .text label{
+    display: none;
+}
+
+
+.aligned .field-body .cp-placeholderfield,
+.aligned .field-contents .cp-placeholderfield {
+    width: 100%
+}
+
+.cp-content .cp-formset-item-fields fieldset {
+    padding: 0
+}
+
+.quill-resizable {
+  width: 600px;            /* whatever you like */
+  height: 300px;           /* initial height */
+  border: 1px solid #ddd;  /* optional */
+  display: flex;
+  flex-direction: column;
+  resize: both;            /* <- makes it resizable (drag bottom-right) */
+  overflow: auto;          /* required for the resize handle to appear */
+}
+
+/* Make the Quill parts behave inside a flex column */
+.quill-resizable .ql-toolbar { flex: 0 0 auto; }
+.quill-resizable .ql-container {
+  flex: 1 1 auto;
+  height: auto !important; /* override Quill’s fixed height */
+  min-height: 120px;       /* keep it usable when tiny */
+}
+.quill-resizable .ql-editor {
+  overflow: auto;          /* scroll content when smaller than text */
+}
+
+
+.ql-snow .ql-editor a.quill-button-link {
+  display: inline-block;
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: #fff !important;
+  border-radius: 4px;
+  text-decoration: none;
+    cursor: pointer;
+
+}
+.ql-snow .ql-editor a.quill-button-link:hover {
+  background-color: #0056b3;
+}
+
+    /* Custom tooltip styles for ButtonLink */
+    .ql-tooltip.ql-button-link-tooltip {
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0px 0px 5px #ddd;
+        color: #444;
+        padding: 5px 12px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip::before {
+        content: "Button URL:";
+        line-height: 26px;
+        margin-right: 8px;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip input[type=text] {
+        border: 1px solid #ccc;
+        font-size: 13px;
+        height: 26px;
+        margin: 0px;
+        padding: 3px 5px;
+        width: 170px;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip a.ql-preview {
+        display: inline-block;
+        max-width: 200px;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        vertical-align: top;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip a.ql-action::after {
+        border-right: 1px solid #ccc;
+        content: 'Edit';
+        margin-left: 16px;
+        padding-right: 8px;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip a.ql-remove::before {
+        content: 'Remove';
+        margin-left: 8px;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip a {
+        line-height: 26px;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-preview,
+    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-remove {
+        display: none;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip.ql-editing input[type=text] {
+        display: inline-block;
+    }
+
+    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-action::after {
+        border-right: 0px;
+        content: 'Save';
+        padding-right: 0px;
+    }

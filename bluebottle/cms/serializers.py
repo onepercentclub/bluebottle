@@ -387,7 +387,7 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
 class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = RichTextField()
+    text = SafeField()
 
     class Meta(object):
         model = ImagePlainTextItem
@@ -438,6 +438,7 @@ class TextBlockSerializer(BaseBlockSerializer):
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ImageTextItem
@@ -450,6 +451,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
 class ImageRoundTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ImageTextRoundItem
@@ -462,6 +464,7 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
 
 class ScaledImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ScaledImageTextItem
@@ -503,6 +506,8 @@ class RawHHTMLBlockSerializer(BaseBlockSerializer):
 
 
 class ColumnBlockSerializer(BaseBlockSerializer):
+    text1 = RichTextField()
+    text2 = RichTextField()
 
     class Meta(object):
         model = ColumnsItem

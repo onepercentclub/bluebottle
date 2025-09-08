@@ -10,7 +10,7 @@ from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
-from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
+from fluent_contents.extensions.model_fields import PluginImageField
 from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem
 from fluent_contents.models.fields import ContentItemRelation
@@ -71,9 +71,9 @@ class ColumnsItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
-    text1 = PluginHtmlField(_('text left'), blank=True)
+    text1 = QuillField(_('text left'), blank=True)
     text1_final = models.TextField(editable=False, blank=True, null=True)
-    text2 = PluginHtmlField(_('text right'), blank=True)
+    text2 = QuillField(_('text right'), blank=True)
     text2_final = models.TextField(editable=False, blank=True, null=True)
 
     objects = ContentItemManager()
@@ -105,7 +105,7 @@ class ImageTextItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
         _("Image"),
@@ -163,7 +163,7 @@ class ImageTextItem(ContentItem):
 
 
 class ImageTextRoundItem(ContentItem):
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
         _("Image"),
@@ -197,7 +197,7 @@ class ImageTextRoundItem(ContentItem):
 
 
 class ScaledImageTextItem(ContentItem):
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     image = PluginImageField(
         _("Image"),
         upload_to='pages',

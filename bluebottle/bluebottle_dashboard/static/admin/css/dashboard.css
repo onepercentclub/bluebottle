@@ -18,12 +18,12 @@
     clear: both;
 }
 
-form .aligned strong+p.help {
+form .aligned strong + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
 
-form .aligned p.file-upload+p.help {
+form .aligned p.file-upload + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
@@ -50,11 +50,11 @@ form .aligned p.file-upload+p.help {
     content: ''
 }
 
-label+div {
+label + div {
     display: inline-block;
 }
 
-.aligned label+div input[type=checkbox]+label {
+.aligned label + div input[type=checkbox] + label {
     width: 30px;
 }
 
@@ -270,7 +270,7 @@ label+div {
 
 
 /* For 2fa settings */
-#container #content>h1 {
+#container #content > h1 {
     display: block;
 }
 
@@ -414,7 +414,7 @@ html {
 }
 
 
-form .aligned .form-row label+p.help {
+form .aligned .form-row label + p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
 }
@@ -522,7 +522,7 @@ div.inline.radiolist {
 
 
 .aligned .field-body label,
-.aligned .field-contents label{
+.aligned .field-contents label {
     display: none;
 }
 
@@ -533,7 +533,7 @@ div.inline.radiolist {
 
 
 .aligned .field-body .inline-related .text label,
-.aligned .field-contents .inline-related .text label{
+.aligned .field-contents .inline-related .text label {
     display: none;
 }
 
@@ -548,102 +548,122 @@ div.inline.radiolist {
 }
 
 .quill-resizable {
-  width: 600px;            /* whatever you like */
-  height: 300px;           /* initial height */
-  border: 1px solid #ddd;  /* optional */
-  display: flex;
-  flex-direction: column;
-  resize: both;            /* <- makes it resizable (drag bottom-right) */
-  overflow: auto;          /* required for the resize handle to appear */
+    width: 100%;
+    height: 400px;
+    border: 1px solid #ddd; /* optional */
+    display: flex;
+    flex-direction: column;
+    resize: both; /* <- makes it resizable (drag bottom-right) */
+    overflow: auto; /* required for the resize handle to appear */
 }
 
 /* Make the Quill parts behave inside a flex column */
-.quill-resizable .ql-toolbar { flex: 0 0 auto; }
-.quill-resizable .ql-container {
-  flex: 1 1 auto;
-  height: auto !important; /* override Quill’s fixed height */
-  min-height: 120px;       /* keep it usable when tiny */
+.quill-resizable .ql-toolbar {
+    flex: 0 0 auto;
 }
+
+.quill-resizable .ql-container {
+    flex: 1 1 auto;
+    height: auto !important; /* override Quill’s fixed height */
+    min-height: 120px; /* keep it usable when tiny */
+}
+
 .quill-resizable .ql-editor {
-  overflow: auto;          /* scroll content when smaller than text */
+    overflow: auto; /* scroll content when smaller than text */
 }
 
 
 .ql-snow .ql-editor a.quill-button-link {
-  display: inline-block;
-  padding: 6px 12px;
-  background-color: #007bff;
-  color: #fff !important;
-  border-radius: 4px;
-  text-decoration: none;
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #1569c5;
+    color: #fff !important;
+    border-radius: 8px;
+    text-decoration: none;
     cursor: pointer;
-
+    font-weight: bold;
 }
+
 .ql-snow .ql-editor a.quill-button-link:hover {
-  background-color: #0056b3;
+    background-color: #0e4e97;
 }
 
-    /* Custom tooltip styles for ButtonLink */
-    .ql-tooltip.ql-button-link-tooltip {
-        background-color: #fff;
-        border: 1px solid #ccc;
-        box-shadow: 0px 0px 5px #ddd;
-        color: #444;
-        padding: 5px 12px;
-        white-space: nowrap;
-        z-index: 1000;
-    }
+/* Custom tooltip styles for ButtonLink */
+.ql-tooltip.ql-button-link-tooltip {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0px 0px 5px #ddd;
+    color: #444;
+    padding: 5px 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
 
-    .ql-tooltip.ql-button-link-tooltip::before {
-        content: "Button URL:";
-        line-height: 26px;
-        margin-right: 8px;
-    }
+.ql-tooltip.ql-button-link-tooltip::before {
+    content: "Button URL:";
+    line-height: 26px;
+    margin-right: 8px;
+}
 
-    .ql-tooltip.ql-button-link-tooltip input[type=text] {
-        border: 1px solid #ccc;
-        font-size: 13px;
-        height: 26px;
-        margin: 0px;
-        padding: 3px 5px;
-        width: 170px;
-    }
+.ql-tooltip.ql-button-link-tooltip input[type=text] {
+    border: 1px solid #ccc;
+    font-size: 13px;
+    height: 26px;
+    margin: 0px;
+    padding: 3px 5px;
+    width: 170px;
+}
 
-    .ql-tooltip.ql-button-link-tooltip a.ql-preview {
-        display: inline-block;
-        max-width: 200px;
-        overflow-x: hidden;
-        text-overflow: ellipsis;
-        vertical-align: top;
-    }
+.ql-tooltip.ql-button-link-tooltip a.ql-preview {
+    display: inline-block;
+    max-width: 200px;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+}
 
-    .ql-tooltip.ql-button-link-tooltip a.ql-action::after {
-        border-right: 1px solid #ccc;
-        content: 'Edit';
-        margin-left: 16px;
-        padding-right: 8px;
-    }
+.ql-tooltip.ql-button-link-tooltip a.ql-action::after {
+    border-right: 1px solid #ccc;
+    content: 'Edit';
+    margin-left: 16px;
+    padding-right: 8px;
+}
 
-    .ql-tooltip.ql-button-link-tooltip a.ql-remove::before {
-        content: 'Remove';
-        margin-left: 8px;
-    }
+.ql-tooltip.ql-button-link-tooltip a.ql-remove::before {
+    content: 'Remove';
+    margin-left: 8px;
+}
 
-    .ql-tooltip.ql-button-link-tooltip a {
-        line-height: 26px;
-    }
+.ql-tooltip.ql-button-link-tooltip a {
+    line-height: 26px;
+}
 
-    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-preview,
-    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-remove {
-        display: none;
-    }
+.ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-preview,
+.ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-remove {
+    display: none;
+}
 
-    .ql-tooltip.ql-button-link-tooltip.ql-editing input[type=text] {
-        display: inline-block;
-    }
+.ql-tooltip.ql-button-link-tooltip.ql-editing input[type=text] {
+    display: inline-block;
+}
 
-    .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-action::after {
-        border-right: 0px;
-        content: 'Save';
-        padding-right: 0px;
-    }
+.ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-action::after {
+    border-right: 0px;
+    content: 'Save';
+    padding-right: 0px;
+}
+
+form .form-row .django-quill-widget p {
+    margin-bottom: 16px
+}
+
+.colM .aligned .vLargeTextField, .colM .aligned .vXMLLargeTextField .django-quill-widget-container {
+    width: auto !important;
+    height: auto !important;
+}
+
+
+
+.aligned .field-body .inline-related .cp-item-delete label {
+    display: none
+}

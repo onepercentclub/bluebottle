@@ -3,29 +3,11 @@
     .django-quill-widget-container .select2 {
         display: none;
     }
-    
-    /* Define the buttonLink icon using CSS */
-    .ql-toolbar .ql-buttonLink:before {
-        content: "🔗";
-        font-size: 16px;
-    }
-    
-    /* Or use a custom icon with background */
-    .ql-toolbar .ql-buttonLink {
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuNSA0LjVIMTMuNUMyNC4yNSAxMy41IDQuNSAxMy41VjQuNVoiIGZpbGw9IiNmZmZmZmYiLz4KPHBhdGggZD0iTTQuNSA0LjVIMTMuNUMyNC4yNSAxMy41IDQuNSAxMy41VjQuNVoiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KPHBhdGggZD0iTTcuNSA3LjVIMTAuNVYxMC41SDcuNVY3LjVaIiBmaWxsPSIjMzMzMzMzIi8+CjxwYXRoIGQ9Ik0xMS4yNSAxMS4yNUwxMy41IDEzLjUiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K');
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 18px 18px;
-    }
-    
-    .ql-toolbar .ql-buttonLink:before {
-        content: "";
-    }
 </style>
 
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
-<div class="vLargeTextField quill-resizable django-quill-widget-container form-row {{ class }}">
-    <div id="quill-{{ id }}" class="django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
+<div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
+    <div id="quill-{{ id }}" class="quill-resizable django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
     <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden">
     <script>
 

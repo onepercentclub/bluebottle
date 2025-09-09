@@ -160,6 +160,16 @@ urlpatterns = [
         include('bluebottle.social.urls.api')
     ),
 
+    re_path(
+        r'^api/json-ld/',
+        include('bluebottle.activity_pub.urls.jsonld')
+    ),
+
+    re_path(
+        r'^api/activity-pub/',
+        include('bluebottle.activity_pub.urls.api')
+    ),
+
     re_path(r'token/', include('bluebottle.token_auth.urls')),
 
     re_path(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
@@ -168,6 +178,7 @@ urlpatterns = [
         r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'
     ),
+
 
 ]
 

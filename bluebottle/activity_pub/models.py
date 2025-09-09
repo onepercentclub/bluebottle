@@ -1,121 +1,22 @@
-import inflection
-
 from django.db import models
+from polymorphic.models import PolymorphicModel, PolymorphicManager
 
-from pyld import jsonld
-
-from polymorphic.models import PolymorphicModel
-
-processor = jsonld.JsonLdProcessor()
-MODEL_MAPPING = {}
+from bluebottle.members.models import Member
 
 
-def register(cls):
-    iri = cls.expand_iri(cls.type)
-
-    MODEL_MAPPING[iri] = cls
-
-    return cls
+from django.contrib.contenttypes.models import ContentType
 
 
 class ActivityPubModel(PolymorphicModel):
-    url = models.URLField()
+    def __init__(self, *args, **kwargs):
 
+        ContentType.objects.clear_cache()
+        super().__init__(*args, **kwargs)
+
+    url = models.URLField(null=True)
     type = None
 
-    context = {
-        "as": "https://www.w3.org/ns/activitystreams#",
-        "sec": "https://w3id.org/security#",
-        "ldp": "http://www.w3.org/ns/ldp#",
-        "Person": "as:Person",
-        "name": "as:name",
-        "inbox": {
-            "@id": "ldp:inbox",
-            "@type": "@id"
-        },
-        "outbox": {
-            "@id": "as:outbox",
-            "@type": "@id"
-        },
-        "privateKeyPem": "sec:privateKeyPem",
-        "publicKeyPem": "sec:publicKeyPem",
-        "publicKey": {"@id": "sec:publicKey", "@type": "@id"},
-        "owner": {"@id": "sec:owner", "@type": "@id"},
-    }
 
-    def to_jsonld(self, include_type=True):
-        data = {}
-
-        if include_type:
-            data['@type'] = self.__class__.expand_iri(self.type)
-
-        for field in self._meta.fields:
-            value = getattr(self, field.name)
-
-            if field.name in ('id', 'polymorphic_ctype') or field.name.endswith('_ptr'):
-                continue
-
-            if field.name == 'url':
-                data['@id'] = self.url
-            else:
-                if isinstance(value, ActivityPubModel):
-                    data[
-                        self.__class__.expand_iri(inflection.camelize(field.name, False))
-                    ] = value.to_jsonld(include_type=False)
-                else:
-                    data[self.__class__.expand_iri(inflection.camelize(field.name, False))] = value
-
-        if include_type:
-            return processor.compact(
-                data,
-                ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
-                {}
-            )
-        else:
-            return data
-
-    @classmethod
-    def expand_iri(cls, iri):
-        initial_context = processor._get_initial_context({})
-        processed_context = processor.process_context(
-            initial_context, cls.context, {}
-        )
-
-        return processor._expand_iri(processed_context, iri, vocab=True)
-
-    @classmethod
-    def save_graph(cls, graph, expand=True):
-        if expand:
-            expanded = processor.expand(graph, {})[0]
-
-        else:
-            expanded = graph
-
-        if '@type' in expanded and expanded['@type'][0] != cls.expand_iri(cls.type):
-            raise Exception('Wrong type')
-
-        data = {'url': expanded['@id']}
-
-        for field in cls._meta.fields:
-            iri = cls.expand_iri(inflection.camelize(field.name, False))
-
-            if iri in expanded:
-                for value in expanded[iri]:
-                    if '@value' in value:
-                        data[field.name] = value['@value']
-                    elif '@id' in value:
-                        Model = field.related_model
-                        related_instance = Model.save_graph(value, expand=False)
-
-                        data[field.name] = related_instance
-
-        instance = cls(**data)
-        instance.save()
-
-        return instance
-
-
-@register
 class Actor(ActivityPubModel):
     type = 'Actor'
 
@@ -124,29 +25,48 @@ class Actor(ActivityPubModel):
     public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.CASCADE)
 
 
-@register
+class PersonManager(PolymorphicManager):
+    def from_model(self, model):
+        if not isinstance(model, Member):
+            raise TypeError("Model should be a member instance")
+
+        try:
+            return model.person
+        except Member.person.RelatedObjectDoesNotExist:
+            inbox = Inbox.objects.create()
+            outbox = Outbox.objects.create()
+
+            public_key = PublicKey.objects.create()
+
+            return Person.objects.create(
+                inbox=inbox,
+                member=model,
+                outbox=outbox,
+                public_key=public_key,
+                name=model.full_name
+            )
+
+
 class Person(Actor):
     type = 'Person'
-
     name = models.TextField()
 
+    member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
 
-@register
+    objects = PersonManager()
+
+
 class Inbox(ActivityPubModel):
     type = 'Inbox'
 
 
-@register
 class Outbox(ActivityPubModel):
     type = 'Outbox'
 
 
 class Activity(ActivityPubModel):
     type = 'Activity'
-
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
-    to = models.ManyToManyField('activity_pub.Actor', related_name='recevied_activities')
-    summary = models.TextField()
 
 
 class Follow(Activity):
@@ -156,6 +76,6 @@ class Follow(Activity):
 
 
 class PublicKey(ActivityPubModel):
-    type = 'sec:PublicKey'
+    type = 'PublicKey'
 
     public_key_pem = models.TextField()

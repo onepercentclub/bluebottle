@@ -1,7 +1,6 @@
 from pprint import pprint
 import json
 
-from bluebottle.activity_pub.models import Person
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -37,7 +36,11 @@ class PersonTestCase(BluebottleTestCase):
     def graph(self):
         return json.loads(self.doc)
 
-    def test_save_graph(self):
-        person = Person.save_graph(self.graph)
+    def test_repeated(self):
+        from bluebottle.activity_pub.serializers import processor
 
-        pprint(person.to_jsonld())
+        pprint(
+            processor.expand(
+                self.graph, {}
+            )[0]
+        )

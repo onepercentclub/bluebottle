@@ -429,7 +429,8 @@ form .aligned .django-quill-widget ul {
 
 
 .django-quill-widget.ql-container {
-    height: 200px;
+    height: 300px;
+    width: 800px;
 }
 
 form .form-row .django-quill-widget p {
@@ -466,13 +467,11 @@ form .form-row .django-quill-widget p {
     font-weight: 700;
     line-height: 32px;
     content: "Heading";
-    /* Rename H4 */
     letter-spacing: 0;
 }
 
 .ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="5"]::before {
     content: "Sub-heading";
-    /* Rename H5 */
 }
 
 .ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="5"]::before {
@@ -480,7 +479,6 @@ form .form-row .django-quill-widget p {
     font-weight: 700;
     line-height: 32px;
     content: "Sub-heading";
-    /* Rename H5 */
     letter-spacing: 0;
 }
 
@@ -582,6 +580,7 @@ div.inline.radiolist {
     text-decoration: none;
     cursor: pointer;
     font-weight: bold;
+    margin-bottom: 16px;
 }
 
 .ql-snow .ql-editor a.quill-button-link:hover {
@@ -592,7 +591,7 @@ div.inline.radiolist {
 .ql-tooltip.ql-button-link-tooltip {
     background-color: #fff;
     border: 1px solid #ccc;
-    box-shadow: 0px 0px 5px #ddd;
+    box-shadow: 0 0 5px #ddd;
     color: #444;
     padding: 5px 12px;
     white-space: nowrap;
@@ -609,7 +608,7 @@ div.inline.radiolist {
     border: 1px solid #ccc;
     font-size: 13px;
     height: 26px;
-    margin: 0px;
+    margin: 0;
     padding: 3px 5px;
     width: 170px;
 }
@@ -648,9 +647,9 @@ div.inline.radiolist {
 }
 
 .ql-tooltip.ql-button-link-tooltip.ql-editing a.ql-action::after {
-    border-right: 0px;
+    border-right: 0;
     content: 'Save';
-    padding-right: 0px;
+    padding-right: 0;
 }
 
 form .form-row .django-quill-widget p {
@@ -662,8 +661,86 @@ form .form-row .django-quill-widget p {
     height: auto !important;
 }
 
+.colM .aligned .vLargeTextField, .colM .aligned .vXMLLargeTextField {
+    width: auto;
+    height: auto;
+}
 
 
 .aligned .field-body .inline-related .cp-item-delete label {
     display: none
+}
+
+.inline-related fieldset.module .django-quill-widget p {
+    font-size: 16px;
+}
+
+.inline-related fieldset.module .django-quill-widget h1,
+.inline-related fieldset.module .django-quill-widget h2,
+.inline-related fieldset.module .django-quill-widget h3,
+.inline-related fieldset.module .django-quill-widget h4,
+.inline-related fieldset.module .django-quill-widget h5 {
+    background: none;
+    color: #333;
+    border-width: 0;
+    padding: 0;
+    text-transform: none;
+}
+
+.inline-related fieldset.module .django-quill-widget h1 {
+    font-size: 48px;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before {
+    content: 'Main title' !important;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before {
+    content: 'Heading 1' !important;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-label[data-value="4"]::before,
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before {
+    content: 'Heading 2' !important;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before,
+.inline-related fieldset.module .django-quill-widget h2 {
+    font-size: 40px !important;
+    margin-bottom: 16px;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before,
+.inline-related fieldset.module .django-quill-widget h3 {
+    font-size: 32px !important;
+    margin-bottom: 16px;
+}
+
+.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="4"]::before,
+.inline-related fieldset.module .django-quill-widget h4 {
+    font-size: 24px !important;
+}
+
+.inline-related fieldset.module .django-quill-widget h5 {
+    font-size: 18px;
+}
+
+.django-quill-widget-container .select2 {
+    display: none;
+}
+
+.ql-tooltip {
+    z-index: 9999 !important;
+    position: absolute !important;
+    left: 30px !important;
+}
+
+.django-quill-widget-container {
+    overflow: visible !important;
+}
+
+.django-quill-widget {
+    position: static !important;
 }

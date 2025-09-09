@@ -1,106 +1,145 @@
 {% load static %}
-<style>
-    .django-quill-widget-container .select2 {
-        display: none;
-    }
-</style>
 
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
 <div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
     <div id="quill-{{ id }}" class="quill-resizable django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
     <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden">
     <script>
+        function customizeQuill() {
+
+              const Link = Quill.import('formats/link');
+
+              class ButtonLink extends Link {
+                  static blotName = 'buttonLink';
+                  static tagName = 'a';
+                  static className = 'quill-button-link'
+
+                  static create(value) {
+                      let node = super.create(value);
+                      node.setAttribute('href', value);
+                      node.classList.add('quill-button-link');
+                      node.classList.add('inline-flex');
+                      node.classList.add('items-center')
+                      node.classList.add('new-btn__small--pri');
+                      return node;
+                  }
+                  format(name, value) {
+                      console.log('format', name, value);
+                      if (name !== this.statics.blotName || !value) {
+                          const element = super.format(name, value);
+                      } else {
+                          this.domNode.setAttribute('href', this.constructor.sanitize(value));
+                          const element = this.domNode
+                      }
+                  }
+
+                  static formats(node) {
+                      return node.getAttribute('href');
+                  }
+              }
+
+              Quill.register(ButtonLink);
+
+              const icons = Quill.import('ui/icons');
+              icons['buttonLink'] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><rect x="0" fill="none" width="20" height="20"/><g><path d="M17 5H3c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm1 7c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h14c.6 0 1 .4 1 1v5z"/></g></svg>';
+
+              Quill.register(
+                  { 'modules/imageUploader': ImageUploader },
+                  true,
+              )
+        }
+
 
         (function () {
-            const Link = Quill.import('formats/link');
+          const quillConfig = JSON.parse('{{ config|safe|escapejs }}');
+          if (!('modules/imageUploader' in Quill.imports)) {
+            customizeQuill()
+          }
 
-            class ButtonLink extends Link {
-                static blotName = 'buttonLink';
-                static tagName = 'a';
+          async function upload(file) {
+              const response = await fetch(
+                  '/api/files/images',
+                  {
+                      method: "POST",
+                      body: file,
+                      headers: {
+                          "Content-Disposition": 'attachement; filename="' + file.name + '"'
+                      }
+                  }
+              )
+              const data = await response.json()
+              return data.links.cover
+          }
 
-                static create(value) {
-                    let node = super.create(value);
-                    node.setAttribute('href', value);
-                    node.setAttribute('target', '_blank');
-                    node.classList.add('quill-button-link');
-                    node.classList.add('inline-flex');
-                    node.classList.add('items-center')
-                    node.classList.add('new-btn__small--pri');
-                    return node;
-                }
-                static format(name, value) {
-                    console.log('format', name, value);
-                    if (name !== this.statics.blotName || !value) {
-                        super.format(name, value);
-                    } else {
-                        this.domNode.setAttribute('href', this.constructor.sanitize(value));
-                    }
-                }
+          quillConfig.modules.imageUploader = {
+              upload: upload
+          }
 
-                static formats(node) {
-                    console.log('formats', node);
-                    return node.getAttribute('href');
+          quillConfig.modules.toolbar = {
+              container: [
+                  [{ 'header': [2, 3, 4] }],
+                  ['bold', 'italic'],
+                  ['link', 'buttonLink'],
+                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                  ['clean']
+              ],
+              handlers: {
+                  'buttonLink': function (value) {
+                      if (value) {
+                          const range = this.quill.getSelection();
+                          if (range) {
+                              const button = this.quill.format('buttonLink', this.quill.getText(range));
+                              const fmt = this.quill.getFormat(range);
+                              const currentHref = fmt.buttonLink || fmt.link || '';
+                              this.quill.theme?.tooltip?.edit?.('buttonLink', currentHref);
+
+                          } else {
+                              alert("Make a selection first.")
+                          }
+                      }
+                  }
+              }
+          };
+
+
+            var wrapper = new QuillWrapper('quill-{{ id }}', 'quill-input-{{ id }}', quillConfig);
+
+            const tooltip = wrapper.quill.theme?.tooltip;
+            if (tooltip && !tooltip.__patchedForButtonLink) {
+              const originalSave = tooltip.save.bind(tooltip);
+
+              tooltip.save = function () {
+                const blotType = this.root.getAttribute("data-mode")
+                const range = this.linkRange || this.quill.getSelection(true);
+                if (blotType === 'buttonLink') {
+                    const value = this.textbox.value || '';
+                    this.quill.formatText(range, 'buttonLink', value, Quill.sources.USER);
+                    this.hide()
+                } else {
+                    originalSave();
                 }
+              };
+
+              tooltip.__patchedForButtonLink = true;
             }
 
-            Quill.register(ButtonLink);
 
-            const icons = Quill.import('ui/icons');
-            icons['buttonLink'] = '<svg stroke="currentColor" fill="none" stroke-width="0" viewBox="0 0 15 15" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 5H13C13.5523 5 14 5.44772 14 6V9C14 9.55228 13.5523 10 13 10H2C1.44772 10 1 9.55228 1 9V6C1 5.44772 1.44772 5 2 5ZM0 6C0 4.89543 0.895431 4 2 4H13C14.1046 4 15 4.89543 15 6V9C15 10.1046 14.1046 11 13 11H2C0.89543 11 0 10.1046 0 9V6ZM4.5 6.75C4.08579 6.75 3.75 7.08579 3.75 7.5C3.75 7.91421 4.08579 8.25 4.5 8.25C4.91421 8.25 5.25 7.91421 5.25 7.5C5.25 7.08579 4.91421 6.75 4.5 6.75ZM6.75 7.5C6.75 7.08579 7.08579 6.75 7.5 6.75C7.91421 6.75 8.25 7.08579 8.25 7.5C8.25 7.91421 7.91421 8.25 7.5 8.25C7.08579 8.25 6.75 7.91421 6.75 7.5ZM10.5 6.75C10.0858 6.75 9.75 7.08579 9.75 7.5C9.75 7.91421 10.0858 8.25 10.5 8.25C10.9142 8.25 11.25 7.91421 11.25 7.5C11.25 7.08579 10.9142 6.75 10.5 6.75Z" fill="currentColor"></path></svg>';
+            wrapper.quill.root.addEventListener('click', (e) => {
+              const a = e.target.closest('a.quill-button-link');
+              if (!a) return;
 
-            var config = JSON.parse('{{ config|safe|escapejs }}');
+              // Put selection on the blot so save() applies correctly
+              const blot = Quill.find(a);
+              if (blot) {
+                const index = wrapper.quill.getIndex(blot);
+                wrapper.quill.setSelection(index, blot.length(), Quill.sources.SILENT);
+              }
 
-            async function upload(file) {
-                const response = await fetch(
-                    '/api/files/images',
-                    {
-                        method: "POST",
-                        body: file,
-                        headers: {
-                            "Content-Disposition": 'attachement; filename="' + file.name + '"'
-                        }
-                    }
-                )
-                const data = await response.json()
-                return data.links.cover
-            }
+              const href = a.getAttribute('href') || '';
+              wrapper.quill.theme?.tooltip?.edit?.('buttonLink', href);
+              e.preventDefault();
+            });
 
-            config.modules.imageUploader = {
-                upload: upload
-            }
-
-            config.modules.toolbar = {
-                container: [
-                    [{ 'header': [1, 2, false] }],
-                    ['bold', 'italic'],
-                    ['link', 'buttonLink'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['clean']
-                ],
-                handlers: {
-                    'buttonLink': function (value) {
-                        if (value) {
-                            const range = this.quill.getSelection();
-                            if (range) {
-                                this.quill.format('buttonLink', value);
-                            }
-                        } else {
-                            // Show URL input dialog
-                            const url = prompt('Enter URL for button:', '');
-                            if (url !== null && url.trim()) {
-                                this.quill.format('buttonLink', url.trim());
-                            }
-                        }
-                    }
-                }
-            };
-
-            Quill.register(
-                { 'modules/imageUploader': ImageUploader },
-                true,
-            )
-
-            var wrapper = new QuillWrapper('quill-{{ id }}', 'quill-input-{{ id }}', config);
             {% if quill and quill.delta %}
                 // try django_quill/quill.py/Quill instance
                 var contents = JSON.parse('{{ quill.delta|safe|escapejs }}');

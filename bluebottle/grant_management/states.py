@@ -77,6 +77,7 @@ class GrantApplicationStateMachine(ActivityStateMachine):
         permission=can_approve,
         form=GrantApplicationApproveForm,
         conditions=[
+            ActivityStateMachine.is_back_office,
             ActivityStateMachine.initiative_is_approved,
             ActivityStateMachine.is_valid,
             ActivityStateMachine.is_complete,

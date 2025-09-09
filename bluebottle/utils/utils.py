@@ -171,6 +171,25 @@ def get_current_language():
         return properties.LANGUAGE_CODE
 
 
+def get_request():
+    """
+    Get the current request
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return request
+
+
+def is_back_office():
+    """
+    Is this a back-office request?
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return request.resolver_match and request.resolver_match.app_name == 'admin'
+    return False
+
+
 class InvalidIpError(Exception):
     """ Custom exception for an invalid IP address """
 

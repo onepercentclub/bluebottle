@@ -10,6 +10,7 @@ from bluebottle.fsm.state import (
     register,
 )
 from bluebottle.initiatives.models import InitiativePlatformSettings
+from bluebottle.utils.utils import is_back_office
 
 
 class ActivityStateMachine(ModelStateMachine):
@@ -75,6 +76,9 @@ class ActivityStateMachine(ModelStateMachine):
     def is_complete(self):
         """all required information has been submitted"""
         return not list(self.instance.required)
+
+    def is_back_office(self):
+        return is_back_office()
 
     def is_valid(self):
         """all fields passed validation and are correct"""

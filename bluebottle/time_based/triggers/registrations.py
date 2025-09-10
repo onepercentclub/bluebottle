@@ -167,8 +167,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 UnFollowActivityEffect,
             ]
-        )
-
+        ),
     ]
 
 

@@ -105,6 +105,18 @@ class RegistrationStateMachine(ModelStateMachine):
         hide_from_admin=True,
     )
 
+    restore = Transition(
+        withdrawn,
+        new,
+        name=_("Restore"),
+        passed_label=_("restored"),
+        description=_(
+            "Restore after being withdrawn."
+        ),
+        automatic=True,
+        hide_from_admin=True,
+    )
+
 
 @register(DateRegistration)
 class DateRegistrationStateMachine(RegistrationStateMachine):

@@ -17,7 +17,7 @@ from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding
+from bluebottle.funding.models import Donor, Funding, IbanCheck
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
     FundingPlatformSettings
@@ -99,11 +99,12 @@ class StripePayment(Payment):
             self.states.require_action(save=True)
         elif not intent.latest_charge and self.status != self.states.action_needed.value:
             # No charge. Do we still need to charge?
-            self.states.fail(save=True)
+            if intent.status == 'failed' and self.status != self.states.failed.value:
+                self.states.require_action(save=True)
         elif (
-            intent.latest_charge and
-            stripe.Charge.retrieve(intent.latest_charge).refunded and
-            self.status != self.states.refunded.value
+                intent.latest_charge and
+                stripe.Charge.retrieve(intent.latest_charge).refunded and
+                self.status != self.states.refunded.value
         ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
@@ -398,21 +399,32 @@ class StripePayoutAccount(PayoutAccount):
     def prefill_business_profile(self):
         if self.account_id and self.business_type:
             business_profile = getattr(self.account, 'business_profile', None)
+            company = getattr(self.account, 'company', None)
             email = getattr(self.account, 'email', None)
             if business_profile:
                 stripe = get_stripe()
-                if not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
-                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowd-funding
+                if (
+                        self.business_type == BusinessTypeChoices.company
+                        and company
+                        and company.structure == "incorporated_non_profit"
+                ):
                     stripe.Account.modify(
                         self.account_id,
+                        company={"structure": None}
+                    )
+                elif not business_profile.mcc and self.business_type != BusinessTypeChoices.company:
+                    business_profile.mcc = "8398"  # Default MCC for non-profits and crowdfunding
+                    stripe.Account.modify(
+                        self.account_id,
+                        company={"structure": "incorporated_non_profit"},
                         business_profile=business_profile,
                     )
 
                 if not business_profile.product_description:
                     platform = get_tenant_name()
-                    business_profile.product_description = (
-                        f"Not applicable - raising funds for a do-good project on {platform}, a GoodUp platform."
-                    )
+                    business_profile.product_description = _(
+                        "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
+                    ) % {"platform": platform}
                     stripe.Account.modify(
                         self.account_id,
                         business_profile=business_profile,
@@ -430,6 +442,7 @@ class StripePayoutAccount(PayoutAccount):
                             self.account_id,
                             email=email,
                         )
+                self._account = stripe.Account.retrieve(self.account_id)
 
     def save(self, *args, **kwargs):
         stripe = get_stripe()
@@ -443,11 +456,22 @@ class StripePayoutAccount(PayoutAccount):
             self.verification_method = VerificationMethodChoices.personal
 
         if self.country and not self.account_id:
+            business_profile = {
+                "mcc": "8398" if self.business_type != BusinessTypeChoices.company else "",
+                "product_description": "Not applicable - raising funds for a do-good project on a GoodUp platform."
+            }
+            if self.business_type == BusinessTypeChoices.individual:
+                company = None
+            else:
+                company = {"structure": "incorporated_non_profit"}
+
             account = stripe.Account.create(
                 country=self.country,
                 type="custom",
                 settings=self.account_settings,
-                business_type=self.business_type,
+                business_type=self.business_type or BusinessTypeChoices.non_profit,
+                company=company,
+                business_profile=business_profile,
                 capabilities=self.capabilities,
                 metadata=self.metadata,
                 tos_acceptance={'service_agreement': self.service_agreement},
@@ -528,9 +552,9 @@ class StripePayoutAccount(PayoutAccount):
         self.payouts_enabled = data.payouts_enabled
 
         if (
-            self.verified and self.payouts_enabled
-            and self.payments_enabled
-            and self.status != self.states.verified.value
+                self.verified and self.payouts_enabled
+                and self.payments_enabled
+                and self.status != self.states.verified.value
         ):
             self.states.verify()
 
@@ -575,13 +599,13 @@ class StripePayoutAccount(PayoutAccount):
         for external_account in external_accounts:
             status = 'new'
             if (
-                self.status == 'verified' and
-                external_account.requirements.currently_due == [] and
-                external_account.requirements.past_due == [] and
-                external_account.requirements.pending_verification == [] and
-                external_account.future_requirements.currently_due == [] and
-                external_account.future_requirements.past_due == [] and
-                external_account.future_requirements.pending_verification == []
+                    self.status == 'verified' and
+                    external_account.requirements.currently_due == [] and
+                    external_account.requirements.past_due == [] and
+                    external_account.requirements.pending_verification == [] and
+                    external_account.future_requirements.currently_due == [] and
+                    external_account.future_requirements.past_due == [] and
+                    external_account.future_requirements.pending_verification == []
             ):
                 status = 'verified'
 
@@ -644,6 +668,15 @@ class ExternalAccount(BankAccount):
     @property
     def ready(self):
         return self.connect_account.verified
+
+    @property
+    def iban_verified(self):
+        checks = IbanCheck.objects.filter(
+            fingerprint=self.account.fingerprint,
+            name=self.account.account_holder_name,
+            matched__in=['match', 'close_match', 'mistype']
+        )
+        return checks.exists()
 
     @property
     def metadata(self):

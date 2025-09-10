@@ -182,7 +182,9 @@ class IbanCheckView(JsonApiViewMixin, CreateAPIView):
     def perform_create(self, serializer):
         iban = serializer.validated_data.pop('iban')
         hashed_iban = self.hash_iban(iban)
-        instance = serializer.save(hashed_iban=hashed_iban)
+        instance = serializer.save(
+            hashed_iban=hashed_iban,
+        )
         instance.iban = iban
         instance.check_iban()
 

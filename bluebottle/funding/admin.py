@@ -52,7 +52,7 @@ from bluebottle.funding.models import (
     Payout,
     PayoutAccount,
     PlainPayoutAccount,
-    Reward,
+    Reward, IbanCheck,
 )
 from bluebottle.funding.states import DonorStateMachine
 from bluebottle.funding_flutterwave.models import FlutterwavePayment
@@ -700,6 +700,12 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
                 download_url = reverse_signed('kyc-document', args=(obj.connect_account.id,))
             return template.render({'document_url': download_url})
         return "_"
+
+
+@admin.register(IbanCheck)
+class IbanCheckAdmin(admin.ModelAdmin):
+    model = IbanCheck
+    readonly_fields = ['id', 'hashed_iban', 'fingerprint', 'matched', 'name', 'result']
 
 
 @admin.register(BankAccount)

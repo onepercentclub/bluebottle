@@ -1914,14 +1914,29 @@ class IbanCheckTestCase(APITestCase):
         super(IbanCheckTestCase, self).setUp()
         self.url = reverse('funding-iban-check')
         self.user = BlueBottleUserFactory.create()
+        self.stripe_token = stripe.Token("tok_test_token_id")
+
+        self.stripe_token.bank_account = stripe.BankAccount()
+        self.stripe_token.bank_account.update(munch.munchify({
+            'object': 'bank_account',
+            'account_holder_name': 'Nadine Bok',
+            'account_holder_type': 'individual',
+            'bank_name': 'STRIPE TEST BANK',
+            'country': 'NL',
+            'currency': 'eur',
+            'fingerprint': '1JWtPxqbdX5Gamtc',
+            'last4': '6789',
+            'metadata': {
+                'order_id': '6735'
+            },
+            'routing_number': '110000000',
+            'status': 'new',
+            'account': 'acct_1032D82eZvKYlo2C'
+        }))
 
     def test_valid(self):
         # Mock ABN Amro API response for valid match
         abn_amro_response = {"nameMatchResult": "match", "nameSuggestion": "Nadine Bok"}
-
-        # Mock Stripe token creation
-        stripe_token = stripe.Token("tok_test_token")
-        stripe_token.id = "tok_test_token_id"
 
         data = {
             'data': {
@@ -1942,7 +1957,7 @@ class IbanCheckTestCase(APITestCase):
                 "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
                 return_value='some-token'
             ):
-                with mock.patch("stripe.Token.create", return_value=stripe_token):
+                with mock.patch("stripe.Token.create", return_value=self.stripe_token):
                     self.perform_create(user=self.user, data=data)
 
         self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)
@@ -1994,10 +2009,6 @@ class IbanCheckTestCase(APITestCase):
             "nameSuggestion": "Nadine Bok",
         }
 
-        # Mock Stripe token creation
-        stripe_token = stripe.Token("tok_test_token")
-        stripe_token.id = "tok_test_token_id"
-
         data = {
             "data": {
                 "type": "funding/iban-check",
@@ -2017,7 +2028,7 @@ class IbanCheckTestCase(APITestCase):
                 "bluebottle.funding.adapters.abn_amro.AbnAmroAdapter._get_token",
                 return_value='some-token'
             ):
-                with mock.patch("stripe.Token.create", return_value=stripe_token):
+                with mock.patch("stripe.Token.create", return_value=self.stripe_token):
                     self.perform_create(user=self.user, data=data)
 
         self.assertEqual(self.response.status_code, status.HTTP_201_CREATED)

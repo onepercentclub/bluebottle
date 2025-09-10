@@ -1,25 +1,23 @@
 import json
+import mock
+from urllib.parse import urlparse
 
-from rest_framework import status
-
-from django.db import connection, connections
+from django.db import connection
 from django.urls import reverse
-from django.test import Client as TestClient, LiveServerTestCase
-from django.core.management import call_command
+from django.test import Client as TestClient
 
 
-from bluebottle.activity_pub.models import Person, Follow
+from bluebottle.activity_pub.models import Person, Follow, Accept
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.serializers import PersonSerializer
+
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 
 
 class ActivityPubClient(TestClient):
-    def __init__(self, port):
-        self.port = port
-        super().__init__()
-
     def generic(self, *args, **kwargs):
         return super().generic(*args, **kwargs)
 
@@ -27,55 +25,52 @@ class ActivityPubClient(TestClient):
         env = super()._base_environ(**request)
 
         env['SERVER_NAME'] = connection.tenant.domain_url
-        env['SERVER_PORT'] = self.port
 
         return env
 
 
-class ActivityPubTestCase(LiveServerTestCase):
+def do_request(method, url, data=None):
+    client = ActivityPubClient()
+
+    kwargs = {'content_type': 'application/json'}
+    if data:
+        kwargs['data'] = json.dumps(data)
+
+    tenant = Client.objects.get(domain_url=urlparse(url).hostname)
+
+    with LocalTenant(tenant):
+        response = getattr(client, method)(url, **kwargs)
+
+    if response.status_code in (200, 201):
+        return response.json()
+    else:
+        raise Exception(response.json())
+
+
+adapter_mock = mock.patch(
+    "bluebottle.activity_pub.adapters.JSONLDAdapter.do_request", wraps=do_request
+)
+
+
+class ActivityPubTestCase(BluebottleTestCase):
+
     def setUp(self):
-        self.client = ActivityPubClient(self.server_thread.port)
+        self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
+
+        self.other_tenant = Client.objects.get(schema_name='test2')
+
+        adapter_mock.start()
         super().setUp()
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        tenant = Client.objects.get(schema_name='test')
-        cls.tenant = tenant
-        connection.set_tenant(tenant)
-
-        cls.other_tenant = Client.objects.get(schema_name='test2')
-
-    def _fixture_teardown(self):
-        # Allow TRUNCATE ... CASCADE and don't emit the post_migrate signal
-        # when flushing only a subset of the apps
-        for db_name in self._databases_names(include_mirrors=False):
-            # Flush the database
-            inhibit_post_migrate = (
-                self.available_apps is not None
-                or (  # Inhibit the post_migrate signal when using serialized
-                    # rollback to avoid trying to recreate the serialized data.
-                    self.serialized_rollback
-                    and hasattr(connections[db_name], "_test_serialized_contents")
-                )
-            )
-            call_command(
-                "flush",
-                verbosity=0,
-                interactive=False,
-                database=db_name,
-                reset_sequences=False,
-                allow_cascade=True,
-                inhibit_post_migrate=inhibit_post_migrate,
-            )
+    def tearDown(self):
+        super().tearDown()
+        adapter_mock.stop()
 
 
 class PersonAPITestCase(ActivityPubTestCase):
-
     def build_absolute_url(self, path):
-        return f'http://{connection.tenant.domain_url}:{self.server_thread.port}{path}'
+        return f'http://{connection.tenant.domain_url}{path}'
 
     def setUp(self):
         super(PersonAPITestCase, self).setUp()
@@ -83,7 +78,7 @@ class PersonAPITestCase(ActivityPubTestCase):
         user = BlueBottleUserFactory.create()
         self.person = Person.objects.from_model(user)
 
-        self.person_url = self.build_absolute_url(reverse("Person", args=(self.person.pk, )))
+        self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
 
     def test_get_person(self):
         response = self.client.get(self.person_url)
@@ -107,22 +102,33 @@ class PersonAPITestCase(ActivityPubTestCase):
     def test_follow(self):
         with LocalTenant(self.other_tenant):
             user = BlueBottleUserFactory.create()
+            person = Person.objects.from_model(user)
 
-            response = self.json_api_client.post(
-                reverse('activity-pub-follow-list'),
-                json.dumps({
-                    'data': {
-                        'type': 'activity-pub-follows',
-                        'attributes': {
-                            'url': self.person_url
-                        }
-                    }
-                }),
-                user=user,
-                SERVER_PORT=self.client.port
+            object = adapter.sync(
+                self.person_url, serializer=PersonSerializer
             )
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(
-            Follow.objects.get()
+            follow = Follow.objects.create(
+                actor=person,
+                object=object
+            )
+
+            adapter.publish(follow)
+
+        self.follow = Follow.objects.get(object=self.person)
+        self.assertTrue(self.follow)
+
+    def test_accept(self):
+        self.test_follow()
+
+        accept = Accept.objects.create(
+            actor=self.person,
+            object=self.follow
         )
+
+        adapter.publish(accept)
+
+        with LocalTenant(self.other_tenant):
+            accept = Accept.objects.get(object=Follow.objects.get())
+
+            self.assertTrue(accept)

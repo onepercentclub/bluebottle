@@ -14,12 +14,9 @@ class ActivityPubModel(PolymorphicModel):
         super().__init__(*args, **kwargs)
 
     url = models.URLField(null=True)
-    type = None
 
 
 class Actor(ActivityPubModel):
-    type = 'Actor'
-
     inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.CASCADE)
     outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.CASCADE)
     public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.CASCADE)
@@ -48,7 +45,6 @@ class PersonManager(PolymorphicManager):
 
 
 class Person(Actor):
-    type = 'Person'
     name = models.TextField()
 
     member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
@@ -57,25 +53,32 @@ class Person(Actor):
 
 
 class Inbox(ActivityPubModel):
-    type = 'Inbox'
+    pass
 
 
 class Outbox(ActivityPubModel):
-    type = 'Outbox'
+    pass
 
 
 class Activity(ActivityPubModel):
-    type = 'Activity'
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
 
 
 class Follow(Activity):
-    type = 'Follow'
-
     object = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE)
+
+    @property
+    def audience(self):
+        return [self.object]
+
+
+class Accept(Activity):
+    object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
+
+    @property
+    def audience(self):
+        return [self.object.actor]
 
 
 class PublicKey(ActivityPubModel):
-    type = 'PublicKey'
-
     public_key_pem = models.TextField()

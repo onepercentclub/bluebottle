@@ -162,12 +162,7 @@ urlpatterns = [
 
     re_path(
         r'^api/json-ld/',
-        include('bluebottle.activity_pub.urls.jsonld')
-    ),
-
-    re_path(
-        r'^api/activity-pub/',
-        include('bluebottle.activity_pub.urls.api')
+        include('bluebottle.activity_pub.urls.jsonld', namespace='json-ld')
     ),
 
     re_path(r'token/', include('bluebottle.token_auth.urls')),

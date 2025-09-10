@@ -1,27 +1,18 @@
-import requests
 import inflection
 from urllib.parse import urlparse
-from pyld import jsonld, ContextResolver
-from cachetools import LRUCache
+from django.db import connection, models
 
 from rest_framework.reverse import reverse
 from rest_framework import serializers
-from rest_framework_json_api.serializers import Serializer
 
 from django.urls import resolve
 
 from bluebottle.clients import properties
-from bluebottle.activity_pub.models import Person, Inbox, Outbox, PublicKey, Follow
-
-
-processor = jsonld.JsonLdProcessor()
-default_context = ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1']
-processed_context = processor.process_context(
-    processor._get_initial_context({}),
-    {"@context": default_context},
-    {
-        'contextResolver': ContextResolver(LRUCache(maxsize=1000), jsonld.requests_document_loader())
-    }
+from bluebottle.activity_pub.models import (
+    Person, Inbox, Outbox, PublicKey, Follow, Accept
+)
+from bluebottle.activity_pub.adapters import (
+    adapter, processor, default_context, processed_context
 )
 
 
@@ -34,9 +25,10 @@ def expand_iri(iri):
 
 
 class RelatedJSONLDField(serializers.Field):
-    def __init__(self, serializer_class):
+    def __init__(self, serializer_class, url_name):
         super().__init__()
         self.serializer_class = serializer_class
+        self.url_name = url_name
 
     def to_representation(self, instance):
         return self.serializer_class(
@@ -59,6 +51,7 @@ class RelatedJSONLDField(serializers.Field):
 class RelatedIdField(serializers.Field):
     def __init__(self, *args, **kwargs):
         self.serializer_class = kwargs.pop('serializer_class')
+        self.url_name = kwargs.pop('url_name')
 
         super().__init__(*args, **kwargs)
 
@@ -66,12 +59,12 @@ class RelatedIdField(serializers.Field):
         if instance.url is not None:
             url = instance.url
         else:
-            url = reverse(
-                instance.type,
-                args=[instance.pk],
-                request=self.context.get('request')
+            url = connection.tenant.build_absolute_url(
+                reverse(
+                    self.url_name,
+                    args=[instance.pk],
+                )
             )
-
         return {'@id': url}
 
     def to_internal_value(self, data):
@@ -81,24 +74,19 @@ class RelatedIdField(serializers.Field):
         if is_local(url):
             return model.objects.get(**resolve(urlparse(url).path).kwargs)
         else:
-            response = requests.get(url)
-            serializer = self.serializer_class(context=self.context, data=response.json())
-
-            serializer.is_valid()
-
-            return serializer.save()
+            return adapter.sync(url, self.serializer_class)
 
 
 class IdField(serializers.URLField):
-
     def to_representation(self, instance):
         if instance.url is not None:
             return instance.url
         else:
-            url = reverse(
-                instance.type,
-                args=[instance.pk],
-                request=self.context.get('request')
+            url = connection.tenant.build_absolute_url(
+                reverse(
+                    self.parent.Meta.url_name,
+                    args=[instance.pk],
+                )
             )
 
             return url
@@ -106,7 +94,7 @@ class IdField(serializers.URLField):
 
 class TypeField(serializers.URLField):
     def to_representation(self, instance):
-        return instance.type
+        return self.parent.Meta.type
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -139,8 +127,8 @@ class ActivityPubSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         expanded = processor.expand(data, {})[0]
 
-        if '@type' in expanded and expanded['@type'][0] != expand_iri(self.Meta.model.type):
-            raise Exception(f'{self.__class__}: Wrong type: Expected {self.Meta.model.type}, got {expanded["@type"]}')
+        if '@type' in expanded and expanded['@type'][0] != expand_iri(self.Meta.type):
+            raise Exception(f'{self.__class__}: Wrong type: Expected {self.Meta.type}, got {expanded["@type"]}')
 
         result = {'url': expanded['@id']}
 
@@ -162,44 +150,100 @@ class ActivityPubSerializer(serializers.ModelSerializer):
 
 class InboxSerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
+        type = 'Inbox'
         model = Inbox
+        url_name = 'json-ld:inbox'
 
 
 class OutboxSerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
+        type = 'Outbox'
+        url_name = 'json-ld:outbox'
         model = Outbox
 
 
 class PublicKeySerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
+        type = 'Outbox'
+        url_name = 'json-ld:public-key'
         model = PublicKey
 
 
 class PersonSerializer(ActivityPubSerializer):
-    inbox = RelatedIdField(serializer_class=InboxSerializer)
-    outbox = RelatedIdField(serializer_class=OutboxSerializer)
-    public_key = RelatedJSONLDField(serializer_class=PublicKeySerializer)
+    inbox = RelatedIdField(serializer_class=InboxSerializer, url_name="json-ld:inbox")
+    outbox = RelatedIdField(serializer_class=OutboxSerializer, url_name="json-ld:outbox")
+    public_key = RelatedJSONLDField(serializer_class=PublicKeySerializer, url_name="json-ld:public-key")
 
     class Meta(ActivityPubSerializer.Meta):
-        model = Person
+        type = 'Person'
+        url_name = 'json-ld:person'
         exclude = ActivityPubSerializer.Meta.exclude + ('member', )
+        model = Person
 
 
-class FollowSerializer(ActivityPubSerializer):
-    actor = RelatedIdField(serializer_class=PersonSerializer)
-    object = RelatedIdField(serializer_class=PersonSerializer)
+class BaseActivitySerializer(ActivityPubSerializer):
+    actor = RelatedIdField(serializer_class=PersonSerializer, url_name="json-ld:person")
+
+
+class FollowSerializer(BaseActivitySerializer):
+    object = RelatedIdField(serializer_class=PersonSerializer, url_name="json-ld:follow")
 
     class Meta(ActivityPubSerializer.Meta):
+        type = 'Follow'
+        url_name = 'json-ld:follow'
         model = Follow
 
 
-class FollowJSONAPISerializer(Serializer):
-    url = serializers.CharField(required=False)
+class AcceptSerializer(BaseActivitySerializer):
+    object = RelatedIdField(serializer_class=FollowSerializer, url_name="json-ld:accept")
 
-    class Meta(object):
-        fields = (
-            'id', 'url',
-        )
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Accept'
+        url_name = 'json-ld:accept'
+        model = Accept
 
-    class JSONAPIMeta(object):
-        resource_name = 'activity-pub-follows'
+
+class ActivitySerializer(serializers.Serializer):
+    polymorphic_serializers = [
+        FollowSerializer, AcceptSerializer
+    ]
+
+    def __init__(self, *args, **kwargs):
+        self._serializers = [
+            serializer(*args, **kwargs) for serializer in self.polymorphic_serializers
+        ]
+        super().__init__(*args, **kwargs)
+
+    def get_serializer(self, data):
+        if isinstance(data, models.Model):
+            for serializer in self._serializers:
+                if serializer.Meta.model == data.__class__:
+                    return serializer
+        else:
+            compacted = processor.compact(data, default_context, [])
+
+            for serializer in self._serializers:
+                if compacted['type'] == serializer.Meta.type:
+                    return serializer
+
+    def to_representation(self, instance):
+        return self.get_serializer(instance).to_representation(instance)
+
+    def to_internal_value(self, data):
+        return self.get_serializer(data).to_internal_value(data)
+
+    def create(self, validated_data):
+        return self.get_serializer(self.initial_data).create(validated_data)
+
+    def update(self, instance, validated_data):
+        return self.get_serializer(instance).update(validated_data)
+
+    def is_valid(self, *args, **kwargs):
+        super().is_valid(*args, **kwargs)
+
+        if hasattr(self, 'instance') and self.instance:
+            serializer = self.get_serializer(self.instance)
+        else:
+            serializer = self.get_serializer(self.initial_data)
+
+        return serializer.is_valid(*args, **kwargs)

@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -13,6 +15,14 @@ class Client(TenantMixin):
     updated = models.DateTimeField(_('updated'), auto_now=True)
 
     auto_create_schema = True
+
+    def build_absolute_url(self, path):
+        if 'localhost' in self.domain_url:
+            scheme = 'http'
+        else:
+            scheme = 'https'
+
+        return urljoin(f'{scheme}://{self.domain_url}', path)
 
     def __str__(self):
         return self.name

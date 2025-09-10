@@ -7,14 +7,17 @@ from django.urls import reverse
 from django.test import Client as TestClient
 
 
-from bluebottle.activity_pub.models import Person, Follow, Accept
+from bluebottle.activity_pub.models import Person, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.serializers import PersonSerializer
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
+from bluebottle.deeds.tests.factories import DeedFactory
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.files.tests.factories import ImageFactory
 
 
 class ActivityPubClient(TestClient):
@@ -75,8 +78,8 @@ class PersonAPITestCase(ActivityPubTestCase):
     def setUp(self):
         super(PersonAPITestCase, self).setUp()
 
-        user = BlueBottleUserFactory.create()
-        self.person = Person.objects.from_model(user)
+        self.user = BlueBottleUserFactory.create()
+        self.person = Person.objects.from_model(self.user)
 
         self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
 
@@ -87,12 +90,12 @@ class PersonAPITestCase(ActivityPubTestCase):
             response.json(),
             {
                 '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
-                'id': self.build_absolute_url(reverse('Person', args=(self.person.pk, ))),
-                'inbox': self.build_absolute_url(reverse('Inbox', args=(self.person.inbox.pk, ))),
-                'outbox': self.build_absolute_url(reverse('Outbox', args=(self.person.outbox.pk, ))),
+                'id': self.build_absolute_url(reverse('json-ld:person', args=(self.person.pk, ))),
+                'inbox': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
+                'outbox': self.build_absolute_url(reverse('json-ld:outbox', args=(self.person.outbox.pk, ))),
                 'name': self.person.name,
                 'publicKey': {
-                    'id': self.build_absolute_url(reverse('PublicKey', args=(self.person.public_key.pk, ))),
+                    'id': self.build_absolute_url(reverse('json-ld:public-key', args=(self.person.public_key.pk, ))),
                     'publicKeyPem': self.person.public_key.public_key_pem
                 },
                 'type': 'Person'
@@ -132,3 +135,18 @@ class PersonAPITestCase(ActivityPubTestCase):
             accept = Accept.objects.get(object=Follow.objects.get())
 
             self.assertTrue(accept)
+
+    def test_publish_deed(self):
+        self.test_accept()
+
+        deed = DeedFactory.create(owner=self.user, image=ImageFactory.create())
+
+        deed.initiative.states.submit()
+        deed.initiative.states.approve(save=True)
+
+        deed.states.publish(save=True)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+
+            self.assertTrue(event.name, deed.title)

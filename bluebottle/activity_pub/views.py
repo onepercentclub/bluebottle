@@ -1,11 +1,11 @@
 from rest_framework import generics
 
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event
 )
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, ActivitySerializer
+    AcceptSerializer, ActivitySerializer, EventSerializer, PublishSerializer
 )
 
 
@@ -35,6 +35,11 @@ class OutBoxView(ActivityPubView):
     queryset = Outbox.objects.all()
 
 
+class EventView(ActivityPubView):
+    serializer_class = EventSerializer
+    queryset = Event.objects.all()
+
+
 class PublicKeyView(ActivityPubView):
     serializer_class = PublicKeySerializer
     queryset = PublicKey.objects.all()
@@ -48,3 +53,8 @@ class FollowView(ActivityPubView):
 class AcceptView(ActivityPubView):
     serializer_class = AcceptSerializer
     queryset = Accept.objects.all()
+
+
+class PublishView(ActivityPubView):
+    serializer_class = PublishSerializer
+    queryset = Publish.objects.all()

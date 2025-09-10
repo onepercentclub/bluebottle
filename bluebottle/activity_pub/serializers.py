@@ -9,7 +9,7 @@ from django.urls import resolve
 
 from bluebottle.clients import properties
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish
 )
 from bluebottle.activity_pub.adapters import (
     adapter, processor, default_context, processed_context
@@ -24,36 +24,16 @@ def expand_iri(iri):
     return processor._expand_iri(processed_context, iri, vocab=True)
 
 
-class RelatedJSONLDField(serializers.Field):
-    def __init__(self, serializer_class, url_name):
-        super().__init__()
+class RelatedActivityPubField(serializers.Field):
+    def __init__(self, serializer_class, *args, **kwargs):
         self.serializer_class = serializer_class
-        self.url_name = url_name
-
-    def to_representation(self, instance):
-        return self.serializer_class(
-            context=self.parent.context, parent=self.parent
-        ).to_representation(instance)
-
-    def to_internal_value(self, data):
-        model = self.serializer_class.Meta.model
-        url = data['@id']
-
-        if is_local(url):
-            return model.objects.get(**resolve(urlparse(url).path).kwargs)
-        else:
-            serializer = self.serializer_class(context=self.context, data=data)
-            serializer.is_valid()
-
-            return serializer.save()
-
-
-class RelatedIdField(serializers.Field):
-    def __init__(self, *args, **kwargs):
-        self.serializer_class = kwargs.pop('serializer_class')
-        self.url_name = kwargs.pop('url_name')
+        self.include = kwargs.pop('include', False)
 
         super().__init__(*args, **kwargs)
+
+    @property
+    def url_name(self):
+        return self.serializer_class.Meta.url_name
 
     def to_representation(self, instance):
         if instance.url is not None:
@@ -65,7 +45,16 @@ class RelatedIdField(serializers.Field):
                     args=[instance.pk],
                 )
             )
-        return {'@id': url}
+
+        if self.include:
+            serializer = self.serializer_class()
+            serializer.bind(parent=self.parent, field_name=self.field_name)
+
+            representation = serializer.to_representation(instance)
+
+            return representation
+        else:
+            return {'@id': url}
 
     def to_internal_value(self, data):
         model = self.serializer_class.Meta.model
@@ -99,15 +88,10 @@ class TypeField(serializers.URLField):
 
 class ActivityPubSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
-        parent = kwargs.pop('parent', None)
-
         super().__init__(*args, **kwargs)
 
-        self.parent = parent
-
         self.fields['@id'] = IdField(source='*')
-        if not self.parent:
-            self.fields['@type'] = TypeField(source='*')
+        self.fields['@type'] = TypeField(source='*')
 
     def to_representation(self, instance):
         result = dict(
@@ -116,6 +100,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         )
 
         if self.parent:
+            del result['@type']
             return result
         else:
             return processor.compact(
@@ -164,15 +149,15 @@ class OutboxSerializer(ActivityPubSerializer):
 
 class PublicKeySerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
-        type = 'Outbox'
+        type = 'PublicKey'
         url_name = 'json-ld:public-key'
         model = PublicKey
 
 
 class PersonSerializer(ActivityPubSerializer):
-    inbox = RelatedIdField(serializer_class=InboxSerializer, url_name="json-ld:inbox")
-    outbox = RelatedIdField(serializer_class=OutboxSerializer, url_name="json-ld:outbox")
-    public_key = RelatedJSONLDField(serializer_class=PublicKeySerializer, url_name="json-ld:public-key")
+    inbox = RelatedActivityPubField(InboxSerializer)
+    outbox = RelatedActivityPubField(OutboxSerializer)
+    public_key = RelatedActivityPubField(PublicKeySerializer, include=True)
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Person'
@@ -181,12 +166,26 @@ class PersonSerializer(ActivityPubSerializer):
         model = Person
 
 
+class EventSerializer(ActivityPubSerializer):
+    organizer = RelatedActivityPubField(PersonSerializer)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    name = serializers.CharField()
+    description = serializers.CharField()
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Event'
+        url_name = 'json-ld:event'
+        exclude = ActivityPubSerializer.Meta.exclude + ('activity', )
+        model = Event
+
+
 class BaseActivitySerializer(ActivityPubSerializer):
-    actor = RelatedIdField(serializer_class=PersonSerializer, url_name="json-ld:person")
+    actor = RelatedActivityPubField(PersonSerializer)
 
 
 class FollowSerializer(BaseActivitySerializer):
-    object = RelatedIdField(serializer_class=PersonSerializer, url_name="json-ld:follow")
+    object = RelatedActivityPubField(PersonSerializer)
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Follow'
@@ -195,7 +194,7 @@ class FollowSerializer(BaseActivitySerializer):
 
 
 class AcceptSerializer(BaseActivitySerializer):
-    object = RelatedIdField(serializer_class=FollowSerializer, url_name="json-ld:accept")
+    object = RelatedActivityPubField(FollowSerializer)
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Accept'
@@ -203,11 +202,16 @@ class AcceptSerializer(BaseActivitySerializer):
         model = Accept
 
 
-class ActivitySerializer(serializers.Serializer):
-    polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer
-    ]
+class PublishSerializer(BaseActivitySerializer):
+    object = RelatedActivityPubField(EventSerializer)
 
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Publish'
+        url_name = 'json-ld:publish'
+        model = Publish
+
+
+class PolymorpphicActivityPubSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         self._serializers = [
             serializer(*args, **kwargs) for serializer in self.polymorphic_serializers
@@ -247,3 +251,9 @@ class ActivitySerializer(serializers.Serializer):
             serializer = self.get_serializer(self.initial_data)
 
         return serializer.is_valid(*args, **kwargs)
+
+
+class ActivitySerializer(PolymorpphicActivityPubSerializer):
+    polymorphic_serializers = [
+        FollowSerializer, AcceptSerializer, PublishSerializer
+    ]

@@ -183,7 +183,7 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
 
     kwargs.update({
         'settings': MailPlatformSettings.load(),
-        'content': SitePlatformSettings.objects.get(),
+        'content': SitePlatformSettings.load(),
     })
 
     try:

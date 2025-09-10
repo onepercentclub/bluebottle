@@ -180,13 +180,23 @@ def get_request():
         return request
 
 
-def is_back_office():
+def is_back_office_request():
     """
     Is this a back-office request?
     """
     request = ThreadLocal.get_current_request()
     if request:
         return request.resolver_match and request.resolver_match.app_name == 'admin'
+    return False
+
+
+def is_api_request():
+    """
+    Is this an API request?
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
+        return '/api/' in request.path
     return False
 
 

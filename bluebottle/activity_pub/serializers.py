@@ -6,7 +6,6 @@ from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish
 )
 from bluebottle.activity_pub.utils import is_local
-from bluebottle.utils.fields import RichTextField
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -105,7 +104,7 @@ class EventSerializer(ActivityPubSerializer):
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
     name = serializers.CharField()
-    description = RichTextField()
+    description = serializers.CharField()
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'

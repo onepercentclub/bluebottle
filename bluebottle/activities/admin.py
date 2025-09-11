@@ -1,4 +1,7 @@
 import re
+
+from bluebottle.utils.utils import get_current_host
+
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django import forms
 from django.contrib import admin, messages
@@ -622,6 +625,9 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
+        'activity_pub_url',
+        'event',
+        'event_url',
     ]
 
     office_fields = (
@@ -648,6 +654,12 @@ class ActivityChildAdmin(
         'has_deleted_data',
         'status',
         'states',
+    )
+
+    activity_pub_fields = (
+        'activity_pub_url',
+        'event',
+        'event_url'
     )
 
     registration_fields = None
@@ -726,12 +738,29 @@ class ActivityChildAdmin(
             )
     initiative_link.short_description = _('Initiative')
 
+    def event(self, obj):
+        if obj.event:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse('admin:activity_pub_event_change', args=(obj.event.id,)),
+                obj.event
+            )
+
+    def event_url(self, obj):
+        if obj.event:
+            return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+
+    def get_activity_pub_fields(self, request, obj=None):
+        return self.activity_pub_fields
+
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
         ]
+
         if self.get_registration_fields(request, obj):
             fieldsets.append(
                 (
@@ -888,7 +917,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):

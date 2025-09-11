@@ -3,7 +3,6 @@ from urllib.parse import urlparse
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
 from django.urls import reverse
-from django_quill.fields import QuillField
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.clients.models import Client
@@ -110,7 +109,7 @@ class EventManager(PolymorphicManager):
 
 class Event(ActivityPubModel):
     name = models.CharField()
-    description = QuillField()
+    description = models.TextField()
     image = models.URLField(null=True)
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)

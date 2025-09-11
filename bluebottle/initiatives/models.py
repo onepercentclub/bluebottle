@@ -30,6 +30,7 @@ from bluebottle.utils.models import (
     ValidatedModelMixin,
 )
 from bluebottle.utils.utils import get_current_host, get_current_language
+from django.core.exceptions import ValidationError
 
 
 @python_2_unicode_compatible
@@ -325,6 +326,12 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ("phone", _("Phone")),
     )
 
+    HOUR_REGISTRATION_OPTIONS = (
+        ("disabled", _("Disable")),
+        ("per_activity", _("Unique per activity")),
+        ("generic", _("Same for all activities")),
+    )
+
     activity_types = MultiSelectField(max_length=300, choices=ACTIVITY_TYPES)
     team_activities = models.BooleanField(
         default=False,
@@ -438,6 +445,24 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ),
     )
 
+    hour_registration = models.CharField(
+        _("Hour registration"),
+        max_length=100,
+        choices=HOUR_REGISTRATION_OPTIONS,
+        default='disabled',
+        help_text=_("Hour registration only applies to time-based activity types.")
+    )
+
+    hour_registration_data = models.CharField(
+        _("Code / URL"),
+        max_length=400,
+        blank=True, null=True,
+        help_text=_(
+            "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, "
+            "this code or link will be used for every activity and can’t be changed."
+        )
+    )
+
     enable_reviewing = models.BooleanField(
         _("Enable reviewing"),
         default=True,
@@ -466,6 +491,14 @@ class InitiativePlatformSettings(BasePlatformSettings):
     class Meta(object):
         verbose_name_plural = _("Activity & initiative settings")
         verbose_name = _("Activity & initiative settings")
+
+    def clean(self):
+        if self.hour_registration == "generic" and not self.hour_registration_data:
+            raise ValidationError({
+                "hour_registration_data": _(
+                    "Hour registration data is required when 'generic' hour registration is selected."
+                )
+            })
 
 
 class SearchFilter(SortableMixin, models.Model):

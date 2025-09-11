@@ -19,6 +19,14 @@
                 <b>{% translate "Schedule" %}</b> -
                 {% translate "The activity manager will contact you to discuss a specific date, time and location." %}
             </li>
+            {% if hour_registration %}
+                <li>
+                    <b>{% translate "Hour registration" %}</b> -
+                    {% blocktrans context 'email' %}
+                        Make sure to register your hours using the code or URL found on the activity detail page.
+                    {% endblocktrans %}
+                </li>
+            {% endif %}
         </ul>
     </p>
 {% endblock %}

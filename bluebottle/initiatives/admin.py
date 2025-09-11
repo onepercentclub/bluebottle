@@ -337,6 +337,15 @@ class InitiativePlatformSettingsAdmin(
                 )
             },
         ),
+        (
+            _("Hour registration"),
+            {
+                "fields": (
+                    "hour_registration",
+                    "hour_registration_data",
+                )
+            },
+        ),
     )
 
 

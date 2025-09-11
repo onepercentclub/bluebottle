@@ -1,18 +1,26 @@
-import json
 import requests
-from pyld import jsonld, ContextResolver
-from cachetools import LRUCache
 
-from bluebottle.activity_pub.document_loaders import local_document_loader
+from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.renderers import JSONLDRenderer
 
 
 class JSONLDAdapter():
-    def do_request(self, method, url, data=None):
-        kwargs = {'headers': {'Content-Type': 'application/json'}}
-        if data:
-            kwargs['data'] = json.dumps(data)
+    def __init__(self):
+        self.parser = JSONLDParser()
+        self.renderer = JSONLDRenderer()
 
-        return getattr(requests, method)(url, **kwargs).json()
+    def execute(self, method, url, data=None):
+        kwargs = {'headers': {'Content-Type': 'application/ld+json'}}
+        if data:
+            kwargs['data'] = data
+
+        response = getattr(requests, method)(url, **kwargs)
+
+        return (response.raw, response.headers['content-type'])
+
+    def do_request(self, method, url, data=None):
+        (stream, media_type) = self.execute(method, url, data)
+        return self.parser.parse(stream, media_type)
 
     def get(self, url):
         return self.do_request('get', url)
@@ -20,36 +28,29 @@ class JSONLDAdapter():
     def post(self, url, data):
         return self.do_request('post', url, data)
 
-    def sync(self, url, serializer):
-        data = self.get(url)
+    def sync(self, url, serializer, force=True):
+        # First try to get the existing model, so we do not create duplicates
+        try:
+            return serializer.Meta.model.objects.get(url=url)
+        except serializer.Meta.model.DoesNotExist:
+            data = self.get(url)
+            serializer = serializer(data=data)
+            serializer.is_valid(raise_exception=True)
 
-        serializer = serializer(data=data)
-        serializer.is_valid()
-
-        return serializer.save()
+            return serializer.save()
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer
 
-        data = ActivitySerializer().to_representation(activity)
+        if activity.url:
+            raise TypeError('Only local activities can be published')
+
+        data = self.renderer.render(
+            ActivitySerializer().to_representation(activity)
+        )
 
         for actor in activity.audience:
             self.post(actor.inbox.url, data=data)
 
 
 adapter = JSONLDAdapter()
-
-jsonld.set_document_loader(
-    local_document_loader
-)
-
-processor = jsonld.JsonLdProcessor()
-default_context = ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1']
-processed_context = processor.process_context(
-    processor._get_initial_context({}),
-    {"@context": default_context},
-    {
-        'contextResolver': ContextResolver(LRUCache(maxsize=1000), local_document_loader),
-        'documentLoader': local_document_loader
-    }
-)

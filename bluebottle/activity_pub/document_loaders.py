@@ -35,4 +35,5 @@ def local_document_loader(url, options={}):
                 'document': json.load(f)
             }
     else:
+        print(url, '!!!!!!!!')
         return requests_document_loader(url, options)

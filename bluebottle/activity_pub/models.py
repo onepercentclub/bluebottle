@@ -14,11 +14,11 @@ from bluebottle.members.models import Member
 
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):
-
         ContentType.objects.clear_cache()
+
         super().__init__(*args, **kwargs)
 
-    url = models.URLField(null=True)
+    url = models.URLField(null=True, unique=True)
 
     @property
     def platform(self):
@@ -102,7 +102,7 @@ class EventManager(PolymorphicManager):
                 end_date=model.end,
                 organizer=Person.objects.from_model(model.owner),
                 name=model.title,
-                description=model.description,
+                description=model.description.html,
                 image=connection.tenant.build_absolute_url(image_url) if image_url else None,
                 activity=model
             )

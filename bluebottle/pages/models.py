@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
@@ -7,10 +8,9 @@ from django.utils.html import strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
-
-
-from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
+from fluent_contents.extensions.model_fields import PluginImageField
 from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem
 from fluent_contents.models.fields import ContentItemRelation
@@ -71,9 +71,9 @@ class ColumnsItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
-    text1 = PluginHtmlField(_('text left'), blank=True)
+    text1 = QuillField(_('text left'), blank=True)
     text1_final = models.TextField(editable=False, blank=True, null=True)
-    text2 = PluginHtmlField(_('text right'), blank=True)
+    text2 = QuillField(_('text right'), blank=True)
     text2_final = models.TextField(editable=False, blank=True, null=True)
 
     objects = ContentItemManager()
@@ -105,7 +105,7 @@ class ImageTextItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
     """
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
         _("Image"),
@@ -163,7 +163,7 @@ class ImageTextItem(ContentItem):
 
 
 class ImageTextRoundItem(ContentItem):
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     text_final = models.TextField(editable=False, blank=True, null=True)
     image = PluginImageField(
         _("Image"),
@@ -197,7 +197,7 @@ class ImageTextRoundItem(ContentItem):
 
 
 class ScaledImageTextItem(ContentItem):
-    text = PluginHtmlField(_('text'), blank=True)
+    text = QuillField(_('text'), blank=True)
     image = PluginImageField(
         _("Image"),
         upload_to='pages',
@@ -220,6 +220,18 @@ class ScaledImageTextItem(ContentItem):
     class Meta(object):
         verbose_name = _('Text + Scaled Image')
         verbose_name_plural = _('Text + Scaled Image')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
+class TextOnlyItem(ContentItem):
+    text = QuillField(_('text'), blank=True)
+    objects = ContentItemManager()
+
+    class Meta(object):
+        verbose_name = _('Text only')
+        verbose_name_plural = _('Text only')
 
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
@@ -252,7 +264,9 @@ class Page(PublishableModel):
     )
 
     body = PlaceholderField('blog_contents', plugins=[
+        'TextOnlyPlugin',
         'TextPlugin',
+        'TextOnlyPlugin',
         'ColumnsPlugin',
         'ActionPlugin',
         'ImageTextPlugin',

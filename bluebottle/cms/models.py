@@ -75,7 +75,8 @@ class HomePage(SingletonModel, TranslatableModel):
         'HomepageStatisticsBlockPlugin',
         'QuotesBlockPlugin',
         'PeopleBlockPlugin',
-        'DonateButtonBlockPlugin'
+        'DonateButtonBlockPlugin',
+        'TextOnlyPlugin',
     ])
     translations = TranslatedFields()
 

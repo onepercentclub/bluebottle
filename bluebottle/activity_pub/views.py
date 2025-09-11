@@ -3,6 +3,8 @@ from rest_framework import generics
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event
 )
+from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, EventSerializer, PublishSerializer
@@ -10,6 +12,9 @@ from bluebottle.activity_pub.serializers import (
 
 
 class ActivityPubView(generics.RetrieveAPIView):
+    parser_classes = [JSONLDParser]
+    renderer_classes = [JSONLDRenderer]
+
     def get_queryset(self):
         return self.queryset.filter(url__isnull=True)
 

@@ -1,6 +1,6 @@
-import json
 import mock
 from urllib.parse import urlparse
+from io import BytesIO
 
 from django.db import connection
 from django.urls import reverse
@@ -21,23 +21,25 @@ from bluebottle.files.tests.factories import ImageFactory
 
 
 class ActivityPubClient(TestClient):
-    def generic(self, *args, **kwargs):
-        return super().generic(*args, **kwargs)
-
     def _base_environ(self, **request):
         env = super()._base_environ(**request)
 
         env['SERVER_NAME'] = connection.tenant.domain_url
+        env['content_type'] = 'application/ld+json'
 
         return env
 
+    def post(self, *args, **kwargs):
+        kwargs['content_type'] = 'application/ld+json'
+        return super().post(*args, **kwargs)
 
-def do_request(method, url, data=None):
+
+def execute(method, url, data=None):
     client = ActivityPubClient()
 
-    kwargs = {'content_type': 'application/json'}
+    kwargs = {}
     if data:
-        kwargs['data'] = json.dumps(data)
+        kwargs['data'] = data
 
     tenant = Client.objects.get(domain_url=urlparse(url).hostname)
 
@@ -45,13 +47,13 @@ def do_request(method, url, data=None):
         response = getattr(client, method)(url, **kwargs)
 
     if response.status_code in (200, 201):
-        return response.json()
+        return (BytesIO(response.content), response.accepted_media_type)
     else:
-        raise Exception(response.json())
+        raise Exception(url, response.json())
 
 
 adapter_mock = mock.patch(
-    "bluebottle.activity_pub.adapters.JSONLDAdapter.do_request", wraps=do_request
+    "bluebottle.activity_pub.adapters.JSONLDAdapter.execute", wraps=execute
 )
 
 
@@ -82,6 +84,19 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.person = Person.objects.from_model(self.user)
 
         self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
+
+    def test_get_inbox(self):
+        inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))
+        response = self.client.get(inbox_url)
+
+        self.assertEqual(
+            response.json(),
+            {
+                '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
+                'id': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
+                'type': 'Person'
+            }
+        )
 
     def test_get_person(self):
         response = self.client.get(self.person_url)

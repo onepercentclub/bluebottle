@@ -61,26 +61,11 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 
 class FollowForm(forms.ModelForm):
-    url = forms.URLField(help_text="Enter the URL of the Actor to follow")
+    url = forms.URLField(help_text="Enter the URL of the Actor to follow", max_length=400)
 
     class Meta:
         model = Follow
         fields = ["url", "object"]
-
-
-class FollowingForm(forms.ModelForm):
-    """Form for existing Follow objects - shows readonly information about who they're following"""
-
-    class Meta:
-        model = Follow
-        fields = ["actor", "object"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Make all fields readonly for existing objects
-        for field in self.fields.values():
-            field.widget.attrs['readonly'] = True
-            field.required = False
 
 
 class FollowingInline(admin.StackedInline):
@@ -108,6 +93,7 @@ class FollowingInline(admin.StackedInline):
                     if form.instance and form.instance.pk:
                         form.fields["url"].widget = forms.widgets.HiddenInput()
                     else:
+                        form.fields["object"].required = False
                         form.fields["object"].widget = forms.widgets.HiddenInput()
 
             def save(self, commit=True):

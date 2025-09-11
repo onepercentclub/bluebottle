@@ -1,5 +1,7 @@
 import inflection
 from urllib.parse import urlparse
+
+from bluebottle.utils.fields import RichTextField
 from django.db import connection, models
 
 from rest_framework.reverse import reverse
@@ -171,7 +173,7 @@ class EventSerializer(ActivityPubSerializer):
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
     name = serializers.CharField()
-    description = serializers.CharField()
+    description = RichTextField()
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'

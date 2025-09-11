@@ -10,7 +10,7 @@ from bluebottle.activities.messages.participant import (
     ParticipantWithdrewConfirmationNotification,
 )
 from bluebottle.activities.states import (
-    OrganizerStateMachine, EffortContributionStateMachine
+    OrganizerStateMachine, EffortContributionStateMachine, ActivityStateMachine
 )
 from bluebottle.activities.triggers import (
     ActivityTriggers, ContributorTriggers, has_organizer
@@ -157,6 +157,13 @@ class DeedTriggers(ActivityTriggers):
                 TransitionEffect(DeedStateMachine.expire, conditions=[is_finished, has_no_participants]),
             ]
         ),
+        TransitionTrigger(
+            ActivityStateMachine.approve,
+            effects=[
+                PublishEffect
+            ]
+        ),
+
         TransitionTrigger(
             DeedStateMachine.publish,
             effects=[

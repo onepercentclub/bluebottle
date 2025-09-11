@@ -1,6 +1,9 @@
 import functools
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+from bluebottle.utils.utils import get_current_host
+
 from bluebottle.segments.filters import MemberSegmentAdminMixin
 from builtins import object
 from django import forms
@@ -598,9 +601,11 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         return readonly_fields
 
     def pub_person(self, obj):
-        if obj.person:
-            pub_url = reverse("json-ld:person", args=(obj.person.pk,))
-
+        try:
+            if obj.person.url:
+                pub_url = obj.person.url
+            else:
+                pub_url = get_current_host() + reverse("json-ld:person", args=(obj.person.pk,))
             url = reverse("admin:activity_pub_person_change", args=(obj.person.pk,))
             return format_html(
                 '<a href="{}">{}</a>&nbsp;&nbsp;<i>{}</i>',
@@ -608,11 +613,12 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                 _("Go to Person object"),
                 pub_url
             )
-        url = reverse('admin:members_member_create_pub_person', kwargs={'pk': obj.id})
-        return format_html(
-            "<a href='{}'>{}</a>",
-            url, _("Create ActivityPub Person"),
-        )
+        except Member.person.RelatedObjectDoesNotExist:
+            url = reverse('admin:members_member_create_pub_person', kwargs={'pk': obj.id})
+            return format_html(
+                "<a href='{}'>{}</a>",
+                url, _("Create ActivityPub Person"),
+            )
 
     def get_impact_fields(self, obj):
         fields = [

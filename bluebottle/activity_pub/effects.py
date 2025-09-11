@@ -8,6 +8,7 @@ from bluebottle.fsm.effects import Effect
 
 class PublishEffect(Effect):
     display = True
+    template = 'admin/activity_pub/publish_effect.html'
 
     def post_save(self, **kwargs):
         event = Event.objects.from_model(self.instance)

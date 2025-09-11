@@ -1,12 +1,15 @@
+from urllib.parse import urlparse
+
 from django.contrib.contenttypes.models import ContentType
-from django.db import models, connection
+from django.db import connection, models
 from django.urls import reverse
+from django_quill.fields import QuillField
+from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from polymorphic.models import PolymorphicModel, PolymorphicManager
-
-from bluebottle.members.models import Member
+from bluebottle.clients.models import Client
 from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
+from bluebottle.members.models import Member
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -16,6 +19,16 @@ class ActivityPubModel(PolymorphicModel):
         super().__init__(*args, **kwargs)
 
     url = models.URLField(null=True)
+
+    @property
+    def platform(self):
+        if not self.url:
+            return None
+
+        parsed_url = urlparse(self.url)
+        domain_url = parsed_url.netloc.split(":")[0]
+        tenant = Client.objects.filter(domain_url=domain_url).first()
+        return tenant.name if tenant else None
 
 
 class Actor(ActivityPubModel):
@@ -52,6 +65,11 @@ class Person(Actor):
     member = models.OneToOneField(Member, null=True, on_delete=models.CASCADE)
 
     objects = PersonManager()
+
+    def __str__(self):
+        if self.platform:
+            return self.name + " @ " + self.platform
+        return self.name
 
 
 class Inbox(ActivityPubModel):
@@ -92,7 +110,7 @@ class EventManager(PolymorphicManager):
 
 class Event(ActivityPubModel):
     name = models.CharField()
-    description = models.CharField()
+    description = QuillField()
     image = models.URLField(null=True)
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)

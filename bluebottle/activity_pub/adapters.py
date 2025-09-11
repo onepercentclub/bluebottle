@@ -2,6 +2,7 @@ import requests
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
+from io import BytesIO
 
 
 class JSONLDAdapter():
@@ -15,15 +16,15 @@ class JSONLDAdapter():
             kwargs['data'] = data
 
         response = getattr(requests, method)(url, **kwargs)
-
-        return (response.raw, response.headers['content-type'])
+        stream = BytesIO(response.content)
+        return (stream, response.headers["content-type"])
 
     def do_request(self, method, url, data=None):
         (stream, media_type) = self.execute(method, url, data)
         return self.parser.parse(stream, media_type)
 
     def get(self, url):
-        return self.do_request('get', url)
+        return self.do_request("get", url)
 
     def post(self, url, data):
         return self.do_request('post', url, data)

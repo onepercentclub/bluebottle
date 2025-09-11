@@ -19,9 +19,7 @@ from bluebottle.activity_pub.models import (
     PublicKey,
     Publish,
 )
-from bluebottle.activity_pub.serializers import (
-    PersonSerializer,
-)
+from bluebottle.activity_pub.serializers import PersonSerializer
 
 
 @admin.register(ActivityPubModel)

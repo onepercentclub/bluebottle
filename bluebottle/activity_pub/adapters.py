@@ -36,7 +36,6 @@ class JSONLDAdapter():
             data = self.get(url)
             serializer = serializer(data=data)
             serializer.is_valid(raise_exception=True)
-
             return serializer.save()
 
     def publish(self, activity):

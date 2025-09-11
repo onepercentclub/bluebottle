@@ -139,8 +139,6 @@ class FollowersInline(admin.StackedInline):
                 self.deleted_objects = []
 
             def save(self, commit=True):
-                # Don't save through normal formset process
-                # The PersonAdmin.save_formset will handle this
                 return []
 
         return CustomFormSet
@@ -160,14 +158,9 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     actor = form.instance.actor
                     if url:
                         try:
-
                             try:
-                                target_actor = adapter.sync(
-                                    url, serializer=PersonSerializer
-                                )
-                                follow = Follow.objects.create(
-                                    actor=actor, object=target_actor
-                                )
+                                target_actor = adapter.sync(url, serializer=PersonSerializer)
+                                follow = Follow.objects.create(actor=actor, object=target_actor)
                                 try:
                                     adapter.publish(follow)
                                     self.message_user(

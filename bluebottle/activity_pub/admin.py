@@ -1,5 +1,16 @@
+import json
+from io import BytesIO
+
+import requests
 from django import forms
 from django.contrib import admin
+from django.contrib.admin.utils import unquote
+from django.core.exceptions import PermissionDenied
+from django.core.files import File
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
+from django.utils.html import format_html
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicChildModelFilter,
@@ -20,6 +31,8 @@ from bluebottle.activity_pub.models import (
     Publish,
 )
 from bluebottle.activity_pub.serializers import PersonSerializer
+from bluebottle.deeds.models import Deed
+from bluebottle.files.models import Image
 
 
 @admin.register(ActivityPubModel)
@@ -214,10 +227,17 @@ class PublishAdmin(ActivityPubModelChildAdmin):
 
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
-    list_display = ("id", "name", "platform", "start_date", "end_date", "organizer")
+    list_display = (
+        "id",
+        "name",
+        "platform",
+        "start_date",
+        "end_date",
+        "organizer",
+    )
     readonly_fields = (
         "name",
-        "description",
+        "html_description",
         "platform",
         "image",
         "start_date",
@@ -226,3 +246,98 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "activity",
         "url",
     )
+    fields = readonly_fields
+
+    def html_description(self, obj):
+        return format_html(
+            '<div style="display: table-cell">' + obj.description + "</div>"
+        )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/adopt/",
+                self.admin_site.admin_view(self.adopt_event),
+                name="activity_pub_event_adopt",
+            ),
+        ]
+        return custom_urls + urls
+
+    def adopt_event(self, request, object_id):
+        """
+        Create a Deed from the Event information
+        """
+        if not request.user.has_perm("deeds.add_deed"):
+            raise PermissionDenied
+
+        event = get_object_or_404(Event, pk=unquote(object_id))
+
+        if event.activity:
+            self.message_user(
+                request,
+                "This event has already been adopted as a Deed.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        try:
+            deed = Deed.objects.create(
+                owner=request.user,
+                title=event.name,
+                description=json.dumps({"html": event.description, "delta": ""}),
+                start=event.start_date,
+                end=event.end_date,
+                status="draft",
+            )
+
+            # Download and store the event image if it exists
+            if event.image:
+                try:
+                    # Download the image from the URL
+                    response = requests.get(event.image, timeout=30)
+                    response.raise_for_status()
+
+                    # Create an Image object
+                    image = Image(owner=request.user)
+
+                    # Generate a filename based on the event name and current timestamp
+                    import time
+
+                    filename = f"event_{event.pk}_{int(time.time())}.jpg"
+
+                    # Save the image file
+                    image.file.save(filename, File(BytesIO(response.content)))
+
+                    # Assign the image to the deed
+                    deed.image = image
+                    deed.save()
+
+                except Exception as e:
+                    # Log the error but don't fail the entire operation
+                    self.message_user(
+                        request,
+                        f"Warning: Could not download image from {event.image}: {str(e)}",
+                        level="warning",
+                    )
+
+            event.activity = deed
+            event.save()
+
+            self.message_user(
+                request,
+                f'Successfully created Deed "{deed.title}" from Event "{event.name}".',
+                level="success",
+            )
+
+            return HttpResponseRedirect(
+                reverse("admin:deeds_deed_change", args=[deed.pk])
+            )
+
+        except Exception as e:
+            self.message_user(request, f"Error creating Deed: {str(e)}", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )

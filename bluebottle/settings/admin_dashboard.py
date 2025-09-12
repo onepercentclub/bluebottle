@@ -51,6 +51,21 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
+        "label": _("Activity Pub"),
+        "app_label": "activity_pub",
+        "permissions": ["activities.change_activities"],
+        "items": [
+            {
+                "name": "activity_pub.event",
+                "permissions": ["initiatives.change_activities"],
+            },
+            {
+                "name": "activity_pub.activitypubmodel",
+                "permissions": ["initiatives.change_activities"],
+            },
+        ],
+    },
+    {
         "label": _("Time Based"),
         "app_label": "time_based",
         "permissions": ["activities.change_activity"],

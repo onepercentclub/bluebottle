@@ -190,6 +190,14 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def activity_pub_url(self):
+        from bluebottle.activity_pub.models import Event
+        try:
+            return self.event.url or self.event.get_absolute_url()
+        except Event.DoesNotExist:
+            return None
+
+    @property
     def owners(self):
         if self.owner_id:
             yield self.owner

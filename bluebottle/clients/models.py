@@ -20,7 +20,7 @@ class Client(TenantMixin):
     def build_absolute_url(self, path):
         if 'localhost' in self.domain_url:
             scheme = 'http'
-            if not settings.TESTING:
+            if not hasattr(settings, 'TESTING') or not settings.TESTING:
                 return urljoin(f'{scheme}://{self.domain_url}:3000', path)
         else:
             scheme = 'https'

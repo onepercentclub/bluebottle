@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish, Announce
 )
 from bluebottle.activity_pub.utils import is_local
 
@@ -142,6 +142,15 @@ class PublishSerializer(BaseActivitySerializer):
         type = 'Publish'
         url_name = 'json-ld:publish'
         model = Publish
+
+
+class AnnounceSerializer(BaseActivitySerializer):
+    object = RelatedActivityPubField(EventSerializer)
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Announce'
+        url_name = 'json-ld:announce'
+        model = Announce
 
 
 class ActivitySerializer(PolymorpphicActivityPubSerializer):

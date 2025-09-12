@@ -152,3 +152,11 @@ class Publish(Activity):
         # All followers of the actor
         for follow in self.actor.follow_set.all():
             yield follow.actor.inbox
+
+
+class Announce(Activity):
+    object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
+
+    @property
+    def audience(self):
+        return [self.object.organizer]

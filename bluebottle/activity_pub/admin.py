@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Outbox,
     Person,
     PublicKey,
-    Publish,
+    Publish, Announce,
 )
 from bluebottle.activity_pub.serializers import PersonSerializer
 from bluebottle.deeds.models import Deed
@@ -49,6 +49,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Follow,
         PublicKey,
         Publish,
+        Announce,
         Event,
     )
 
@@ -218,12 +219,17 @@ class FollowAdmin(ActivityPubModelChildAdmin):
 
 @admin.register(PublicKey)
 class PublicKeyAdmin(ActivityPubModelChildAdmin):
-    list_display = ('id', 'inbox', 'outbox')
+    list_display = ("id", 'inbox', 'outbox')
 
 
 @admin.register(Publish)
 class PublishAdmin(ActivityPubModelChildAdmin):
-    list_display = ("id", "inbox", "outbox")
+    list_display = ("id", "actor", "object")
+
+
+@admin.register(Announce)
+class AnnounceAdmin(ActivityPubModelChildAdmin):
+    list_display = ("id", "actor", "object")
 
 
 @admin.register(Event)
@@ -243,6 +249,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "start_date",
         "end_date",
         "organizer",
+        "actor",
         "activity",
         "url",
     )

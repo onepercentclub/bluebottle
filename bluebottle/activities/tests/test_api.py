@@ -27,6 +27,7 @@ from bluebottle.initiatives.models import (
     InitiativePlatformSettings,
 )
 from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.notifications.models import NotificationPlatformSettings
 from bluebottle.offices.tests.factories import OfficeSubRegionFactory
 from bluebottle.segments.tests.factories import SegmentFactory, SegmentTypeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -1620,6 +1621,30 @@ class ActivityRelatedImageAPITestCase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ActivityQrCodeTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(ActivityQrCodeTestCase, self).setUp()
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.funding = FundingFactory.create(
+            owner=self.owner,
+        )
+        self.qr_code_url = reverse('activity-qr-code', args=(self.funding.pk,))
+
+    def test_get_not_enabled(self):
+        response = self.client.get(self.qr_code_url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content, b'QR code sharing not enabled')
+
+    def test_get(self):
+        settings = NotificationPlatformSettings.load()
+        settings.share_options = ['qrcode']
+        settings.save()
+        response = self.client.get(self.qr_code_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.content.startswith(b'\x89PNG'))
 
 
 class ContributionListAPITestCase(BluebottleTestCase):

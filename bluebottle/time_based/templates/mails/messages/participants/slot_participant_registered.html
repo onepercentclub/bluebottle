@@ -6,5 +6,12 @@
 {% endblocktrans %}
 
 {% include 'mails/messages/partial/slot.html' %}
+{% if hour_registration %}
+    <p>
+        {% blocktrans context 'email' %}
+            Make sure to register your hours using the code or URL found on the activity detail page.
+        {% endblocktrans %}
+    </p>
+{% endif %}
 
 {% endblock %}

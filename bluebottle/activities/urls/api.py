@@ -6,7 +6,7 @@ from bluebottle.activities.views import (
     RelatedActivityImageContent, ActivityImage,
     InviteDetailView, ContributionList, ActivityList,
     ActivityQuestionList, ActivityAnswerList, ActivityAnswerDetail,
-    FileUploadAnswerDocumentView
+    FileUploadAnswerDocumentView, ActivityQrCode
 )
 
 urlpatterns = [
@@ -43,6 +43,12 @@ urlpatterns = [
         r'^/(?P<pk>\d+)/image/(?P<size>\d+(x\d+)?)$',
         ActivityImage.as_view(),
         name='activity-image'
+    ),
+
+    re_path(
+        r'^/(?P<pk>\d+)/qr-code',
+        ActivityQrCode.as_view(),
+        name='activity-qr-code'
     ),
 
     re_path(

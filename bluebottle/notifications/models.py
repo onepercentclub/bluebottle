@@ -58,17 +58,17 @@ class NotificationPlatformSettings(BasePlatformSettings):
         ('whatsapp', _('Whatsapp')),
         ('teams', _('Teams')),
         ('email', _('Email')),
+        ('qrcode', _('QR code')),
     )
 
     share_options = MultiSelectField(
         max_length=100, choices=SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
-    default_yammer_group_id = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta(object):
-        verbose_name_plural = _('notification settings')
-        verbose_name = _('notification settings')
+        verbose_name_plural = _('Sharing settings')
+        verbose_name = _('Sharing settings')
 
 
 class NotificationModelMixin(object):

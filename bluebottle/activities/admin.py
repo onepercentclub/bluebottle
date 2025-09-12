@@ -41,6 +41,8 @@ from bluebottle.activities.models import (
     Team,
     TextAnswer,
     TextQuestion,
+    ConfirmationQuestion,
+    ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
@@ -540,6 +542,9 @@ class ActivityAnswerInline(StackedPolymorphicInline):
     class TextAnswerInline(StackedPolymorphicInline.Child):
         model = TextAnswer
 
+    class ConfirmationAnswerInline(StackedPolymorphicInline.Child):
+        model = ConfirmationAnswer
+
     class SegmentAnswerInline(StackedPolymorphicInline.Child):
         model = SegmentAnswer
 
@@ -550,6 +555,7 @@ class ActivityAnswerInline(StackedPolymorphicInline):
 
     child_inlines = (
         TextAnswerInline,
+        ConfirmationAnswerInline,
         SegmentAnswerInline,
         FileUploadAnswerInline,
     )
@@ -1066,6 +1072,7 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
     base_model = ActivityQuestion
     child_models = (
         TextQuestion,
+        ConfirmationQuestion,
         SegmentQuestion,
         FileUploadQuestion
     )
@@ -1081,6 +1088,12 @@ class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
 @admin.register(TextQuestion)
 class TextQuestionAdmin(ActivityQuestionChildAdmin):
     model = TextQuestion
+
+
+@admin.register(ConfirmationQuestion)
+class ConfirmationQuestionAdmin(ActivityQuestionChildAdmin):
+    model = ConfirmationQuestion
+    fields = ActivityQuestionChildAdmin.fields + ['text']
 
 
 @admin.register(SegmentQuestion)

@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from bluebottle.fsm.state import (
     register, State, Transition, EmptyState, ModelStateMachine
 )
-from bluebottle.time_based.forms import RegistrationRejectForm, RegistrationAcceptForm
 from bluebottle.time_based.models import (
     DeadlineRegistration,
     PeriodicRegistration, ScheduleRegistration, TeamScheduleRegistration, DateRegistration, )
@@ -79,7 +78,6 @@ class RegistrationStateMachine(ModelStateMachine):
         passed_label=_('accepted'),
         automatic=False,
         permission=can_accept_registration,
-        form=RegistrationAcceptForm
     )
 
     reject = Transition(
@@ -89,7 +87,6 @@ class RegistrationStateMachine(ModelStateMachine):
         description=_("Reject this person as a participant of this activity."),
         automatic=False,
         permission=can_accept_registration,
-        form=RegistrationRejectForm
     )
 
     withdraw = Transition(

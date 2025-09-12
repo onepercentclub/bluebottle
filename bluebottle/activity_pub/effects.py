@@ -11,8 +11,6 @@ class PublishEffect(Effect):
     template = 'admin/activity_pub/publish_effect.html'
 
     def post_save(self, **kwargs):
-        if not self.is_valid():
-            return
         event = Event.objects.from_model(self.instance)
         publish = Publish.objects.create(actor=event.organizer, object=event)
         adapter.publish(publish)
@@ -23,8 +21,9 @@ class PublishEffect(Effect):
         except Person.DoesNotExist:
             return None
 
+    @property
     def is_valid(self):
-        event = Event.objects.from_model(self.instance)
+        event = Event.objects.filter(activity=self.instance).first()
         if event:
             return False
         return self.get_person() is not None

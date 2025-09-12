@@ -229,7 +229,6 @@ class PublishAdmin(ActivityPubModelChildAdmin):
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
-        "id",
         "name",
         "platform",
         "start_date",

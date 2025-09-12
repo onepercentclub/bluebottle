@@ -15,6 +15,14 @@ class ActivityPubSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('polymorphic_ctype', 'url')
 
+    def save(self, **kwargs):
+        if not is_local(self.initial_data['id']):
+            try:
+                self.instance = self.Meta.model.objects.get(url=self.initial_data['id'])
+            except self.Meta.model.DoesNotExist:
+                pass
+        return super().save(**kwargs)
+
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
 

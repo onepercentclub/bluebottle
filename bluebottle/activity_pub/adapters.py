@@ -30,14 +30,11 @@ class JSONLDAdapter():
         return self.do_request('post', url, data)
 
     def sync(self, url, serializer, force=True):
-        # First try to get the existing model, so we do not create duplicates
-        try:
-            return serializer.Meta.model.objects.get(url=url)
-        except serializer.Meta.model.DoesNotExist:
-            data = self.get(url)
-            serializer = serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            return serializer.save()
+        data = self.get(url)
+        serializer = serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        return serializer.save()
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer

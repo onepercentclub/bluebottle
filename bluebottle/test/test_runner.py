@@ -2,9 +2,9 @@ import locale
 from builtins import range
 
 from django.conf import settings
-from django.db import connection, IntegrityError
+from django.db import IntegrityError, connection
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
-from djmoney.contrib.exchange.models import Rate, ExchangeBackend
+from djmoney.contrib.exchange.models import ExchangeBackend, Rate
 from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import InitProjectDataMixin
@@ -22,22 +22,32 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         connection.set_schema_to_public()
 
-        tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url='test2.localhost',
-            name='Test Too',
-            schema_name='test2',
-            client_name='test2')
+        try:
+            tenant2, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test2.localhost",
+                name="Test Too",
+                schema_name="test2",
+                client_name="test2",
+            )
+        except IntegrityError:
+            # If tenant already exists, get it
+            tenant2 = get_tenant_model().objects.get(client_name="test2")
 
         connection.set_tenant(tenant2)
         self.init_projects()
 
         connection.set_schema_to_public()
 
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url='test.localhost',
-            name='Test',
-            schema_name='test',
-            client_name='test')
+        try:
+            tenant, _created = get_tenant_model().objects.get_or_create(
+                domain_url="test.localhost",
+                name="Test",
+                schema_name="test",
+                client_name="test",
+            )
+        except IntegrityError:
+            # If tenant already exists, get it
+            tenant = get_tenant_model().objects.get(client_name="test")
 
         connection.set_tenant(tenant)
         self.init_projects()

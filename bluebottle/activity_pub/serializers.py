@@ -1,5 +1,4 @@
 from django.db import models
-
 from rest_framework import serializers
 
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField

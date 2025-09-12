@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from future.utils import python_2_unicode_compatible
 from tenant_schemas.models import TenantMixin
+from django.conf import settings
 
 
 @python_2_unicode_compatible
@@ -19,6 +20,8 @@ class Client(TenantMixin):
     def build_absolute_url(self, path):
         if 'localhost' in self.domain_url:
             scheme = 'http'
+            if not settings.TESTING:
+                return urljoin(f'{scheme}://{self.domain_url}:3000', path)
         else:
             scheme = 'https'
 

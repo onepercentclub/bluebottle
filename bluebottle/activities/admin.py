@@ -763,8 +763,8 @@ class ActivityChildAdmin(
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
-            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
 
         if self.get_registration_fields(request, obj):

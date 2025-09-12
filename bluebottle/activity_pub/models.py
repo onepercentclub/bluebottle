@@ -9,6 +9,7 @@ from bluebottle.clients.models import Client
 from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.members.models import Member
+from django.utils.translation import gettext_lazy as _
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -117,6 +118,10 @@ class Event(ActivityPubModel):
 
     activity = models.OneToOneField(Deed, null=True, on_delete=models.CASCADE)
     objects = EventManager()
+
+    class Meta:
+        verbose_name_plural = _("Shared activities")
+        verbose_name = _("Shared activity")
 
 
 class Activity(ActivityPubModel):

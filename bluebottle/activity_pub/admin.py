@@ -1,5 +1,6 @@
 import json
 from io import BytesIO
+from django.utils.translation import gettext_lazy as _
 
 import requests
 from django import forms
@@ -237,9 +238,9 @@ class EventAdmin(ActivityPubModelChildAdmin):
     )
     readonly_fields = (
         "name",
-        "html_description",
         "platform",
-        "image",
+        "display_description",
+        "display_image",
         "start_date",
         "end_date",
         "organizer",
@@ -248,10 +249,17 @@ class EventAdmin(ActivityPubModelChildAdmin):
     )
     fields = readonly_fields
 
-    def html_description(self, obj):
+    def display_description(self, obj):
         return format_html(
             '<div style="display: table-cell">' + obj.description + "</div>"
         )
+    display_description.short_description = _("Description")
+
+    def display_image(self, obj):
+        return format_html(
+            '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
+        )
+    display_image.short_description = _("Image")
 
     def get_urls(self):
         urls = super().get_urls()
@@ -293,30 +301,23 @@ class EventAdmin(ActivityPubModelChildAdmin):
                 status="draft",
             )
 
-            # Download and store the event image if it exists
             if event.image:
                 try:
-                    # Download the image from the URL
                     response = requests.get(event.image, timeout=30)
                     response.raise_for_status()
 
-                    # Create an Image object
                     image = Image(owner=request.user)
 
-                    # Generate a filename based on the event name and current timestamp
                     import time
 
                     filename = f"event_{event.pk}_{int(time.time())}.jpg"
 
-                    # Save the image file
                     image.file.save(filename, File(BytesIO(response.content)))
 
-                    # Assign the image to the deed
                     deed.image = image
                     deed.save()
 
                 except Exception as e:
-                    # Log the error but don't fail the entire operation
                     self.message_user(
                         request,
                         f"Warning: Could not download image from {event.image}: {str(e)}",

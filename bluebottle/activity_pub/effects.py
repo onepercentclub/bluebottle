@@ -38,8 +38,9 @@ class AnnounceAdoptionEffect(Effect):
 
     def post_save(self, **kwargs):
         event = self.instance.event
-        publish = Announce.objects.create(actor=event.actor, object=event)
-        adapter.publish(publish)
+        person = self.get_person()
+        announce = Announce.objects.create(actor=person, object=event)
+        adapter.publish(announce)
 
     def get_person(self):
         try:

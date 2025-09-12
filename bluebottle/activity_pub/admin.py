@@ -232,6 +232,23 @@ class AnnounceAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
 
 
+class AnnouncementInline(admin.StackedInline):
+    verbose_name = _("Adoption")
+    verbose_name_plural = _("Adoptions")
+    model = Announce
+    extra = 0
+    fk_name = "object"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
@@ -254,6 +271,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "url",
     )
     fields = readonly_fields
+    inlines = [AnnouncementInline]
 
     def display_description(self, obj):
         return format_html(

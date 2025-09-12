@@ -155,5 +155,5 @@ class AnnounceSerializer(BaseActivitySerializer):
 
 class ActivitySerializer(PolymorpphicActivityPubSerializer):
     polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer, PublishSerializer
+        FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]

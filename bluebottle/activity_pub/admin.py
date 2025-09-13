@@ -296,10 +296,28 @@ class AnnouncementInline(admin.StackedInline):
         return False
 
 
+class AdoptedFilter(admin.SimpleListFilter):
+    title = _('Adoption Status')
+    parameter_name = 'adopted'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Adopted')),
+            ('no', _('Not Adopted')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(activity__isnull=False)
+        elif self.value() == 'no':
+            return queryset.filter(activity__isnull=True)
+
+
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
+        "adopted",
         "organizer",
         "start_date",
         "end_date",
@@ -318,6 +336,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
+    list_filter = ['organizer', AdoptedFilter]
 
     def display_description(self, obj):
         return format_html(

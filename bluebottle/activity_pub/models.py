@@ -165,6 +165,10 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(Deed, null=True, on_delete=models.CASCADE)
     objects = EventManager()
 
+    @property
+    def adopted(self):
+        return self.activity is not None
+
     class Meta:
         verbose_name_plural = _("Shared activities")
         verbose_name = _("Shared activity")

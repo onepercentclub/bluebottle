@@ -3,12 +3,16 @@ from builtins import str
 from django import forms
 from django.contrib import admin
 from django.db import models
-from django.urls import reverse
+from django.http import HttpResponseRedirect
+from django.urls import re_path, reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activity_pub.models import PubOrganization
 from bluebottle.initiatives.models import Initiative
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
@@ -64,7 +68,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
-    fields = ('name', 'website', 'description', 'verified', 'logo')
+    readonly_fields = ['pub_organization']
+    fields = ('name', 'website', 'description', 'verified', 'logo', 'pub_organization')
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),
@@ -83,3 +88,42 @@ class OrganizationAdmin(admin.ModelAdmin):
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
     actions = (export_as_csv_action(fields=export_fields), )
+
+    def pub_organization(self, obj):
+        try:
+            if obj.puborganization.url:
+                pub_url = obj.puborganization.url
+            else:
+                pub_url = get_current_host() + reverse("json-ld:organization", args=(obj.puborganization.pk,))
+            url = reverse("admin:activity_pub_puborganization_change", args=(obj.puborganization.pk,))
+            return format_html(
+                '<a href="{}">{}</a>&nbsp;&nbsp;<i>{}</i>',
+                url,
+                _("Go to ActivityPub object"),
+                pub_url
+            )
+        except Organization.puborganization.RelatedObjectDoesNotExist:
+            url = reverse('admin:organizations_organization_create_pub_organization', kwargs={'pk': obj.id})
+            return format_html(
+                "<a href='{}'>{}</a>",
+                url, _("Create ActivityPub Organization"),
+            )
+
+    def get_urls(self):
+        urls = super(OrganizationAdmin, self).get_urls()
+
+        extra_urls = [
+            re_path(
+                r'^create-pub-organization/(?P<pk>\d+)/$',
+                self.admin_site.admin_view(self.create_pub_organization),
+                name='organizations_organization_create_pub_organization'
+            ),
+        ]
+        return extra_urls + urls
+
+    def create_pub_organization(self, request, pk):
+        organization = Organization.objects.get(pk=pk)
+        self.organization = PubOrganization.objects.from_model(organization)
+        message = _('Organisation {name} now has a ActivityPub Organization.').format(name=organization.name)
+        self.message_user(request, message)
+        return HttpResponseRedirect(reverse('admin:organizations_organization_change', args=(organization.id,)))

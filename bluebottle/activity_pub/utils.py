@@ -1,5 +1,11 @@
 import inflection
 from urllib.parse import urlparse
+
+from bluebottle.activity_pub.models import PubOrganization
+from bluebottle.organizations.models import Organization
+
+from bluebottle.cms.models import SitePlatformSettings
+
 from bluebottle.clients import properties
 
 
@@ -28,3 +34,12 @@ def camelize(data, initial=True):
 
 def is_local(url):
     return urlparse(url).hostname == properties.tenant.domain_url
+
+
+def get_platform_actor():
+    site_settings = SitePlatformSettings.load()
+    try:
+        platform_organization = site_settings.organization
+        return platform_organization.puborganization
+    except (Organization.DoesNotExist, PubOrganization.DoesNotExist):
+        return None

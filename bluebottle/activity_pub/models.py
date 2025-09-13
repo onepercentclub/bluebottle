@@ -74,7 +74,7 @@ class OrganizationManager(PolymorphicManager):
 
     def from_model(self, model):
         if not isinstance(model, Organization):
-            raise TypeError("Model should be a organisation instance")
+            raise TypeError("Model should be a organisation instance, not {}".format(type(model)))
 
         try:
             return model.puborganization
@@ -131,6 +131,7 @@ class PublicKey(ActivityPubModel):
 
 class EventManager(PolymorphicManager):
     def from_model(self, model):
+        from bluebottle.activity_pub.utils import get_platform_actor
         if not isinstance(model, Deed):
             raise TypeError("Model should be a member instance")
 
@@ -145,7 +146,7 @@ class EventManager(PolymorphicManager):
             return Event.objects.create(
                 start_date=model.start,
                 end_date=model.end,
-                organizer=PubOrganization.objects.from_model(model.owner),
+                organizer=get_platform_actor(),
                 name=model.title,
                 description=model.description.html,
                 image=connection.tenant.build_absolute_url(image_url) if image_url else None,

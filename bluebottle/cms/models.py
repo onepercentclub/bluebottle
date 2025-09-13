@@ -667,6 +667,11 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
+    organization = models.ForeignKey(
+        'organizations.Organization', null=True, blank=True, on_delete=models.SET_NULL,
+        help_text=_('The organization this platform belongs to.')
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(

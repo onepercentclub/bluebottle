@@ -1,6 +1,5 @@
 import json
 from io import BytesIO
-from django.utils.translation import gettext_lazy as _
 
 import requests
 from django import forms
@@ -12,6 +11,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicChildModelFilter,
@@ -29,9 +29,11 @@ from bluebottle.activity_pub.models import (
     Outbox,
     Person,
     PublicKey,
-    Publish, Announce,
+    Publish,
+    Announce,
+    PubOrganization,
 )
-from bluebottle.activity_pub.serializers import PersonSerializer
+from bluebottle.activity_pub.serializers import OrganizationSerializer
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 
@@ -51,6 +53,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Publish,
         Announce,
         Event,
+        PubOrganization,
     )
 
     def type(self, obj):
@@ -61,6 +64,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
     base_model = ActivityPubModel
+    readonly_fields = ["pub_url", ]
 
 
 @admin.register(Inbox)
@@ -74,7 +78,11 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 
 class FollowForm(forms.ModelForm):
-    url = forms.URLField(help_text="Enter the URL of the Actor to follow", max_length=400)
+    url = forms.URLField(
+        label=_("Organisation URL"),
+        help_text="Enter the ActivityPub URL of the organisation to follow",
+        max_length=400
+    )
 
     class Meta:
         model = Follow
@@ -160,7 +168,45 @@ class FollowersInline(admin.StackedInline):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'url')
+    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
+    inlines = [FollowingInline, FollowersInline]
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model == Follow:
+            for form in formset.forms:
+                if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                    url = form.cleaned_data.get("url")
+                    actor = form.instance.actor
+                    if url:
+                        try:
+                            target_actor = adapter.sync(url, serializer=OrganizationSerializer)
+                            follow = Follow.objects.create(actor=actor, object=target_actor)
+                            try:
+                                adapter.publish(follow)
+                                self.message_user(
+                                    request,
+                                    f"Successfully created and published Follow relationship to {url}",
+                                )
+                            except Exception as e:
+                                self.message_user(
+                                    request,
+                                    f"Follow created but publishing failed: {str(e)}",
+                                    level="warning",
+                                )
+                        except Exception as e:
+                            self.message_user(
+                                request,
+                                f"Error processing Follow form: {str(e)}",
+                                level="error",
+                            )
+        else:
+            super().save_formset(request, form, formset, change)
+
+
+@admin.register(PubOrganization)
+class PubOrganizationAdmin(ActivityPubModelChildAdmin):
+    list_display = ('id', 'inbox', 'outbox')
+    readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
     inlines = [FollowingInline, FollowersInline]
 
     def save_formset(self, request, form, formset, change):
@@ -172,7 +218,7 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     if url:
                         try:
                             try:
-                                target_actor = adapter.sync(url, serializer=PersonSerializer)
+                                target_actor = adapter.sync(url, serializer=OrganizationSerializer)
                                 follow = Follow.objects.create(actor=actor, object=target_actor)
                                 try:
                                     adapter.publish(follow)
@@ -215,6 +261,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 @admin.register(Follow)
 class FollowAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
+    readonly_fields = ("actor", "object", "url", "pub_url")
 
 
 @admin.register(PublicKey)
@@ -253,14 +300,13 @@ class AnnouncementInline(admin.StackedInline):
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "platform",
+        "organizer",
         "start_date",
         "end_date",
         "organizer",
     )
     readonly_fields = (
         "name",
-        "platform",
         "display_description",
         "display_image",
         "start_date",

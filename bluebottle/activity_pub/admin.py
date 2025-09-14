@@ -23,6 +23,7 @@ from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
     Actor,
+    Announce,
     Event,
     Follow,
     Inbox,
@@ -30,7 +31,6 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
-    Announce,
     PubOrganization,
 )
 from bluebottle.activity_pub.serializers import OrganizationSerializer
@@ -313,6 +313,25 @@ class AdoptedFilter(admin.SimpleListFilter):
             return queryset.filter(activity__isnull=True)
 
 
+class SubEventInline(admin.StackedInline):
+    model = Event
+    fk_name = "parent"
+    extra = 0
+    readonly_fields = ("pub_url", "activity")
+    fields = ("name", "start_date", "end_date", "organizer", "activity", "pub_url")
+    verbose_name = _("Slot")
+    verbose_name_plural = _("Slots")
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
@@ -333,9 +352,10 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "actor",
         "activity",
         "url",
+        "pub_url",
     )
     fields = readonly_fields
-    inlines = [AnnouncementInline]
+    inlines = [SubEventInline, AnnouncementInline]
     list_filter = ['organizer', AdoptedFilter]
 
     def display_description(self, obj):

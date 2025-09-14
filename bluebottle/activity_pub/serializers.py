@@ -1,11 +1,21 @@
 from django.db import models
+from isodate import parse_duration
 from rest_framework import serializers
 
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish, Announce, PubOrganization
+    Accept,
+    Announce,
+    Event,
+    Follow,
+    Inbox,
+    Outbox,
+    Person,
+    PublicKey,
+    Publish,
+    PubOrganization,
 )
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -123,12 +133,33 @@ class OrganizationSerializer(ActivityPubSerializer):
         model = PubOrganization
 
 
+class DurationField(serializers.DurationField):
+    def to_representation(self, value):
+        return timedelta_to_iso(value) if value else None
+
+    def to_internal_value(self, data):
+        return parse_duration(data)
+
+
 class EventSerializer(ActivityPubSerializer):
     organizer = RelatedActivityPubField(OrganizationSerializer)
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
     name = serializers.CharField()
     description = serializers.CharField()
+    duration = DurationField(required=False)
+    gu_activity_type = serializers.SerializerMethodField()
+    sub_event = serializers.SerializerMethodField()
+
+    def get_gu_activity_type(self, obj):
+        return str(obj.activity.__class__.__name__)
+        return obj.activity.__class__.__name__
+
+    def get_sub_event(self, obj):
+        subevents = obj.subevents.all().order_by("start_date")
+        if subevents.exists():
+            return EventSerializer(subevents, many=True, context=self.context).data
+        return None
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'

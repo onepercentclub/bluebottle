@@ -1,6 +1,6 @@
 from rest_framework import renderers
 
-from bluebottle.activity_pub.processor import processor, default_context
+from bluebottle.activity_pub.processor import default_context, processor
 from bluebottle.activity_pub.utils import camelize
 
 
@@ -10,6 +10,11 @@ class JSONLDRenderer(renderers.JSONRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         camelized = camelize(data, False)
+
+        # Custom field mapping before context processing
+        if "guActivityType" in camelized:
+            camelized["gu:activityType"] = camelized.pop("guActivityType")
+
         camelized['@context'] = default_context
         compacted = processor.compact(camelized, default_context, {})
 

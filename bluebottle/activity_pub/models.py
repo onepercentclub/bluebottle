@@ -4,8 +4,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.deeds.models import Deed
-from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization
 
@@ -131,27 +129,13 @@ class PublicKey(ActivityPubModel):
 
 class EventManager(PolymorphicManager):
     def from_model(self, model):
-        from bluebottle.activity_pub.utils import get_platform_actor
-        if not isinstance(model, Deed):
-            raise TypeError("Model should be a member instance")
+        from bluebottle.activity_pub.mappers.registry import mapper_registry
 
-        try:
-            return model.event
-        except Deed.event.RelatedObjectDoesNotExist:
-            if model.image:
-                image_url = reverse('activity-image', args=(str(model.pk), ORIGINAL_SIZE))
-            elif model.initiative and model.initiative.image:
-                image_url = reverse('initiative-image', args=(str(model.initiative.pk), ORIGINAL_SIZE))
-
-            return Event.objects.create(
-                start_date=model.start,
-                end_date=model.end,
-                organizer=get_platform_actor(),
-                name=model.title,
-                description=model.description.html,
-                image=connection.tenant.build_absolute_url(image_url) if image_url else None,
-                activity=model
-            )
+        event = Event.objects.filter(activity=model).first()
+        if event:
+            return event
+        else:
+            return mapper_registry.to_event(model)
 
 
 class Event(ActivityPubModel):
@@ -160,9 +144,22 @@ class Event(ActivityPubModel):
     image = models.URLField(null=True)
     start_date = models.DateField(null=True)
     end_date = models.DateField(null=True)
+    duration = models.DurationField(null=True)
     organizer = models.ForeignKey(PubOrganization, on_delete=models.CASCADE)
 
-    activity = models.OneToOneField(Deed, null=True, on_delete=models.CASCADE)
+    # Add this line for subevents support
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="subevents",
+    )
+
+    activity = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.CASCADE
+    )
+
     objects = EventManager()
 
     @property

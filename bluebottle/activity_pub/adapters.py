@@ -15,6 +15,8 @@ from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Actor
 from bluebottle.activity_pub.utils import is_local
 
+from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
     def get_actor(self, url):
@@ -27,14 +29,17 @@ class JSONLDKeyResolver(HTTPSignatureKeyResolver):
 
     def resolve_public_key(self, key_id):
         actor = self.get_actor(key_id)
-        import ipdb; ipdb.set_trace()
 
-        return actor.public_key.public_key_pem
+        return load_pem_public_key(
+            bytes(actor.public_key.public_key_pem, encoding='utf-8')
+        )
 
     def resolve_private_key(self, key_id):
         actor = self.get_actor(key_id)
 
-        return bytes(actor.public_key.private_key.private_key_pem, encoding='utf-8')
+        return load_pem_private_key(
+            bytes(actor.public_key.private_key.private_key_pem, encoding='utf-8'), password=None
+        )
 
 
 key_resolver = JSONLDKeyResolver()
@@ -56,7 +61,7 @@ class JSONLDAdapter():
         auth = HTTPSignatureAuth(
             key_id=key_id,
             key_resolver=key_resolver,
-            signature_algorithm=algorithms.HMAC_SHA256
+            signature_algorithm=algorithms.ED25519
         )
         return auth
 

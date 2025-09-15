@@ -5,6 +5,7 @@ from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.permissions import InboxPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
@@ -29,6 +30,8 @@ class PersonView(ActivityPubView):
 class InboxView(generics.CreateAPIView, ActivityPubView):
     serializer_class = InboxSerializer
     queryset = Inbox.objects.all()
+
+    permission_classes = [InboxPermission] 
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == 'POST':

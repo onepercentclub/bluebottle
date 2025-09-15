@@ -20,8 +20,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
 
-from requests_http_signature import HTTPSignatureAuth, algorithms
-
 
 class ActivityPubClient(TestClient):
     def _base_environ(self, **request):
@@ -46,13 +44,13 @@ def execute(method, url, data=None, auth=None):
         request = Request(
             method.upper(), url, data=data, headers={'content-type': 'application/ld+json'}
         ).prepare()
+
         signed = auth(request)
         headers.update(signed.headers)
 
     tenant = Client.objects.get(domain_url=urlparse(url).hostname)
 
     with LocalTenant(tenant):
-        print(headers)
         response = getattr(client, method)(url, data=data, headers=headers)
 
     if response.status_code in (200, 201):

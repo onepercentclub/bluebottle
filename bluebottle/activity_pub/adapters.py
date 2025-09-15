@@ -5,7 +5,6 @@ from io import BytesIO
 
 from rest_framework.reverse import reverse
 from requests_http_signature import HTTPSignatureAuth, algorithms, HTTPSignatureKeyResolver
-from http_message_signatures.resolvers import HTTPSignatureKeyResolver
 
 from django.db import connection
 from django.urls import resolve
@@ -15,8 +14,8 @@ from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Actor
 from bluebottle.activity_pub.utils import is_local
 
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
     def get_actor(self, url):

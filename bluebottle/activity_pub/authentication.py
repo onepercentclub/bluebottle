@@ -1,4 +1,5 @@
 from requests import Request
+import http_sfv
 
 from rest_framework import authentication
 from requests_http_signature import HTTPSignatureAuth, algorithms
@@ -12,16 +13,23 @@ class HTTPSignatureAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         if 'Signature' in request.headers:
             prepared_request = Request(
-                request.method.upper(), 
-                request.build_absolute_uri(), 
-                data=request.body, 
+                request.method.upper(),
+                request.build_absolute_uri(),
+                data=request.body,
                 headers=request.headers
             ).prepare()
 
-            try: 
+            signature_input = http_sfv.Dictionary()
+            signature_input.parse(request.headers['Signature-Input'].encode())
+            algorithm = 'ed25519'
+            for input in signature_input.values():
+                if 'alg' in input.params:
+                    algorithm = input.params['alg']
+
+            try:
                 verify_result = HTTPSignatureAuth.verify(
                     prepared_request,
-                    signature_algorithm=algorithms.ED25519,
+                    signature_algorithm=getattr(algorithms, algorithm.upper()),
                     key_resolver=JSONLDKeyResolver()
                 )
                 return (None, Actor.objects.get(url=verify_result.parameters['keyid']))

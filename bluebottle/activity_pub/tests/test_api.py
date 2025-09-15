@@ -5,7 +5,7 @@ from io import BytesIO
 
 from django.db import connection
 from django.urls import reverse
-from django.test import Client as TestClient, RequestFactory
+from django.test import Client as TestClient
 
 
 from bluebottle.activity_pub.models import Person, Follow, Accept, Event
@@ -91,7 +91,6 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.person = Person.objects.from_model(self.user)
 
         self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
-
 
     def test_get_inbox(self):
         inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))

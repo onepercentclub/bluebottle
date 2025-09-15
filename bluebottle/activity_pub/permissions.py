@@ -4,7 +4,7 @@ from django.urls import resolve
 
 from rest_framework import permissions
 
-from bluebottle.activity_pub.models import Accept, Follow
+from bluebottle.activity_pub.models import Follow
 
 
 class InboxPermission(permissions.BasePermission):
@@ -14,7 +14,7 @@ class InboxPermission(permissions.BasePermission):
                 return True
             if request.data['type'] == 'Accept':
                 # Only the object of a follow can accept itself
-                follow =  Follow.objects.get(**resolve(urlparse(request.data['object']).path).kwargs)
+                follow = Follow.objects.get(**resolve(urlparse(request.data['object']).path).kwargs)
                 return follow.object == request.auth
             if request.data['type'] == 'Publish':
                 # Only actors we follow can post publish activities
@@ -23,4 +23,3 @@ class InboxPermission(permissions.BasePermission):
             return False
         else:
             return True
-

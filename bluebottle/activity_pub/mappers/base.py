@@ -1,3 +1,4 @@
+from datetime import datetime, date
 from typing import Protocol
 
 from django.utils import timezone
@@ -15,4 +16,7 @@ def get_absolute_path(tenant, path):
 def datetime_to_iso(dt):
     if not dt:
         return None
+
+    if isinstance(dt, date):
+        dt = datetime.combine(dt, datetime.min.time())
     return timezone.make_aware(dt) if timezone.is_naive(dt) else dt

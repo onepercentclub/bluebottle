@@ -58,6 +58,8 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "activity_pub.event",
                 "permissions": ["initiatives.change_activities"],
+                "url": "/en/admin/activity_pub/event/",
+                "label": _("Shared activities"),
             },
             {
                 "name": "activity_pub.activitypubmodel",

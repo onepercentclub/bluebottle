@@ -1,5 +1,6 @@
 from rest_framework import generics
 
+from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event
 )
@@ -14,6 +15,7 @@ from bluebottle.activity_pub.serializers import (
 class ActivityPubView(generics.RetrieveAPIView):
     parser_classes = [JSONLDParser]
     renderer_classes = [JSONLDRenderer]
+    authentication_classes = [HTTPSignatureAuthentication]
 
     def get_queryset(self):
         return self.queryset.filter(url__isnull=True)

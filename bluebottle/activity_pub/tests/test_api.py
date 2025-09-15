@@ -1,10 +1,11 @@
+from requests import Request
 import mock
 from urllib.parse import urlparse
 from io import BytesIO
 
 from django.db import connection
 from django.urls import reverse
-from django.test import Client as TestClient
+from django.test import Client as TestClient, RequestFactory
 
 
 from bluebottle.activity_pub.models import Person, Follow, Accept, Event
@@ -18,6 +19,8 @@ from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
+
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
 
 class ActivityPubClient(TestClient):
@@ -34,17 +37,23 @@ class ActivityPubClient(TestClient):
         return super().post(*args, **kwargs)
 
 
-def execute(method, url, data=None):
+def execute(method, url, data=None, auth=None):
     client = ActivityPubClient()
 
-    kwargs = {}
-    if data:
-        kwargs['data'] = data
+    headers = {'content_type': 'application/ld+json'}
+
+    if auth:
+        request = Request(
+            method.upper(), url, data=data, headers={'content-type': 'application/ld+json'}
+        ).prepare()
+        signed = auth(request)
+        headers.update(signed.headers)
 
     tenant = Client.objects.get(domain_url=urlparse(url).hostname)
 
     with LocalTenant(tenant):
-        response = getattr(client, method)(url, **kwargs)
+        print(headers)
+        response = getattr(client, method)(url, data=data, headers=headers)
 
     if response.status_code in (200, 201):
         return (BytesIO(response.content), response.accepted_media_type)
@@ -75,7 +84,7 @@ class ActivityPubTestCase(BluebottleTestCase):
 
 class PersonAPITestCase(ActivityPubTestCase):
     def build_absolute_url(self, path):
-        return f'http://{connection.tenant.domain_url}{path}'
+        return connection.tenant.build_absolute_url(path)
 
     def setUp(self):
         super(PersonAPITestCase, self).setUp()
@@ -84,6 +93,7 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.person = Person.objects.from_model(self.user)
 
         self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
+
 
     def test_get_inbox(self):
         inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))

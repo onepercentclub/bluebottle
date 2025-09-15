@@ -21,6 +21,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
                 self.instance = self.Meta.model.objects.get(url=self.initial_data['id'])
             except self.Meta.model.DoesNotExist:
                 pass
+
         return super().save(**kwargs)
 
     def to_internal_value(self, data):
@@ -93,6 +94,7 @@ class PublicKeySerializer(ActivityPubSerializer):
         type = 'PublicKey'
         url_name = 'json-ld:public-key'
         model = PublicKey
+        exclude = ActivityPubSerializer.Meta.exclude + ('private_key', )
 
 
 class PersonSerializer(ActivityPubSerializer):

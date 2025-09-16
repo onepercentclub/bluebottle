@@ -31,7 +31,7 @@ class InboxPermission(permissions.BasePermission):
                 return True
             if request.data['type'] == 'Accept':
                 # Only the object of a follow can accept itself
-                follow = Follow.objects.get(**resolve(urlparse(request.data['object']).path).kwargs)
+                follow = Follow.objects.get(**resolve(urlparse(request.auth.url).path).kwargs)
                 return follow.object == request.auth
             if request.data['type'] == 'Publish':
                 # Only actors we follow can post publish activities

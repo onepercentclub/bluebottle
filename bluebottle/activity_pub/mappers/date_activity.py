@@ -57,20 +57,7 @@ class DateActivityMapper:
                 activity=activity,
             )
         else:
-            first_slot = slots.first()
-            last_slot = slots.last()
-
-            main_start_date = datetime_to_iso(first_slot.start)
-            main_end_date = None
-
-            if hasattr(last_slot, "end") and last_slot.end:
-                main_end_date = datetime_to_iso(last_slot.end)
-            elif hasattr(last_slot, "duration") and last_slot.duration:
-                main_end_date = datetime_to_iso(last_slot.start + last_slot.duration)
-
             main_event = Event.objects.create(
-                start_date=main_start_date,
-                end_date=main_end_date,
                 organizer=get_platform_actor(),
                 name=activity.title,
                 description=getattr(activity.description, "html", None),
@@ -87,12 +74,15 @@ class DateActivityMapper:
                 elif hasattr(slot, "duration") and slot.duration:
                     slot_end_date = datetime_to_iso(slot.start + slot.duration)
 
+                title = slot.title or  f"{activity.title} - Slot {slot.sequence}"
+
                 Event.objects.create(
                     start_date=slot_start_date,
                     end_date=slot_end_date,
                     organizer=get_platform_actor(),
-                    name=f"{activity.title} - Slot {slot.sequence}",
+                    name=title,
                     description=getattr(activity.description, "html", None),
+                    slot_id=slot.id,
                     image=absolute_image,
                     parent=main_event,
                 )

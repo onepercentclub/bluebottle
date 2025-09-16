@@ -19,6 +19,7 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.mappers import mapper_registry
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -401,53 +402,23 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-            deed = Deed.objects.create(
-                owner=request.user,
-                title=event.name,
-                description=json.dumps({"html": event.description, "delta": ""}),
-                start=event.start_date,
-                end=event.end_date,
-                status="draft",
-            )
-
-            if event.image:
-                try:
-                    response = requests.get(event.image, timeout=30)
-                    response.raise_for_status()
-
-                    image = Image(owner=request.user)
-
-                    import time
-
-                    filename = f"event_{event.pk}_{int(time.time())}.jpg"
-
-                    image.file.save(filename, File(BytesIO(response.content)))
-
-                    deed.image = image
-                    deed.save()
-
-                except Exception as e:
-                    self.message_user(
-                        request,
-                        f"Warning: Could not download image from {event.image}: {str(e)}",
-                        level="warning",
-                    )
-
-            event.activity = deed
+            activity = mapper_registry.to_activity(event, request.user)
+            activity.save()
+            event.activity = activity
             event.save()
 
             self.message_user(
                 request,
-                f'Successfully created Deed "{deed.title}" from Event "{event.name}".',
+                f'Successfully created activity "{activity.title}".',
                 level="success",
             )
 
             return HttpResponseRedirect(
-                reverse("admin:deeds_deed_change", args=[deed.pk])
+                reverse("admin:activities_activity_change", args=[activity.pk])
             )
 
         except Exception as e:
-            self.message_user(request, f"Error creating Deed: {str(e)}", level="error")
+            self.message_user(request, f"Error creating activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )

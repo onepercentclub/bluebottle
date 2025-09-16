@@ -147,7 +147,6 @@ class Event(ActivityPubModel):
     duration = models.DurationField(null=True)
     organizer = models.ForeignKey(PubOrganization, on_delete=models.CASCADE)
 
-    # Add this line for subevents support
     parent = models.ForeignKey(
         "self",
         null=True,
@@ -159,6 +158,8 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.CASCADE
     )
+
+    slot_id = models.CharField(max_length=100, null=True, blank=True)
 
     objects = EventManager()
 

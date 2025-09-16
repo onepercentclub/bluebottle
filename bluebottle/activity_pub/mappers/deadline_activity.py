@@ -1,12 +1,15 @@
+import json
+
 from django.db import connection
 from django.urls import reverse
 
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from .base import get_absolute_path, datetime_to_iso
+from .base import get_absolute_path, datetime_to_iso, ActivityMapper
 from ..models import Event
+from ...time_based.models import DeadlineActivity
 
 
-class DeadlineActivityMapper:
+class DeadlineActivityMapper(ActivityMapper):
     def to_event(self, activity):
         from bluebottle.activity_pub.utils import get_platform_actor
 
@@ -34,3 +37,17 @@ class DeadlineActivityMapper:
             image=absolute_image,
             activity=activity,
         )
+
+    def to_activity(self, event, user):
+        activity = DeadlineActivity.objects.create(
+            owner=user,
+            title=event.name,
+            description=json.dumps({"html": event.description, "delta": ""}),
+            start=event.start_date,
+            deadline=event.end_date,
+            duration=event.duration,
+            status="draft",
+        )
+        activity.image = self.get_image(event, user)
+        activity.save()
+        return activity

@@ -2,11 +2,13 @@ from django.db import connection
 from django.urls import reverse
 
 from bluebottle.files.serializers import ORIGINAL_SIZE
+from . import ActivityMapper
 from .base import get_absolute_path, datetime_to_iso
 from ..models import Event
+from ...collect.models import CollectActivity
 
 
-class CollectActivityMapper:
+class CollectActivityMapper(ActivityMapper):
     def to_event(self, collect_activity) -> Event:
         # Import here to avoid circular import
         from bluebottle.activity_pub.utils import get_platform_actor
@@ -31,3 +33,6 @@ class CollectActivityMapper:
             image=absolute_image,
             activity=collect_activity,
         )
+
+    def to_activity(self, event):
+        raise NotImplemented()

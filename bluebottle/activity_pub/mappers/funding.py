@@ -1,18 +1,12 @@
-import json
-
 from django.db import connection
 from django.urls import reverse
 
-from bluebottle.activity_pub.models import (
-    Event,
-)
-from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
-from . import ActivityMapper
 from .base import get_absolute_path, datetime_to_iso
+from ..models import Event
 
 
-class DeedMapper(ActivityMapper):
+class DeedMapper:
     def to_event(self, deed) -> Event:
         # Import here to avoid circular import
         from bluebottle.activity_pub.utils import get_platform_actor
@@ -37,17 +31,3 @@ class DeedMapper(ActivityMapper):
             image=absolute_image,
             activity=deed,
         )
-
-    def to_activity(self, event, user):
-        activity = Deed.objects.create(
-            owner=user,
-            title=event.name,
-            description=json.dumps({"html": event.description, "delta": ""}),
-            start=event.start_date,
-            end=event.end_date,
-            status="draft",
-        )
-        activity.image = self.get_image(event, user)
-        activity.save()
-        return activity
-

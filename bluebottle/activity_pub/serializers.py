@@ -153,7 +153,6 @@ class EventSerializer(ActivityPubSerializer):
 
     def get_gu_activity_type(self, obj):
         return str(obj.activity.__class__.__name__)
-        return obj.activity.__class__.__name__
 
     def get_sub_event(self, obj):
         subevents = obj.subevents.all().order_by("start_date")
@@ -164,7 +163,7 @@ class EventSerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'
         url_name = 'json-ld:event'
-        exclude = ActivityPubSerializer.Meta.exclude + ('activity', )
+        exclude = ActivityPubSerializer.Meta.exclude + ('activity', 'slot_id')
         model = Event
 
 

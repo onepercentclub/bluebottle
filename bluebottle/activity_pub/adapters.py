@@ -19,12 +19,11 @@ class JSONLDAdapter():
         kwargs = {'headers': {'Content-Type': 'application/ld+json'}}
         if data:
             kwargs['data'] = data
-
         try:
             response = getattr(requests, method)(url, **kwargs)
             response.raise_for_status()  # Raise an exception for bad status codes
 
-            # Check if response has content
+            # Check if the response has content
             if not response.content:
                 logger.warning(f"Empty response from {url}")
                 return None, None
@@ -38,7 +37,7 @@ class JSONLDAdapter():
 
     def do_request(self, method, url, data=None):
         result = self.execute(method, url, data)
-        if result[0] is None:  # Empty or failed response
+        if result[0] is None:
             return None
 
         stream, media_type = result

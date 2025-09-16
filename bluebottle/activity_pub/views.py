@@ -5,7 +5,7 @@ from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
-from bluebottle.activity_pub.permissions import InboxPermission
+from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
@@ -17,6 +17,8 @@ class ActivityPubView(generics.RetrieveAPIView):
     parser_classes = [JSONLDParser]
     renderer_classes = [JSONLDRenderer]
     authentication_classes = [HTTPSignatureAuthentication]
+
+    permission_classes = [ActivityPubPermission]
 
     def get_queryset(self):
         return self.queryset.filter(url__isnull=True)

@@ -1,5 +1,7 @@
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.funding.models import Funding
+from bluebottle.grant_management.models import GrantApplication
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from django.utils.html import format_html
@@ -14,7 +16,25 @@ class OwnerActivityNotification(TransitionMessage):
     def action_link(self):
         return self.obj.get_absolute_url()
 
-    action_title = pgettext('email', 'Open your activity')
+    def get_context(self, recipient):
+        context = super().get_context(recipient)
+        if isinstance(self.obj, Funding):
+            context['activity_type'] = pgettext('email', 'crowdfunding campaign')
+        elif isinstance(self.obj, GrantApplication):
+            context['activity_type'] = pgettext('email', 'grant application')
+        else:
+            context['activity_type'] = pgettext('email', 'activity')
+
+        return context
+
+    @property
+    def action_title(self):
+        if isinstance(self.obj, Funding):
+            return pgettext('email', 'View campaign')
+        elif isinstance(self.obj, GrantApplication):
+            return pgettext('email', 'View application')
+        else:
+            return pgettext('email', 'View activity')
 
     def get_recipients(self):
         """activity owner"""

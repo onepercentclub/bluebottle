@@ -60,6 +60,8 @@ class JSONLDAdapter():
         if data:
             kwargs['data'] = data
 
+        auth = self.get_auth('http://example.com')
+
         response = getattr(requests, method)(url, **kwargs)
         stream = BytesIO(response.content)
         return (stream, response.headers["content-type"])

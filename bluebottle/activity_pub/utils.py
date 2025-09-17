@@ -1,8 +1,7 @@
 import inflection
 from urllib.parse import urlparse
 
-from bluebottle.activity_pub.models import PubOrganization
-from bluebottle.organizations.models import Organization
+from bluebottle.activity_pub.models import Organization as Organization
 
 from bluebottle.cms.models import SitePlatformSettings
 
@@ -39,7 +38,8 @@ def is_local(url):
 def get_platform_actor():
     site_settings = SitePlatformSettings.load()
     try:
-        platform_organization = site_settings.organization
-        return platform_organization.puborganization
-    except (Organization.DoesNotExist, PubOrganization.DoesNotExist):
-        return None
+        if site_settings.organization:
+            platform_organization = site_settings.organization
+            return platform_organization.activity_pub_organization
+    except Organization.DoesNotExist:
+        pass

@@ -8,7 +8,7 @@ from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activity_pub.models import PubOrganization
+from bluebottle.activity_pub.models import Organization as PubOrganization
 from bluebottle.initiatives.models import Initiative
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.admin import export_as_csv_action

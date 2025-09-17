@@ -210,7 +210,7 @@ JWT_EXPIRATION_DELTA = datetime.timedelta(days=7)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
-                          '/surveys', '/token', '/jet')
+                          '/surveys', '/token', '/jet', '/.well-known')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'

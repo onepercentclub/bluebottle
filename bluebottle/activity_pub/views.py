@@ -1,9 +1,11 @@
 from rest_framework import generics
 
+from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event, Announce, PubOrganization
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event, Announce, Organization
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
@@ -15,6 +17,9 @@ from bluebottle.activity_pub.serializers import (
 class ActivityPubView(generics.RetrieveAPIView):
     parser_classes = [JSONLDParser]
     renderer_classes = [JSONLDRenderer]
+    authentication_classes = [HTTPSignatureAuthentication]
+
+    permission_classes = [ActivityPubPermission]
 
     def get_queryset(self):
         return self.queryset.filter(url__isnull=True)
@@ -27,12 +32,14 @@ class PersonView(ActivityPubView):
 
 class OrganizationView(ActivityPubView):
     serializer_class = OrganizationSerializer
-    queryset = PubOrganization.objects.all()
+    queryset = Organization.objects.all()
 
 
 class InboxView(generics.CreateAPIView, ActivityPubView):
     serializer_class = InboxSerializer
     queryset = Inbox.objects.all()
+
+    permission_classes = [InboxPermission]
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == 'POST':

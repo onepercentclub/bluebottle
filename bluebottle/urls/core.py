@@ -174,7 +174,7 @@ urlpatterns = [
         LoginWithView.as_view(), name='login-with'
     ),
 
-
+    re_path(r'^.well-known/webfinger', include('bluebottle.webfinger.urls'))
 ]
 
 

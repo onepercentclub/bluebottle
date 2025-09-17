@@ -1,4 +1,6 @@
 from urllib.parse import urlparse
+from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives import serialization
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
@@ -80,8 +82,36 @@ class Outbox(ActivityPubModel):
     pass
 
 
+class PrivateKey(models.Model):
+    private_key_pem = models.TextField()
+
+
 class PublicKey(ActivityPubModel):
     public_key_pem = models.TextField()
+    private_key = models.ForeignKey(PrivateKey, null=True, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        if not self.url and not self.private_key:
+
+            private_key = ed25519.Ed25519PrivateKey.generate()
+            public_key = private_key.public_key()
+
+            private_key_pem = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            ).decode('utf-8')
+
+            self.private_key = PrivateKey.objects.create(
+                private_key_pem=private_key_pem
+
+            )
+            self.public_key_pem = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            ).decode('utf-8')
+
+        super().save(*args, **kwargs)
 
 
 class EventManager(PolymorphicManager):

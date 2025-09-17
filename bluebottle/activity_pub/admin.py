@@ -19,7 +19,6 @@ from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
     Actor,
-    Announce,
     Event,
     Follow,
     Inbox,
@@ -30,10 +29,8 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
 )
-from bluebottle.activity_pub.serializers import DeedEventSerializer, ActivityEventSerializer
+from bluebottle.activity_pub.serializers import ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
-from bluebottle.activity_pub.serializers import DeadlineActivityEventSerializer
-from bluebottle.activity_pub.services import EventCreationService
 
 
 @admin.register(ActivityPubModel)
@@ -202,7 +199,7 @@ class PersonAdmin(ActivityPubModelChildAdmin):
 
 
 @admin.register(Organization)
-class PubOrganizationAdmin(ActivityPubModelChildAdmin):
+class OrganizationAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
     readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
     inlines = [FollowingInline, FollowersInline]
@@ -412,7 +409,6 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         except Exception as e:
-            import ipdb; ipdb.set_trace()
             self.message_user(request, f"Error creating activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])

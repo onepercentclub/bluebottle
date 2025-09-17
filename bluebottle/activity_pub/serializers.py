@@ -283,8 +283,8 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
 
 
 class DeedEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateTimeField(source='start', required=False, allow_null=True)
-    end = serializers.DateTimeField(source='end', required=False, allow_null=True)
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
 
     class Meta:
         model = Deed
@@ -292,7 +292,7 @@ class DeedEventSerializer(BaseActivityEventSerializer):
 
 
 class DeadlineActivityEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateTimeField(source='start', required=False, allow_null=True)
+    start = serializers.DateTimeField(required=False, allow_null=True)
     end = serializers.DateTimeField(source='deadline', required=False, allow_null=True)
     duration = serializers.DurationField(required=False, allow_null=True)
 

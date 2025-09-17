@@ -13,7 +13,9 @@ from bluebottle.activity_pub.models import Actor
 from bluebottle.activity_pub.utils import is_local
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+import logging
 
+logger = logging.getLogger(__name__)
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
     def get_actor(self, url):
@@ -98,7 +100,6 @@ class JSONLDAdapter():
         for sub_event in sub_events:
             slot = EventSerializer().create(sub_event)
             slot.save(parent=event)
-        event.save()
         return event
 
     def publish(self, activity):

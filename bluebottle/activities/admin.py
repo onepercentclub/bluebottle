@@ -769,12 +769,10 @@ class ActivityChildAdmin(
 
     def share_activity_link(self, obj):
         if obj and obj.id:
-            print('obj.id', obj.id)
             url = reverse('admin:{}_{}_share_activity'.format(
                 obj._meta.app_label,
                 obj._meta.model_name
             ), args=(obj.id,))
-            print('url', url)
             return format_html(
                 '<a href="{}">{}</a>',
                 url,

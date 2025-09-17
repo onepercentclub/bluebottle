@@ -113,6 +113,7 @@ install_requires = [
     'rave-python==1.0.2',
     'regex==2025.9.1',
     'requests==2.32.0',
+    'requests_http_signature-0.7.1',
     'schwifty==2.1.0',
     'scss==0.8.73',
     'sentry-sdk==2.16.0',

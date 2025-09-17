@@ -19,8 +19,6 @@ from bluebottle.activity_pub.models import (
     Organization,
 )
 from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
-import json
-
 from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.time_based.models import DeadlineActivity, DateActivity, DateActivitySlot, ActivitySlot
@@ -172,8 +170,8 @@ class DurationField(serializers.DurationField):
 
 class EventSerializer(ActivityPubSerializer):
     organizer = RelatedActivityPubField(OrganizationSerializer)
-    start = serializers.DateField(required=False)
-    end = serializers.DateField(required=False)
+    start = serializers.DateTimeField(required=False)
+    end = serializers.DateTimeField(required=False)
     name = serializers.CharField()
     description = serializers.CharField()
     duration = DurationField(required=False)
@@ -285,8 +283,8 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
 
 
 class DeedEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateField(source='start', required=False, allow_null=True)
-    end = serializers.DateField(source='end', required=False, allow_null=True)
+    start = serializers.DateTimeField(source='start', required=False, allow_null=True)
+    end = serializers.DateTimeField(source='end', required=False, allow_null=True)
 
     class Meta:
         model = Deed
@@ -294,8 +292,8 @@ class DeedEventSerializer(BaseActivityEventSerializer):
 
 
 class DeadlineActivityEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateField(source='start', required=False, allow_null=True)
-    end = serializers.DateField(source='deadline', required=False, allow_null=True)
+    start = serializers.DateTimeField(source='start', required=False, allow_null=True)
+    end = serializers.DateTimeField(source='deadline', required=False, allow_null=True)
     duration = serializers.DurationField(required=False, allow_null=True)
 
     class Meta:

@@ -90,10 +90,16 @@ class JSONLDAdapter():
         if data is None:
             raise ValueError(f"Failed to fetch data from {url}")
 
+        sub_events = data.pop('sub_event', [])
         serializer = serializer(data=data)
         serializer.is_valid(raise_exception=True)
-
-        return serializer.save()
+        event =  serializer.save()
+        from bluebottle.activity_pub.serializers import EventSerializer
+        for sub_event in sub_events:
+            slot = EventSerializer().create(sub_event)
+            slot.save(parent=event)
+        event.save()
+        return event
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer

@@ -16,7 +16,7 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
-    PubOrganization,
+    Organization,
 )
 from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
 import json
@@ -34,12 +34,16 @@ class ActivityPubSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('polymorphic_ctype', 'url')
 
+    def get_url_name(self, instance):
+        return self.Meta.url_name
+
     def save(self, **kwargs):
         if not is_local(self.initial_data['id']):
             try:
                 self.instance = self.Meta.model.objects.get(url=self.initial_data['id'])
             except self.Meta.model.DoesNotExist:
                 pass
+
         return super().save(**kwargs)
 
     def to_internal_value(self, data):
@@ -58,6 +62,9 @@ class PolymorphicActivityPubSerializer(serializers.Serializer):
         ]
         super().__init__(*args, **kwargs)
 
+    def get_url_name(self, instance):
+        return self.get_serializer(instance).Meta.url_name
+
     def get_serializer(self, data):
         if isinstance(data, models.Model):
             for serializer in self._serializers:
@@ -69,10 +76,16 @@ class PolymorphicActivityPubSerializer(serializers.Serializer):
                     return serializer
 
     def to_representation(self, instance):
-        return self.get_serializer(instance).to_representation(instance)
+        if hasattr(self, 'initial_data'):
+            return self.get_serializer(self.initial_data).to_representation(instance)
+        else:
+            return self.get_serializer(instance).to_representation(instance)
 
     def to_internal_value(self, data):
         return self.get_serializer(data).to_internal_value(data)
+
+    def save(self, *args, **kwargs):
+        return self.get_serializer(self.initial_data).save(*args, **kwargs)
 
     def create(self, validated_data):
         return self.get_serializer(self.initial_data).create(validated_data)
@@ -112,6 +125,7 @@ class PublicKeySerializer(ActivityPubSerializer):
         type = 'PublicKey'
         url_name = 'json-ld:public-key'
         model = PublicKey
+        exclude = ActivityPubSerializer.Meta.exclude + ('private_key', )
 
 
 class PersonSerializer(ActivityPubSerializer):
@@ -139,7 +153,13 @@ class OrganizationSerializer(ActivityPubSerializer):
         type = 'Organization'
         url_name = 'json-ld:organization'
         exclude = ActivityPubSerializer.Meta.exclude + ('organization', )
-        model = PubOrganization
+        model = Organization
+
+
+class ActorSerializer(PolymorphicActivityPubSerializer):
+    polymorphic_serializers = [
+        OrganizationSerializer, PersonSerializer
+    ]
 
 
 class DurationField(serializers.DurationField):
@@ -177,7 +197,7 @@ class EventSerializer(ActivityPubSerializer):
 
 
 class BaseActivitySerializer(ActivityPubSerializer):
-    actor = RelatedActivityPubField(OrganizationSerializer)
+    actor = RelatedActivityPubField(ActorSerializer)
 
 
 class FollowSerializer(BaseActivitySerializer):
@@ -339,4 +359,3 @@ class ActivityEventSerializer(PolymorphicSerializer):
         serializer = self.get_serializer_from_data(data)
         result = serializer().to_internal_value(data)
         return result
-    

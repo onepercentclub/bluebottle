@@ -799,6 +799,13 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         ),
     )
 
+    def save(self, *args, **kwargs):
+        if self.organization and not hasattr(self.organization, 'activity_pub_organization'):
+            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+            ActivityPubOrganization.objects.from_model(self.organization)
+
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name_plural = _('site platform settings')
         verbose_name = _('site platform settings')

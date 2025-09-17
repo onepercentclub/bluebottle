@@ -27,7 +27,8 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
-    PubOrganization,
+    Announce,
+    Organization,
 )
 from bluebottle.activity_pub.serializers import DeedEventSerializer, ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
@@ -50,7 +51,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Publish,
         Announce,
         Event,
-        PubOrganization,
+        Organization,
     )
 
     def type(self, obj):
@@ -200,7 +201,7 @@ class PersonAdmin(ActivityPubModelChildAdmin):
             super().save_formset(request, form, formset, change)
 
 
-@admin.register(PubOrganization)
+@admin.register(Organization)
 class PubOrganizationAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
     readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')

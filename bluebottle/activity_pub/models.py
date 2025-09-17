@@ -127,17 +127,6 @@ class PublicKey(ActivityPubModel):
     public_key_pem = models.TextField()
 
 
-class EventManager(PolymorphicManager):
-    def from_model(self, model):
-        from bluebottle.activity_pub.mappers.registry import mapper_registry
-
-        event = Event.objects.filter(activity=model).first()
-        if event:
-            return event
-        else:
-            return mapper_registry.to_event(model)
-
-
 class Event(ActivityPubModel):
     name = models.CharField()
     description = models.TextField()
@@ -160,8 +149,6 @@ class Event(ActivityPubModel):
     )
 
     slot_id = models.CharField(max_length=100, null=True, blank=True)
-
-    objects = EventManager()
 
     @property
     def adopted(self):

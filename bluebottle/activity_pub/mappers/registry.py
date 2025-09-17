@@ -35,7 +35,7 @@ class MapperRegistry:
                 mapper = self.get_mapper(ScheduleActivity)
             else:
                 mapper = self.get_mapper(DateActivity)
-        if getattr(event, 'duration', None):
+        elif getattr(event, 'duration', None):
             mapper = self.get_mapper(DeadlineActivity)
         else:
             mapper = self.get_mapper(Deed)

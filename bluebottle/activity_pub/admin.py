@@ -1,12 +1,8 @@
-import json
-from io import BytesIO
-
-import requests
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied
-from django.core.files import File
+from django.forms import model_to_dict
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -19,7 +15,6 @@ from polymorphic.admin import (
 )
 
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.mappers import mapper_registry
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -34,9 +29,9 @@ from bluebottle.activity_pub.models import (
     Publish,
     PubOrganization,
 )
+from bluebottle.activity_pub.serializers import DeedEventSerializer, ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
-from bluebottle.deeds.models import Deed
-from bluebottle.files.models import Image
+from bluebottle.activity_pub.serializers import DeadlineActivityEventSerializer
 
 
 @admin.register(ActivityPubModel)
@@ -394,7 +389,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         if event.activity:
             self.message_user(
                 request,
-                "This event has already been adopted as a Deed.",
+                "This activity has already been adopted.",
                 level="warning",
             )
             return HttpResponseRedirect(
@@ -402,22 +397,20 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-            activity = mapper_registry.to_activity(event, request.user)
-            activity.save()
-            event.activity = activity
-            event.save()
-
+            serializer = ActivityEventSerializer(data=model_to_dict(event))
+            serializer.is_valid(raise_exception=True)
+            activity = serializer.save(owner=request.user)
             self.message_user(
                 request,
-                f'Successfully created activity "{activity.title}".',
+                f'Successfully created Deed "{activity.title}".',
                 level="success",
             )
-
             return HttpResponseRedirect(
                 reverse("admin:activities_activity_change", args=[activity.pk])
             )
 
         except Exception as e:
+            import ipdb; ipdb.set_trace()
             self.message_user(request, f"Error creating activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])

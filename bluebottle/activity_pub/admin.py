@@ -32,6 +32,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers import DeedEventSerializer, ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
 from bluebottle.activity_pub.serializers import DeadlineActivityEventSerializer
+from bluebottle.activity_pub.services import EventCreationService
 
 
 @admin.register(ActivityPubModel)
@@ -314,7 +315,7 @@ class SubEventInline(admin.StackedInline):
     fk_name = "parent"
     extra = 0
     readonly_fields = ("pub_url", "activity")
-    fields = ("name", "start_date", "end_date", "organizer", "activity", "pub_url")
+    fields = ("name", "start", "end", "organizer", "activity", "pub_url")
     verbose_name = _("Slot")
     verbose_name_plural = _("Slots")
 
@@ -334,16 +335,16 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "name",
         "adopted",
         "organizer",
-        "start_date",
-        "end_date",
+        "start",
+        "end",
         "organizer",
     )
     readonly_fields = (
         "name",
         "display_description",
         "display_image",
-        "start_date",
-        "end_date",
+        "start",
+        "end",
         "organizer",
         "actor",
         "activity",
@@ -402,7 +403,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
             activity = serializer.save(owner=request.user)
             self.message_user(
                 request,
-                f'Successfully created Deed "{activity.title}".',
+                f'Successfully created Activity "{activity.title}" from Event.',
                 level="success",
             )
             return HttpResponseRedirect(

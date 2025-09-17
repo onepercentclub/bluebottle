@@ -1,5 +1,14 @@
 import re
+from urllib.parse import unquote
 
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
+
+from bluebottle.activity_pub.adapters import adapter
+from bluebottle.activity_pub.models import Event, Publish
+from bluebottle.activity_pub.serializers import ActivityEventSerializer
+from bluebottle.activity_pub.services import EventCreationService
+from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.utils.utils import get_current_host
 
 from bluebottle.segments.filters import ActivitySegmentAdminMixin
@@ -9,7 +18,7 @@ from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse
+from django.urls import re_path, reverse, path
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -446,7 +455,6 @@ class ActivityBulkAddForm(forms.Form):
 
 
 class BulkAddMixin(object):
-
     bulk_add_form = ActivityBulkAddForm
     bulk_add_template = 'admin/activities/bulk_add.html'
 
@@ -634,6 +642,7 @@ class ActivityChildAdmin(
         'activity_pub_url',
         'event',
         'event_url',
+        'share_activity_link'
     ]
 
     office_fields = (
@@ -663,6 +672,7 @@ class ActivityChildAdmin(
     )
 
     activity_pub_fields = (
+        'share_activity_link',
         'activity_pub_url',
         'event',
         'event_url'
@@ -680,8 +690,8 @@ class ActivityChildAdmin(
             inlines.append(impact_goal_inline)
 
         if not obj or (
-            obj.team_activity != Activity.TeamActivityChoices.teams or
-            obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+                obj.team_activity != Activity.TeamActivityChoices.teams or
+                obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):
             inlines = [
                 inline for inline in inlines if not isinstance(inline, TeamInline)
@@ -742,6 +752,7 @@ class ActivityChildAdmin(
                 reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
                 obj.initiative
             )
+
     initiative_link.short_description = _('Initiative')
 
     def event(self, obj):
@@ -755,6 +766,43 @@ class ActivityChildAdmin(
     def event_url(self, obj):
         if obj.event:
             return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+
+    def share_activity_link(self, obj):
+        if obj and obj.id:
+            print('obj.id', obj.id)
+            url = reverse('admin:{}_{}_share_activity'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ), args=(obj.id,))
+            print('url', url)
+            return format_html(
+                '<a href="{}">{}</a>',
+                url,
+                _('Share activity')
+            )
+
+    share_activity_link.short_description = _('Share activity')
+
+    def share_activity(self, request, pk):
+        if not request.user.has_perm("activity.add_activity"):
+            raise PermissionDenied
+
+        activity = get_object_or_404(Activity, pk=unquote(pk))
+        data = ActivityEventSerializer(activity).data
+        actor = get_platform_actor()
+        event = EventCreationService.create_activity_from_event(data)
+        event.activity = activity
+        event.save()
+        publish = Publish.objects.create(actor=actor, object=event)
+        adapter.publish(publish)
+        self.message_user(
+            request,
+            f'Successfully shared Deed "{activity.title}".',
+            level="success",
+        )
+        return HttpResponseRedirect(
+            reverse("admin:activities_activity_change", args=[activity.pk])
+        )
 
     def get_activity_pub_fields(self, request, obj=None):
         return self.activity_pub_fields
@@ -788,11 +836,11 @@ class ActivityChildAdmin(
         if SegmentType.objects.count():
             fieldsets.append((
                 _('Segments'), {
-                    'fields': [
-                        segment_type.field_name
-                        for segment_type in SegmentType.objects.all()
-                    ]
-                }
+                'fields': [
+                    segment_type.field_name
+                    for segment_type in SegmentType.objects.all()
+                ]
+            }
             ))
 
         if request.user.is_superuser:
@@ -852,7 +900,15 @@ class ActivityChildAdmin(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
-            )
+            ),
+            re_path(
+                r'^share_activity/(?P<pk>\d+)$',
+                self.admin_site.admin_view(self.share_activity),
+                name='{}_{}_share_activity'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                ),
+            ),
         ]
         return extra_urls + urls
 

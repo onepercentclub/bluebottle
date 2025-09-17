@@ -131,8 +131,8 @@ class Event(ActivityPubModel):
     name = models.CharField()
     description = models.TextField()
     image = models.URLField(null=True)
-    start_date = models.DateField(null=True)
-    end_date = models.DateField(null=True)
+    start = models.DateTimeField(null=True)
+    end = models.DateTimeField(null=True)
     duration = models.DurationField(null=True)
     organizer = models.ForeignKey(PubOrganization, on_delete=models.CASCADE)
 
@@ -145,7 +145,7 @@ class Event(ActivityPubModel):
     )
 
     activity = models.OneToOneField(
-        "activities.Activity", null=True, on_delete=models.CASCADE
+        "activities.Activity", null=True, on_delete=models.SET_NULL
     )
 
     slot_id = models.CharField(max_length=100, null=True, blank=True)

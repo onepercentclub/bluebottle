@@ -229,6 +229,20 @@ class Follow(Activity):
         return [self.object]
 
 
+class Follower(Follow):
+    class Meta:
+        proxy = True
+        verbose_name = _('Follower')
+        verbose_name_plural = _('Followers')
+
+
+class Following(Follow):
+    class Meta:
+        proxy = True
+        verbose_name = _('Following')
+        verbose_name_plural = _('Followings')
+
+
 class Accept(Activity):
     object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
 

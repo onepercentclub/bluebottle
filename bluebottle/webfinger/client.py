@@ -5,10 +5,10 @@ import requests
 
 class WebFingerClient:
     def _do_request(self, url):
+        print(url)
         response = requests.get(url)
-
+        print(response.status_code)
         response.raise_for_status()
-
         return response.json()
 
     def get(self, uri, type='application/activity+josn'):

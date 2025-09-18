@@ -27,7 +27,7 @@ from bluebottle.activity_pub.models import (
     PublicKey,
     Publish,
     Announce,
-    Organization,
+    Organization, Following, Follower,
 )
 from bluebottle.activity_pub.serializers import ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
@@ -74,14 +74,14 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 class FollowForm(forms.ModelForm):
     url = forms.URLField(
-        label=_("Organisation URL"),
-        help_text="Enter the ActivityPub URL of the organisation to follow",
+        label=_("Platform URL"),
+        help_text=_("Enter the Platform URL to follow"),
         max_length=400
     )
 
     class Meta:
         model = Follow
-        fields = ["url", "object"]
+        fields = ["url", ]
 
 
 class FollowingInline(admin.StackedInline):
@@ -94,7 +94,6 @@ class FollowingInline(admin.StackedInline):
     readonly_fields = ("actor",)
 
     def get_formset(self, request, obj=None, **kwargs):
-        """Override to use different forms for new vs existing objects"""
         formset = super().get_formset(request, obj, **kwargs)
 
         class CustomFormSet(formset):
@@ -296,6 +295,89 @@ class SubEventInline(admin.StackedInline):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+
+
+from .models import Following
+
+
+class FollowingAddForm(forms.ModelForm):
+    platform_url = forms.URLField(
+        label=_("Platform URL"),
+        help_text=_("Enter the Platform URL to follow"),
+    )
+
+    class Meta:
+        model = Following
+        fields = []  # exclude all model fields
+
+    def __init__(self, *args, **kwargs):
+        # Always create a new instance when adding
+        if 'instance' not in kwargs:
+            kwargs['instance'] = Following()
+        super().__init__(*args, **kwargs)
+
+
+@admin.register(Following)
+class FollowingAdmin(FollowAdmin):
+    # Only show the custom form field
+    fields = ('platform_url',)
+
+    # Make sure no read-only model fields are injected
+    readonly_fields = ()
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(url__isnull=True)
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Use custom form for adding new Following objects"""
+        if obj is None:
+            return FollowingAddForm
+        return super().get_form(request, obj, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        """Handle saving of new Following objects using adapter.follow()"""
+        if not change and isinstance(form, FollowingAddForm):
+            # This is a new object using our custom add form
+            platform_url = form.cleaned_data['platform_url']
+            try:
+                # Use adapter.follow to create the Follow object
+                follow_obj = adapter.follow(platform_url)
+                self.message_user(
+                    request,
+                    f"Successfully created Follow relationship to {platform_url}",
+                    level="success"
+                )
+                # Store the created object for response_add
+                self._created_follow_obj = follow_obj
+                return
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f"Error creating Follow relationship: {str(e)}",
+                    level="error"
+                )
+                raise
+        else:
+            # For existing objects, use the default behavior
+            super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """Redirect to the changelist after adding"""
+        if hasattr(self, '_created_follow_obj'):
+            # Successfully created via adapter.follow()
+            delattr(self, '_created_follow_obj')  # Clean up
+            return HttpResponseRedirect(reverse('admin:activity_pub_following_changelist'))
+        return super().response_add(request, obj, post_url_continue)
+
+
+@admin.register(Follower)
+class FollowerAdmin(FollowAdmin):
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(url__isnull=True)
 
 
 @admin.register(Event)

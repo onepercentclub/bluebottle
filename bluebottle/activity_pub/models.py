@@ -220,16 +220,12 @@ class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
 
     def save(self, *args, **kwargs):
-        from bluebottle.activity_pub.adapters import adapter
         from bluebottle.activity_pub.utils import get_platform_actor
 
         if not hasattr(self, 'actor'):
             self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)
-
-        if self.is_local:
-            adapter.publish(self)
 
 
 class Follow(Activity):

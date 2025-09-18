@@ -63,8 +63,8 @@ class Organization(ValidatedModelMixin, models.Model):
 
     class Meta(object):
         ordering = ['name']
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
+        verbose_name = _("Organisation")
+        verbose_name_plural = _("Organisations")
 
     class JSONAPIMeta:
         resource_name = 'organizations'

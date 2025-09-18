@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish, Announce, Organization
 )
 from bluebottle.activity_pub.utils import is_local
 
@@ -14,6 +14,9 @@ class ActivityPubSerializer(serializers.ModelSerializer):
 
     class Meta:
         exclude = ('polymorphic_ctype', 'url')
+
+    def get_url_name(self, instance):
+        return self.Meta.url_name
 
     def save(self, **kwargs):
         if not is_local(self.initial_data['id']):
@@ -33,12 +36,15 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         return result
 
 
-class PolymorpphicActivityPubSerializer(serializers.Serializer):
+class PolymorphicActivityPubSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         self._serializers = [
             serializer(*args, **kwargs) for serializer in self.polymorphic_serializers
         ]
         super().__init__(*args, **kwargs)
+
+    def get_url_name(self, instance):
+        return self.get_serializer(instance).Meta.url_name
 
     def get_serializer(self, data):
         if isinstance(data, models.Model):
@@ -51,10 +57,16 @@ class PolymorpphicActivityPubSerializer(serializers.Serializer):
                     return serializer
 
     def to_representation(self, instance):
-        return self.get_serializer(instance).to_representation(instance)
+        if hasattr(self, 'initial_data'):
+            return self.get_serializer(self.initial_data).to_representation(instance)
+        else:
+            return self.get_serializer(instance).to_representation(instance)
 
     def to_internal_value(self, data):
         return self.get_serializer(data).to_internal_value(data)
+
+    def save(self, *args, **kwargs):
+        return self.get_serializer(self.initial_data).save(*args, **kwargs)
 
     def create(self, validated_data):
         return self.get_serializer(self.initial_data).create(validated_data)
@@ -109,8 +121,30 @@ class PersonSerializer(ActivityPubSerializer):
         model = Person
 
 
+class OrganizationSerializer(ActivityPubSerializer):
+    inbox = RelatedActivityPubField(InboxSerializer)
+    outbox = RelatedActivityPubField(OutboxSerializer)
+    public_key = RelatedActivityPubField(PublicKeySerializer, include=True)
+    name = serializers.CharField()
+    summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Organization'
+        url_name = 'json-ld:organization'
+        exclude = ActivityPubSerializer.Meta.exclude + ('organization', )
+        model = Organization
+
+
+class ActorSerializer(PolymorphicActivityPubSerializer):
+    polymorphic_serializers = [
+        OrganizationSerializer, PersonSerializer
+    ]
+
+
 class EventSerializer(ActivityPubSerializer):
-    organizer = RelatedActivityPubField(PersonSerializer)
+    organizer = RelatedActivityPubField(OrganizationSerializer)
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
     name = serializers.CharField()
@@ -124,11 +158,11 @@ class EventSerializer(ActivityPubSerializer):
 
 
 class BaseActivitySerializer(ActivityPubSerializer):
-    actor = RelatedActivityPubField(PersonSerializer)
+    actor = RelatedActivityPubField(ActorSerializer)
 
 
 class FollowSerializer(BaseActivitySerializer):
-    object = RelatedActivityPubField(PersonSerializer)
+    object = RelatedActivityPubField(OrganizationSerializer)
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Follow'
@@ -154,7 +188,16 @@ class PublishSerializer(BaseActivitySerializer):
         model = Publish
 
 
-class ActivitySerializer(PolymorpphicActivityPubSerializer):
+class AnnounceSerializer(BaseActivitySerializer):
+    object = RelatedActivityPubField(EventSerializer)
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Announce'
+        url_name = 'json-ld:announce'
+        model = Announce
+
+
+class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        FollowSerializer, AcceptSerializer, PublishSerializer
+        FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]

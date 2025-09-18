@@ -17,17 +17,13 @@ class RelatedActivityPubField(serializers.Field):
 
         super().__init__(*args, **kwargs)
 
-    @property
-    def url_name(self):
-        return self.serializer_class.Meta.url_name
-
     def to_representation(self, instance):
         if instance.url is not None:
             url = instance.url
         else:
             url = connection.tenant.build_absolute_url(
                 reverse(
-                    self.url_name,
+                    self.serializer_class().get_url_name(instance),
                     args=[instance.pk],
                 )
             )
@@ -44,27 +40,30 @@ class RelatedActivityPubField(serializers.Field):
             return url
 
     def to_internal_value(self, data):
-        model = self.serializer_class.Meta.model
-
         if 'id' in data:
             url = data['id']
         else:
             url = data
 
         if is_local(url):
-            return model.objects.get(**resolve(urlparse(url).path).kwargs)
+            resolved = resolve(urlparse(url).path)
+            queryset = resolved.func.cls.queryset
+
+            return queryset.get(**resolved.kwargs)
         else:
             return adapter.sync(url, self.serializer_class)
 
 
 class IdField(serializers.CharField):
     def to_representation(self, instance):
-        if instance.url:
+        if isinstance(instance, dict) and 'url' in instance:
+            return instance['url']
+        elif instance.url:
             return instance.url
         else:
             return connection.tenant.build_absolute_url(
                 reverse(
-                    self.parent.Meta.url_name,
+                    self.parent.get_url_name(instance),
                     args=[instance.pk],
                 )
             )

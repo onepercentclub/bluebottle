@@ -667,6 +667,11 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
+    organization = models.ForeignKey(
+        'organizations.Organization', null=True, blank=True, on_delete=models.SET_NULL,
+        help_text=_('The organization this platform belongs to.')
+    )
+
     action_color = ColorField(
         _('Action colour'), null=True, blank=True,
         help_text=_(
@@ -793,6 +798,13 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             help_text=_('Slug of the start initiative page')
         ),
     )
+
+    def save(self, *args, **kwargs):
+        if self.organization and not hasattr(self.organization, 'activity_pub_organization'):
+            from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
+            ActivityPubOrganization.objects.from_model(self.organization)
+
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name_plural = _('site platform settings')

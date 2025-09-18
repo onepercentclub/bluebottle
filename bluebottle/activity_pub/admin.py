@@ -1,6 +1,5 @@
 import json
 from io import BytesIO
-from django.utils.translation import gettext_lazy as _
 
 import requests
 from django import forms
@@ -12,6 +11,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from polymorphic.admin import (
     PolymorphicChildModelAdmin,
     PolymorphicChildModelFilter,
@@ -30,8 +30,10 @@ from bluebottle.activity_pub.models import (
     Person,
     PublicKey,
     Publish,
+    Announce,
+    Organization,
 )
-from bluebottle.activity_pub.serializers import PersonSerializer
+from bluebottle.activity_pub.serializers import OrganizationSerializer
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 
@@ -49,7 +51,9 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Follow,
         PublicKey,
         Publish,
+        Announce,
         Event,
+        Organization,
     )
 
     def type(self, obj):
@@ -60,6 +64,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
     base_model = ActivityPubModel
+    readonly_fields = ["pub_url", ]
 
 
 @admin.register(Inbox)
@@ -73,7 +78,11 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 
 class FollowForm(forms.ModelForm):
-    url = forms.URLField(help_text="Enter the URL of the Actor to follow", max_length=400)
+    url = forms.URLField(
+        label=_("Organisation URL"),
+        help_text="Enter the ActivityPub URL of the organisation to follow",
+        max_length=400
+    )
 
     class Meta:
         model = Follow
@@ -159,7 +168,7 @@ class FollowersInline(admin.StackedInline):
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'url')
+    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
     inlines = [FollowingInline, FollowersInline]
 
     def save_formset(self, request, form, formset, change):
@@ -170,26 +179,19 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                     actor = form.instance.actor
                     if url:
                         try:
+                            target_actor = adapter.sync(url, serializer=OrganizationSerializer)
+                            follow = Follow.objects.create(actor=actor, object=target_actor)
                             try:
-                                target_actor = adapter.sync(url, serializer=PersonSerializer)
-                                follow = Follow.objects.create(actor=actor, object=target_actor)
-                                try:
-                                    adapter.publish(follow)
-                                    self.message_user(
-                                        request,
-                                        f"Successfully created and published Follow relationship to {url}",
-                                    )
-                                except Exception as e:
-                                    self.message_user(
-                                        request,
-                                        f"Follow created but publishing failed: {str(e)}",
-                                        level="warning",
-                                    )
+                                adapter.publish(follow)
+                                self.message_user(
+                                    request,
+                                    f"Successfully created and published Follow relationship to {url}",
+                                )
                             except Exception as e:
                                 self.message_user(
                                     request,
-                                    f"Error creating Follow: {str(e)}",
-                                    level="error",
+                                    f"Follow created but publishing failed: {str(e)}",
+                                    level="warning",
                                 )
                         except Exception as e:
                             self.message_user(
@@ -197,6 +199,22 @@ class PersonAdmin(ActivityPubModelChildAdmin):
                                 f"Error processing Follow form: {str(e)}",
                                 level="error",
                             )
+        else:
+            super().save_formset(request, form, formset, change)
+
+
+@admin.register(Organization)
+class OrganizationAdmin(ActivityPubModelChildAdmin):
+    list_display = ('id', 'inbox', 'outbox')
+    readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
+    inlines = [FollowingInline, FollowersInline]
+
+    def save_formset(self, request, form, formset, change):
+        if formset.model == Follow:
+            for form in formset.forms:
+                if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
+                    url = form.cleaned_data.get("url")
+                    adapter.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 
@@ -214,39 +232,82 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 @admin.register(Follow)
 class FollowAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
+    readonly_fields = ("actor", "object", "url", "pub_url")
 
 
 @admin.register(PublicKey)
 class PublicKeyAdmin(ActivityPubModelChildAdmin):
-    list_display = ('id', 'inbox', 'outbox')
+    list_display = ("id", 'inbox', 'outbox')
 
 
 @admin.register(Publish)
 class PublishAdmin(ActivityPubModelChildAdmin):
-    list_display = ("id", "inbox", "outbox")
+    list_display = ("id", "actor", "object")
+
+
+@admin.register(Announce)
+class AnnounceAdmin(ActivityPubModelChildAdmin):
+    list_display = ("id", "actor", "object")
+
+
+class AnnouncementInline(admin.StackedInline):
+    verbose_name = _("Adoption")
+    verbose_name_plural = _("Adoptions")
+    model = Announce
+    extra = 0
+    fk_name = "object"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class AdoptedFilter(admin.SimpleListFilter):
+    title = _('Adoption Status')
+    parameter_name = 'adopted'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', _('Adopted')),
+            ('no', _('Not Adopted')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(activity__isnull=False)
+        elif self.value() == 'no':
+            return queryset.filter(activity__isnull=True)
 
 
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "platform",
+        "adopted",
+        "organizer",
         "start_date",
         "end_date",
         "organizer",
     )
     readonly_fields = (
         "name",
-        "platform",
         "display_description",
         "display_image",
         "start_date",
         "end_date",
         "organizer",
+        "actor",
         "activity",
         "url",
     )
     fields = readonly_fields
+    inlines = [AnnouncementInline]
+    list_filter = ['organizer', AdoptedFilter]
 
     def display_description(self, obj):
         return format_html(

@@ -7,11 +7,11 @@ from django.db import connection
 from django.urls import reverse
 from django.test import Client as TestClient
 
-
+from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Person, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.serializers import PersonSerializer
 
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 from bluebottle.deeds.tests.factories import DeedFactory
@@ -19,6 +19,7 @@ from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
 
 
 class ActivityPubClient(TestClient):
@@ -59,25 +60,53 @@ def execute(method, url, data=None, auth=None):
         raise Exception(url, response.json())
 
 
+def do_request(url):
+    client = ActivityPubClient()
+    tenant = Client.objects.get(domain_url=urlparse(url).hostname)
+
+    with LocalTenant(tenant):
+        response = client.get(url, content_type='application.jrd+json')
+
+    if response.status_code in (200, 201):
+        return response.json()
+    else:
+        raise Exception(url, response.json())
+
+
 adapter_mock = mock.patch(
     "bluebottle.activity_pub.adapters.JSONLDAdapter.execute", wraps=execute
 )
 
+webfinger_mock = mock.patch(
+    "bluebottle.webfinger.client.WebFingerClient._do_request", wraps=do_request
+)
+
 
 class ActivityPubTestCase(BluebottleTestCase):
-
     def setUp(self):
-        self.client = ActivityPubClient()
-        self.json_api_client = JSONAPITestClient()
+        super().setUp()
 
         self.other_tenant = Client.objects.get(schema_name='test2')
 
+        SitePlatformSettings.objects.create(
+            organization=OrganizationFactory.create()
+        )
+
+        with LocalTenant(self.other_tenant):
+            SitePlatformSettings.objects.create(
+                organization=OrganizationFactory.create()
+            )
+
+        self.client = ActivityPubClient()
+        self.json_api_client = JSONAPITestClient()
+
         adapter_mock.start()
-        super().setUp()
+        webfinger_mock.start()
 
     def tearDown(self):
         super().tearDown()
         adapter_mock.stop()
+        webfinger_mock.stop()
 
 
 class PersonAPITestCase(ActivityPubTestCase):
@@ -90,8 +119,6 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.user = BlueBottleUserFactory.create()
         self.person = Person.objects.from_model(self.user)
 
-        self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
-
     def test_get_inbox(self):
         inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))
         response = self.client.get(inbox_url)
@@ -101,7 +128,7 @@ class PersonAPITestCase(ActivityPubTestCase):
             {
                 '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
                 'id': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
-                'type': 'Person'
+                'type': 'Inbox'
             }
         )
 
@@ -125,33 +152,19 @@ class PersonAPITestCase(ActivityPubTestCase):
         )
 
     def test_follow(self):
+        platform_url = self.build_absolute_url('/')
         with LocalTenant(self.other_tenant):
-            user = BlueBottleUserFactory.create()
-            person = Person.objects.from_model(user)
+            adapter.follow(platform_url)
 
-            object = adapter.sync(
-                self.person_url, serializer=PersonSerializer
-            )
-
-            follow = Follow.objects.create(
-                actor=person,
-                object=object
-            )
-
-            adapter.publish(follow)
-
-        self.follow = Follow.objects.get(object=self.person)
+        self.follow = Follow.objects.get(object=get_platform_actor())
         self.assertTrue(self.follow)
 
     def test_accept(self):
         self.test_follow()
 
         accept = Accept.objects.create(
-            actor=self.person,
             object=self.follow
         )
-
-        adapter.publish(accept)
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())

@@ -254,7 +254,7 @@ class Publish(Activity):
     @property
     def audience(self):
         # All followers of the actor
-        for follow in self.actor.follow_set.all():
+        for follow in self.actor.follow_set.filter(accept__isnull=False):
             yield follow.actor.inbox
 
 

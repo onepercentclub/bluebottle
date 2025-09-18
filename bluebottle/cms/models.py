@@ -306,7 +306,7 @@ class HomepageStatisticsContent(TitledContent):
     year = models.IntegerField(blank=True, null=True)
 
     class StatTypeChoices(DjangoChoices):
-        all = ChoiceItem('all', label=_("Global"))
+        all = ChoiceItem('all', label=_("All"))
         office_subregion = ChoiceItem('office_subregion', label=_("Group"))
         office_region = ChoiceItem('office_region', label=_("Region"))
 

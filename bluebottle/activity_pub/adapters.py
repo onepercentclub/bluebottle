@@ -9,7 +9,7 @@ from django.urls import resolve
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Actor, Follow
+from bluebottle.activity_pub.models import Actor, Follow, Activity
 from bluebottle.activity_pub.utils import is_local
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
@@ -17,6 +17,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 from bluebottle.webfinger.client import client
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver([post_save])
+def update_delete_registration(sender, instance, **kwargs):
+    if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+        adapter.publish(instance)
 
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):

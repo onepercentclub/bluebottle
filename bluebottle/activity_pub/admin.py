@@ -204,7 +204,7 @@ class PersonAdmin(ActivityPubModelChildAdmin):
 
 
 @admin.register(Organization)
-class PubOrganizationAdmin(ActivityPubModelChildAdmin):
+class OrganizationAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
     readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
     inlines = [FollowingInline, FollowersInline]
@@ -214,36 +214,7 @@ class PubOrganizationAdmin(ActivityPubModelChildAdmin):
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
                     url = form.cleaned_data.get("url")
-                    actor = form.instance.actor
-                    if url:
-                        try:
-                            try:
-                                target_actor = adapter.sync(url, serializer=OrganizationSerializer)
-                                follow = Follow.objects.create(actor=actor, object=target_actor)
-                                try:
-                                    adapter.publish(follow)
-                                    self.message_user(
-                                        request,
-                                        f"Successfully created and published Follow relationship to {url}",
-                                    )
-                                except Exception as e:
-                                    self.message_user(
-                                        request,
-                                        f"Follow created but publishing failed: {str(e)}",
-                                        level="warning",
-                                    )
-                            except Exception as e:
-                                self.message_user(
-                                    request,
-                                    f"Error creating Follow: {str(e)}",
-                                    level="error",
-                                )
-                        except Exception as e:
-                            self.message_user(
-                                request,
-                                f"Error processing Follow form: {str(e)}",
-                                level="error",
-                            )
+                    adapter.follow(url)
         else:
             super().save_formset(request, form, formset, change)
 

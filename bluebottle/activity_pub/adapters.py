@@ -9,10 +9,12 @@ from django.urls import resolve
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Actor
+from bluebottle.activity_pub.models import Actor, Follow
 from bluebottle.activity_pub.utils import is_local
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+
+from bluebottle.webfinger.client import client
 
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
@@ -60,9 +62,8 @@ class JSONLDAdapter():
         if data:
             kwargs['data'] = data
 
-        auth = self.get_auth('http://example.com')
-
         response = getattr(requests, method)(url, **kwargs)
+        response.raise_for_status()
         stream = BytesIO(response.content)
         return (stream, response.headers["content-type"])
 
@@ -82,6 +83,17 @@ class JSONLDAdapter():
         serializer.is_valid(raise_exception=True)
 
         return serializer.save()
+
+    def follow(self, url):
+        from bluebottle.activity_pub.serializers import ActorSerializer
+
+        discovered_url = client.get(url)
+
+        actor = self.sync(discovered_url, ActorSerializer)
+
+        return Follow.objects.create(
+            object=actor
+        )
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer

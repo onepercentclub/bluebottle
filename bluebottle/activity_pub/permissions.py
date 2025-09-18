@@ -7,6 +7,7 @@ from bluebottle.members.models import MemberPlatformSettings
 class ActivityPubPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return True
+        # FIXME
         if request.method == 'GET':
             settings = MemberPlatformSettings.load()
             if settings.closed:

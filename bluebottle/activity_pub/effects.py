@@ -1,6 +1,5 @@
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import Event, Publish, Announce
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
@@ -15,8 +14,7 @@ class PublishEffect(Effect):
         data = ActivityEventSerializer(self.instance).data
         actor = get_platform_actor()
         event = Event.objects.create(activity=self.instance, organizer=actor, **data)
-        publish = Publish.objects.create(actor=actor, object=event)
-        adapter.publish(publish)
+        Publish.objects.create(actor=actor, object=event)
 
     @property
     def is_valid(self):
@@ -36,8 +34,7 @@ class AnnounceAdoptionEffect(Effect):
     def post_save(self, **kwargs):
         event = self.instance.event
         actor = get_platform_actor()
-        announce = Announce.objects.create(actor=actor, object=event)
-        adapter.publish(announce)
+        Announce.objects.create(actor=actor, object=event)
 
     @property
     def is_valid(self):

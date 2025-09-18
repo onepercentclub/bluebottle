@@ -45,7 +45,7 @@ class WebFingerView(generics.RetrieveAPIView):
     def get_object(self):
         try:
             resource = self.request.GET['resource']
-        except IndexError:
+        except KeyError:
             raise exceptions.ValidationError()
 
         if re.match(f'{self.request.scheme}://{self.request.get_host()}/?$', resource):

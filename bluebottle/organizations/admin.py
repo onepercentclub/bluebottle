@@ -68,8 +68,8 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('initiatives__theme', admin.RelatedOnlyFieldListFilter),
         ('initiatives__location', admin.RelatedOnlyFieldListFilter),
     )
-    readonly_fields = ['pub_organization']
-    fields = ('name', 'website', 'description', 'verified', 'logo', 'pub_organization')
+    readonly_fields = ['activity_pub_organization']
+    fields = ('name', 'website', 'description', 'verified', 'logo', 'activity_pub_organization')
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),

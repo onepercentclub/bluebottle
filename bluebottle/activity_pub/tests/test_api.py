@@ -7,8 +7,6 @@ from django.db import connection
 from django.urls import reverse
 from django.test import Client as TestClient
 
-
-from bluebottle.activity_pub.admin import OrganizationSerializer
 from bluebottle.activity_pub.effects import get_platform_actor
 from bluebottle.activity_pub.models import Person, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
@@ -62,13 +60,29 @@ def execute(method, url, data=None, auth=None):
         raise Exception(url, response.json())
 
 
+def do_request(url):
+    client = ActivityPubClient()
+    tenant = Client.objects.get(domain_url=urlparse(url).hostname)
+
+    with LocalTenant(tenant):
+        response = client.get(url, content_type='application.jrd+json')
+
+    if response.status_code in (200, 201):
+        return response.json()
+    else:
+        raise Exception(url, response.json())
+
+
 adapter_mock = mock.patch(
     "bluebottle.activity_pub.adapters.JSONLDAdapter.execute", wraps=execute
 )
 
+webfinger_mock = mock.patch(
+    "bluebottle.webfinger.client.WebFingerClient._do_request", wraps=do_request
+)
+
 
 class ActivityPubTestCase(BluebottleTestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -87,10 +101,12 @@ class ActivityPubTestCase(BluebottleTestCase):
         self.json_api_client = JSONAPITestClient()
 
         adapter_mock.start()
+        webfinger_mock.start()
 
     def tearDown(self):
         super().tearDown()
         adapter_mock.stop()
+        webfinger_mock.stop()
 
 
 class PersonAPITestCase(ActivityPubTestCase):
@@ -137,35 +153,19 @@ class PersonAPITestCase(ActivityPubTestCase):
         )
 
     def test_follow(self):
-        organization = get_platform_actor()
-        organization_url = self.build_absolute_url(
-            reverse("json-ld:organization", args=(organization.pk, ))
-        )
-
+        platform_url = self.build_absolute_url('/')
         with LocalTenant(self.other_tenant):
-            object = adapter.sync(
-                organization_url, serializer=OrganizationSerializer
-            )
+            adapter.follow(platform_url)
 
-            follow = Follow.objects.create(
-                actor=get_platform_actor(),
-                object=object
-            )
-
-            adapter.publish(follow)
-
-        self.follow = Follow.objects.get(object=organization)
+        self.follow = Follow.objects.get(object=get_platform_actor())
         self.assertTrue(self.follow)
 
     def test_accept(self):
         self.test_follow()
 
         accept = Accept.objects.create(
-            actor=get_platform_actor(),
             object=self.follow
         )
-
-        adapter.publish(accept)
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())

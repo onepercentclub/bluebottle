@@ -445,6 +445,7 @@ TENANT_APPS = (
     'django_quill',
 
     'bluebottle.activity_pub',
+    'bluebottle.webfinger',
 )
 
 

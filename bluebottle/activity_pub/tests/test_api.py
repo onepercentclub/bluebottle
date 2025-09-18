@@ -185,3 +185,16 @@ class PersonAPITestCase(ActivityPubTestCase):
             event = Event.objects.get()
 
             self.assertTrue(event.name, deed.title)
+
+    def test_publish_deed_no_accept(self):
+        self.test_follow()
+
+        deed = DeedFactory.create(owner=self.user, image=ImageFactory.create())
+
+        deed.initiative.states.submit()
+        deed.initiative.states.approve(save=True)
+
+        deed.states.publish(save=True)
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Event.objects.count(), 0)

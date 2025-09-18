@@ -13,8 +13,6 @@ class PublishEffect(Effect):
     def post_save(self, **kwargs):
         from bluebottle.activity_pub.serializers import ActivityEventSerializer
         data = ActivityEventSerializer(self.instance).data
-        # Safely remove resourcetype if it exists
-        data.pop('resourcetype', None)
         actor = get_platform_actor()
         event = Event.objects.create(activity=self.instance, organizer=actor, **data)
         publish = Publish.objects.create(actor=actor, object=event)

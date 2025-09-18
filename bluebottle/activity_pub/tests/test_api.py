@@ -102,6 +102,7 @@ class PersonAPITestCase(ActivityPubTestCase):
 
         self.user = BlueBottleUserFactory.create()
         self.person = Person.objects.from_model(self.user)
+        self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
 
     def test_get_inbox(self):
         inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))
@@ -112,7 +113,7 @@ class PersonAPITestCase(ActivityPubTestCase):
             {
                 '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
                 'id': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
-                'type': 'Person'
+                'type': 'Inbox'
             }
         )
 

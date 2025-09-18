@@ -282,9 +282,28 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
         fields = ('name', 'description')
 
 
+class DateToDateTimeField(serializers.DateTimeField):
+    def to_representation(self, value):
+        from datetime import datetime, time, date
+        from django.utils import timezone
+
+        if not value:
+            return None
+
+        # If it's a pure date, convert to datetime at start of day
+        if isinstance(value, date) and not isinstance(value, datetime):
+            value = datetime.combine(value, time.min)
+
+        # Ensure timezone-aware
+        if timezone.is_naive(value):
+            value = timezone.make_aware(value, timezone.get_current_timezone())
+
+        return value.isoformat()
+
+
 class DeedEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateTimeField(required=False, allow_null=True)
-    end = serializers.DateTimeField(required=False, allow_null=True)
+    start = DateToDateTimeField(required=False, allow_null=True)
+    end = DateToDateTimeField(required=False, allow_null=True)
 
     class Meta:
         model = Deed

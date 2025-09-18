@@ -239,7 +239,7 @@ class Following(Follow):
     class Meta:
         proxy = True
         verbose_name = _('Following')
-        verbose_name_plural = _('Followings')
+        verbose_name_plural = _('Following')
 
 
 class Accept(Activity):

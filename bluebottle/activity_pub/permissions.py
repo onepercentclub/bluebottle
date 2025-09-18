@@ -6,9 +6,9 @@ from bluebottle.members.models import MemberPlatformSettings
 
 class ActivityPubPermission(permissions.BasePermission):
     def has_permission(self, request, view):
+        return True
         if request.method == 'GET':
             settings = MemberPlatformSettings.load()
-
             if settings.closed:
                 if request.auth:
                     return Follow.objects.filter(object=request.auth).exists()

@@ -98,12 +98,10 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers import ActorSerializer
 
         discovered_url = client.get(url)
-
         actor = self.sync(discovered_url, ActorSerializer)
+        import ipdb; ipdb.set_trace()
 
-        return Follow.objects.create(
-            object=actor
-        )
+        return Follow.objects.create(object=actor)
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer

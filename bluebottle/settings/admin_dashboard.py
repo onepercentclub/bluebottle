@@ -62,6 +62,14 @@ JET_SIDE_MENU_ITEMS = [
                 "label": _("Shared activities"),
             },
             {
+                "name": "activity_pub.following",
+                "permissions": ["initiatives.change_activities"],
+            },
+            {
+                "name": "activity_pub.follower",
+                "permissions": ["initiatives.change_activities"],
+            },
+            {
                 "name": "activity_pub.activitypubmodel",
                 "permissions": ["initiatives.change_activities"],
             },

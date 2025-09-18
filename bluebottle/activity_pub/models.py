@@ -45,6 +45,9 @@ class Actor(ActivityPubModel):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
 
+    def __str__(self):
+        return self.preferred_username
+
 
 class PersonManager(PolymorphicManager):
     def from_model(self, model):

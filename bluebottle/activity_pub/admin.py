@@ -225,7 +225,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 
 @admin.register(Follow)
 class FollowAdmin(ActivityPubModelChildAdmin):
-    list_display = ('id', 'inbox', 'outbox')
+    list_display = ('actor', "object")
     readonly_fields = ("actor", "object", "url", "pub_url")
 
 
@@ -297,10 +297,6 @@ class SubEventInline(admin.StackedInline):
         return False
 
 
-
-from .models import Following
-
-
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Platform URL"),
@@ -320,15 +316,25 @@ class FollowingAddForm(forms.ModelForm):
 
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
-    # Only show the custom form field
-    fields = ('platform_url',)
 
-    # Make sure no read-only model fields are injected
-    readonly_fields = ()
+    def get_fields(self, request, obj=None, **kwargs):
+        if obj is None:
+            return ["platform_url"]
+        return super().get_fields(request, obj, **kwargs)
+    list_display = ("object",)
+
+    readonly_fields = ('object', )
+
+    fields = readonly_fields
     
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(url__isnull=True)
+        from bluebottle.activity_pub.utils import get_platform_actor
+        qs = Follow.objects.all()
+        platform_actor = get_platform_actor()
+        if platform_actor:
+            # Show Follow records where the platform is the actor (following others)
+            return qs.filter(actor=platform_actor)
+        return qs.none()  # No platform actor configured
 
     def get_form(self, request, obj=None, **kwargs):
         """Use custom form for adding new Following objects"""
@@ -374,10 +380,15 @@ class FollowingAdmin(FollowAdmin):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
+    list_display = ("object",)
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(url__isnull=True)
+        from bluebottle.activity_pub.utils import get_platform_actor
+        qs = Follow.objects.all()
+        platform_actor = get_platform_actor()
+        if platform_actor:
+            return qs.filter(object=platform_actor)
+        return qs.none()
 
 
 @admin.register(Event)

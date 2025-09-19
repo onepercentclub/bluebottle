@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 11:49+0200\n"
+"POT-Creation-Date: 2025-09-19 12:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -7326,7 +7326,7 @@ msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr ""
 
 #: bluebottle/initiatives/models.py:434
-msgid "Add a link to activities so managers van download a contributor list."
+msgid "Add a link to activities so managers can download a contributor list."
 msgstr ""
 
 #: bluebottle/initiatives/models.py:438

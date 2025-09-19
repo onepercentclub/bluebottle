@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 11:49+0200\n"
-"PO-Revision-Date: 2025-09-19 09:59\n"
+"POT-Creation-Date: 2025-09-19 12:00+0200\n"
+"PO-Revision-Date: 2025-09-19 10:04\n"
 "Last-Translator: \n"
 "Language-Team: Spanish (Modern)\n"
 "Language: es_EM\n"
@@ -7163,8 +7163,8 @@ msgid "Allow admins to open up initiatives for any user to add activities."
 msgstr "Permitir a los administradores abrir iniciativas para que cualquier usuario añada actividades."
 
 #: bluebottle/initiatives/models.py:434
-msgid "Add a link to activities so managers van download a contributor list."
-msgstr "Añadir un enlace a las actividades para que los administradores van descargar una lista de colaboradores."
+msgid "Add a link to activities so managers can download a contributor list."
+msgstr ""
 
 #: bluebottle/initiatives/models.py:438
 msgid "Enable matching"

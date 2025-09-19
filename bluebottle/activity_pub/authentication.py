@@ -19,6 +19,13 @@ class DjangoRequestComponentResolver(resolvers.HTTPSignatureComponentResolver):
 class DjangoHTTPSignatureAuth(HTTPSignatureAuth):
     component_resolver_class = DjangoRequestComponentResolver
 
+    @classmethod
+    def get_body(cls, message):
+        if message.method == 'GET':
+            return None
+        else:
+            return message.body
+
 
 class HTTPSignatureAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
@@ -37,5 +44,7 @@ class HTTPSignatureAuthentication(authentication.BaseAuthentication):
                     key_resolver=JSONLDKeyResolver()
                 )
                 return (None, Actor.objects.get(url=verify_result.parameters['keyid']))
-            except (exceptions.InvalidSignature, Actor.DoesNotExist) as e:
+            except Actor.DoesNotExist:
+                pass
+            except exceptions.InvalidSignature as e:
                 print(e)

@@ -10,7 +10,7 @@ from django.urls import resolve
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Actor, Follow, Activity
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import is_local, get_platform_actor
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 
@@ -21,7 +21,7 @@ from django.dispatch import receiver
 
 
 @receiver([post_save])
-def update_delete_registration(sender, instance, **kwargs):
+def publish_activity(sender, instance, **kwargs):
     if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
         adapter.publish(instance)
 
@@ -32,22 +32,22 @@ class JSONLDKeyResolver(HTTPSignatureKeyResolver):
             resolved_url = resolve(urlparse(url).path)
             return Actor.objects.get(**resolved_url.kwargs)
         else:
-            from bluebottle.activity_pub.serializers import ActorSerializer
-            return adapter.sync(url, ActorSerializer)
+            return Actor.objects.get(url=url)
 
     def resolve_public_key(self, key_id):
         actor = self.get_actor(key_id)
-
-        return load_pem_public_key(
-            bytes(actor.public_key.public_key_pem, encoding='utf-8')
-        )
+        if actor:
+            return load_pem_public_key(
+                bytes(actor.public_key.public_key_pem, encoding='utf-8')
+            )
 
     def resolve_private_key(self, key_id):
         actor = self.get_actor(key_id)
 
-        return load_pem_private_key(
-            bytes(actor.public_key.private_key.private_key_pem, encoding='utf-8'), password=None
-        )
+        if actor:
+            return load_pem_private_key(
+                bytes(actor.public_key.private_key.private_key_pem, encoding='utf-8'), password=None
+            )
 
 
 key_resolver = JSONLDKeyResolver()
@@ -80,14 +80,15 @@ class JSONLDAdapter():
         (stream, media_type) = self.execute(method, url, data=data, auth=auth)
         return self.parser.parse(stream, media_type)
 
-    def get(self, url):
-        return self.do_request("get", url)
+    def get(self, url, auth=None):
+        return self.do_request("get", url, auth=auth)
 
     def post(self, url, data, auth):
         return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
 
     def sync(self, url, serializer, force=True):
-        data = self.get(url)
+        auth = self.get_auth(get_platform_actor())
+        data = self.get(url, auth=auth)
         serializer = serializer(data=data)
         serializer.is_valid(raise_exception=True)
 

@@ -3,7 +3,6 @@ from django.templatetags.static import static
 
 
 MEDIA_JS = [
-    # syntax-highlight
     static('django_quill/highlight.min.js'),
     static('django_quill/quill.min.js'),
     static('django_quill/quill.imageCompressor.min.js'),
@@ -11,8 +10,6 @@ MEDIA_JS = [
     static('django_quill/django_quill.js'),
 ]
 MEDIA_CSS = [
-    # syntax-highlight
-
     static('django_quill/quill.snow.css'),
     static('django_quill/darcula.min.css'),
     static('django_quill/resize.min.css'),

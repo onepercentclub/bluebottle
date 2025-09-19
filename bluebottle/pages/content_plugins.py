@@ -1,10 +1,9 @@
 from django.utils.translation import gettext_lazy as _
-
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.pages.models import (
     ImageTextItem, DocumentItem, ActionItem, ColumnsItem, ImageTextRoundItem,
-    ScaledImageTextItem
+    ScaledImageTextItem, TextOnlyItem
 )
 
 
@@ -27,6 +26,13 @@ class ScaledImageTextPlugin(ContentPlugin):
     model = ScaledImageTextItem
     render_template = "pages/plugins/imagetext/default.html"
     category = _("Multimedia")
+
+
+@plugin_pool.register
+class TextOnlyPlugin(ContentPlugin):
+    model = TextOnlyItem
+    render_template = "pages/plugins/default.html"
+    category = _("Text")
 
 
 @plugin_pool.register

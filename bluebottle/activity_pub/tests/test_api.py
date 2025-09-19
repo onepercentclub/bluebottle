@@ -16,6 +16,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 from bluebottle.deeds.tests.factories import DeedFactory
 
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
@@ -172,6 +173,24 @@ class PersonAPITestCase(ActivityPubTestCase):
             self.assertTrue(accept)
 
     def test_publish_deed(self):
+        self.test_accept()
+
+        deed = DeedFactory.create(owner=self.user, image=ImageFactory.create())
+
+        deed.initiative.states.submit()
+        deed.initiative.states.approve(save=True)
+
+        deed.states.publish(save=True)
+
+        with LocalTenant(self.other_tenant):
+            event = Event.objects.get()
+
+            self.assertTrue(event.name, deed.title)
+
+    def test_publish_deed_to_closed_platform(self):
+        with LocalTenant(self.other_tenant):
+            MemberPlatformSettings.objects.create(closed=True)
+
         self.test_accept()
 
         deed = DeedFactory.create(owner=self.user, image=ImageFactory.create())

@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, connection
 from django.urls import reverse
 from isodate import parse_duration
 from rest_framework import serializers
@@ -6,6 +6,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activities.models import Activity
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
+from bluebottle.activity_pub.mappers.base import get_absolute_path
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -272,14 +273,20 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         image_url = None
         if obj.image:
-            image_url = reverse('activity-image', args=(str(obj.pk), ORIGINAL_SIZE))
+            image_url = get_absolute_path(
+                connection.tenant,
+                reverse('activity-image', args=(str(obj.pk), ORIGINAL_SIZE))
+            )
         elif obj.initiative and obj.initiative.image:
-            image_url = reverse('initiative-image', args=(str(obj.initiative.pk), ORIGINAL_SIZE))
+            image_url = get_absolute_path(
+                connection.tenant,
+                reverse('initiative-image', args=(str(obj.initiative.pk), ORIGINAL_SIZE))
+            )
         return image_url
 
     class Meta:
         model = Activity
-        fields = ('name', 'description')
+        fields = ('name', 'description', 'image')
 
 
 class DateToDateTimeField(serializers.DateTimeField):
@@ -311,8 +318,8 @@ class DeedEventSerializer(BaseActivityEventSerializer):
 
 
 class DeadlineActivityEventSerializer(BaseActivityEventSerializer):
-    start = serializers.DateTimeField(required=False, allow_null=True)
-    end = serializers.DateTimeField(source='deadline', required=False, allow_null=True)
+    start = DateToDateTimeField(required=False, allow_null=True)
+    end = DateToDateTimeField(source='deadline', required=False, allow_null=True)
     duration = serializers.DurationField(required=False, allow_null=True)
 
     class Meta:
@@ -342,6 +349,7 @@ class DateActivityEventSerializer(BaseActivityEventSerializer):
         source='slots',
         required=False,
         allow_null=True,
+        allow_empty=True,
         many=True
     )
 

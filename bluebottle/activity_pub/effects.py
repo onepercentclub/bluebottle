@@ -11,9 +11,10 @@ class PublishEffect(Effect):
 
     def post_save(self, **kwargs):
         from bluebottle.activity_pub.serializers import ActivityEventSerializer
+        from bluebottle.activity_pub.services import EventCreationService
         data = ActivityEventSerializer(self.instance).data
         actor = get_platform_actor()
-        event = Event.objects.create(activity=self.instance, organizer=actor, **data)
+        event = EventCreationService.create_event_from_activity(data)
         Publish.objects.create(actor=actor, object=event)
 
     @property

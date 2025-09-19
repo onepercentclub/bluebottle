@@ -31,6 +31,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers import ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
+from bluebottle.activity_pub.utils import get_platform_actor
 
 
 @admin.register(ActivityPubModel)
@@ -540,6 +541,11 @@ class EventAdmin(ActivityPubModelChildAdmin):
     inlines = [SubEventInline, AnnouncementInline]
     list_filter = ['organizer', AdoptedFilter]
 
+    def adopted(self, obj):
+        return obj.adopted
+    adopted.boolean = True
+    adopted.short_description = _("Adopted")
+
     def display_description(self, obj):
         return format_html(
             '<div style="display: table-cell">' + obj.description + "</div>"
@@ -585,8 +591,11 @@ class EventAdmin(ActivityPubModelChildAdmin):
         try:
             serializer = ActivityEventSerializer(data=model_to_dict(event))
             serializer.is_valid(raise_exception=True)
-
             activity = serializer.save(owner=request.user)
+            event.activity = activity
+            event.save()
+            actor = get_platform_actor()
+
             self.message_user(
                 request,
                 f'Successfully created Activity "{activity.title}" from Event.',

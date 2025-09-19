@@ -787,12 +787,12 @@ class ActivityChildAdmin(
 
         activity = get_object_or_404(Activity, pk=unquote(pk))
         data = ActivityEventSerializer(activity).data
-        actor = get_platform_actor()
         event = EventCreationService.create_event_from_activity(data)
         event.activity = activity
         event.save()
-        publish = Publish.objects.create(actor=actor, object=event)
-        adapter.publish(publish)
+        actor = get_platform_actor()
+        Publish.objects.create(actor=actor, object=event)
+
         self.message_user(
             request,
             f'Successfully shared Deed "{activity.title}".',
@@ -892,7 +892,7 @@ class ActivityChildAdmin(
 
         extra_urls = [
             re_path(
-                r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+                r'^(?P<pk>\d+)/send-impact-reminder-message$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
@@ -900,7 +900,7 @@ class ActivityChildAdmin(
                 ),
             ),
             re_path(
-                r'^share_activity/(?P<pk>\d+)$',
+                r'^(?P<pk>\d+)/share_activity$',
                 self.admin_site.admin_view(self.share_activity),
                 name='{}_{}_share_activity'.format(
                     self.model._meta.app_label,

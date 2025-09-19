@@ -9,6 +9,7 @@ from django.urls import resolve
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.models import Actor, Follow, Announce
 from bluebottle.activity_pub.models import Actor, Follow, Activity
 from bluebottle.activity_pub.utils import is_local
 

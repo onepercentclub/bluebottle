@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 09:51+0200\n"
+"POT-Creation-Date: 2025-09-19 11:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -5353,7 +5353,7 @@ msgstr ""
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:18
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:18
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:18
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:20
 msgctxt "email"
 msgid "Provide additional details"
 msgstr ""
@@ -5408,8 +5408,8 @@ msgstr ""
 msgctxt "email"
 msgid ""
 "\n"
-"    To be able to collect funds for your organisation or avoid issues with "
-"current campaigns on %(site_name)s, we need\n"
+"    To be able to collect funds for your organisation on %(site_name)s, we "
+"need\n"
 "    some extra information from you. Please provide this information as soon "
 "as possible.\n"
 "    "
@@ -5572,7 +5572,6 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
 msgctxt "email"
 msgid ""
@@ -6779,6 +6778,23 @@ msgid ""
 "<p>\n"
 "    You will not be able to edit the application when it is in review.\n"
 "</p>\n"
+msgstr ""
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"            You are working on a grant application on %(site_name)s.\n"
+"            <br/><br/>\n"
+"\n"
+"            You submitted some information to verify you or an organisations "
+"identity, but in some cases we need extra information for a successful "
+"verification. \n"
+"            <br/></br>\n"
+"            Please provide this as soon as possible to avoid issues with "
+"your grant application or to resolve them quickly.\n"
+"        "
 msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_verified.html:6
@@ -12312,26 +12328,46 @@ msgid ""
 msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:25
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"                        Once accepted, you are expected to spend around "
+"%(duration)s hour during the set period, although the actual time may vary. "
+"If no period is defined, then you can contribute at anytime that suits you.\n"
+"                    "
+msgstr ""
+
+#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:29
+#, python-format
+msgctxt "email"
+msgid ""
+"\n"
+"                        Once accepted, you are expected to spend around "
+"%(duration)s hours during the set period, although the actual time may vary. "
+"If no period is defined, then you can contribute at anytime that suits you.\n"
+"                    "
+msgstr ""
+
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:21
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"                        You are expected to spend %(duration)s hour "
-"contributing to this activity within the defined period. If no period is "
-"defined, then you can contribute at any time that suits you.\n"
+"                        Expect to spend around %(duration)s hour during the "
+"set period, although the actual time may vary.  If no period is defined, "
+"then you can contribute at anytime that suits you.\n"
 "                    "
 msgstr ""
 
-#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:25
 #, python-format
 msgctxt "email"
 msgid ""
 "\n"
-"                        You are expected to spend %(duration)s hours "
-"contributing to this activity within the defined period. If no period is "
-"defined, then you can contribute at any time that suits you.\n"
+"                        Expect to spend around %(duration)s hours during the "
+"set period, although the actual time may vary.  If no period is defined, "
+"then you can contribute at anytime that suits you.\n"
 "                    "
 msgstr ""
 
@@ -12456,8 +12492,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                    When you are accepted you are expected to contribute "
-"%(duration)s hour(s) every %(period)s.\n"
+"                    Once accepted, you are expected to spend around "
+"%(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
 msgstr ""
 
@@ -12478,8 +12514,8 @@ msgstr ""
 #, python-format
 msgid ""
 "\n"
-"                    You are expected to contribute %(duration)s hour(s) "
-"every %(period)s.\n"
+"                    Expect to spend around %(duration)s hour(s) every "
+"%(period)s, although the actual time may vary.\n"
 "                "
 msgstr ""
 

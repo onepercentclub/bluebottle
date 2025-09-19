@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 09:51+0200\n"
-"PO-Revision-Date: 2025-09-19 07:53\n"
+"POT-Creation-Date: 2025-09-19 11:49+0200\n"
+"PO-Revision-Date: 2025-09-19 09:59\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -5176,7 +5176,7 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:18
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:18
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:18
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:20
 msgctxt "email"
 msgid "Provide additional details"
 msgstr "Gegevens aanvullen"
@@ -5237,12 +5237,13 @@ msgstr "\n"
 #, python-format
 msgctxt "email"
 msgid "\n"
-"    To be able to collect funds for your organisation or avoid issues with current campaigns on %(site_name)s, we need\n"
+"    To be able to collect funds for your organisation on %(site_name)s, we need\n"
 "    some extra information from you. Please provide this information as soon as possible.\n"
 "    "
 msgstr "\n"
-"    Om donaties te ontvangen voor je organisatie %(site_name)s, hebben we\n"
-"    extra informatie nodig. Geef dit zo snel mogelijk op.\n"
+"Hallo %(site_name)s,\n"
+"    \n"
+"    Om geld te ontvangen voor uw organisatie te kunnen verzamelen op %(site_name)s,  hebben we extra informatie van u nodig. Verstrek deze informatie zo snel mogelijk.\n"
 "    "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:6
@@ -5425,7 +5426,6 @@ msgstr "\n"
 "</ul>\n"
 
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
 msgctxt "email"
 msgid "\n"
@@ -6635,6 +6635,24 @@ msgstr "\n"
 "        Als je aanmelding wordt goedgekeurd, moet je je bankgegevens invoeren en gegevens aanleveren om je identiteit of die van je organisatie te bevestigen. Zo zorgen we voor een veilige uitbetaling.\n"
 "    </li>\n"
 "</ul>\n"
+
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
+#, python-format
+msgctxt "email"
+msgid "\n"
+"            You are working on a grant application on %(site_name)s.\n"
+"            <br/><br/>\n\n"
+"            You submitted some information to verify you or an organisations identity, but in some cases we need extra information for a successful verification. \n"
+"            <br/></br>\n"
+"            Please provide this as soon as possible to avoid issues with your grant application or to resolve them quickly.\n"
+"        "
+msgstr "\n"
+"            Je bent bezig met een aanvraag op %(site_name)s.\n"
+"            <br/><br/>\n\n"
+"            Eerder heb je informatie ingediend om jouw identiteit of die van een organisatie te controleren, maar in sommige gevallen hebben we extra informatie nodig voor een succesvolle verificatie. \n"
+"            <br/></br>\n"
+"            Lever dit zo snel mogelijk aan om problemen met je aanvraag te voorkomen of om ze snel op te lossen.\n"
+"        "
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_verified.html:6
 #, python-format
@@ -11981,24 +11999,44 @@ msgstr "\n"
 "            "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:25
+#, python-format
+msgctxt "email"
+msgid "\n"
+"                        Once accepted, you are expected to spend around %(duration)s hour during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.\n"
+"                    "
+msgstr "\n"
+"                        Zodra je geaccepteerd bent, wordt er verwacht dat je ongeveer %(duration)s uur tijdens de vastgestelde periode besteedt, hoewel de daadwerkelijke tijd kan variëren. Als er geen periode is gedefinieerd, kun je bijdragen wanneer het jou uitkomt.\n"
+"                    "
+
+#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:29
+#, python-format
+msgctxt "email"
+msgid "\n"
+"                        Once accepted, you are expected to spend around %(duration)s hours during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.\n"
+"                    "
+msgstr "\n"
+"                        Zodra je geaccepteerd bent, wordt er verwacht dat je ongeveer %(duration)s uren tijdens de vastgestelde periode besteedt, hoewel de daadwerkelijke tijd kan variëren. Als er geen periode is gedefinieerd, kun je bijdragen wanneer het jou uitkomt.\n"
+"                    "
+
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:21
 #, python-format
 msgctxt "email"
 msgid "\n"
-"                        You are expected to spend %(duration)s hour contributing to this activity within the defined period. If no period is defined, then you can contribute at any time that suits you.\n"
+"                        Expect to spend around %(duration)s hour during the set period, although the actual time may vary.  If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
 msgstr "\n"
-"Er wordt verwacht dat je %(duration)s uur besteedt aan deze activiteit binnen de vastgestelde periode. Als er geen periode is vastgesteld, kun je bijdragen op elk moment dat jou uitkomt.                    "
+"                        Er wordt verwacht dat je ongeveer %(duration)s uur tijdens de vastgestelde periode besteedt, hoewel de daadwerkelijke tijd kan variëren. Als er geen periode is gedefinieerd, kun je bijdragen wanneer het jou uitkomt.\n"
+"                    "
 
-#: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:25
 #, python-format
 msgctxt "email"
 msgid "\n"
-"                        You are expected to spend %(duration)s hours contributing to this activity within the defined period. If no period is defined, then you can contribute at any time that suits you.\n"
+"                        Expect to spend around %(duration)s hours during the set period, although the actual time may vary.  If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
 msgstr "\n"
-"Er wordt verwacht dat je %(duration)s uur besteedt aan deze activiteit binnen de vastgestelde periode. Als er geen periode is vastgesteld, kun je bijdragen op elk moment dat jou uitkomt.                    "
+"                        Er wordt verwacht dat je ongeveer %(duration)s uren tijdens de vastgestelde periode besteedt, hoewel de daadwerkelijke tijd kan variëren. Als er geen periode is gedefinieerd, kun je bijdragen wanneer het jou uitkomt.\n"
+"                    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:33
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:31
@@ -12125,10 +12163,10 @@ msgstr "\n"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:24
 #, python-format
 msgid "\n"
-"                    When you are accepted you are expected to contribute %(duration)s hour(s) every %(period)s.\n"
+"                    Once accepted, you are expected to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
 msgstr "\n"
-"                    Wanneer je bent geaccepteerd, wordt je verwacht elke %(period)s %(duration)s uur bij te dragen.\n"
+"                    Wanneer je geaccepteerd wordt, verwacht dan ongeveer %(duration)s ur(en) per %(period)s te besteden. De werkelijke tijd kan echter variëren.\n"
 "                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
@@ -12145,10 +12183,10 @@ msgstr "Als je wilt stoppen met bijdragen aan de activiteit, stop dan je deelnam
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:20
 #, python-format
 msgid "\n"
-"                    You are expected to contribute %(duration)s hour(s) every %(period)s.\n"
+"                    Expect to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
 msgstr "\n"
-"          Er wordt van je verwacht dat je elke %(period)s %(duration)s uur bijdraagt.\n"
+"                    Verwacht ongeveer %(duration)s uur(s) te besteden elke %(period)s, hoewel de werkelijke tijd kan variëren.\n"
 "                "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6

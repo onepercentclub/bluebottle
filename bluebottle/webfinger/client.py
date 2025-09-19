@@ -6,9 +6,7 @@ import requests
 class WebFingerClient:
     def _do_request(self, url):
         response = requests.get(url)
-
         response.raise_for_status()
-
         return response.json()
 
     def get(self, uri, type='application/activity+josn'):

@@ -13,6 +13,7 @@ from bluebottle.activities.messages.reviewer import (
 )
 from bluebottle.activities.states import OrganizerStateMachine
 from bluebottle.activities.triggers import ActivityTriggers, has_organizer
+from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
 from bluebottle.fsm.effects import RelatedTransitionEffect, TransitionEffect
 from bluebottle.fsm.triggers import ModelChangedTrigger, TransitionTrigger, register
 from bluebottle.notifications.effects import NotificationEffect
@@ -349,8 +350,18 @@ class DateActivityTriggers(TimeBasedTriggers):
         ),
 
         TransitionTrigger(
+            RegistrationActivityStateMachine.approve,
+            effects=[
+                PublishEffect,
+                AnnounceAdoptionEffect
+            ]
+        ),
+
+        TransitionTrigger(
             DateStateMachine.publish,
             effects=[
+                PublishEffect,
+                AnnounceAdoptionEffect,
                 RelatedTransitionEffect(
                     'organizer',
                     OrganizerStateMachine.succeed,
@@ -496,6 +507,20 @@ class DeadlineActivityTriggers(RegistrationActivityTriggers):
                     conditions=[is_full, registration_deadline_is_not_passed],
                 ),
             ],
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.approve,
+            effects=[
+                PublishEffect,
+                AnnounceAdoptionEffect
+            ]
+        ),
+        TransitionTrigger(
+            RegistrationActivityStateMachine.publish,
+            effects=[
+                PublishEffect,
+                AnnounceAdoptionEffect
+            ]
         ),
     ]
 

@@ -1,4 +1,5 @@
 from rest_framework.parsers import JSONParser
+from rest_framework.exceptions import ParseError
 
 from bluebottle.activity_pub.processor import processor, default_context
 from bluebottle.activity_pub.utils import underscore
@@ -12,14 +13,19 @@ class JSONLDParser(JSONParser):
 
     def parse(self, stream, media_type=None, parser_context=None):
         """
-        Simply return a string representing the body of the request.
+        Parse JSON-LD data from the input stream.
         """
-        result = super().parse(stream, media_type, parser_context)
-        compacted = processor.compact(
-            result,
-            default_context,
-            {}
-        )
-        del compacted['@context']
+        if stream is None:
+            raise ParseError('No content to parse')
 
-        return underscore(compacted)
+        try:
+            result = super().parse(stream, media_type, parser_context)
+            compacted = processor.compact(
+                result,
+                default_context,
+                {}
+            )
+            del compacted['@context']
+            return underscore(compacted)
+        except Exception as e:
+            raise ParseError(f'JSON parse error - {str(e)}')

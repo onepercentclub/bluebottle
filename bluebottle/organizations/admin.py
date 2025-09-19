@@ -95,7 +95,7 @@ class OrganizationAdmin(admin.ModelAdmin):
                 pub_url = obj.puborganization.url
             else:
                 pub_url = get_current_host() + reverse("json-ld:organization", args=(obj.puborganization.pk,))
-            url = reverse("admin:activity_pub_puborganization_change", args=(obj.puborganization.pk,))
+            url = reverse("admin:activity_pub_organization_change", args=(obj.puborganization.pk,))
             return format_html(
                 '<a href="{}">{}</a>&nbsp;&nbsp;<i>{}</i>',
                 url,

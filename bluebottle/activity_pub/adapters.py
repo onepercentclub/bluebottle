@@ -9,11 +9,14 @@ from django.urls import resolve
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.models import Actor, Follow, Announce
 from bluebottle.activity_pub.models import Actor, Follow, Activity
 from bluebottle.activity_pub.utils import is_local, get_platform_actor
 
 from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
+import logging
 
+logger = logging.getLogger(__name__)
 from bluebottle.webfinger.client import client
 
 from django.db.models.signals import post_save
@@ -89,21 +92,22 @@ class JSONLDAdapter():
     def sync(self, url, serializer, force=True):
         auth = self.get_auth(get_platform_actor())
         data = self.get(url, auth=auth)
+        sub_events = data.pop('sub_event', [])
         serializer = serializer(data=data)
         serializer.is_valid(raise_exception=True)
-
-        return serializer.save()
+        event =  serializer.save()
+        from bluebottle.activity_pub.serializers import EventSerializer
+        for sub_event in sub_events:
+            slot = EventSerializer().create(sub_event)
+            slot.save(parent=event)
+        return event
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers import ActorSerializer
 
         discovered_url = client.get(url)
-
         actor = self.sync(discovered_url, ActorSerializer)
-
-        return Follow.objects.create(
-            object=actor
-        )
+        return Follow.objects.create(object=actor)
 
     def publish(self, activity):
         from bluebottle.activity_pub.serializers import ActivitySerializer

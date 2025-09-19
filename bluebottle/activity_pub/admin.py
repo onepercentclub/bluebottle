@@ -1,12 +1,8 @@
-import json
-from io import BytesIO
-
-import requests
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied
-from django.core.files import File
+from django.forms import model_to_dict
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -31,11 +27,11 @@ from bluebottle.activity_pub.models import (
     PublicKey,
     Publish,
     Announce,
-    Organization,
+    Organization, Following, Follower,
 )
+from bluebottle.activity_pub.serializers import ActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
-from bluebottle.deeds.models import Deed
-from bluebottle.files.models import Image
+from bluebottle.activity_pub.utils import get_platform_actor
 
 
 @admin.register(ActivityPubModel)
@@ -57,7 +53,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
 
     list_display = ("id", "type", "url")
 
@@ -79,14 +75,14 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 class FollowForm(forms.ModelForm):
     url = forms.URLField(
-        label=_("Organisation URL"),
-        help_text="Enter the ActivityPub URL of the organisation to follow",
+        label=_("Platform URL"),
+        help_text=_("Enter the Platform URL to follow"),
         max_length=400
     )
 
     class Meta:
         model = Follow
-        fields = ["url", "object"]
+        fields = ["url", ]
 
 
 class FollowingInline(admin.StackedInline):
@@ -99,7 +95,6 @@ class FollowingInline(admin.StackedInline):
     readonly_fields = ("actor",)
 
     def get_formset(self, request, obj=None, **kwargs):
-        """Override to use different forms for new vs existing objects"""
         formset = super().get_formset(request, obj, **kwargs)
 
         class CustomFormSet(formset):
@@ -231,7 +226,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 
 @admin.register(Follow)
 class FollowAdmin(ActivityPubModelChildAdmin):
-    list_display = ('id', 'inbox', 'outbox')
+    list_display = ('actor', "object")
     readonly_fields = ("actor", "object", "url", "pub_url")
 
 
@@ -284,30 +279,272 @@ class AdoptedFilter(admin.SimpleListFilter):
             return queryset.filter(activity__isnull=True)
 
 
+class SubEventInline(admin.StackedInline):
+    model = Event
+    fk_name = "parent"
+    extra = 0
+    readonly_fields = ("pub_url", "activity")
+    fields = ("name", "start", "end", "organizer", "activity", "pub_url")
+    verbose_name = _("Slot")
+    verbose_name_plural = _("Slots")
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class FollowingAddForm(forms.ModelForm):
+    platform_url = forms.URLField(
+        label=_("Platform URL"),
+        help_text=_("Enter the Platform URL to follow"),
+    )
+
+    class Meta:
+        model = Following
+        fields = []  # exclude all model fields
+
+    def __init__(self, *args, **kwargs):
+        # Always create a new instance when adding
+        if 'instance' not in kwargs:
+            kwargs['instance'] = Following()
+        super().__init__(*args, **kwargs)
+
+
+@admin.register(Following)
+class FollowingAdmin(FollowAdmin):
+
+    def get_fields(self, request, obj=None, **kwargs):
+        if obj is None:
+            return ["platform_url"]
+        return super().get_fields(request, obj, **kwargs)
+    list_display = ("object", "accepted")
+
+    readonly_fields = ('object', 'accepted')
+
+    def accepted(self, obj):
+        """Check if this follow request has been accepted"""
+        from bluebottle.activity_pub.models import Accept
+        return Accept.objects.filter(object=obj).exists()
+    accepted.boolean = True
+    accepted.short_description = _("Accepted")
+
+
+    fields = readonly_fields
+    
+    def get_queryset(self, request):
+        from bluebottle.activity_pub.utils import get_platform_actor
+        qs = Follow.objects.all()
+        platform_actor = get_platform_actor()
+        if platform_actor:
+            # Show Follow records where the platform is the actor (following others)
+            return qs.filter(actor=platform_actor)
+        return qs.none()  # No platform actor configured
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Use custom form for adding new Following objects"""
+        if obj is None:
+            return FollowingAddForm
+        return super().get_form(request, obj, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        """Handle saving of new Following objects using adapter.follow()"""
+        if not change and isinstance(form, FollowingAddForm):
+            # This is a new object using our custom add form
+            platform_url = form.cleaned_data['platform_url']
+            try:
+                # Use adapter.follow to create the Follow object
+                follow_obj = adapter.follow(platform_url)
+                self.message_user(
+                    request,
+                    f"Successfully created Follow relationship to {platform_url}",
+                    level="success"
+                )
+                # Store the created object for response_add
+                self._created_follow_obj = follow_obj
+                return
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f"Error creating Follow relationship: {str(e)}",
+                    level="error"
+                )
+                raise
+        else:
+            # For existing objects, use the default behavior
+            super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """Redirect to the changelist after adding"""
+        if hasattr(self, '_created_follow_obj'):
+            # Successfully created via adapter.follow()
+            delattr(self, '_created_follow_obj')  # Clean up
+            return HttpResponseRedirect(reverse('admin:activity_pub_following_changelist'))
+        return super().response_add(request, obj, post_url_continue)
+
+
+@admin.register(Follower)
+class FollowerAdmin(FollowAdmin):
+    list_display = ("actor", "object", "accepted")
+    actions = ['accept_follow_requests']
+
+    def get_queryset(self, request):
+        from bluebottle.activity_pub.utils import get_platform_actor
+        qs = Follow.objects.all()
+        platform_actor = get_platform_actor()
+        if platform_actor:
+            return qs.filter(object=platform_actor)
+        return qs.none()
+
+    def accepted(self, obj):
+        """Check if this follow request has been accepted"""
+        from bluebottle.activity_pub.models import Accept
+        return Accept.objects.filter(object=obj).exists()
+    accepted.boolean = True
+    accepted.short_description = "Accepted"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/accept/",
+                self.admin_site.admin_view(self.accept_follow_request),
+                name="activity_pub_follower_accept",
+            ),
+        ]
+        return custom_urls + urls
+
+    def accept_follow_request(self, request, object_id):
+        """Accept a single follow request"""
+        from bluebottle.activity_pub.models import Accept, Follow
+        from bluebottle.activity_pub.utils import get_platform_actor
+        
+        follow = get_object_or_404(Follow, pk=unquote(object_id))
+        platform_actor = get_platform_actor()
+        
+        if not platform_actor:
+            self.message_user(request, "No platform actor configured", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_follower_change", args=[follow.pk])
+            )
+        
+        # Check if already accepted
+        if Accept.objects.filter(object=follow).exists():
+            self.message_user(
+                request,
+                f"Follow request from {follow.actor} has already been accepted",
+                level="info"
+            )
+        else:
+            # Create Accept object
+            Accept.objects.create(
+                actor=platform_actor,
+                object=follow
+            )
+            self.message_user(
+                request,
+                f"Successfully accepted follow request from {follow.actor}",
+                level="success"
+            )
+        
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Override change view to add accept button context"""
+        extra_context = extra_context or {}
+        
+        if object_id:
+            from bluebottle.activity_pub.models import Accept, Follow
+            follow = get_object_or_404(Follow, pk=unquote(object_id))
+            extra_context['is_accepted'] = Accept.objects.filter(object=follow).exists()
+            extra_context['accept_url'] = reverse('admin:activity_pub_follower_accept', args=[object_id])
+        
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but not actual changing
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def accept_follow_requests(self, request, queryset):
+        """Accept selected follow requests"""
+        from bluebottle.activity_pub.models import Accept
+        from bluebottle.activity_pub.utils import get_platform_actor
+        
+        platform_actor = get_platform_actor()
+        if not platform_actor:
+            self.message_user(request, "No platform actor configured", level="error")
+            return
+            
+        accepted_count = 0
+        already_accepted_count = 0
+        
+        for follow in queryset:
+            # Check if already accepted
+            if Accept.objects.filter(object=follow).exists():
+                already_accepted_count += 1
+                continue
+                
+            # Create Accept object
+            Accept.objects.create(
+                actor=platform_actor,
+                object=follow
+            )
+            accepted_count += 1
+        
+        if accepted_count > 0:
+            self.message_user(
+                request, 
+                f"Successfully accepted {accepted_count} follow request(s)",
+                level="success"
+            )
+        
+        if already_accepted_count > 0:
+            self.message_user(
+                request,
+                f"{already_accepted_count} follow request(s) were already accepted",
+                level="info"
+            )
+    
+    accept_follow_requests.short_description = "Accept selected follow requests"
+
+
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
         "adopted",
         "organizer",
-        "start_date",
-        "end_date",
+        "start",
+        "end",
         "organizer",
     )
     readonly_fields = (
         "name",
         "display_description",
         "display_image",
-        "start_date",
-        "end_date",
+        "start",
+        "end",
         "organizer",
         "actor",
         "activity",
         "url",
+        "pub_url",
     )
     fields = readonly_fields
-    inlines = [AnnouncementInline]
+    inlines = [SubEventInline, AnnouncementInline]
     list_filter = ['organizer', AdoptedFilter]
+
+    def adopted(self, obj):
+        return obj.adopted
+    adopted.boolean = True
+    adopted.short_description = _("Adopted")
 
     def display_description(self, obj):
         return format_html(
@@ -344,7 +581,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         if event.activity:
             self.message_user(
                 request,
-                "This event has already been adopted as a Deed.",
+                "This activity has already been adopted.",
                 level="warning",
             )
             return HttpResponseRedirect(
@@ -352,53 +589,24 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-            deed = Deed.objects.create(
-                owner=request.user,
-                title=event.name,
-                description=json.dumps({"html": event.description, "delta": ""}),
-                start=event.start_date,
-                end=event.end_date,
-                status="draft",
-            )
-
-            if event.image:
-                try:
-                    response = requests.get(event.image, timeout=30)
-                    response.raise_for_status()
-
-                    image = Image(owner=request.user)
-
-                    import time
-
-                    filename = f"event_{event.pk}_{int(time.time())}.jpg"
-
-                    image.file.save(filename, File(BytesIO(response.content)))
-
-                    deed.image = image
-                    deed.save()
-
-                except Exception as e:
-                    self.message_user(
-                        request,
-                        f"Warning: Could not download image from {event.image}: {str(e)}",
-                        level="warning",
-                    )
-
-            event.activity = deed
+            serializer = ActivityEventSerializer(data=model_to_dict(event))
+            serializer.is_valid(raise_exception=True)
+            activity = serializer.save(owner=request.user)
+            event.activity = activity
             event.save()
+            actor = get_platform_actor()
 
             self.message_user(
                 request,
-                f'Successfully created Deed "{deed.title}" from Event "{event.name}".',
+                f'Successfully created Activity "{activity.title}" from Event.',
                 level="success",
             )
-
             return HttpResponseRedirect(
-                reverse("admin:deeds_deed_change", args=[deed.pk])
+                reverse("admin:activities_activity_change", args=[activity.pk])
             )
 
         except Exception as e:
-            self.message_user(request, f"Error creating Deed: {str(e)}", level="error")
+            self.message_user(request, f"Error creating activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )

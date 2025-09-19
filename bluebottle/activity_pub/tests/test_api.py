@@ -119,6 +119,7 @@ class PersonAPITestCase(ActivityPubTestCase):
 
         self.user = BlueBottleUserFactory.create()
         self.person = Person.objects.from_model(self.user)
+        self.person_url = self.build_absolute_url(reverse("json-ld:person", args=(self.person.pk, )))
 
     def test_get_inbox(self):
         inbox_url = self.build_absolute_url(reverse("json-ld:inbox", args=(self.person.inbox.pk, )))
@@ -163,13 +164,12 @@ class PersonAPITestCase(ActivityPubTestCase):
     def test_accept(self):
         self.test_follow()
 
-        accept = Accept.objects.create(
+        Accept.objects.create(
             object=self.follow
         )
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
-
             self.assertTrue(accept)
 
     def test_publish_deed(self):

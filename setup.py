@@ -25,7 +25,7 @@ install_requires = [
     'SurveyGizmo==1.2.2',
     'bcrypt==3.2.0',
     'beautifulsoup4==4.12.2',
-    'celery==4.3.1',
+    'celery==5.2.1',
     'clamd==1.0.2',
     'defusedxml==0.6.0',
     'django-admin-inline-paginator==0.4.0',
@@ -111,11 +111,12 @@ install_requires = [
     'python3-saml==1.9.0',
     'qrcode==7.4.2',
     'rave-python==1.0.2',
-    'raven==6.1.0',
-    'regex==2017.05.26',
+    'regex==2025.9.1',
     'requests==2.32.0',
+    'requests_http_signature==0.7.1',
     'schwifty==2.1.0',
     'scss==0.8.73',
+    'sentry-sdk==2.16.0',
     'social-auth-core==4.5.4',
     'social-auth-app-django==5.4.2',
     'sorl-thumbnail==12.11.0',
@@ -156,7 +157,7 @@ tests_requires = [
     'tdaemon==0.1.1',
     'WebTest==2.0.27',
     'sniffer==0.4.0',
-    'vine==1.3.0',
+    'vine==5.0.0',
     'Faker==12.3.3'
 ]
 

@@ -10,8 +10,11 @@ class PublishEffect(Effect):
     template = 'admin/activity_pub/publish_effect.html'
 
     def post_save(self, **kwargs):
-        event = Event.objects.from_model(self.instance)
+        from bluebottle.activity_pub.serializers import ActivityEventSerializer
+        from bluebottle.activity_pub.services import EventCreationService
+        data = ActivityEventSerializer(self.instance).data
         actor = get_platform_actor()
+        event = EventCreationService.create_event_from_activity(data)
         Publish.objects.create(actor=actor, object=event)
 
     @property

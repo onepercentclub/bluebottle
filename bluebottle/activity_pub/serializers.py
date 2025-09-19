@@ -1,11 +1,28 @@
-from django.db import models
+from django.db import models, connection
+from django.urls import reverse
+from isodate import parse_duration
 from rest_framework import serializers
+from rest_polymorphic.serializers import PolymorphicSerializer
 
+from bluebottle.activities.models import Activity
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Event, Publish, Announce, Organization
+    Accept,
+    Announce,
+    Event,
+    Follow,
+    Inbox,
+    Outbox,
+    Person,
+    PublicKey,
+    Publish,
+    Organization,
 )
-from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
+from bluebottle.deeds.models import Deed
+from bluebottle.files.serializers import ORIGINAL_SIZE
+from bluebottle.time_based.models import DeadlineActivity, DateActivity, DateActivitySlot, ActivitySlot
+from bluebottle.utils.fields import RichTextField
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -143,17 +160,37 @@ class ActorSerializer(PolymorphicActivityPubSerializer):
     ]
 
 
+class DurationField(serializers.DurationField):
+    def to_representation(self, value):
+        return timedelta_to_iso(value) if value else None
+
+    def to_internal_value(self, data):
+        return parse_duration(data)
+
+
 class EventSerializer(ActivityPubSerializer):
     organizer = RelatedActivityPubField(OrganizationSerializer)
-    start_date = serializers.DateField(required=False)
-    end_date = serializers.DateField(required=False)
+    start = serializers.DateTimeField(required=False)
+    end = serializers.DateTimeField(required=False)
     name = serializers.CharField()
     description = serializers.CharField()
+    duration = DurationField(required=False)
+    gu_activity_type = serializers.SerializerMethodField()
+    sub_event = serializers.SerializerMethodField()
+
+    def get_gu_activity_type(self, obj):
+        return str(obj.activity.__class__.__name__)
+
+    def get_sub_event(self, obj):
+        subevents = obj.subevents.all().order_by("start")
+        if subevents.exists():
+            return EventSerializer(subevents, many=True, context=self.context).data
+        return None
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'
         url_name = 'json-ld:event'
-        exclude = ActivityPubSerializer.Meta.exclude + ('activity', )
+        exclude = ActivityPubSerializer.Meta.exclude + ('activity', 'slot_id')
         model = Event
 
 
@@ -201,3 +238,157 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]
+
+
+def _download_event_image(event, user):
+    from io import BytesIO
+
+    import requests
+    from django.core.files import File
+
+    from bluebottle.files.models import Image
+
+    if getattr(event, "image", None):
+        try:
+            response = requests.get(event.image, timeout=30)
+            response.raise_for_status()
+
+            image = Image(owner=user)
+            import time
+
+            filename = f"event_{event.pk}_{int(time.time())}.jpg"
+            image.file.save(filename, File(BytesIO(response.content)))
+            return image
+        except Exception:
+            return None
+    return None
+
+
+def get_absolute_path(tenant, path):
+    return tenant.build_absolute_url(path) if (tenant and path) else None
+
+
+class BaseActivityEventSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='title', required=False)
+    description = RichTextField(required=False, allow_null=True)
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        image_url = None
+        if obj.image:
+            image_url = get_absolute_path(
+                connection.tenant,
+                reverse('activity-image', args=(str(obj.pk), ORIGINAL_SIZE))
+            )
+        elif obj.initiative and obj.initiative.image:
+            image_url = get_absolute_path(
+                connection.tenant,
+                reverse('initiative-image', args=(str(obj.initiative.pk), ORIGINAL_SIZE))
+            )
+        return image_url
+
+    class Meta:
+        model = Activity
+        fields = ('name', 'description', 'image')
+
+
+class DateToDateTimeField(serializers.DateTimeField):
+    def to_representation(self, value):
+        from datetime import datetime, time, date
+        from django.utils import timezone
+
+        if not value:
+            return None
+
+        # If it's a pure date, convert to datetime at start of day
+        if isinstance(value, date) and not isinstance(value, datetime):
+            value = datetime.combine(value, time.min)
+
+        # Ensure timezone-aware
+        if timezone.is_naive(value):
+            value = timezone.make_aware(value, timezone.get_current_timezone())
+
+        return value.isoformat()
+
+
+class DeedEventSerializer(BaseActivityEventSerializer):
+    start = DateToDateTimeField(required=False, allow_null=True)
+    end = DateToDateTimeField(required=False, allow_null=True)
+
+    class Meta:
+        model = Deed
+        fields = BaseActivityEventSerializer.Meta.fields + ('start', 'end')
+
+
+class DeadlineActivityEventSerializer(BaseActivityEventSerializer):
+    start = DateToDateTimeField(required=False, allow_null=True)
+    end = DateToDateTimeField(source='deadline', required=False, allow_null=True)
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+    class Meta:
+        model = DeadlineActivity
+        fields = BaseActivityEventSerializer.Meta.fields + ('duration', 'start', 'end')
+
+
+class BaseSlotEventSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='title', required=False)
+    start = serializers.DateTimeField(required=False, allow_null=True)
+    end = serializers.DateTimeField(required=False, allow_null=True)
+
+    class Meta:
+        model = ActivitySlot
+        fields = ('name', 'start', 'end')
+
+
+class DateActivitySlotEventSerializer(BaseSlotEventSerializer):
+
+    class Meta:
+        model = DateActivitySlot
+        fields = BaseSlotEventSerializer.Meta.fields
+
+
+class DateActivityEventSerializer(BaseActivityEventSerializer):
+    subevents = DateActivitySlotEventSerializer(
+        source='slots',
+        required=False,
+        allow_null=True,
+        allow_empty=True,
+        many=True
+    )
+
+    class Meta:
+        model = DateActivity
+        fields = BaseActivityEventSerializer.Meta.fields + ('subevents',)
+
+
+class ActivityEventSerializer(PolymorphicSerializer):
+
+    polymorphic_serializers = [
+        DeedEventSerializer,
+        DeadlineActivityEventSerializer,
+        DateActivityEventSerializer,
+    ]
+
+    model_serializer_mapping = {
+        Deed: DeedEventSerializer,
+        DeadlineActivity: DeadlineActivityEventSerializer,
+        DateActivity: DateActivityEventSerializer
+    }
+
+    def get_serializer_from_data(self, data):
+        if 'subevents' in data:
+            return DateActivityEventSerializer
+        elif 'duration' in data:
+            return DeadlineActivityEventSerializer
+        else:
+            return DeedEventSerializer
+
+    def to_internal_value(self, data):
+        serializer = self.get_serializer_from_data(data)
+        result = serializer().to_internal_value(data)
+        return result
+
+    def create(self, validated_data):
+        validated_data.pop('resourcetype', None)
+        serializer = self.get_serializer_from_data(validated_data)
+        return serializer().create(validated_data)

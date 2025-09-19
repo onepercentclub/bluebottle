@@ -43,3 +43,39 @@ def get_platform_actor():
             return platform_organization.activity_pub_organization
     except Organization.DoesNotExist:
         pass
+
+
+def timedelta_to_iso(td):
+    sign = '-' if td.total_seconds() < 0 else ''
+    td = -td if td.total_seconds() < 0 else td
+
+    days = td.days
+    seconds = td.seconds
+    micros = td.microseconds
+
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+
+    parts = ['P']
+    if days:
+        parts.append(f'{days}D')
+
+    time_parts = []
+    if hours:
+        time_parts.append(f'{hours}H')
+    if minutes:
+        time_parts.append(f'{minutes}M')
+
+    if seconds or micros:
+        total_sec = seconds + micros / 1_000_000
+        s = f'{total_sec:.6f}'.rstrip('0').rstrip('.')
+        time_parts.append(f'{s}S')
+
+    if not days and not time_parts:
+        return 'PT0S'
+
+    if time_parts:
+        parts.append('T')
+        parts.extend(time_parts)
+
+    return sign + ''.join(parts)

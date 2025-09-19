@@ -7,8 +7,6 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
-from bluebottle.deeds.models import Deed
-from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 
@@ -46,6 +44,9 @@ class Actor(ActivityPubModel):
     def webfinger_uri(self):
         if self.preferred_username:
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
+
+    def __str__(self):
+        return self.preferred_username
 
 
 class PersonManager(PolymorphicManager):
@@ -171,41 +172,28 @@ class PublicKey(ActivityPubModel):
         super().save(*args, **kwargs)
 
 
-class EventManager(PolymorphicManager):
-    def from_model(self, model):
-        from bluebottle.activity_pub.utils import get_platform_actor
-        if not isinstance(model, Deed):
-            raise TypeError("Model should be a member instance")
-
-        try:
-            return model.event
-        except Deed.event.RelatedObjectDoesNotExist:
-            if model.image:
-                image_url = reverse('activity-image', args=(str(model.pk), ORIGINAL_SIZE))
-            elif model.initiative and model.initiative.image:
-                image_url = reverse('initiative-image', args=(str(model.initiative.pk), ORIGINAL_SIZE))
-
-            return Event.objects.create(
-                start_date=model.start,
-                end_date=model.end,
-                organizer=get_platform_actor(),
-                name=model.title,
-                description=model.description.html,
-                image=connection.tenant.build_absolute_url(image_url) if image_url else None,
-                activity=model
-            )
-
-
 class Event(ActivityPubModel):
     name = models.CharField()
     description = models.TextField()
     image = models.URLField(null=True)
-    start_date = models.DateField(null=True)
-    end_date = models.DateField(null=True)
+    start = models.DateTimeField(null=True)
+    end = models.DateTimeField(null=True)
+    duration = models.DurationField(null=True)
     organizer = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
-    activity = models.OneToOneField(Deed, null=True, on_delete=models.CASCADE)
-    objects = EventManager()
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="subevents",
+    )
+
+    activity = models.OneToOneField(
+        "activities.Activity", null=True, on_delete=models.SET_NULL
+    )
+
+    slot_id = models.CharField(max_length=100, null=True, blank=True)
 
     @property
     def adopted(self):
@@ -238,6 +226,20 @@ class Follow(Activity):
     @property
     def audience(self):
         return [self.object]
+
+
+class Follower(Follow):
+    class Meta:
+        proxy = True
+        verbose_name = _('Follower')
+        verbose_name_plural = _('Followers')
+
+
+class Following(Follow):
+    class Meta:
+        proxy = True
+        verbose_name = _('Following')
+        verbose_name_plural = _('Following')
 
 
 class Accept(Activity):

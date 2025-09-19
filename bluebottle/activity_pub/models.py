@@ -46,6 +46,14 @@ class Actor(ActivityPubModel):
             return f'acct:{self.preferred_username}@{connection.tenant.domain_url}'
 
     def __str__(self):
+        try:
+            return self.person.name
+        except Person.DoesNotExist:
+            pass
+        try:
+            return self.organization.name
+        except (Organization.DoesNotExist, AttributeError):
+            pass
         return self.preferred_username
 
 
@@ -124,12 +132,12 @@ class Organization(Actor):
 
     objects = OrganizationManager()
 
+    class Meta:
+        verbose_name = _("Platform")
+        verbose_name_plural = _("Platforms")
+
     def __str__(self):
         return self.name
-
-    class Meta:
-        verbose_name = _("Organization")
-        verbose_name_plural = _("Organizations")
 
 
 class Inbox(ActivityPubModel):
@@ -180,6 +188,7 @@ class Event(ActivityPubModel):
     end = models.DateTimeField(null=True)
     duration = models.DurationField(null=True)
     organizer = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=100)
 
     parent = models.ForeignKey(
         "self",
@@ -219,7 +228,7 @@ class Activity(ActivityPubModel):
 class Follow(Activity):
     object = models.ForeignKey(
         'activity_pub.Actor',
-        verbose_name=_("Organisation"),
+        verbose_name=_("Platform"),
         on_delete=models.CASCADE
     )
 
@@ -234,12 +243,18 @@ class Follower(Follow):
         verbose_name = _('Follower')
         verbose_name_plural = _('Followers')
 
+    def __str__(self):
+        return str(self.actor)
+
 
 class Following(Follow):
     class Meta:
         proxy = True
         verbose_name = _('Following')
         verbose_name_plural = _('Following')
+
+    def __str__(self):
+        return str(self.object)
 
 
 class Accept(Activity):

@@ -175,11 +175,7 @@ class EventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     description = serializers.CharField()
     duration = DurationField(required=False)
-    gu_activity_type = serializers.SerializerMethodField()
     sub_event = serializers.SerializerMethodField()
-
-    def get_gu_activity_type(self, obj):
-        return str(obj.activity.__class__.__name__)
 
     def get_sub_event(self, obj):
         subevents = obj.subevents.all().order_by("start")
@@ -240,7 +236,7 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
     ]
 
 
-def _download_event_image(event, user):
+def download_event_image(event, user):
     from io import BytesIO
 
     import requests

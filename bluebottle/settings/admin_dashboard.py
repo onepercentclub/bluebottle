@@ -64,10 +64,14 @@ JET_SIDE_MENU_ITEMS = [
             {
                 "name": "activity_pub.following",
                 "permissions": ["initiatives.change_activities"],
+                "url": "/en/admin/activity_pub/following/",
+                "label": _("Followed platforms"),
             },
             {
                 "name": "activity_pub.follower",
                 "permissions": ["initiatives.change_activities"],
+                "url": "/en/admin/activity_pub/follower/",
+                "label": _("Followers"),
             },
             {
                 "name": "activity_pub.activitypubmodel",

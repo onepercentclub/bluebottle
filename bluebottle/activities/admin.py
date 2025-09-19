@@ -788,7 +788,7 @@ class ActivityChildAdmin(
         activity = get_object_or_404(Activity, pk=unquote(pk))
         data = ActivityEventSerializer(activity).data
         actor = get_platform_actor()
-        event = EventCreationService.create_activity_from_event(data)
+        event = EventCreationService.create_event_from_activity(data)
         event.activity = activity
         event.save()
         publish = Publish.objects.create(actor=actor, object=event)

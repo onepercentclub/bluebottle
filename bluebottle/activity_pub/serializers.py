@@ -376,3 +376,8 @@ class ActivityEventSerializer(PolymorphicSerializer):
         serializer = self.get_serializer_from_data(data)
         result = serializer().to_internal_value(data)
         return result
+
+    def create(self, validated_data):
+        validated_data.pop('resourcetype', None)
+        serializer = self.get_serializer_from_data(validated_data)
+        return serializer().create(validated_data)

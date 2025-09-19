@@ -108,8 +108,6 @@ class JSONLDAdapter():
 
         discovered_url = client.get(url)
         actor = self.sync(discovered_url, ActorSerializer)
-        import ipdb; ipdb.set_trace()
-
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):

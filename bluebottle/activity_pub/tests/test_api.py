@@ -163,13 +163,12 @@ class PersonAPITestCase(ActivityPubTestCase):
     def test_accept(self):
         self.test_follow()
 
-        accept = Accept.objects.create(
+        Accept.objects.create(
             object=self.follow
         )
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
-
             self.assertTrue(accept)
 
     def test_publish_deed(self):

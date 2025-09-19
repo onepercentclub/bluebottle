@@ -9,7 +9,7 @@ class EventCreationService:
     
     @classmethod
     @transaction.atomic
-    def create_activity_from_event(cls, data):
+    def create_event_from_activity(cls, data):
         subevents_data = data.pop('subevents', [])
         organizer = get_platform_actor()
         data.pop('resourcetype', None)

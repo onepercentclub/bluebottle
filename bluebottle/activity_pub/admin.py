@@ -52,7 +52,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__
+        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
 
     list_display = ("id", "type", "url")
 
@@ -321,9 +321,17 @@ class FollowingAdmin(FollowAdmin):
         if obj is None:
             return ["platform_url"]
         return super().get_fields(request, obj, **kwargs)
-    list_display = ("object",)
+    list_display = ("object", "accepted")
 
-    readonly_fields = ('object', )
+    readonly_fields = ('object', 'accepted')
+
+    def accepted(self, obj):
+        """Check if this follow request has been accepted"""
+        from bluebottle.activity_pub.models import Accept
+        return Accept.objects.filter(object=obj).exists()
+    accepted.boolean = True
+    accepted.short_description = _("Accepted")
+
 
     fields = readonly_fields
     
@@ -380,7 +388,8 @@ class FollowingAdmin(FollowAdmin):
 
 @admin.register(Follower)
 class FollowerAdmin(FollowAdmin):
-    list_display = ("object",)
+    list_display = ("actor", "object", "accepted")
+    actions = ['accept_follow_requests']
 
     def get_queryset(self, request):
         from bluebottle.activity_pub.utils import get_platform_actor
@@ -389,6 +398,120 @@ class FollowerAdmin(FollowAdmin):
         if platform_actor:
             return qs.filter(object=platform_actor)
         return qs.none()
+
+    def accepted(self, obj):
+        """Check if this follow request has been accepted"""
+        from bluebottle.activity_pub.models import Accept
+        return Accept.objects.filter(object=obj).exists()
+    accepted.boolean = True
+    accepted.short_description = "Accepted"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/accept/",
+                self.admin_site.admin_view(self.accept_follow_request),
+                name="activity_pub_follower_accept",
+            ),
+        ]
+        return custom_urls + urls
+
+    def accept_follow_request(self, request, object_id):
+        """Accept a single follow request"""
+        from bluebottle.activity_pub.models import Accept, Follow
+        from bluebottle.activity_pub.utils import get_platform_actor
+        
+        follow = get_object_or_404(Follow, pk=unquote(object_id))
+        platform_actor = get_platform_actor()
+        
+        if not platform_actor:
+            self.message_user(request, "No platform actor configured", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_follower_change", args=[follow.pk])
+            )
+        
+        # Check if already accepted
+        if Accept.objects.filter(object=follow).exists():
+            self.message_user(
+                request,
+                f"Follow request from {follow.actor} has already been accepted",
+                level="info"
+            )
+        else:
+            # Create Accept object
+            Accept.objects.create(
+                actor=platform_actor,
+                object=follow
+            )
+            self.message_user(
+                request,
+                f"Successfully accepted follow request from {follow.actor}",
+                level="success"
+            )
+        
+        return HttpResponseRedirect(reverse('admin:activity_pub_follower_changelist'))
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Override change view to add accept button context"""
+        extra_context = extra_context or {}
+        
+        if object_id:
+            from bluebottle.activity_pub.models import Accept, Follow
+            follow = get_object_or_404(Follow, pk=unquote(object_id))
+            extra_context['is_accepted'] = Accept.objects.filter(object=follow).exists()
+            extra_context['accept_url'] = reverse('admin:activity_pub_follower_accept', args=[object_id])
+        
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def has_change_permission(self, request, obj=None):
+        # Allow viewing but not actual changing
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def accept_follow_requests(self, request, queryset):
+        """Accept selected follow requests"""
+        from bluebottle.activity_pub.models import Accept
+        from bluebottle.activity_pub.utils import get_platform_actor
+        
+        platform_actor = get_platform_actor()
+        if not platform_actor:
+            self.message_user(request, "No platform actor configured", level="error")
+            return
+            
+        accepted_count = 0
+        already_accepted_count = 0
+        
+        for follow in queryset:
+            # Check if already accepted
+            if Accept.objects.filter(object=follow).exists():
+                already_accepted_count += 1
+                continue
+                
+            # Create Accept object
+            Accept.objects.create(
+                actor=platform_actor,
+                object=follow
+            )
+            accepted_count += 1
+        
+        if accepted_count > 0:
+            self.message_user(
+                request, 
+                f"Successfully accepted {accepted_count} follow request(s)",
+                level="success"
+            )
+        
+        if already_accepted_count > 0:
+            self.message_user(
+                request,
+                f"{already_accepted_count} follow request(s) were already accepted",
+                level="info"
+            )
+    
+    accept_follow_requests.short_description = "Accept selected follow requests"
 
 
 @admin.register(Event)
@@ -462,6 +585,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         try:
             serializer = ActivityEventSerializer(data=model_to_dict(event))
             serializer.is_valid(raise_exception=True)
+
             activity = serializer.save(owner=request.user)
             self.message_user(
                 request,

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-17 09:14+0200\n"
-"PO-Revision-Date: 2025-09-17 07:16\n"
+"POT-Creation-Date: 2025-09-19 09:51+0200\n"
+"PO-Revision-Date: 2025-09-19 07:53\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -287,11 +287,11 @@ msgstr "Mit Ihrem Team"
 msgid "As an individual"
 msgstr "Als Einzelperson"
 
-#: bluebottle/activities/filters.py:343
+#: bluebottle/activities/filters.py:348
 msgid "In-person"
 msgstr "Persönlich"
 
-#: bluebottle/activities/filters.py:343
+#: bluebottle/activities/filters.py:348
 msgid "Online/remote"
 msgstr "Online/Remote"
 
@@ -299,101 +299,152 @@ msgstr "Online/Remote"
 msgid "Send impact reminder message"
 msgstr "Nachricht zur Einschlagserinnerung senden"
 
-#: bluebottle/activities/messages/activity_manager.py:17
-#: bluebottle/activities/messages/participant.py:47
-#: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
-#: bluebottle/time_based/messages.py:423 bluebottle/time_based/messages.py:447
-#: bluebottle/time_based/messages.py:747 bluebottle/time_based/messages.py:774
-#: bluebottle/time_based/messages.py:857 bluebottle/time_based/messages.py:880
-#: bluebottle/time_based/messages.py:905 bluebottle/time_based/messages.py:942
-#: bluebottle/time_based/messages/messages.py:426
-#: bluebottle/time_based/messages/messages.py:450
-#: bluebottle/time_based/messages/messages.py:750
-#: bluebottle/time_based/messages/messages.py:777
-#: bluebottle/time_based/messages/messages.py:872
-#: bluebottle/time_based/messages/messages.py:895
-#: bluebottle/time_based/messages/messages.py:920
-#: bluebottle/time_based/messages/messages.py:957
-#: bluebottle/time_based/messages/participants.py:18
-#: bluebottle/time_based/messages/registrations.py:25
+#: bluebottle/activities/messages/activity_manager.py:22
 msgctxt "email"
-msgid "Open your activity"
-msgstr "Öffne deine Aktivität"
+msgid "crowdfunding campaign"
+msgstr ""
 
-#: bluebottle/activities/messages/activity_manager.py:25
+#: bluebottle/activities/messages/activity_manager.py:24
+msgctxt "email"
+msgid "grant application"
+msgstr ""
+
+#: bluebottle/activities/messages/activity_manager.py:26
+msgctxt "email"
+msgid "activity"
+msgstr "aktivität"
+
+#: bluebottle/activities/messages/activity_manager.py:33
+#: bluebottle/funding/messages/funding/activity_manager.py:13
+#: bluebottle/funding/messages/funding/reviewer.py:13
+msgctxt "email"
+msgid "View campaign"
+msgstr "Kampagne ansehen"
+
+#: bluebottle/activities/messages/activity_manager.py:35
+#: bluebottle/grant_management/messages/activity_manager.py:15
+#: bluebottle/grant_management/messages/reviewer.py:13
+msgctxt "email"
+msgid "View application"
+msgstr "Antrag anzeigen"
+
+#: bluebottle/activities/messages/activity_manager.py:37
+#: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
+#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
+#: bluebottle/time_based/messages.py:84 bluebottle/time_based/messages.py:127
+#: bluebottle/time_based/messages.py:166 bluebottle/time_based/messages.py:205
+#: bluebottle/time_based/messages.py:228 bluebottle/time_based/messages.py:267
+#: bluebottle/time_based/messages.py:301 bluebottle/time_based/messages.py:324
+#: bluebottle/time_based/messages.py:347 bluebottle/time_based/messages.py:372
+#: bluebottle/time_based/messages.py:397 bluebottle/time_based/messages.py:469
+#: bluebottle/time_based/messages.py:503 bluebottle/time_based/messages.py:526
+#: bluebottle/time_based/messages.py:549 bluebottle/time_based/messages.py:571
+#: bluebottle/time_based/messages.py:593 bluebottle/time_based/messages.py:616
+#: bluebottle/time_based/messages.py:637 bluebottle/time_based/messages.py:704
+#: bluebottle/time_based/messages.py:725 bluebottle/time_based/messages.py:834
+#: bluebottle/time_based/messages/messages.py:87
+#: bluebottle/time_based/messages/messages.py:130
+#: bluebottle/time_based/messages/messages.py:169
+#: bluebottle/time_based/messages/messages.py:208
+#: bluebottle/time_based/messages/messages.py:231
+#: bluebottle/time_based/messages/messages.py:270
+#: bluebottle/time_based/messages/messages.py:304
+#: bluebottle/time_based/messages/messages.py:327
+#: bluebottle/time_based/messages/messages.py:350
+#: bluebottle/time_based/messages/messages.py:375
+#: bluebottle/time_based/messages/messages.py:400
+#: bluebottle/time_based/messages/messages.py:472
+#: bluebottle/time_based/messages/messages.py:506
+#: bluebottle/time_based/messages/messages.py:529
+#: bluebottle/time_based/messages/messages.py:552
+#: bluebottle/time_based/messages/messages.py:574
+#: bluebottle/time_based/messages/messages.py:596
+#: bluebottle/time_based/messages/messages.py:619
+#: bluebottle/time_based/messages/messages.py:640
+#: bluebottle/time_based/messages/messages.py:707
+#: bluebottle/time_based/messages/messages.py:728
+#: bluebottle/time_based/messages/messages.py:849
+#: bluebottle/time_based/messages/participants.py:62
+#: bluebottle/time_based/messages/participants.py:127
+#: bluebottle/time_based/messages/registrations.py:91
+msgctxt "email"
+msgid "View activity"
+msgstr "Aktivität anzeigen"
+
+#: bluebottle/activities/messages/activity_manager.py:45
 #, python-brace-format
 msgctxt "email"
 msgid "Please share the impact results for your activity \"{title}\"."
 msgstr "Bitte teilen Sie die Ergebnisse für Ihre Aktivität \"{title}\"."
 
-#: bluebottle/activities/messages/activity_manager.py:36
+#: bluebottle/activities/messages/activity_manager.py:56
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has succeeded 🎉"
 msgstr "Ihre Aktivität \"{title}\" wurde erfolgreich 🎉"
 
-#: bluebottle/activities/messages/activity_manager.py:44
+#: bluebottle/activities/messages/activity_manager.py:64
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has been restored"
 msgstr "Die Aktivität \"{title}\" wurde wiederhergestellt"
 
-#: bluebottle/activities/messages/activity_manager.py:52
+#: bluebottle/activities/messages/activity_manager.py:72
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been rejected"
 msgstr "Ihre Aktivität \"{title}\" wurde abgelehnt"
 
-#: bluebottle/activities/messages/activity_manager.py:60
+#: bluebottle/activities/messages/activity_manager.py:80
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been cancelled"
 msgstr "Ihre Aktivität \"{title}\" wurde abgebrochen"
 
-#: bluebottle/activities/messages/activity_manager.py:68
+#: bluebottle/activities/messages/activity_manager.py:88
 #, python-brace-format
 msgctxt "email"
 msgid "The registration deadline for your activity \"{title}\" has expired"
 msgstr "Die Registrierungsfrist für Ihre Aktivität \"{title}\" ist abgelaufen"
 
-#: bluebottle/activities/messages/activity_manager.py:76
+#: bluebottle/activities/messages/activity_manager.py:96
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been published!"
 msgstr "Ihre Aktivität auf {site_name} wurde veröffentlicht!"
 
-#: bluebottle/activities/messages/activity_manager.py:84
+#: bluebottle/activities/messages/activity_manager.py:104
 #: bluebottle/time_based/messages/activity_manager.py:18
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an activity on {site_name}"
 msgstr "Sie haben eine Aktivität auf {site_name} eingereicht"
 
-#: bluebottle/activities/messages/activity_manager.py:92
+#: bluebottle/activities/messages/activity_manager.py:112
 #: bluebottle/time_based/messages/activity_manager.py:26
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been approved!"
 msgstr "Ihre Aktivität auf {site_name} wurde genehmigt!"
 
-#: bluebottle/activities/messages/activity_manager.py:100
+#: bluebottle/activities/messages/activity_manager.py:120
 #, python-brace-format
 msgctxt "email"
 msgid "The activity you submitted on {site_name} needs work"
 msgstr "Die Aktivität, die Sie bei {site_name} eingereicht haben, benötigt Arbeit"
 
-#: bluebottle/activities/messages/activity_manager.py:105
+#: bluebottle/activities/messages/activity_manager.py:125
 #, python-brace-format
 msgctxt "email"
 msgid "Publish your activity \"{title}\""
 msgstr "Veröffentlichen Sie Ihre Aktivität \"{title}\""
 
-#: bluebottle/activities/messages/activity_manager.py:113
+#: bluebottle/activities/messages/activity_manager.py:133
 msgctxt "email"
 msgid "Publish your activity"
 msgstr "Veröffentlichen Sie Ihre Aktivität"
 
-#: bluebottle/activities/messages/activity_manager.py:117
+#: bluebottle/activities/messages/activity_manager.py:137
 msgctxt "email"
 msgid "Terms of service"
 msgstr "Nutzungsbedingungen"
@@ -474,6 +525,26 @@ msgstr "Sie wurden zur Aktivität hinzugefügt {title}"
 msgctxt "email"
 msgid "You have withdrawn from the activity \"{title}\""
 msgstr "Sie haben die Aktivität \"{title} \" zurückgezogen"
+
+#: bluebottle/activities/messages/participant.py:47
+#: bluebottle/collect/messages.py:56 bluebottle/deeds/messages.py:57
+#: bluebottle/time_based/messages.py:423 bluebottle/time_based/messages.py:447
+#: bluebottle/time_based/messages.py:747 bluebottle/time_based/messages.py:774
+#: bluebottle/time_based/messages.py:857 bluebottle/time_based/messages.py:880
+#: bluebottle/time_based/messages.py:905 bluebottle/time_based/messages.py:942
+#: bluebottle/time_based/messages/messages.py:426
+#: bluebottle/time_based/messages/messages.py:450
+#: bluebottle/time_based/messages/messages.py:750
+#: bluebottle/time_based/messages/messages.py:777
+#: bluebottle/time_based/messages/messages.py:872
+#: bluebottle/time_based/messages/messages.py:895
+#: bluebottle/time_based/messages/messages.py:920
+#: bluebottle/time_based/messages/messages.py:957
+#: bluebottle/time_based/messages/participants.py:18
+#: bluebottle/time_based/messages/registrations.py:25
+msgctxt "email"
+msgid "Open your activity"
+msgstr "Öffne deine Aktivität"
 
 #: bluebottle/activities/messages/reviewer.py:17
 msgctxt "email"
@@ -1386,11 +1457,9 @@ msgstr "Sie können Ihre Aktivität auf Ihrer Aktivitätsdetailseite veröffentl
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            Terms of Service for %(title)s\n"
+"            Thanks for creating a %(activity_type)s for \"%(title)s\". Here are the Terms of Service.\n"
 "        "
-msgstr "\n"
-"            Nutzungsbedingungen für %(title)s\n"
-"        "
+msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:7
 #, python-format
@@ -2729,9 +2798,11 @@ msgstr "Personen"
 msgid "Platform Statistics"
 msgstr "Plattformstatistik"
 
-#: bluebottle/cms/models.py:309 bluebottle/cms/models.py:433
-msgid "Global"
-msgstr "Globale"
+#: bluebottle/cms/models.py:309 bluebottle/funding/filters.py:17
+#: bluebottle/funding/filters.py:44 bluebottle/time_based/admin.py:1150
+#: bluebottle/time_based/models.py:215
+msgid "All"
+msgstr "Alle"
 
 #: bluebottle/cms/models.py:310 bluebottle/cms/models.py:434
 msgid "Group"
@@ -2797,6 +2868,10 @@ msgstr "Projekte"
 #: bluebottle/cms/models.py:422
 msgid "Share Results"
 msgstr "Ergebnisse teilen"
+
+#: bluebottle/cms/models.py:433
+msgid "Global"
+msgstr "Globale"
 
 #: bluebottle/cms/models.py:438
 msgid "Map view"
@@ -3043,48 +3118,6 @@ msgstr "Heute"
 msgctxt "email"
 msgid "Runs indefinitely"
 msgstr "Läuft unbegrenzt"
-
-#: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
-#: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
-#: bluebottle/time_based/messages.py:84 bluebottle/time_based/messages.py:127
-#: bluebottle/time_based/messages.py:166 bluebottle/time_based/messages.py:205
-#: bluebottle/time_based/messages.py:228 bluebottle/time_based/messages.py:267
-#: bluebottle/time_based/messages.py:301 bluebottle/time_based/messages.py:324
-#: bluebottle/time_based/messages.py:347 bluebottle/time_based/messages.py:372
-#: bluebottle/time_based/messages.py:397 bluebottle/time_based/messages.py:469
-#: bluebottle/time_based/messages.py:503 bluebottle/time_based/messages.py:526
-#: bluebottle/time_based/messages.py:549 bluebottle/time_based/messages.py:571
-#: bluebottle/time_based/messages.py:593 bluebottle/time_based/messages.py:616
-#: bluebottle/time_based/messages.py:637 bluebottle/time_based/messages.py:704
-#: bluebottle/time_based/messages.py:725 bluebottle/time_based/messages.py:834
-#: bluebottle/time_based/messages/messages.py:87
-#: bluebottle/time_based/messages/messages.py:130
-#: bluebottle/time_based/messages/messages.py:169
-#: bluebottle/time_based/messages/messages.py:208
-#: bluebottle/time_based/messages/messages.py:231
-#: bluebottle/time_based/messages/messages.py:270
-#: bluebottle/time_based/messages/messages.py:304
-#: bluebottle/time_based/messages/messages.py:327
-#: bluebottle/time_based/messages/messages.py:350
-#: bluebottle/time_based/messages/messages.py:375
-#: bluebottle/time_based/messages/messages.py:400
-#: bluebottle/time_based/messages/messages.py:472
-#: bluebottle/time_based/messages/messages.py:506
-#: bluebottle/time_based/messages/messages.py:529
-#: bluebottle/time_based/messages/messages.py:552
-#: bluebottle/time_based/messages/messages.py:574
-#: bluebottle/time_based/messages/messages.py:596
-#: bluebottle/time_based/messages/messages.py:619
-#: bluebottle/time_based/messages/messages.py:640
-#: bluebottle/time_based/messages/messages.py:707
-#: bluebottle/time_based/messages/messages.py:728
-#: bluebottle/time_based/messages/messages.py:849
-#: bluebottle/time_based/messages/participants.py:62
-#: bluebottle/time_based/messages/participants.py:127
-#: bluebottle/time_based/messages/registrations.py:91
-msgctxt "email"
-msgid "View activity"
-msgstr "Aktivität anzeigen"
 
 #: bluebottle/collect/messages.py:44 bluebottle/deeds/messages.py:45
 #, python-brace-format
@@ -3982,11 +4015,6 @@ msgstr "Anonyme Spende entfernen"
 msgid "Select or create a payout account"
 msgstr "Wählen oder erstellen Sie ein Auszahlungskonto"
 
-#: bluebottle/funding/filters.py:17 bluebottle/funding/filters.py:44
-#: bluebottle/time_based/admin.py:1150 bluebottle/time_based/models.py:215
-msgid "All"
-msgstr "Alle"
-
 #: bluebottle/funding/filters.py:62
 msgid "Pledged"
 msgstr "Versprechend"
@@ -4015,12 +4043,6 @@ msgstr "Benutzerdefinierte Nachricht"
 #: bluebottle/funding/forms.py:18
 msgid "You can provide a custom message to the campaign owner explaining why the funding needs work."
 msgstr "Sie können dem Kampagneninhaber eine benutzerdefinierte Nachricht zukommen lassen, in der Sie erklären, warum die Finanzierung Arbeit benötigt."
-
-#: bluebottle/funding/messages/funding/activity_manager.py:13
-#: bluebottle/funding/messages/funding/reviewer.py:13
-msgctxt "email"
-msgid "View campaign"
-msgstr "Kampagne ansehen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:25
 msgid "You have a new donation!💰"
@@ -6212,12 +6234,6 @@ msgstr "Know Your Customer-Informationen"
 #: bluebottle/grant_management/forms.py:169
 msgid "Account details not available"
 msgstr "Kontodaten nicht verfügbar"
-
-#: bluebottle/grant_management/messages/activity_manager.py:15
-#: bluebottle/grant_management/messages/reviewer.py:13
-msgctxt "email"
-msgid "View application"
-msgstr "Antrag anzeigen"
 
 #: bluebottle/grant_management/messages/activity_manager.py:35
 #, python-brace-format
@@ -9281,19 +9297,19 @@ msgstr "Teilnehmer für diese Registrierung erstellen"
 msgid "Create slot participant for this registration"
 msgstr "Slot Teilnehmer für diese Registrierung erstellen"
 
-#: bluebottle/time_based/effects/registrations.py:43
+#: bluebottle/time_based/effects/registrations.py:44
 msgid "Create participant for this team member"
 msgstr "Teilnehmer für dieses Teammitglied erstellen"
 
-#: bluebottle/time_based/effects/registrations.py:60
+#: bluebottle/time_based/effects/registrations.py:61
 msgid "Create initial periodic participant for this registration"
 msgstr "Erstelle einen ersten periodischen Teilnehmer für diese Registrierung"
 
-#: bluebottle/time_based/effects/registrations.py:75
+#: bluebottle/time_based/effects/registrations.py:76
 msgid "Adjust initial periodic participant and connect to slot"
 msgstr "Den ursprünglichen periodischen Teilnehmer anpassen und mit Slot verbinden"
 
-#: bluebottle/time_based/effects/registrations.py:107
+#: bluebottle/time_based/effects/registrations.py:108
 msgid "Create team for this registration"
 msgstr "Team für diese Registrierung erstellen"
 

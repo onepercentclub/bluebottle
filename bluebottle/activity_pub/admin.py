@@ -31,9 +31,12 @@ from bluebottle.activity_pub.models import (
     Following,
     Follower,
 )
-from bluebottle.activity_pub.serializers import ActivityEventSerializer
+from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeadlineActivityEventSerializer, \
+    DeedEventSerializer, DateActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.deeds.serializers import DeedSerializer
+from bluebottle.time_based.models import DeadlineActivity
 
 
 @admin.register(ActivityPubModel)
@@ -474,6 +477,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "activity",
         "url",
         "pub_url",
+        "activity_type"
     )
     fields = readonly_fields
     inlines = [SubEventInline, AnnouncementInline]
@@ -527,7 +531,14 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-            serializer = ActivityEventSerializer(data=model_to_dict(event))
+            if event.activity_type == 'deed':
+                serializer = DeedEventSerializer(data=model_to_dict(event))
+            elif event.activity_type == 'deadline':
+                serializer = DeadlineActivityEventSerializer
+            elif event.activity_type == 'date':
+                serializer = DateActivityEventSerializer
+            else:
+                serializer = ActivityEventSerializer(data=model_to_dict(event))
             serializer.is_valid(raise_exception=True)
             activity = serializer.save(owner=request.user)
             event.activity = activity

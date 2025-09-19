@@ -283,6 +283,36 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
             )
         return image_url
 
+    def save(self, **kwargs):
+        # Get user from kwargs (passed from view) or from context
+        user = kwargs.get('owner') or (
+            self.context.get('request') and self.context['request'].user
+        )
+        
+        # Call parent save first to create/update the activity
+        activity = super().save(**kwargs)
+        
+        # Check if there's an image URL in the initial data and we have a user
+        if (hasattr(self, 'initial_data') and 
+            self.initial_data.get('image') and 
+            user and 
+            not activity.image):  # Only download if no image is already set
+            
+            # Create a mock event object with the image URL for download_event_image
+            class MockEvent:
+                def __init__(self, image_url, pk):
+                    self.image = image_url
+                    self.pk = pk
+            
+            mock_event = MockEvent(self.initial_data['image'], activity.pk)
+            downloaded_image = download_event_image(mock_event, user)
+            
+            if downloaded_image:
+                activity.image = downloaded_image
+                activity.save()
+        
+        return activity
+        
     class Meta:
         model = Activity
         fields = ('name', 'description', 'image')

@@ -188,7 +188,6 @@ class Event(ActivityPubModel):
     end = models.DateTimeField(null=True)
     duration = models.DurationField(null=True)
     organizer = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    activity_type = models.CharField(max_length=100)
 
     parent = models.ForeignKey(
         "self",
@@ -203,6 +202,14 @@ class Event(ActivityPubModel):
     )
 
     slot_id = models.CharField(max_length=100, null=True, blank=True)
+
+    @property
+    def activity_type(self):
+        if self.subevents.exists():
+            return "date"
+        if self.duration:
+            return "deadline"
+        return "deed"
 
     @property
     def adopted(self):

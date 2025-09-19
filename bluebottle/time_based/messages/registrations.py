@@ -3,10 +3,11 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
-from bluebottle.utils.widgets import duration_to_hours
+from bluebottle.time_based.utils import duration_to_hours
 
 
 class ManagerRegistrationNotification(TransitionMessage):
@@ -73,6 +74,13 @@ class UserRegistrationNotification(TransitionMessage):
             context['start'] = self.obj.activity.start
             context['end'] = self.obj.activity.deadline
             context['duration'] = duration_to_hours(self.obj.activity.duration)
+
+        settings = InitiativePlatformSettings.load()
+        context['hour_registration'] = (
+            settings.hour_registration != 'none'
+            and self.obj.activity.hour_registration_data
+            or settings.hour_registration_data
+        )
 
         return context
 

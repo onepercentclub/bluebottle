@@ -11,5 +11,4 @@ class NotificationPlatformSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'share_options',
             'facebook_at_work_url',
-            'default_yammer_group_id',
         )

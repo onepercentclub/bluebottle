@@ -3,6 +3,7 @@ from bluebottle.activities.messages.activity_manager import (
     ActivitySucceededNotification, ActivityRestoredNotification,
     ActivityExpiredNotification
 )
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import NotificationTestCase
 from bluebottle.time_based.messages import (
@@ -119,6 +120,21 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertBodyContains('You are registered for a time slot for the activity')
         self.assertActionLink(self.obj.slot.get_absolute_url())
         self.assertActionTitle('View activity')
+
+    def test_participant_registered_with_hour_registration(self):
+        settings = InitiativePlatformSettings.load()
+        settings.hour_registration = 'generic'
+        settings.save()
+        self.activity.hour_registration_data = 'https://example.com'
+        self.activity.save()
+        self.obj = DateParticipantFactory.create(
+            activity=self.activity,
+            slot=self.obj.activity.slots.first(),
+            user=self.supporter
+        )
+        self.message_class = ParticipantSlotParticipantRegisteredNotification
+        self.create()
+        self.assertBodyContains('Make sure to register your hours')
 
     def test_participant_registered_with_review_link(self):
         self.activity.review_link = 'https://example.com'

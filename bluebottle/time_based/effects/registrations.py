@@ -28,12 +28,13 @@ class CreateSlotParticipantEffect(Effect):
     def post_save(self, **kwargs):
         if self.instance.activity.slots.count() == 1:
             slot = self.instance.activity.slots.first()
-            self.instance.participants.create(
-                activity=self.instance.activity,
-                user=self.instance.user,
-                slot=slot,
-                registration=self.instance,
-            )
+            if not slot.participants.filter(user=self.instance.user).exists():
+                self.instance.participants.create(
+                    activity=self.instance.activity,
+                    user=self.instance.user,
+                    slot=slot,
+                    registration=self.instance,
+                )
 
     def is_valid(self):
         return not self.instance.activity.slots.count() == 1
@@ -76,14 +77,15 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
     template = "admin/adjust_participant.html"
 
     def post_save(self, **kwargs):
-        slot = self.instance.activity.slots.last()
+        activity = self.instance.activity
+        slot = activity.slots.last()
         if not slot:
             slot = PeriodicSlot.objects.create(
-                activity=self.instance,
+                activity=activity,
                 start=now(),
-                end=now() + relativedelta(**{self.instance.period: 1}),
+                end=now() + relativedelta(**{activity.period: 1}),
                 status='running',
-                duration=self.instance.duration
+                duration=activity.duration
             )
         participant = self.instance.participants.first()
         if participant:
@@ -92,7 +94,7 @@ class AdjustInitialPeriodicParticipantEffect(Effect):
             participant.contributions.update(start=slot.start)
         else:
             self.instance.participants.create(
-                activity=self.instance.activity,
+                activity=activity,
                 user=self.instance.user,
                 slot=slot,
                 registration=self.instance,

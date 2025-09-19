@@ -1,5 +1,6 @@
 from djmoney.money import Money
 
+from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
 from bluebottle.grant_management.messages.activity_manager import GrantApplicationApprovedMessage, \
     GrantApplicationRejectedMessage, GrantApplicationSubmittedMessage, GrantApplicationCancelledMessage
 from bluebottle.grant_management.messages.grant_provider import GrantPaymentRequestMessage
@@ -45,6 +46,15 @@ class GrantApplicationNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('You have submitted a grant application on Test')
         self.assertBodyContains('has been submitted')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View application')
+
+    def test_activity_terms_notification(self):
+        self.message_class = TermsOfServiceNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Terms of service')
+        self.assertBodyContains('Thanks for creating a grant application for')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View application')
 

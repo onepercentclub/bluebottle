@@ -6,7 +6,6 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activities.models import Activity
 from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
-from bluebottle.activity_pub.mappers.base import get_absolute_path
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -263,6 +262,10 @@ def _download_event_image(event, user):
         except Exception:
             return None
     return None
+
+
+def get_absolute_path(tenant, path):
+    return tenant.build_absolute_url(path) if (tenant and path) else None
 
 
 class BaseActivityEventSerializer(serializers.ModelSerializer):

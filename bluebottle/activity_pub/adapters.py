@@ -9,7 +9,6 @@ from django.urls import resolve
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Actor, Follow, Announce
 from bluebottle.activity_pub.models import Actor, Follow, Activity
 from bluebottle.activity_pub.utils import is_local, get_platform_actor
 
@@ -25,8 +24,12 @@ from django.dispatch import receiver
 
 @receiver([post_save])
 def publish_activity(sender, instance, **kwargs):
-    if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
-        adapter.publish(instance)
+    try:
+        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+            adapter.publish(instance)
+    except Exception as e:
+        logger.error(f"Failed to publish activity: {str(e)}")
+        pass
 
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
@@ -96,10 +99,13 @@ class JSONLDAdapter():
         serializer = serializer(data=data)
         serializer.is_valid(raise_exception=True)
         event =  serializer.save()
-        from bluebottle.activity_pub.serializers import EventSerializer
+        from bluebottle.activity_pub.serializers import EventSerializer, PlaceSerializer
         for sub_event in sub_events:
             slot = EventSerializer().create(sub_event)
             slot.save(parent=event)
+        if data.get('place'):
+            event.place = PlaceSerializer().create(data['place'])
+            event.save()
         return event
 
     def follow(self, url):

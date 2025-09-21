@@ -24,6 +24,7 @@ from bluebottle.activity_pub.models import (
     Inbox,
     Outbox,
     Person,
+    Place,  # Add Place import
     PublicKey,
     Publish,
     Announce,
@@ -55,6 +56,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Announce,
         Event,
         Organization,
+        Place,  # Add Place to child_models
     )
 
     def type(self, obj):
@@ -456,6 +458,51 @@ class FollowerAdmin(FollowAdmin):
     accept_follow_requests.short_description = "Accept selected follow requests"
 
 
+@admin.register(Place)
+class PlaceAdmin(ActivityPubModelChildAdmin):
+    list_display = (
+        "name",
+        "locality", 
+        "country",
+        "latitude",
+        "longitude"
+    )
+    list_filter = ['country', 'region']
+    search_fields = ['name', 'locality', 'street_address', 'country']
+    readonly_fields = ("pub_url",)
+    
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'pub_url')
+        }),
+        (_('Address'), {
+            'fields': ('street_address', 'postal_code', 'locality', 'region', 'country', 'country_code')
+        }),
+        (_('Coordinates'), {
+            'fields': ('latitude', 'longitude', 'mapbox_id')
+        }),
+    )
+
+
+class PlaceInline(admin.StackedInline):
+    model = Place
+    extra = 0
+    max_num = 1
+    verbose_name = _("Location")
+    verbose_name_plural = _("Locations")
+    fields = (
+        'name',
+        'street_address', 
+        'postal_code',
+        'locality',
+        'region', 
+        'country',
+        'country_code',
+        'latitude',
+        'longitude'
+    )
+
+
 @admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
@@ -464,7 +511,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "organizer",
         "start",
         "end",
-        "organizer",
+        "place",  # Add place
     )
     readonly_fields = (
         "name",
@@ -475,6 +522,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "organizer",
         "actor",
         "activity",
+        "place",  # Add place
         "url",
         "pub_url",
         "activity_type"
@@ -534,16 +582,15 @@ class EventAdmin(ActivityPubModelChildAdmin):
             if event.activity_type == 'deed':
                 serializer = DeedEventSerializer(data=model_to_dict(event))
             elif event.activity_type == 'deadline':
-                serializer = DeadlineActivityEventSerializer
+                serializer = DeadlineActivityEventSerializer(data=model_to_dict(event))
             elif event.activity_type == 'date':
-                serializer = DateActivityEventSerializer
+                serializer = DateActivityEventSerializer(data=model_to_dict(event))
             else:
                 serializer = ActivityEventSerializer(data=model_to_dict(event))
             serializer.is_valid(raise_exception=True)
             activity = serializer.save(owner=request.user)
             event.activity = activity
             event.save()
-            actor = get_platform_actor()
 
             self.message_user(
                 request,

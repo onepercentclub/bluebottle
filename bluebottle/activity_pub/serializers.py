@@ -1,3 +1,4 @@
+from bluebottle.geo.models import Geolocation
 from django.db import models, connection
 from django.urls import reverse
 from isodate import parse_duration
@@ -14,6 +15,7 @@ from bluebottle.activity_pub.models import (
     Inbox,
     Outbox,
     Person,
+    Place,
     PublicKey,
     Publish,
     Organization,
@@ -168,6 +170,82 @@ class DurationField(serializers.DurationField):
         return parse_duration(data)
 
 
+class PlaceSerializer(ActivityPubSerializer):
+    name = serializers.CharField()
+    latitude = serializers.DecimalField(max_digits=10, decimal_places=6, coerce_to_string=False)
+    longitude = serializers.DecimalField(max_digits=10, decimal_places=6, coerce_to_string=False)
+    
+    address = serializers.SerializerMethodField()
+    
+    geo = serializers.SerializerMethodField()
+    
+    locality = serializers.CharField()
+    region = serializers.CharField()
+    country = serializers.CharField()
+    country_code = serializers.CharField()
+    identifier = serializers.SerializerMethodField()
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Place'
+        url_name = 'json-ld:place'
+        model = Place
+
+    def get_address(self, obj):
+        """Return Schema.org PostalAddress structure"""
+        return {
+            "type": "PostalAddress",
+            "streetAddress": obj.street_address,
+            "addressLocality": obj.locality,
+            "addressRegion": obj.region,
+            "postalCode": obj.postal_code,
+            "addressCountry": obj.country_code
+        }
+
+    def get_geo(self, obj):
+        """Return Schema.org GeoCoordinates structure"""
+        try:
+            latitude = float(obj.latitude) if obj.latitude else None
+            longitude = float(obj.longitude) if obj.longitude else None
+        except (ValueError, TypeError):
+            latitude = longitude = None
+            
+        return {
+            "type": "GeoCoordinates", 
+            "latitude": latitude,
+            "longitude": longitude
+        }
+
+    def get_identifier(self, obj):
+        """Return identifier array with mapbox ID if available"""
+        identifiers = []
+        if obj.mapbox_id:
+            identifiers.append({
+                "scheme": "mapbox",
+                "value": obj.mapbox_id
+            })
+        return identifiers if identifiers else None
+
+    def to_representation(self, instance):
+        """Override to add custom context information for Place objects"""
+        data = super().to_representation(instance)
+        data['_custom_context'] = 'place_with_schema'
+        data = {k: v for k, v in data.items() if v is not None}
+        
+        return data
+
+    def create(self, validated_data):
+        data  = validated_data.copy()
+        data.pop('url', None)
+        data.pop('id', None)
+        data.pop('type', None)
+        data.pop('identifier', None)
+        data.pop('https://schema.org/postal_address', None)
+        data.pop('https://schema.org/geo', None)
+        place = Place.objects.create(**data)
+        return place
+
+
+
 class EventSerializer(ActivityPubSerializer):
     organizer = RelatedActivityPubField(OrganizationSerializer)
     start = serializers.DateTimeField(required=False)
@@ -176,12 +254,29 @@ class EventSerializer(ActivityPubSerializer):
     description = serializers.CharField()
     duration = DurationField(required=False)
     sub_event = serializers.SerializerMethodField()
+    place = PlaceSerializer(required=False, read_only=True)
 
     def get_sub_event(self, obj):
         subevents = obj.subevents.all().order_by("start")
         if subevents.exists():
             return EventSerializer(subevents, many=True, context=self.context).data
         return None
+
+    def create(self, validated_data):
+        place_data = validated_data.pop('place', None)
+        instance = super().create(validated_data)
+
+        if place_data:
+            place_data.pop('url', None)
+            place_data.pop('id', None)
+            place_data.pop('type', None)
+            place_data.pop('identifier', None)
+
+            place = Place.objects.create(**place_data)
+            instance.place = place
+            instance.save()
+
+        return instance
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Event'
@@ -264,6 +359,60 @@ def get_absolute_path(tenant, path):
     return tenant.build_absolute_url(path) if (tenant and path) else None
 
 
+
+class PlaceEventSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+    name = serializers.CharField(source='locality')
+    street_0address = serializers.SerializerMethodField()
+    postal_code = serializers.CharField()
+    locality = serializers.CharField()
+    region = serializers.CharField(source='province')
+    country = serializers.CharField(source='country.name')
+    country_code = serializers.CharField(source='country.alpha2_code')
+    latitude = serializers.SerializerMethodField()
+    longitude = serializers.SerializerMethodField()
+    mapbox_id = serializers.CharField()
+
+    def get_type(self, obj):
+        return 'Place'
+
+    def get_street_address(self, obj):
+        parts = []
+        if obj.street:
+            parts.append(obj.street)
+        if obj.street_number:
+            parts.append(obj.street_number)
+        return ' '.join(parts) if parts else None
+    
+    def get_latitude(self, obj):
+        return str(obj.position.y) if obj.position else None
+    
+    def get_longitude(self, obj):
+        return str(obj.position.x) if obj.position else None
+
+    def to_representation(self, instance):
+        """Override to add custom context information for Place objects"""
+        data = super().to_representation(instance)
+        data['_custom_context'] = 'place_with_schema'
+        return data
+
+    class Meta:
+        model = Geolocation
+        fields = [
+            'type',
+            'name',
+            'street_address',
+            'postal_code',
+            'locality',
+            'region',
+            'country',
+            'country_code',
+            'latitude',
+            'longitude',
+            'mapbox_id'
+        ]
+
+
 class BaseActivityEventSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title', required=False)
     description = RichTextField(required=False, allow_null=True)
@@ -326,9 +475,8 @@ class DateToDateTimeField(serializers.DateTimeField):
         if not value:
             return None
 
-        # If it's a pure date, convert to datetime at start of day
         if isinstance(value, date) and not isinstance(value, datetime):
-            value = datetime.combine(value, time.min)
+            value = datetime.combine(value, time(12, 0))  
 
         # Ensure timezone-aware
         if timezone.is_naive(value):
@@ -350,20 +498,22 @@ class DeadlineActivityEventSerializer(BaseActivityEventSerializer):
     start = DateToDateTimeField(required=False, allow_null=True)
     end = DateToDateTimeField(source='deadline', required=False, allow_null=True)
     duration = serializers.DurationField(required=False, allow_null=True)
+    place = PlaceEventSerializer(source='location', required=False, allow_null=True)
 
     class Meta:
         model = DeadlineActivity
-        fields = BaseActivityEventSerializer.Meta.fields + ('duration', 'start', 'end')
+        fields = BaseActivityEventSerializer.Meta.fields + ('duration', 'start', 'end', 'place')
 
 
 class BaseSlotEventSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title', required=False)
     start = serializers.DateTimeField(required=False, allow_null=True)
     end = serializers.DateTimeField(required=False, allow_null=True)
+    place = PlaceEventSerializer(source='location', required=False, allow_null=True)
 
     class Meta:
         model = ActivitySlot
-        fields = ('name', 'start', 'end')
+        fields = ('name', 'start', 'end', 'place')
 
 
 class DateActivitySlotEventSerializer(BaseSlotEventSerializer):

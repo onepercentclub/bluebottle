@@ -14,7 +14,6 @@ from bluebottle.organizations.models import Organization as BluebottleOrganizati
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):
         ContentType.objects.clear_cache()
-
         super().__init__(*args, **kwargs)
 
     url = models.URLField(null=True, unique=True)
@@ -180,6 +179,22 @@ class PublicKey(ActivityPubModel):
         super().save(*args, **kwargs)
 
 
+class Place(ActivityPubModel):
+    name = models.CharField(max_length=1000)
+    latitude = models.CharField(max_length=1000)
+    longitude = models.CharField(max_length=1000)
+
+    street_address = models.CharField(max_length=1000)
+    postal_code = models.CharField(max_length=1000)
+
+    locality = models.CharField(max_length=1000)
+    region = models.CharField(max_length=1000)
+    country = models.CharField(max_length=1000)
+    country_code = models.CharField(max_length=5)
+
+    mapbox_id = models.CharField(max_length=1000)
+
+
 class Event(ActivityPubModel):
     name = models.CharField()
     description = models.TextField()
@@ -188,6 +203,7 @@ class Event(ActivityPubModel):
     end = models.DateTimeField(null=True)
     duration = models.DurationField(null=True)
     organizer = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)  # Add this field
 
     parent = models.ForeignKey(
         "self",

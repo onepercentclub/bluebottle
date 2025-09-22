@@ -98,7 +98,7 @@ class JSONLDAdapter():
         sub_events = data.pop('sub_event', [])
         serializer = serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        event =  serializer.save()
+        event = serializer.save()
         from bluebottle.activity_pub.serializers import EventSerializer, PlaceSerializer
         for sub_event in sub_events:
             slot = EventSerializer().create(sub_event)

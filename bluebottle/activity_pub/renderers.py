@@ -10,7 +10,7 @@ class JSONLDRenderer(renderers.JSONRenderer):
 
     def get_context_for_object(self, data):
         """Return appropriate context based on object type and requirements"""
-        
+
         # Check if this is a Place object that needs Schema.org context
         if data.get('_custom_context') == 'place_with_schema':
             return [
@@ -21,7 +21,7 @@ class JSONLDRenderer(renderers.JSONRenderer):
                     "geo": "schema:geo"
                 }
             ]
-        
+
         return default_context
 
     def get_enhanced_context(self, data):
@@ -31,7 +31,7 @@ class JSONLDRenderer(renderers.JSONRenderer):
             base_context = default_context.copy()
         else:
             base_context = [default_context]
-        
+
         # Check if we have any Place objects that need Schema.org context
         if self.has_place_with_schema(data):
             # Add Schema.org context
@@ -41,7 +41,7 @@ class JSONLDRenderer(renderers.JSONRenderer):
                 "geo": "schema:geo"
             }
             base_context.append(schema_context)
-            
+
         return base_context
 
     def has_place_with_schema(self, data):
@@ -79,10 +79,10 @@ class JSONLDRenderer(renderers.JSONRenderer):
 
         # Get enhanced context that includes Schema.org if needed
         context = self.get_enhanced_context(camelized)
-        
+
         # Remove all custom context markers AFTER checking for them
         self.remove_custom_context_markers(camelized)
-        
+
         camelized['@context'] = context
         compacted = processor.compact(camelized, context, {})
 

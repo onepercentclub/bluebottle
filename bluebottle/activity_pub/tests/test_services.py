@@ -1,16 +1,12 @@
 from datetime import date, timedelta
 from unittest import mock
 
-from django.test import TestCase
-
 from bluebottle.activity_pub.models import Event, Place
-from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeedEventSerializer
+from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
-from bluebottle.test.factory_models import generate_rich_text
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -21,11 +17,11 @@ class EventCreationServiceTestCase(BluebottleTestCase):
 
     def setUp(self):
         super().setUp()
-        
+
         # Create platform organization for get_platform_actor
         self.platform_org = OrganizationFactory.create()
         SitePlatformSettings.objects.create(organization=self.platform_org)
-        
+
         # Create a user and initiative
         self.user = BlueBottleUserFactory.create()
 
@@ -38,11 +34,11 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             start=date.today() + timedelta(days=7),
             end=date.today() + timedelta(days=8)
         )
-        
+
         # Serialize the deed to get the data format expected by EventCreationService
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Create event from the deed data
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -68,7 +64,7 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             start=date.today() + timedelta(days=5),
             end=date.today() + timedelta(days=5)
         )
-        
+
         # Mock location data that would come from serializer
         location_data = {
             'name': 'Community Garden',
@@ -77,12 +73,12 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             'longitude': -74.0060,
             'mapbox_id': 'place.123'
         }
-        
+
         # Serialize deed and add place data
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
         data['place'] = location_data
-        
+
         # Create event from deed data with place
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -108,24 +104,24 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             start=start,
             end=end
         )
-        
+
         # Use DeedEventSerializer directly to ensure it works properly
         serializer = DeedEventSerializer(deed)
         data = serializer.data
-        
+
         # Verify we get the expected data structure
         self.assertEqual(data['name'], deed.title)
         self.assertEqual(data['description'], deed.description.html)
-        
+
         # For date fields, the serializer converts dates to ISO datetime strings
         # We need to parse them back to compare with the original dates
         from datetime import datetime
         start_datetime = datetime.fromisoformat(data['start'])
         end_datetime = datetime.fromisoformat(data['end'])
-        
+
         self.assertEqual(start_datetime.date(), deed.start)
         self.assertEqual(end_datetime.date(), deed.end)
-        
+
         # Create event from serialized data
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -144,13 +140,13 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="Tree Planting",
         )
-        
+
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Add resourcetype which should be removed
         data['resourcetype'] = 'activities/deeds'
-        
+
         # Create event - should not fail even with resourcetype present
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -165,13 +161,13 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="River Cleanup",
         )
-        
+
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Verify no subevents in data
         self.assertNotIn('subevents', data)
-        
+
         # Create event
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -186,14 +182,14 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="Wildlife Conservation",
         )
-        
+
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Get platform actor before creating event
         platform_actor = get_platform_actor()
         self.assertIsNotNone(platform_actor)
-        
+
         # Create event
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -207,13 +203,13 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="Online Coordination",
         )
-        
+
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Add empty place data
         data['place'] = None
-        
+
         # Create event
         event = EventCreationService.create_event_from_activity(data)
         event.refresh_from_db()
@@ -228,21 +224,21 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="Disaster Relief",
         )
-        
+
         serializer = ActivityEventSerializer(deed)
         data = serializer.data
-        
+
         # Count events before
         initial_event_count = Event.objects.count()
-        
+
         # Mock Event.objects.create to raise an exception
         with mock.patch('bluebottle.activity_pub.models.Event.objects.create') as mock_create:
             mock_create.side_effect = Exception("Database error")
-            
+
             # Attempt to create event - should raise exception
             with self.assertRaises(Exception):
                 EventCreationService.create_event_from_activity(data)
-        
+
         # Verify no events were created due to transaction rollback
         self.assertEqual(Event.objects.count(), initial_event_count)
 
@@ -252,10 +248,10 @@ class EventCreationServiceTestCase(BluebottleTestCase):
             owner=self.user,
             title="Food Drive",
         )
-        
+
         # Test that polymorphic serializer selects correct serializer for Deed
         serializer = ActivityEventSerializer(deed)
-        
+
         # The data should be formatted by DeedEventSerializer
         data = serializer.data
         self.assertIn('start', data)

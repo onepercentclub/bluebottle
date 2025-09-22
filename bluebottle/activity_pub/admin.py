@@ -35,9 +35,6 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeadlineActivityEventSerializer, \
     DeedEventSerializer, DateActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
-from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.deeds.serializers import DeedSerializer
-from bluebottle.time_based.models import DeadlineActivity
 
 
 @admin.register(ActivityPubModel)
@@ -261,6 +258,7 @@ class FollowingAdmin(FollowAdmin):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
         return Accept.objects.filter(object=obj).exists()
+
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
@@ -333,6 +331,7 @@ class FollowerAdmin(FollowAdmin):
 
     def platform(self, obj):
         return obj.actor
+
     platform.short_description = _("Platform")
 
     def get_queryset(self, request):
@@ -347,6 +346,7 @@ class FollowerAdmin(FollowAdmin):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
         return Accept.objects.filter(object=obj).exists()
+
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
@@ -462,7 +462,7 @@ class FollowerAdmin(FollowAdmin):
 class PlaceAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "locality", 
+        "locality",
         "country",
         "latitude",
         "longitude"
@@ -470,7 +470,7 @@ class PlaceAdmin(ActivityPubModelChildAdmin):
     list_filter = ['country', 'region']
     search_fields = ['name', 'locality', 'street_address', 'country']
     readonly_fields = ("pub_url",)
-    
+
     fieldsets = (
         (None, {
             'fields': ('name', 'pub_url')
@@ -492,10 +492,10 @@ class PlaceInline(admin.StackedInline):
     verbose_name_plural = _("Locations")
     fields = (
         'name',
-        'street_address', 
+        'street_address',
         'postal_code',
         'locality',
-        'region', 
+        'region',
         'country',
         'country_code',
         'latitude',
@@ -533,6 +533,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
 
     def adopted(self, obj):
         return obj.adopted
+
     adopted.boolean = True
     adopted.short_description = _("Adopted")
 
@@ -540,12 +541,14 @@ class EventAdmin(ActivityPubModelChildAdmin):
         return format_html(
             '<div style="display: table-cell">' + obj.description + "</div>"
         )
+
     display_description.short_description = _("Description")
 
     def display_image(self, obj):
         return format_html(
             '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
         )
+
     display_image.short_description = _("Image")
 
     def get_urls(self):

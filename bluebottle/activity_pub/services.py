@@ -6,7 +6,7 @@ from bluebottle.activity_pub.utils import get_platform_actor
 
 class EventCreationService:
     """Service for creating Events and their related subevents from Activity"""
-    
+
     @classmethod
     @transaction.atomic
     def create_event_from_activity(cls, data):

@@ -206,7 +206,7 @@ class DateParticipantNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.supporter])
         self.assertSubject('You have been removed as participant for the activity "Save the world!"')
         self.assertBodyContains('You have been removed as participant for the activity "Save the world!"')
-        self.assertActionLink('https://testserver/initiatives/activities/list')
+        self.assertActionLink('https://test.localhost/initiatives/activities/list')
         self.assertActionTitle('View all activities')
 
     def test_participant_finished_notification(self):

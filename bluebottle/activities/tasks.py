@@ -163,7 +163,7 @@ def recommend():
 def do_good_hours_reminder():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.do_good_hours:
                 offset = settings.fiscal_month_offset
                 today = date.today()
@@ -196,7 +196,7 @@ def do_good_hours_reminder():
 def data_retention_contribution_task():
     for tenant in Client.objects.all():
         with LocalTenant(tenant, clear_tenant=True):
-            settings = MemberPlatformSettings.objects.get()
+            settings = MemberPlatformSettings.load()
             if settings.retention_anonymize:
                 history = now() - relativedelta(months=settings.retention_anonymize)
                 Activity.objects.filter(created__lt=history, has_deleted_data=False).update(has_deleted_data=True)

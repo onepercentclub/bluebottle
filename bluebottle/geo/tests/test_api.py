@@ -190,7 +190,7 @@ class LocationListTestCase(GeoTestCase):
         )
 
     def test_api_location_closed_platform(self):
-        member_settings = MemberPlatformSettings.objects.get()
+        member_settings = MemberPlatformSettings.load()
         member_settings.closed = True
         member_settings.save()
 

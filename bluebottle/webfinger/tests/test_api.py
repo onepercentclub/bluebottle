@@ -28,7 +28,7 @@ class WebFingerTestCase(BluebottleTestCase):
             "activity_pub:organization",
             args=(self.organization.activity_pub_organization.pk, )
         )
-        organization_url = f'https://test.localhost{path}'
+        organization_url = f'http://test.localhost{path}'
 
         self.assertEqual(
             response.json(),

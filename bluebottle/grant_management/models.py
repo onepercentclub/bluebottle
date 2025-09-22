@@ -149,50 +149,51 @@ class GrantPayment(TriggerMixin, models.Model):
 
     def generate_payment_link(self):
         stripe = get_stripe()
-        currency = str(self.total.currency)
+        currency = str(self.total.currency).lower()
+
+        donations = list(GrantDonor.objects.filter(payout__payment=self).all())
+        donation_currencies = {str(d.amount.currency).lower() for d in donations}
+        if len(donation_currencies) != 1:
+            raise ValueError(
+                f"All line items must use the same currency for bank transfer. "
+                f"Found: {sorted(donation_currencies)}"
+            )
+        if currency not in donation_currencies:
+            raise ValueError(
+                f"Total currency ({currency}) must match line item currency ({list(donation_currencies)[0]})."
+            )
+
         metadata = {
             "tenant_name": connection.tenant.client_name,
             "tenant_domain": connection.tenant.domain_url,
             "grant_payment_id": self.id,
             "grant_provider": self.grant_provider.name,
         }
-        init_args = {
-            'payment_intent_data': {
-                'metadata': metadata
-            },
-            'metadata': metadata
-        }
-        bank_transfer_type = "eu_bank_transfer"
-        if currency == "USD":
-            bank_transfer_type = "us_bank_transfer"
-        elif currency == "GBP":
-            bank_transfer_type = "gb_bank_transfer"
-        elif currency == "MXN":
-            bank_transfer_type = "mx_bank_transfer"
 
-        if currency == "EUR":
-            init_args["payment_method_options"] = {
-                "customer_balance": {
-                    "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
-                        "eu_bank_transfer": {"country": "NL"},
-                    },
-                },
-            }
+        bank_transfer_type = {
+            "eur": "eu_bank_transfer",
+            "usd": "us_bank_transfer",
+            "gbp": "gb_bank_transfer",
+            "mxn": "mx_bank_transfer",
+            "jpy": "jp_bank_transfer",
+        }.get(currency, None)
+
+        if not bank_transfer_type:
+            payment_method_types = ["card", "ideal"]
+            payment_method_options = {}
         else:
-            init_args["payment_method_options"] = {
+            payment_method_types = ["customer_balance", "card", "ideal"]
+            bank_transfer_opts = {"type": bank_transfer_type}
+            if currency == "eur":
+                bank_transfer_opts["eu_bank_transfer"] = {"country": "NL"}
+            payment_method_options = {
                 "customer_balance": {
                     "funding_type": "bank_transfer",
-                    "bank_transfer": {
-                        "type": bank_transfer_type,
-                    },
-                },
+                    "bank_transfer": bank_transfer_opts,
+                }
             }
 
         line_items = []
-        donations = GrantDonor.objects.filter(payout__payment=self).all()
-
         for donation in donations:
             product = stripe.Product.create(
                 name=donation.activity.title,
@@ -200,23 +201,25 @@ class GrantPayment(TriggerMixin, models.Model):
             )
             price = stripe.Price.create(
                 unit_amount=int(donation.amount.amount * 100),
-                currency=donation.amount.currency,
+                currency=currency,
                 product=product["id"],
             )
-            line_items.append(
-                {
-                    "price": price.id,
-                    "quantity": 1,
-                }
-            )
+            line_items.append({"price": price.id, "quantity": 1})
 
-        init_args["payment_method_types"] = ["customer_balance", "ideal", "card"]
-        init_args["line_items"] = line_items
-        init_args["customer"] = self.grant_provider.stripe_customer_id
-        init_args["success_url"] = (
-            get_current_host() +
-            reverse('admin:grant_management_grantpayment_change', args=(self.pk,))
-        )
+        init_args = {
+            "payment_intent_data": {"metadata": metadata},
+            "metadata": metadata,
+            "payment_method_types": payment_method_types,
+            "payment_method_options": payment_method_options,
+            "line_items": line_items,
+            "customer": self.grant_provider.stripe_customer_id,  # REQUIRED for bank transfer in Checkout
+            "success_url": (
+                    get_current_host()
+                    + reverse("admin:grant_management_grantpayment_change", args=(self.pk,))
+            ),
+            "cancel_url": get_current_host(),  # pick a sensible cancel target
+        }
+
         checkout = stripe.checkout.Session.create(mode="payment", **init_args)
         self.checkout_id = checkout.id
         self.payment_link = checkout.url

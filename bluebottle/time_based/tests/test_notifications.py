@@ -375,7 +375,7 @@ class RegisteredDateActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.owner])
         self.assertSubject('Your activity on Test has been registered!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
 
 class RegisteredDateParticipantNotificationTestCase(NotificationTestCase):

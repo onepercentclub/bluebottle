@@ -49396,4 +49396,3 @@ ALTER TABLE ONLY test2.utils_translationplatformsettings_translation
 --
 -- PostgreSQL database dump complete
 --
-

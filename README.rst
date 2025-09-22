@@ -185,16 +185,3 @@ To pull messages simply do
     $ crowdin pull
 
 And commit the changes after that command
-
-
-
-PyCharm setup
--------------
-
-If you need to set environment variables in PyCharm:
-
-- Tests: Running tests from the context menu should work out of the box because pytest.ini sets DJANGO_SETTINGS_MODULE=bluebottle.settings.testing. If you need a different settings module for a specific run, override DJANGO_SETTINGS_MODULE in that run configuration.
-- Run/Debug configs: Open Run > Edit Configurations…, select your configuration (Django server, pytest, etc.), and set Environment variables. PyCharm 2023.1+ can also load variables from a .env file.
-- .env usage: Copy .env.example to .env at the project root and enable loading it in your run configuration (Environment > .env files).
-
-See docs/pycharm.md for detailed, step-by-step instructions.

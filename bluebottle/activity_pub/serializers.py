@@ -1,6 +1,7 @@
 from bluebottle.geo.models import Geolocation
 from django.db import models, connection
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 from isodate import parse_duration
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
@@ -23,8 +24,10 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
 from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
+from bluebottle.pages.models import Page
 from bluebottle.time_based.models import DeadlineActivity, DateActivity, DateActivitySlot, ActivitySlot
 from bluebottle.utils.fields import RichTextField
+
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -282,6 +285,89 @@ class EventSerializer(ActivityPubSerializer):
         url_name = 'json-ld:event'
         exclude = ActivityPubSerializer.Meta.exclude + ('activity', 'slot_id')
         model = Event
+
+
+class PageJSONLDSerializer(ActivityPubSerializer):
+    name = serializers.CharField(source='title')
+    blocks = serializers.SerializerMethodField()
+    
+    def get_blocks(self, obj):
+        """Get blocks as simple JSON-LD compatible objects"""
+        if not obj.body:
+            return []
+        
+        # Get all content items for this page
+        content_items = obj.body.contentitems.all()
+        print(f"Content items count: {content_items.count()}")
+        
+        blocks = []
+        for item in content_items:
+            # Create JSON-LD compatible block data
+            block_data = {
+                '@type': 'Block',
+                '@id': f'block-{item.id}',  # String ID for JSON-LD
+                'type': item.__class__.__name__,
+                'content': self._get_block_content(item)
+            }
+            blocks.append(block_data)
+        
+        print(f"Serialized blocks count: {len(blocks)}")
+        return blocks
+    
+    def _get_block_content(self, item):
+        """Extract content from block item based on its type"""
+        item_type = item.__class__.__name__
+        
+        if item_type == 'TextItem':
+            return {'text': getattr(item, 'text', '')}
+        elif item_type in ['ImageTextItem', 'ImageTextRoundItem', 'ScaledImageTextItem']:
+            content = {'text': getattr(item, 'text', '')}
+            if hasattr(item, 'image') and item.image:
+                content['image'] = {'url': item.image.url}
+            return content
+        elif item_type == 'ImageItem':
+            content = {}
+            if hasattr(item, 'image') and item.image:
+                content['image'] = {
+                    'url': item.image.url,
+                    'title': getattr(item, 'title', '')
+                }
+            return content
+        elif item_type == 'PictureItem':
+            content = {}
+            if hasattr(item, 'image') and item.image:
+                content['image'] = {'url': item.image.url}
+            return content
+        elif item_type in ['ImagePlainTextItem', 'PlainTextItem']:
+            return {'text': getattr(item, 'text', '')}
+        elif item_type == 'ColumnsItem':
+            return {
+                'text1': getattr(item, 'text1', ''),
+                'text2': getattr(item, 'text2', '')
+            }
+        elif item_type == 'OEmbedItem':
+            return {'html': getattr(item, 'html', '')}
+        elif item_type == 'DocumentItem':
+            content = {'text': getattr(item, 'text', '')}
+            if hasattr(item, 'document') and item.document:
+                content['document'] = {'url': item.document.url}
+            return content
+        elif item_type == 'ActionItem':
+            return {
+                'title': getattr(item, 'title', ''),
+                'link': getattr(item, 'link', '')
+            }
+        elif item_type == 'RawHtmlItem':
+            return {'html': getattr(item, 'html', '')}
+        
+        return {}
+
+    class Meta(ActivityPubSerializer.Meta):
+        type = 'Article'
+        url_name = 'json-ld:page'
+        exclude = None
+        fields = ('name', 'blocks')
+        model = Page
 
 
 class BaseActivitySerializer(ActivityPubSerializer):

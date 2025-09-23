@@ -4,13 +4,14 @@ from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event, Announce, Organization, Place
 )
+from bluebottle.pages.models import Page
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, EventSerializer, PublishSerializer, AnnounceSerializer,
-    OrganizationSerializer, PlaceSerializer
+    OrganizationSerializer, PlaceSerializer, PageJSONLDSerializer
 )
 
 
@@ -61,6 +62,14 @@ class OutBoxView(ActivityPubView):
 class EventView(ActivityPubView):
     serializer_class = EventSerializer
     queryset = Event.objects.all()
+
+
+class PageView(ActivityPubView):
+    serializer_class = PageJSONLDSerializer
+    queryset = Page.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(status='published')
 
 
 class PublicKeyView(ActivityPubView):

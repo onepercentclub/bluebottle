@@ -62,7 +62,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('You submitted an activity on Test')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_published_notification(self):
         self.message_class = ActivityPublishedNotification
@@ -70,7 +70,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity on Test has been published!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_approved_notification(self):
         self.message_class = ActivityApprovedNotification
@@ -78,7 +78,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your activity on Test has been approved!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_needs_work_notification(self):
         self.message_class = ActivityNeedsWorkNotification
@@ -86,7 +86,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertRecipients([self.obj.owner])
         self.assertSubject('The activity you submitted on Test needs work')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_rejected_notification(self):
         self.message_class = ActivityRejectedNotification
@@ -95,7 +95,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been rejected')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been rejected.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_cancelled_notification(self):
         self.message_class = ActivityCancelledNotification
@@ -104,7 +104,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('Your activity "Save the world!" has been cancelled')
         self.assertBodyContains('Unfortunately your activity "Save the world!" has been cancelled.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_restored_notification(self):
         self.message_class = ActivityRestoredNotification
@@ -113,7 +113,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
         self.assertSubject('The activity "Save the world!" has been restored')
         self.assertBodyContains('Your activity "Save the world!" has been restored.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_expired_notification(self):
         self.message_class = ActivityExpiredNotification
@@ -125,7 +125,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
             '"Save the world!" before the deadline to apply. '
             'That’s why we have cancelled your activity.')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
     def test_activity_succeeded_notification(self):
         self.message_class = ActivitySucceededNotification
@@ -136,7 +136,7 @@ class ActivityNotificationTestCase(NotificationTestCase):
             'You did it! Your activity "Save the world!" has succeeded, '
             'that calls for a celebration!')
         self.assertActionLink(self.obj.get_absolute_url())
-        self.assertActionTitle('Open your activity')
+        self.assertActionTitle('View activity')
 
 
 class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
@@ -216,8 +216,8 @@ class DoGoodHoursReminderNotificationTestCase(NotificationTestCase):
         self.assertSubject("It’s a new year, let's make some impact!")
         self.assertBodyContains('Can you spend 8 hours making an impact this year?')
         self.assertActionTitle('Find activities')
-        self.assertActionLink('https://testserver/initiatives/activities/list')
-        self.assertBodyContains('https://testserver/member/profile')
+        self.assertActionLink('http://test.localhost:8000/initiatives/activities/list')
+        self.assertBodyContains('http://test.localhost:8000/member/profile')
 
     def test_reminder_q2(self):
         self.message_class = DoGoodHoursReminderQ2Notification

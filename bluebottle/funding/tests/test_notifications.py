@@ -1,3 +1,4 @@
+from bluebottle.activities.messages.activity_manager import TermsOfServiceNotification
 from bluebottle.funding.messages.funding.activity_manager import FundingSubmittedMessage, FundingApprovedMessage, \
     FundingNeedsWorkMessage, FundingRejectedMessage
 from bluebottle.funding.messages.funding.reviewer import FundingSubmittedReviewerMessage
@@ -40,6 +41,15 @@ class FundingNotificationTestCase(NotificationTestCase):
         self.create()
         self.assertRecipients([self.obj.owner])
         self.assertSubject('Your crowdfunding campaign on Test has been approved!')
+        self.assertActionLink(self.obj.get_absolute_url())
+        self.assertActionTitle('View campaign')
+
+    def test_activity_terms_notification(self):
+        self.message_class = TermsOfServiceNotification
+        self.create()
+        self.assertRecipients([self.obj.owner])
+        self.assertSubject('Terms of service')
+        self.assertBodyContains('Thanks for creating a crowdfunding campaign for')
         self.assertActionLink(self.obj.get_absolute_url())
         self.assertActionTitle('View campaign')
 

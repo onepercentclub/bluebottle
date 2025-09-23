@@ -136,7 +136,7 @@ class PublicKeySerializer(ActivityPubSerializer):
         type = 'PublicKey'
         url_name = 'json-ld:public-key'
         model = PublicKey
-        exclude = ActivityPubSerializer.Meta.exclude + ('private_key', )
+        exclude = ActivityPubSerializer.Meta.exclude + ('private_key',)
 
 
 class PersonSerializer(ActivityPubSerializer):
@@ -147,7 +147,7 @@ class PersonSerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
         type = 'Person'
         url_name = 'json-ld:person'
-        exclude = ActivityPubSerializer.Meta.exclude + ('member', )
+        exclude = ActivityPubSerializer.Meta.exclude + ('member',)
         model = Person
 
 
@@ -163,7 +163,7 @@ class OrganizationSerializer(ActivityPubSerializer):
     class Meta(ActivityPubSerializer.Meta):
         type = 'Organization'
         url_name = 'json-ld:organization'
-        exclude = ActivityPubSerializer.Meta.exclude + ('organization', )
+        exclude = ActivityPubSerializer.Meta.exclude + ('organization',)
         model = Organization
 
 
@@ -495,7 +495,7 @@ class DateToDateTimeField(serializers.DateTimeField):
         if isinstance(value, date) and not isinstance(value, datetime):
             value = datetime.combine(value, time(12, 0))
 
-        # Ensure timezone-aware
+            # Ensure timezone-aware
         if timezone.is_naive(value):
             value = timezone.make_aware(value, timezone.get_current_timezone())
 
@@ -534,7 +534,6 @@ class BaseSlotEventSerializer(serializers.ModelSerializer):
 
 
 class DateActivitySlotEventSerializer(BaseSlotEventSerializer):
-
     class Meta:
         model = DateActivitySlot
         fields = BaseSlotEventSerializer.Meta.fields
@@ -555,7 +554,6 @@ class DateActivityEventSerializer(BaseActivityEventSerializer):
 
 
 class ActivityEventSerializer(PolymorphicSerializer):
-
     polymorphic_serializers = [
         DeedEventSerializer,
         DeadlineActivityEventSerializer,

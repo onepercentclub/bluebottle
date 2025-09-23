@@ -55,6 +55,12 @@ class GrantDepositTriggers(TriggerManager):
 
             ]
         ),
+        ModelChangedTrigger(
+            ['amount'],
+            effects=[
+                UpdateLedgerItemEffect
+            ]
+        ),
     ]
 
 

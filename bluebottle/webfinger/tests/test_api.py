@@ -21,19 +21,19 @@ class WebFingerTestCase(BluebottleTestCase):
         super().setUp()
 
     def test_get_default_organization(self):
-        response = self.client.get(f'{self.url}?resource=http://testserver/')
+        response = self.client.get(f'{self.url}?resource=http://test.localhost/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         path = reverse(
             "activity_pub:organization",
             args=(self.organization.activity_pub_organization.pk, )
         )
-        organization_url = f'https://testserver{path}'
+        organization_url = f'http://test.localhost{path}'
 
         self.assertEqual(
             response.json(),
             {
-                'subject': f'acct:{self.organization.slug}@testserver',
+                'subject': f'acct:{self.organization.slug}@test.localhost',
                 'aliases': [organization_url],
                 'links': [{
                     'rel': 'self',

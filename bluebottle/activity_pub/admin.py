@@ -259,6 +259,7 @@ class FollowingAdmin(FollowAdmin):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
         return Accept.objects.filter(object=obj).exists()
+
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
@@ -330,6 +331,7 @@ class FollowerAdmin(FollowAdmin):
 
     def platform(self, obj):
         return obj.actor
+
     platform.short_description = _("Platform")
 
     def get_queryset(self, request):
@@ -343,6 +345,7 @@ class FollowerAdmin(FollowAdmin):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
         return Accept.objects.filter(object=obj).exists()
+
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
@@ -527,6 +530,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
 
     def adopted(self, obj):
         return obj.adopted
+
     adopted.boolean = True
     adopted.short_description = _("Adopted")
 
@@ -534,12 +538,14 @@ class EventAdmin(ActivityPubModelChildAdmin):
         return format_html(
             '<div style="display: table-cell">' + obj.description + "</div>"
         )
+
     display_description.short_description = _("Description")
 
     def display_image(self, obj):
         return format_html(
             '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
         )
+
     display_image.short_description = _("Image")
 
     def get_urls(self):

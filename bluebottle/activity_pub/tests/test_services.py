@@ -2,8 +2,8 @@ from datetime import date, timedelta
 from unittest import mock
 
 from bluebottle.activity_pub.models import Event, Place
-from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeedEventSerializer
+from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.deeds.tests.factories import DeedFactory

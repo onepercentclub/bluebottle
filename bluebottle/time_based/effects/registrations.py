@@ -28,12 +28,13 @@ class CreateSlotParticipantEffect(Effect):
     def post_save(self, **kwargs):
         if self.instance.activity.slots.count() == 1:
             slot = self.instance.activity.slots.first()
-            self.instance.participants.create(
-                activity=self.instance.activity,
-                user=self.instance.user,
-                slot=slot,
-                registration=self.instance,
-            )
+            if not slot.participants.filter(user=self.instance.user).exists():
+                self.instance.participants.create(
+                    activity=self.instance.activity,
+                    user=self.instance.user,
+                    slot=slot,
+                    registration=self.instance,
+                )
 
     def is_valid(self):
         return not self.instance.activity.slots.count() == 1

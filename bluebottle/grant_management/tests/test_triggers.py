@@ -3,7 +3,7 @@ from moneyed import Money
 
 from bluebottle.activities.messages.activity_manager import (
     ActivityRejectedNotification, ActivitySubmittedNotification,
-    ActivityApprovedNotification, ActivityNeedsWorkNotification
+    ActivityApprovedNotification, ActivityNeedsWorkNotification, TermsOfServiceNotification
 )
 from bluebottle.activities.messages.reviewer import ActivitySubmittedReviewerNotification
 from bluebottle.activities.states import OrganizerStateMachine
@@ -18,6 +18,7 @@ from bluebottle.grant_management.messages.activity_manager import (
     GrantApplicationCancelledMessage
 )
 from bluebottle.grant_management.models import GrantPayment
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import TriggerTestCase
@@ -107,6 +108,22 @@ class GrantApplicationTriggersTestCase(TriggerTestCase):
 
         with self.execute():
             self.assertNotificationEffect(GrantApplicationApprovedMessage)
+            self.assertNoNotificationEffect(ActivityApprovedNotification)
+            self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
+
+    def test_approve_terms(self):
+        settings = InitiativePlatformSettings.load()
+        settings.mail_terms_of_service = True
+        settings.save()
+
+        self.defaults['initiative'] = None
+        self.create()
+        self.model.states.submit(save=True)
+        self.model.states.approve()
+
+        with self.execute():
+            self.assertNotificationEffect(GrantApplicationApprovedMessage)
+            self.assertNotificationEffect(TermsOfServiceNotification)
             self.assertNoNotificationEffect(ActivityApprovedNotification)
             self.assertTransitionEffect(OrganizerStateMachine.succeed, self.model.organizer)
 

@@ -120,7 +120,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     video_url = models.URLField(
         _("video"),
-        max_length=100,
+        max_length=2048,
         blank=True,
         null=True,
         default="",

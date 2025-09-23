@@ -1,18 +1,15 @@
-from urllib.parse import urlparse
 
 import requests
 from io import BytesIO
 
-from requests_http_signature import HTTPSignatureAuth, algorithms, HTTPSignatureKeyResolver
-
-from django.urls import resolve
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Actor, Follow, Activity
-from bluebottle.activity_pub.utils import is_local, get_platform_actor
+from bluebottle.activity_pub.models import Follow, Activity
+from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.activity_pub.authentication import key_resolver
 
-from cryptography.hazmat.primitives.serialization import load_pem_public_key, load_pem_private_key
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,43 +17,6 @@ from bluebottle.webfinger.client import client
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-
-@receiver([post_save])
-def publish_activity(sender, instance, **kwargs):
-    try:
-        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
-            adapter.publish(instance)
-    except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}")
-        pass
-
-
-class JSONLDKeyResolver(HTTPSignatureKeyResolver):
-    def get_actor(self, url):
-        if is_local(url):
-            resolved_url = resolve(urlparse(url).path)
-            return Actor.objects.get(**resolved_url.kwargs)
-        else:
-            return Actor.objects.get(url=url)
-
-    def resolve_public_key(self, key_id):
-        actor = self.get_actor(key_id)
-        if actor:
-            return load_pem_public_key(
-                bytes(actor.public_key.public_key_pem, encoding='utf-8')
-            )
-
-    def resolve_private_key(self, key_id):
-        actor = self.get_actor(key_id)
-
-        if actor:
-            return load_pem_private_key(
-                bytes(actor.public_key.private_key.private_key_pem, encoding='utf-8'), password=None
-            )
-
-
-key_resolver = JSONLDKeyResolver()
 
 
 class JSONLDAdapter():
@@ -93,20 +53,15 @@ class JSONLDAdapter():
         return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
 
     def sync(self, url, serializer, force=True):
-        auth = self.get_auth(get_platform_actor())
-        data = self.get(url, auth=auth)
-        sub_events = data.pop('sub_event', [])
-        serializer = serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        event =  serializer.save()
-        from bluebottle.activity_pub.serializers import EventSerializer, PlaceSerializer
-        for sub_event in sub_events:
-            slot = EventSerializer().create(sub_event)
-            slot.save(parent=event)
-        if data.get('place'):
-            event.place = PlaceSerializer().create(data['place'])
-            event.save()
-        return event
+        try:
+            return serializer.Meta.model.objects.get(url=url)
+        except serializer.Meta.model.DoesNotExist:
+            auth = self.get_auth(get_platform_actor())
+            data = self.get(url, auth=auth)
+            serializer = serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+
+            return serializer.save()
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers import ActorSerializer
@@ -129,3 +84,13 @@ class JSONLDAdapter():
 
 
 adapter = JSONLDAdapter()
+
+
+@receiver([post_save])
+def publish_activity(sender, instance, **kwargs):
+    try:
+        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+            adapter.publish(instance)
+    except Exception as e:
+        logger.error(f"Failed to publish activity: {str(e)}")
+        pass

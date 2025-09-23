@@ -4,8 +4,7 @@ from urllib.parse import unquote
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
-from bluebottle.activity_pub.adapters import adapter
-from bluebottle.activity_pub.models import Event, Publish
+from bluebottle.activity_pub.models import Publish
 from bluebottle.activity_pub.serializers import ActivityEventSerializer
 from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -18,7 +17,7 @@ from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.urls import re_path, reverse, path
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
@@ -834,11 +833,11 @@ class ActivityChildAdmin(
         if SegmentType.objects.count():
             fieldsets.append((
                 _('Segments'), {
-                'fields': [
-                    segment_type.field_name
-                    for segment_type in SegmentType.objects.all()
-                ]
-            }
+                    'fields': [
+                        segment_type.field_name
+                        for segment_type in SegmentType.objects.all()
+                    ]
+                }
             ))
 
         if request.user.is_superuser:

@@ -36,8 +36,6 @@ from bluebottle.activity_pub.serializers import ActivityEventSerializer, Deadlin
     DeedEventSerializer, DateActivityEventSerializer
 from bluebottle.activity_pub.serializers import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.deeds.serializers import DeedSerializer
-from bluebottle.time_based.models import DeadlineActivity
 
 
 @admin.register(ActivityPubModel)
@@ -276,7 +274,6 @@ class FollowingAdmin(FollowAdmin):
     fields = readonly_fields
 
     def get_queryset(self, request):
-        from bluebottle.activity_pub.utils import get_platform_actor
         qs = Follow.objects.all()
         platform_actor = get_platform_actor()
         if platform_actor:
@@ -336,7 +333,6 @@ class FollowerAdmin(FollowAdmin):
     platform.short_description = _("Platform")
 
     def get_queryset(self, request):
-        from bluebottle.activity_pub.utils import get_platform_actor
         qs = Follow.objects.all()
         platform_actor = get_platform_actor()
         if platform_actor:
@@ -364,7 +360,6 @@ class FollowerAdmin(FollowAdmin):
     def accept_follow_request(self, request, object_id):
         """Accept a single follow request"""
         from bluebottle.activity_pub.models import Accept, Follow
-        from bluebottle.activity_pub.utils import get_platform_actor
 
         follow = get_object_or_404(Follow, pk=unquote(object_id))
         platform_actor = get_platform_actor()
@@ -418,7 +413,6 @@ class FollowerAdmin(FollowAdmin):
     def accept_follow_requests(self, request, queryset):
         """Accept selected follow requests"""
         from bluebottle.activity_pub.models import Accept
-        from bluebottle.activity_pub.utils import get_platform_actor
 
         platform_actor = get_platform_actor()
         if not platform_actor:
@@ -462,7 +456,7 @@ class FollowerAdmin(FollowAdmin):
 class PlaceAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "locality", 
+        "locality",
         "country",
         "latitude",
         "longitude"
@@ -470,7 +464,7 @@ class PlaceAdmin(ActivityPubModelChildAdmin):
     list_filter = ['country', 'region']
     search_fields = ['name', 'locality', 'street_address', 'country']
     readonly_fields = ("pub_url",)
-    
+
     fieldsets = (
         (None, {
             'fields': ('name', 'pub_url')
@@ -492,10 +486,10 @@ class PlaceInline(admin.StackedInline):
     verbose_name_plural = _("Locations")
     fields = (
         'name',
-        'street_address', 
+        'street_address',
         'postal_code',
         'locality',
-        'region', 
+        'region',
         'country',
         'country_code',
         'latitude',

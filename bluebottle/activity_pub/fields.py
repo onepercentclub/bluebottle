@@ -1,7 +1,9 @@
 from urllib.parse import urlparse
 
 from django.db import connection
-from django.urls import resolve
+from django.urls import resolve, exceptions
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -46,10 +48,20 @@ class RelatedActivityPubField(serializers.Field):
             url = data
 
         if is_local(url):
-            resolved = resolve(urlparse(url).path)
-            queryset = resolved.func.cls.queryset
+            try:
+                resolved = resolve(urlparse(url).path)
+                queryset = resolved.func.cls.queryset
 
-            return queryset.get(**resolved.kwargs)
+                instance = queryset.get(**resolved.kwargs)
+
+                if not isinstance(instance, self.serializer_class.Meta.model):
+                    return None
+
+                self.serializer_class().to_representation(instance)
+
+                return instance
+            except (ObjectDoesNotExist, exceptions.Resolver404):
+                return None
         else:
             return adapter.sync(url, self.serializer_class)
 

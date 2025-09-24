@@ -273,7 +273,10 @@ class Following(Follow):
         verbose_name_plural = _('Following')
 
     def __str__(self):
-        return str(self.object)
+        try:
+            return str(self.object)
+        except Actor.DoesNotExist:
+            return "-"
 
 
 class Accept(Activity):

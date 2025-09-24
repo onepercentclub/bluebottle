@@ -5,8 +5,6 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
 from bluebottle.activity_pub.models import Publish
-from bluebottle.activity_pub.serializers.json_ld import ActivityEventSerializer
-from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.utils.utils import get_current_host
 
@@ -89,6 +87,9 @@ from bluebottle.time_based.models import (
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
+
+from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
+from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
 
 
 @admin.register(Contributor)
@@ -785,12 +786,14 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         activity = get_object_or_404(Activity, pk=unquote(pk))
-        data = ActivityEventSerializer(activity).data
-        event = EventCreationService.create_event_from_activity(data)
-        event.activity = activity
-        event.save()
-        actor = get_platform_actor()
-        Publish.objects.create(actor=actor, object=event)
+
+        federated_serializer = FederatedDeedSerializer(activity)
+
+        serializer = GoodDeedSerializer(data=federated_serializer.data)
+        serializer.is_valid()
+        event = serializer.save()
+
+        Publish.objects.create(actor=get_platform_actor(), object=event)
 
         self.message_user(
             request,

@@ -54,7 +54,7 @@ class JSONLDAdapter():
 
     def sync(self, url, serializer, force=True):
         try:
-            return serializer.Meta.model.objects.get(url=url)
+            return serializer.Meta.model.objects.get(iri=url)
         except serializer.Meta.model.DoesNotExist:
             auth = self.get_auth(get_platform_actor())
             data = self.get(url, auth=auth)
@@ -73,14 +73,15 @@ class JSONLDAdapter():
     def publish(self, activity):
         from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
 
-        if activity.url:
+        if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
         data = ActivitySerializer().to_representation(activity)
         auth = self.get_auth(activity.actor)
 
         for actor in activity.audience:
-            self.post(actor.inbox.url, data=data, auth=auth)
+            if not actor.inbox.is_local:
+                self.post(actor.inbox.iri, data=data, auth=auth)
 
 
 adapter = JSONLDAdapter()
@@ -93,4 +94,5 @@ def publish_activity(sender, instance, **kwargs):
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")
+        raise
         pass

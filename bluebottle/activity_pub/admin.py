@@ -32,11 +32,11 @@ from bluebottle.activity_pub.models import (
     Following,
     Follower,
 )
-from bluebottle.activity_pub.serializers.json_ld import (
-    ActivityEventSerializer, DeadlineActivityEventSerializer,
-    DeedEventSerializer, DateActivityEventSerializer, OrganizationSerializer
-)
+from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+
+from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
+from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
 
 
 @admin.register(ActivityPubModel)
@@ -61,7 +61,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     def type(self, obj):
         return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
 
-    list_display = ("id", "type", "url")
+    list_display = ("id", "type", "iri")
 
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
@@ -88,19 +88,19 @@ class FollowForm(forms.ModelForm):
 
     class Meta:
         model = Follow
-        fields = ["url", ]
+        fields = ["iri", ]
 
 
 @admin.register(Person)
 class PersonAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
+    readonly_fields = ('member', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
-                    url = form.cleaned_data.get("url")
+                    url = form.cleaned_data.get("iri")
                     actor = form.instance.actor
                     if url:
                         try:
@@ -131,13 +131,13 @@ class PersonAdmin(ActivityPubModelChildAdmin):
 @admin.register(Organization)
 class OrganizationAdmin(ActivityPubModelChildAdmin):
     list_display = ('id', 'inbox', 'outbox')
-    readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'url', 'pub_url')
+    readonly_fields = ('organization', 'inbox', 'outbox', 'public_key', 'iri', 'pub_url')
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Follow:
             for form in formset.forms:
                 if form.cleaned_data and not form.cleaned_data.get("DELETE", False):
-                    url = form.cleaned_data.get("url")
+                    url = form.cleaned_data.get("iri")
                     adapter.follow(url)
         else:
             super().save_formset(request, form, formset, change)
@@ -156,7 +156,7 @@ class ActorAdmin(ActivityPubModelChildAdmin):
 @admin.register(Follow)
 class FollowAdmin(ActivityPubModelChildAdmin):
     list_display = ('actor', "object")
-    readonly_fields = ("actor", "object", "url", "pub_url")
+    readonly_fields = ("actor", "object", "iri", "pub_url")
 
 
 @admin.register(PublicKey)
@@ -514,7 +514,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "actor",
         "activity",
         "place",  # Add place
-        "url",
+        "iri",
         "pub_url",
         "activity_type"
     )
@@ -573,6 +573,8 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
+
+            
             if event.activity_type == 'deed':
                 serializer = DeedEventSerializer(data=model_to_dict(event))
             elif event.activity_type == 'deadline':

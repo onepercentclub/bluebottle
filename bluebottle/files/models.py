@@ -80,6 +80,10 @@ class Image(File):
 
         super().save(*args, **kwargs)
 
+    @property
+    def activity_pub_url(self):
+        return None
+
 
 class Document(File):
     class JSONAPIMeta(object):

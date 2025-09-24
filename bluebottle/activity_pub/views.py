@@ -2,15 +2,16 @@ from rest_framework import generics
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
-    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Event, Announce, Organization, Place
+    Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
+    GoodDeed, Image
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
-    AcceptSerializer, ActivitySerializer, EventSerializer, PublishSerializer, AnnounceSerializer,
-    OrganizationSerializer, PlaceSerializer
+    AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
+    OrganizationSerializer, GoodDeedSerializer, ImageSerializer
 )
 
 
@@ -22,7 +23,7 @@ class ActivityPubView(generics.RetrieveAPIView):
     permission_classes = [ActivityPubPermission]
 
     def get_queryset(self):
-        return self.queryset.filter(url__isnull=True)
+        return self.queryset.filter(iri__isnull=True)
 
 
 class PersonView(ActivityPubView):
@@ -33,11 +34,6 @@ class PersonView(ActivityPubView):
 class OrganizationView(ActivityPubView):
     serializer_class = OrganizationSerializer
     queryset = Organization.objects.all()
-
-
-class PlaceView(ActivityPubView):
-    serializer_class = PlaceSerializer
-    queryset = Place.objects.all()
 
 
 class InboxView(generics.CreateAPIView, ActivityPubView):
@@ -52,15 +48,23 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
         else:
             return self.serializer_class
 
+    def perform_create(self, serializer):
+        return super().perform_create(serializer)
+
 
 class OutBoxView(ActivityPubView):
     serializer_class = OutboxSerializer
     queryset = Outbox.objects.all()
 
 
-class EventView(ActivityPubView):
-    serializer_class = EventSerializer
-    queryset = Event.objects.all()
+class ImageView(ActivityPubView):
+    serializer_class = ImageSerializer
+    queryset = Image.objects.all()
+
+
+class GoodDeedView(ActivityPubView):
+    serializer_class = GoodDeedSerializer
+    queryset = GoodDeed.objects.all()
 
 
 class PublicKeyView(ActivityPubView):

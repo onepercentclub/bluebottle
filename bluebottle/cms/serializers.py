@@ -6,7 +6,6 @@ from django_tools.middlewares.ThreadLocal import get_current_user
 from fluent_contents.models import ContentItem
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
-from fluent_contents.plugins.text.models import TextItem
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField, SerializerMethodResourceRelatedField, \
     HyperlinkedRelatedField
@@ -26,7 +25,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.pages.models import (
     Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem,
-    ScaledImageTextItem
+    ScaledImageTextItem, TextOnlyItem
 )
 from bluebottle.slides.models import Slide
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField, RichTextField, SafeField
@@ -388,7 +387,7 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
 class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = RichTextField()
+    text = SafeField()
 
     class Meta(object):
         model = ImagePlainTextItem
@@ -424,8 +423,11 @@ class PictureBlockSerializer(BaseBlockSerializer):
 
 
 class TextBlockSerializer(BaseBlockSerializer):
+
+    text = RichTextField()
+
     class Meta(object):
-        model = TextItem
+        model = TextOnlyItem
         fields = ('id', 'text', 'block_type', )
 
     class JSONAPIMeta:
@@ -436,6 +438,7 @@ class TextBlockSerializer(BaseBlockSerializer):
 
 class ImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ImageTextItem
@@ -448,6 +451,7 @@ class ImageTextBlockSerializer(BaseBlockSerializer):
 
 class ImageRoundTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ImageTextRoundItem
@@ -460,6 +464,7 @@ class ImageRoundTextBlockSerializer(BaseBlockSerializer):
 
 class ScaledImageTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
+    text = RichTextField()
 
     class Meta(object):
         model = ScaledImageTextItem
@@ -501,6 +506,8 @@ class RawHHTMLBlockSerializer(BaseBlockSerializer):
 
 
 class ColumnBlockSerializer(BaseBlockSerializer):
+    text1 = RichTextField()
+    text2 = RichTextField()
 
     class Meta(object):
         model = ColumnsItem

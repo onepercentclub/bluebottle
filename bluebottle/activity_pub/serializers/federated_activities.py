@@ -1,9 +1,12 @@
+from django.db import connection
 from rest_framework import serializers
 
+from bluebottle.activity_pub.models import Inbox, Outbox, PublicKey
 from bluebottle.activity_pub.serializers.base import (
     FederatedObjectSerializer
 )
 from bluebottle.geo.models import Geolocation
+from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DeadlineActivity, DateActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.collect.models import CollectActivity, CollectType
@@ -62,8 +65,6 @@ class FederatedCollectSerializer(FederatedActivitySerializer):
 
     collect_type = RelatedFederatedObjectField(CollectTypeSerializer)
 
-    target = serializers.DecimalField(decimal_places=2)
-    realized = serializers.DecimalField(decimal_places=2)
 
     class Meta:
         model = CollectActivity
@@ -100,3 +101,18 @@ class FederatedDateActivitySerializer(FederatedActivitySerializer):
 
     class Meta:
         model = DateActivity
+
+
+class FederatedOrganizationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    summary = serializers.CharField(source="description", allow_blank=True)
+    icon = serializers.SerializerMethodField(required=False)
+    preferred_username = serializers.CharField(source="slug")
+
+    def get_icon(self, obj):
+        logo = connection.tenant.build_absolute_url(obj.logo.url) if obj.logo else None
+        return logo
+
+    class Meta:
+        model = Organization
+        fields = ('name', 'summary', 'icon', 'preferred_username')

@@ -3,14 +3,14 @@ from cryptography.hazmat.primitives import serialization
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
+from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.members.models import Member
-from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.fields import MoneyField
-
+from bluebottle.organizations.models import Organization as BluebottleOrganization
 
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):
@@ -93,6 +93,8 @@ class Person(Actor):
 class OrganizationManager(PolymorphicManager):
 
     def from_model(self, model):
+        from bluebottle.organizations.models import Organization as BluebottleOrganization
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedOrganizationSerializer
         if not isinstance(model, BluebottleOrganization):
             raise TypeError("Model should be a organisation instance, not {}".format(type(model)))
 
@@ -101,27 +103,23 @@ class OrganizationManager(PolymorphicManager):
         except BluebottleOrganization.activity_pub_organization.RelatedObjectDoesNotExist:
             inbox = Inbox.objects.create()
             outbox = Outbox.objects.create()
-
             public_key = PublicKey.objects.create()
-            logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
+
+            serializer = FederatedOrganizationSerializer(instance=model)
 
             return Organization.objects.create(
                 inbox=inbox,
                 organization=model,
                 outbox=outbox,
                 public_key=public_key,
-                name=model.name,
-                image=logo,
-                summary=model.description,
-                preferred_username=model.slug
+                **serializer.data
             )
 
 
 class Organization(Actor):
     name = models.CharField(max_length=300)
     summary = models.TextField(null=True, blank=True)
-    content = models.TextField(null=True, blank=True)
-    image = models.URLField(null=True, blank=True)
+    icon = models.URLField(null=True, blank=True)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -138,6 +136,29 @@ class Organization(Actor):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        # First save to ensure we have a PK, then (optionally) create and link a
+        # corresponding Bluebottle Organization if it doesn't exist yet.
+        super(Organization, self).save(*args, **kwargs)
+        if not self.organization:
+            from bluebottle.activity_pub.serializers.federated_activities import FederatedOrganizationSerializer
+
+            # Prepare input compatible with the FederatedOrganizationSerializer.
+            # Only include writable fields.
+            data = {
+                'name': self.name,
+                'summary': self.summary or '',  # maps to Organization.description
+                'preferred_username': self.preferred_username,  # maps to Organization.slug
+            }
+
+            serializer = FederatedOrganizationSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            bb_org = serializer.save()
+
+            # Link the created Bluebottle Organization and persist the relation.
+            self.organization = bb_org
+            super(Organization, self).save(update_fields=['organization'])
 
 
 class Inbox(ActivityPubModel):
@@ -272,8 +293,8 @@ class Following(Follow):
         verbose_name = _('Following')
         verbose_name_plural = _('Following')
 
-    def __str__(self):
-        return str(self.object)
+    # def __str__(self):
+    #     return str(self.object)
 
 
 class Accept(Activity):

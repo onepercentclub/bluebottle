@@ -6,13 +6,12 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
+from django_quill.fields import QuillField
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions import PluginImageField
 from fluent_contents.models import PlaceholderField, ContentItem, ContentItemManager
 from parler.models import TranslatableModel, TranslatedFields
 from solo.models import SingletonModel
-
-from django_quill.fields import QuillField
 
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location

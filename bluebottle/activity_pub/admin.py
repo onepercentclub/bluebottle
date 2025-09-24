@@ -42,7 +42,7 @@ from bluebottle.activity_pub.utils import get_platform_actor
 @admin.register(ActivityPubModel)
 class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     base_model = ActivityPubModel
-    list_filter = [PolymorphicChildModelFilter]
+    # list_filter = [PolymorphicChildModelFilter]
     child_models = (
         Person,
         Activity,

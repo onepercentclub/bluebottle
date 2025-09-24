@@ -42,7 +42,7 @@ from bluebottle.activity_pub.utils import get_platform_actor
 @admin.register(ActivityPubModel)
 class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
     base_model = ActivityPubModel
-    # list_filter = [PolymorphicChildModelFilter]
+    list_filter = [PolymorphicChildModelFilter]
     child_models = (
         Person,
         Activity,
@@ -55,7 +55,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Announce,
         Event,
         Organization,
-        Place,  # Add Place to child_models
+        Place,
     )
 
     def type(self, obj):
@@ -495,32 +495,39 @@ class PlaceInline(admin.StackedInline):
     )
 
 
+@admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "adopted",
-        "organizer",
-        "start",
-        "end",
-        "place",  # Add place
+        # "adopted",
+        # "organizer",
+        # "start",
+        # "end",
+        # "place",
     )
     readonly_fields = (
         "name",
         "display_description",
         "display_image",
-        "start",
-        "end",
-        "organizer",
+        # "start",
+        # "end",
+        # "place",
+        # "organizer",
         "actor",
         "activity",
-        "place",  # Add place
         "url",
         "pub_url",
-        "activity_type"
+        # "activity_type"
     )
     fields = readonly_fields
-    inlines = [SubEventInline, AnnouncementInline]
-    list_filter = ['organizer', AdoptedFilter]
+    inlines = [
+        # SubEventInline,
+        AnnouncementInline
+    ]
+    list_filter = [
+        # 'organizer',
+        AdoptedFilter
+    ]
 
     def adopted(self, obj):
         return obj.adopted

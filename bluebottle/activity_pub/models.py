@@ -1,16 +1,15 @@
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
-
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
-from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.members.models import Member
-from bluebottle.utils.fields import MoneyField
 from bluebottle.organizations.models import Organization as BluebottleOrganization
+from bluebottle.utils.fields import MoneyField
+
 
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):

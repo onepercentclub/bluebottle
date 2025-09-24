@@ -32,9 +32,10 @@ from bluebottle.activity_pub.models import (
     Following,
     Follower,
 )
-from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeadlineActivityEventSerializer, \
-    DeedEventSerializer, DateActivityEventSerializer
-from bluebottle.activity_pub.serializers import OrganizationSerializer
+from bluebottle.activity_pub.serializers.json_ld import (
+    ActivityEventSerializer, DeadlineActivityEventSerializer,
+    DeedEventSerializer, DateActivityEventSerializer, OrganizationSerializer
+)
 from bluebottle.activity_pub.utils import get_platform_actor
 
 
@@ -459,24 +460,18 @@ class FollowerAdmin(FollowAdmin):
 class PlaceAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "locality",
-        "country",
         "latitude",
         "longitude"
     )
-    list_filter = ['country', 'region']
-    search_fields = ['name', 'locality', 'street_address', 'country']
+    search_fields = ['name', ]
     readonly_fields = ("pub_url",)
 
     fieldsets = (
         (None, {
             'fields': ('name', 'pub_url')
         }),
-        (_('Address'), {
-            'fields': ('street_address', 'postal_code', 'locality', 'region', 'country', 'country_code')
-        }),
         (_('Coordinates'), {
-            'fields': ('latitude', 'longitude', 'mapbox_id')
+            'fields': ('latitude', 'longitude')
         }),
     )
 
@@ -500,7 +495,6 @@ class PlaceInline(admin.StackedInline):
     )
 
 
-@admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",

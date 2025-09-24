@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
 from bluebottle.activity_pub.models import Publish
-from bluebottle.activity_pub.serializers import ActivityEventSerializer
+from bluebottle.activity_pub.serializers.json_ld import ActivityEventSerializer
 from bluebottle.activity_pub.services import EventCreationService
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.utils.utils import get_current_host

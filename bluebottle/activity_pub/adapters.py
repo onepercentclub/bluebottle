@@ -64,7 +64,7 @@ class JSONLDAdapter():
             return serializer.save()
 
     def follow(self, url):
-        from bluebottle.activity_pub.serializers import ActorSerializer
+        from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
 
         discovered_url = client.get(url)
         actor = self.sync(discovered_url, ActorSerializer)

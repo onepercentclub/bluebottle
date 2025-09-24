@@ -5,7 +5,7 @@ from rest_framework import exceptions
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
-from bluebottle.activity_pub.serializers import ActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
 from bluebottle.activity_pub.tests.factories import BluebottleOrganizationFactory, FollowFactory, OrganizationFactory
 
 

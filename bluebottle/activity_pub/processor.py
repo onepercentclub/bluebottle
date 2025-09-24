@@ -8,7 +8,11 @@ jsonld.set_document_loader(
 )
 
 processor = jsonld.JsonLdProcessor()
-default_context = ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1']
+default_context = [
+    'https://www.w3.org/ns/activitystreams',
+    'https://w3id.org/security/v1',
+    'https://goodup.com/json-ld',
+]
 processed_context = processor.process_context(
     processor._get_initial_context({}),
     {"@context": default_context},

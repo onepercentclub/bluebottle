@@ -120,7 +120,7 @@ class TransitionMessage(object):
     def get_calendar_attachments(self, recipient):
         events = []
         event_data = self.get_event_data(recipient)
-        if type(event_data) == list:
+        if type(event_data) is list:
             for event in event_data:
                 if not event:
                     continue

@@ -1,0 +1,102 @@
+from rest_framework import serializers
+
+from bluebottle.activity_pub.serializers.base import (
+    FederatedObjectSerializer
+)
+from bluebottle.geo.models import Geolocation
+from bluebottle.time_based.models import DeadlineActivity, DateActivity
+from bluebottle.deeds.models import Deed
+from bluebottle.collect.models import CollectActivity, CollectType
+from bluebottle.funding.models import Funding
+from bluebottle.utils.fields import MoneyField
+
+from bluebottle.utils.fields import RichTextField
+from bluebottle.files.serializers import ImageField
+
+
+class RelatedFederatedObjectField(serializers.Field):
+    def __init__(self, serializer, *args, **kwargs):
+        self.serializer = serializer
+
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        pass
+
+    def to_internal_value(self, data):
+        pass
+
+
+class FederatedActivitySerializer(FederatedObjectSerializer):
+    title = serializers.CharField()
+    description = RichTextField()
+
+    image = ImageField()
+
+
+class CollectTypeSerializer(FederatedObjectSerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = CollectType
+
+
+class LocationSerializer(FederatedObjectSerializer):
+    class Meta:
+        model = Geolocation
+
+
+class FederatedDeedSerializer(FederatedActivitySerializer):
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    class Meta:
+        model = Deed
+
+
+class FederatedCollectSerializer(FederatedActivitySerializer):
+    location = RelatedFederatedObjectField(LocationSerializer)
+
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    collect_type = RelatedFederatedObjectField(CollectTypeSerializer)
+
+    target = serializers.DecimalField(decimal_places=2)
+    realized = serializers.DecimalField(decimal_places=2)
+
+    class Meta:
+        model = CollectActivity
+
+
+class FederatedFundingSerializer(FederatedActivitySerializer):
+    location = RelatedFederatedObjectField(LocationSerializer)
+
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    target = MoneyField()
+    realized = MoneyField()
+
+    class Meta:
+        model = Funding
+
+
+class FederatedDeadlineActivitySerializer(FederatedActivitySerializer):
+    location = RelatedFederatedObjectField(LocationSerializer)
+
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    class Meta:
+        model = DeadlineActivity
+
+
+class FederatedDateActivitySerializer(FederatedActivitySerializer):
+    start = serializers.DateField()
+    end = serializers.DateField()
+
+    #  slots = RelatedFederatedObjectField(SlotSerializer)
+
+    class Meta:
+        model = DateActivity

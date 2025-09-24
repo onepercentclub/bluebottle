@@ -214,8 +214,8 @@ class GrantPayment(TriggerMixin, models.Model):
             "line_items": line_items,
             "customer": self.grant_provider.stripe_customer_id,  # REQUIRED for bank transfer in Checkout
             "success_url": (
-                    get_current_host()
-                    + reverse("admin:grant_management_grantpayment_change", args=(self.pk,))
+                get_current_host()
+                + reverse("admin:grant_management_grantpayment_change", args=(self.pk,))
             ),
             "cancel_url": get_current_host(),  # pick a sensible cancel target
         }

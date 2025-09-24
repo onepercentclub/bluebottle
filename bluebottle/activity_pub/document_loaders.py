@@ -11,8 +11,9 @@ json_ld_path = os.path.join(
 )
 
 local_documents = {
-    'https://www.w3.org/ns/activitystreams': os.path.join(json_ld_path, 'activitystreams.json'),
-    'https://w3id.org/security/v1': os.path.join(json_ld_path, 'security.json'),
+    'https://www.w3.org/ns/activitystreams': 'activitystreams.json',
+    'https://w3id.org/security/v1': 'security.json',
+    'https://goodup.com/json-ld': 'goodup.json',
 }
 
 
@@ -24,7 +25,7 @@ def local_document_loader(url, options={}):
 
     :return: the RemoteDocument.
     """
-    filename = local_documents.get(url)
+    filename = os.path.join(json_ld_path, local_documents.get(url, ''))
 
     if filename and os.path.exists(filename):
         with open(filename) as f:

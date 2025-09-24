@@ -28,4 +28,4 @@ class JSONLDParser(JSONParser):
             del compacted['@context']
             return underscore(compacted)
         except Exception as e:
-            raise ParseError(f'JSON parse error - {str(e)}')
+            raise ParseError(f'JSON-LD parse error - {str(e)}')

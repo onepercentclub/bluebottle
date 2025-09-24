@@ -1,12 +1,12 @@
+from bluebottle.activity_pub.serializers.base import ActivityPubSerializer, PolymorphicActivityPubSerializer
 from bluebottle.geo.models import Geolocation
-from django.db import models, connection
+from django.db import connection
 from django.urls import reverse
 from isodate import parse_duration
 from rest_framework import serializers
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from bluebottle.activities.models import Activity
-from bluebottle.activity_pub.fields import IdField, RelatedActivityPubField, TypeField
+from bluebottle.activity_pub.serializers.fields import RelatedActivityPubField
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -19,89 +19,14 @@ from bluebottle.activity_pub.models import (
     PublicKey,
     Publish,
     Organization,
+    Actor,
+    Activity
 )
-from bluebottle.activity_pub.utils import is_local, timedelta_to_iso
+from bluebottle.activity_pub.utils import timedelta_to_iso
 from bluebottle.deeds.models import Deed
 from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.time_based.models import DeadlineActivity, DateActivity, DateActivitySlot, ActivitySlot
 from bluebottle.utils.fields import RichTextField
-
-
-class ActivityPubSerializer(serializers.ModelSerializer):
-    type = TypeField()
-    id = IdField(source="*")
-
-    class Meta:
-        exclude = ('polymorphic_ctype', 'url')
-
-    def get_url_name(self, instance):
-        return self.Meta.url_name
-
-    def save(self, **kwargs):
-        if not is_local(self.initial_data['id']):
-            try:
-                self.instance = self.Meta.model.objects.get(url=self.initial_data['id'])
-            except self.Meta.model.DoesNotExist:
-                pass
-
-        return super().save(**kwargs)
-
-    def to_internal_value(self, data):
-        result = super().to_internal_value(data)
-
-        if not is_local(data['id']):
-            result['url'] = data['id']
-
-        return result
-
-
-class PolymorphicActivityPubSerializer(serializers.Serializer):
-    def __init__(self, *args, **kwargs):
-        self._serializers = [
-            serializer(*args, **kwargs) for serializer in self.polymorphic_serializers
-        ]
-        super().__init__(*args, **kwargs)
-
-    def get_url_name(self, instance):
-        return self.get_serializer(instance).Meta.url_name
-
-    def get_serializer(self, data):
-        if isinstance(data, models.Model):
-            for serializer in self._serializers:
-                if serializer.Meta.model == data.__class__:
-                    return serializer
-        else:
-            for serializer in self._serializers:
-                if data['type'] == serializer.Meta.type:
-                    return serializer
-
-    def to_representation(self, instance):
-        if hasattr(self, 'initial_data'):
-            return self.get_serializer(self.initial_data).to_representation(instance)
-        else:
-            return self.get_serializer(instance).to_representation(instance)
-
-    def to_internal_value(self, data):
-        return self.get_serializer(data).to_internal_value(data)
-
-    def save(self, *args, **kwargs):
-        return self.get_serializer(self.initial_data).save(*args, **kwargs)
-
-    def create(self, validated_data):
-        return self.get_serializer(self.initial_data).create(validated_data)
-
-    def update(self, instance, validated_data):
-        return self.get_serializer(instance).update(validated_data)
-
-    def is_valid(self, *args, **kwargs):
-        super().is_valid(*args, **kwargs)
-
-        if hasattr(self, 'instance') and self.instance:
-            serializer = self.get_serializer(self.instance)
-        else:
-            serializer = self.get_serializer(self.initial_data)
-
-        return serializer.is_valid(*args, **kwargs)
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -160,6 +85,9 @@ class ActorSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         OrganizationSerializer, PersonSerializer
     ]
+
+    class Meta:
+        model = Actor
 
 
 class DurationField(serializers.DurationField):
@@ -329,6 +257,9 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]
 
+    class Meta:
+        model = Activity
+
 
 def download_event_image(event, user):
     from io import BytesIO
@@ -440,10 +371,12 @@ class BaseActivityEventSerializer(serializers.ModelSerializer):
         activity = super().save(**kwargs)
 
         # Check if there's an image URL in the initial data and we have a user
-        if (hasattr(self, 'initial_data') and
-                self.initial_data.get('image') and
-                user and
-                not activity.image):  # Only download if no image is already set
+        if (
+            hasattr(self, 'initial_data') and
+            self.initial_data.get('image') and
+            user and
+            not activity.image
+        ):  # Only download if no image is already set
 
             # Create a mock event object with the image URL for download_event_image
             class MockEvent:

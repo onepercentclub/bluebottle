@@ -1,10 +1,10 @@
 import factory
 from builtins import object
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
-    Organization, Inbox, Outbox, PublicKey, PrivateKey, Event, Place
+    Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 
@@ -13,15 +13,10 @@ class PrivateKeyFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PrivateKey
 
-    private_key_pem = factory.Faker('text')
-
 
 class PublicKeyFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = PublicKey
-
-    public_key_pem = factory.Faker('text')
-    private_key = factory.SubFactory(PrivateKeyFactory)
 
 
 class InboxFactory(factory.DjangoModelFactory):
@@ -48,6 +43,26 @@ class OrganizationFactory(factory.DjangoModelFactory):
     outbox = factory.SubFactory(OutboxFactory)
     public_key = factory.SubFactory(PublicKeyFactory)
     organization = factory.SubFactory(BluebottleOrganizationFactory)
+
+
+class PersonFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Person
+
+    name = factory.Sequence(lambda n: 'Person {0}'.format(n))
+    preferred_username = factory.Sequence(lambda n: 'person_{0}'.format(n))
+
+    inbox = factory.SubFactory(InboxFactory)
+    outbox = factory.SubFactory(OutboxFactory)
+    public_key = factory.SubFactory(PublicKeyFactory)
+
+
+class FollowFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Follow
+
+    object = factory.SubFactory(OrganizationFactory)
+    actor = factory.SubFactory(OrganizationFactory)
 
 
 class PlaceFactory(factory.DjangoModelFactory):
@@ -80,13 +95,13 @@ class EventFactory(factory.DjangoModelFactory):
             obj.duration = timedelta(hours=4)
             obj.save()
 
-    @factory.post_generation  
+    @factory.post_generation
     def with_subevents(obj, create, extracted, **kwargs):
         """Add subevents to make it a date activity type"""
         if extracted and create:
             # Create subevents
             EventFactory.create_batch(
-                2, 
+                2,
                 parent=obj,
                 organizer=obj.organizer,
                 place=obj.place,

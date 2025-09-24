@@ -9,6 +9,7 @@ from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
+from bluebottle.utils.fields import MoneyField
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -179,39 +180,27 @@ class PublicKey(ActivityPubModel):
         super().save(*args, **kwargs)
 
 
+class Address(ActivityPubModel):
+    street_address = models.CharField(max_length=1000)
+    postal_code = models.CharField(max_length=1000)
+
+    address_locality = models.CharField(max_length=1000)
+    address_region = models.CharField(max_length=1000)
+    address_country = models.CharField(max_length=1000)
+
+
 class Place(ActivityPubModel):
     name = models.CharField(max_length=1000)
     latitude = models.CharField(max_length=1000)
     longitude = models.CharField(max_length=1000)
 
-    street_address = models.CharField(max_length=1000)
-    postal_code = models.CharField(max_length=1000)
-
-    locality = models.CharField(max_length=1000)
-    region = models.CharField(max_length=1000)
-    country = models.CharField(max_length=1000)
-    country_code = models.CharField(max_length=5)
-
-    mapbox_id = models.CharField(max_length=1000)
+    address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
 
 class Event(ActivityPubModel):
     name = models.CharField()
     description = models.TextField()
     image = models.URLField(null=True)
-    start = models.DateTimeField(null=True)
-    end = models.DateTimeField(null=True)
-    duration = models.DurationField(null=True)
-    organizer = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    place = models.ForeignKey(Place, null=True, blank=True, on_delete=models.SET_NULL)  # Add this field
-
-    parent = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="subevents",
-    )
 
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
@@ -220,20 +209,27 @@ class Event(ActivityPubModel):
     slot_id = models.CharField(max_length=100, null=True, blank=True)
 
     @property
-    def activity_type(self):
-        if self.subevents.exists():
-            return "date"
-        if self.duration:
-            return "deadline"
-        return "deed"
-
-    @property
     def adopted(self):
         return self.activity is not None
 
-    class Meta:
-        verbose_name_plural = _("Shared activities")
-        verbose_name = _("Shared activity")
+
+class GoodDeed(Event):
+    start = models.DateField(null=True)
+    end = models.DateField(null=True)
+
+
+class CollectionDrive(Event):
+    start = models.DateField(null=True)
+    end = models.DateField(null=True)
+
+    location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
+
+
+class CrowdFunding(Event):
+    target = MoneyField()
+
+    start = models.DateField(null=True)
+    end = models.DateField(null=True)
 
 
 class Activity(ActivityPubModel):

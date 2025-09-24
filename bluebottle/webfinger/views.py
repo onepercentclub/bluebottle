@@ -2,7 +2,7 @@ import re
 from rest_framework import generics, renderers, serializers, exceptions
 
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.activity_pub.serializers import ActorSerializer
+from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
 
 
 class WebFingerRenderer(renderers.JSONRenderer):

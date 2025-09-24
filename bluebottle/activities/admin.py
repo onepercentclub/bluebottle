@@ -1,12 +1,20 @@
 import re
 from urllib.parse import unquote
 
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
+
+from bluebottle.activity_pub.models import Publish
+from bluebottle.activity_pub.serializers.json_ld import ActivityEventSerializer
+from bluebottle.activity_pub.services import EventCreationService
+from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.utils.utils import get_current_host
+
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django import forms
 from django.contrib import admin, messages
-from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
@@ -48,10 +56,6 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.models import Publish
-from bluebottle.activity_pub.serializers import ActivityEventSerializer
-from bluebottle.activity_pub.services import EventCreationService
-from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -67,7 +71,6 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -85,7 +88,6 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
-from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 

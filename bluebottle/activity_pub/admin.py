@@ -32,9 +32,11 @@ from bluebottle.activity_pub.models import (
     Following,
     Follower,
 )
-from bluebottle.activity_pub.serializers import ActivityEventSerializer, DeadlineActivityEventSerializer, \
-    DeedEventSerializer, DateActivityEventSerializer
-from bluebottle.activity_pub.serializers import OrganizationSerializer
+from bluebottle.activity_pub.serializers.json_ld import (
+    ActivityEventSerializer, DeadlineActivityEventSerializer,
+    DeedEventSerializer, DateActivityEventSerializer, OrganizationSerializer
+)
+from bluebottle.activity_pub.utils import get_platform_actor
 
 
 @admin.register(ActivityPubModel)
@@ -274,7 +276,6 @@ class FollowingAdmin(FollowAdmin):
     fields = readonly_fields
 
     def get_queryset(self, request):
-        from bluebottle.activity_pub.utils import get_platform_actor
         qs = Follow.objects.all()
         platform_actor = get_platform_actor()
         if platform_actor:
@@ -335,7 +336,6 @@ class FollowerAdmin(FollowAdmin):
     platform.short_description = _("Platform")
 
     def get_queryset(self, request):
-        from bluebottle.activity_pub.utils import get_platform_actor
         qs = Follow.objects.all()
         platform_actor = get_platform_actor()
         if platform_actor:
@@ -364,7 +364,6 @@ class FollowerAdmin(FollowAdmin):
     def accept_follow_request(self, request, object_id):
         """Accept a single follow request"""
         from bluebottle.activity_pub.models import Accept, Follow
-        from bluebottle.activity_pub.utils import get_platform_actor
 
         follow = get_object_or_404(Follow, pk=unquote(object_id))
         platform_actor = get_platform_actor()
@@ -418,7 +417,6 @@ class FollowerAdmin(FollowAdmin):
     def accept_follow_requests(self, request, queryset):
         """Accept selected follow requests"""
         from bluebottle.activity_pub.models import Accept
-        from bluebottle.activity_pub.utils import get_platform_actor
 
         platform_actor = get_platform_actor()
         if not platform_actor:
@@ -462,24 +460,18 @@ class FollowerAdmin(FollowAdmin):
 class PlaceAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
-        "locality",
-        "country",
         "latitude",
         "longitude"
     )
-    list_filter = ['country', 'region']
-    search_fields = ['name', 'locality', 'street_address', 'country']
+    search_fields = ['name', ]
     readonly_fields = ("pub_url",)
 
     fieldsets = (
         (None, {
             'fields': ('name', 'pub_url')
         }),
-        (_('Address'), {
-            'fields': ('street_address', 'postal_code', 'locality', 'region', 'country', 'country_code')
-        }),
         (_('Coordinates'), {
-            'fields': ('latitude', 'longitude', 'mapbox_id')
+            'fields': ('latitude', 'longitude')
         }),
     )
 
@@ -503,7 +495,6 @@ class PlaceInline(admin.StackedInline):
     )
 
 
-@admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",

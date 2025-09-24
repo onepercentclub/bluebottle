@@ -128,7 +128,11 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.assertEqual(
             response.json(),
             {
-                '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
+                '@context': [
+                    'https://www.w3.org/ns/activitystreams',
+                    'https://w3id.org/security/v1',
+                    'https://goodup.com/json-ld'
+                ],
                 'id': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
                 'type': 'Inbox'
             }
@@ -140,7 +144,11 @@ class PersonAPITestCase(ActivityPubTestCase):
         self.assertEqual(
             response.json(),
             {
-                '@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
+                '@context': [
+                    'https://www.w3.org/ns/activitystreams',
+                    'https://w3id.org/security/v1',
+                    'https://goodup.com/json-ld'
+                ],
                 'id': self.build_absolute_url(reverse('json-ld:person', args=(self.person.pk, ))),
                 'inbox': self.build_absolute_url(reverse('json-ld:inbox', args=(self.person.inbox.pk, ))),
                 'outbox': self.build_absolute_url(reverse('json-ld:outbox', args=(self.person.outbox.pk, ))),

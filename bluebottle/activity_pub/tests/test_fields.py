@@ -2,11 +2,11 @@ import mock
 
 from django.urls import reverse
 
-from bluebottle.activity_pub.fields import RelatedActivityPubField
+from bluebottle.activity_pub.serializers.fields import RelatedActivityPubField
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
 
-from bluebottle.activity_pub.serializers import ActorSerializer
+from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
 from bluebottle.activity_pub.tests.factories import BluebottleOrganizationFactory, FollowFactory, OrganizationFactory
 
 

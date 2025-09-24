@@ -71,7 +71,7 @@ class JSONLDAdapter():
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):
-        from bluebottle.activity_pub.serializers import ActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
 
         if activity.url:
             raise TypeError('Only local activities can be published')

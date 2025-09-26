@@ -96,11 +96,11 @@ class ImageSerializer(ActivityPubSerializer):
 class GoodDeedSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:good-deed')
 
-    startTime = serializers.DateField(required=False)
-    endTime = serializers.DateField(required=False)
+    startTime = serializers.DateField(required=False, allow_null=True)
+    endTime = serializers.DateField(required=False, allow_null=True)
     name = serializers.CharField()
     summary = serializers.CharField()
-    image = ImageSerializer(include=True)
+    image = ImageSerializer(include=True, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'GoodDeed'

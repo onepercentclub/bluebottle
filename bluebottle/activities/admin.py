@@ -790,7 +790,7 @@ class ActivityChildAdmin(
         federated_serializer = FederatedDeedSerializer(activity)
 
         serializer = GoodDeedSerializer(data=federated_serializer.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         event = serializer.save()
 
         Publish.objects.create(actor=get_platform_actor(), object=event)

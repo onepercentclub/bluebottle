@@ -19,8 +19,8 @@ class ActivityPubView(generics.RetrieveAPIView):
     parser_classes = [JSONLDParser]
     renderer_classes = [JSONLDRenderer]
     authentication_classes = [HTTPSignatureAuthentication]
-
-    permission_classes = [ActivityPubPermission]
+    permission_classes = []
+    # permission_classes = [ActivityPubPermission]
 
     def get_queryset(self):
         return self.queryset.filter(iri__isnull=True)
@@ -40,7 +40,8 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
     serializer_class = InboxSerializer
     queryset = Inbox.objects.all()
 
-    permission_classes = [InboxPermission]
+    permission_classes = []
+    # permission_classes = [InboxPermission]
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == 'POST':

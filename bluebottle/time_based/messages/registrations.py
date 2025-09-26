@@ -7,7 +7,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.time_based.messages import get_slot_info
 from bluebottle.time_based.models import PeriodicActivity, DeadlineActivity
-from bluebottle.utils.widgets import duration_to_hours
+from bluebottle.time_based.utils import duration_to_hours
 
 
 class ManagerRegistrationNotification(TransitionMessage):

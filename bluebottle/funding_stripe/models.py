@@ -406,7 +406,7 @@ class StripePayoutAccount(PayoutAccount):
                 if (
                         self.business_type == BusinessTypeChoices.company
                         and company
-                        and company.structure == "incorporated_non_profit"
+                        and getattr(company, 'structure', None) == 'incorporated_non_profit'
                 ):
                     stripe.Account.modify(
                         self.account_id,

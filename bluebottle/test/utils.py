@@ -568,6 +568,15 @@ class APITestCase(BluebottleTestCase):
             [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
         )
 
+    def assertNotTransition(self, transition):
+        """
+        Assert that it is possible to perform the transition with the name `transition`
+        """
+        self.assertNotIn(
+            transition,
+            [trans['name'] for trans in self.response.json()['data']['meta']['transitions']]
+        )
+
     def assertMeta(self, attr, expected=None, data=None):
         """
         Assert that `attr` is present in the resource's meta

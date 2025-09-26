@@ -38,10 +38,13 @@ class TypeValidator:
 class TypeField(serializers.CharField):
     def __init__(self, *args, **kwargs):
         kwargs['validators'] = kwargs.pop('validators', []) + [TypeValidator()]
-        kwargs['read_only'] = True
+        kwargs['required'] = False
         kwargs['source'] = '*'
 
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
         return self.parent.Meta.type
+
+    def to_internal_value(self, value):
+        return {'type': self.parent.Meta.type}

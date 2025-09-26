@@ -16,6 +16,7 @@ class PublishEffect(Effect):
         federated_serializer = FederatedDeedSerializer(self.instance)
 
         serializer = GoodDeedSerializer(data=federated_serializer.data)
+
         serializer.is_valid()
         event = serializer.save()
 

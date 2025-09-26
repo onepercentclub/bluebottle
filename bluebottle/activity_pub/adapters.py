@@ -79,7 +79,6 @@ class JSONLDAdapter():
 
         for actor in activity.audience:
             if not actor.inbox.is_local:
-                import ipdb; ipdb.set_trace()
                 self.post(actor.inbox.iri, data=data, auth=auth)
 
 

@@ -111,12 +111,12 @@ class GoodDeedSerializer(ActivityPubSerializer):
 
 
 class BaseActivitySerializer(ActivityPubSerializer):
-    actor = OrganizationSerializer()
+    actor = ActorSerializer()
 
 
 class FollowSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:follow')
-    object = OrganizationSerializer()
+    object = ActorSerializer()
 
     class Meta(ActivityPubSerializer.Meta):
         type = 'Follow'

@@ -136,15 +136,43 @@ class GrantPayment(TriggerMixin, models.Model):
         return None
 
     def check_status(self):
-        if self.checkout_id:
-            stripe = get_stripe()
-            session = stripe.checkout.Session.retrieve(self.checkout_id)
-            if session.payment_intent:
-                intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                if intent.status == "succeeded":
+        if not self.checkout_id:
+            return None
+
+        stripe = get_stripe()
+        session = stripe.checkout.Session.retrieve(self.checkout_id)
+
+        if not session.payment_intent:
+            return None
+
+        intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+
+        if intent.status == "requires_action":
+            self.states.wait(save=True)
+            return None
+
+        if intent.status == "succeeded":
+            # Get the related charge and expand balance_transaction
+            # to check if funds are available
+            charge_id = intent.charges.data[0].id if intent.charges.data else None
+            if not charge_id:
+                return None
+
+            charge = stripe.Charge.retrieve(
+                charge_id,
+                expand=["balance_transaction"]
+            )
+            balance_transaction = charge.balance_transaction
+
+            if balance_transaction and balance_transaction.available_on:
+                import time
+                now = int(time.time())
+                if balance_transaction.available_on <= now:
+                    # Funds are actually available for payout
                     self.states.succeed(save=True)
-                if intent.status == "requires_action":
+                else:
                     self.states.wait(save=True)
+
         return None
 
     def generate_payment_link(self):

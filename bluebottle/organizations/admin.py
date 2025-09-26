@@ -9,6 +9,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activity_pub.models import Organization as PubOrganization
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.admin import export_as_csv_action
@@ -80,6 +81,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def has_delete_permission(self, request, obj=None):
+        settings = SitePlatformSettings.load()
+        if obj and obj == settings.organization:
+            return False
+        return True
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that add form do not show inlines """

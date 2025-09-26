@@ -3,7 +3,7 @@ from adminsortable.models import SortableMixin
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, connection
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
@@ -16,6 +16,7 @@ from django_quill.fields import QuillField
 
 from bluebottle.categories.models import Category
 from bluebottle.geo.models import Location
+from bluebottle.organizations.models import Organization
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.validators import FileExtensionValidator, FileMimetypeValidator, validate_file_infection
@@ -667,6 +668,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         if ext not in valid_extensions:
             raise ValidationError(u'File not supported!')
 
+    share_activities = models.BooleanField(
+        _('Share activities'),
+        help_text=_('Share activities with/from other platforms.'),
+        default=False
+    )
+
     organization = models.ForeignKey(
         'organizations.Organization', null=True, blank=True, on_delete=models.SET_NULL,
         help_text=_('The organization this platform belongs to.')
@@ -800,9 +807,17 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     def save(self, *args, **kwargs):
-        if self.organization and not hasattr(self.organization, 'activity_pub_organization'):
+        if self.share_activities and not self.organization_id:
+            tenant = connection.tenant
+            self.organization = Organization.objects.create(
+                name=tenant.name,
+                logo=self.favicon,
+            )
+
+        if self.organization_id and not hasattr(self.organization, 'activity_pub_organization'):
             from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
             ActivityPubOrganization.objects.from_model(self.organization)
+
 
         super().save(*args, **kwargs)
 

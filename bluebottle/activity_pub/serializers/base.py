@@ -22,46 +22,74 @@ class ActivityPubSerializer(serializers.ModelSerializer):
     class Meta:
         exclude = ('polymorphic_ctype', 'iri')
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if not self.parent:
+            return representation 
+        else:
+            if self.include:
+                representation.pop('type', None)
+                return representation
+            else:
+                return representation['id']
+
+    def to_internal_value(self, data):
+        try:
+            return super().to_internal_value(data)
+        except exceptions.ValidationError:
+            data = adapter.sync(data['id'])
+            return super().to_internal_value(data)
+
+    def save(self, **kwargs):
+        iri = self.validated_data['id']
+
+        if not is_local(iri):
+            try:
+                self.instance = self.Meta.model.objects.get(iri=iri)
+            except self.Meta.model.DoesNotExist:
+                pass
+        else:
+            try:
+                resolved = resolve(urlparse(iri).path)
+                self.instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
+            except self.Meta.model.DoesNotExist:
+                pass
+
+        return super().save()
+
     def create(self, validated_data):
+        iri = validated_data.pop('id')
+        if not is_local(iri):
+            validated_data['iri'] = iri
+
         for name, field in self.fields.items():
             if isinstance(field, ActivityPubSerializer):
-                try:
-                    iri = validated_data[name]['iri']
-                    if not is_local(iri):
-                        validated_data[name] = adapter.sync(iri, type(field))
-                    else:
-                        validated_data[name] = field.Meta.model.objects.get(
-                            pk=resolve(urlparse(iri).path).kwargs['pk']
-                        )
-                except (KeyError, field.Meta.model.DoesNotExist):
-                    field.initial_data = validated_data[name]
-                    field.is_valid(raise_exception=True)
-                    validated_data[name] = field.save(**validated_data[name])
+                field.initial_data = validated_data[name]
+                field.is_valid()
+                validated_data[name] = field.save()
 
         return self.Meta.model.objects.create(**validated_data)
 
-    def to_representation(self, instance):
-        result = super().to_representation(instance)
-        if self.parent:
-            if not self.include:
-                return result['id']
-            else:
-                del result['type']
+    def update(self, instance, validated_data):
+        validated_data.pop('id')
 
-                return result
-        else:
-            return result
+        for name, field in self.fields.items():
+            if isinstance(field, ActivityPubSerializer):
+                field.initial_data = validated_data[name]
+                field.is_valid()
+                validated_data[name] = field.save()
 
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            return {'iri': data} 
+        return super().update(instance, validated_data)
 
-        result = super().to_internal_value(data)
+    def get_value(self, data):
+        result = super().get_value(data)
 
-        if 'id' in data and not is_local(data['id']):
-            result['iri'] = data['id']
+        if isinstance(result, str):
+            result =  {'id': result}
 
         return result
+
 
 
 class PolymorphicActivityPubSerializerMetaclass(serializers.SerializerMetaclass):

@@ -25,10 +25,7 @@ class IdField(serializers.CharField):
 
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
-        if is_local(result):
-            return {'id': resolve(urlparse(result).path).kwargs['pk']}
-        else:
-            return {}
+        return {'id': result}
 
 
 class TypeValidator:

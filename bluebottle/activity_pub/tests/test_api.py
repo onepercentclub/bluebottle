@@ -138,6 +138,7 @@ class PersonAPITestCase(ActivityPubTestCase):
             }
         )
 
+    maxDiff = None
     def test_get_person(self):
         response = self.client.get(self.person_url)
 
@@ -165,6 +166,8 @@ class PersonAPITestCase(ActivityPubTestCase):
         platform_url = self.build_absolute_url('/')
         with LocalTenant(self.other_tenant):
             adapter.follow(platform_url)
+
+        import ipdb; ipdb.set_trace()
 
         self.follow = Follow.objects.get(object=get_platform_actor())
         self.assertTrue(self.follow)

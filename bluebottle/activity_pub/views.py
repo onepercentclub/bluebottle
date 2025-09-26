@@ -44,12 +44,9 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
 
     def get_serializer_class(self, *args, **kwargs):
         if self.request.method == 'POST':
-            return ActivitySerializer
+            return FollowSerializer
         else:
             return self.serializer_class
-
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
 
 
 class OutBoxView(ActivityPubView):

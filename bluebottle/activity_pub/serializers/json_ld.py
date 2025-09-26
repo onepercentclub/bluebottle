@@ -1,4 +1,6 @@
-from bluebottle.activity_pub.serializers.base import ActivityPubSerializer, PolymorphicActivityPubSerializer
+from bluebottle.activity_pub.serializers.base import (
+    ActivityPubSerializer, PolymorphicActivityPubSerializer
+)
 from rest_framework import serializers
 
 from bluebottle.activity_pub.serializers.fields import IdField

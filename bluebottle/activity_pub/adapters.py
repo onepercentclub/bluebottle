@@ -52,22 +52,20 @@ class JSONLDAdapter():
     def post(self, url, data, auth):
         return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
 
-    def sync(self, url, serializer, force=True):
-        try:
-            return serializer.Meta.model.objects.get(iri=url)
-        except serializer.Meta.model.DoesNotExist:
-            auth = self.get_auth(get_platform_actor())
-            data = self.get(url, auth=auth)
-            serializer = serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-
-            return serializer.save()
+    def sync(self, url, force=True):
+        auth = self.get_auth(get_platform_actor())
+        return self.get(url, auth=auth)
 
     def follow(self, url):
-        from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
+        from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 
         discovered_url = client.get(url)
-        actor = self.sync(discovered_url, ActorSerializer)
+        data = self.sync(discovered_url)
+
+        serializer = OrganizationSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        actor =  serializer.save()
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):
@@ -81,6 +79,7 @@ class JSONLDAdapter():
 
         for actor in activity.audience:
             if not actor.inbox.is_local:
+                import ipdb; ipdb.set_trace()
                 self.post(actor.inbox.iri, data=data, auth=auth)
 
 

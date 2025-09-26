@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 12:00+0200\n"
-"PO-Revision-Date: 2025-09-19 10:04\n"
+"POT-Creation-Date: 2025-09-24 08:31+0200\n"
+"PO-Revision-Date: 2025-09-24 06:32\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -233,7 +233,7 @@ msgstr "Recente bijdragen"
 
 #: bluebottle/activities/effects.py:23
 msgid "Create organizer"
-msgstr "Maak organisator aan"
+msgstr "Organisator aanmaken"
 
 #: bluebottle/activities/effects.py:37
 msgid "Copy categories"
@@ -621,7 +621,7 @@ msgstr "Slug"
 #: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
-#: bluebottle/grant_management/models.py:420
+#: bluebottle/grant_management/models.py:423
 msgid "Description"
 msgstr "Omschrijving"
 
@@ -3854,7 +3854,7 @@ msgstr "Geen"
 msgid "Funding activities"
 msgstr "Crowdfunding campagnes"
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:378
+#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:381
 msgid "Grant applications"
 msgstr "Fondsaanvragen"
 
@@ -4159,8 +4159,8 @@ msgid "If you enter a duration, leave the deadline field empty for it to be auto
 msgstr "Als je een looptijd opgeeft, laat dan het veld voor deadline leeg."
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:256
-#: bluebottle/grant_management/models.py:329
+#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:259
+#: bluebottle/grant_management/models.py:332
 msgid "started"
 msgstr "gestart"
 
@@ -4220,11 +4220,11 @@ msgid "fundraisers"
 msgstr "fundraisers"
 
 #: bluebottle/funding/models.py:478 bluebottle/funding/states.py:480
-#: bluebottle/grant_management/models.py:255 bluebottle/utils/transitions.py:13
+#: bluebottle/grant_management/models.py:258 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "goedgekeurd"
 
-#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:257
+#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:260
 msgid "completed"
 msgstr "gerealiseerd"
 
@@ -4236,7 +4236,7 @@ msgstr "Crowdfunding uitbetaling"
 msgid "Funding payouts"
 msgstr "Crowdfunding uitbetalingen"
 
-#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:314
+#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:317
 msgid "Payout"
 msgstr "Uitbetaling"
 
@@ -6079,9 +6079,9 @@ msgid "Enter 3 capital letters."
 msgstr "Voer 3 hoofdletters in."
 
 #: bluebottle/grant_management/admin.py:98
-#: bluebottle/grant_management/models.py:239
-#: bluebottle/grant_management/models.py:340
-#: bluebottle/grant_management/models.py:377
+#: bluebottle/grant_management/models.py:242
+#: bluebottle/grant_management/models.py:343
+#: bluebottle/grant_management/models.py:380
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr "Fondsaanvraag"
@@ -6177,7 +6177,7 @@ msgstr "Disburse funds to grant application accounts"
 msgid "Update ledger item"
 msgstr "Grootboekitem bijwerken"
 
-#: bluebottle/grant_management/effects.py:52 effects.py:25
+#: bluebottle/grant_management/effects.py:52
 msgid "Create payouts for connected grant applications that where granted"
 msgstr "Create payouts for connected grant applications that where granted"
 
@@ -6203,14 +6203,14 @@ msgid "Enter the grant amount"
 msgstr "Vul het bedrag in dat je wilt aanvragen"
 
 #: bluebottle/grant_management/forms.py:39
-#: bluebottle/grant_management/models.py:529
-#: bluebottle/grant_management/models.py:576
-#: bluebottle/grant_management/models.py:614
+#: bluebottle/grant_management/models.py:532
+#: bluebottle/grant_management/models.py:579
+#: bluebottle/grant_management/models.py:617
 msgid "Currency should match fund currency"
 msgstr "Valuta moet overeenkomen met de valuta van het fonds"
 
 #: bluebottle/grant_management/forms.py:42
-#: bluebottle/grant_management/models.py:579
+#: bluebottle/grant_management/models.py:582
 msgid "Insufficient funds"
 msgstr "Onvoldoende saldo"
 
@@ -6309,60 +6309,60 @@ msgstr "Fonds storting"
 msgid "Grant payments"
 msgstr "Fonds stortingen"
 
-#: bluebottle/grant_management/models.py:310
+#: bluebottle/grant_management/models.py:313
 msgid "Grant payout"
 msgstr "Fonds uitbetaling"
 
-#: bluebottle/grant_management/models.py:311
+#: bluebottle/grant_management/models.py:314
 msgid "Grant payouts"
 msgstr "Fonds uitbetalingen"
 
-#: bluebottle/grant_management/models.py:407
+#: bluebottle/grant_management/models.py:410
 msgid "Debit"
 msgstr "Debet"
 
-#: bluebottle/grant_management/models.py:411
+#: bluebottle/grant_management/models.py:414
 msgid "credit"
 msgstr "krediet"
 
-#: bluebottle/grant_management/models.py:436
+#: bluebottle/grant_management/models.py:439
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
 msgid "Grant fund"
 msgstr "Fonds"
 
-#: bluebottle/grant_management/models.py:437
+#: bluebottle/grant_management/models.py:440
 msgid "Grant funds"
 msgstr "Fondsen"
 
-#: bluebottle/grant_management/models.py:468
+#: bluebottle/grant_management/models.py:471
 msgid "Total paid out"
 msgstr "Totaal uitbetaald"
 
-#: bluebottle/grant_management/models.py:474
+#: bluebottle/grant_management/models.py:477
 msgid "Paid out applications"
 msgstr "Uitbetaalde aanvragen"
 
-#: bluebottle/grant_management/models.py:479
+#: bluebottle/grant_management/models.py:482
 msgid "Total budget"
 msgstr "Totale budget"
 
-#: bluebottle/grant_management/models.py:485
+#: bluebottle/grant_management/models.py:488
 msgid "Pending payments"
 msgstr "Openstaande betalingen"
 
-#: bluebottle/grant_management/models.py:493
+#: bluebottle/grant_management/models.py:496
 msgid "Pending applications"
 msgstr "Openstaande aanvragen"
 
-#: bluebottle/grant_management/models.py:500
+#: bluebottle/grant_management/models.py:503
 msgid "Available budget"
 msgstr "Beschikbaar budget"
 
-#: bluebottle/grant_management/models.py:557
+#: bluebottle/grant_management/models.py:560
 msgid "Grant"
 msgstr "Fonds"
 
-#: bluebottle/grant_management/models.py:558
+#: bluebottle/grant_management/models.py:561
 msgid "Grants"
 msgstr "Fondsen"
 
@@ -6574,7 +6574,7 @@ msgid "\n"
 "<b>Here’s what happens next:</b>\n"
 "<ul>\n"
 "    <li>\n"
-"        You’ll need to enter your bank details and complete the Know Your Customer (KYC) check from the grant application page.\n"
+"        You’ll need to enter your bank details and complete the verification process from the grant application page.\n"
 "    </li>\n"
 "    <li>\n"
 "        Once the verification process is completed successfully, the payout will be processed.\n"
@@ -6587,10 +6587,10 @@ msgstr "\n"
 "<b>Wat is de volgende stap?</b>\n"
 "<ul>\n"
 "    <li>\n"
-"        Ga naar de pagina van je aanvraag, vul je bankgegevens in en lever gegevens aan om je identiteit of die van je organisatie te bevestigen. Zo zorgen we voor een veilige uitbetaling.\n"
+"        Ga naar de pagina van je aanvraag, vul je bankgegevens in en voltooi het verificatieproces.\n"
 "    </li>\n"
 "    <li>\n"
-"        Zodra de verificatie succesvol is afgerond, wordt de uitbetaling verwerkt.\n"
+"        Zodra het verificatieproces succesvol is afgerond, wordt de uitbetaling verwerkt.\n"
 "    </li>\n"
 "</ul>\n"
 "<br>\n"
@@ -6617,7 +6617,7 @@ msgid "\n"
 "        Your application will be reviewed by the platform manager.\n"
 "    </li>\n"
 "    <li>\n"
-"        Once approved, you’ll need to enter your bank details and complete the Know Your Customer (KYC) check to receive the grant.\n"
+"        Once approved, you’ll need to enter your bank details and complete and complete the verification process.\n"
 "    </li>\n"
 "</ul>\n"
 "<p>\n"
@@ -12889,71 +12889,4 @@ msgid "Second"
 msgid_plural "Seconds"
 msgstr[0] "Seconde"
 msgstr[1] "Seconden"
-
-#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
-#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
-#: tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
-#: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
-#: tenants/crowdfunding-voornatuur/settings.py:26
-#: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
-#: tenants/gent/settings.py:25 tenants/goes/settings.py:25
-#: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:26
-#: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/maximising-potential/settings.py:26
-#: tenants/nl2025/settings.py:25 tenants/nlcares/settings.py:26
-#: tenants/nlmtd/settings.py:29 tenants/nn/settings.py:26
-#: tenants/onepercent/settings.py:25 tenants/ouderenfonds/settings.py:26
-#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
-#: tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
-#: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
-#: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
-#: tenants/tilburg/settings.py:25 tenants/transavia/settings.py:26
-#: tenants/utrecht/settings.py:25 tenants/venlo/settings.py:23
-#: tenants/voor-apeldoorn/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:23
-#: tenants/voor-je-buurt/settings.py:26 tenants/voor-je-stadsie/settings.py:26
-#: tenants/voor-leeuwarden/settings.py:26
-#: tenants/voor-overijssel/settings.py:25 tenants/west-friesland/settings.py:25
-#: tenants/zaanstad/settings.py:25
-msgid "Dutch"
-msgstr "Nederlands"
-
-#: tenants/accenture/settings.py:30
-#: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
-#: tenants/bedrijven-voor-amsterdam/settings.py:27
-#: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
-#: tenants/boost-your-business/settings.py:26
-#: tenants/bright-future-afghanistan/settings.py:26
-#: tenants/bugaboo/settings.py:26 tenants/close-the-gap/settings.py:26
-#: tenants/corona/settings.py:26
-#: tenants/deloitte-impact-foundation/settings.py:30
-#: tenants/deloitte-uk/settings.py:29 tenants/dll/settings.py:29
-#: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
-#: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
-#: tenants/good-growth-in-action/settings.py:27
-#: tenants/impact-booster/settings.py:28
-#: tenants/innovating-justice/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/leap2/settings.py:26
-#: tenants/mars-demo/settings.py:25 tenants/mars/settings.py:26
-#: tenants/maximising-potential/settings.py:27
-#: tenants/nexteconomy/settings.py:29 tenants/nlcares/settings.py:27
-#: tenants/nlmtd/settings.py:30 tenants/nn/settings.py:27
-#: tenants/nola-connects/settings.py:26 tenants/nordea/settings.py:27
-#: tenants/onepercent/settings.py:26 tenants/partos/settings.py:26
-#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
-#: tenants/shell-disaster-relief/settings.py:26
-#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
-#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
-#: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
-msgid "English"
-msgstr "Engels"
-
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
-msgid "French"
-msgstr "Frans"
 

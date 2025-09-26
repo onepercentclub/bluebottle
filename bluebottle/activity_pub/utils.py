@@ -32,6 +32,8 @@ def camelize(data, initial=True):
 
 
 def is_local(url):
+    if not isinstance(url, str):
+        import ipdb; ipdb.set_trace()
     return urlparse(url).hostname == properties.tenant.domain_url
 
 

@@ -16,16 +16,16 @@ class ActivityPubModel(PolymorphicModel):
         ContentType.objects.clear_cache()
         super().__init__(*args, **kwargs)
 
-    url = models.URLField(null=True, unique=True)
+    iri = models.URLField(null=True, unique=True)
 
     @property
     def is_local(self):
-        return self.url is None
+        return self.iri is None
 
     @property
     def pub_url(self):
-        if self.url:
-            return self.url
+        if self.iri:
+            return self.iri
         else:
             model_name = self.__class__.__name__.lower()
             return connection.tenant.build_absolute_url(
@@ -177,7 +177,7 @@ class PublicKey(ActivityPubModel):
     private_key = models.ForeignKey(PrivateKey, null=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        if not self.url and not self.private_key:
+        if not self.iri and not self.private_key:
 
             private_key = ed25519.Ed25519PrivateKey.generate()
             public_key = private_key.public_key()
@@ -217,16 +217,19 @@ class Place(ActivityPubModel):
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
 
+class Image(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    url = models.URLField(null=True)
+
+
 class Event(ActivityPubModel):
     name = models.CharField()
-    description = models.TextField()
-    image = models.URLField(null=True)
+    summary = models.TextField()
+    image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
-
-    slot_id = models.CharField(max_length=100, null=True, blank=True)
 
     @property
     def adopted(self):
@@ -234,8 +237,8 @@ class Event(ActivityPubModel):
 
 
 class GoodDeed(Event):
-    start = models.DateField(null=True)
-    end = models.DateField(null=True)
+    startTime = models.DateField(null=True)
+    endTime = models.DateField(null=True)
 
 
 class CollectionDrive(Event):

@@ -5,17 +5,21 @@ from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 
 
+
 class PublishEffect(Effect):
     display = True
     template = 'admin/activity_pub/publish_effect.html'
 
     def post_save(self, **kwargs):
-        from bluebottle.activity_pub.serializers.json_ld import ActivityEventSerializer
-        from bluebottle.activity_pub.services import EventCreationService
-        data = ActivityEventSerializer(self.instance).data
-        actor = get_platform_actor()
-        event = EventCreationService.create_event_from_activity(data)
-        Publish.objects.create(actor=actor, object=event)
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
+        from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
+        federated_serializer = FederatedDeedSerializer(self.instance)
+
+        serializer = GoodDeedSerializer(data=federated_serializer.data)
+        serializer.is_valid()
+        event = serializer.save()
+
+        Publish.objects.create(actor=get_platform_actor(), object=event)
 
     @property
     def is_valid(self):

@@ -9,7 +9,7 @@ from bluebottle.activity_pub.tests.factories import FollowFactory, OrganizationF
 
 class PermissionTestCase(BluebottleTestCase):
     def setUp(self):
-        self.actor = OrganizationFactory.create(url='https://example.com')
+        self.actor = OrganizationFactory.create(iri='https://example.com')
         self.request_factory = RequestFactory()
         self.permission = self.permission_class()
 

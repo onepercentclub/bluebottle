@@ -106,6 +106,7 @@ class GrantPayment(TriggerMixin, models.Model):
         on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
+    intent_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

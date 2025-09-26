@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-26 09:21+0200\n"
-"PO-Revision-Date: 2025-09-26 07:22\n"
+"POT-Creation-Date: 2025-09-24 08:31+0200\n"
+"PO-Revision-Date: 2025-09-24 06:32\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -35,7 +35,7 @@ msgstr "Bearbeiten"
 
 #: bluebottle/activities/admin.py:209 bluebottle/activities/admin.py:332
 #: bluebottle/funding_stripe/admin.py:203
-#: bluebottle/funding_stripe/admin.py:275 bluebottle/time_based/admin.py:305
+#: bluebottle/funding_stripe/admin.py:271 bluebottle/time_based/admin.py:305
 #: bluebottle/time_based/admin.py:435
 msgid "Details"
 msgstr "Details"
@@ -43,7 +43,7 @@ msgstr "Details"
 #: bluebottle/activities/admin.py:213 bluebottle/activities/admin.py:336
 #: bluebottle/activities/admin.py:771 bluebottle/funding/admin.py:228
 #: bluebottle/funding/admin.py:467 bluebottle/funding/admin.py:645
-#: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:245
+#: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:241
 #: bluebottle/grant_management/admin.py:278
 #: bluebottle/grant_management/admin.py:532 bluebottle/initiatives/admin.py:220
 #: bluebottle/time_based/admin.py:309 bluebottle/time_based/admin.py:439
@@ -989,7 +989,6 @@ msgstr "Die Aktivität endet und die Leute melden sich nicht mehr an. Alle aktue
 #: bluebottle/time_based/states/participants.py:197
 #: bluebottle/time_based/states/participants.py:235
 #: bluebottle/time_based/states/participants.py:317
-#: bluebottle/time_based/states/registrations.py:111
 #: bluebottle/time_based/states/slots.py:112
 #: bluebottle/time_based/states/teams.py:139
 #: bluebottle/time_based/states/teams.py:266
@@ -3083,7 +3082,7 @@ msgstr "Weitere %(verbose_name)s hinzufügen"
 #: bluebottle/time_based/states/participants.py:134
 #: bluebottle/time_based/states/participants.py:260
 #: bluebottle/time_based/states/participants.py:377
-#: bluebottle/time_based/states/registrations.py:183
+#: bluebottle/time_based/states/registrations.py:171
 #: bluebottle/time_based/states/teams.py:80
 #: bluebottle/time_based/states/teams.py:188
 msgid "Remove"
@@ -3269,7 +3268,7 @@ msgstr "Diese Person wurde abgebrochen."
 
 #: bluebottle/collect/states.py:101 bluebottle/deeds/states.py:111
 #: bluebottle/time_based/states/participants.py:32
-#: bluebottle/time_based/states/registrations.py:160
+#: bluebottle/time_based/states/registrations.py:148
 #: bluebottle/time_based/states/teams.py:19
 #: bluebottle/time_based/states/teams.py:159
 msgid "Removed"
@@ -3847,7 +3846,7 @@ msgid "Sync donation with payment."
 msgstr "Spende mit Zahlung synchronisieren."
 
 #: bluebottle/funding/admin.py:463 bluebottle/funding/admin.py:640
-#: bluebottle/funding/admin.py:825 bluebottle/funding_stripe/admin.py:241
+#: bluebottle/funding/admin.py:825 bluebottle/funding_stripe/admin.py:237
 msgid "Basic"
 msgstr "Einfache"
 
@@ -10404,7 +10403,6 @@ msgid "Cancel the participant, because the activity was cancelled."
 msgstr "Den Teilnehmer abbrechen, da die Aktivität abgebrochen wurde."
 
 #: bluebottle/time_based/states/participants.py:198
-#: bluebottle/time_based/states/registrations.py:112
 #: bluebottle/time_based/states/teams.py:141
 #: bluebottle/time_based/states/teams.py:267
 msgid "restored"
@@ -10542,51 +10540,47 @@ msgstr "Diese Person automatisch als Teilnehmer zur Aktivität hinzufügen."
 msgid "added"
 msgstr "hinzugefügt"
 
-#: bluebottle/time_based/states/registrations.py:114
-msgid "Restore after being withdrawn."
-msgstr ""
-
-#: bluebottle/time_based/states/registrations.py:154
+#: bluebottle/time_based/states/registrations.py:142
 msgid "Stopped"
 msgstr "Stoppt"
 
-#: bluebottle/time_based/states/registrations.py:156
+#: bluebottle/time_based/states/registrations.py:144
 msgid "This person stopped contributing to this activity."
 msgstr "Diese Person hat aufgehört, zu dieser Aktivität beizutragen."
 
-#: bluebottle/time_based/states/registrations.py:162
+#: bluebottle/time_based/states/registrations.py:150
 msgid "This person was removed from this activity."
 msgstr "Diese Person wurde von dieser Aktivität entfernt."
 
-#: bluebottle/time_based/states/registrations.py:168
+#: bluebottle/time_based/states/registrations.py:156
 msgid "Stop"
 msgstr "Stoppen"
 
-#: bluebottle/time_based/states/registrations.py:170
+#: bluebottle/time_based/states/registrations.py:158
 msgid "This person will no longer actively participate in your activity and their contribution hours will stop being counted. The hours that have already been counted will be retained. You can resume their participation anytime."
 msgstr "Diese Person wird nicht mehr aktiv an deiner Aktivität teilnehmen und ihre Beitragszeiten werden nicht mehr gezählt. Die bereits gezählten Stunden werden beibehalten. Sie können ihre Teilnahme jederzeit wieder aufnehmen."
 
-#: bluebottle/time_based/states/registrations.py:175
+#: bluebottle/time_based/states/registrations.py:163
 msgid "This person will no longer actively participate."
 msgstr "Diese Person wird nicht mehr aktiv daran teilnehmen."
 
-#: bluebottle/time_based/states/registrations.py:185
+#: bluebottle/time_based/states/registrations.py:173
 msgid "This person will no longer actively participate in your activity and their contribution hours will stop being counted. The hours that have already been counted will be failed."
 msgstr "Diese Person wird nicht mehr aktiv an deiner Aktivität teilnehmen und ihre Beitragszeiten werden nicht mehr gezählt. Die bereits gezählten Stunden werden fehlgeschlagen."
 
-#: bluebottle/time_based/states/registrations.py:189
+#: bluebottle/time_based/states/registrations.py:177
 msgid "This person is removed from the activity."
 msgstr "Diese Person wird von der Aktivität entfernt."
 
-#: bluebottle/time_based/states/registrations.py:197
+#: bluebottle/time_based/states/registrations.py:185
 msgid "Resume"
 msgstr "Fortsetzen"
 
-#: bluebottle/time_based/states/registrations.py:199
+#: bluebottle/time_based/states/registrations.py:187
 msgid "This person will start actively participating in the activity and their contribution hours will be counted. You can stop their participation at any time, and their contribution hours will stop being counted."
 msgstr "Diese Person wird aktiv an der Aktivität teilnehmen und ihre Beitragszeiten werden gezählt. Sie können ihre Teilnahme jederzeit einstellen, und ihre Beitragszeiten werden nicht mehr gezählt."
 
-#: bluebottle/time_based/states/registrations.py:203
+#: bluebottle/time_based/states/registrations.py:191
 msgid "Resume this persons participation in your activity."
 msgstr "Fortsetzen Sie die Teilnahme an Ihrer Aktivität fort."
 

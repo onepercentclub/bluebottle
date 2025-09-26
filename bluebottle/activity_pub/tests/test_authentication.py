@@ -12,8 +12,8 @@ from bluebottle.activity_pub.tests.factories import OrganizationFactory
 
 class JSONLdAuthenticationTestCase(BluebottleTestCase):
     def setUp(self):
-        self.actor = OrganizationFactory.create(url='https://example.com')
-        self.request_factory = SignedRequestFactory(self.actor.url)
+        self.actor = OrganizationFactory.create(iri='https://example.com')
+        self.request_factory = SignedRequestFactory(self.actor.iri)
         self.authentication = HTTPSignatureAuthentication()
 
     def test_signed_get(self):

@@ -37,12 +37,12 @@ class DjangoHTTPSignatureAuth(HTTPSignatureAuth):
 
 
 class JSONLDKeyResolver(HTTPSignatureKeyResolver):
-    def get_actor(self, url):
-        if is_local(url):
-            resolved_url = resolve(urlparse(url).path)
+    def get_actor(self, iri):
+        if is_local(iri):
+            resolved_url = resolve(urlparse(iri).path)
             return Actor.objects.get(**resolved_url.kwargs)
         else:
-            return Actor.objects.get(url=url)
+            return Actor.objects.get(iri=iri)
 
     def resolve_public_key(self, key_id):
         actor = self.get_actor(key_id)
@@ -79,7 +79,7 @@ class HTTPSignatureAuthentication(authentication.BaseAuthentication):
                     signature_algorithm=getattr(algorithms, algorithm.upper()),
                     key_resolver=key_resolver
                 )
-                return (None, Actor.objects.get(url=verify_result.parameters['keyid']))
+                return (None, Actor.objects.get(iri=verify_result.parameters['keyid']))
             except Actor.DoesNotExist:
                 pass
             except exceptions.InvalidSignature as e:

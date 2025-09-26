@@ -1,3 +1,6 @@
+from django.db import connection
+from django.urls import reverse
+
 from rest_framework import serializers
 
 from bluebottle.activity_pub.serializers.base import (
@@ -6,6 +9,7 @@ from bluebottle.activity_pub.serializers.base import (
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DeadlineActivity, DateActivity
 from bluebottle.deeds.models import Deed
+from bluebottle.files.models import Image
 from bluebottle.collect.models import CollectActivity, CollectType
 from bluebottle.funding.models import Funding
 from bluebottle.utils.fields import MoneyField
@@ -28,10 +32,13 @@ class RelatedFederatedObjectField(serializers.Field):
 
 
 class FederatedActivitySerializer(FederatedObjectSerializer):
-    title = serializers.CharField()
-    description = RichTextField()
+    name = serializers.CharField(source='title')
+    summary = RichTextField(source='description')
 
     image = ImageField()
+
+    class Meta:
+        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
 
 
 class CollectTypeSerializer(FederatedObjectSerializer):
@@ -46,12 +53,44 @@ class LocationSerializer(FederatedObjectSerializer):
         model = Geolocation
 
 
+class IdField(serializers.CharField):
+    def __init__(self, url_name):
+        self.url_name = url_name
+        super().__init__(source='*')
+
+    def to_representation(self, value):
+        return value.activity_pub_url
+
+
+class ImageSerializer(FederatedObjectSerializer):
+    id = IdField('json-ld:image')
+    url = serializers.SerializerMethodField()
+    name = serializers.CharField()
+
+    def get_url(self, instance):
+        return connection.tenant.build_absolute_url(
+            reverse('activity-image', args=(instance.activity_set.first().pk, '1568x882'))
+
+        )
+
+    class Meta:
+        model = Image
+        fields = FederatedObjectSerializer.Meta.fields + (
+            'url', 'name'
+        )
+
+
 class FederatedDeedSerializer(FederatedActivitySerializer):
-    start = serializers.DateField()
-    end = serializers.DateField()
+    id = IdField('json-ld:good-deed')
+    startTime = serializers.DateField(source='start')
+    endTime = serializers.DateField(source='end')
+    image = ImageSerializer()
 
     class Meta:
         model = Deed
+        fields = FederatedActivitySerializer.Meta.fields + (
+            'startTime', 'endTime'
+        )
 
 
 class FederatedCollectSerializer(FederatedActivitySerializer):
@@ -62,8 +101,8 @@ class FederatedCollectSerializer(FederatedActivitySerializer):
 
     collect_type = RelatedFederatedObjectField(CollectTypeSerializer)
 
-    target = serializers.DecimalField(decimal_places=2)
-    realized = serializers.DecimalField(decimal_places=2)
+    target = serializers.DecimalField(decimal_places=2, max_digits=10)
+    realized = serializers.DecimalField(decimal_places=2, max_digits=10)
 
     class Meta:
         model = CollectActivity

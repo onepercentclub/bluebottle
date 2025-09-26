@@ -15,12 +15,12 @@ from bluebottle.activity_pub.models import ActivityPubModel, Person, Organizatio
 
 class ActivityPubModelTestCase(BluebottleTestCase):
     def test_is_local(self):
-        self.assertTrue(ActivityPubModel(url=None).is_local)
-        self.assertFalse(ActivityPubModel(url='https://example.com').is_local)
+        self.assertTrue(ActivityPubModel(iri=None).is_local)
+        self.assertFalse(ActivityPubModel(iri='https://example.com').is_local)
 
     def test_pub_url(self):
         self.assertEqual(
-            ActivityPubModel(url='https://example.com').pub_url, 'https://example.com'
+            ActivityPubModel(iri='https://example.com').pub_url, 'https://example.com'
         )
 
 

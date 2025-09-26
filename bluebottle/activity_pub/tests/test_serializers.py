@@ -50,8 +50,8 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
         internal_value = self.serializer_class().to_internal_value(data)
 
         self.assertEqual(internal_value['id'], str(self.follow.pk))
-        self.assertEqual(internal_value['object'], self.follow.object)
-        self.assertEqual(internal_value['actor'], self.follow.actor)
+        self.assertEqual(internal_value['object'], {'iri': self.follow.object.pub_url})
+        self.assertEqual(internal_value['actor'], {'iri': self.follow.actor.pub_url})
 
     def test_to_internal_value_no_matching_serializer(self):
         data = {

@@ -35,8 +35,7 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'ActivityPub Organization {0}'.format(n))
     summary = factory.Faker('text', max_nb_chars=200)
-    content = factory.Faker('text', max_nb_chars=500)
-    image = factory.Faker('image_url')
+    icon = factory.Faker('image_url')
     preferred_username = factory.Sequence(lambda n: 'activitypub_org_{0}'.format(n))
 
     inbox = factory.SubFactory(InboxFactory)

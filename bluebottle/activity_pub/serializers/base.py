@@ -35,18 +35,21 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
-            iri = data['id']
-            if not is_local(iri):
-                try:
-                    instance = self.Meta.model.objects.get(iri=iri)
+            if tuple(data.keys()) == ('id', ):
+                iri = data['id']
+                if not is_local(iri):
+                    try:
+                        instance = self.Meta.model.objects.get(iri=iri)
+                        return type(self)(instance=instance).data
+                    except self.Meta.model.DoesNotExist:
+                        data = adapter.fetch(iri)
+                        return super().to_internal_value(data)
+                else:
+                    resolved = resolve(urlparse(iri).path)
+                    instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
                     return type(self)(instance=instance).data
-                except self.Meta.model.DoesNotExist:
-                    data = adapter.fetch(iri)
-                    return super().to_internal_value(data)
             else:
-                resolved = resolve(urlparse(iri).path)
-                instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
-                return type(self)(instance=instance).data
+                raise
 
     def save(self, **kwargs):
         iri = self.validated_data.get('id', None)
@@ -79,7 +82,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        validated_data.pop('id')
+        validated_data.pop('id', None)
 
         for name, field in self.fields.items():
             if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
@@ -125,6 +128,8 @@ class PolymorphicActivityPubSerializer(
             if serializer.Meta.model == model:
                 return serializer
 
+        raise TypeError(f'Missing serializer for model: {model}')
+
     def get_serializer_from_data(self, data):
         if 'id' in data and 'type' not in data:
             iri = data['id']
@@ -140,7 +145,7 @@ class PolymorphicActivityPubSerializer(
             if data['type'] == serializer.fields['type'].type:
                 return serializer
 
-        raise TypeError(f'Missing serializer for type: {data["type"]}')
+        raise exceptions.ValidationError(f'Missing serializer for type: {data["type"]}')
 
     def bind(self, field_name, parent):
         super().bind(field_name, parent)
@@ -155,12 +160,21 @@ class PolymorphicActivityPubSerializer(
         try:
             return self.get_serializer_from_data(data).to_internal_value(data)
         except exceptions.ValidationError:
-            try:
-                instance = self.Meta.model.objects.get(iri=data['id'])
-                return type(self)(instance=instance).data
-            except self.Meta.model.DoesNotExist:
-                data = adapter.fetch(data['id'])
-                return self.get_serializer_from_data(data).to_internal_value(data)
+            if tuple(data.keys()) == ('id', ):
+                iri = data['id']
+                if not is_local(iri):
+                    try:
+                        instance = self.Meta.model.objects.get(iri=iri)
+                        return type(self)(instance=instance).data
+                    except self.Meta.model.DoesNotExist:
+                        data = adapter.fetch(iri)
+                        return self.get_serializer_from_data(data).to_internal_value(data)
+                else:
+                    resolved = resolve(urlparse(iri).path)
+                    instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
+                    return type(self)(instance=instance).data
+            else:
+                raise
 
     def get_value(self, data):
         result = super().get_value(data)

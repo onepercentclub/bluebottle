@@ -10,7 +10,7 @@ from django.test import Client as TestClient
 from django.test.client import RequestFactory
 
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import GoodDeed, Person, Follow, Accept, Event
+from bluebottle.activity_pub.models import Announce, GoodDeed, Person, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -19,6 +19,7 @@ from bluebottle.clients.models import Client
 from bluebottle.deeds.tests.factories import DeedFactory
 
 from bluebottle.members.models import MemberPlatformSettings
+from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
@@ -252,3 +253,10 @@ class PersonAPITestCase(ActivityPubTestCase):
                 self.assertEqual(deed.title, self.deed.title)
                 self.assertEqual(deed.origin, event)
                 self.assertEqual(deed.image.origin, event.image)
+
+                deed.theme = ThemeFactory.create()
+                deed.states.submit()
+                deed.states.approve(save=True)
+
+        announce = Announce.objects.get()
+        self.assertEqual(announce.object, self.deed.event)

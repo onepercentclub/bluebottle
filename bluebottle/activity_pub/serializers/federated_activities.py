@@ -150,20 +150,27 @@ class FederatedDateActivitySerializer(FederatedActivitySerializer):
 class FederatedActivitySerializer(PolymorphicSerializer):
     resource_type_field_name = 'type'
 
-    model_serializer_mapping = {
-        DeadlineActivity: FederatedDeadlineActivitySerializer,
-        Deed: FederatedDeedSerializer,
-        CollectActivity: FederatedCollectSerializer,
-        DateActivity: FederatedDateActivitySerializer,
-        DeadlineActivity: FederatedDeadlineActivitySerializer,
-        Funding: FederatedFundingSerializer
-    }
+    polymorphic_serializers = [
+        FederatedDeadlineActivitySerializer,
+        FederatedDeedSerializer,
+        FederatedCollectSerializer,
+        FederatedDateActivitySerializer,
+        FederatedDeadlineActivitySerializer,
+        FederatedFundingSerializer
+    ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',
         Funding: 'CrowdFunding',
         CollectActivity: 'CollectionDrive'
     }
+
+    def __new__(cls, *args, **kwargs):
+        cls.model_serializer_mapping = dict(
+            (serializer.Meta.model, serializer) for serializer in cls.polymorphic_serializers
+        )
+
+        return super().__new__(cls, *args, **kwargs)
 
     def to_resource_type(self, model_or_instance):
         if isinstance(model_or_instance, models.Model):

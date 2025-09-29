@@ -35,8 +35,12 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
-            data = adapter.sync(data['id'])
-            return super().to_internal_value(data)
+            try:
+                instance = self.Meta.model.objects.get(iri=data['id'])
+                return type(self)(instance=instance).data
+            except self.Meta.model.DoesNotExist:
+                data = adapter.fetch(data['id'])
+                return super().to_internal_value(data)
 
     def save(self, **kwargs):
         iri = self.validated_data.get('id', None)
@@ -52,7 +56,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
             except self.Meta.model.DoesNotExist:
                 pass
 
-        return super().save()
+        return super().save(**kwargs)
 
     def create(self, validated_data):
         iri = validated_data.pop('id', None)
@@ -145,8 +149,12 @@ class PolymorphicActivityPubSerializer(
         try:
             return self.get_serializer_from_data(data).to_internal_value(data)
         except exceptions.ValidationError:
-            data = adapter.sync(data['id'])
-            return self.to_internal_value(data)
+            try:
+                instance = self.Meta.model.objects.get(iri=data['id'])
+                return type(self)(instance=instance).data
+            except self.Meta.model.DoesNotExist:
+                data = adapter.fetch(data['id'])
+                return self.get_serializer_from_data(data).to_internal_value(data)
 
     def get_value(self, data):
         result = super().get_value(data)

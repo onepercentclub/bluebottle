@@ -52,7 +52,7 @@ class JSONLDAdapter():
     def post(self, url, data, auth):
         return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
 
-    def sync(self, url, force=True):
+    def fetch(self, url):
         auth = self.get_auth(get_platform_actor())
         return self.get(url, auth=auth)
 
@@ -60,7 +60,7 @@ class JSONLDAdapter():
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 
         discovered_url = client.get(url)
-        data = self.sync(discovered_url)
+        data = self.fetch(discovered_url)
 
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)

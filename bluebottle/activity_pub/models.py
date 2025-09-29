@@ -302,4 +302,6 @@ class Announce(Activity):
 
     @property
     def audience(self):
-        return [self.object.organizer]
+        for publish in self.object.publish_set.all():
+            for follow in publish.actor.follow_set.all():
+                yield follow.object.inbox

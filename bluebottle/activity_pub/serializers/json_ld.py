@@ -113,7 +113,7 @@ class GoodDeedSerializer(BaseEventSerializer):
     startTime = serializers.DateField(required=False)
     endTime = serializers.DateField(required=False)
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
 
 
@@ -128,7 +128,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     currencty = serializers.CharField(required=False)
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
 
 
@@ -139,7 +139,7 @@ class CollectionDriveSerializer(BaseEventSerializer):
     startTime = serializers.DateField(required=False)
     endTime = serializers.DateField(required=False)
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseEventSerializer.Meta):
         model = CollectionDrive
 
 
@@ -178,7 +178,7 @@ class AcceptSerializer(BaseActivitySerializer):
 class PublishSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:publish')
     type = TypeField('Publish')
-    object = GoodDeedSerializer()
+    object = EventSerializer()
 
     class Meta(ActivityPubSerializer.Meta):
         model = Publish
@@ -187,7 +187,7 @@ class PublishSerializer(BaseActivitySerializer):
 class AnnounceSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:announce')
     type = TypeField('Announce')
-    object = GoodDeedSerializer()
+    object = EventSerializer()
 
     class Meta(ActivityPubSerializer.Meta):
         model = Announce

@@ -7,7 +7,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Follow, Activity
-from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
 import logging
@@ -43,6 +43,9 @@ class JSONLDAdapter():
         return (stream, response.headers["content-type"])
 
     def do_request(self, method, url, data=None, auth=None):
+        if is_local(url):
+            raise TypeError(f'Trying to {method} to local url: {url}')
+
         (stream, media_type) = self.execute(method, url, data=data, auth=auth)
         return self.parser.parse(stream, media_type)
 

@@ -35,12 +35,18 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
-            try:
-                instance = self.Meta.model.objects.get(iri=data['id'])
+            iri = data['id']
+            if not is_local(iri):
+                try:
+                    instance = self.Meta.model.objects.get(iri=iri)
+                    return type(self)(instance=instance).data
+                except self.Meta.model.DoesNotExist:
+                    data = adapter.fetch(iri)
+                    return super().to_internal_value(data)
+            else:
+                resolved = resolve(urlparse(iri).path)
+                instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
                 return type(self)(instance=instance).data
-            except self.Meta.model.DoesNotExist:
-                data = adapter.fetch(data['id'])
-                return super().to_internal_value(data)
 
     def save(self, **kwargs):
         iri = self.validated_data.get('id', None)

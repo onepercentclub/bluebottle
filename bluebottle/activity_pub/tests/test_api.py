@@ -138,7 +138,6 @@ class PersonAPITestCase(ActivityPubTestCase):
             }
         )
 
-    maxDiff = None
     def test_get_person(self):
         response = self.client.get(self.person_url)
 

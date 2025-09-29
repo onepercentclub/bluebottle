@@ -35,9 +35,6 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
 
-from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
-from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
-
 
 @admin.register(ActivityPubModel)
 class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
@@ -573,8 +570,6 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-
-            
             if event.activity_type == 'deed':
                 serializer = DeedEventSerializer(data=model_to_dict(event))
             elif event.activity_type == 'deadline':

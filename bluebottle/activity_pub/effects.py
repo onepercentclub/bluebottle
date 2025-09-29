@@ -5,7 +5,6 @@ from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.fsm.effects import Effect
 
 
-
 class PublishEffect(Effect):
     display = True
     template = 'admin/activity_pub/publish_effect.html'

@@ -1,12 +1,11 @@
 from urllib.parse import urlparse
 
 from django.urls import resolve
-from django.db import models
 
 from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.processor import default_context
-from bluebottle.activity_pub.serializers.fields import IdField, TypeField
+from bluebottle.activity_pub.serializers.fields import TypeField
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.activity_pub.adapters import adapter
 
@@ -26,7 +25,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         if not self.parent:
-            return representation 
+            return representation
         else:
             if self.include:
                 representation.pop('type', None)
@@ -37,8 +36,8 @@ class ActivityPubSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         try:
             return super().to_internal_value(data)
-        except exceptions.ValidationError as e:
-            if not 'id' in data:
+        except exceptions.ValidationError:
+            if 'id' not in data:
                 import ipdb; ipdb.set_trace()
             data = adapter.sync(data['id'])
             return super().to_internal_value(data)
@@ -47,10 +46,10 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         iri = self.validated_data.get('id', None)
 
         if iri:
-            model_class =  self.Meta.model
+            model_class = self.Meta.model
             try:
                 if not is_local(iri):
-                    self.instance = model_class.objects.get(iri=iri) 
+                    self.instance = model_class.objects.get(iri=iri)
                 else:
                     resolved = resolve(urlparse(iri).path)
                     self.instance = self.Meta.model.objects.get(pk=resolved.kwargs['pk'])
@@ -89,7 +88,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         result = super().get_value(data)
 
         if isinstance(result, str):
-            result =  {'id': result}
+            result = {'id': result}
 
         return result
 
@@ -153,7 +152,7 @@ class PolymorphicActivityPubSerializer(
         result = super().get_value(data)
 
         if isinstance(result, str):
-            result =  {'id': result}
+            result = {'id': result}
 
         return result
 

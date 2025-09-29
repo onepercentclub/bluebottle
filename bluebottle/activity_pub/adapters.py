@@ -65,7 +65,7 @@ class JSONLDAdapter():
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        actor =  serializer.save()
+        actor = serializer.save()
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):

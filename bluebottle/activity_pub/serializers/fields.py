@@ -1,12 +1,7 @@
-from urllib.parse import urlparse
-
 from django.db import connection
-from django.urls import resolve
 
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-
-from bluebottle.activity_pub.utils import is_local
 
 
 class IdField(serializers.CharField):

@@ -7,12 +7,10 @@ from bluebottle.activity_pub.serializers.fields import IdField
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
-    Event,
     Follow,
     Inbox,
     Outbox,
     Person,
-    Place,
     PublicKey,
     Publish,
     Organization,
@@ -33,6 +31,7 @@ class InboxSerializer(ActivityPubSerializer):
 
 class OutboxSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:outbox')
+
     class Meta(ActivityPubSerializer.Meta):
         type = 'Outbox'
         model = Outbox

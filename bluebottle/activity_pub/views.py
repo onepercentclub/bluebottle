@@ -3,7 +3,7 @@ from rest_framework import generics
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image
+    GoodDeed, Image, CollectionDrive, CrowdFunding
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
@@ -11,7 +11,8 @@ from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
-    OrganizationSerializer, GoodDeedSerializer, ImageSerializer
+    OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
+    CrowdFundingSerializer, CollectionDriveSerializer
 )
 
 
@@ -48,9 +49,6 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
         else:
             return self.serializer_class
 
-    def perform_create(self, serializer):
-        return super().perform_create(serializer)
-
 
 class OutBoxView(ActivityPubView):
     serializer_class = OutboxSerializer
@@ -65,6 +63,16 @@ class ImageView(ActivityPubView):
 class GoodDeedView(ActivityPubView):
     serializer_class = GoodDeedSerializer
     queryset = GoodDeed.objects.all()
+
+
+class CollectionDriveView(ActivityPubView):
+    serializer_class = CollectionDriveSerializer
+    queryset = CollectionDrive.objects.all()
+
+
+class CrowdFundingView(ActivityPubView):
+    serializer_class = CrowdFundingSerializer
+    queryset = CrowdFunding.objects.all()
 
 
 class PublicKeyView(ActivityPubView):

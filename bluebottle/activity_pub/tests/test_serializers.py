@@ -49,24 +49,14 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
         }
         internal_value = self.serializer_class().to_internal_value(data)
 
-        self.assertEqual(internal_value['id'], str(self.follow.pk))
-        self.assertEqual(internal_value['object'], {'iri': self.follow.object.pub_url})
-        self.assertEqual(internal_value['actor'], {'iri': self.follow.actor.pub_url})
+        self.assertEqual(internal_value['id'], str(self.follow.pub_url))
+        self.assertEqual(internal_value['object']['id'], self.follow.object.pub_url)
+        self.assertEqual(internal_value['actor']['id'], self.follow.actor.pub_url)
 
     def test_to_internal_value_no_matching_serializer(self):
         data = {
             'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
             'type': 'Organization',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
-        }
-
-        with self.assertRaises(exceptions.ValidationError):
-            self.serializer_class().to_internal_value(data)
-
-    def test_to_internal_value_missing_type(self):
-        data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
             'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
             'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
         }
@@ -81,7 +71,6 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
             'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
         }
         with self.assertRaises(exceptions.ValidationError):
-
             self.serializer_class().to_internal_value(data)
 
     def test_create(self):

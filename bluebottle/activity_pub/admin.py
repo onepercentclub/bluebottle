@@ -2,7 +2,6 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
 from django.core.exceptions import PermissionDenied
-from django.forms import model_to_dict
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -34,9 +33,6 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
-
-from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
-from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
 
 
 @admin.register(ActivityPubModel)
@@ -575,20 +571,7 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
         try:
-
-            
-            if event.activity_type == 'deed':
-                serializer = DeedEventSerializer(data=model_to_dict(event))
-            elif event.activity_type == 'deadline':
-                serializer = DeadlineActivityEventSerializer(data=model_to_dict(event))
-            elif event.activity_type == 'date':
-                serializer = DateActivityEventSerializer(data=model_to_dict(event))
-            else:
-                serializer = ActivityEventSerializer(data=model_to_dict(event))
-            serializer.is_valid(raise_exception=True)
-            activity = serializer.save(owner=request.user)
-            event.activity = activity
-            event.save()
+            activity = adapter.adopt(event, request)
 
             self.message_user(
                 request,

@@ -7,7 +7,7 @@ from requests_http_signature import HTTPSignatureAuth, algorithms
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Follow, Activity
-from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
 import logging
@@ -43,6 +43,9 @@ class JSONLDAdapter():
         return (stream, response.headers["content-type"])
 
     def do_request(self, method, url, data=None, auth=None):
+        if is_local(url):
+            raise TypeError(f'Trying to {method} to local url: {url}')
+
         (stream, media_type) = self.execute(method, url, data=data, auth=auth)
         return self.parser.parse(stream, media_type)
 
@@ -52,22 +55,20 @@ class JSONLDAdapter():
     def post(self, url, data, auth):
         return self.do_request('post', url, data=self.renderer.render(data), auth=auth)
 
-    def sync(self, url, serializer, force=True):
-        try:
-            return serializer.Meta.model.objects.get(iri=url)
-        except serializer.Meta.model.DoesNotExist:
-            auth = self.get_auth(get_platform_actor())
-            data = self.get(url, auth=auth)
-            serializer = serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-
-            return serializer.save()
+    def fetch(self, url):
+        auth = self.get_auth(get_platform_actor())
+        return self.get(url, auth=auth)
 
     def follow(self, url):
-        from bluebottle.activity_pub.serializers.json_ld import ActorSerializer
+        from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 
         discovered_url = client.get(url)
-        actor = self.sync(discovered_url, ActorSerializer)
+        data = self.fetch(discovered_url)
+
+        serializer = OrganizationSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        actor = serializer.save()
         return Follow.objects.create(object=actor)
 
     def publish(self, activity):
@@ -82,6 +83,16 @@ class JSONLDAdapter():
         for actor in activity.audience:
             if not actor.inbox.is_local:
                 self.post(actor.inbox.iri, data=data, auth=auth)
+
+    def adopt(self, event, request):
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
+        data = EventSerializer(instance=event).data
+        serializer = FederatedActivitySerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        return serializer.save()
 
 
 adapter = JSONLDAdapter()

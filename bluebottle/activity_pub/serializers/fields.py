@@ -1,12 +1,7 @@
-from urllib.parse import urlparse
-
 from django.db import connection
-from django.urls import resolve
 
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-
-from bluebottle.activity_pub.utils import is_local
 
 
 class IdField(serializers.CharField):
@@ -25,26 +20,28 @@ class IdField(serializers.CharField):
 
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
-        if is_local(result):
-            return {'id': resolve(urlparse(result).path).kwargs['pk']}
-        else:
-            return {}
+        return {'id': result}
 
 
 class TypeValidator:
     requires_context = True
 
     def __call__(self, value, serialized_field):
-        return value == serialized_field.parent.Meta.type
+        return value == serialized_field.type
 
 
 class TypeField(serializers.CharField):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, type, *args, **kwargs):
+        self.type = type
+
         kwargs['validators'] = kwargs.pop('validators', []) + [TypeValidator()]
-        kwargs['read_only'] = True
+        kwargs['required'] = False
         kwargs['source'] = '*'
 
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
-        return self.parent.Meta.type
+        return self.type
+
+    def to_internal_value(self, value):
+        return {'type': self.type}

@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from bluebottle.activity_pub.models import Follow
+from bluebottle.activity_pub.models import Follow, Accept
 from bluebottle.members.models import MemberPlatformSettings
 
 
@@ -29,6 +29,9 @@ class InboxPermission(permissions.BasePermission):
                 if request.data['type'] in ('Publish', 'Accept'):
                     # Only actors we follow can post publish activities
                     return Follow.objects.filter(object=request.auth).exists()
+                if request.data['type'] in ('Announce', ):
+                    # Only actors that we accepted us can announce
+                    return Accept.objects.filter(object__actor=request.auth).exists()
 
             return False
         else:

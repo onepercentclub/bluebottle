@@ -5,12 +5,11 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from django.db import connection
-from django.urls import reverse
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
 
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, GoodDeed, Person, Follow, Accept, Event
+from bluebottle.activity_pub.models import Announce, GoodDeed, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -121,6 +120,7 @@ class PersonAPITestCase(ActivityPubTestCase):
         super(PersonAPITestCase, self).setUp()
 
         self.user = BlueBottleUserFactory.create()
+
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
         with LocalTenant(self.other_tenant):

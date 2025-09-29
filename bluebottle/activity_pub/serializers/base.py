@@ -5,14 +5,11 @@ from django.urls import resolve
 from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.processor import default_context
-from bluebottle.activity_pub.serializers.fields import TypeField
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.activity_pub.adapters import adapter
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
-    type = TypeField()
-
     def __init__(self, *args, **kwargs):
         self.include = kwargs.pop('include', False)
 
@@ -37,8 +34,6 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
-            if 'id' not in data:
-                import ipdb; ipdb.set_trace()
             data = adapter.sync(data['id'])
             return super().to_internal_value(data)
 
@@ -120,17 +115,21 @@ class PolymorphicActivityPubSerializer(
                 return serializer
 
     def get_serializer_from_data(self, data):
-        iri = data['id']
-        if is_local(iri):
-            resolved = resolve(urlparse(iri).path)
-            return self.get_serializer_from_model(resolved.func.view_class.queryset.model)
+        if 'id' in data and 'type' not in data:
+            iri = data['id']
+
+            if is_local(iri):
+                resolved = resolve(urlparse(iri).path)
+                return self.get_serializer_from_model(resolved.func.view_class.queryset.model)
 
         if 'type' not in data:
             raise exceptions.ValidationError({'type': 'Missing type information'})
 
         for serializer in self._serializers:
-            if data['type'] == serializer.Meta.type:
+            if data['type'] == serializer.fields['type'].type:
                 return serializer
+
+        raise TypeError(f'Missing serializer for type: {data["type"]}')
 
     def bind(self, field_name, parent):
         super().bind(field_name, parent)
@@ -187,9 +186,6 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', )
 
-    def to_internal_value(self, data):
-        pass
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
@@ -200,3 +196,15 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
             representation.pop('id')
 
         return representation
+
+    def create(self, validated_data):
+        validated_data.pop('id')
+
+        for name, field in self.fields.items():
+            if isinstance(field, (FederatedObjectSerializer)):
+                field.initial_data = validated_data[name]
+                field.is_valid(raise_exception=True)
+
+                validated_data[name] = field.save()
+
+        return super().create(validated_data)

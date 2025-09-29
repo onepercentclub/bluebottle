@@ -1,14 +1,16 @@
-from requests import Request
+from requests import Request, Response
 import mock
 from urllib.parse import urlparse
 from io import BytesIO
+from datetime import datetime, timedelta
 
 from django.db import connection
 from django.urls import reverse
 from django.test import Client as TestClient
+from django.test.client import RequestFactory
 
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Person, Follow, Accept, Event
+from bluebottle.activity_pub.models import GoodDeed, Person, Follow, Accept, Event
 from bluebottle.activity_pub.adapters import adapter
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -183,17 +185,22 @@ class PersonAPITestCase(ActivityPubTestCase):
     def test_publish_deed(self):
         self.test_accept()
 
-        deed = DeedFactory.create(owner=self.user, image=ImageFactory.create())
+        self.deed = DeedFactory.create(
+            owner=self.user,
+            image=ImageFactory.create(),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            end=(datetime.now() + timedelta(days=20)).date()
+        )
 
-        deed.initiative.states.submit()
-        deed.initiative.states.approve(save=True)
+        self.deed.initiative.states.submit()
+        self.deed.initiative.states.approve(save=True)
 
-        deed.states.publish(save=True)
+        self.deed.states.publish(save=True)
 
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
 
-            self.assertTrue(event.name, deed.title)
+            self.assertTrue(event.name, self.deed.title)
 
     def test_publish_deed_to_closed_platform(self):
         with LocalTenant(self.other_tenant):
@@ -225,3 +232,21 @@ class PersonAPITestCase(ActivityPubTestCase):
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
+
+    def test_adopt_deed(self):
+        self.test_publish_deed()
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            mock_response = Response()
+            mock_response.raw = BytesIO(image_file.read())
+            mock_response.status_code = 200
+
+        with LocalTenant(self.other_tenant):
+            event = GoodDeed.objects.get()
+
+            request = RequestFactory().get('/')
+            request.user = BlueBottleUserFactory.create()
+
+            with mock.patch('requests.get', return_value=mock_response):
+                deed = adapter.adopt(event, request)
+                self.assertEqual(deed.title, self.deed.title)

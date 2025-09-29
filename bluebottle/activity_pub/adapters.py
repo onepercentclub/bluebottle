@@ -81,6 +81,16 @@ class JSONLDAdapter():
             if not actor.inbox.is_local:
                 self.post(actor.inbox.iri, data=data, auth=auth)
 
+    def adopt(self, event, request):
+        from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+        from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+
+        data = EventSerializer(instance=event).data
+        serializer = FederatedActivitySerializer(data=data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+
+        return serializer.save()
+
 
 adapter = JSONLDAdapter()
 

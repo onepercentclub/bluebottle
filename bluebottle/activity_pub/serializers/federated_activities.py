@@ -1,8 +1,15 @@
-from django.db import connection
+from io import BytesIO
+
+import requests
+
+from django.core.files import File
+from django.db import connection, models
 from django.urls import reverse
 
 from rest_framework import serializers
+from rest_polymorphic.serializers import PolymorphicSerializer
 
+from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.activity_pub.serializers.base import (
     FederatedObjectSerializer
 )
@@ -15,42 +22,6 @@ from bluebottle.funding.models import Funding
 from bluebottle.utils.fields import MoneyField
 
 from bluebottle.utils.fields import RichTextField
-from bluebottle.files.serializers import ImageField
-
-
-class RelatedFederatedObjectField(serializers.Field):
-    def __init__(self, serializer, *args, **kwargs):
-        self.serializer = serializer
-
-        super().__init__(*args, **kwargs)
-
-    def to_representation(self, value):
-        pass
-
-    def to_internal_value(self, data):
-        pass
-
-
-class FederatedActivitySerializer(FederatedObjectSerializer):
-    name = serializers.CharField(source='title')
-    summary = RichTextField(source='description')
-
-    image = ImageField()
-
-    class Meta:
-        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
-
-
-class CollectTypeSerializer(FederatedObjectSerializer):
-    name = serializers.CharField()
-
-    class Meta:
-        model = CollectType
-
-
-class LocationSerializer(FederatedObjectSerializer):
-    class Meta:
-        model = Geolocation
 
 
 class IdField(serializers.CharField):
@@ -60,6 +31,9 @@ class IdField(serializers.CharField):
 
     def to_representation(self, value):
         return value.activity_pub_url
+
+    def to_internal_value(self, value):
+        return {'id': value}
 
 
 class ImageSerializer(FederatedObjectSerializer):
@@ -73,6 +47,18 @@ class ImageSerializer(FederatedObjectSerializer):
 
         )
 
+    def create(self, validated_data):
+        image = ActivityPubImage.objects.get(iri=validated_data['id'])
+        response = requests.get(image.url, timeout=30)
+        response.raise_for_status()
+
+        validated_data['file'] = File(BytesIO(response.content), name=validated_data['name'])
+
+        return super().create(validated_data)
+
+    def save(self, *args, **kwargs):
+        return super().save(owner=self.context['request'].user)
+
     class Meta:
         model = Image
         fields = FederatedObjectSerializer.Meta.fields + (
@@ -80,10 +66,30 @@ class ImageSerializer(FederatedObjectSerializer):
         )
 
 
+class FederatedActivitySerializer(FederatedObjectSerializer):
+    name = serializers.CharField(source='title')
+    summary = RichTextField(source='description')
+
+    class Meta:
+        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
+
+
+class CollectTypeSerializer(FederatedActivitySerializer):
+    name = serializers.CharField()
+
+    class Meta:
+        model = CollectType
+
+
+class LocationSerializer(FederatedObjectSerializer):
+    class Meta:
+        model = Geolocation
+
+
 class FederatedDeedSerializer(FederatedActivitySerializer):
     id = IdField('json-ld:good-deed')
-    startTime = serializers.DateField(source='start')
-    endTime = serializers.DateField(source='end')
+    startTime = serializers.DateField(source='start', allow_null=True)
+    endTime = serializers.DateField(source='end', allow_null=True)
     image = ImageSerializer()
 
     class Meta:
@@ -94,12 +100,12 @@ class FederatedDeedSerializer(FederatedActivitySerializer):
 
 
 class FederatedCollectSerializer(FederatedActivitySerializer):
-    location = RelatedFederatedObjectField(LocationSerializer)
+    location = LocationSerializer()
 
     start = serializers.DateField()
     end = serializers.DateField()
 
-    collect_type = RelatedFederatedObjectField(CollectTypeSerializer)
+    collect_type = CollectTypeSerializer()
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     realized = serializers.DecimalField(decimal_places=2, max_digits=10)
@@ -109,7 +115,7 @@ class FederatedCollectSerializer(FederatedActivitySerializer):
 
 
 class FederatedFundingSerializer(FederatedActivitySerializer):
-    location = RelatedFederatedObjectField(LocationSerializer)
+    location = LocationSerializer()
 
     start = serializers.DateField()
     end = serializers.DateField()
@@ -122,7 +128,7 @@ class FederatedFundingSerializer(FederatedActivitySerializer):
 
 
 class FederatedDeadlineActivitySerializer(FederatedActivitySerializer):
-    location = RelatedFederatedObjectField(LocationSerializer)
+    location = LocationSerializer()
 
     start = serializers.DateField()
     end = serializers.DateField()
@@ -139,3 +145,33 @@ class FederatedDateActivitySerializer(FederatedActivitySerializer):
 
     class Meta:
         model = DateActivity
+
+
+class FederatedActivitySerializer(PolymorphicSerializer):
+    resource_type_field_name = 'type'
+
+    model_serializer_mapping = {
+        DeadlineActivity: FederatedDeadlineActivitySerializer,
+        Deed: FederatedDeedSerializer,
+        CollectActivity: FederatedCollectSerializer,
+        DateActivity: FederatedDateActivitySerializer,
+        DeadlineActivity: FederatedDeadlineActivitySerializer,
+        Funding: FederatedFundingSerializer
+    }
+
+    model_type_mapping = {
+        Deed: 'GoodDeed',
+        Funding: 'CrowdFunding',
+        CollectActivity: 'CollectionDrive'
+    }
+
+    def to_resource_type(self, model_or_instance):
+        if isinstance(model_or_instance, models.Model):
+            model = type(model_or_instance)
+        else:
+            model = model_or_instance
+
+        return self.model_type_mapping.get(model, 'unknown')
+
+    def save(self, *args, **kwargs):
+        return super().save(owner=self.context['request'].user)

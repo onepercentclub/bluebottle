@@ -27,11 +27,13 @@ class TypeValidator:
     requires_context = True
 
     def __call__(self, value, serialized_field):
-        return value == serialized_field.parent.Meta.type
+        return value == serialized_field.type
 
 
 class TypeField(serializers.CharField):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, type, *args, **kwargs):
+        self.type = type
+
         kwargs['validators'] = kwargs.pop('validators', []) + [TypeValidator()]
         kwargs['required'] = False
         kwargs['source'] = '*'
@@ -39,7 +41,7 @@ class TypeField(serializers.CharField):
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
-        return self.parent.Meta.type
+        return self.type
 
     def to_internal_value(self, value):
-        return {'type': self.parent.Meta.type}
+        return {'type': self.type}

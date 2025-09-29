@@ -2,6 +2,7 @@ from builtins import object
 
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.timezone import now
 from django_tools.middlewares.ThreadLocal import get_current_user
 from fluent_contents.models import ContentItem
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
@@ -20,10 +21,11 @@ from bluebottle.cms.models import (
     ProjectsMapContent, CategoriesContent, StepsContent,
     SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, HomepageStatisticsContent,
-    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent
+    ActivitiesContent, PlainTextItem, ImagePlainTextItem, ImageItem, DonateButtonContent, NewsContent
 )
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
+from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import (
     Page, DocumentItem, ImageTextItem, ActionItem, ColumnsItem, ImageTextRoundItem,
     ScaledImageTextItem
@@ -320,6 +322,16 @@ class QuotesBlockSerializer(BaseBlockSerializer):
         ]
 
 
+class NewsBlockSerializer(BaseBlockSerializer):
+
+    class Meta(object):
+        model = NewsContent
+        fields = ('id', 'block_type', 'title', 'sub_title')
+
+    class JSONAPIMeta:
+        resource_name = 'pages/blocks/news'
+
+
 class PeopleBlockSerializer(BaseBlockSerializer):
     persons = ResourceRelatedField(
         many=True,
@@ -513,7 +525,6 @@ class ColumnBlockSerializer(BaseBlockSerializer):
 
 class FallbackBlockSerializer(serializers.Serializer):
     def to_representation(self, instance):
-        print(instance.__class__)
         return {'id': instance.pk, 'block_type': self.JSONAPIMeta.resource_name}
 
     class Meta(object):
@@ -551,6 +562,7 @@ class BlockSerializer(PolymorphicModelSerializer):
         StatsBlockSerializer,
         QuotesBlockSerializer,
         PeopleBlockSerializer,
+        NewsBlockSerializer,
         LogosBlockSerializer,
         CategoriesBlockSerializer,
         TextBlockSerializer,
@@ -588,7 +600,7 @@ class BlockSerializer(PolymorphicModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'links', 'steps', 'quotes', 'slides', 'logos', 'categories', 'funding',
-            'full_page', 'persons',
+            'full_page', 'persons'
 
         ]
 

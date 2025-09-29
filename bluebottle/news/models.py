@@ -69,3 +69,6 @@ class NewsItem(PublishableModel):
             ('api_change_newsitem', 'Can change news items through the API'),
             ('api_delete_newsitem', 'Can delete news items through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'news-item'

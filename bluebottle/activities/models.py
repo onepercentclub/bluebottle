@@ -118,6 +118,10 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
     image = ImageField(blank=True, null=True)
 
+    origin = models.ForeignKey(
+        'activity_pub.Event', null=True, related_name="files", on_delete=models.SET_NULL
+    )
+
     video_url = models.URLField(
         _("video"),
         max_length=2048,

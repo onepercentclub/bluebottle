@@ -4,6 +4,7 @@ from django.urls import resolve
 
 from rest_framework import serializers, exceptions
 
+from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.activity_pub.adapters import adapter
@@ -198,7 +199,8 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         return representation
 
     def create(self, validated_data):
-        validated_data.pop('id')
+        iri = validated_data.pop('id')
+        validated_data['origin'] = ActivityPubModel.objects.get(iri=iri)
 
         for name, field in self.fields.items():
             if isinstance(field, (FederatedObjectSerializer)):

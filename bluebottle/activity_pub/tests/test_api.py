@@ -250,3 +250,5 @@ class PersonAPITestCase(ActivityPubTestCase):
             with mock.patch('requests.get', return_value=mock_response):
                 deed = adapter.adopt(event, request)
                 self.assertEqual(deed.title, self.deed.title)
+                self.assertEqual(deed.origin, event)
+                self.assertEqual(deed.image.origin, event.image)

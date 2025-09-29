@@ -62,6 +62,9 @@ class File(models.Model):
 
 class Image(File):
     cropbox = models.CharField(max_length=40, blank=True)
+    origin = models.ForeignKey(
+        'activity_pub.Image', null=True, related_name="activities", on_delete=models.SET_NULL
+    )
 
     class JSONAPIMeta(object):
         resource_name = 'images'

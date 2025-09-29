@@ -66,6 +66,9 @@ class NewsItemDetail(CMSDetailView):
 
 class NewsItemList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
-        return NewsItem.objects.published().order_by('-publication_date')
+        language = get_language_from_request(self.request)
+        return NewsItem.objects.filter(
+            language=language
+        ).published().order_by('-publication_date', '-id')
 
-    serializer_class = NewsItemPreviewSerializer
+    serializer_class = NewsItemSerializer

@@ -685,6 +685,7 @@ class PageSerializer(BaseCMSSerializer):
 class NewsItemSerializer(BaseCMSSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     main_image = SorlImageField('1920')
+    summary = serializers.CharField()
 
     content_attribute = 'contents'
 
@@ -692,9 +693,9 @@ class NewsItemSerializer(BaseCMSSerializer):
         return obj.contents.contentitems.all()
 
     class Meta(BaseCMSSerializer.Meta):
-        model = Page
+        model = NewsItem
         fields = BaseCMSSerializer.Meta.fields + (
-            'title', 'author', 'publication_date', 'slug', 'main_image'
+            'title', 'author', 'publication_date', 'slug', 'main_image', 'summary'
         )
 
     class JSONAPIMeta(BaseCMSSerializer.JSONAPIMeta):

@@ -1,12 +1,15 @@
 from builtins import object
+
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
 from django.utils.safestring import mark_safe
+from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
-from fluent_contents.rendering import render_placeholder
+from fluent_contents.rendering import render_placeholder, render_content_items
 from future.utils import python_2_unicode_compatible
 
 from bluebottle.utils.fields import ImageField
@@ -58,6 +61,12 @@ class NewsItem(PublishableModel):
         s = MLStripper()
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
+
+    @property
+    def summary(self) -> str:
+        items = self.contents.get_content_items()
+        text = " ".join(str(item) for item in items)
+        return Truncator(text).chars(250)
 
     class Meta(object):
         verbose_name = _("news item")

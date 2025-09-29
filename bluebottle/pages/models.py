@@ -1,4 +1,6 @@
 from builtins import object
+
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
@@ -15,7 +17,7 @@ from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem
 from fluent_contents.models.fields import ContentItemRelation
 from fluent_contents.models.managers import ContentItemManager
-from fluent_contents.rendering import render_placeholder
+from fluent_contents.rendering import render_placeholder, render_content_items
 from fluent_contents.utils.filters import apply_filters
 from future.utils import python_2_unicode_compatible
 

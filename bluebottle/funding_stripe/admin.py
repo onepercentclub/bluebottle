@@ -14,7 +14,7 @@ from bluebottle.funding.admin import (
     PaymentChildAdmin, PaymentProviderChildAdmin, PayoutAccountChildAdmin,
     BankAccountChildAdmin
 )
-from bluebottle.funding.models import BankAccount, Payment, PaymentProvider
+from bluebottle.funding.models import BankAccount, Payment, PaymentProvider, FundingPlatformSettings
 from bluebottle.funding_stripe.models import StripePayment, StripePaymentProvider, StripePayoutAccount, \
     StripeSourcePayment, ExternalAccount, PaymentIntent
 from bluebottle.funding_stripe.utils import get_stripe
@@ -233,8 +233,12 @@ class StripeBankAccountAdmin(BankAccountChildAdmin):
     list_display = ['created', 'account_id', 'status']
 
     def get_fieldsets(self, request, obj=None):
+        fields = list(self.get_fields(request, obj))
+        settings = FundingPlatformSettings.load()
+        if not settings.enable_iban_check and 'iban_verified' in fields:
+            fields.remove('iban_verified')
         fieldsets = (
-            (_('Basic'), {'fields': self.get_fields(request, obj)}),
+            (_('Basic'), {'fields': fields}),
         )
         if request.user.is_superuser:
             fieldsets += (

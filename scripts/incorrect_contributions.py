@@ -16,9 +16,6 @@ def run(*args):
     total_errors = False
     for client in Client.objects.all():
         with (LocalTenant(client)):
-            registrations_removed = Registration.objects.filter(
-                status='removed'
-            )
 
             date_participants_without_registration = DateParticipant.objects.filter(
                 registration__isnull=True,
@@ -212,8 +209,7 @@ def run(*args):
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
                 registrations_without_participant_multi_slot.count() or
-                date_participants_without_registration.count() or
-                registrations_removed.count()
+                date_participants_without_registration.count()
             )
             if errors:
                 total_errors = True
@@ -246,10 +242,6 @@ def run(*args):
                           f'{date_participants_without_registration.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(p.id) for p in date_participants_without_registration])}')
-                if registrations_removed.count():
-                    print(f'registrations with status removed: {registrations_removed.count()}')
-                    if verbose:
-                        print(f'IDs: {" ".join([str(r.id) for r in registrations_removed])}')
 
                 print('\n')
                 if fix:
@@ -341,8 +333,6 @@ def run(*args):
                             registration.save()
                             participant.registration = registration
                             participant.save()
-
-                    registrations_removed.update(status='rejected')
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

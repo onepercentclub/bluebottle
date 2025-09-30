@@ -204,25 +204,6 @@ class AdoptedFilter(admin.SimpleListFilter):
             return queryset.filter(activity__isnull=True)
 
 
-class SubEventInline(admin.StackedInline):
-    model = Event
-    fk_name = "parent"
-    extra = 0
-    readonly_fields = ("pub_url", "activity")
-    fields = ("name", "start", "end", "organizer", "activity", "pub_url")
-    verbose_name = _("Slot")
-    verbose_name_plural = _("Slots")
-
-    def has_change_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Platform URL"),
@@ -493,32 +474,23 @@ class PlaceInline(admin.StackedInline):
     )
 
 
+@admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
         "adopted",
-        "organizer",
-        "start",
-        "end",
-        "place",  # Add place
     )
     readonly_fields = (
         "name",
         "display_description",
-        "display_image",
-        "start",
-        "end",
-        "organizer",
         "actor",
         "activity",
-        "place",  # Add place
         "iri",
         "pub_url",
-        "activity_type"
     )
     fields = readonly_fields
-    inlines = [SubEventInline, AnnouncementInline]
-    list_filter = ['organizer', AdoptedFilter]
+    inlines = [AnnouncementInline]
+    list_filter = [AdoptedFilter]
 
     def adopted(self, obj):
         return obj.adopted

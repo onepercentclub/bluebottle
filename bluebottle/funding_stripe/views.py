@@ -572,7 +572,8 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            error = f"Payout account not found {event.data.object.id}."
+            tenant = connection.tenant
+            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
             return HttpResponse("Skipped event {}, account not found".format(event.type)):wq
 

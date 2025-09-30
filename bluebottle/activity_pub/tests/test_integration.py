@@ -112,12 +112,12 @@ class ActivityPubTestCase(BluebottleTestCase):
         webfinger_mock.stop()
 
 
-class PersonAPITestCase(ActivityPubTestCase):
+class AdoptDeedTestCase(ActivityPubTestCase):
     def build_absolute_url(self, path):
         return connection.tenant.build_absolute_url(path)
 
     def setUp(self):
-        super(PersonAPITestCase, self).setUp()
+        super(AdoptDeedTestCase, self).setUp()
 
         self.user = BlueBottleUserFactory.create()
 
@@ -158,7 +158,9 @@ class PersonAPITestCase(ActivityPubTestCase):
         with LocalTenant(self.other_tenant):
             event = Event.objects.get()
 
-            self.assertTrue(event.name, self.deed.title)
+            self.assertEqual(event.name, self.deed.title)
+            self.assertEqual(event.start_time.date(), self.deed.start)
+            self.assertEqual(event.end_time.date(), self.deed.end)
 
     def test_publish_deed_to_closed_platform(self):
         with LocalTenant(self.other_tenant):
@@ -208,6 +210,8 @@ class PersonAPITestCase(ActivityPubTestCase):
             with mock.patch('requests.get', return_value=mock_response):
                 deed = adapter.adopt(event, request)
                 self.assertEqual(deed.title, self.deed.title)
+                self.assertEqual(deed.start, self.deed.start)
+                self.assertEqual(deed.end, self.deed.end)
                 self.assertEqual(deed.origin, event)
                 self.assertEqual(deed.image.origin, event.image)
 

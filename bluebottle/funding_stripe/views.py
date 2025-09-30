@@ -575,7 +575,7 @@ class ConnectWebHookView(View):
             tenant = connection.tenant
             error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
-            return HttpResponse("Skipped event {}, account not found".format(event.type)):wq
+            return HttpResponse("Skipped event {}, account not found".format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

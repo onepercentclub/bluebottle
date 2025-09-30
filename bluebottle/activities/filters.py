@@ -169,10 +169,15 @@ class TeamActivityFacet(BooleanFacet):
 
 
 class MatchingFacet(BooleanFacet):
-
     def add_filter(self, filter_values):
         user = get_current_user()
-        filters = Terms(status=["open", "full", "running"])
+
+        settings = InitiativePlatformSettings.objects.get()
+        statuses = ["open", "running"]
+        if settings.include_full_activities:
+            statuses.append("full")
+
+        filters = Terms(status=statuses)
 
         if not user.is_authenticated:
             return filters

@@ -37,7 +37,7 @@ class Effect(object):
         return (partial(Effect, self.instance, **self.options), ())
 
     def __eq__(self, other):
-        return self.instance == other.instance and type(self) == type(other)
+        return self.instance is other.instance and type(self) is type(other)
 
     def pre_save(self, **kwargs):
         pass
@@ -141,7 +141,6 @@ def TransitionEffect(transition, field='states', conditions=None, post_save=Fals
 
 
 class BaseRelatedTransitionEffect(Effect):
-    post_save = True
     display = False
     description = None
     transition_effect_class = None

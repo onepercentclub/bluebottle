@@ -925,7 +925,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
                 form.field_order.append((name, new))
 
 
-@ override_settings(
+@override_settings(
     CELERY_ALWAYS_EAGER=True,
     CELERY_EAGER_PROPAGATES_EXCEPTIONS=True
 )
@@ -938,7 +938,7 @@ class CeleryTestCase(SimpleTestCase):
         for factory in self.factories:
             factory._meta.model.objects.all().delete()
 
-    @ classmethod
+    @classmethod
     def setUpClass(cls):
         from celery.contrib.testing.tasks import ping  # noqa
 
@@ -948,7 +948,7 @@ class CeleryTestCase(SimpleTestCase):
 
         super().setUpClass()
 
-    @ classmethod
+    @classmethod
     def tearDownClass(cls):
         cls.celery_worker.__exit__(None, None, None)
         app.conf.task_always_eager = True

@@ -110,8 +110,8 @@ class GoodDeedSerializer(BaseEventSerializer):
     id = IdField(url_name='json-ld:good-deed')
     type = TypeField('GoodDeed')
 
-    startTime = serializers.DateField(required=False)
-    endTime = serializers.DateField(required=False)
+    start_time = serializers.DateTimeField(required=False)
+    end_time = serializers.DateTimeField(required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed

@@ -217,12 +217,12 @@ class Event(ActivityPubModel):
 
 
 class GoodDeed(Event):
-    startTime = models.DateField(null=True)
-    endTime = models.DateField(null=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
 
 
 class CollectionDrive(Event):
-    start = models.DateField(null=True)
+    start = models.DateTimeField(null=True)
     end = models.DateField(null=True)
 
     location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
@@ -231,8 +231,8 @@ class CollectionDrive(Event):
 class CrowdFunding(Event):
     target = MoneyField()
 
-    start = models.DateField(null=True)
-    end = models.DateField(null=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
 
 
 class Activity(ActivityPubModel):

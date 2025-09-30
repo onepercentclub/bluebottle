@@ -1,4 +1,7 @@
+import datetime
 from io import BytesIO
+
+import pytz
 
 import requests
 
@@ -6,7 +9,7 @@ from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
 
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.activity_pub.models import Image as ActivityPubImage
@@ -66,6 +69,24 @@ class ImageSerializer(FederatedObjectSerializer):
         )
 
 
+class DateField(serializers.Field):
+    def to_internal_value(self, data):
+        try:
+            return datetime.datetime.fromisoformat(data).date()
+        except ValueError as e:
+            raise exceptions.ValidationError(str(e))
+
+    def to_representation(self, value):
+        if isinstance(value, datetime.date):
+            value = pytz.utc.localize(
+                datetime.datetime(
+                    value.year, value.month, value.day
+                )
+            )
+
+        return value
+
+
 class FederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
@@ -88,14 +109,14 @@ class LocationSerializer(FederatedObjectSerializer):
 
 class FederatedDeedSerializer(FederatedActivitySerializer):
     id = IdField('json-ld:good-deed')
-    startTime = serializers.DateField(source='start', allow_null=True)
-    endTime = serializers.DateField(source='end', allow_null=True)
+    start_time = DateField(source='start', allow_null=True)
+    end_time = DateField(source='end', allow_null=True)
     image = ImageSerializer()
 
     class Meta:
         model = Deed
         fields = FederatedActivitySerializer.Meta.fields + (
-            'startTime', 'endTime'
+            'start_time', 'end_time'
         )
 
 
@@ -117,8 +138,8 @@ class FederatedCollectSerializer(FederatedActivitySerializer):
 class FederatedFundingSerializer(FederatedActivitySerializer):
     location = LocationSerializer()
 
-    start = serializers.DateField()
-    end = serializers.DateField()
+    start_time = DateField()
+    end_time = DateField()
 
     target = MoneyField()
     realized = MoneyField()
@@ -130,8 +151,8 @@ class FederatedFundingSerializer(FederatedActivitySerializer):
 class FederatedDeadlineActivitySerializer(FederatedActivitySerializer):
     location = LocationSerializer()
 
-    start = serializers.DateField()
-    end = serializers.DateField()
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
 
     class Meta:
         model = DeadlineActivity

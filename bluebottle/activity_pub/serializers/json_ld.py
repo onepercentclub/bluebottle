@@ -48,7 +48,7 @@ class PublicKeySerializer(ActivityPubSerializer):
 
     class Meta(ActivityPubSerializer.Meta):
         model = PublicKey
-        exclude = ActivityPubSerializer.Meta.exclude + ('private_key',)
+        fields = ActivityPubSerializer.Meta.fields + ('public_key_pem',)
 
 
 class PersonSerializer(ActivityPubSerializer):
@@ -59,7 +59,7 @@ class PersonSerializer(ActivityPubSerializer):
     public_key = PublicKeySerializer(include=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        exclude = ActivityPubSerializer.Meta.exclude + ('member',)
+        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', )
         model = Person
 
 
@@ -75,7 +75,9 @@ class OrganizationSerializer(ActivityPubSerializer):
     image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        exclude = ActivityPubSerializer.Meta.exclude + ('organization',)
+        fields = ActivityPubSerializer.Meta.fields + (
+            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image',
+        )
         model = Organization
 
 
@@ -96,6 +98,7 @@ class ImageSerializer(ActivityPubSerializer):
 
     class Meta(ActivityPubSerializer.Meta):
         model = Image
+        fields = ActivityPubSerializer.Meta.fields + ('url', 'name', )
 
 
 class AddressSerializer(ActivityPubSerializer):
@@ -111,6 +114,9 @@ class AddressSerializer(ActivityPubSerializer):
 
     class Meta(ActivityPubSerializer.Meta):
         model = Address
+        fields = ActivityPubSerializer.Meta.fields + (
+            'street_address', 'postal_code', 'address_locality', 'address_region', 'address_country',
+        )
 
 
 class PlaceSerializer(ActivityPubSerializer):
@@ -125,6 +131,7 @@ class PlaceSerializer(ActivityPubSerializer):
 
     class Meta(ActivityPubSerializer.Meta):
         model = Place
+        fields = ActivityPubSerializer.Meta.fields + ('latitude', 'longitude', 'name', 'address', )
 
 
 class BaseEventSerializer(ActivityPubSerializer):
@@ -133,7 +140,7 @@ class BaseEventSerializer(ActivityPubSerializer):
     image = ImageSerializer(include=True, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        exclude = ActivityPubSerializer.Meta.exclude + ('activity', )
+        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', )
 
 
 class GoodDeedSerializer(BaseEventSerializer):
@@ -145,6 +152,7 @@ class GoodDeedSerializer(BaseEventSerializer):
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
+        fields = BaseEventSerializer.Meta.fields + ('start_time', 'end_time', )
 
 
 class CrowdFundingSerializer(BaseEventSerializer):
@@ -160,6 +168,7 @@ class CrowdFundingSerializer(BaseEventSerializer):
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
+        fields = BaseEventSerializer.Meta.fields + ('end_time', 'target', 'target_currency', 'location')
 
 
 class EventSerializer(PolymorphicActivityPubSerializer):
@@ -174,13 +183,17 @@ class EventSerializer(PolymorphicActivityPubSerializer):
 class BaseActivitySerializer(ActivityPubSerializer):
     actor = ActorSerializer()
 
+    class Meta(ActivityPubSerializer.Meta):
+        model = Follow
+        fields = ActivityPubSerializer.Meta.fields + ('actor', 'object')
+
 
 class FollowSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:follow')
     type = TypeField('Follow')
     object = ActorSerializer()
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseActivitySerializer.Meta):
         model = Follow
 
 
@@ -190,7 +203,7 @@ class AcceptSerializer(BaseActivitySerializer):
 
     object = FollowSerializer()
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseActivitySerializer.Meta):
         model = Accept
 
 
@@ -199,10 +212,8 @@ class PublishSerializer(BaseActivitySerializer):
     type = TypeField('Publish')
     object = EventSerializer()
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseActivitySerializer.Meta):
         model = Publish
-
-        exclude = ('polymorphic_ctype', 'iri')
 
 
 class AnnounceSerializer(BaseActivitySerializer):

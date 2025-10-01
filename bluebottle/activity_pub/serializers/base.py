@@ -17,7 +17,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
     class Meta:
-        exclude = ('polymorphic_ctype', 'iri')
+        fields = ('type', 'id')
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

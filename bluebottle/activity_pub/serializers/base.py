@@ -230,11 +230,11 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
         iri = validated_data.pop('id')
         validated_data['origin'] = ActivityPubModel.objects.get(iri=iri)
 
-        for name, field in self.fields.items():
+        for field in self.fields.values():
             if isinstance(field, (FederatedObjectSerializer)):
-                field.initial_data = validated_data[name]
-                field.is_valid(raise_exception=True)
+                if field.source != '*':
+                    field.initial_data = validated_data[field.source]
 
-                validated_data[name] = field.save()
+                    validated_data[field.source] = field.create(validated_data[field.source])
 
         return super().create(validated_data)

@@ -8,7 +8,8 @@ from bluebottle.activity_pub.models import (
     Accept,
     Announce,
     CrowdFunding,
-    CollectionDrive,
+    Address,
+    Place,
     Follow,
     Inbox,
     Outbox,
@@ -97,6 +98,35 @@ class ImageSerializer(ActivityPubSerializer):
         model = Image
 
 
+class AddressSerializer(ActivityPubSerializer):
+    id = IdField(url_name='json-ld:address')
+    type = TypeField('Address')
+
+    street_address = serializers.CharField(required=False, allow_null=True)
+    postal_code = serializers.CharField(required=False, allow_null=True)
+
+    address_locality = serializers.CharField(required=False, allow_null=True)
+    address_region = serializers.CharField(required=False, allow_null=True)
+    address_country = serializers.CharField(required=False, allow_null=True)
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Address
+
+
+class PlaceSerializer(ActivityPubSerializer):
+    id = IdField(url_name='json-ld:place')
+    type = TypeField('Place')
+
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+    name = serializers.CharField()
+
+    address = AddressSerializer(allow_null=True, include=True)
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Place
+
+
 class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField()
@@ -121,31 +151,20 @@ class CrowdFundingSerializer(BaseEventSerializer):
     id = IdField(url_name='json-ld:crowd-funding')
     type = TypeField('CrowdFunding')
 
-    endTime = serializers.DateField(required=False)
+    end_time = serializers.DateTimeField(required=False)
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
-    realized = serializers.DecimalField(decimal_places=2, max_digits=10)
+    target_currency = serializers.CharField()
 
-    currencty = serializers.CharField(required=False)
+    location = PlaceSerializer(allow_null=True, include=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
 
 
-class CollectionDriveSerializer(BaseEventSerializer):
-    id = IdField(url_name='json-ld:collection-drive')
-    type = TypeField('CollectionDrive')
-
-    startTime = serializers.DateField(required=False)
-    endTime = serializers.DateField(required=False)
-
-    class Meta(BaseEventSerializer.Meta):
-        model = CollectionDrive
-
-
 class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        GoodDeedSerializer, CollectionDriveSerializer, CrowdFundingSerializer
+        GoodDeedSerializer, CrowdFundingSerializer
     ]
 
     class Meta:

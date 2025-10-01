@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower,
+    Follower, GoodDeed,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -51,7 +51,8 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Announce,
         Event,
         Organization,
-        Place,  # Add Place to child_models
+        GoodDeed,
+        Place,
     )
 
     def type(self, obj):
@@ -199,28 +200,23 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(activity__isnull=False)
+            return queryset.filter(adopted_activities__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(activity__isnull=True)
+            return queryset.filter(adopted_activities__isnull=True)
 
 
-class SubEventInline(admin.StackedInline):
-    model = Event
-    fk_name = "parent"
-    extra = 0
-    readonly_fields = ("pub_url", "activity")
-    fields = ("name", "start", "end", "organizer", "activity", "pub_url")
-    verbose_name = _("Slot")
-    verbose_name_plural = _("Slots")
+class SourceFilter(admin.SimpleListFilter):
+    title = _('Source')
+    parameter_name = 'source'
 
-    def has_change_permission(self, request, obj=None):
-        return False
+    def lookups(self, request, model_admin):
+        options = Organization.objects.values_list('id', 'name')
+        return options
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj=None):
-        return False
+    def queryset(self, request, queryset):
+        if self.value() :
+            queryset = queryset.filter(publishes__actor=self.value())
+        return queryset
 
 
 class FollowingAddForm(forms.ModelForm):
@@ -493,32 +489,24 @@ class PlaceInline(admin.StackedInline):
     )
 
 
+@admin.register(Event)
 class EventAdmin(ActivityPubModelChildAdmin):
     list_display = (
         "name",
+        "source",
         "adopted",
-        "organizer",
-        "start",
-        "end",
-        "place",  # Add place
     )
     readonly_fields = (
         "name",
         "display_description",
-        "display_image",
-        "start",
-        "end",
-        "organizer",
-        "actor",
+        "source",
         "activity",
-        "place",  # Add place
         "iri",
         "pub_url",
-        "activity_type"
     )
     fields = readonly_fields
-    inlines = [SubEventInline, AnnouncementInline]
-    list_filter = ['organizer', AdoptedFilter]
+    inlines = [AnnouncementInline]
+    list_filter = [AdoptedFilter, SourceFilter]
 
     def adopted(self, obj):
         return obj.adopted
@@ -532,6 +520,98 @@ class EventAdmin(ActivityPubModelChildAdmin):
         )
 
     display_description.short_description = _("Description")
+
+    def display_image(self, obj):
+        return format_html(
+            '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
+        )
+
+    display_image.short_description = _("Image")
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<path:object_id>/adopt/",
+                self.admin_site.admin_view(self.adopt_event),
+                name="activity_pub_event_adopt",
+            ),
+        ]
+        return custom_urls + urls
+
+    def adopt_event(self, request, object_id):
+        """
+        Create a Deed from the Event information
+        """
+        if not request.user.has_perm("deeds.add_deed"):
+            raise PermissionDenied
+
+        event = get_object_or_404(Event, pk=unquote(object_id))
+
+        if event.activity:
+            self.message_user(
+                request,
+                "This activity has already been adopted.",
+                level="warning",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+        try:
+            activity = adapter.adopt(event, request)
+
+            self.message_user(
+                request,
+                f'Successfully created Activity "{activity.title}" from Event.',
+                level="success",
+            )
+            return HttpResponseRedirect(
+                reverse("admin:activities_activity_change", args=[activity.pk])
+            )
+
+        except Exception as e:
+            self.message_user(request, f"Error creating activity: {str(e)}", level="error")
+            return HttpResponseRedirect(
+                reverse("admin:activity_pub_event_change", args=[event.pk])
+            )
+
+
+@admin.register(GoodDeed)
+class GoodDeedAdmin(ActivityPubModelChildAdmin):
+    list_display = (
+        "name",
+        "source",
+        "adopted",
+    )
+
+    readonly_fields = (
+        "name",
+        "display_summary",
+        "activity",
+        "iri",
+        "source",
+        "pub_url",
+        "image",
+        "start_time",
+        "end_time",
+    )
+    fields = readonly_fields
+    inlines = [AnnouncementInline]
+    list_filter = [AdoptedFilter]
+
+    def adopted(self, obj):
+        return obj.adopted
+
+    adopted.boolean = True
+    adopted.short_description = _("Adopted")
+
+    def display_summary(self, obj):
+        return format_html(
+            '<div style="display: table-cell">' + obj.summary + "</div>"
+        )
+
+    display_summary.short_description = _("Summary")
 
     def display_image(self, obj):
         return format_html(

@@ -5,7 +5,7 @@ from io import BytesIO
 from datetime import datetime, timedelta
 
 from django.db import connection
-from django.test import Client as TestClient
+from django.test import Client as TestClient, override_settings
 from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
 

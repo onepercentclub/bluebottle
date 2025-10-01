@@ -1,8 +1,10 @@
 
+from celery import shared_task
 import requests
 from io import BytesIO
 
 from requests_http_signature import HTTPSignatureAuth, algorithms
+from django.db import connection
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
@@ -13,6 +15,7 @@ from bluebottle.activity_pub.authentication import key_resolver
 import logging
 
 logger = logging.getLogger(__name__)
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 
 from django.db.models.signals import post_save
@@ -71,18 +74,24 @@ class JSONLDAdapter():
         actor = serializer.save()
         return Follow.objects.create(object=actor)
 
-    def publish(self, activity):
+    @shared_task(
+        autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
+    )
+    def publish_to_inbox(self, activity, inbox, tenant):
         from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+        with LocalTenant(tenant, clear_tenant=True):
+            data = ActivitySerializer().to_representation(activity)
+            auth = self.get_auth(activity.actor)
 
+            self.post(inbox.iri, data=data, auth=auth)
+
+    def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        data = ActivitySerializer().to_representation(activity)
-        auth = self.get_auth(activity.actor)
-
         for actor in activity.audience:
             if not actor.inbox.is_local:
-                self.post(actor.inbox.iri, data=data, auth=auth)
+                self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer

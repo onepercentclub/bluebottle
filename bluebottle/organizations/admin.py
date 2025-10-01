@@ -8,7 +8,9 @@ from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from bluebottle.activities.models import Activity
 from bluebottle.activity_pub.models import Organization as PubOrganization
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.initiatives.models import Initiative
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.admin import export_as_csv_action
@@ -23,6 +25,25 @@ class OrganizationInitiativeInline(admin.TabularInline):
     extra = 0
 
     def initiative_url(self, obj):
+        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
+                                                    obj._meta.model_name),
+                      args=[obj.id])
+        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class OrganizationActivityInline(admin.TabularInline):
+    model = Activity
+    readonly_fields = ('activity_url', 'owner', 'status')
+    fields = ('activity_url', 'owner', 'status')
+    extra = 0
+
+    def activity_url(self, obj):
         url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
                                                     obj._meta.model_name),
                       args=[obj.id])
@@ -60,7 +81,7 @@ class OrganizationForm(forms.ModelForm):
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = (OrganizationInitiativeInline, )
+    inlines = (OrganizationInitiativeInline, OrganizationActivityInline)
     form = OrganizationForm
 
     list_display = ('name', 'website', 'verified', 'created')
@@ -80,6 +101,12 @@ class OrganizationAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def has_delete_permission(self, request, obj=None):
+        settings = SitePlatformSettings.load()
+        if obj and obj == settings.organization:
+            return False
+        return True
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that add form do not show inlines """

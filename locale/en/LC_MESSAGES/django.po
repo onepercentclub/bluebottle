@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-22 12:09+0200\n"
+"POT-Creation-Date: 2025-09-24 08:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -632,7 +632,7 @@ msgstr ""
 #: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
-#: bluebottle/grant_management/models.py:420
+#: bluebottle/grant_management/models.py:423
 msgid "Description"
 msgstr ""
 
@@ -4003,7 +4003,7 @@ msgstr ""
 msgid "Funding activities"
 msgstr ""
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:378
+#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:381
 msgid "Grant applications"
 msgstr ""
 
@@ -4314,8 +4314,8 @@ msgid ""
 msgstr ""
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:256
-#: bluebottle/grant_management/models.py:329
+#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:259
+#: bluebottle/grant_management/models.py:332
 msgid "started"
 msgstr ""
 
@@ -4375,11 +4375,11 @@ msgid "fundraisers"
 msgstr ""
 
 #: bluebottle/funding/models.py:478 bluebottle/funding/states.py:480
-#: bluebottle/grant_management/models.py:255 bluebottle/utils/transitions.py:13
+#: bluebottle/grant_management/models.py:258 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr ""
 
-#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:257
+#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:260
 msgid "completed"
 msgstr ""
 
@@ -4391,7 +4391,7 @@ msgstr ""
 msgid "Funding payouts"
 msgstr ""
 
-#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:314
+#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:317
 msgid "Payout"
 msgstr ""
 
@@ -6225,9 +6225,9 @@ msgid "Enter 3 capital letters."
 msgstr ""
 
 #: bluebottle/grant_management/admin.py:98
-#: bluebottle/grant_management/models.py:239
-#: bluebottle/grant_management/models.py:340
-#: bluebottle/grant_management/models.py:377
+#: bluebottle/grant_management/models.py:242
+#: bluebottle/grant_management/models.py:343
+#: bluebottle/grant_management/models.py:380
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr ""
@@ -6352,14 +6352,14 @@ msgid "Enter the grant amount"
 msgstr ""
 
 #: bluebottle/grant_management/forms.py:39
-#: bluebottle/grant_management/models.py:529
-#: bluebottle/grant_management/models.py:576
-#: bluebottle/grant_management/models.py:614
+#: bluebottle/grant_management/models.py:532
+#: bluebottle/grant_management/models.py:579
+#: bluebottle/grant_management/models.py:617
 msgid "Currency should match fund currency"
 msgstr ""
 
 #: bluebottle/grant_management/forms.py:42
-#: bluebottle/grant_management/models.py:579
+#: bluebottle/grant_management/models.py:582
 msgid "Insufficient funds"
 msgstr ""
 
@@ -6458,60 +6458,60 @@ msgstr ""
 msgid "Grant payments"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:310
+#: bluebottle/grant_management/models.py:313
 msgid "Grant payout"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:311
+#: bluebottle/grant_management/models.py:314
 msgid "Grant payouts"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:407
+#: bluebottle/grant_management/models.py:410
 msgid "Debit"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:411
+#: bluebottle/grant_management/models.py:414
 msgid "credit"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:436
+#: bluebottle/grant_management/models.py:439
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
 msgid "Grant fund"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:437
+#: bluebottle/grant_management/models.py:440
 msgid "Grant funds"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:468
+#: bluebottle/grant_management/models.py:471
 msgid "Total paid out"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:474
+#: bluebottle/grant_management/models.py:477
 msgid "Paid out applications"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:479
+#: bluebottle/grant_management/models.py:482
 msgid "Total budget"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:485
+#: bluebottle/grant_management/models.py:488
 msgid "Pending payments"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:493
+#: bluebottle/grant_management/models.py:496
 msgid "Pending applications"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:500
+#: bluebottle/grant_management/models.py:503
 msgid "Available budget"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:557
+#: bluebottle/grant_management/models.py:560
 msgid "Grant"
 msgstr ""
 
-#: bluebottle/grant_management/models.py:558
+#: bluebottle/grant_management/models.py:561
 msgid "Grants"
 msgstr ""
 

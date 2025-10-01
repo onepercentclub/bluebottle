@@ -88,8 +88,9 @@ from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
 
-from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
-from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
+from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer, \
+    FederatedActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer, EventSerializer
 
 
 @admin.register(Contributor)
@@ -639,10 +640,9 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'activity_pub_url',
-        'event',
-        'event_url',
-        'share_activity_link'
+        'origin',
+        'share_activity_link',
+        'event'
     ]
 
     office_fields = (
@@ -673,9 +673,8 @@ class ActivityChildAdmin(
 
     activity_pub_fields = (
         'share_activity_link',
-        'activity_pub_url',
-        'event',
-        'event_url'
+        'origin',
+        'event'
     )
 
     registration_fields = None
@@ -787,11 +786,12 @@ class ActivityChildAdmin(
 
         activity = get_object_or_404(Activity, pk=unquote(pk))
 
-        federated_serializer = FederatedDeedSerializer(activity)
+        federated_serializer = FederatedActivitySerializer(activity)
 
-        serializer = GoodDeedSerializer(data=federated_serializer.data)
-        serializer.is_valid()
-        event = serializer.save()
+        serializer = EventSerializer(data=federated_serializer.data)
+
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save(activity=activity)
 
         Publish.objects.create(actor=get_platform_actor(), object=event)
 

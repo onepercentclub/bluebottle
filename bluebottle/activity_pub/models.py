@@ -206,10 +206,19 @@ class Event(ActivityPubModel):
     name = models.CharField()
     summary = models.TextField()
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
-
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
+
+    @property
+    def source(self):
+        publish = Publish.objects.filter(object=self).first()
+        if publish:
+            return publish.actor
+
+    @property
+    def adopted_activity(self):
+        return self.adopted_activities.first()
 
     @property
     def adopted(self):

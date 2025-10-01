@@ -639,10 +639,9 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
-        'activity_pub_url',
-        'event',
-        'event_url',
-        'share_activity_link'
+        'origin',
+        'share_activity_link',
+        'event'
     ]
 
     office_fields = (
@@ -673,9 +672,8 @@ class ActivityChildAdmin(
 
     activity_pub_fields = (
         'share_activity_link',
-        'activity_pub_url',
-        'event',
-        'event_url'
+        'origin',
+        'event'
     )
 
     registration_fields = None
@@ -790,7 +788,7 @@ class ActivityChildAdmin(
         federated_serializer = FederatedDeedSerializer(activity)
 
         serializer = GoodDeedSerializer(data=federated_serializer.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         event = serializer.save()
 
         Publish.objects.create(actor=get_platform_actor(), object=event)

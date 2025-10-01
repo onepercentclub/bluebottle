@@ -130,7 +130,7 @@ class PlaceSerializer(ActivityPubSerializer):
 class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField()
-    image = ImageSerializer(include=True)
+    image = ImageSerializer(include=True, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
         exclude = ActivityPubSerializer.Meta.exclude + ('activity', )
@@ -140,8 +140,8 @@ class GoodDeedSerializer(BaseEventSerializer):
     id = IdField(url_name='json-ld:good-deed')
     type = TypeField('GoodDeed')
 
-    start_time = serializers.DateTimeField(required=False)
-    end_time = serializers.DateTimeField(required=False)
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
 
     class Meta(BaseEventSerializer.Meta):
         model = GoodDeed
@@ -201,6 +201,8 @@ class PublishSerializer(BaseActivitySerializer):
 
     class Meta(ActivityPubSerializer.Meta):
         model = Publish
+
+        exclude = ('polymorphic_ctype', 'iri')
 
 
 class AnnounceSerializer(BaseActivitySerializer):

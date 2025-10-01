@@ -65,7 +65,7 @@ def execute(method, url, data=None, auth=None):
     if response.status_code in (200, 201):
         return (BytesIO(response.content), response.accepted_media_type)
     else:
-        raise Exception(url, response.json())
+        raise Exception(f'Failed request: {method.upper()}: {url}, {response.json()} status={response.status_code}')
 
 
 def do_request(url):

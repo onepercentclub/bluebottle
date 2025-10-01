@@ -38,6 +38,5 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
 
 class InitiativePlatformSettingsFactory(factory.DjangoModelFactory):
-
     class Meta(object):
         model = InitiativePlatformSettings

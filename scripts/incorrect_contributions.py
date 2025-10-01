@@ -1,4 +1,3 @@
-
 from django.db.models import Q, Count
 
 from bluebottle.clients.models import Client
@@ -16,9 +15,6 @@ def run(*args):
     total_errors = False
     for client in Client.objects.all():
         with (LocalTenant(client)):
-            registrations_removed = Registration.objects.filter(
-                status='removed'
-            )
 
             date_participants_without_registration = DateParticipant.objects.filter(
                 registration__isnull=True,
@@ -59,7 +55,7 @@ def run(*args):
                 contributor__activity__team_activity='individuals'
             ).exclude(
                 Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_team_schedule_contributions = TimeContribution.objects.filter(
@@ -68,7 +64,7 @@ def run(*args):
                 contributor__activity__team_activity='teams'
             ).exclude(
                 Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled')) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled', 'unscheduled')) &
                 Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
@@ -197,23 +193,12 @@ def run(*args):
                 slot_count=1
             )
 
-            registrations_without_participant_multi_slot = DateRegistration.objects.filter(
-                status='accepted',
-                participants__isnull=True,
-            ).annotate(
-                slot_count=Count('activity__timebasedactivity__dateactivity__slots', distinct=True),
-            ).filter(
-                slot_count__gt=1
-            )
-
             errors = (
                 failed_contributions.count() or
                 succeeded_contributions.count() or
                 failed_contributions_new.count() or
                 registrations_without_participant.count() or
-                registrations_without_participant_multi_slot.count() or
-                date_participants_without_registration.count() or
-                registrations_removed.count()
+                date_participants_without_registration.count()
             )
             if errors:
                 total_errors = True
@@ -236,20 +221,11 @@ def run(*args):
                           f'{registrations_without_participant.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(r.id) for r in registrations_without_participant])}')
-                if registrations_without_participant_multi_slot.count():
-                    print(f'registrations without participant (multiple slots): '
-                          f'{registrations_without_participant_multi_slot.count()}')
-                    if verbose:
-                        print(f'IDs: {" ".join([str(r.id) for r in registrations_without_participant_multi_slot])}')
                 if date_participants_without_registration.count():
                     print(f'date participants without registration: '
                           f'{date_participants_without_registration.count()}')
                     if verbose:
                         print(f'IDs: {" ".join([str(p.id) for p in date_participants_without_registration])}')
-                if registrations_removed.count():
-                    print(f'registrations with status removed: {registrations_removed.count()}')
-                    if verbose:
-                        print(f'IDs: {" ".join([str(r.id) for r in registrations_removed])}')
 
                 print('\n')
                 if fix:
@@ -327,8 +303,6 @@ def run(*args):
 
                     for registration in registrations_without_participant.all():
                         add_participant_to_registration(registration)
-                    for registration in registrations_without_participant_multi_slot.all():
-                        add_participant_to_registration(registration)
 
                     for participant in date_participants_without_registration.all():
                         if participant.user:
@@ -341,8 +315,6 @@ def run(*args):
                             registration.save()
                             participant.registration = registration
                             participant.save()
-
-                    registrations_removed.update(status='rejected')
 
     if not fix and total_errors:
         print("☝️ Add '--script-args=fix' to the command to actually fix the activities.")

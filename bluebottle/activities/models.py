@@ -119,7 +119,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     image = ImageField(blank=True, null=True)
 
     origin = models.ForeignKey(
-        'activity_pub.Event', null=True, related_name="files", on_delete=models.SET_NULL
+        'activity_pub.Event', null=True, related_name="adopted_activities", on_delete=models.SET_NULL
     )
 
     video_url = models.URLField(
@@ -192,6 +192,11 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         default=False,
         help_text=_("Has the user accepted the terms of service for this activity?")
     )
+
+    @property
+    def event(self):
+        from bluebottle.activity_pub.models import Event
+        return Event.objects.get(object=self)
 
     @property
     def activity_pub_url(self):

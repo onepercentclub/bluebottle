@@ -9,7 +9,6 @@ from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
-from bluebottle.utils.fields import MoneyField
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -181,18 +180,18 @@ class PublicKey(ActivityPubModel):
 
 
 class Address(ActivityPubModel):
-    street_address = models.CharField(max_length=1000)
-    postal_code = models.CharField(max_length=1000)
+    street_address = models.CharField(max_length=1000, null=True)
+    postal_code = models.CharField(max_length=1000, null=True)
 
-    address_locality = models.CharField(max_length=1000)
-    address_region = models.CharField(max_length=1000)
-    address_country = models.CharField(max_length=1000)
+    address_locality = models.CharField(max_length=1000, null=True)
+    address_region = models.CharField(max_length=1000, null=True)
+    address_country = models.CharField(max_length=1000, null=True)
 
 
 class Place(ActivityPubModel):
     name = models.CharField(max_length=1000)
-    latitude = models.CharField(max_length=1000)
-    longitude = models.CharField(max_length=1000)
+    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True)
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
 
@@ -230,18 +229,14 @@ class GoodDeed(Event):
     end_time = models.DateTimeField(null=True)
 
 
-class CollectionDrive(Event):
-    start = models.DateTimeField(null=True)
-    end = models.DateField(null=True)
-
-    location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
-
-
 class CrowdFunding(Event):
-    target = MoneyField()
+    target = models.DecimalField(decimal_places=2, max_digits=10)
+    target_currency = models.CharField(max_length=3)
 
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
+
+    location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
 
 
 class Activity(ActivityPubModel):

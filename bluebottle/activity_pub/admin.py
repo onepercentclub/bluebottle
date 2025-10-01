@@ -214,7 +214,7 @@ class SourceFilter(admin.SimpleListFilter):
         return options
 
     def queryset(self, request, queryset):
-        if self.value() :
+        if self.value():
             queryset = queryset.filter(publishes__actor=self.value())
         return queryset
 

@@ -818,7 +818,6 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             from bluebottle.activity_pub.models import Organization as ActivityPubOrganization
             ActivityPubOrganization.objects.from_model(self.organization)
 
-
         super().save(*args, **kwargs)
 
     class Meta:

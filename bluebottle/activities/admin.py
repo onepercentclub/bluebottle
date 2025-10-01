@@ -88,8 +88,9 @@ from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
 from bluebottle.utils.widgets import get_human_readable_duration
 
-from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer
-from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer
+from bluebottle.activity_pub.serializers.federated_activities import FederatedDeedSerializer, \
+    FederatedActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import GoodDeedSerializer, EventSerializer
 
 
 @admin.register(Contributor)
@@ -785,11 +786,12 @@ class ActivityChildAdmin(
 
         activity = get_object_or_404(Activity, pk=unquote(pk))
 
-        federated_serializer = FederatedDeedSerializer(activity)
+        federated_serializer = FederatedActivitySerializer(activity)
 
-        serializer = GoodDeedSerializer(data=federated_serializer.data)
+        serializer = EventSerializer(data=federated_serializer.data)
+
         serializer.is_valid(raise_exception=True)
-        event = serializer.save()
+        event = serializer.save(activity=activity)
 
         Publish.objects.create(actor=get_platform_actor(), object=event)
 

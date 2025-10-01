@@ -75,8 +75,9 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         for name, field in self.fields.items():
             if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 field.initial_data = validated_data[name]
-                field.is_valid()
-                validated_data[name] = field.save()
+                field.is_valid(raise_exception=True)
+                if validated_data[name]:
+                    validated_data[name] = field.save()
 
         validated_data.pop('type', None)
         return self.Meta.model.objects.create(**validated_data)

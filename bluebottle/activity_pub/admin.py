@@ -490,8 +490,7 @@ class PlaceInline(admin.StackedInline):
     )
 
 
-@admin.register(Event)
-class EventAdmin(ActivityPubModelChildAdmin):
+class EventAdminMixin:
     list_display = (
         "name",
         "source",
@@ -577,9 +576,28 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
 
+@admin.register(Event)
+class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
+    base_model = Event
+    list_filter = [PolymorphicChildModelFilter]
+    child_models = (
+        GoodDeed,
+        CrowdFunding,
+    )
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
+
+    list_display = ("name", "type", "source", "adopted")
+
+
+class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
+    pass
+
+
 @admin.register(GoodDeed)
-class GoodDeedAdmin(EventAdmin):
-    readonly_fields = EventAdmin.readonly_fields + (
+class GoodDeedAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
     )
@@ -587,8 +605,8 @@ class GoodDeedAdmin(EventAdmin):
 
 
 @admin.register(CrowdFunding)
-class CrowdFundingAdmin(EventAdmin):
-    readonly_fields = EventAdmin.readonly_fields + (
+class CrowdFundingAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target'
     )

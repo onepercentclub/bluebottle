@@ -16,6 +16,7 @@ from bluebottle.activity_pub.models import Image as ActivityPubImage
 from bluebottle.activity_pub.serializers.base import (
     FederatedObjectSerializer
 )
+from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.geo.models import Geolocation
 from bluebottle.time_based.models import DeadlineActivity, DateActivity
 from bluebottle.deeds.models import Deed
@@ -46,7 +47,7 @@ class ImageSerializer(FederatedObjectSerializer):
 
     def get_url(self, instance):
         return connection.tenant.build_absolute_url(
-            reverse('activity-image', args=(instance.activity_set.first().pk, '1568x882'))
+            reverse('activity-image', args=(instance.activity_set.first().pk, ORIGINAL_SIZE))
 
         )
 

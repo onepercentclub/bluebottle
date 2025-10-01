@@ -78,7 +78,7 @@ def is_admin(effect):
     """Is not user"""
     user = effect.options.get("user")
     return (
-        user and effect.instance.user != user and (user.is_staff or user.is_superuser)
+        user and effect.instance.user_id and effect.instance.user != user and (user.is_staff or user.is_superuser)
     )
 
 

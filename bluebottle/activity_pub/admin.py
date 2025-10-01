@@ -200,9 +200,9 @@ class AdoptedFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
-            return queryset.filter(asopted_activities__isnull=False)
+            return queryset.filter(adopted_activities__isnull=False)
         elif self.value() == 'no':
-            return queryset.filter(asopted_activities__isnull=True)
+            return queryset.filter(adopted_activities__isnull=True)
 
 
 class SourceFilter(admin.SimpleListFilter):

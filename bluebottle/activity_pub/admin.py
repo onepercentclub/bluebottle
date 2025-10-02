@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed,
+    Follower, GoodDeed, CrowdFunding,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -52,6 +52,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Event,
         Organization,
         GoodDeed,
+        CrowdFunding,
         Place,
     )
 
@@ -489,8 +490,7 @@ class PlaceInline(admin.StackedInline):
     )
 
 
-@admin.register(Event)
-class EventAdmin(ActivityPubModelChildAdmin):
+class EventAdminMixin:
     list_display = (
         "name",
         "source",
@@ -502,7 +502,6 @@ class EventAdmin(ActivityPubModelChildAdmin):
         "source",
         "activity",
         "iri",
-        "pub_url",
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
@@ -577,93 +576,38 @@ class EventAdmin(ActivityPubModelChildAdmin):
             )
 
 
-@admin.register(GoodDeed)
-class GoodDeedAdmin(ActivityPubModelChildAdmin):
-    list_display = (
-        "name",
-        "source",
-        "adopted",
+@admin.register(Event)
+class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
+    base_model = Event
+    list_filter = [PolymorphicChildModelFilter]
+    child_models = (
+        GoodDeed,
+        CrowdFunding,
     )
 
-    readonly_fields = (
-        "name",
-        "display_summary",
-        "activity",
-        "iri",
-        "source",
-        "pub_url",
-        "image",
-        "start_time",
-        "end_time",
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
+
+    list_display = ("name", "type", "source", "adopted")
+
+
+class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
+    pass
+
+
+@admin.register(GoodDeed)
+class GoodDeedAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'start_time',
+        'end_time',
     )
     fields = readonly_fields
-    inlines = [AnnouncementInline]
-    list_filter = [AdoptedFilter]
 
-    def adopted(self, obj):
-        return obj.adopted
 
-    adopted.boolean = True
-    adopted.short_description = _("Adopted")
-
-    def display_summary(self, obj):
-        return format_html(
-            '<div style="display: table-cell">' + obj.summary + "</div>"
-        )
-
-    display_summary.short_description = _("Summary")
-
-    def display_image(self, obj):
-        return format_html(
-            '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
-        )
-
-    display_image.short_description = _("Image")
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "<path:object_id>/adopt/",
-                self.admin_site.admin_view(self.adopt_event),
-                name="activity_pub_event_adopt",
-            ),
-        ]
-        return custom_urls + urls
-
-    def adopt_event(self, request, object_id):
-        """
-        Create a Deed from the Event information
-        """
-        if not request.user.has_perm("deeds.add_deed"):
-            raise PermissionDenied
-
-        event = get_object_or_404(Event, pk=unquote(object_id))
-
-        if event.activity:
-            self.message_user(
-                request,
-                "This activity has already been adopted.",
-                level="warning",
-            )
-            return HttpResponseRedirect(
-                reverse("admin:activity_pub_event_change", args=[event.pk])
-            )
-
-        try:
-            activity = adapter.adopt(event, request)
-
-            self.message_user(
-                request,
-                f'Successfully created Activity "{activity.title}" from Event.',
-                level="success",
-            )
-            return HttpResponseRedirect(
-                reverse("admin:activities_activity_change", args=[activity.pk])
-            )
-
-        except Exception as e:
-            self.message_user(request, f"Error creating activity: {str(e)}", level="error")
-            return HttpResponseRedirect(
-                reverse("admin:activity_pub_event_change", args=[event.pk])
-            )
+@admin.register(CrowdFunding)
+class CrowdFundingAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'end_time',
+        'target'
+    )
+    fields = readonly_fields

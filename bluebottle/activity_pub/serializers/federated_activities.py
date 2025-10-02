@@ -247,4 +247,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         return self.model_type_mapping.get(model, 'unknown')
 
     def save(self, *args, **kwargs):
-        return super().save(owner=self.context['request'].user)
+        if not kwargs.get('owner'):
+            kwargs['owner'] = self.context['request'].user
+
+        return super().save(**kwargs)

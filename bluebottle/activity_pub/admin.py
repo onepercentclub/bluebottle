@@ -579,11 +579,11 @@ class EventAdminMixin:
 @admin.register(Event)
 class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     base_model = Event
-    list_filter = [PolymorphicChildModelFilter]
     child_models = (
         GoodDeed,
         CrowdFunding,
     )
+    list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
     def type(self, obj):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
@@ -592,7 +592,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
 
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
-    pass
+    change_form_template = 'admin/activity_pub/event/change_form.html'
 
 
 @admin.register(GoodDeed)

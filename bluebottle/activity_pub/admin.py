@@ -586,7 +586,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     )
 
     def type(self, obj):
-        return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
+        return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
 
     list_display = ("name", "type", "source", "adopted")
 

@@ -223,10 +223,21 @@ class Event(ActivityPubModel):
     def adopted(self):
         return self.activity is not None
 
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Shared activity")
+        verbose_name_plural = _("Shared activities")
+
 
 class GoodDeed(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
+
+    class Meta:
+        verbose_name = _("Deed")
+        verbose_name_plural = _("Deeds")
 
 
 class CrowdFunding(Event):
@@ -237,6 +248,10 @@ class CrowdFunding(Event):
     end_time = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _("Funding")
+        verbose_name_plural = _("Funding")
 
 
 class Activity(ActivityPubModel):

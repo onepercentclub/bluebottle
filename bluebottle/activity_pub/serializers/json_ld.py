@@ -221,7 +221,7 @@ class AnnounceSerializer(BaseActivitySerializer):
     type = TypeField('Announce')
     object = EventSerializer()
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseActivitySerializer.Meta):
         model = Announce
 
 

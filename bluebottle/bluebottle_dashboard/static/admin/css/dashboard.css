@@ -519,3 +519,7 @@ div.inline.radiolist {
 #participants-group .field-checked .inline-deletelink {
     display: none !important;
 }
+
+#login-form input[type=checkbox] {
+    display: block;
+}

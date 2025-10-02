@@ -597,7 +597,7 @@ class StripePayoutAccount(PayoutAccount):
             self.account_id,
         )
         for external_account in external_accounts:
-            status = 'new'
+            status = 'unverified'
             if (
                     self.status == 'verified' and
                     external_account.requirements.currently_due == [] and

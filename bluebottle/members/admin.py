@@ -48,7 +48,7 @@ from bluebottle.time_based.models import (
     DeadlineParticipant,
     PeriodicParticipant,
     ScheduleParticipant,
-    TeamScheduleParticipant,
+    TeamScheduleParticipant, RegisteredDateParticipant,
 )
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
@@ -58,6 +58,7 @@ from bluebottle.utils.admin import (
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
+from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
 
@@ -569,7 +570,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             "schedule_activities",
             "team_schedule_activities",
             "date_activities",
+            "registered_date_activities",
             "funding",
+            "grant_applications",
             "deeds",
             "collect",
             "kyc",
@@ -605,7 +608,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             "deadline_activities",
             "schedule_activities",
             "team_schedule_activities",
+            "registered_date_activities",
             "funding",
+            "grant_applications",
             "deeds",
             "collect",
         ]
@@ -767,6 +772,11 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     team_schedule_activities.short_description = _("Team schedule activity")
 
+    def registered_date_activities(self, obj):
+        return self.get_stats(obj, RegisteredDateParticipant)
+
+    registered_date_activities.short_description = _("Past date activity")
+
     def funding(self, obj):
         donations = []
         donation_url = reverse('admin:funding_donor_changelist')
@@ -780,6 +790,21 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         return format_html('<br/>'.join(donations)) or _('None')
 
     funding.short_description = _('Funding donations')
+
+    def grant_applications(self, obj):
+        grants_url = reverse('admin:grant_management_grantapplication_changelist')
+        grant_lines = []
+        grants = GrantApplication.objects.filter(owner=obj, status__in=['granted', 'succeeded'])
+        if grants.count():
+            link = grants_url + '?owner_id={}'.format(obj.id)
+            grant_lines.append(format_html(
+                '<a href="{}">{}</a> granted applications',
+                link,
+                grants.count(),
+            ))
+        return format_html('<br/>'.join(grant_lines)) or _('None')
+
+    grant_applications.short_description = _('Grant applications')
 
     def deeds(self, obj):
         return self.get_stats(obj, DeedParticipant)

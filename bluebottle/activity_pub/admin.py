@@ -592,7 +592,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
 
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
-    pass
+    change_form_template = 'admin/activity_pub/event/change_form.html'
 
 
 @admin.register(GoodDeed)

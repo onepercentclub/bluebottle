@@ -247,7 +247,7 @@ class CrowdFunding(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
 
-    location = models.ForeignKey(Place, null=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _("Funding")

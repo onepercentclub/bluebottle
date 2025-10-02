@@ -159,12 +159,12 @@ class CrowdFundingSerializer(BaseEventSerializer):
     id = IdField(url_name='json-ld:crowd-funding')
     type = TypeField('CrowdFunding')
 
-    end_time = serializers.DateTimeField(required=False)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
 
-    location = PlaceSerializer(allow_null=True, include=True)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding

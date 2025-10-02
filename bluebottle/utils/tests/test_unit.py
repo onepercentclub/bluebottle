@@ -291,7 +291,7 @@ class Testtenantawaremailserver(BluebottleTestCase):
             properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
             properties.DKIM_SELECTOR = b"key2"
-            properties.DKIM_DOMAIN = b"testserver"
+            properties.DKIM_DOMAIN = b"test.localhost"
             properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
 
             be = TenantAwareBackend()
@@ -315,7 +315,7 @@ class Testtenantawaremailserver(BluebottleTestCase):
                 )
             )
 
-            self.assertTrue(signed_msg.find(b"d=testserver") >= 0)
+            self.assertTrue(signed_msg.find(b"d=test.localhost") >= 0)
             self.assertTrue(signed_msg.find(b"s=key2") >= 0)
             self.assertTrue(dkim_check, "Email should be signed by tenant")
 

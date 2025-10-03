@@ -7,6 +7,8 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from django_better_admin_arrayfield.models.fields import ArrayField
+
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 
@@ -34,9 +36,10 @@ class ActivityPubModel(PolymorphicModel):
 
 
 class Actor(ActivityPubModel):
-    inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.CASCADE)
-    outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.CASCADE)
-    public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.CASCADE)
+    inbox = models.OneToOneField('activity_pub.Inbox', on_delete=models.CASCADE)
+    outbox = models.OneToOneField('activity_pub.Outbox', on_delete=models.CASCADE)
+    followers = models.OneToOneField('activity_pub.Followers', on_delete=models.CASCADE, null=True)
+    public_key = models.OneToOneField('activity_pub.PublicKey', on_delete=models.CASCADE)
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
@@ -66,6 +69,7 @@ class PersonManager(PolymorphicManager):
         except Member.person.RelatedObjectDoesNotExist:
             inbox = Inbox.objects.create()
             outbox = Outbox.objects.create()
+            followers = Followers.objects.create()
 
             public_key = PublicKey.objects.create()
 
@@ -74,6 +78,7 @@ class PersonManager(PolymorphicManager):
                 member=model,
                 outbox=outbox,
                 public_key=public_key,
+                followers=followers,
                 name=model.full_name
             )
 
@@ -102,6 +107,7 @@ class OrganizationManager(PolymorphicManager):
             outbox = Outbox.objects.create()
 
             public_key = PublicKey.objects.create()
+            followers = Followers.objects.create()
             logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
 
             return Organization.objects.create(
@@ -109,6 +115,7 @@ class OrganizationManager(PolymorphicManager):
                 organization=model,
                 outbox=outbox,
                 public_key=public_key,
+                followers=followers,
                 name=model.name,
                 image=logo,
                 summary=model.description,
@@ -179,6 +186,10 @@ class PublicKey(ActivityPubModel):
         super().save(*args, **kwargs)
 
 
+class Followers(ActivityPubModel):
+    pass
+
+
 class Address(ActivityPubModel):
     street_address = models.CharField(max_length=1000, null=True)
     postal_code = models.CharField(max_length=1000, null=True)
@@ -241,6 +252,7 @@ class CrowdFunding(Event):
 
 class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
+    to = ArrayField(models.URLField(), default=list)
 
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
@@ -306,9 +318,7 @@ class Publish(Activity):
 
     @property
     def audience(self):
-        # All followers of the actor
-        for follow in self.actor.follow_set.filter(accept__isnull=False):
-            yield follow.actor.inbox
+        return [self.actor.followers]
 
 
 class Announce(Activity):
@@ -316,6 +326,8 @@ class Announce(Activity):
 
     @property
     def audience(self):
-        for publish in self.object.publish_set.all():
-            for follow in publish.actor.follow_set.all():
-                yield follow.object.inbox
+        return [
+            Publish.objects.get(
+                object=self.object
+            ).actor
+        ]

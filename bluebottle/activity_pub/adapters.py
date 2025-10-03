@@ -8,7 +8,7 @@ from django.db import connection
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity
+from bluebottle.activity_pub.models import Follow, Activity, Actor, Followers, Accept
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
@@ -77,21 +77,31 @@ class JSONLDAdapter():
     @shared_task(
         autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
     )
-    def publish_to_inbox(self, activity, inbox, tenant):
+    def publish_to_inbox(self, activity, tenant):
         from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
         with LocalTenant(tenant, clear_tenant=True):
             data = ActivitySerializer().to_representation(activity)
-            auth = self.get_auth(activity.actor)
+            for item in activity.audience:
+                if item.is_local:
+                    if isinstance(item, Followers):
+                        for accept in Accept.objects.filter(actor=item.actor):
+                            actor = accept.object.actor
+                            auth = self.get_auth(activity.actor)
+                            self.post(actor.inbox.iri, data=data, auth=auth)
+                else:
+                    actor = Actor.objects.get(iri=item.iri)
+                    auth = self.get_auth(activity.actor)
+                    self.post(actor.inbox.iri, data=data, auth=auth)
 
-            self.post(inbox.iri, data=data, auth=auth)
+                activity.to.append(item.pub_url)
+                activity.save()
 
     def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        for actor in activity.audience:
-            if not actor.inbox.is_local:
-                self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+        self.publish_to_inbox.delay(self, activity, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer

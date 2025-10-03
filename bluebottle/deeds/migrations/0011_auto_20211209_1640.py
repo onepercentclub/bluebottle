@@ -4,6 +4,7 @@ from django.db import migrations
 
 
 def fix_participant_dates(apps, schema_editor):
+    return
     EffortContribution = apps.get_model('activities', 'EffortContribution')
     EffortContribution.objects.update(end=None)
 

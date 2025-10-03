@@ -24,7 +24,7 @@ from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, St
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, get_tenant_model
 from bluebottle.files.tests.factories import ImageFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
@@ -95,6 +95,7 @@ class ActivityPubTestCase:
         super().setUp()
 
         self.other_tenant = Client.objects.get(schema_name='test2')
+        self.third_tenant = Client.objects.get(schema_name='test3')
 
         SitePlatformSettings.objects.create(
             organization=OrganizationFactory.create()
@@ -200,6 +201,31 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
+
+    def test_backfill(self):
+        self.test_publish()
+
+        platform_url = self.build_absolute_url('/')
+        with LocalTenant(self.third_tenant):
+            SitePlatformSettings.objects.create(
+                organization=OrganizationFactory.create()
+            )
+
+            follow = adapter.follow(platform_url)
+            follow_iri = follow.pub_url
+
+        with LocalTenant(self.tenant):
+            Accept.objects.create(
+                object=Follow.objects.get(iri=follow_iri)
+            )
+
+        outbox_url = get_platform_actor().outbox.pub_url
+        with LocalTenant(self.third_tenant):
+            outbox_data = adapter.fetch(outbox_url)
+            page_data = adapter.fetch(outbox_data['first'])
+            import ipdb; ipdb.set_trace()
+            print(data)
+
 
     def test_adopt_default_owner(self):
         self.test_publish()

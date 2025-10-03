@@ -8,6 +8,7 @@ from bluebottle.clients import properties
 
 
 def migrate_share_options(apps, schema_editor):
+    return
     ProjectPlatformSettings = apps.get_model('projects', 'ProjectPlatformSettings')
     Client = apps.get_model('clients', 'Client')
 

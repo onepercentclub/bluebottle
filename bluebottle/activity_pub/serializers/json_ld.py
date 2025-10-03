@@ -1,3 +1,5 @@
+from django.db import connection
+from django.urls import reverse
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
@@ -35,10 +37,31 @@ class InboxSerializer(ActivityPubSerializer):
 
 class OutboxSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:outbox')
-    type = TypeField('Outbox')
+    type = TypeField('OrderedCollection')
 
     class Meta(ActivityPubSerializer.Meta):
         model = Outbox
+
+    def to_representation(self, data):
+        result = super().to_representation(data)
+        if self.parent:
+            return result
+        else:
+            view = self.context['view']
+            request = self.context['request']
+
+            pagination = view.pagination_class()
+            pagination.paginate_queryset(
+                view.page_view(request=request, kwargs=view.kwargs).get_queryset(), 
+                self.context['request'], 
+                view
+            )
+
+            result['totalItems'] = pagination.page.paginator.count
+            result['first'] = pagination.get_link(1)
+            result['last'] = pagination.get_link(pagination.page.paginator.num_pages)
+
+            return result
 
 
 class PublicKeySerializer(ActivityPubSerializer):
@@ -51,32 +74,45 @@ class PublicKeySerializer(ActivityPubSerializer):
         fields = ActivityPubSerializer.Meta.fields + ('public_key_pem',)
 
 
-class PersonSerializer(ActivityPubSerializer):
-    id = IdField(url_name='json-ld:person')
-    type = TypeField('Person')
+class FollowersSerializer(ActivityPubSerializer):
+    id = IdField(url_name='json-ld:followers')
+    type = TypeField('OrderedCollection')
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Inbox
+
+
+class BaseActorSerializer(ActivityPubSerializer):
     inbox = InboxSerializer()
     outbox = OutboxSerializer()
     public_key = PublicKeySerializer(include=True)
+    followers = PublicKeySerializer(include=True)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', )
         model = Person
 
 
-class OrganizationSerializer(ActivityPubSerializer):
+class PersonSerializer(BaseActorSerializer):
+    id = IdField(url_name='json-ld:person')
+    type = TypeField('Person')
+
+    class Meta(BaseActorSerializer.Meta):
+        model = Person
+
+
+class OrganizationSerializer(BaseActorSerializer):
     id = IdField(url_name='json-ld:organization')
     type = TypeField('Organization')
-    inbox = InboxSerializer()
-    outbox = OutboxSerializer()
-    public_key = PublicKeySerializer(include=True)
+
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
-    class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image',
+    class Meta(BaseActorSerializer.Meta):
+        fields = BaseActorSerializer.Meta.fields + (
+            'name', 'summary', 'content', 'image',
         )
         model = Organization
 
@@ -86,7 +122,7 @@ class ActorSerializer(PolymorphicActivityPubSerializer):
         OrganizationSerializer, PersonSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Actor
 
 
@@ -176,7 +212,7 @@ class EventSerializer(PolymorphicActivityPubSerializer):
         GoodDeedSerializer, CrowdFundingSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Event
 
 
@@ -196,7 +232,7 @@ class FollowSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Follow
 
-
+    
 class AcceptSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:accept')
     type = TypeField('Accept')
@@ -230,5 +266,5 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Activity

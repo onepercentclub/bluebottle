@@ -60,6 +60,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         return obj.get_real_instance_class().__name__ if obj.get_real_instance_class() else '-'
 
     list_display = ("id", "type", "iri")
+    readonly_fields = ('iri', 'actor', 'pub_url')
 
 
 class ActivityPubModelChildAdmin(PolymorphicChildModelAdmin):
@@ -165,6 +166,7 @@ class PublicKeyAdmin(ActivityPubModelChildAdmin):
 @admin.register(Publish)
 class PublishAdmin(ActivityPubModelChildAdmin):
     list_display = ("id", "actor", "object")
+    readonly_fields = ('iri', 'actor', 'object', 'pub_url')
 
 
 @admin.register(Announce)
@@ -191,6 +193,7 @@ class AnnouncementInline(admin.StackedInline):
 
 class AdoptedFilter(admin.SimpleListFilter):
     title = _('Adoption Status')
+    parameter_name = 'adopted'
     parameter_name = 'adopted'
 
     def lookups(self, request, model_admin):

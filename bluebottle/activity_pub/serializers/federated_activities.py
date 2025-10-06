@@ -21,6 +21,7 @@ from bluebottle.activity_pub.serializers.base import (
 )
 from bluebottle.geo.models import Country, Geolocation
 from bluebottle.files.serializers import ORIGINAL_SIZE
+from bluebottle.organizations.models import Organization
 from bluebottle.time_based.models import DeadlineActivity, DateActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
@@ -118,9 +119,22 @@ class AddressSerializer(FederatedObjectSerializer):
 
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
-
         del result['id']
         return result
+
+
+class HostOrganizationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(allow_null=True)
+    summary = serializers.CharField(
+        source='description',
+        allow_blank=True,
+        allow_null=True,
+        required=False
+    )
+
+    class Meta:
+        model = Organization
+        fields = ('name', 'summary')
 
 
 class LocationSerializer(FederatedObjectSerializer):
@@ -133,7 +147,7 @@ class LocationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Geolocation
-        fields = ('id', 'latitude', 'longitude', 'name', 'address', )
+        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
 
     def create(self, validated_data):
         try:
@@ -156,6 +170,7 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     image = ImageSerializer()
+    host_organization = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')

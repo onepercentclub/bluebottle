@@ -8,7 +8,7 @@ from django.db import connection
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity
+from bluebottle.activity_pub.models import Follow, Activity, Publish
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
@@ -64,14 +64,15 @@ class JSONLDAdapter():
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
-
+        from bluebottle.activity_pub.serializers.federated_activities import HostOrganizationSerializer
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
-
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-
-        actor = serializer.save()
+        host_serializer = HostOrganizationSerializer(data=data)
+        host_serializer.is_valid(raise_exception=True)
+        host_organization = host_serializer.save()
+        actor = serializer.save(organization=host_organization)
         return Follow.objects.create(object=actor)
 
     @shared_task(
@@ -100,8 +101,8 @@ class JSONLDAdapter():
         data = EventSerializer(instance=event).data
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-
-        return serializer.save()
+        organization = Publish.objects.filter(object=event).first().actor.organization
+        return serializer.save(host_organization=organization)
 
 
 adapter = JSONLDAdapter()

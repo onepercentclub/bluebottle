@@ -670,7 +670,8 @@ class ActivityChildAdmin(
     activity_pub_fields = (
         'share_activity_link',
         'origin',
-        'event'
+        'event',
+        'host_organization',
     )
 
     registration_fields = None

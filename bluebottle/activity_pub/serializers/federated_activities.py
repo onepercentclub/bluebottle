@@ -170,7 +170,6 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     image = ImageSerializer()
-    host_organization = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')

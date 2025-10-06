@@ -102,7 +102,10 @@ class JSONLDAdapter():
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         organization = Publish.objects.filter(object=event).first().actor.organization
-        return serializer.save(host_organization=organization)
+        activity = serializer.save()
+        activity.host_organization = organization
+        activity.save()
+        return activity
 
 
 adapter = JSONLDAdapter()

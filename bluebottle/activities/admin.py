@@ -638,7 +638,8 @@ class ActivityChildAdmin(
         'send_impact_reminder_message_link',
         'origin',
         'share_activity_link',
-        'event'
+        'event',
+        'host_organization'
     ]
 
     office_fields = (

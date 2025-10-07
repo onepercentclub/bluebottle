@@ -9,6 +9,7 @@ from polymorphic.models import PolymorphicManager, PolymorphicModel
 
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
+from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
 class ActivityPubModel(PolymorphicModel):
@@ -252,6 +253,51 @@ class CrowdFunding(Event):
     class Meta:
         verbose_name = _("Funding")
         verbose_name_plural = _("Funding")
+
+
+class EventAttendanceModeChoices(DjangoChoices):
+    online = ChoiceItem('OnlineEventAttendanceMode')
+    offline = ChoiceItem('OfflineEventAttendanceMode')
+
+
+class SubEvent(ActivityPubModel):
+    name = models.CharField(null=True)
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    duration = models.DurationField(null=True)
+    event_attendance_mode = models.CharField(
+        choices=EventAttendanceModeChoices.choices,
+        null=True
+    )
+    parent = models.ForeignKey(
+        'activity_pub.DoGoodEvent',
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='sub_events'
+    )
+    slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _("Sub event")
+        verbose_name_plural = _("Sub events")
+
+
+class DoGoodEvent(Event):
+    start_time = models.DateTimeField(null=True)
+    end_time = models.DateTimeField(null=True)
+
+    location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
+    duration = models.DurationField(null=True)
+    event_attendance_mode = models.CharField(
+        choices=EventAttendanceModeChoices.choices,
+        null=True
+    )
+
+    class Meta:
+        verbose_name = _("Do good event")
+        verbose_name_plural = _("Do good events")
 
 
 class Activity(ActivityPubModel):

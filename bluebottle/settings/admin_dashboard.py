@@ -53,7 +53,8 @@ JET_SIDE_MENU_ITEMS = [
     {
         "label": _("Activity Pub"),
         "app_label": "activity_pub",
-        "permissions": ["activities.change_activities"],
+        "permissions": ["cms.site_platform_settings"],
+        "enabled": "cms.SitePlatformSettings.share_activities",
         "items": [
             {
                 "name": "activity_pub.event",

@@ -123,7 +123,7 @@ class AddressSerializer(FederatedObjectSerializer):
         return result
 
 
-class HostOrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(serializers.ModelSerializer):
     name = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
         source='description',
@@ -170,9 +170,12 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     image = ImageSerializer()
+    organization = OrganizationSerializer()
 
     class Meta:
-        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
+        fields = FederatedObjectSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization'
+        )
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):

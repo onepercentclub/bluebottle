@@ -205,6 +205,7 @@ class Event(ActivityPubModel):
     name = models.CharField()
     summary = models.TextField()
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    organization = models.ForeignKey(Organization, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )

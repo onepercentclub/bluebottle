@@ -1,4 +1,3 @@
-
 from celery import shared_task
 import requests
 from io import BytesIO
@@ -64,7 +63,8 @@ class JSONLDAdapter():
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
-        from bluebottle.activity_pub.serializers.federated_activities import HostOrganizationSerializer
+        from bluebottle.activity_pub.serializers.federated_activities import \
+            OrganizationSerializer as HostOrganizationSerializer
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
         serializer = OrganizationSerializer(data=data)

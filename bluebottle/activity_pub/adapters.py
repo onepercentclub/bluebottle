@@ -12,14 +12,15 @@ from bluebottle.activity_pub.models import Follow, Activity
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
-import logging
-
-logger = logging.getLogger(__name__)
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class JSONLDAdapter():
@@ -80,10 +81,15 @@ class JSONLDAdapter():
     def publish_to_inbox(self, activity, inbox, tenant):
         from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
         with LocalTenant(tenant, clear_tenant=True):
-            data = ActivitySerializer().to_representation(activity)
-            auth = self.get_auth(activity.actor)
+            try:
+                data = ActivitySerializer().to_representation(activity)
+                auth = self.get_auth(activity.actor)
 
-            self.post(inbox.iri, data=data, auth=auth)
+                self.post(inbox.iri, data=data, auth=auth)
+            except Exception as e:
+                logger.error(e)
+                print(e)
+                raise
 
     def publish(self, activity):
         if not activity.is_local:

@@ -13,7 +13,6 @@ from polymorphic.admin import (
     PolymorphicParentModelAdmin,
 )
 
-from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
     Activity,
     ActivityPubModel,
@@ -290,6 +289,8 @@ class FollowingAdmin(FollowAdmin):
         if not change and isinstance(form, FollowingAddForm):
             # This is a new object using our custom add form
             platform_url = form.cleaned_data['platform_url']
+            from bluebottle.activity_pub.adapters import JSONLDAdapter
+            adapter = JSONLDAdapter()
             try:
                 # Use adapter.follow to create the Follow object
                 follow_obj = adapter.follow(platform_url)
@@ -410,6 +411,9 @@ class FollowerAdmin(FollowAdmin):
         return True
 
     def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
         return False
 
     def accept_follow_requests(self, request, queryset):

@@ -1,24 +1,20 @@
-from celery import shared_task
-import requests
+import logging
 from io import BytesIO
 
-from requests_http_signature import HTTPSignatureAuth, algorithms
+import requests
+from celery import shared_task
 from django.db import connection
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
+from bluebottle.activity_pub.authentication import key_resolver
+from bluebottle.activity_pub.models import Follow, Publish
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity, Publish
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
-from bluebottle.activity_pub.authentication import key_resolver
-
-import logging
 
 logger = logging.getLogger(__name__)
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
-
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
 
 class JSONLDAdapter():
@@ -63,16 +59,11 @@ class JSONLDAdapter():
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
-        from bluebottle.activity_pub.serializers.federated_activities import \
-            OrganizationSerializer as HostOrganizationSerializer
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        host_serializer = HostOrganizationSerializer(data=data)
-        host_serializer.is_valid(raise_exception=True)
-        host_organization = host_serializer.save()
-        actor = serializer.save(organization=host_organization)
+        actor = serializer.save()
         return Follow.objects.create(object=actor)
 
     @shared_task(
@@ -92,7 +83,8 @@ class JSONLDAdapter():
 
         for actor in activity.audience:
             if not actor.inbox.is_local:
-                self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+                self.publish_to_inbox(self, activity, actor.inbox, connection.tenant)
+                # self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -101,22 +93,6 @@ class JSONLDAdapter():
         data = EventSerializer(instance=event).data
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        organization = Publish.objects.filter(object=event).first().actor.organization
         activity = serializer.save()
-        activity.host_organization = organization
         activity.save()
         return activity
-
-
-adapter = JSONLDAdapter()
-
-
-@receiver([post_save])
-def publish_activity(sender, instance, **kwargs):
-    try:
-        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
-            adapter.publish(instance)
-    except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}")
-        raise
-        pass

@@ -102,7 +102,15 @@ class OrganizationManager(PolymorphicManager):
             outbox = Outbox.objects.create()
 
             public_key = PublicKey.objects.create()
-            logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
+            image = None
+            try:
+                if model.logo and model.logo.file:
+                    image = Image.objects.create(
+                        name=model.logo.file.name,
+                        url=connection.tenant.build_absolute_url(model.logo.url),
+                    )
+            except FileNotFoundError:
+                pass
 
             return Organization.objects.create(
                 inbox=inbox,
@@ -110,17 +118,23 @@ class OrganizationManager(PolymorphicManager):
                 outbox=outbox,
                 public_key=public_key,
                 name=model.name,
-                image=logo,
+                image=image,
                 summary=model.description,
                 preferred_username=model.slug
             )
+
+
+class Image(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    url = models.URLField(null=True)
 
 
 class Organization(Actor):
     name = models.CharField(max_length=300)
     summary = models.TextField(null=True, blank=True)
     content = models.TextField(null=True, blank=True)
-    image = models.URLField(null=True, blank=True)
+    image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    url = models.URLField(null=True, blank=True)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -194,11 +208,6 @@ class Place(ActivityPubModel):
     longitude = models.FloatField(null=True)
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
-
-
-class Image(ActivityPubModel):
-    name = models.CharField(max_length=1000, null=True)
-    url = models.URLField(null=True)
 
 
 class Event(ActivityPubModel):
@@ -328,3 +337,6 @@ class Announce(Activity):
         for publish in self.object.publish_set.all():
             for follow in publish.actor.follow_set.all():
                 yield follow.object.inbox
+
+
+from .tasks import *  # noqa

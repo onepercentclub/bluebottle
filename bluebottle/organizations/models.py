@@ -31,7 +31,7 @@ class Organization(ValidatedModelMixin, models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
 
-    website = models.URLField(_('website'), blank=True)
+    website = models.URLField(_('website'), blank=True, null=True)
     logo = ImageField(
         _('logo'),
         blank=True,

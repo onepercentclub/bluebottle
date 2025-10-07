@@ -131,10 +131,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
+    url = serializers.URLField(source='website', allow_null=True)
+    image = ImageSerializer()
+
+    def get_image(self, obj):
+        if obj.logo:
+            return obj.logo.url
 
     class Meta:
         model = Organization
-        fields = ('name', 'summary')
+        fields = ('name', 'summary', 'url', 'image')
 
 
 class LocationSerializer(FederatedObjectSerializer):

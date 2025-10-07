@@ -1,13 +1,14 @@
 from urllib.parse import urlparse
 
 from django.urls import resolve
-
 from rest_framework import serializers, exceptions
 
+from bluebottle.activity_pub.adapters import JSONLDAdapter
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context
 from bluebottle.activity_pub.utils import is_local
-from bluebottle.activity_pub.adapters import adapter
+
+adapter = JSONLDAdapter()
 
 
 class ActivityPubSerializer(serializers.ModelSerializer):
@@ -52,6 +53,11 @@ class ActivityPubSerializer(serializers.ModelSerializer):
                 raise
 
     def save(self, **kwargs):
+        # Ensure validated_data is available before accessing it
+        if not hasattr(self, '_validated_data') or self.validated_data is None:
+            if not self.is_valid():
+                raise serializers.ValidationError("Serializer data is not valid")
+        
         iri = self.validated_data.get('id', None)
 
         if iri:
@@ -88,7 +94,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         for name, field in self.fields.items():
             if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 field.initial_data = validated_data[name]
-                field.is_valid()
+                field.is_valid(raise_exception=True)
                 validated_data[name] = field.save()
 
         validated_data.pop('type', None)
@@ -186,15 +192,19 @@ class PolymorphicActivityPubSerializer(
         return result
 
     def save(self, *args, **kwargs):
-        self.instance = self.get_serializer_from_data(self.initial_data).save(*args, **kwargs)
+        serializer = self.get_serializer_from_data(self.initial_data)
+        serializer.initial_data = self.initial_data
+        if not serializer.is_valid():
+            raise serializers.ValidationError(serializer.errors)
+        self.instance = serializer.save(*args, **kwargs)
 
         return self.instance
 
     def create(self, validated_data):
-        return self.get_serialize_from_datar(self.initial_data).create(validated_data)
+        return self.get_serializer_from_data(self.initial_data).create(validated_data)
 
     def update(self, instance, validated_data):
-        return self.get_serialize_from_datar(instance).update(validated_data)
+        return self.get_serializer_from_data(self.initial_data).update(instance, validated_data)
 
     def is_valid(self, *args, **kwargs):
         model_classes = [serializer.Meta.model for serializer in self._serializers]

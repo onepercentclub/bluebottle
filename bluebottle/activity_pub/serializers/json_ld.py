@@ -63,6 +63,17 @@ class PersonSerializer(ActivityPubSerializer):
         model = Person
 
 
+class ImageSerializer(ActivityPubSerializer):
+    id = IdField(url_name='json-ld:image')
+    type = TypeField('Image')
+    url = serializers.URLField()
+    name = serializers.CharField()
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Image
+        fields = ActivityPubSerializer.Meta.fields + ('url', 'name', )
+
+
 class OrganizationSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:organization')
     type = TypeField('Organization')
@@ -72,11 +83,19 @@ class OrganizationSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
+    image = ImageSerializer(include=True, allow_null=True, required=False)
+    url = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image',
+            'inbox',
+            'outbox',
+            'public_key',
+            'name',
+            'summary',
+            'content',
+            'image',
+            'url'
         )
         model = Organization
 
@@ -88,17 +107,6 @@ class ActorSerializer(PolymorphicActivityPubSerializer):
 
     class Meta:
         model = Actor
-
-
-class ImageSerializer(ActivityPubSerializer):
-    id = IdField(url_name='json-ld:image')
-    type = TypeField('Image')
-    url = serializers.URLField()
-    name = serializers.CharField()
-
-    class Meta(ActivityPubSerializer.Meta):
-        model = Image
-        fields = ActivityPubSerializer.Meta.fields + ('url', 'name', )
 
 
 class AddressSerializer(ActivityPubSerializer):

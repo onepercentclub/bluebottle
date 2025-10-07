@@ -2,7 +2,6 @@ from builtins import object
 
 from django.db.models import Q
 from django.urls import reverse
-from django.utils.timezone import now
 from django_tools.middlewares.ThreadLocal import get_current_user
 from fluent_contents.models import ContentItem
 from fluent_contents.plugins.oembeditem.models import OEmbedItem

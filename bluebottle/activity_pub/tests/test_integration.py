@@ -21,6 +21,7 @@ from bluebottle.geo.models import Geolocation
 
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -99,8 +100,13 @@ class ActivityPubTestCase:
         SitePlatformSettings.objects.create(
             organization=OrganizationFactory.create()
         )
+        self.country = CountryFactory.create()
 
         with LocalTenant(self.other_tenant):
+            CountryFactory.create(
+                alpha2_code=self.country.alpha2_code
+            )
+            CountryFactory.create()
             SitePlatformSettings.objects.create(
                 organization=OrganizationFactory.create()
             )
@@ -238,7 +244,7 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
 
     def create(self):
         super().create(
-            impact_location=GeolocationFactory.create(),
+            impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
             bank_account=ExternalAccountFactory.create(
                 account_id="some-external-account-id",
@@ -249,10 +255,6 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
                 ),
             )
         )
-        with LocalTenant(self.other_tenant):
-            CountryFactory.create(
-                alpha2_code=self.model.impact_location.country.alpha2_code
-            )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
 
@@ -284,3 +286,45 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.adopted.impact_location.country.alpha2_code,
             self.model.impact_location.country.alpha2_code
         )
+
+
+class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DeadlineActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date()
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        self.assertEqual(self.event.start_time.date(), self.model.start)
+        self.assertEqual(self.event.end_time.date(), self.model.deadline)
+
+
+class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[])
+
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 3)

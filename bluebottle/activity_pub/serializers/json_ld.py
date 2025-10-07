@@ -200,12 +200,20 @@ class DoGoodEventSerializer(BaseEventSerializer):
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
 
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
+    event_attendance_mode = serializers.ChoiceField(
+        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
+        required=False,
+        allow_null=True
+    )
+    duration = serializers.DurationField(required=False, allow_null=True)
+
     sub_events = SubEventSerializer(many=True, allow_null=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'sub_events'
+            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode', 'sub_events'
         )
 
     def create(self, validated_data):

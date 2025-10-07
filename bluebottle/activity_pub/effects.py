@@ -16,7 +16,6 @@ class PublishEffect(Effect):
         federated_serializer = FederatedActivitySerializer(self.instance)
 
         serializer = EventSerializer(data=federated_serializer.data)
-
         serializer.is_valid(raise_exception=True)
         event = serializer.save(activity=self.instance)
 

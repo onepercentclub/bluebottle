@@ -4,9 +4,9 @@
 {% block submit_buttons_bottom %}
     
     {% if original %}
-        {% if original.activity %}
+        {% if original.adopted_activity %}
             <div class="submit-row">
-                <a href="{% url 'admin:activities_activity_change' original.activity.pk %}">
+                <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">
                     <input type="button" value="View adopted activity" class="default" name="_adopt">
                 </a>
             </div>

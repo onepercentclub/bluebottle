@@ -5,7 +5,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
-    PeriodicActivity, DateRegistration, DateParticipant, Registration
+    PeriodicActivity, DateRegistration, DateParticipant
 )
 
 
@@ -64,7 +64,9 @@ def run(*args):
                 contributor__activity__team_activity='teams'
             ).exclude(
                 Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled', 'unscheduled')) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
+                    'succeeded', 'scheduled', 'unscheduled'
+                )) &
                 Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )

@@ -96,10 +96,10 @@ class ActivityPubTestCase:
         super().setUp()
 
         self.other_tenant = Client.objects.get(schema_name='test2')
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = True
+        site_settings.save()
 
-        SitePlatformSettings.objects.create(
-            organization=OrganizationFactory.create()
-        )
         self.country = CountryFactory.create()
 
         with LocalTenant(self.other_tenant):
@@ -107,9 +107,9 @@ class ActivityPubTestCase:
                 alpha2_code=self.country.alpha2_code
             )
             CountryFactory.create()
-            SitePlatformSettings.objects.create(
-                organization=OrganizationFactory.create()
-            )
+            site_settings = SitePlatformSettings.load()
+            site_settings.share_activities = True
+            site_settings.save()
 
         self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
@@ -125,6 +125,12 @@ class ActivityPubTestCase:
 
     def build_absolute_url(self, path):
         return connection.tenant.build_absolute_url(path)
+
+    def test_platform_organization(self):
+        site_settings = SitePlatformSettings.load()
+        self.assertTrue(site_settings.share_activities)
+        self.assertTrue(bool(site_settings.organization))
+        self.assertTrue(bool(site_settings.organization.activity_pub_organization))
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')

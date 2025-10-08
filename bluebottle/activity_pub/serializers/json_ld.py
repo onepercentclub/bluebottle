@@ -61,7 +61,7 @@ class PersonSerializer(ActivityPubSerializer):
     public_key = PublicKeySerializer(include=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', )
+        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', 'name')
         model = Person
 
 

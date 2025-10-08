@@ -2,15 +2,11 @@ import datetime
 from io import BytesIO
 
 import pytz
-
 import requests
-
+from django.contrib.gis.geos import Point
 from django.core.files import File
 from django.db import connection, models
 from django.urls import reverse
-
-from django.contrib.gis.geos import Point
-
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
@@ -18,13 +14,13 @@ from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as 
 from bluebottle.activity_pub.serializers.base import (
     FederatedObjectSerializer
 )
-from bluebottle.geo.models import Country, Geolocation
-from bluebottle.files.serializers import ORIGINAL_SIZE
-from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
+from bluebottle.files.serializers import ORIGINAL_SIZE
 from bluebottle.funding.models import Funding
-
+from bluebottle.geo.models import Country, Geolocation
+from bluebottle.organizations.models import Organization
+from bluebottle.time_based.models import DateActivitySlot, DeadlineActivity, DateActivity
 from bluebottle.utils.fields import RichTextField
 from bluebottle.utils.serializers import Money
 
@@ -117,9 +113,22 @@ class AddressSerializer(FederatedObjectSerializer):
 
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
-
         del result['id']
         return result
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(allow_null=True)
+    summary = serializers.CharField(
+        source='description',
+        allow_blank=True,
+        allow_null=True,
+        required=False
+    )
+
+    class Meta:
+        model = Organization
+        fields = ('name', 'summary')
 
 
 class LocationSerializer(FederatedObjectSerializer):
@@ -132,7 +141,7 @@ class LocationSerializer(FederatedObjectSerializer):
 
     class Meta:
         model = Geolocation
-        fields = ('id', 'latitude', 'longitude', 'name', 'address', )
+        fields = ('id', 'latitude', 'longitude', 'name', 'address',)
 
     def create(self, validated_data):
         try:

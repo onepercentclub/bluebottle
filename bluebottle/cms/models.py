@@ -74,9 +74,11 @@ class HomePage(SingletonModel, TranslatableModel):
         'ActivitiesBlockPlugin',
         'ProjectMapBlockPlugin',
         'HomepageStatisticsBlockPlugin',
+        'NewsBlockPlugin',
         'QuotesBlockPlugin',
         'PeopleBlockPlugin',
         'DonateButtonBlockPlugin'
+
     ])
     translations = TranslatedFields()
 
@@ -283,6 +285,17 @@ class PeopleContent(TitledContent):
     @property
     def items(self):
         return self.persons
+
+
+class NewsContent(TitledContent):
+    type = 'news'
+    preview_template = 'admin/cms/preview/news.html'
+
+    class Meta:
+        verbose_name = _('News items')
+
+    def __str__(self):
+        return str(_("News items"))
 
 
 class StatsContent(TitledContent):

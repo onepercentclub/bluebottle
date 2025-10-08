@@ -1,9 +1,11 @@
 from builtins import object
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.functional import lazy
 from django.utils.safestring import mark_safe
+from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
@@ -59,6 +61,12 @@ class NewsItem(PublishableModel):
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
 
+    @property
+    def summary(self) -> str:
+        items = self.contents.get_content_items()
+        text = " ".join(str(item) for item in items)
+        return Truncator(text).chars(250)
+
     class Meta(object):
         verbose_name = _("news item")
         verbose_name_plural = _("news items")
@@ -69,3 +77,6 @@ class NewsItem(PublishableModel):
             ('api_change_newsitem', 'Can change news items through the API'),
             ('api_delete_newsitem', 'Can delete news items through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'news-item'

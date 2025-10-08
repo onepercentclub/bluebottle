@@ -117,7 +117,7 @@ class AddressSerializer(FederatedObjectSerializer):
         return result
 
 
-class HostOrganizationSerializer(serializers.ModelSerializer):
+class OrganizationSerializer(serializers.ModelSerializer):
     name = serializers.CharField(allow_null=True)
     summary = serializers.CharField(
         source='description',

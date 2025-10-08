@@ -3,6 +3,7 @@ from celery import shared_task
 import requests
 from io import BytesIO
 
+from django.forms import model_to_dict
 from requests_http_signature import HTTPSignatureAuth, algorithms
 from django.db import connection
 
@@ -19,6 +20,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 import logging
+
+from bluebottle.activity_pub.models import Organization
 
 logger = logging.getLogger(__name__)
 
@@ -65,15 +68,11 @@ class JSONLDAdapter():
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
-        from bluebottle.activity_pub.serializers.federated_activities import HostOrganizationSerializer
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
-        host_serializer = HostOrganizationSerializer(data=data)
-        host_serializer.is_valid(raise_exception=True)
-        host_organization = host_serializer.save()
-        actor = serializer.save(organization=host_organization)
+        actor = serializer.save()
         return Follow.objects.create(object=actor)
 
     @shared_task(
@@ -124,5 +123,22 @@ def publish_activity(sender, instance, **kwargs):
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")
+        raise
+        pass
+
+
+@receiver([post_save])
+def create_organization(sender, instance, **kwargs):
+    try:
+        if isinstance(instance, Organization) and kwargs['created'] and not instance.organization_id:
+            from bluebottle.activity_pub.serializers.federated_activities import OrganizationSerializer
+            serializer = OrganizationSerializer(data=model_to_dict(instance))
+            serializer.is_valid(raise_exception=True)
+            organization = serializer.save()
+            instance.organization = organization
+            instance.save(update_fields=['organization'])
+
+    except Exception as e:
+        logger.error(f"Failed to create related organization: {str(e)}")
         raise
         pass

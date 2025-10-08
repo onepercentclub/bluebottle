@@ -123,8 +123,6 @@ def publish_activity(sender, instance, **kwargs):
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")
-        raise
-        pass
 
 
 @receiver([post_save])
@@ -140,5 +138,3 @@ def create_organization(sender, instance, **kwargs):
 
     except Exception as e:
         logger.error(f"Failed to create related organization: {str(e)}")
-        raise
-        pass

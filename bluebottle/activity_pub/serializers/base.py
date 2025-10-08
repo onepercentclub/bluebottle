@@ -35,6 +35,9 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         try:
             return super().to_internal_value(data)
         except exceptions.ValidationError:
+            if isinstance(data, str):
+                data = {'id': data}
+
             if tuple(data.keys()) == ('id', ):
                 iri = data['id']
                 if not is_local(iri):
@@ -73,10 +76,13 @@ class ActivityPubSerializer(serializers.ModelSerializer):
             validated_data['iri'] = iri
 
         for name, field in self.fields.items():
-            if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
-                field.initial_data = validated_data[name]
-                field.is_valid(raise_exception=True)
-                if validated_data[name]:
+            if (
+                isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)) and
+                not getattr(field, 'many', False)
+            ):
+                if validated_data.get(name, None):
+                    field.initial_data = validated_data.get(name, None)
+                    field.is_valid(raise_exception=True)
                     validated_data[name] = field.save()
 
         validated_data.pop('type', None)
@@ -161,6 +167,9 @@ class PolymorphicActivityPubSerializer(
         try:
             return self.get_serializer_from_data(data).to_internal_value(data)
         except exceptions.ValidationError:
+            if isinstance(data, str):
+                data = {'id': data}
+
             if tuple(data.keys()) == ('id', ):
                 iri = data['id']
                 if not is_local(iri):
@@ -229,6 +238,12 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
             representation.pop('id')
 
         return representation
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = adapter.fetch(data)
+
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         iri = validated_data.pop('id')

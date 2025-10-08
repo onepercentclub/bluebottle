@@ -10,7 +10,7 @@ from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
 
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event
+from bluebottle.activity_pub.models import Follow, Accept, Event, Announce
 from bluebottle.activity_pub.adapters import adapter
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -21,12 +21,12 @@ from bluebottle.geo.models import Geolocation
 
 from bluebottle.funding.tests.factories import BudgetLineFactory, FundingFactory
 from bluebottle.funding_stripe.tests.factories import ExternalAccountFactory, StripePayoutAccountFactory
+from bluebottle.time_based.tests.factories import DateActivityFactory, DateActivitySlotFactory, DeadlineActivityFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase, get_tenant_model
+from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 
 
@@ -95,16 +95,20 @@ class ActivityPubTestCase:
         super().setUp()
 
         self.other_tenant = Client.objects.get(schema_name='test2')
-        self.third_tenant = Client.objects.get(schema_name='test3')
+        site_settings = SitePlatformSettings.load()
+        site_settings.share_activities = True
+        site_settings.save()
 
-        SitePlatformSettings.objects.create(
-            organization=OrganizationFactory.create()
-        )
+        self.country = CountryFactory.create()
 
         with LocalTenant(self.other_tenant):
-            SitePlatformSettings.objects.create(
-                organization=OrganizationFactory.create()
+            CountryFactory.create(
+                alpha2_code=self.country.alpha2_code
             )
+            CountryFactory.create()
+            site_settings = SitePlatformSettings.load()
+            site_settings.share_activities = True
+            site_settings.save()
 
         self.client = ActivityPubClient()
         self.json_api_client = JSONAPITestClient()
@@ -120,6 +124,12 @@ class ActivityPubTestCase:
 
     def build_absolute_url(self, path):
         return connection.tenant.build_absolute_url(path)
+
+    def test_platform_organization(self):
+        site_settings = SitePlatformSettings.load()
+        self.assertTrue(site_settings.share_activities)
+        self.assertTrue(bool(site_settings.organization))
+        self.assertTrue(bool(site_settings.organization.activity_pub_organization))
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
@@ -203,29 +213,15 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
     def test_backfill(self):
-        self.test_publish()
+        for _ in range(15):
+            self.create()
 
-        platform_url = self.build_absolute_url('/')
-        with LocalTenant(self.third_tenant):
-            SitePlatformSettings.objects.create(
-                organization=OrganizationFactory.create()
-            )
+        self.test_accept()
 
-            follow = adapter.follow(platform_url)
-            follow_iri = follow.pub_url
-
-        with LocalTenant(self.tenant):
-            Accept.objects.create(
-                object=Follow.objects.get(iri=follow_iri)
-            )
-
-        outbox_url = get_platform_actor().outbox.pub_url
-        with LocalTenant(self.third_tenant):
-            outbox_data = adapter.fetch(outbox_url)
-            page_data = adapter.fetch(outbox_data['first'])
-            import ipdb; ipdb.set_trace()
-            print(data)
-
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Follow.objects.count(), 1)
+            self.assertEqual(Accept.objects.count(), 1)
+            self.assertEqual(Event.objects.count(), 15)
 
     def test_adopt_default_owner(self):
         self.test_publish()
@@ -289,7 +285,7 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
 
     def create(self):
         super().create(
-            impact_location=GeolocationFactory.create(),
+            impact_location=GeolocationFactory.create(country=self.country),
             deadline=(datetime.now(get_current_timezone()) + timedelta(days=10)),
             bank_account=ExternalAccountFactory.create(
                 account_id="some-external-account-id",
@@ -300,10 +296,6 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
                 ),
             )
         )
-        with LocalTenant(self.other_tenant):
-            CountryFactory.create(
-                alpha2_code=self.model.impact_location.country.alpha2_code
-            )
 
         BudgetLineFactory.create_batch(2, activity=self.model)
 
@@ -335,3 +327,45 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
             self.adopted.impact_location.country.alpha2_code,
             self.model.impact_location.country.alpha2_code
         )
+
+
+class AdoptDeadlineActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DeadlineActivityFactory
+
+    def create(self):
+        super().create(
+            location=GeolocationFactory.create(country=self.country),
+            start=(datetime.now() + timedelta(days=10)).date(),
+            deadline=(datetime.now() + timedelta(days=20)).date()
+        )
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+        self.assertEqual(self.event.start_time.date(), self.model.start)
+        self.assertEqual(self.event.end_time.date(), self.model.deadline)
+
+
+class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[])
+
+        DateActivitySlotFactory.create_batch(
+            3,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 3)

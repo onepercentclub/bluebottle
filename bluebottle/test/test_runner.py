@@ -23,22 +23,6 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         try:
-            tenant3, _created = get_tenant_model().objects.get_or_create(
-                domain_url="test3.localhost",
-                name="Test Three",
-                schema_name="test3",
-                client_name="test3",
-            )
-        except IntegrityError:
-            # If tenant already exists, get it
-            tenant3 = get_tenant_model().objects.get(client_name="test3")
-
-        connection.set_tenant(tenant3)
-        self.init_projects()
-
-        connection.set_schema_to_public()
-
-        try:
             tenant2, _created = get_tenant_model().objects.get_or_create(
                 domain_url="test2.localhost",
                 name="Test Too",

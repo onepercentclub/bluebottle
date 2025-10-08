@@ -1,4 +1,5 @@
 from builtins import object
+
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
@@ -8,8 +9,6 @@ from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import gettext_lazy as _
 from djchoices import DjangoChoices, ChoiceItem
-
-
 from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
 from fluent_contents.models import PlaceholderField
 from fluent_contents.models.db import ContentItem

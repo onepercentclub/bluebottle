@@ -6,7 +6,7 @@ from rest_framework import generics, pagination, response
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image, CrowdFunding, Place, Address, Activity
+    GoodDeed, Image, CrowdFunding, Place, Address, Activity, DoGoodEvent, SubEvent,
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import (
@@ -17,8 +17,10 @@ from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
     AcceptSerializer, ActivitySerializer, PublishSerializer, AnnounceSerializer,
     OrganizationSerializer, GoodDeedSerializer, ImageSerializer,
-    CrowdFundingSerializer, PlaceSerializer, AddressSerializer
+    CrowdFundingSerializer, PlaceSerializer, AddressSerializer,
+    DoGoodEventSerializer, SubEventSerializer
 )
+
 
 class CollectionPagination(pagination.PageNumberPagination):
     page_size = 3
@@ -116,10 +118,7 @@ class OutboxPageView(ActivityPubMixin, generics.ListAPIView):
         outbox = Outbox.objects.get(pk=self.kwargs['pk'])
 
         to = [self.request.auth.iri, outbox.actor.followers.pub_url]
-
-        return super().get_queryset().filter(
-            to__overlap=to
-        )
+        return super().get_queryset().filter(to__overlap=to)
 
 
 class OutboxView(ActivityPubView):
@@ -154,6 +153,16 @@ class GoodDeedView(ActivityPubView):
 class CrowdFundingView(ActivityPubView):
     serializer_class = CrowdFundingSerializer
     queryset = CrowdFunding.objects.all()
+
+
+class SubEventView(ActivityPubView):
+    serializer_class = SubEventSerializer
+    queryset = SubEvent.objects.all()
+
+
+class DoGoodEventView(ActivityPubView):
+    serializer_class = DoGoodEventSerializer
+    queryset = DoGoodEvent.objects.all()
 
 
 class PublicKeyView(ActivityPubView):

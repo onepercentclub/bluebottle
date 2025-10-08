@@ -5,11 +5,10 @@ from fluent_contents.models import ContentItem
 from bluebottle.clients import properties
 from bluebottle.cms.models import HomePage
 from bluebottle.cms.serializers import (
-    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer,
-    NewsItemPreviewSerializer
+    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer
 )
-from bluebottle.pages.models import Page
 from bluebottle.news.models import NewsItem
+from bluebottle.pages.models import Page
 from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermission
 from bluebottle.utils.utils import get_language_from_request
 from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
@@ -66,6 +65,9 @@ class NewsItemDetail(CMSDetailView):
 
 class NewsItemList(JsonApiViewMixin, ListAPIView):
     def get_queryset(self, *args, **kwargs):
-        return NewsItem.objects.published().order_by('-publication_date')
+        language = get_language_from_request(self.request)
+        return NewsItem.objects.filter(
+            language=language
+        ).published().order_by('-publication_date', '-id')
 
-    serializer_class = NewsItemPreviewSerializer
+    serializer_class = NewsItemSerializer

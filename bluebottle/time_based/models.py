@@ -317,6 +317,23 @@ class ActivitySlot(TriggerMixin, ValidatedModelMixin, models.Model):
 
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
 
+    origin = models.ForeignKey(
+        'activity_pub.SubEvent', null=True, related_name="adopted_slots", on_delete=models.SET_NULL
+    )
+
+    @property
+    def event(self):
+        from bluebottle.activity_pub.models import SubEvent
+        try:
+            return SubEvent.objects.get(slot=self)
+        except SubEvent.DoesNotExist:
+            pass
+
+    @property
+    def activity_pub_url(self):
+        if self.event:
+            return self.event.iri
+
     @property
     def uid(self):
         return '{}-{}-{}'.format(connection.tenant.client_name, 'dateactivityslot', self.pk)

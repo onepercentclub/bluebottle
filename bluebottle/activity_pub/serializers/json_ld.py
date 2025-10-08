@@ -1,5 +1,3 @@
-from django.db import connection
-from django.urls import reverse
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
@@ -23,7 +21,9 @@ from bluebottle.activity_pub.models import (
     Activity,
     GoodDeed,
     Image,
-    Event
+    Event,
+    DoGoodEvent,
+    SubEvent,
 )
 
 
@@ -52,8 +52,8 @@ class OutboxSerializer(ActivityPubSerializer):
 
             pagination = view.pagination_class()
             pagination.paginate_queryset(
-                view.page_view(request=request, kwargs=view.kwargs).get_queryset(), 
-                self.context['request'], 
+                view.page_view(request=request, kwargs=view.kwargs).get_queryset(),
+                self.context['request'],
                 view
             )
 
@@ -89,7 +89,7 @@ class BaseActorSerializer(ActivityPubSerializer):
     followers = PublicKeySerializer(include=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', )
+        fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', 'name')
         model = Person
 
 
@@ -195,21 +195,77 @@ class CrowdFundingSerializer(BaseEventSerializer):
     id = IdField(url_name='json-ld:crowd-funding')
     type = TypeField('CrowdFunding')
 
-    end_time = serializers.DateTimeField(required=False)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
 
     target = serializers.DecimalField(decimal_places=2, max_digits=10)
     target_currency = serializers.CharField()
 
-    location = PlaceSerializer(allow_null=True, include=True)
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = CrowdFunding
         fields = BaseEventSerializer.Meta.fields + ('end_time', 'target', 'target_currency', 'location')
 
 
+class SubEventSerializer(ActivityPubSerializer):
+    id = IdField(url_name='json-ld:sub-event')
+    type = TypeField('Event')
+
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
+
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
+    event_attendance_mode = serializers.ChoiceField(
+        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode']
+    )
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+    class Meta(BaseEventSerializer.Meta):
+        model = SubEvent
+        fields = ActivityPubSerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode',
+        )
+
+
+class DoGoodEventSerializer(BaseEventSerializer):
+    id = IdField(url_name='json-ld:do-good-event')
+    type = TypeField('DoGoodEvent')
+
+    start_time = serializers.DateTimeField(required=False, allow_null=True)
+    end_time = serializers.DateTimeField(required=False, allow_null=True)
+
+    location = PlaceSerializer(allow_null=True, include=True, required=False)
+    event_attendance_mode = serializers.ChoiceField(
+        choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
+        required=False,
+        allow_null=True
+    )
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+    sub_events = SubEventSerializer(many=True, allow_null=True, required=False)
+
+    class Meta(BaseEventSerializer.Meta):
+        model = DoGoodEvent
+        fields = BaseEventSerializer.Meta.fields + (
+            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode', 'sub_events'
+        )
+
+    def create(self, validated_data):
+        sub_events = validated_data.pop('sub_events', [])
+        result = super().create(validated_data)
+
+        field = self.fields['sub_events']
+        field.initial_data = sub_events
+
+        field.is_valid(raise_exception=True)
+        field.save(parent=result)
+
+        return result
+
+
 class EventSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        GoodDeedSerializer, CrowdFundingSerializer
+        GoodDeedSerializer, CrowdFundingSerializer, DoGoodEventSerializer
     ]
 
     class Meta(PolymorphicActivityPubSerializer.Meta):
@@ -232,7 +288,7 @@ class FollowSerializer(BaseActivitySerializer):
     class Meta(BaseActivitySerializer.Meta):
         model = Follow
 
-    
+
 class AcceptSerializer(BaseActivitySerializer):
     id = IdField(url_name='json-ld:accept')
     type = TypeField('Accept')
@@ -257,7 +313,7 @@ class AnnounceSerializer(BaseActivitySerializer):
     type = TypeField('Announce')
     object = EventSerializer()
 
-    class Meta(ActivityPubSerializer.Meta):
+    class Meta(BaseActivitySerializer.Meta):
         model = Announce
 
 

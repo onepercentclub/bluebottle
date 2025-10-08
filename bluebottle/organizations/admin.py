@@ -42,6 +42,7 @@ class OrganizationActivityInline(admin.TabularInline):
     readonly_fields = ('activity_url', 'owner', 'status')
     fields = ('activity_url', 'owner', 'status')
     extra = 0
+    fk_name = 'organization'
 
     def activity_url(self, obj):
         url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,

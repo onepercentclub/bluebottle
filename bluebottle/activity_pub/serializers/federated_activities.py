@@ -266,17 +266,17 @@ class SlotsSerializer(FederatedObjectSerializer):
 class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:do-good-event')
 
-    sub_events = SlotsSerializer(many=True, source='slots')
+    sub_event = SlotsSerializer(many=True, source='slots')
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
-        fields = BaseFederatedActivitySerializer.Meta.fields + ('sub_events', )
+        fields = BaseFederatedActivitySerializer.Meta.fields + ('sub_event', )
 
     def create(self, validated_data):
         slots = validated_data.pop('slots', [])
         result = super().create(validated_data)
 
-        field = self.fields['sub_events']
+        field = self.fields['sub_event']
         for slot in slots:
             slot['activity'] = result
 
@@ -325,7 +325,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
 
     def _get_resource_type_from_mapping(self, data):
         if data.get('type') == 'DoGoodEvent':
-            if len(data.get('sub_events', [])) > 0:
+            if len(data.get('sub_event', [])) > 0:
                 return 'DateActivity'
             else:
                 return 'DeadlineActivity'

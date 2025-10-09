@@ -208,19 +208,19 @@ class DoGoodEventSerializer(BaseEventSerializer):
     )
     duration = serializers.DurationField(required=False, allow_null=True)
 
-    sub_events = SubEventSerializer(many=True, allow_null=True, required=False)
+    sub_event = SubEventSerializer(many=True, allow_null=True, required=False)
 
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode', 'sub_events'
+            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode', 'sub_event'
         )
 
     def create(self, validated_data):
-        sub_events = validated_data.pop('sub_events', [])
+        sub_events = validated_data.pop('sub_event', [])
         result = super().create(validated_data)
 
-        field = self.fields['sub_events']
+        field = self.fields['sub_event']
         field.initial_data = sub_events
 
         field.is_valid(raise_exception=True)

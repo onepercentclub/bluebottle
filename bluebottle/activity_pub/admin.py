@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding,
+    Follower, GoodDeed, CrowdFunding, DoGoodEvent,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -53,6 +53,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Organization,
         GoodDeed,
         CrowdFunding,
+        DoGoodEvent,
         Place,
     )
 
@@ -193,7 +194,6 @@ class AnnouncementInline(admin.StackedInline):
 
 class AdoptedFilter(admin.SimpleListFilter):
     title = _('Adoption Status')
-    parameter_name = 'adopted'
     parameter_name = 'adopted'
 
     def lookups(self, request, model_admin):
@@ -499,6 +499,7 @@ class EventAdminMixin:
         "source",
         "activity",
         "iri",
+        "pub_url"
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
@@ -579,6 +580,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     child_models = (
         GoodDeed,
         CrowdFunding,
+        DoGoodEvent
     )
     list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
@@ -606,5 +608,14 @@ class CrowdFundingAdmin(EventChildAdmin):
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target'
+    )
+    fields = readonly_fields
+
+
+@admin.register(DoGoodEvent)
+class DoGoodEventAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'start_time',
+        'end_time',
     )
     fields = readonly_fields

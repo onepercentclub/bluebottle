@@ -107,12 +107,12 @@ class AddressSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:address')
     type = TypeField('Address')
 
-    street_address = serializers.CharField(required=False, allow_null=True)
-    postal_code = serializers.CharField(required=False, allow_null=True)
+    street_address = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    postal_code = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
-    address_locality = serializers.CharField(required=False, allow_null=True)
-    address_region = serializers.CharField(required=False, allow_null=True)
-    address_country = serializers.CharField(required=False, allow_null=True)
+    address_locality = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    address_region = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    address_country = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
         model = Address
@@ -139,7 +139,7 @@ class PlaceSerializer(ActivityPubSerializer):
 class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField()
-    image = ImageSerializer(include=True, allow_null=True)
+    image = ImageSerializer(include=True, allow_null=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', )

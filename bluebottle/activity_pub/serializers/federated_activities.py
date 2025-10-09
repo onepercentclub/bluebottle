@@ -45,10 +45,11 @@ class ImageSerializer(FederatedObjectSerializer):
     def get_url(self, instance):
         return connection.tenant.build_absolute_url(
             reverse('activity-image', args=(instance.activity_set.first().pk, ORIGINAL_SIZE))
-
         )
 
     def create(self, validated_data):
+        if not validated_data:
+            return None
         validated_data['owner'] = self.context['request'].user
         image = ActivityPubImage.objects.get(iri=validated_data['id'])
         response = requests.get(image.url, timeout=30)
@@ -144,6 +145,8 @@ class LocationSerializer(FederatedObjectSerializer):
         fields = ('id', 'latitude', 'longitude', 'name', 'address',)
 
     def create(self, validated_data):
+        if not validated_data:
+            return None
         try:
             validated_data['country'] = validated_data['country']['code']
         except KeyError:
@@ -163,7 +166,7 @@ class LocationSerializer(FederatedObjectSerializer):
 class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
-    image = ImageSerializer()
+    image = ImageSerializer(required=False, allow_null=True)
 
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
@@ -184,7 +187,7 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:crowd-funding')
 
-    location = LocationSerializer(source='impact_location')
+    location = LocationSerializer(source='impact_location', allow_null=True)
 
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
@@ -223,7 +226,7 @@ class EventAttendanceModeField(serializers.Field):
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:crowd-funding')
 
-    location = LocationSerializer()
+    location = LocationSerializer(allow_null=True)
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
@@ -275,7 +278,6 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     def create(self, validated_data):
         slots = validated_data.pop('slots', [])
         result = super().create(validated_data)
-
         field = self.fields['sub_events']
         for slot in slots:
             slot['activity'] = result

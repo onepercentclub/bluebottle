@@ -106,9 +106,11 @@ class JSONLDAdapter():
         data = EventSerializer(instance=event).data
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
+
+        follow = Follow.objects.get(object=event.source)
         organization = Publish.objects.filter(object=event).first().actor.organization
-        activity = serializer.save(host_organization=organization)
-        return activity
+
+        return serializer.save(owner=follow.default_owner, host_organization=organization)
 
 
 adapter = JSONLDAdapter()

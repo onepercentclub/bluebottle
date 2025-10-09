@@ -319,6 +319,13 @@ class Follow(Activity):
         on_delete=models.CASCADE
     )
 
+    default_owner = models.ForeignKey(
+        "members.Member",
+        null=True,
+        verbose_name=_("Default activity owner"),
+        on_delete=models.SET_NULL,
+    )
+
     @property
     def audience(self):
         return [self.object]

@@ -231,7 +231,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = []  # exclude all model fields
+        fields = []
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding
@@ -242,15 +242,11 @@ class FollowingAddForm(forms.ModelForm):
 
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
-
-    def get_fields(self, request, obj=None, **kwargs):
-        if obj is None:
-            return ["platform_url"]
-        return super().get_fields(request, obj, **kwargs)
-
     list_display = ("object", "accepted")
 
     readonly_fields = ('object', 'accepted')
+    fields = readonly_fields + ('default_owner', )
+    raw_id_fields = ('default_owner',)
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -267,9 +263,7 @@ class FollowingAdmin(FollowAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
-
-    fields = readonly_fields
+        return True
 
     def get_queryset(self, request):
         qs = Follow.objects.all()

@@ -88,9 +88,6 @@ from bluebottle.updates.models import Update
 from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
-from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
-from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-
 
 @admin.register(Contributor)
 class ContributorAdmin(

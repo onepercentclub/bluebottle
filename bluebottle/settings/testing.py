@@ -152,7 +152,7 @@ PAYOUT_SERVICE = {
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
 NUM_SLOW_TESTS = 50
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = False
 logging.disable(logging.CRITICAL)
 
@@ -415,3 +415,4 @@ MAP_WIDGETS = {
 
 
 DISABLE_TWO_FACTOR = True
+TESTING = True

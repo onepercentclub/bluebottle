@@ -230,6 +230,9 @@ class BaseActivitySerializer(ModelSerializer):
         required=False,
         allow_null=True,
     )
+    host_organization = ResourceRelatedField(
+        read_only=True
+    )
 
     updates = HyperlinkedRelatedField(
         many=True,
@@ -301,6 +304,7 @@ class BaseActivitySerializer(ModelSerializer):
         'office_location.subregion': 'bluebottle.offices.serializers.SubregionSerializer',
         'office_location.subregion.region': 'bluebottle.offices.serializers.RegionSerializer',
         'partner_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'host_organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
         'answers': 'bluebottle.activities.serializers.ActivityAnswerSerializer',
         'answers.segment': 'bluebottle.segments.serializers.SegmentListSerializer',
         'answers.file': 'bluebottle.files.serializers.DocumentSerializer',
@@ -350,6 +354,7 @@ class BaseActivitySerializer(ModelSerializer):
             'next_step_button_label',
             'admin_url',
             'partner_organization',
+            'host_organization',
             'theme',
             'answers',
             'tos_accepted'
@@ -393,6 +398,7 @@ class BaseActivitySerializer(ModelSerializer):
             'office_location.subregion',
             'office_location.subregion.region',
             'partner_organization',
+            'host_organization',
             'answers',
             'answers.segment',
             'answers.file',

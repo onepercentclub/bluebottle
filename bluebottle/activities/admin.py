@@ -1,9 +1,12 @@
 import re
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
+from urllib.parse import unquote
+
 from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
@@ -45,6 +48,10 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
+from bluebottle.activity_pub.models import Publish
+from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
+from bluebottle.activity_pub.serializers.json_ld import EventSerializer
+from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -60,6 +67,7 @@ from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.notifications.models import Message
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from bluebottle.segments.models import SegmentType
 from bluebottle.time_based.models import (
     DateActivity,
@@ -77,6 +85,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.updates.admin import UpdateInline
 from bluebottle.updates.models import Update
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import get_human_readable_duration
 
 
@@ -443,7 +452,6 @@ class ActivityBulkAddForm(forms.Form):
 
 
 class BulkAddMixin(object):
-
     bulk_add_form = ActivityBulkAddForm
     bulk_add_template = 'admin/activities/bulk_add.html'
 
@@ -628,6 +636,10 @@ class ActivityChildAdmin(
         'stats_data',
         'review_status',
         'send_impact_reminder_message_link',
+        'origin',
+        'share_activity_link',
+        'event',
+        'host_organization'
     ]
 
     office_fields = (
@@ -656,6 +668,13 @@ class ActivityChildAdmin(
         'states',
     )
 
+    activity_pub_fields = (
+        'share_activity_link',
+        'origin',
+        'event',
+        'host_organization',
+    )
+
     registration_fields = None
 
     def get_registration_fields(self, request, obj):
@@ -668,8 +687,8 @@ class ActivityChildAdmin(
             inlines.append(impact_goal_inline)
 
         if not obj or (
-            obj.team_activity != Activity.TeamActivityChoices.teams or
-            obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
+                obj.team_activity != Activity.TeamActivityChoices.teams or
+                obj._initial_values['team_activity'] != Activity.TeamActivityChoices.teams
         ):
             inlines = [
                 inline for inline in inlines if not isinstance(inline, TeamInline)
@@ -730,14 +749,68 @@ class ActivityChildAdmin(
                 reverse('admin:initiatives_initiative_change', args=(obj.initiative.id,)),
                 obj.initiative
             )
+
     initiative_link.short_description = _('Initiative')
+
+    def event(self, obj):
+        if obj.event:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse('admin:activity_pub_event_change', args=(obj.event.id,)),
+                obj.event
+            )
+
+    def event_url(self, obj):
+        if obj.event:
+            return get_current_host() + reverse("json-ld:event", args=(obj.event.id,))
+
+    def share_activity_link(self, obj):
+        if obj and obj.id:
+            url = reverse('admin:{}_{}_share_activity'.format(
+                obj._meta.app_label,
+                obj._meta.model_name
+            ), args=(obj.id,))
+            return format_html(
+                '<a href="{}">{}</a>',
+                url,
+                _('Share activity')
+            )
+
+    share_activity_link.short_description = _('Share activity')
+
+    def share_activity(self, request, pk):
+        if not request.user.has_perm("activity.add_activity"):
+            raise PermissionDenied
+
+        activity = get_object_or_404(Activity, pk=unquote(pk))
+        federated_serializer = FederatedActivitySerializer(activity)
+
+        serializer = EventSerializer(data=federated_serializer.data)
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save(activity=activity)
+
+        Publish.objects.create(actor=get_platform_actor(), object=event)
+
+        self.message_user(
+            request,
+            f'Successfully shared activity "{activity.title}".',
+            level="success",
+        )
+        return HttpResponseRedirect(
+            reverse("admin:activities_activity_change", args=[activity.pk])
+        )
+
+    def get_activity_pub_fields(self, request, obj=None):
+        return self.activity_pub_fields
 
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
+
         if self.get_registration_fields(request, obj):
             fieldsets.append(
                 (
@@ -817,13 +890,21 @@ class ActivityChildAdmin(
 
         extra_urls = [
             re_path(
-                r'^send-impact-reminder-message/(?P<pk>\d+)/$',
+                r'^(?P<pk>\d+)/send-impact-reminder-message$',
                 self.admin_site.admin_view(self.send_impact_reminder_message),
                 name='{}_{}_send_impact_reminder_message'.format(
                     self.model._meta.app_label,
                     self.model._meta.model_name
                 ),
-            )
+            ),
+            re_path(
+                r'^(?P<pk>\d+)/share_activity$',
+                self.admin_site.admin_view(self.share_activity),
+                name='{}_{}_share_activity'.format(
+                    self.model._meta.app_label,
+                    self.model._meta.model_name
+                ),
+            ),
         ]
         return extra_urls + urls
 
@@ -894,7 +975,7 @@ class ActivityAdmin(
         ScheduleActivity,
         RegisteredDateActivity
     )
-    readonly_fields = ['link', 'review_status']
+    readonly_fields = ['link', 'review_status', 'activity_pub_url']
     list_filter = [PolymorphicChildModelFilter, StateMachineFilter, 'highlight', ]
 
     def lookup_allowed(self, key, value):

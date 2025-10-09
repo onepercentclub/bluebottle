@@ -40,6 +40,8 @@ from bluebottle.funding.states import (
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 
+from bluebottle.activity_pub.effects import PublishEffect
+
 
 def should_finish(effect):
     """the deadline has passed"""
@@ -122,7 +124,8 @@ class FundingTriggers(ActivityTriggers):
                     FundingStateMachine.expire,
                     conditions=[should_finish]
                 ),
-                NotificationEffect(FundingApprovedMessage)
+                NotificationEffect(FundingApprovedMessage),
+                PublishEffect
             ]
         ),
 

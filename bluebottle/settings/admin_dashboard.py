@@ -53,29 +53,35 @@ JET_SIDE_MENU_ITEMS = [
     {
         "label": _("Activity Pub"),
         "app_label": "activity_pub",
-        "permissions": ["activities.change_activities"],
+        "permissions": ["activity_pub.change_event"],
         "items": [
             {
                 "name": "activity_pub.event",
-                "permissions": ["initiatives.change_activities"],
-                "url": "/en/admin/activity_pub/event/",
-                "label": _("Shared activities"),
+                "permissions": ["activity_pub.change_event"],
+                "url": "/en/admin/activity_pub/publishedactivity/",
+                "label": _("Published activities"),
+            },
+            {
+                "name": "activity_pub.event",
+                "permissions": ["activity_pub.change_event"],
+                "url": "/en/admin/activity_pub/receivedactivity/",
+                "label": _("Received activities"),
             },
             {
                 "name": "activity_pub.following",
-                "permissions": ["initiatives.change_activities"],
+                "permissions": ["activity_pub.change_event"],
                 "url": "/en/admin/activity_pub/following/",
                 "label": _("Followed platforms"),
             },
             {
                 "name": "activity_pub.follower",
-                "permissions": ["initiatives.change_activities"],
+                "permissions": ["activity_pub.change_event"],
                 "url": "/en/admin/activity_pub/follower/",
                 "label": _("Followers"),
             },
             {
                 "name": "activity_pub.activitypubmodel",
-                "permissions": ["initiatives.change_activities"],
+                "permissions": ["cms.change_site_platform_settings"],
             },
         ],
     },

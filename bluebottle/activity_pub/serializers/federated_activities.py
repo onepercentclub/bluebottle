@@ -245,7 +245,7 @@ class SlotsSerializer(FederatedObjectSerializer):
     id = IdField('json-ld:sub-event')
 
     name = serializers.CharField(source='title', required=False, allow_null=True)
-    start_time = serializers.DateTimeField(source='start')
+    start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
     end_time = serializers.DateTimeField(source='end', read_only=True)
     location = LocationSerializer()
 

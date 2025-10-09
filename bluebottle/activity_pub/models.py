@@ -303,7 +303,7 @@ class SubEvent(ActivityPubModel):
         'activity_pub.DoGoodEvent',
         null=True,
         on_delete=models.CASCADE,
-        related_name='sub_events'
+        related_name='sub_event'
     )
     slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.CASCADE)
 
@@ -345,6 +345,13 @@ class Follow(Activity):
         'activity_pub.Actor',
         verbose_name=_("Platform"),
         on_delete=models.CASCADE
+    )
+
+    default_owner = models.ForeignKey(
+        "members.Member",
+        null=True,
+        verbose_name=_("Default activity owner"),
+        on_delete=models.SET_NULL,
     )
 
     @property

@@ -27,7 +27,6 @@ from bluebottle.test.factory_models.projects import ThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import JSONAPITestClient, BluebottleTestCase
 from bluebottle.files.tests.factories import ImageFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, GeolocationFactory
 
 
@@ -213,6 +212,31 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
 
+    def test_adopt_default_owner(self):
+        self.test_publish()
+
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            follow.default_owner = BlueBottleUserFactory()
+            follow.save()
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
+            mock_response = Response()
+            mock_response.raw = BytesIO(image_file.read())
+            mock_response.status_code = 200
+
+        with LocalTenant(self.other_tenant):
+            follow = Follow.objects.get()
+            self.event = Event.objects.get()
+
+            request = RequestFactory().get('/')
+            request.user = BlueBottleUserFactory.create()
+
+            with mock.patch('requests.get', return_value=mock_response):
+                with mock.patch.object(Geolocation, 'update_location'):
+                    self.adopted = adapter.adopt(self.event, request)
+                    self.assertEqual(self.adopted.owner, follow.default_owner)
+
 
 class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DeedFactory
@@ -328,9 +352,37 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
     def test_publish(self):
         super().test_publish()
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.sub_event.count(), 3)
 
     def test_adopt(self):
         super().test_adopt()
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 3)
+
+
+class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[])
+
+        DateActivitySlotFactory.create_batch(
+            1,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.sub_event.count(), 1)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 1)

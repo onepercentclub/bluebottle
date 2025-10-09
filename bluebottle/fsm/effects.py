@@ -37,7 +37,7 @@ class Effect(object):
         return (partial(Effect, self.instance, **self.options), ())
 
     def __eq__(self, other):
-        return self.instance is other.instance and type(self) is type(other)
+        return self.instance == other.instance and type(self) is type(other)
 
     def pre_save(self, **kwargs):
         pass

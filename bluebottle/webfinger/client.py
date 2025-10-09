@@ -9,8 +9,9 @@ class WebFingerClient:
         response.raise_for_status()
         return response.json()
 
-    def get(self, uri, type='application/activity+josn'):
+    def get(self, uri, type='application/activity+json'):
         parsed = urlparse(uri)
+        print(parsed)
 
         params = urlencode({'resource': uri})
         response = self._do_request(

@@ -31,7 +31,7 @@ class SignedRequestFactory(RequestFactory):
 
         request = Request(
             result.method,
-            f'http://test.localhost{path}',
+            f'https://testserver{path}',
             data=data,
             headers=result.headers
         ).prepare()

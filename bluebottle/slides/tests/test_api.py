@@ -74,5 +74,5 @@ class SlideTestCase(BluebottleTestCase):
 
         slide = slides[0]
         self.assertEqual(slide['attributes']['title'], self.slide2.title)
-        self.assertTrue(slide['attributes']['video'].startswith('http://test.localhost/media/banner_slides/sparks'))
+        self.assertTrue(slide['attributes']['video'].startswith('http://testserver/media/banner_slides/sparks'))
         self.assertEqual(slide['attributes']['body'], self.slide2.body)

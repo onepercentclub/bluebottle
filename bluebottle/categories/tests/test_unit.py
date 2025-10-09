@@ -17,5 +17,5 @@ class TestCategoryModel(BluebottleTestCase):
 
         self.assertEqual(
             category.get_absolute_url(),
-            f'http://test.localhost/en/categories/{category.id}/{category.slug}/activities/list'
+            f'http://testserver/en/categories/{category.id}/{category.slug}/activities/list'
         )

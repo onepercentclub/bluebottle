@@ -27,10 +27,10 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
         self.assertEqual(
             data,
             {
-                'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
+                'id': f'https://testserver{reverse("json-ld:follow", args=(self.follow.pk, ))}',
                 'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
+                'actor': f'https://testserver{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
+                'object': f'https://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
             }
         )
 
@@ -42,10 +42,10 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
     def test_to_internal_value(self):
         data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
+            'id': f'https://testserver{reverse("json-ld:follow", args=(self.follow.pk, ))}',
             'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
+            'actor': f'https://testserver{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
+            'object': f'https://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
         }
         internal_value = self.serializer_class().to_internal_value(data)
 
@@ -55,10 +55,10 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
     def test_to_internal_value_no_matching_serializer(self):
         data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
+            'id': f'http://testserver{reverse("json-ld:follow", args=(self.follow.pk, ))}',
             'type': 'Organization',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
+            'actor': f'http://testserver{reverse("json-ld:organization", args=(self.follow.actor.pk, ))}',
+            'object': f'http://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
         }
 
         with self.assertRaises(exceptions.ValidationError):
@@ -66,9 +66,9 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
     def test_to_internal_value_invalid(self):
         data = {
-            'id': f'http://test.localhost{reverse("json-ld:follow", args=(self.follow.pk, ))}',
+            'id': f'http://testserver{reverse("json-ld:follow", args=(self.follow.pk, ))}',
             'type': 'Follow',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
+            'object': f'http://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}'
         }
         with self.assertRaises(exceptions.ValidationError):
             self.serializer_class().to_internal_value(data)
@@ -79,8 +79,8 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
         serializer = self.serializer_class(data={
             'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(object.pk, ))}'
+            'actor': f'http://testserver{reverse("json-ld:organization", args=(actor.pk, ))}',
+            'object': f'http://testserver{reverse("json-ld:organization", args=(object.pk, ))}'
         })
         self.assertTrue(serializer.is_valid())
 
@@ -97,8 +97,8 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
         serializer = self.serializer_class(data={
             'type': 'Organization',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-            'object': f'http://test.localhost{reverse("json-ld:organization", args=(object.pk, ))}'
+            'actor': f'http://testserver{reverse("json-ld:organization", args=(actor.pk, ))}',
+            'object': f'http://testserver{reverse("json-ld:organization", args=(object.pk, ))}'
         })
 
         with self.assertRaises(exceptions.ValidationError):
@@ -109,7 +109,7 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
 
         serializer = self.serializer_class(data={
             'type': 'Follow',
-            'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
+            'actor': f'http://testserver{reverse("json-ld:organization", args=(actor.pk, ))}',
         })
 
         self.assertFalse(serializer.is_valid())
@@ -121,8 +121,8 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
             instance=self.follow,
             data={
                 'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
+                'actor': f'http://testserver{reverse("json-ld:organization", args=(actor.pk, ))}',
+                'object': f'http://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
             }
         )
         self.assertTrue(serializer.is_valid())
@@ -139,8 +139,8 @@ class PolymorphicSerializerTestCase(BluebottleTestCase):
             instance=self.follow.actor,
             data={
                 'type': 'Follow',
-                'actor': f'http://test.localhost{reverse("json-ld:organization", args=(actor.pk, ))}',
-                'object': f'http://test.localhost{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
+                'actor': f'http://testserver{reverse("json-ld:organization", args=(actor.pk, ))}',
+                'object': f'http://testserver{reverse("json-ld:organization", args=(self.follow.object.pk, ))}',
             }
         )
         with self.assertRaises(TypeError):

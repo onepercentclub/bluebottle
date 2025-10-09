@@ -24,7 +24,7 @@ from bluebottle.redirects.models import Redirect
 class RedirectTests(BluebottleTestCase):
     def setUp(self):
         super(RedirectTests, self).setUp()
-        self.test_url = 'http://test.localhost'
+        self.test_url = 'https://testserver'
 
     def test_model(self):
         r1 = Redirect.objects.create(

@@ -22,7 +22,7 @@ class FundingTestCase(BluebottleTestCase):
 
     def test_absolute_url(self):
         funding = FundingFactory()
-        expected = 'http://test.localhost/en/activities/details' \
+        expected = 'http://testserver/en/activities/details' \
                    '/funding/{}/{}'.format(funding.id, funding.slug)
         self.assertEqual(funding.get_absolute_url(), expected)
 

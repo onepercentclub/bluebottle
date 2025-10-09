@@ -352,9 +352,37 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
 
     def test_publish(self):
         super().test_publish()
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.sub_event.count(), 3)
 
     def test_adopt(self):
         super().test_adopt()
 
         with LocalTenant(self.other_tenant):
             self.assertEqual(self.adopted.slots.count(), 3)
+
+
+class AdoptSingleSlotDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
+    factory = DateActivityFactory
+
+    def create(self):
+        super().create(slots=[])
+
+        DateActivitySlotFactory.create_batch(
+            1,
+            activity=self.model,
+            location=GeolocationFactory.create(country=self.country),
+        )
+
+        self.submit()
+
+    def test_publish(self):
+        super().test_publish()
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.event.sub_event.count(), 1)
+
+    def test_adopt(self):
+        super().test_adopt()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(self.adopted.slots.count(), 1)

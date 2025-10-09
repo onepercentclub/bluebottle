@@ -10,6 +10,17 @@ from bluebottle.activity_pub.utils import is_local
 from bluebottle.activity_pub.adapters import adapter
 
 
+class ActivityPubListSerializer(serializers.ListSerializer):
+    def get_value(self, data):
+        result = super().get_value(data)
+
+        if not isinstance(result, (tuple, list)):
+            # In json-ld single items are compacted to lists. Make a list again in that case
+            return [result]
+
+        return result
+
+
 class ActivityPubSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         self.include = kwargs.pop('include', False)
@@ -17,6 +28,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
     class Meta:
+        list_serializer_class = ActivityPubListSerializer
         fields = ('type', 'id')
 
     def to_representation(self, instance):
@@ -83,7 +95,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data.get(name, None)
                     field.is_valid(raise_exception=True)
-                    validated_data[name] = field.save()
+                    validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
         return self.Meta.model.objects.create(**validated_data)
@@ -95,7 +107,7 @@ class ActivityPubSerializer(serializers.ModelSerializer):
             if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
                 field.initial_data = validated_data[name]
                 field.is_valid()
-                validated_data[name] = field.save()
+                validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
         return super().update(instance, validated_data)

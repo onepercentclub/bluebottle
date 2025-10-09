@@ -287,7 +287,7 @@ class SubEvent(ActivityPubModel):
         'activity_pub.DoGoodEvent',
         null=True,
         on_delete=models.CASCADE,
-        related_name='sub_events'
+        related_name='sub_event'
     )
     slot = models.ForeignKey('time_based.DateActivitySlot', null=True, on_delete=models.CASCADE)
 

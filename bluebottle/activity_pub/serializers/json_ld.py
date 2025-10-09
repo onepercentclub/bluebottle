@@ -139,7 +139,7 @@ class PlaceSerializer(ActivityPubSerializer):
 class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField()
-    image = ImageSerializer(include=True, allow_null=True)
+    image = ImageSerializer(include=True, allow_null=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', )

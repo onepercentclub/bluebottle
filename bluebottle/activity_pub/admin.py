@@ -623,7 +623,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 class PublishedActivityAdmin(EventPolymorphicAdmin):
     
     model = PublishedActivity
-    list_display = ("name_link", "type", "source", "adopted")
+    list_display = ("name_link", "type")
     list_display_links = ("name_link",)
     
     def get_queryset(self, request):

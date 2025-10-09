@@ -222,7 +222,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted(self):
-        return self.activity is not None
+        return self.adopted_activity is not None
 
     def __str__(self):
         return self.name

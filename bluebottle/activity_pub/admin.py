@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding,
+    Follower, GoodDeed, CrowdFunding, DoGoodEvent,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -53,6 +53,7 @@ class ActivityPubModelAdmin(PolymorphicParentModelAdmin):
         Organization,
         GoodDeed,
         CrowdFunding,
+        DoGoodEvent,
         Place,
     )
 
@@ -194,7 +195,6 @@ class AnnouncementInline(admin.StackedInline):
 class AdoptedFilter(admin.SimpleListFilter):
     title = _('Adoption Status')
     parameter_name = 'adopted'
-    parameter_name = 'adopted'
 
     def lookups(self, request, model_admin):
         return (
@@ -231,7 +231,7 @@ class FollowingAddForm(forms.ModelForm):
 
     class Meta:
         model = Following
-        fields = []  # exclude all model fields
+        fields = []
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding
@@ -242,15 +242,11 @@ class FollowingAddForm(forms.ModelForm):
 
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
-
-    def get_fields(self, request, obj=None, **kwargs):
-        if obj is None:
-            return ["platform_url"]
-        return super().get_fields(request, obj, **kwargs)
-
     list_display = ("object", "accepted")
 
     readonly_fields = ('object', 'accepted')
+    fields = readonly_fields + ('default_owner', )
+    raw_id_fields = ('default_owner',)
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -267,9 +263,7 @@ class FollowingAdmin(FollowAdmin):
         return False
 
     def has_change_permission(self, request, obj=None):
-        return False
-
-    fields = readonly_fields
+        return True
 
     def get_queryset(self, request):
         qs = Follow.objects.all()
@@ -505,6 +499,7 @@ class EventAdminMixin:
         "source",
         "activity",
         "iri",
+        "pub_url"
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
@@ -585,6 +580,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     child_models = (
         GoodDeed,
         CrowdFunding,
+        DoGoodEvent
     )
     list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
@@ -612,5 +608,14 @@ class CrowdFundingAdmin(EventChildAdmin):
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target'
+    )
+    fields = readonly_fields
+
+
+@admin.register(DoGoodEvent)
+class DoGoodEventAdmin(EventChildAdmin):
+    readonly_fields = EventChildAdmin.readonly_fields + (
+        'start_time',
+        'end_time',
     )
     fields = readonly_fields

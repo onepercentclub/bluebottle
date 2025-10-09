@@ -505,6 +505,7 @@ class EventAdminMixin:
         "source",
         "activity",
         "iri",
+        "pub_url"
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]

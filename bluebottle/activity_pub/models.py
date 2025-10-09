@@ -227,6 +227,18 @@ class Event(ActivityPubModel):
     def __str__(self):
         return self.name
 
+    @property
+    def pub_url(self):
+        if self.iri:
+            return self.iri
+        else:
+            model_name = self.get_real_instance_class().__name__
+            import re
+            dashed_name = re.sub(r'(?<!^)(?=[A-Z])', '-', model_name).lower()
+            return connection.tenant.build_absolute_url(
+                reverse(f'json-ld:{dashed_name}', args=(str(self.pk),))
+            )
+
     class Meta:
         verbose_name = _("Shared activity")
         verbose_name_plural = _("Shared activities")

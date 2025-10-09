@@ -228,16 +228,34 @@ class FollowingAddForm(forms.ModelForm):
         label=_("Platform URL"),
         help_text=_("Enter the Platform URL to follow"),
     )
+    default_owner = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
+        label=_("Default activity owner"),
+        help_text=_("Optional: Member who will own adopted activities from this platform"),
+    )
 
     class Meta:
         model = Following
-        fields = []
+        fields = ['platform_url', 'default_owner']
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding
         if 'instance' not in kwargs:
             kwargs['instance'] = Following()
         super().__init__(*args, **kwargs)
+        
+        # Set up the default_owner field
+        from bluebottle.members.models import Member
+        self.fields['default_owner'].queryset = Member.objects.all()
+        
+        # Apply raw_id widget to default_owner field
+        if 'default_owner' in self.fields:
+            from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+            from django.contrib.admin.sites import site
+            # Get the foreign key relation for the default_owner field
+            field = Following._meta.get_field('default_owner')
+            self.fields['default_owner'].widget = ForeignKeyRawIdWidget(field.remote_field, site)
 
 
 @admin.register(Following)
@@ -247,6 +265,15 @@ class FollowingAdmin(FollowAdmin):
     readonly_fields = ('object', 'accepted')
     fields = readonly_fields + ('default_owner', )
     raw_id_fields = ('default_owner',)
+    
+    def get_fields(self, request, obj=None):
+        """Show platform_url field when adding new Following objects"""
+        if obj is None:
+            # Adding new object - show platform_url and default_owner
+            return ('platform_url', 'default_owner')
+        else:
+            # Editing existing object - show readonly fields
+            return self.readonly_fields + ('default_owner',)
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -278,15 +305,26 @@ class FollowingAdmin(FollowAdmin):
         if obj is None:
             return FollowingAddForm
         return super().get_form(request, obj, **kwargs)
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Ensure raw_id_fields work for the custom add form"""
+        if db_field.name in self.raw_id_fields:
+            kwargs['widget'] = admin.widgets.ForeignKeyRawIdWidget(db_field.remote_field, self.admin_site)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""
         if not change and isinstance(form, FollowingAddForm):
             # This is a new object using our custom add form
             platform_url = form.cleaned_data['platform_url']
+            default_owner = form.cleaned_data.get('default_owner')
             try:
                 # Use adapter.follow to create the Follow object
                 follow_obj = adapter.follow(platform_url)
+                # Set the default_owner if provided
+                if default_owner:
+                    follow_obj.default_owner = default_owner
+                    follow_obj.save()
                 self.message_user(
                     request,
                     f"Successfully created Follow relationship to {platform_url}",

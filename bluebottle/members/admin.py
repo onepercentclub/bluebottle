@@ -62,7 +62,6 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member, UserSegment
 from ..grant_management.models import GrantApplication
-from ..activity_pub.models import Person
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
 
@@ -446,7 +445,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         'can_do_bank_transfer',
         'verified',
         'kyc',
-        'pub_person',
     ]
 
     def get_permission_fields(self, request, obj=None):
@@ -569,7 +567,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             "login_as_link",
             "reset_password",
             "resend_welcome_link",
-            "pub_person",
             "initiatives",
             "deadline_activities",
             "periodic_activities",
@@ -602,26 +599,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             readonly_fields.append('is_superuser')
 
         return readonly_fields
-
-    def pub_person(self, obj):
-        try:
-            if obj.person.url:
-                pub_url = obj.person.url
-            else:
-                pub_url = get_current_host() + reverse("json-ld:person", args=(obj.person.pk,))
-            url = reverse("admin:activity_pub_person_change", args=(obj.person.pk,))
-            return format_html(
-                '<a href="{}">{}</a>&nbsp;&nbsp;<i>{}</i>',
-                url,
-                _("Go to Person object"),
-                pub_url
-            )
-        except Member.person.RelatedObjectDoesNotExist:
-            url = reverse('admin:members_member_create_pub_person', kwargs={'pk': obj.id})
-            return format_html(
-                "<a href='{}'>{}</a>",
-                url, _("Create ActivityPub Person"),
-            )
 
     def get_impact_fields(self, obj):
         fields = [
@@ -889,11 +866,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
         extra_urls = [
             re_path(
-                r'^create-pub-person/(?P<pk>\d+)/$',
-                self.admin_site.admin_view(self.create_pub_person),
-                name='members_member_create_pub_person'
-            ),
-            re_path(
                 r'^login-as/(?P<pk>\d+)/$',
                 self.admin_site.admin_view(self.login_as),
                 name='members_member_login_as'
@@ -967,13 +939,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         response = HttpResponse(template.render(context, request), content_type='text/html')
         response['cache-control'] = "no-store, no-cache, private"
         return response
-
-    def create_pub_person(self, request, pk):
-        user = Member.objects.get(pk=pk)
-        self.person = Person.objects.from_model(user)
-        message = _('User {name} now has a ActivityPerson.').format(name=user.full_name)
-        self.message_user(request, message)
-        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id,)) + '#/tab/module_3/')
 
     def login_as_link(self, obj):
         url = reverse('admin:members_member_login_as', args=(obj.pk,))

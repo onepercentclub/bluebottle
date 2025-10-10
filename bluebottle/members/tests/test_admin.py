@@ -272,6 +272,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "hours_spent",
             "all_contributions",
             "data_retention_info",
+            "registered_date_activities",
+            "grant_applications",
         }
 
         self.assertEqual(expected_fields, set(fields))
@@ -301,6 +303,8 @@ class MemberAdminFieldsTest(BluebottleTestCase):
             "hours_spent",
             "all_contributions",
             "data_retention_info",
+            "registered_date_activities",
+            "grant_applications",
         }
 
         self.assertEqual(expected_fields, set(fields))

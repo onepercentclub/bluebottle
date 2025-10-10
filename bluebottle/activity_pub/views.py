@@ -1,4 +1,6 @@
 from rest_framework import generics
+from rest_framework import status
+from rest_framework.response import Response
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
@@ -6,7 +8,7 @@ from bluebottle.activity_pub.models import (
     GoodDeed, Image, CrowdFunding, Place, Address, DoGoodEvent, SubEvent
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
-from bluebottle.activity_pub.permissions import ActivityPubPermission, InboxPermission
+from bluebottle.activity_pub.permissions import InboxPermission, ActivityPubPermission
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.serializers.json_ld import (
     PersonSerializer, InboxSerializer, OutboxSerializer, PublicKeySerializer, FollowSerializer,
@@ -21,7 +23,6 @@ class ActivityPubView(generics.RetrieveAPIView):
     parser_classes = [JSONLDParser]
     renderer_classes = [JSONLDRenderer]
     authentication_classes = [HTTPSignatureAuthentication]
-
     permission_classes = [ActivityPubPermission]
 
     def get_queryset(self):

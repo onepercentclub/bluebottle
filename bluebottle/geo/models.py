@@ -256,7 +256,7 @@ class Geolocation(models.Model):
     postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
-    country = models.ForeignKey('geo.Country', on_delete=models.CASCADE)
+    country = models.ForeignKey('geo.Country', null=True, blank=True, on_delete=models.SET_NULL)
     mapbox_id = models.CharField(max_length=50, null=True, blank=True)
 
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
@@ -280,7 +280,7 @@ class Geolocation(models.Model):
         if self.locality:
             return u"{}, {}".format(self.locality, self.country.name)
         else:
-            return self.country.name
+            return self.country.name if self.country else self.formatted_address or '-unknown-'
 
     @property
     def timezone(self):

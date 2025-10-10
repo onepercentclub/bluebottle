@@ -113,6 +113,8 @@ class AddressSerializer(FederatedObjectSerializer):
         )
 
     def to_internal_value(self, data):
+        if not data:
+            return {}
         result = super().to_internal_value(data)
         del result['id']
         return result
@@ -232,7 +234,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     end_time = DateField(source='deadline', allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
-    duration = serializers.DurationField()
+    duration = serializers.DurationField(allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DeadlineActivity

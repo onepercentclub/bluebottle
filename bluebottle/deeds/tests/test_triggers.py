@@ -117,7 +117,6 @@ class DeedTriggersTestCase(TriggerTestCase):
 
     def test_reject(self):
         self.create()
-        self.model.states.publish(save=True)
         self.model.states.reject()
 
         with self.execute():

@@ -64,8 +64,6 @@ class TimeBasedActivityTriggerTestCase():
 
     def test_reject(self):
         self.initiative.states.submit(save=True)
-        self.initiative.states.approve(save=True)
-        self.activity.states.publish(save=True)
         mail.outbox = []
 
         self.activity.states.reject(save=True)

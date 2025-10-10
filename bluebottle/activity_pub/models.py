@@ -222,7 +222,7 @@ class Event(ActivityPubModel):
 
     @property
     def adopted(self):
-        return self.activity is not None
+        return self.adopted_activity is not None
 
     def __str__(self):
         return self.name
@@ -242,6 +242,22 @@ class Event(ActivityPubModel):
     class Meta:
         verbose_name = _("Shared activity")
         verbose_name_plural = _("Shared activities")
+
+
+class PublishedActivity(Event):
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Published activity")
+        verbose_name_plural = _("Publihed activities")
+
+
+class ReceivedActivity(Event):
+
+    class Meta:
+        proxy = True
+        verbose_name = _("Received activity")
+        verbose_name_plural = _("Received activities")
 
 
 class GoodDeed(Event):
@@ -307,9 +323,9 @@ class DoGoodEvent(Event):
         null=True
     )
 
-    class Meta:
-        verbose_name = _("Do good event")
-        verbose_name_plural = _("Do good events")
+    class Meta(Event.Meta):
+        verbose_name = _('Date activity')
+        verbose_name_plural = _('Date activities')
 
 
 class Activity(ActivityPubModel):

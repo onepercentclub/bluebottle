@@ -1,8 +1,8 @@
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -29,7 +29,7 @@ from bluebottle.activity_pub.models import (
     Announce,
     Organization,
     Following,
-    Follower, GoodDeed, CrowdFunding, DoGoodEvent,
+    Follower, GoodDeed, CrowdFunding, DoGoodEvent, SubEvent, PublishedActivity, ReceivedActivity,
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
@@ -588,14 +588,62 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
 
     list_display = ("name", "type", "source", "adopted")
+    
+    def name_link(self, obj):
+        """Generate the name as a link to the polymorphic child admin."""
+        real_instance = obj.get_real_instance()
+        model_name = real_instance._meta.model_name
+        app_label = real_instance._meta.app_label
+        change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.pk])
+        return format_html('<a href="{}">{}</a>', change_url, obj.name)
+    
+    name_link.short_description = _("Name")
+    name_link.admin_order_field = "name"  # Allow sorting by name
 
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        try:
+            event = Event.objects.get(pk=object_id, iri__isnull=False)
+            real_instance = event.get_real_instance()
+            model_name = real_instance._meta.model_name
+            app_label = real_instance._meta.app_label
+            
+            change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[object_id])
+            return HttpResponseRedirect(change_url)
+        except Event.DoesNotExist:
+            raise Http404
+
+
+@admin.register(PublishedActivity)
+class PublishedActivityAdmin(EventPolymorphicAdmin):
+    
+    model = PublishedActivity
+    list_display = ("name_link", "type")
+    list_display_links = ("name_link",)
+    
+    def get_queryset(self, request):
+        return Event.objects.filter(iri__isnull=True)
+
+
+@admin.register(ReceivedActivity)
+class ReceivedActivityAdmin(EventPolymorphicAdmin):
+    
+    model = ReceivedActivity
+    list_display = ("name_link", "type", "source", "adopted")
+    list_display_links = ("name_link",)
+    
+    def get_queryset(self, request):
+        return Event.objects.filter(iri__isnull=False)
+    
 
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
     change_form_template = 'admin/activity_pub/event/change_form.html'
+    base_model = Event
 
 
 @admin.register(GoodDeed)
 class GoodDeedAdmin(EventChildAdmin):
+    base_model = Event
+    model = GoodDeed
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
@@ -605,6 +653,8 @@ class GoodDeedAdmin(EventChildAdmin):
 
 @admin.register(CrowdFunding)
 class CrowdFundingAdmin(EventChildAdmin):
+    base_model = Event
+    model = GoodDeed
     readonly_fields = EventChildAdmin.readonly_fields + (
         'end_time',
         'target'
@@ -612,8 +662,35 @@ class CrowdFundingAdmin(EventChildAdmin):
     fields = readonly_fields
 
 
+class SubEventInline(admin.TabularInline):
+    model = SubEvent
+    fk_name = 'parent'
+    verbose_name_plural = _('Slots')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(DoGoodEvent)
 class DoGoodEventAdmin(EventChildAdmin):
+    base_model = Event
+    model = DoGoodEvent
+    
+    inlines = (SubEventInline,)
+
+    def get_inline_instances(self, request, obj=None):
+        inlines =  super(DoGoodEventAdmin, self).get_inline_instances(request, obj)
+        if obj.sub_events.count():
+            return inlines
+        else:
+            return []
+
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',

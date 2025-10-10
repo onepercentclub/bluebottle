@@ -129,7 +129,7 @@ class PlaceSerializer(ActivityPubSerializer):
     longitude = serializers.FloatField()
     name = serializers.CharField()
 
-    address = AddressSerializer(allow_null=True, include=True)
+    address = AddressSerializer(allow_null=True, include=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
         model = Place

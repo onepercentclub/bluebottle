@@ -534,10 +534,11 @@ class EventAdminMixin:
     readonly_fields = (
         "name",
         "display_description",
+        "display_image",
         "source",
         "activity",
         "iri",
-        "pub_url"
+        "pub_url",
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
@@ -551,14 +552,14 @@ class EventAdminMixin:
 
     def display_description(self, obj):
         return format_html(
-            '<div style="display: table-cell">' + obj.description + "</div>"
+            '<div style="display: table-cell; border:1px solid #aaa; padding: 12px">' + obj.summary + "</div>"
         )
 
     display_description.short_description = _("Description")
 
     def display_image(self, obj):
         return format_html(
-            '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
+            '<img src="{}" style="max-height: 300px; max-width: 600px;" />', obj.image.url
         )
 
     display_image.short_description = _("Image")
@@ -724,7 +725,7 @@ class DoGoodEventAdmin(EventChildAdmin):
 
     def get_inline_instances(self, request, obj=None):
         inlines =  super(DoGoodEventAdmin, self).get_inline_instances(request, obj)
-        if obj.sub_events.count():
+        if obj.sub_event.count():
             return inlines
         else:
             return []

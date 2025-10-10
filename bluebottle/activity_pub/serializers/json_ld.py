@@ -68,9 +68,9 @@ class PersonSerializer(ActivityPubSerializer):
 class OrganizationSerializer(ActivityPubSerializer):
     id = IdField(url_name='json-ld:organization')
     type = TypeField('Organization')
-    inbox = InboxSerializer()
-    outbox = OutboxSerializer()
-    public_key = PublicKeySerializer(include=True)
+    inbox = InboxSerializer(required=False, allow_null=True)
+    outbox = OutboxSerializer(required=False, allow_null=True)
+    public_key = PublicKeySerializer(include=True, required=False, allow_null=True)
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -140,9 +140,10 @@ class BaseEventSerializer(ActivityPubSerializer):
     name = serializers.CharField()
     summary = serializers.CharField()
     image = ImageSerializer(include=True, allow_null=True, required=False)
+    organization = OrganizationSerializer(include=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', )
+        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
 
 
 class GoodDeedSerializer(BaseEventSerializer):

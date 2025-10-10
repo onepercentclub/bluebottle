@@ -535,6 +535,7 @@ class EventAdminMixin:
         "name",
         "display_description",
         "display_image",
+        "organization",
         "source",
         "activity",
         "iri",

@@ -230,16 +230,10 @@ class FollowingAddForm(forms.ModelForm):
         label=_("Platform URL"),
         help_text=_("Enter the Platform URL to follow!!!"),
     )
-    default_owner = forms.ModelChoiceField(
-        queryset=None,
-        required=False,
-        label=_("Default activity owner"),
-        help_text=_("Optional: Member who will own adopted activities from this platform"),
-    )
 
     class Meta:
         model = Following
-        fields = ['platform_url', 'default_owner']
+        fields = ['default_owner', 'platform_url']
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding

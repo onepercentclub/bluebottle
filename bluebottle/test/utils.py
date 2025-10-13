@@ -907,6 +907,8 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         staff.user_set.add(self.staff_member)
         mail.outbox = []
 
+        super().setUp()
+
     def get_csrf_token(self, response):
         csrf = 'name="csrfmiddlewaretoken" value="'
         start = response.content.decode().find(csrf) + len(csrf)

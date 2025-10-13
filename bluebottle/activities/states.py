@@ -190,7 +190,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        [draft, needs_work],
+        [draft, needs_work, submitted],
         rejected,
         name=_("Reject"),
         description=_(

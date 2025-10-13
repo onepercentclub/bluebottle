@@ -68,6 +68,7 @@ class JSONLDAdapter():
 
     def follow(self, url):
         from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
+
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
         serializer = OrganizationSerializer(data=data)

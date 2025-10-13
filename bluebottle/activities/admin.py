@@ -3,7 +3,8 @@ from urllib.parse import unquote
 
 from django import forms
 from django.contrib import admin, messages
-from django.core.exceptions import PermissionDenied
+
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -48,6 +49,7 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
+from bluebottle.activity_pub.admin import adapter
 from bluebottle.activity_pub.models import Publish
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
@@ -783,13 +785,18 @@ class ActivityChildAdmin(
             raise PermissionDenied
 
         activity = get_object_or_404(Activity, pk=unquote(pk))
-        federated_serializer = FederatedActivitySerializer(activity)
+        try:
+            publish = activity.event.publish_set.get()
 
-        serializer = EventSerializer(data=federated_serializer.data)
-        serializer.is_valid(raise_exception=True)
-        event = serializer.save(activity=activity)
+            adapter.publish(publish)
+        except ObjectDoesNotExist:
+            federated_serializer = FederatedActivitySerializer(activity)
 
-        Publish.objects.create(actor=get_platform_actor(), object=event)
+            serializer = EventSerializer(data=federated_serializer.data)
+            serializer.is_valid(raise_exception=True)
+            event = serializer.save(activity=activity)
+
+            Publish.objects.create(actor=get_platform_actor(), object=event)
 
         self.message_user(
             request,

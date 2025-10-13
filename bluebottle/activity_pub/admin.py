@@ -264,15 +264,6 @@ class FollowingAdmin(FollowAdmin):
     fields = ('default_owner', 'platform_url', 'object', 'accepted')
     raw_id_fields = ('default_owner',)
 
-    def get_fields(self, request, obj=None):
-        """Show platform_url field when adding new Following objects"""
-        if obj is None:
-            # Adding new object - show platform_url and default_owner
-            return ('platform_url', 'default_owner')
-        else:
-            # Editing existing object - show readonly fields
-            return self.readonly_fields + ('default_owner',)
-
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
         from bluebottle.activity_pub.models import Accept
@@ -318,12 +309,6 @@ class FollowingAdmin(FollowAdmin):
         if obj is None:
             return FollowingAddForm
         return super().get_form(request, obj, **kwargs)
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """Ensure raw_id_fields work for the custom add form"""
-        if db_field.name in self.raw_id_fields:
-            kwargs['widget'] = admin.widgets.ForeignKeyRawIdWidget(db_field.remote_field, self.admin_site)
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         """Handle saving of new Following objects using adapter.follow()"""

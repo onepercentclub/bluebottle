@@ -42,7 +42,7 @@ class File(models.Model):
         on_delete=models.CASCADE
     )
     used = models.BooleanField(_('used'), default=False)
-    name = models.CharField(null=True, blank=True, max_length=50)
+    name = models.CharField(null=True, blank=True, max_length=500)
 
     def save(self, *args, **kwargs):
         if not self.name and self.file.name:

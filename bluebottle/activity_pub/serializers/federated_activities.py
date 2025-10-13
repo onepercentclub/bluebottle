@@ -113,6 +113,8 @@ class AddressSerializer(FederatedObjectSerializer):
         )
 
     def to_internal_value(self, data):
+        if not data:
+            return {}
         result = super().to_internal_value(data)
         del result['id']
         return result
@@ -167,9 +169,19 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title')
     summary = RichTextField(source='description')
     image = ImageSerializer(required=False, allow_null=True)
+    organization = OrganizationSerializer(required=False, allow_null=True)
 
     class Meta:
-        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image')
+        fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
+
+    def create(self, validated_data):
+        organization_data = validated_data.pop('organization', None)
+        if organization_data:
+            organization_serializer = OrganizationSerializer(data=organization_data)
+            organization_serializer.is_valid(raise_exception=True)
+            validated_data['organization'] = organization_serializer.save()
+
+        return super().create(validated_data)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):
@@ -232,7 +244,7 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     end_time = DateField(source='deadline', allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
-    duration = serializers.DurationField()
+    duration = serializers.DurationField(allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DeadlineActivity

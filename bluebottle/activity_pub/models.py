@@ -1,6 +1,5 @@
-from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
-
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
 from django.urls import reverse
@@ -35,9 +34,9 @@ class ActivityPubModel(PolymorphicModel):
 
 
 class Actor(ActivityPubModel):
-    inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.CASCADE)
-    outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.CASCADE)
-    public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.CASCADE)
+    inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.SET_NULL, null=True, blank=True)
+    outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.SET_NULL, null=True, blank=True)
+    public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.SET_NULL, null=True, blank=True)
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
@@ -208,6 +207,10 @@ class Event(ActivityPubModel):
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
+    )
+
+    organization = models.ForeignKey(
+        Organization, null=True, on_delete=models.SET_NULL
     )
 
     @property

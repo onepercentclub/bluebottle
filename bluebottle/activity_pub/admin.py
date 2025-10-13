@@ -234,6 +234,12 @@ class FollowingAddForm(forms.ModelForm):
     class Meta:
         model = Following
         fields = ['default_owner', 'platform_url']
+        widgets = {
+            'default_owner': admin.widgets.ForeignKeyRawIdWidget(
+                Following._meta.get_field('default_owner').remote_field,
+                admin.site
+            ),
+        }
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding
@@ -259,9 +265,6 @@ class FollowingAddForm(forms.ModelForm):
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     list_display = ("object", "accepted")
-
-    readonly_fields = ['object', 'accepted']
-    fields = ('default_owner', 'platform_url', 'object', 'accepted')
     raw_id_fields = ('default_owner',)
 
     def accepted(self, obj):
@@ -272,7 +275,7 @@ class FollowingAdmin(FollowAdmin):
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
-    def get_readonly_field(request, obj=None):
+    def get_readonly_fields(self, request, obj=None):
         if obj:
             return ['object', 'accepted']
         else:
@@ -315,9 +318,14 @@ class FollowingAdmin(FollowAdmin):
         if not change and isinstance(form, FollowingAddForm):
             # This is a new object using our custom add form
             platform_url = form.cleaned_data['platform_url']
+            default_owner = form.cleaned_data.get('default_owner')
             try:
                 # Use adapter.follow to create the Follow object
                 follow_obj = adapter.follow(platform_url)
+                # Set the default_owner if provided
+                if default_owner:
+                    follow_obj.default_owner = default_owner
+                    follow_obj.save()
                 self.message_user(
                     request,
                     f"Successfully created Follow relationship to {platform_url}",
@@ -534,10 +542,12 @@ class EventAdminMixin:
     readonly_fields = (
         "name",
         "display_description",
+        "display_image",
+        "organization",
         "source",
         "activity",
         "iri",
-        "pub_url"
+        "pub_url",
     )
     fields = readonly_fields
     inlines = [AnnouncementInline]
@@ -551,14 +561,14 @@ class EventAdminMixin:
 
     def display_description(self, obj):
         return format_html(
-            '<div style="display: table-cell">' + obj.description + "</div>"
+            '<div style="display: table-cell; border:1px solid #aaa; padding: 12px">' + obj.summary + "</div>"
         )
 
     display_description.short_description = _("Description")
 
     def display_image(self, obj):
         return format_html(
-            '<img src="{}" style="max-height: 300px; max-width: 600px;>" />', obj.image
+            '<img src="{}" style="max-height: 300px; max-width: 600px;" />', obj.image.url
         )
 
     display_image.short_description = _("Image")
@@ -722,7 +732,7 @@ class DoGoodEventAdmin(EventChildAdmin):
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(DoGoodEventAdmin, self).get_inline_instances(request, obj)
-        if obj.sub_events.count():
+        if obj.sub_event.count():
             return inlines
         else:
             return []

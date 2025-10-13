@@ -19,12 +19,11 @@ class WebFingerClient:
             )
         except requests.exceptions.HTTPError:
             params = urlencode({
-                'resource': urlunparse((parsed.scheme, parsed.netloc, '', None, None, None ))
+                'resource': urlunparse((parsed.scheme, parsed.netloc, '', None, None, None))
             })
             response = self._do_request(
                 f'{parsed.scheme}://{parsed.netloc}/.well-known/webfinger?{params}'
             )
-
 
         for link in response['links']:
             if link['type'] == 'application/activity+json' and link['rel'] == 'self':

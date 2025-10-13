@@ -12,6 +12,8 @@ from polymorphic.admin import (
     PolymorphicChildModelFilter,
     PolymorphicParentModelAdmin,
 )
+from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+
 import requests
 
 from bluebottle.activity_pub.adapters import adapter
@@ -34,6 +36,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.members.models import Member
 from bluebottle.webfinger.client import client
 
 
@@ -229,6 +232,11 @@ class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Platform URL"),
         help_text=_("Enter the Platform URL to follow!!!"),
+    )
+    default_owner = forms.ModelChoiceField(
+        Member.objects.all(),
+        widget=ForeignKeyRawIdWidget(Following._meta.get_field("default_owner").remote_field, admin.site),
+        required=False
     )
 
     class Meta:

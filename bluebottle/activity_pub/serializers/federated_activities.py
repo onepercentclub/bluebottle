@@ -199,7 +199,7 @@ class FederatedDeedSerializer(BaseFederatedActivitySerializer):
 class FederatedFundingSerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:crowd-funding')
 
-    location = LocationSerializer(source='impact_location', allow_null=True)
+    location = LocationSerializer(source='impact_location', allow_null=True, required=False)
 
     end_time = serializers.DateTimeField(source='deadline')
     target = serializers.DecimalField(source='target.amount', decimal_places=2, max_digits=10)
@@ -238,7 +238,7 @@ class EventAttendanceModeField(serializers.Field):
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:crowd-funding')
 
-    location = LocationSerializer(allow_null=True)
+    location = LocationSerializer(allow_null=True, required=False)
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
@@ -259,7 +259,7 @@ class SlotsSerializer(FederatedObjectSerializer):
     name = serializers.CharField(source='title', required=False, allow_null=True)
     start_time = serializers.DateTimeField(source='start', allow_null=True, required=False)
     end_time = serializers.DateTimeField(source='end', read_only=True)
-    location = LocationSerializer()
+    location = LocationSerializer(allow_null=True, required=False)
 
     event_attendance_mode = EventAttendanceModeField()
 

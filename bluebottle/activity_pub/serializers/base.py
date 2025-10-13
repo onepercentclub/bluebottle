@@ -260,7 +260,7 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
 
         for field in self.fields.values():
             if isinstance(field, (FederatedObjectSerializer)):
-                if field.source != '*':
+                if field.source != '*' and field.source in validated_data:
                     field.initial_data = validated_data[field.source]
 
                     validated_data[field.source] = field.create(validated_data[field.source])

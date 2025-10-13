@@ -12,6 +12,7 @@ from polymorphic.admin import (
     PolymorphicChildModelFilter,
     PolymorphicParentModelAdmin,
 )
+import requests
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
@@ -33,6 +34,7 @@ from bluebottle.activity_pub.models import (
 )
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
+from bluebottle.webfinger.client import client
 
 
 @admin.register(ActivityPubModel)
@@ -226,7 +228,7 @@ class SourceFilter(admin.SimpleListFilter):
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
         label=_("Platform URL"),
-        help_text=_("Enter the Platform URL to follow"),
+        help_text=_("Enter the Platform URL to follow!!!"),
     )
     default_owner = forms.ModelChoiceField(
         queryset=None,
@@ -243,29 +245,31 @@ class FollowingAddForm(forms.ModelForm):
         # Always create a new instance when adding
         if 'instance' not in kwargs:
             kwargs['instance'] = Following()
+
         super().__init__(*args, **kwargs)
-        
-        # Set up the default_owner field
-        from bluebottle.members.models import Member
-        self.fields['default_owner'].queryset = Member.objects.all()
-        
-        # Apply raw_id widget to default_owner field
-        if 'default_owner' in self.fields:
-            from django.contrib.admin.widgets import ForeignKeyRawIdWidget
-            from django.contrib.admin.sites import site
-            # Get the foreign key relation for the default_owner field
-            field = Following._meta.get_field('default_owner')
-            self.fields['default_owner'].widget = ForeignKeyRawIdWidget(field.remote_field, site)
+
+    def clean(self):
+        super().clean()
+        if 'platform_url' in self.cleaned_data:
+            try:
+                client.get(self.cleaned_data['platform_url'])
+            except requests.exceptions.HTTPError:
+                raise ValidationError({
+                    'platform_url': _(
+                        "Could not determine platform information needed for subscribing. "
+                        "Are you sure the url is correct?",
+                    )
+                })
 
 
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     list_display = ("object", "accepted")
 
-    readonly_fields = ('object', 'accepted')
-    fields = readonly_fields + ('default_owner', )
+    readonly_fields = ['object', 'accepted']
+    fields = ('default_owner', 'platform_url', 'object', 'accepted')
     raw_id_fields = ('default_owner',)
-    
+
     def get_fields(self, request, obj=None):
         """Show platform_url field when adding new Following objects"""
         if obj is None:
@@ -282,6 +286,21 @@ class FollowingAdmin(FollowAdmin):
 
     accepted.boolean = True
     accepted.short_description = _("Accepted")
+
+    def get_readonly_field(request, obj=None):
+        if obj:
+            return ['object', 'accepted']
+        else:
+            return []
+
+    def get_fields(self, request, obj=None):
+        fields = ['default_owner']
+        if not obj:
+            fields = ['platform_url'] + fields
+        else:
+            fields = ['object', 'accepted'] + fields
+
+        return fields
 
     def has_add_permission(self, request, obj=None):
         return True
@@ -305,7 +324,7 @@ class FollowingAdmin(FollowAdmin):
         if obj is None:
             return FollowingAddForm
         return super().get_form(request, obj, **kwargs)
-    
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         """Ensure raw_id_fields work for the custom add form"""
         if db_field.name in self.raw_id_fields:
@@ -332,14 +351,21 @@ class FollowingAdmin(FollowAdmin):
                 )
                 # Store the created object for response_add
                 self._created_follow_obj = follow_obj
-                return
+            except requests.exceptions.HTTPError:
+                self.message_user(
+                    request,
+                    (
+                        "Could not determine platform information needed for subscribing. "
+                        "Are you sure the url is correct?"
+                    ),
+                    level="error"
+                )
             except Exception as e:
                 self.message_user(
                     request,
                     f"Error creating Follow relationship: {str(e)}",
                     level="error"
                 )
-                raise
         else:
             # For existing objects, use the default behavior
             super().save_model(request, obj, form, change)
@@ -628,7 +654,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         return obj.get_real_instance_class()._meta.verbose_name if obj.get_real_instance_class() else '-'
 
     list_display = ("name", "type", "source", "adopted")
-    
+
     def name_link(self, obj):
         """Generate the name as a link to the polymorphic child admin."""
         real_instance = obj.get_real_instance()
@@ -636,7 +662,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         app_label = real_instance._meta.app_label
         change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.pk])
         return format_html('<a href="{}">{}</a>', change_url, obj.name)
-    
+
     name_link.short_description = _("Name")
     name_link.admin_order_field = "name"  # Allow sorting by name
 
@@ -646,7 +672,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
             real_instance = event.get_real_instance()
             model_name = real_instance._meta.model_name
             app_label = real_instance._meta.app_label
-            
+
             change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[object_id])
             return HttpResponseRedirect(change_url)
         except Event.DoesNotExist:
@@ -655,25 +681,23 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
 @admin.register(PublishedActivity)
 class PublishedActivityAdmin(EventPolymorphicAdmin):
-    
     model = PublishedActivity
     list_display = ("name_link", "type")
     list_display_links = ("name_link",)
-    
+
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=True)
 
 
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
-    
     model = ReceivedActivity
     list_display = ("name_link", "type", "source", "adopted")
     list_display_links = ("name_link",)
-    
+
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=False)
-    
+
 
 class EventChildAdmin(EventAdminMixin, ActivityPubModelChildAdmin):
     change_form_template = 'admin/activity_pub/event/change_form.html'
@@ -721,7 +745,7 @@ class SubEventInline(admin.TabularInline):
 class DoGoodEventAdmin(EventChildAdmin):
     base_model = Event
     model = DoGoodEvent
-    
+
     inlines = (SubEventInline,)
 
     def get_inline_instances(self, request, obj=None):

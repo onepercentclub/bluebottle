@@ -350,6 +350,7 @@ class Follow(Activity):
     default_owner = models.ForeignKey(
         "members.Member",
         null=True,
+        blank=True,
         verbose_name=_("Default activity owner"),
         on_delete=models.SET_NULL,
     )

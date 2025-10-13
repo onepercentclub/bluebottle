@@ -2,7 +2,6 @@ import functools
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
-from bluebottle.utils.utils import get_current_host
 
 from bluebottle.segments.filters import MemberSegmentAdminMixin
 from builtins import object

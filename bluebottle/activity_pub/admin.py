@@ -731,7 +731,7 @@ class DoGoodEventAdmin(EventChildAdmin):
     inlines = (SubEventInline,)
 
     def get_inline_instances(self, request, obj=None):
-        inlines =  super(DoGoodEventAdmin, self).get_inline_instances(request, obj)
+        inlines = super(DoGoodEventAdmin, self).get_inline_instances(request, obj)
         if obj.sub_event.count():
             return inlines
         else:

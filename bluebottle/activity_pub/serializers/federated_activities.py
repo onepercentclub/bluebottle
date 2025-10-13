@@ -174,7 +174,6 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     class Meta:
         fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
 
-
     def create(self, validated_data):
         organization_data = validated_data.pop('organization', None)
         if organization_data:

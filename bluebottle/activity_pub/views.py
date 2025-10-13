@@ -1,6 +1,4 @@
 from rest_framework import generics
-from rest_framework import status
-from rest_framework.response import Response
 
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (

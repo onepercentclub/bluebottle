@@ -234,6 +234,12 @@ class FollowingAddForm(forms.ModelForm):
     class Meta:
         model = Following
         fields = ['default_owner', 'platform_url']
+        widgets = {
+            'default_owner': admin.widgets.ForeignKeyRawIdWidget(
+                Following._meta.get_field('default_owner').remote_field,
+                admin.site
+            ),
+        }
 
     def __init__(self, *args, **kwargs):
         # Always create a new instance when adding
@@ -259,9 +265,6 @@ class FollowingAddForm(forms.ModelForm):
 @admin.register(Following)
 class FollowingAdmin(FollowAdmin):
     list_display = ("object", "accepted")
-
-    readonly_fields = ['object', 'accepted']
-    fields = ('default_owner', 'platform_url', 'object', 'accepted')
     raw_id_fields = ('default_owner',)
 
     def accepted(self, obj):
@@ -272,7 +275,7 @@ class FollowingAdmin(FollowAdmin):
     accepted.boolean = True
     accepted.short_description = _("Accepted")
 
-    def get_readonly_field(request, obj=None):
+    def get_readonly_fields(self, request, obj=None):
         if obj:
             return ['object', 'accepted']
         else:

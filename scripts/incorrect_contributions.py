@@ -65,9 +65,9 @@ def run(*args):
             ).exclude(
                 Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
                 Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
-                    'succeeded', 'scheduled', 'unscheduled'
+                    'succeeded', 'scheduled', 'accepted'
                 )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_contributions = (

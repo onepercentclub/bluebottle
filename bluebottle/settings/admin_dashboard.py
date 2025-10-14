@@ -56,14 +56,16 @@ JET_SIDE_MENU_ITEMS = [
         "permissions": ["activity_pub.change_event"],
         "items": [
             {
-                "name": "activity_pub.event",
+                "name": "activity_pub.publishedactivity",
                 "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_publishing_activities",
                 "url": "/en/admin/activity_pub/publishedactivity/",
                 "label": _("Published activities"),
             },
             {
-                "name": "activity_pub.event",
+                "name": "activity_pub.receivedactivity",
                 "permissions": ["activity_pub.change_event"],
+                "enabled": "cms.SitePlatformSettings.is_receiving_activities",
                 "url": "/en/admin/activity_pub/receivedactivity/",
                 "label": _("Received activities"),
             },

@@ -687,6 +687,20 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         default=False
     )
 
+    @property
+    def is_publishing_activities(self):
+        from bluebottle.activity_pub.models import Accept
+        from bluebottle.activity_pub.utils import get_platform_actor
+        actor = get_platform_actor()
+        return self.share_activities and Accept.objects.filter(object__object=actor).exists()
+
+    @property
+    def is_receiving_activities(self):
+        from bluebottle.activity_pub.models import Accept
+        from bluebottle.activity_pub.utils import get_platform_actor
+        actor = get_platform_actor()
+        return self.share_activities and Accept.objects.filter(object__actor=actor).exists()
+
     organization = models.ForeignKey(
         'organizations.Organization', null=True, blank=True, on_delete=models.SET_NULL,
         help_text=_('The organization this platform belongs to.')

@@ -1,8 +1,10 @@
+import requests
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.utils import unquote
+from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -12,9 +14,6 @@ from polymorphic.admin import (
     PolymorphicChildModelFilter,
     PolymorphicParentModelAdmin,
 )
-from django.contrib.admin.widgets import ForeignKeyRawIdWidget
-
-import requests
 
 from bluebottle.activity_pub.adapters import adapter
 from bluebottle.activity_pub.models import (
@@ -572,7 +571,6 @@ class EventAdminMixin:
         if not obj or not obj.is_local:
             return []
         return super().get_inline_instances(request, obj)
-
 
     def display_description(self, obj):
         return format_html(

@@ -558,7 +558,6 @@ class EventAdminMixin:
         "pub_url",
     )
     fields = readonly_fields
-    inlines = [AnnouncementInline]
     list_filter = [AdoptedFilter, SourceFilter]
 
     def adopted(self, obj):
@@ -566,6 +565,14 @@ class EventAdminMixin:
 
     adopted.boolean = True
     adopted.short_description = _("Adopted")
+
+    inlines = [AnnouncementInline]
+
+    def get_inline_instances(self, request, obj=None):
+        if not obj or not obj.is_local:
+            return []
+        return super().get_inline_instances(request, obj)
+
 
     def display_description(self, obj):
         return format_html(
@@ -636,7 +643,8 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
     child_models = (
         GoodDeed,
         CrowdFunding,
-        DoGoodEvent
+        DoGoodEvent,
+
     )
     list_filter = [AdoptedFilter, SourceFilter, PolymorphicChildModelFilter]
 
@@ -655,18 +663,6 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
 
     name_link.short_description = _("Name")
     name_link.admin_order_field = "name"  # Allow sorting by name
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        try:
-            event = Event.objects.get(pk=object_id, iri__isnull=False)
-            real_instance = event.get_real_instance()
-            model_name = real_instance._meta.model_name
-            app_label = real_instance._meta.app_label
-
-            change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[object_id])
-            return HttpResponseRedirect(change_url)
-        except Event.DoesNotExist:
-            raise Http404
 
 
 @admin.register(PublishedActivity)
@@ -736,7 +732,7 @@ class DoGoodEventAdmin(EventChildAdmin):
     base_model = Event
     model = DoGoodEvent
 
-    inlines = (SubEventInline,)
+    inlines = [SubEventInline] + EventChildAdmin.inlines
 
     def get_inline_instances(self, request, obj=None):
         inlines = super(DoGoodEventAdmin, self).get_inline_instances(request, obj)

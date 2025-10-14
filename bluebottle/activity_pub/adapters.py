@@ -54,7 +54,8 @@ class JSONLDAdapter():
             raise TypeError(f'Trying to {method} to local url: {url}')
 
         (stream, media_type) = self.execute(method, url, data=data, auth=auth)
-        return self.parser.parse(stream, media_type)
+        if stream:
+            return self.parser.parse(stream, media_type)
 
     def get(self, url, auth=None):
         return self.do_request("get", url, auth=auth)

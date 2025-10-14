@@ -1,3 +1,4 @@
+from django.db import connection
 from rest_framework import generics, status, response
 from celery import shared_task
 
@@ -16,6 +17,7 @@ from bluebottle.activity_pub.serializers.json_ld import (
     CrowdFundingSerializer, PlaceSerializer, AddressSerializer,
     DoGoodEventSerializer, SubEventSerializer
 )
+from bluebottle.clients.utils import LocalTenant
 
 
 class ActivityPubView(generics.RetrieveAPIView):
@@ -39,9 +41,10 @@ class OrganizationView(ActivityPubView):
 
 
 @shared_task()
-def create_task(serializer):
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
+def create_task(serializer, tenant):
+    with LocalTenant(tenant):
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
 
 class InboxView(generics.CreateAPIView, ActivityPubView):
@@ -61,7 +64,7 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        create_task.delay(serializer)
+        create_task.delay(serializer, connection.tenant)
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 

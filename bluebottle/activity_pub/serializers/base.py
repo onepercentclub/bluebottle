@@ -105,9 +105,10 @@ class ActivityPubSerializer(serializers.ModelSerializer):
 
         for name, field in self.fields.items():
             if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
-                field.initial_data = validated_data[name]
-                field.is_valid()
-                validated_data[field.source] = field.save()
+                if validated_data.get(name, None):
+                    field.initial_data = validated_data[name]
+                    field.is_valid()
+                    validated_data[field.source] = field.save()
 
         validated_data.pop('type', None)
         return super().update(instance, validated_data)

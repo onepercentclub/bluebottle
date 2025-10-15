@@ -47,14 +47,15 @@ class JSONLDAdapter():
         response = getattr(requests, method)(url, **kwargs)
         response.raise_for_status()
         stream = BytesIO(response.content)
-        return (stream, response.headers["content-type"])
+        return (stream, response.headers.get("content-type"))
 
     def do_request(self, method, url, data=None, auth=None):
         if is_local(url):
             raise TypeError(f'Trying to {method} to local url: {url}')
 
         (stream, media_type) = self.execute(method, url, data=data, auth=auth)
-        return self.parser.parse(stream, media_type)
+        if stream and media_type:
+            return self.parser.parse(stream, media_type)
 
     def get(self, url, auth=None):
         return self.do_request("get", url, auth=auth)

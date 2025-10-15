@@ -62,8 +62,10 @@ def execute(method, url, data=None, auth=None):
     with LocalTenant(tenant):
         response = getattr(client, method)(url, data=data, headers=headers)
 
-    if response.status_code in (200, 201):
-        return (BytesIO(response.content), response.accepted_media_type)
+    if response.status_code in (200, 201, 204):
+        return (
+            BytesIO(response.content) if response.content else None, response.accepted_media_type
+        )
     else:
         raise Exception(f'Failed request: {method.upper()}: {url}, {response.json()} status={response.status_code}')
 

@@ -9,8 +9,9 @@ class JSONLDRenderer(renderers.JSONRenderer):
     format = 'application/ld+json'
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        camelized = camelize(data, False)
-        camelized['@context'] = default_context
-        compacted = processor.compact(camelized, default_context, {})
+        if data:
+            camelized = camelize(data, False)
+            camelized['@context'] = default_context
+            data = processor.compact(camelized, default_context, {})
 
-        return super().render(compacted, accepted_media_type, renderer_context)
+        return super().render(data, accepted_media_type, renderer_context)

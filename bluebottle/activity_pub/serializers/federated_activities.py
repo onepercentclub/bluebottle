@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import serializers, exceptions
 from rest_polymorphic.serializers import PolymorphicSerializer
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage
+from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices
 from bluebottle.activity_pub.serializers.base import (
     FederatedObjectSerializer
 )
@@ -235,6 +235,23 @@ class EventAttendanceModeField(serializers.Field):
             return False
 
 
+class JoinModeField(serializers.Field):
+    def __init__(self, *args, **kwargs):
+        kwargs['source'] = 'review'
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        return (
+            JoinModeChoices.review if value else JoinModeChoices.open
+        )
+
+    def to_internal_value(self, value):
+        if value == JoinModeChoices.review:
+            return True
+        elif value == JoinModeChoices.open:
+            return False
+
+
 class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:crowd-funding')
 
@@ -242,14 +259,17 @@ class FederatedDeadlineActivitySerializer(BaseFederatedActivitySerializer):
 
     start_time = DateField(source='start', allow_null=True)
     end_time = DateField(source='deadline', allow_null=True)
+    registration_deadline = DateField(allow_null=True)
 
     event_attendance_mode = EventAttendanceModeField()
+    join_mode = JoinModeField()
     duration = serializers.DurationField(allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DeadlineActivity
         fields = BaseFederatedActivitySerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'event_attendance_mode', 'duration',
+            'location', 'start_time', 'end_time', 'registration_deadline',
+            'event_attendance_mode', 'duration', 'join_mode',
         )
 
 
@@ -274,7 +294,8 @@ class SlotsSerializer(FederatedObjectSerializer):
         model = DateActivitySlot
 
         fields = FederatedObjectSerializer.Meta.fields + (
-            'name', 'location', 'start_time', 'end_time', 'event_attendance_mode', 'duration',
+            'name', 'location', 'start_time', 'end_time',
+            'event_attendance_mode', 'duration',
         )
 
 
@@ -282,10 +303,14 @@ class FederatedDateActivitySerializer(BaseFederatedActivitySerializer):
     id = IdField('json-ld:do-good-event')
 
     sub_event = SlotsSerializer(many=True, source='slots')
+    join_mode = JoinModeField()
+    registration_deadline = DateField(allow_null=True)
 
     class Meta(BaseFederatedActivitySerializer.Meta):
         model = DateActivity
-        fields = BaseFederatedActivitySerializer.Meta.fields + ('sub_event', )
+        fields = BaseFederatedActivitySerializer.Meta.fields + (
+            'sub_event', 'review', 'join_mode', 'registration_deadline',
+        )
 
     def create(self, validated_data):
         slots = validated_data.pop('slots', [])

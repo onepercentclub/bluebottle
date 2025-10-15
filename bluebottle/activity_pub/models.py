@@ -291,6 +291,11 @@ class EventAttendanceModeChoices(DjangoChoices):
     offline = ChoiceItem('OfflineEventAttendanceMode')
 
 
+class JoinModeChoices(DjangoChoices):
+    open = ChoiceItem('OpenJoinMode')
+    review = ChoiceItem('ReviewJoinMode')
+
+
 class SubEvent(ActivityPubModel):
     name = models.CharField(null=True)
     start_time = models.DateTimeField(null=True)
@@ -318,11 +323,16 @@ class SubEvent(ActivityPubModel):
 class DoGoodEvent(Event):
     start_time = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
+    registration_deadline = models.DateTimeField(null=True)
 
     location = models.ForeignKey(Place, null=True, blank=True, on_delete=models.CASCADE)
     duration = models.DurationField(null=True)
     event_attendance_mode = models.CharField(
         choices=EventAttendanceModeChoices.choices,
+        null=True
+    )
+    join_mode = models.CharField(
+        choices=JoinModeChoices.choices,
         null=True
     )
 

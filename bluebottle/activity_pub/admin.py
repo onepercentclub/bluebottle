@@ -559,12 +559,14 @@ class EventAdminMixin:
     adopted.boolean = True
     adopted.short_description = _("Adopted")
 
-    inlines = [AnnouncementInline]
+    inlines = []
 
     def get_inline_instances(self, request, obj=None):
-        if not obj or not obj.is_local:
-            return []
-        return super().get_inline_instances(request, obj)
+        inlines = super().get_inline_instances(request, obj)
+        if obj and obj.is_local:
+            inlines.append(AnnouncementInline(self.model, self.admin_site))
+
+        return inlines
 
     def display_description(self, obj):
         return format_html(
@@ -736,5 +738,8 @@ class DoGoodEventAdmin(EventChildAdmin):
     readonly_fields = EventChildAdmin.readonly_fields + (
         'start_time',
         'end_time',
+        'registration_deadline',
+        'join_mode',
+        'event_attendance_mode'
     )
     fields = readonly_fields

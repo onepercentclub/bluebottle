@@ -905,6 +905,7 @@ class FundingTestCase(BluebottleTestCase):
 class DonationTestCase(BluebottleTestCase):
     def setUp(self):
         super(DonationTestCase, self).setUp()
+        StripePaymentProviderFactory.create()
         self.client = JSONAPITestClient()
         self.user = BlueBottleUserFactory()
         self.initiative = InitiativeFactory.create()

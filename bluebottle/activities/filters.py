@@ -103,7 +103,7 @@ class UpcomingFacet(Facet):
     def add_filter(self, filter_values):
         if filter_values == ["1"]:
             settings = InitiativePlatformSettings.objects.get()
-            statuses = ["open", "running", "granted"]
+            statuses = ["open", "running"]
             if settings.include_full_activities:
                 statuses.append("full")
             return Terms(status=statuses)

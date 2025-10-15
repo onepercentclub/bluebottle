@@ -202,7 +202,6 @@ class DoGoodEventSerializer(BaseEventSerializer):
     end_time = serializers.DateTimeField(required=False, allow_null=True)
     registration_deadline = serializers.DateTimeField(required=False, allow_null=True)
 
-
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
         choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],

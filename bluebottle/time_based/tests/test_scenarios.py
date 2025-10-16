@@ -10,7 +10,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import (
     BluebottleTestCase,
     JSONAPITestClient,
-    BluebottleAdminTestCase,
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,

@@ -12,7 +12,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase, JSONAPITestClient
+from bluebottle.test.utils import APITestCase
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,

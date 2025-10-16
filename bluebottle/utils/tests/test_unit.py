@@ -268,7 +268,6 @@ class TestTenantAwareMailserver(BluebottleTestCase):
                         new=mock.Mock([])) as properties:
             # Mock properties without DKIM settings to test non-DKIM case
             properties.MAIL_CONFIG = None
-            
             be = TenantAwareBackend()
             msg = EmailMultiAlternatives(subject="test", body="test",
                                          to=["test@example.com"])

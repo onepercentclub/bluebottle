@@ -93,7 +93,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
 
         # Confirm should change status
         response = self.app.post(self.approve_url, {
-            'confirm': "Yes, I'm sure", 
+            'confirm': "Yes, I'm sure",
             'send_messages': 'on'
         }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')

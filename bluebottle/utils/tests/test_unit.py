@@ -254,7 +254,8 @@ jzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFMBGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtB
 nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
 
 
-class Testtenantawaremailserver(BluebottleTestCase):
+class TestTenantAwareMailserver(BluebottleTestCase):
+
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
         EMAIL_HOST='somehost',

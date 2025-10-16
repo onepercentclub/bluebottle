@@ -246,7 +246,8 @@ ZWwmp8Nkdeirc0wsQ41fR+SNVfw7mlzzvN5ucxNEkWcCGCngccwnHZ+iEbkCQQC8
 3QjW7VSsDTjh9IlNfiMEoVCe/NcA+efXNvUzhF0vf+w52p0NuEQeoHlyTkze23fU
 ShoJXy+7HBXhw27EqkAhAkEAvizvS5bTzkAi7T94zWYoS0rbO/pSqzcGcNGjyisM
 pk501YSTBeanQ7Y9PL17TLQjXquz0u5oqhGlRujFnt9HwA==
------END RSA PRIVATE KEY----"""
+-----END RSA PRIVATE KEY-----
+"""
 
 DKIM_PUBLIC_KEY = b"""MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcw49R0Dy
 5F8mkP31iCQdgHl9TzZV8n9puQf4pYl0GnHcnj+josc9s1PRMI9rxvYFdM7Vxpw9w2ryxe
@@ -263,21 +264,26 @@ class TestTenantAwareMailserver(BluebottleTestCase):
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
         """ Test simple / traditional case where config comes from settings """
-        be = TenantAwareBackend()
-        msg = EmailMultiAlternatives(subject="test", body="test",
-                                     to=["test@example.com"])
+        with mock.patch("bluebottle.utils.email_backend.properties",
+                        new=mock.Mock([])) as properties:
+            # Mock properties without DKIM settings to test non-DKIM case
+            properties.MAIL_CONFIG = None
+            
+            be = TenantAwareBackend()
+            msg = EmailMultiAlternatives(subject="test", body="test",
+                                         to=["test@example.com"])
 
-        # open the connection explicitly so we can get the
-        # connection reference. It will be cleared once closed
-        # in send_messages
-        be.open()
-        connection = be.connection
+            # open the connection explicitly so we can get the
+            # connection reference. It will be cleared once closed
+            # in send_messages
+            be.open()
+            connection = be.connection
 
-        be.send_messages([msg])
+            be.send_messages([msg])
 
-        self.assertTrue(smtp.called)
-        self.assertEqual(smtp.call_args[0], ('somehost', 1337))
-        self.assertTrue(connection.sendmail.called)
+            self.assertTrue(smtp.called)
+            self.assertEqual(smtp.call_args[0], ('somehost', 1337))
+            self.assertTrue(connection.sendmail.called)
 
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',

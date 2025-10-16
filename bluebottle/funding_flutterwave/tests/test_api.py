@@ -1,6 +1,7 @@
 import json
 
 from django.urls import reverse
+from djmoney.contrib.exchange.models import Rate
 from djmoney.money import Money
 from mock import patch
 from rest_framework import status

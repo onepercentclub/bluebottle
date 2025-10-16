@@ -1847,6 +1847,7 @@ class FundingPlatformSettingsAPITestCase(APITestCase):
     def setUp(self):
         super(FundingPlatformSettingsAPITestCase, self).setUp()
         self.user = BlueBottleUserFactory.create()
+        StripePaymentProviderFactory.create()
 
     def test_anonymous_donations_setting(self):
         funding_settings = FundingPlatformSettings.load()

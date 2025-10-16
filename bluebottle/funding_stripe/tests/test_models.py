@@ -4,8 +4,9 @@ import stripe
 from django.test.utils import override_settings
 
 from bluebottle.funding_stripe.models import (
-    StripePayoutAccount, ExternalAccount
+    StripePayoutAccount, ExternalAccount, StripePaymentProvider
 )
+from bluebottle.funding_stripe.tests.factories import StripePaymentProviderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -20,6 +21,8 @@ from bluebottle.test.utils import BluebottleTestCase
 class ConnectAccountTestCase(BluebottleTestCase):
     def setUp(self):
         account_id = 'some-connect-id'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.check = StripePayoutAccount(
             owner=BlueBottleUserFactory.create(),
             country='NL',
@@ -97,6 +100,8 @@ class StripeExternalAccountTestCase(BluebottleTestCase):
         account_id = 'some-connect-id'
         external_account_id = 'some-bank-token'
         country = 'NL'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
 
         self.connect_account = stripe.Account(account_id)
 

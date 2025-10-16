@@ -907,6 +907,8 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         staff.user_set.add(self.staff_member)
         mail.outbox = []
 
+        super().setUp()
+
     def get_csrf_token(self, response):
         csrf = 'name="csrfmiddlewaretoken" value="'
         start = response.content.decode().find(csrf) + len(csrf)
@@ -1048,6 +1050,13 @@ class JSONAPITestClient(Client):
         if user:
             extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
+
+    def _base_environ(self, **request):
+        env = super()._base_environ(**request)
+
+        env['SERVER_NAME'] = connection.tenant.domain_url
+
+        return env
 
 
 def get_first_included_by_type(response, type):

@@ -12,7 +12,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import APITestCase
+from bluebottle.test.utils import APITestCase, JSONAPITestClient
 from bluebottle.time_based.serializers import (
     DateActivitySerializer,
     DateParticipantSerializer,
@@ -366,10 +366,10 @@ class DateSlotDetailAPITestCase(APITestCase):
 
         self.perform_get(user=self.model.owner)
 
+        url = reverse('slot-participant-export', args=(self.model.pk,))
+
         self.assertTrue(
-            self.response.json()['data']['attributes']['participants-export-url']['url'].startswith(
-                reverse('slot-participant-export', args=(self.model.pk,))
-            ),
+            url in self.response.json()['data']['attributes']['participants-export-url']['url']
         )
 
         export_response = self.client.get(

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from django.shortcuts import resolve_url
 from django.utils.timezone import now
@@ -13,71 +15,54 @@ from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 
-from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
-from rest_framework.authtoken.serializers import AuthTokenSerializer
-from rest_framework import parsers, renderers
+from social_core.exceptions import AuthCanceled
+from social_core.utils import get_strategy
+from social_django.utils import psa, STORAGE
+
+from rest_framework.exceptions import AuthenticationFailed
 
 from two_factor.views import SetupView
 
-from social_django.utils import psa, get_strategy, STORAGE
-from social.exceptions import AuthCanceled
-
-from bluebottle.auth.serializers import FacebookAuthSerializer
+from bluebottle.auth.serializers import SocialLoginSerializer
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
-
-
-class GetAuthToken(APIView):
-    throttle_classes = ()
-    permission_classes = ()
-    parser_classes = (parsers.FormParser, parsers.MultiPartParser,
-                      parsers.JSONParser,)
-    renderer_classes = (renderers.JSONRenderer,)
-    serializer_class = AuthTokenSerializer
-    queryset = Token.objects.all()
-
-    # Accept backend as a parameter and 'auth' for a login / pass
-    def post(self, request, backend):
-        # Here we call PSA to authenticate like we would if we used PSA on
-        # server side.
-        token_result = complete(request, backend)
-
-        # If user is active we get or create the REST token and send it back
-        # with user data
-        if token_result.get('token', None):
-            return Response({'token': token_result.get('token')})
-        elif token_result.get('error', None):
-            return Response({'error': token_result.get('error')})
-        return Response({'error': _('No result for token')})
-
 
 def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
 
-
-@psa(redirect_uri='/static/assets/frontend/popup.html',
-     load_strategy=load_drf_strategy)
+@psa(load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
-        user = request.backend.auth_complete(request=request)
-    except AuthCanceled:
-        return None
+        user = request.backend.complete(request=request)
+    except AuthCanceled as e:
+        raise AuthenticationFailed(
+            _('Authentication was cancelled'),
+            code="cancelled"
+        )
+    if not user.email:
+        if user.date_joined > now() - timedelta(hours=1):
+            user.delete()
+        raise AuthenticationFailed(
+            _('Please allow Facebook access to your email address if you wish to sign up/log in via Facebook.'),
+            code="email_required"
+        )
+    if not user.is_active:
+        raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
+    return user
 
-    if user and user.is_active:
+class SocialLoginView(JsonApiViewMixin, CreateAPIView):
+    serializer_class = SocialLoginSerializer
+    permission_classes = ()
+
+    def perform_create(self, serializer):
+        user = complete(self.request, serializer.validated_data['backend'])
+
         user.last_login = now()
         user.save()
-        return {'token': user.get_jwt_token()}
-    elif user and not user.is_active:
-        return {'error': _(
-            "This user account is disabled, please contact us if you want to re-activate.")}
-    else:
-        return None
 
-
-class AuthFacebookView(JsonApiViewMixin, CreateAPIView):
-    serializer_class = FacebookAuthSerializer
-    permission_classes = ()
+        serializer.instance = type('obj', (object,), {
+            'pk': user.id,
+            'token': user.get_jwt_token()
+        })
 
 
 @csrf_protect

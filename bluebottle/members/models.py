@@ -23,6 +23,22 @@ from ..offices.models import OfficeSubRegion
 from ..segments.models import SegmentType, Segment
 
 
+class SocialLoginSettings(models.Model):
+    LOGIN_BACKENDS = (
+        ('facebook', _('Facebook')),
+        ('google', _('Google')),
+    )
+    settings = models.ForeignKey(
+        'members.MemberPlatformSettings', 
+        on_delete=models.CASCADE, 
+        related_name='social_login_methods'
+    )
+
+    backend = models.CharField(_('Platform'), choices=LOGIN_BACKENDS)
+    secret = models.CharField(_('Secret'))
+    client_id = models.CharField(_('Client id'))
+
+
 class MemberPlatformSettings(BasePlatformSettings):
     LOGIN_METHODS = (
         ('password', _('Email/password combination')),

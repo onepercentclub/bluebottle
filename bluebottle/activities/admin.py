@@ -55,6 +55,7 @@ from bluebottle.activity_pub.serializers.federated_activities import FederatedAc
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
 from bluebottle.follow.models import Follow
@@ -672,9 +673,7 @@ class ActivityChildAdmin(
 
     activity_pub_fields = (
         'share_activity_link',
-        'origin',
         'event',
-        'host_organization',
     )
 
     registration_fields = None
@@ -808,15 +807,35 @@ class ActivityChildAdmin(
         )
 
     def get_activity_pub_fields(self, request, obj=None):
-        return self.activity_pub_fields
+        if obj:
+            if obj.origin:
+                return (
+                    'origin',
+                    'host_organization',
+                )
+            else:
+                return (
+                    'share_activity_link',
+                    'event',
+                )
+        return []
 
     def get_fieldsets(self, request, obj=None):
         settings = InitiativePlatformSettings.objects.get()
         fieldsets = [
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
-            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
+        site_settings = SitePlatformSettings.load()
+        if site_settings.share_activities and request.user.has_perm("activity_pub.add_event"):
+            if obj and obj.origin:
+                fieldsets.append(
+                    (_("Source activity"), {"fields": self.get_activity_pub_fields(request, obj)})
+                )
+            elif site_settings.is_publishing_activities:
+                fieldsets.append(
+                    (_("Publish"), {"fields": self.get_activity_pub_fields(request, obj)})
+                )
 
         if self.get_registration_fields(request, obj):
             fieldsets.append(

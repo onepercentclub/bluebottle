@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from bluebottle import activity_pub
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices

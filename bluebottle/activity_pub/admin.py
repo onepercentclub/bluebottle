@@ -594,10 +594,7 @@ class EventAdminMixin:
         return custom_urls + urls
 
     def adopt_event(self, request, object_id):
-        """
-        Create a Deed from the Event information
-        """
-        if not request.user.has_perm("deeds.add_deed"):
+        if not request.user.has_perm("deeds.add_activity"):
             raise PermissionDenied
 
         event = get_object_or_404(Event, pk=unquote(object_id))

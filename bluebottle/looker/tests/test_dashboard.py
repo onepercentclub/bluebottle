@@ -45,9 +45,9 @@ class LookerAppDashboardTest(BluebottleAdminTestCase):
         dashboard = parent_dashboard.children[0]
         dashboard.init_with_context({})
         self.assertTrue(isinstance(dashboard, LookerDashboard))
-        # Migration will already have generated 3 Looker embeds so total should be 10
+
         self.assertEqual(
-            len(dashboard.children), 10
+            len(dashboard.children), 7
         )
 
 

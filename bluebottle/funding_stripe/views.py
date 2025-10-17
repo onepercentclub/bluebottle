@@ -112,7 +112,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
 
         payment_provider = StripePaymentProvider.objects.first()
 
-        platform_currency = payment_provider.get_default_currency()[0].lower()
+        platform_currency = payment_provider.currency.lower()
 
         if 'card_payments' in connect_account.account.capabilities:
             # Only do  on_behalf_of when card_payments are enabled
@@ -572,9 +572,10 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            error = "Payout not found"
+            tenant = connection.tenant
+            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
-            return HttpResponse(error, status=400)
+            return HttpResponse("Skipped event {}, account not found".format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

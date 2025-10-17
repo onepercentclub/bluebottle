@@ -44,7 +44,7 @@ class ActivitySlotSerializer(ModelSerializer):
     timezone = serializers.SerializerMethodField()
 
     participants_export_url = PrivateFileSerializer(
-        'date-participant-export',
+        'slot-participant-export',
         url_args=('pk',),
         filename='participant.csv',
         permission=CanExportParticipantsPermission,

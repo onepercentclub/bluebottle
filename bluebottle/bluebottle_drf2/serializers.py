@@ -59,7 +59,9 @@ class SorlImageField(RestrictedImageField):
 
         if not os.path.exists(value.path):
             if settings.DEBUG and settings.RANDOM_IMAGE_PROVIDER:
-                (width, height) = self.geometry_string.split('x')
+                parts = self.geometry_string.split('x')
+                width = parts[0]
+                height = parts[1] if len(parts) > 1 else parts[0]
                 return settings.RANDOM_IMAGE_PROVIDER.format(seed=randrange(1, 300), width=width, height=height)
             return ""
 

@@ -24,6 +24,7 @@ class SignedRequestFactory(RequestFactory):
 
     def request(self, **kwargs):
         kwargs['SERVER_NAME'] = connection.tenant.domain_url
+        kwargs['HTTP_HOST'] = connection.tenant.domain_url
         result = super().request(**kwargs)
 
         path = self.overrides.get('path', result.path)

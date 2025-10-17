@@ -152,7 +152,7 @@ PAYOUT_SERVICE = {
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
 NUM_SLOW_TESTS = 50
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = False
 logging.disable(logging.CRITICAL)
 

@@ -119,7 +119,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).post(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def put(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -130,7 +131,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).put(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def patch(self, path, data=None, format='json', content_type=None, **extra):
         if 'token' in extra:
@@ -141,7 +143,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).patch(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
     def delete(self, path, data=None, format='json', content_type=None,
                **extra):
@@ -153,7 +156,8 @@ class ApiClient(RestAPIClient):
             extra['HTTP_HOST'] = self.tenant.domain_url
 
         return super(ApiClient, self).delete(
-            path, data=data, format=format, content_type=content_type, **extra)
+            path, data=data, format=format, content_type=content_type, **extra
+        )
 
 
 @override_settings(DEBUG=True)
@@ -900,14 +904,13 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     """
 
     def setUp(self):
+        super().setUp()
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
         self.staff_member = BlueBottleUserFactory.create(is_staff=True)
         staff = Group.objects.get(name='Staff')
         staff.user_set.add(self.staff_member)
         mail.outbox = []
-
-        super().setUp()
 
     def get_csrf_token(self, response):
         csrf = 'name="csrfmiddlewaretoken" value="'
@@ -1029,6 +1032,9 @@ class override_properties(object):
 
 class JSONAPITestClient(Client):
 
+    def get(self, path, data=None, follow=False, secure=False, **extra):
+        return super(JSONAPITestClient, self).get(path, data, follow, secure, **extra)
+
     def patch(self, path, data='',
               content_type='application/vnd.api+json',
               follow=False, secure=False, **extra):
@@ -1053,10 +1059,14 @@ class JSONAPITestClient(Client):
 
     def _base_environ(self, **request):
         env = super()._base_environ(**request)
-
         env['SERVER_NAME'] = connection.tenant.domain_url
-
+        env['HTTP_HOST'] = connection.tenant.domain_url
         return env
+
+    def request(self, **kwargs):
+        kwargs['SERVER_NAME'] = connection.tenant.domain_url
+        kwargs['HTTP_HOST'] = connection.tenant.domain_url  # Added this line
+        return super().request(**kwargs)
 
 
 def get_first_included_by_type(response, type):

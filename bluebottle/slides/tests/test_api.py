@@ -38,7 +38,7 @@ class SlideTestCase(BluebottleTestCase):
         self.slide4 = DraftSlideFactory.create(author=self.user, language='nl')
         self.homepage_url = reverse('home-detail')
 
-        HomePage.objects.get(pk=1).delete()
+        HomePage.objects.all().delete()
         self.page = HomePageFactory(pk=1)
         placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         SlidesContent.objects.create_for_placeholder(placeholder, language_code='en')

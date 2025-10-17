@@ -3,13 +3,13 @@ from datetime import date, timedelta
 from django.core import mail
 from django.utils.timezone import now
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.tests.steps import api_initiative_transition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import (
     BluebottleTestCase,
     JSONAPITestClient,
-    BluebottleAdminTestCase,
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -28,7 +28,7 @@ from bluebottle.time_based.tests.steps import (
 )
 
 
-class DateActivityScenarioTestCase(BluebottleAdminTestCase):
+class DateActivityScenarioTestCase(BluebottleTestCase):
 
     def setUp(self):
         super().setUp()
@@ -36,6 +36,9 @@ class DateActivityScenarioTestCase(BluebottleAdminTestCase):
         self.supporter = BlueBottleUserFactory.create()
         self.initiative = InitiativeFactory.create(owner=self.owner, status='draft')
         self.client = JSONAPITestClient()
+        settings = InitiativePlatformSettings.load()
+        settings.activity_types = ['dateactivity']
+        settings.save()
 
     def test_create_with_multiple_slots(self):
         activity_data = {

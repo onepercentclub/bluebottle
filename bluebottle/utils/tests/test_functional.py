@@ -10,6 +10,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 class AdminPermissionsTest(BluebottleTestCase):
     def setUp(self):
+        super().setUp()
         self.init_projects()
 
         # Create staff user without superuser permission

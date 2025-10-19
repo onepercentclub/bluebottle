@@ -1,6 +1,7 @@
 from rest_framework import permissions
 
 from bluebottle.activity_pub.models import Follow, Accept
+from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.members.models import MemberPlatformSettings
 
 
@@ -10,10 +11,12 @@ class ActivityPubPermission(permissions.BasePermission):
             settings = MemberPlatformSettings.load()
             if settings.closed:
                 if request.auth:
-                    return Follow.objects.filter(object=request.auth).exists()
+                    return (
+                        Follow.objects.filter(object=request.auth).exists() or
+                        Accept.objects.filter(object__actor=request.auth).exists()
+                    )
                 else:
-                    return False
-
+                    return request.build_absolute_uri() == get_platform_actor().pub_url
             else:
                 return True
         else:

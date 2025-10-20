@@ -141,9 +141,12 @@ class BaseEventSerializer(ActivityPubSerializer):
     summary = serializers.CharField()
     image = ImageSerializer(include=True, allow_null=True, required=False)
     organization = OrganizationSerializer(include=True, allow_null=True, required=False)
+    activity_link = serializers.URLField(required=False, allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
+        fields = ActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization', 'activity_link',
+        )
 
 
 class GoodDeedSerializer(BaseEventSerializer):

@@ -166,6 +166,7 @@ class RegistrationActivityDocument(TimeBasedActivityDocument):
             return DeadlineActivity.objects.filter(contributors=related_instance)
 
     def prepare_contribution_duration(self, instance):
+
         if instance.duration:
             return [{
                 'period': 0,

@@ -17,5 +17,18 @@
                 </a>
             </div>
         {% endif %}
+        {% if original.linked_activity %}
+            <div class="submit-row">
+                <a href="{% url 'admin:activity_links_linkeddeed_change' original.linked_activity.pk %}">
+                    <input type="button" value="View linked activity" class="default" name="_adopt">
+                </a>
+            </div>
+        {% else %}
+            <div class="submit-row">
+                <a href="{% url 'admin:activity_pub_event_link' original.pk %}">
+                    <input type="button" value="Link activity" class="default" name="_adopt">
+                </a>
+            </div>
+        {% endif %}
     {% endif %}
 {% endblock %}

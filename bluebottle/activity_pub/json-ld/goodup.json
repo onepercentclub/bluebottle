@@ -11,6 +11,7 @@
     "country": "goodup:country",
     "locality": "goodup:locality",
     "target": "goodup:target",
-    "targetCurrency": "goodup:targetCurrency"
+    "targetCurrency": "goodup:targetCurrency",
+    "activityLink": "goodup:activityLink"
   }
 }

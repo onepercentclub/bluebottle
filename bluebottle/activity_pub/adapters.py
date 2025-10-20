@@ -7,6 +7,7 @@ from django.forms import model_to_dict
 from requests_http_signature import HTTPSignatureAuth, algorithms
 from django.db import connection
 
+from bluebottle.activity_links.models import LinkedDeed
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.models import Follow, Activity, Publish
@@ -113,6 +114,16 @@ class JSONLDAdapter():
         organization = Publish.objects.filter(object=event).first().actor.organization
 
         return serializer.save(owner=follow.default_owner, host_organization=organization)
+
+    def link(self, event, request):
+        import json
+        linked = LinkedDeed.objects.create(
+            title=event.name,
+            description=json.dumps({'html': event.summary, 'delta': ''}),
+            status='open',
+        )
+        event.linked_activity = linked
+        event.save()
 
 
 adapter = JSONLDAdapter()

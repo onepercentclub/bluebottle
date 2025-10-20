@@ -209,6 +209,11 @@ class Event(ActivityPubModel):
     activity = models.OneToOneField(
         "activities.Activity", null=True, on_delete=models.SET_NULL
     )
+    activity_link = models.URLField(null=True, blank=True)
+
+    linked_activity = models.OneToOneField(
+        "activity_links.LinkedActivity", null=True, on_delete=models.SET_NULL
+    )
 
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
@@ -297,6 +302,13 @@ class JoinModeChoices(DjangoChoices):
     review = ChoiceItem('ReviewJoinMode')
 
 
+class AdoptionModeChoices(DjangoChoices):
+    nothing = ChoiceItem('NothingAdoptionMode')
+    link = ChoiceItem('LinkAdoptionMode')
+    publish = ChoiceItem('PublishAdoptionMode')
+    copy = ChoiceItem('CopyAdoptionMode')
+
+
 class SubEvent(ActivityPubModel):
     name = models.CharField(null=True)
     start_time = models.DateTimeField(null=True)
@@ -367,6 +379,13 @@ class Follow(Activity):
         blank=True,
         verbose_name=_("Default activity owner"),
         on_delete=models.SET_NULL,
+    )
+
+    adoption_mode = models.CharField(
+        choices=AdoptionModeChoices.choices,
+        default=AdoptionModeChoices.nothing,
+        verbose_name=_("Adoption mode"),
+        help_text=_("Select what should happen when a new activity has been received."),
     )
 
     @property

@@ -341,7 +341,7 @@ class FederatedActivitySerializer(PolymorphicSerializer):
         FederatedDeedSerializer,
         FederatedDateActivitySerializer,
         FederatedFundingSerializer
-    ]
+                                                                                                                                                                                                                                                                                                                        ]
 
     model_type_mapping = {
         Deed: 'GoodDeed',

@@ -4,6 +4,7 @@
 {% block submit_buttons_bottom %}
     
     {% if original and not original.is_local %}
+        {{ block.super }}
         {% if original.adopted_activity %}
             <div class="submit-row">
                 <a href="{% url 'admin:activities_activity_change' original.adopted_activity.pk %}">

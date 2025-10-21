@@ -211,10 +211,6 @@ class Event(ActivityPubModel):
     )
     activity_link = models.URLField(null=True, blank=True)
 
-    linked_activity = models.OneToOneField(
-        "activity_links.LinkedActivity", null=True, on_delete=models.SET_NULL
-    )
-
     organization = models.ForeignKey(
         Organization, null=True, on_delete=models.SET_NULL
     )
@@ -232,6 +228,14 @@ class Event(ActivityPubModel):
     @property
     def adopted(self):
         return self.adopted_activity is not None
+
+    @property
+    def linked_activity(self):
+        return self.linked_activities.first()
+
+    @property
+    def linked(self):
+        return self.linked_activity is not None
 
     def __str__(self):
         return self.name
@@ -303,10 +307,23 @@ class JoinModeChoices(DjangoChoices):
 
 
 class AdoptionModeChoices(DjangoChoices):
-    nothing = ChoiceItem('NothingAdoptionMode')
-    link = ChoiceItem('LinkAdoptionMode')
-    publish = ChoiceItem('PublishAdoptionMode')
-    copy = ChoiceItem('CopyAdoptionMode')
+    nothing = ChoiceItem(
+        'NothingAdoptionMode',
+        _('Leave new activities. Adoption is managed manually.')
+    )
+    link = ChoiceItem(
+        'LinkAdoptionMode',
+        _('Create a link to new activities.')
+
+    )
+    publish = ChoiceItem(
+        'PublishAdoptionMode',
+        _('Publish the new activities.')
+    )
+    copy = ChoiceItem(
+        'CopyAdoptionMode',
+        _('Create a local copy for new activities.')
+    )
 
 
 class SubEvent(ActivityPubModel):

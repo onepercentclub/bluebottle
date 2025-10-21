@@ -289,7 +289,7 @@ class FollowingAdmin(FollowAdmin):
             return []
 
     def get_fields(self, request, obj=None):
-        fields = ['default_owner']
+        fields = ['default_owner', 'adoption_mode']
         if not obj:
             fields = ['platform_url'] + fields
         else:
@@ -539,6 +539,7 @@ class EventAdminMixin:
         "name",
         "source",
         "adopted",
+        "linked"
     )
     readonly_fields = (
         "name",
@@ -559,6 +560,12 @@ class EventAdminMixin:
 
     adopted.boolean = True
     adopted.short_description = _("Adopted")
+
+    def linked(self, obj):
+        return obj.linked
+
+    linked.boolean = True
+    linked.short_description = _("Linked")
 
     inlines = []
 
@@ -662,7 +669,7 @@ class EventAdminMixin:
             )
 
         except Exception as e:
-            self.message_user(request, f"Error creating activity: {str(e)}", level="error")
+            self.message_user(request, f"Error creating linked activity: {str(e)}", level="error")
             return HttpResponseRedirect(
                 reverse("admin:activity_pub_event_change", args=[event.pk])
             )
@@ -709,7 +716,7 @@ class PublishedActivityAdmin(EventPolymorphicAdmin):
 @admin.register(ReceivedActivity)
 class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
-    list_display = ("name_link", "type", "source", "adopted")
+    list_display = ("name_link", "type", "source", "adopted", "linked")
     list_display_links = ("name_link",)
 
     def get_queryset(self, request):

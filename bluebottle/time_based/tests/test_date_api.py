@@ -8,6 +8,7 @@ from django.utils.timezone import now
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -345,6 +346,44 @@ class DateSlotDetailAPITestCase(APITestCase):
             self.assertEqual(
                 ical_event["organizer"], "MAILTO:{}".format(self.activity.owner.email)
             )
+
+    def test_export_download_anonymous(self):
+        settings = InitiativePlatformSettings.objects.get()
+        settings.enable_participant_exports = True
+        settings.save()
+
+        self.perform_get()
+        self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
+
+    def test_export_download_disabled(self):
+        self.perform_get(user=self.model.owner)
+        self.assertIsNone(self.response.json()['data']['attributes']['participants-export-url'])
+
+    def test_export_download_owner(self):
+        settings = InitiativePlatformSettings.objects.get()
+        settings.enable_participant_exports = True
+        settings.save()
+
+        self.perform_get(user=self.model.owner)
+
+        self.assertTrue(
+            self.response.json()['data']['attributes']['participants-export-url']['url'].startswith(
+                reverse('slot-participant-export', args=(self.model.pk,))
+            ),
+        )
+
+        export_response = self.client.get(
+            self.response.json()['data']['attributes']['participants-export-url']['url']
+        )
+        workbook = load_workbook(filename=BytesIO(export_response.content))
+        self.assertEqual(len(workbook.worksheets), 1)
+
+        sheet = workbook.get_active_sheet()
+
+        self.assertEqual(
+            tuple(sheet.values)[0],
+            ('Email', 'Name', 'Registration Date', 'Status',)
+        )
 
 
 class DateSlotListAPITestCase(APITestCase):

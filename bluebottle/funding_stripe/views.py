@@ -112,7 +112,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
 
         payment_provider = StripePaymentProvider.objects.first()
 
-        platform_currency = payment_provider.get_default_currency()[0].lower()
+        platform_currency = payment_provider.currency.lower()
 
         if 'card_payments' in connect_account.account.capabilities:
             # Only do  on_behalf_of when card_payments are enabled

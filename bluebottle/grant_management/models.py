@@ -142,7 +142,6 @@ class GrantPayment(TriggerMixin, models.Model):
 
         stripe = get_stripe()
         session = stripe.checkout.Session.retrieve(self.checkout_id)
-
         if not session.payment_intent:
             return None
 
@@ -156,8 +155,6 @@ class GrantPayment(TriggerMixin, models.Model):
             return None
 
         if intent.status == "succeeded":
-            # Get the related charge and expand balance_transaction
-            # to check if funds are available
             charge_id = intent.charges.data[0].id if intent.charges.data else None
             if not charge_id:
                 return None

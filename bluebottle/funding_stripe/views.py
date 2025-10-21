@@ -489,7 +489,7 @@ class IntentWebHookView(View):
             return HttpResponse('Payment not found', status=400)
 
     def get_payment(self, payment_id):
-        if PaymentIntent.objects.filter(id=payment_id).exists():
+        if PaymentIntent.objects.filter(intent_id=payment_id).exists():
             intent = PaymentIntent.objects.get(intent_id=payment_id)
             try:
                 return intent.payment

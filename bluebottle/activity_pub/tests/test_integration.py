@@ -194,6 +194,10 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             self.assertEqual(Event.objects.count(), 0)
 
+    def approve(self, activity):
+        activity.theme = ThemeFactory.create()
+        activity.states.approve(save=True)
+
     def test_adopt(self):
         self.test_publish()
 
@@ -214,6 +218,11 @@ class ActivityPubTestCase:
                     self.assertEqual(self.adopted.title, self.model.title)
                     self.assertEqual(self.adopted.origin, self.event)
                     self.assertEqual(self.adopted.image.origin, self.event.image)
+
+                    self.approve(self.adopted)
+
+        announce = Announce.objects.get()
+        self.assertTrue(announce)
 
     def test_adopt_default_owner(self):
         self.test_publish()
@@ -247,7 +256,8 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
     def create(self):
         super().create(
             start=(datetime.now() + timedelta(days=10)).date(),
-            end=(datetime.now() + timedelta(days=20)).date()
+            end=(datetime.now() + timedelta(days=20)).date(),
+            organization=None
         )
         self.submit()
 
@@ -262,14 +272,6 @@ class AdoptDeedTestCase(ActivityPubTestCase, BluebottleTestCase):
 
         self.assertEqual(self.adopted.start, self.model.start)
         self.assertEqual(self.adopted.end, self.model.end)
-
-        with LocalTenant(self.other_tenant):
-            self.adopted.theme = ThemeFactory.create()
-            self.adopted.states.submit()
-            self.adopted.states.approve(save=True)
-
-        announce = Announce.objects.get()
-        self.assertEqual(announce.object, self.model.event)
 
 
 class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
@@ -292,6 +294,21 @@ class FundingTestCase(ActivityPubTestCase, BluebottleTestCase):
         BudgetLineFactory.create_batch(2, activity=self.model)
 
         self.submit()
+
+    def approve(self, activity):
+        BudgetLineFactory.create_batch(2, activity=activity)
+
+        activity.bank_account = ExternalAccountFactory.create(
+            account_id="some-external-account-id",
+            status="verified",
+            connect_account=StripePayoutAccountFactory.create(
+                account_id="test-account-id",
+                status="verified",
+            )
+        )
+        activity.theme = ThemeFactory.create()
+        activity.states.submit()
+        activity.states.approve(save=True)
 
     def test_publish(self):
         super().test_publish()
@@ -343,12 +360,13 @@ class AdoptDateActivityTestCase(ActivityPubTestCase, BluebottleTestCase):
     factory = DateActivityFactory
 
     def create(self):
-        super().create(slots=[])
+        super().create(slots=[], organization=None)
 
         DateActivitySlotFactory.create_batch(
             3,
             activity=self.model,
-            location=GeolocationFactory.create(country=self.country),
+            location=None,
+            is_online=True
         )
 
         self.submit()

@@ -3,7 +3,6 @@ from celery import shared_task
 import requests
 from io import BytesIO
 
-from django.forms import model_to_dict
 from requests_http_signature import HTTPSignatureAuth, algorithms
 from django.db import connection
 
@@ -72,9 +71,11 @@ class JSONLDAdapter():
 
         discovered_url = client.get(url)
         data = self.fetch(discovered_url)
+
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         actor = serializer.save()
+
         return Follow.objects.create(object=actor)
 
     @shared_task(
@@ -131,8 +132,15 @@ def publish_activity(sender, instance, **kwargs):
 def create_organization(sender, instance, **kwargs):
     try:
         if isinstance(instance, Organization) and kwargs['created'] and not instance.organization_id:
-            from bluebottle.activity_pub.serializers.federated_activities import OrganizationSerializer
-            serializer = OrganizationSerializer(data=model_to_dict(instance))
+            from bluebottle.activity_pub.serializers.federated_activities import (
+                OrganizationSerializer as FederatedOrganizationSerializer
+            )
+
+            from bluebottle.activity_pub.serializers.json_ld import (
+                OrganizationSerializer
+            )
+            data = OrganizationSerializer(instance=instance).data
+            serializer = FederatedOrganizationSerializer(data=data)
             serializer.is_valid(raise_exception=True)
             organization = serializer.save()
             instance.organization = organization

@@ -3,7 +3,6 @@ from future import standard_library
 from bluebottle.members.models import MemberPlatformSettings, SocialLoginSettings
 standard_library.install_aliases()
 import json
-import urllib.parse
 
 import mock
 import httmock
@@ -58,39 +57,39 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         load_signed_request_mock
     )
     def test_token(self):
-            with httmock.HTTMock(facebook_me_mock):
-                response = self.client.post(
-                    self.token_url,
-                    {
-                        'data': {
-                            'type': 'social/tokens',
+        with httmock.HTTMock(facebook_me_mock):
+            response = self.client.post(
+                self.token_url,
+                {
+                    'data': {
+                        'type': 'social/tokens',
 
-                            'attributes': {
-                                'backend': 'facebook',
-                                'access-token': 'test_token',
-                                'signed-request': 'test-signed-request'
-                            }
+                        'attributes': {
+                            'backend': 'facebook',
+                            'access-token': 'test_token',
+                            'signed-request': 'test-signed-request'
                         }
-                    },
-                )
+                    }
+                },
+            )
 
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-                self.assertTrue('token' in response.json()['data']['attributes'])
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertTrue('token' in response.json()['data']['attributes'])
 
-                authenticated_response = self.client.get(
-                    reverse('current-member-detail'),
-                    HTTP_AUTHORIZATION="JWT {0}".format(response.json()['data']['attributes']['token'])
-                )
+            authenticated_response = self.client.get(
+                reverse('current-member-detail'),
+                HTTP_AUTHORIZATION="JWT {0}".format(response.json()['data']['attributes']['token'])
+            )
 
-                self.assertEqual(authenticated_response.status_code, status.HTTP_200_OK)
-                self.assertEqual(
-                    authenticated_response.json()['data']['attributes']['first-name'], 
-                    'First'
-                )
-                self.assertEqual(
-                    authenticated_response.json()['data']['attributes']['last-name'], 
-                    'Last'
-                )
+            self.assertEqual(authenticated_response.status_code, status.HTTP_200_OK)
+            self.assertEqual(
+                authenticated_response.json()['data']['attributes']['first-name'],
+                'First'
+            )
+            self.assertEqual(
+                authenticated_response.json()['data']['attributes']['last-name'],
+                'Last'
+            )
 
     @mock.patch(
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
@@ -157,6 +156,6 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         load_signed_request_mock
     )
     def test_token_no_data(self):
-            with httmock.HTTMock(facebook_me_mock):
-                response = self.client.post(self.token_url)
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with httmock.HTTMock(facebook_me_mock):
+            response = self.client.post(self.token_url)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

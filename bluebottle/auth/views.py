@@ -26,14 +26,16 @@ from two_factor.views import SetupView
 from bluebottle.auth.serializers import SocialLoginSerializer
 from bluebottle.utils.views import CreateAPIView, JsonApiViewMixin
 
+
 def load_drf_strategy(request=None):
     return get_strategy('bluebottle.social.strategy.DRFStrategy', STORAGE, request)
+
 
 @psa(load_strategy=load_drf_strategy)
 def complete(request, backend):
     try:
         user = request.backend.complete(request=request)
-    except AuthCanceled as e:
+    except AuthCanceled:
         raise AuthenticationFailed(
             _('Authentication was cancelled'),
             code="cancelled"
@@ -48,6 +50,7 @@ def complete(request, backend):
     if not user.is_active:
         raise AuthenticationFailed(_('User account is disabled'), code="account_disabled")
     return user
+
 
 class SocialLoginView(JsonApiViewMixin, CreateAPIView):
     serializer_class = SocialLoginSerializer

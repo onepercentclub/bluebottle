@@ -29,8 +29,8 @@ class SocialLoginSettings(models.Model):
         ('google', _('Google')),
     )
     settings = models.ForeignKey(
-        'members.MemberPlatformSettings', 
-        on_delete=models.CASCADE, 
+        'members.MemberPlatformSettings',
+        on_delete=models.CASCADE,
         related_name='social_login_methods'
     )
 

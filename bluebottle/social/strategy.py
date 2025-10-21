@@ -6,9 +6,10 @@ from bluebottle.members.models import SocialLoginSettings
 
 class DRFStrategy(DjangoStrategy):
     name_mapping = {
-        'KEY': 'client_id', 
+        'KEY': 'client_id',
         'SECRET': 'secret'
     }
+
     def request_data(self, merge=True):
         return self.request.data
 

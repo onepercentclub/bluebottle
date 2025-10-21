@@ -32,7 +32,7 @@ def set_language(user, response, *args, **kwargs):
 
 
 def set_last_login(user, response, *args, **kwargs):
-    user.last_= now()
+    user.last = now()
     user.save()
 
 

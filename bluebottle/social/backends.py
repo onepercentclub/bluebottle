@@ -1,4 +1,3 @@
-import json
 from social_core.backends.facebook import FacebookAppOAuth2
 from social_core.backends.google import GoogleOAuth2
 

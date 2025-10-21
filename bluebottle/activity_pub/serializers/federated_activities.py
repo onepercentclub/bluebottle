@@ -226,6 +226,9 @@ class EventAttendanceModeField(serializers.Field):
 class JoinModeField(serializers.Field):
     def __init__(self, *args, **kwargs):
         kwargs['source'] = 'review'
+        kwargs['required'] = False
+        kwargs['allow_null'] = True
+
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
@@ -236,7 +239,7 @@ class JoinModeField(serializers.Field):
     def to_internal_value(self, value):
         if value == JoinModeChoices.review:
             return True
-        elif value == JoinModeChoices.open:
+        else:
             return False
 
 

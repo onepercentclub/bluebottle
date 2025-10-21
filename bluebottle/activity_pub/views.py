@@ -47,6 +47,14 @@ def create_task(serializer, tenant):
         serializer.save()
 
 
+class PickableRequest:
+    def __init__(self, request):
+        self.path = request.path
+        self.user = request.user
+        self.headers = request.headers
+        self.auth = request.auth
+
+
 class InboxView(generics.CreateAPIView, ActivityPubView):
     serializer_class = InboxSerializer
     queryset = Inbox.objects.all()
@@ -60,7 +68,7 @@ class InboxView(generics.CreateAPIView, ActivityPubView):
             return self.serializer_class
 
     def get_serializer_context(self):
-        return {}
+        return {'request': PickableRequest(self.request)}
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

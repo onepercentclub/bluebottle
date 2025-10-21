@@ -133,7 +133,15 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         return self.Meta.model.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        validated_data.pop('id', None)
+        id = validated_data.pop('id', None)
+
+        if (
+            is_local(id) and
+            self.context['request'].auth and
+            not is_local(self.context['request'].auth.iri)
+        ):
+            # do not allow remote request to update local instances
+            return instance
 
         for name, field in self.fields.items():
             if isinstance(

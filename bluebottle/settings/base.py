@@ -405,6 +405,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.activity_links',
 
     # Custom dashboard
     # 'fluent_dashboard',

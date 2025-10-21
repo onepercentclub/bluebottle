@@ -1,8 +1,10 @@
+from urllib.parse import urlparse
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
@@ -11,12 +13,25 @@ from bluebottle.organizations.models import Organization as BluebottleOrganizati
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
 
 
+class ActivityPubManager(PolymorphicManager):
+    def from_iri(self, iri):
+        from bluebottle.activity_pub.utils import is_local
+
+        if is_local(iri):
+            resolved = resolve(urlparse(iri).path)
+            return self.get(pk=resolved.kwargs['pk'])
+        else:
+            return self.get(iri=iri)
+
+
 class ActivityPubModel(PolymorphicModel):
     def __init__(self, *args, **kwargs):
         ContentType.objects.clear_cache()
         super().__init__(*args, **kwargs)
 
     iri = models.URLField(null=True, unique=True)
+
+    objects = ActivityPubManager()
 
     @property
     def is_local(self):
@@ -56,7 +71,7 @@ class Actor(ActivityPubModel):
         return self.preferred_username
 
 
-class PersonManager(PolymorphicManager):
+class PersonManager(ActivityPubManager):
     def from_model(self, model):
         if not isinstance(model, Member):
             raise TypeError("Model should be a member instance")
@@ -89,7 +104,7 @@ class Person(Actor):
         return self.name
 
 
-class OrganizationManager(PolymorphicManager):
+class OrganizationManager(ActivityPubManager):
 
     def from_model(self, model):
         if not isinstance(model, BluebottleOrganization):

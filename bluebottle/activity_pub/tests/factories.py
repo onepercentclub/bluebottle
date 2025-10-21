@@ -4,7 +4,8 @@ from datetime import timedelta
 from django.utils import timezone
 
 from bluebottle.activity_pub.models import (
-    Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event
+    Organization, Inbox, Outbox, PublicKey, PrivateKey, Follow, Person, Place, Event,
+    DoGoodEvent, SubEvent, Address, Image
 )
 from bluebottle.test.factory_models.organizations import OrganizationFactory as BluebottleOrganizationFactory
 
@@ -65,15 +66,20 @@ class FollowFactory(factory.DjangoModelFactory):
     actor = factory.SubFactory(OrganizationFactory)
 
 
+class AddressFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Address
+
+
 class PlaceFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Place
 
     name = factory.Faker('company')
-    street_address = factory.Faker('street_address')
     latitude = factory.Faker('latitude')
     longitude = factory.Faker('longitude')
-    mapbox_id = factory.Sequence(lambda n: f'place.{n}')
+
+    address = factory.SubFactory(AddressFactory)
 
 
 class EventFactory(factory.DjangoModelFactory):
@@ -108,3 +114,40 @@ class EventFactory(factory.DjangoModelFactory):
                 start=obj.start,
                 end=obj.start + timedelta(hours=2)
             )
+
+
+class SubEventFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SubEvent
+
+    start_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=7))
+    end_time = factory.LazyFunction(lambda: timezone.now() + timedelta(days=8))
+    duration = factory.LazyFunction(lambda: timedelta(hours=3))
+    location = factory.SubFactory(PlaceFactory)
+
+
+class ImageFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Image
+
+    url = factory.Faker('image_url')
+
+
+class DoGoodEventFactory(factory.DjangoModelFactory):
+    @factory.post_generation
+    def with_subevents(obj, create, extracted, **kwargs):
+        """Add subevents to make it a date activity type"""
+        if extracted and create:
+            # Create subevents
+            SubEventFactory.create_batch(
+                2,
+                parent=obj,
+            )
+
+    class Meta(object):
+        model = DoGoodEvent
+
+    name = factory.Faker('sentence', nb_words=4)
+    summary = factory.Faker('text', max_nb_chars=500)
+    image = factory.SubFactory(ImageFactory)
+    organization = factory.SubFactory(OrganizationFactory)

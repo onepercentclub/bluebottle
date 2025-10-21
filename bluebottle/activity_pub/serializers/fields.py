@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 
-class IdField(serializers.CharField):
+class ActivityPubIdField(serializers.CharField):
     def __init__(self, url_name):
         self.url_name = url_name
 
@@ -21,6 +21,18 @@ class IdField(serializers.CharField):
     def to_internal_value(self, data):
         result = super().to_internal_value(data)
         return {'id': result}
+
+
+class FederatedIdField(serializers.CharField):
+    def __init__(self, url_name):
+        self.url_name = url_name
+        super().__init__(source='*')
+
+    def to_representation(self, value):
+        return value.activity_pub_url
+
+    def to_internal_value(self, value):
+        return {'id': value}
 
 
 class TypeValidator:

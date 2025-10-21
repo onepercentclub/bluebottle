@@ -6,6 +6,7 @@ from rest_framework import serializers, exceptions
 
 from bluebottle.activity_pub.models import ActivityPubModel
 from bluebottle.activity_pub.processor import default_context
+from bluebottle.activity_pub.serializers.fields import FederatedIdField, ActivityPubIdField, TypeField
 from bluebottle.activity_pub.utils import is_local
 from bluebottle.activity_pub.adapters import adapter
 
@@ -20,8 +21,39 @@ class ActivityPubListSerializer(serializers.ListSerializer):
 
         return result
 
+    def update(self, instances, validated_data):
+        result = []
+        for index, instance in enumerate(instances):
+            result.append(self.child.update(instance, validated_data[index]))
 
-class ActivityPubSerializer(serializers.ModelSerializer):
+        return result
+
+
+class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
+    def __new__(cls, name, bases, attrs):
+        for attr_name, attr in attrs.items():
+            if (
+                isinstance(attr, serializers.Serializer) and
+                not isinstance(
+                    attr,
+                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+                )
+            ):
+                raise TypeError(
+                    f'Attribute {attr_name} should be a subclass of ActivityPubSerializer'
+                )
+
+        if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
+            if 'id' not in attrs or not isinstance(attrs['id'], ActivityPubIdField):
+                raise TypeError(f'{name} is missing an IdField')
+
+            if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
+                raise TypeError(f'{name} is missing a TypeField')
+
+        return super().__new__(cls, name, bases, attrs)
+
+
+class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSerializerMetaclass):
     def __init__(self, *args, **kwargs):
         self.include = kwargs.pop('include', False)
 
@@ -104,7 +136,10 @@ class ActivityPubSerializer(serializers.ModelSerializer):
         validated_data.pop('id', None)
 
         for name, field in self.fields.items():
-            if isinstance(field, (ActivityPubSerializer, PolymorphicActivityPubSerializer)):
+            if isinstance(
+                field,
+                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+            ):
                 if validated_data.get(name, None):
                     field.initial_data = validated_data[name]
                     field.is_valid()
@@ -234,9 +269,48 @@ class PolymorphicActivityPubSerializer(
         return False
 
 
+class FederatedObjectListSerializer(serializers.ListSerializer):
+    def get_value(self, data):
+        result = super().get_value(data)
+
+        if not isinstance(result, (tuple, list)):
+            # In json-ld single items are compacted to lists. Make a list again in that case
+            return [result]
+
+        return result
+
+    def update(self, instances, validated_data):
+        result = []
+        for index, instance in enumerate(instances):
+            result.append(self.child.update(instance, validated_data[index]))
+
+        return result
+
+
+class FederatedObjectSerializerMetaclass(serializers.SerializerMetaclass):
+    def __new__(cls, name, bases, attrs):
+        for attr_name, attr in attrs.items():
+            if (
+                isinstance(attr, serializers.Serializer) and
+                not isinstance(
+                    attr, (FederatedObjectSerializer, )
+                )
+            ):
+                raise TypeError(
+                    f'Attribute {attr_name} should be a subclass of FederatedObjectSerializer'
+                )
+
+        if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
+            if 'id' not in attrs or not isinstance(attrs['id'], FederatedIdField):
+                raise TypeError(f'{name} is missing an IdField')
+
+        return super().__new__(cls, name, bases, attrs)
+
+
 class FederatedObjectSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', )
+        list_serializer_class = FederatedObjectListSerializer
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -257,13 +331,29 @@ class FederatedObjectSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         iri = validated_data.pop('id')
-        validated_data['origin'] = ActivityPubModel.objects.get(iri=iri)
+        validated_data['origin'] = ActivityPubModel.objects.from_iri(iri)
 
         for field in self.fields.values():
-            if isinstance(field, (FederatedObjectSerializer)):
-                if field.source != '*' and field.source in validated_data:
+            if isinstance(field, (FederatedObjectSerializer, )):
+                if (
+                    field.source != '*' and
+                    field.source in validated_data and
+                    validated_data[field.source]
+                ):
                     field.initial_data = validated_data[field.source]
 
                     validated_data[field.source] = field.create(validated_data[field.source])
 
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop('id', None)
+
+        for name, field in self.fields.items():
+            if isinstance(field, (FederatedObjectSerializer, )):
+                if validated_data.get(name, None):
+                    field.initial_data = validated_data[name]
+                    field.is_valid()
+                    validated_data[field.source] = field.save()
+
+        return super().update(instance, validated_data)

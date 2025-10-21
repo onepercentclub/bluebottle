@@ -396,6 +396,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         "grant_provider",
         "state_name",
         "checkout_id",
+        "intent_id",
         "get_payment_link",
     ]
     fields = readonly_fields

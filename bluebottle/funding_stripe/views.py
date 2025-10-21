@@ -442,15 +442,18 @@ class IntentWebHookView(View):
             return HttpResponse('Signature failed to verify', status=400)
 
         try:
-            if event.type == 'checkout.updated':
-            q
-            elif event.type == 'payment_intent.succeeded':
+            if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    payment.states.succeed()
-                    payment.update()
-                    payment.donation.save()
-                    payment.save()
+                if payment:
+                    if payment.status != payment.states.succeeded.value:
+                        payment.states.succeed()
+                        payment.update()
+                        payment.donation.save()
+                        payment.save()
+                else:
+                    grant_payment = self.get_grant_payment(event.data.object.id)
+                    if grant_payment:
+                        grant_payment.check_status()
 
                 return HttpResponse('Updated payment to succeeded')
 
@@ -498,6 +501,9 @@ class IntentWebHookView(View):
                 except Donor.payment.RelatedObjectDoesNotExist:
                     payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
                     return payment
+
+    def get_grant_payment(self, payment_id):
+        return GrantPayment.objects.filter(intent_id=payment_id).first()
 
 
 class SessionWebHookView(View):

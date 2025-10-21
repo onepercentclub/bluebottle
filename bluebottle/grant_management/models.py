@@ -147,6 +147,9 @@ class GrantPayment(TriggerMixin, models.Model):
             return None
 
         intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+        if not self.intent_id:
+            self.intent_id = intent.id
+            self.save()
 
         if intent.status == "requires_action":
             self.states.wait(save=True)

@@ -138,23 +138,23 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
         if (
             is_local(id) and
             self.context['request'].auth and
-            not is_local(self.context['request'].auth.iri)
+            is_local(self.context['request'].auth.iri)
         ):
-            # do not allow remote request to update local instances
+
+            for name, field in self.fields.items():
+                if isinstance(
+                    field,
+                    (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
+                ):
+                    if validated_data.get(name, None):
+                        field.initial_data = validated_data[name]
+                        field.is_valid()
+                        validated_data[field.source] = field.save()
+
+            validated_data.pop('type', None)
+            return super().update(instance, validated_data)
+        else:
             return instance
-
-        for name, field in self.fields.items():
-            if isinstance(
-                field,
-                (ActivityPubSerializer, ActivityPubListSerializer, PolymorphicActivityPubSerializer)
-            ):
-                if validated_data.get(name, None):
-                    field.initial_data = validated_data[name]
-                    field.is_valid()
-                    validated_data[field.source] = field.save()
-
-        validated_data.pop('type', None)
-        return super().update(instance, validated_data)
 
     def get_value(self, data):
         result = super().get_value(data)

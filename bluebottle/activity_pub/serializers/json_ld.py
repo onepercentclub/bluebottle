@@ -200,10 +200,16 @@ class DoGoodEventSerializer(BaseEventSerializer):
 
     start_time = serializers.DateTimeField(required=False, allow_null=True)
     end_time = serializers.DateTimeField(required=False, allow_null=True)
+    registration_deadline = serializers.DateTimeField(required=False, allow_null=True)
 
     location = PlaceSerializer(allow_null=True, include=True, required=False)
     event_attendance_mode = serializers.ChoiceField(
         choices=['OnlineEventAttendanceMode', 'OfflineEventAttendanceMode'],
+        required=False,
+        allow_null=True
+    )
+    join_mode = serializers.ChoiceField(
+        choices=['OpenJoinMode', 'ReviewJoinMode'],
         required=False,
         allow_null=True
     )
@@ -214,7 +220,9 @@ class DoGoodEventSerializer(BaseEventSerializer):
     class Meta(BaseEventSerializer.Meta):
         model = DoGoodEvent
         fields = BaseEventSerializer.Meta.fields + (
-            'location', 'start_time', 'end_time', 'duration', 'event_attendance_mode', 'sub_event'
+            'location', 'start_time', 'end_time', 'duration',
+            'event_attendance_mode', 'join_mode', 'registration_deadline',
+            'sub_event',
         )
 
     def create(self, validated_data):

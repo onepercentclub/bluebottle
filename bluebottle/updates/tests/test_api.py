@@ -281,6 +281,7 @@ class ActivityUpdateListTestCase(APITestCase):
     serializer = UpdateSerializer
 
     def setUp(self):
+        super().setUp()
         self.activity = DeedFactory.create()
 
         self.models = UpdateFactory.create_batch(5, activity=self.activity)

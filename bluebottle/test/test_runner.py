@@ -45,7 +45,10 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.init_projects()
 
         try:
-            backend, _created = ExchangeBackend.objects.get_or_create(base_currency='USD')
+            backend, _created = ExchangeBackend.objects.get_or_create(
+                base_currency='USD',
+                name='openexchangerates.org'
+            )
             Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
             Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
             Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})

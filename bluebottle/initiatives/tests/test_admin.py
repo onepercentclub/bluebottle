@@ -83,8 +83,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_review_initiative_send_mail(self):
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.approve_url)
+        response = self.app.get(self.approve_url, user=self.superuser)
         mail.outbox = []
 
         # Should show confirmation page
@@ -93,7 +92,10 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertContains(response, 'Send e-mail notifications')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+            'send_messages': 'on'
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -101,17 +103,18 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_review_initiative_send_no_mail(self):
-        self.client.force_login(self.superuser)
         mail.outbox = []
-        response = self.client.get(self.approve_url)
+        response = self.app.get(self.approve_url, user=self.superuser)
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, 'You are about to')
-        self.assertContains(response, 'Send e-mail notifications')
+        self.assertContains(response, 'Send e-mail')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': False})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')
@@ -125,7 +128,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         )
 
         self.client.force_login(self.superuser)
-        response = self.client.get(request_changes_url)
+        response = self.app.get(request_changes_url, user=self.superuser)
 
         # Should show confirmation page
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -133,7 +136,11 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertNotContains(response, 'Don\'t send any messages')
 
         # Confirm should change status
-        response = self.client.post(self.approve_url, {'confirm': True, 'send_messages': True})
+        response = self.app.post(self.approve_url, {
+            'confirm': "Yes, I'm sure",
+            'send_messages': 'on',
+            'post': 'yes'
+        }, user=self.superuser)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'approved')

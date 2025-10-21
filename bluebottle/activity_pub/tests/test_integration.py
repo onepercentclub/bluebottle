@@ -35,6 +35,7 @@ class ActivityPubClient(TestClient):
         env = super()._base_environ(**request)
 
         env['SERVER_NAME'] = connection.tenant.domain_url
+        env['HTTP_HOST'] = connection.tenant.domain_url
         env['content_type'] = 'application/ld+json'
 
         return env

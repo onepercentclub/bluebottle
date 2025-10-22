@@ -22,7 +22,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         connection.set_schema_to_public()
 
-        tenant2, _created = get_tenant_model().objects.get_or_create(
+        tenant2, _created = get_tenant_model().objects.update_or_create(
             schema_name="test2",
             client_name="test2",
             defaults={
@@ -36,7 +36,7 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         connection.set_schema_to_public()
 
-        tenant, _created = get_tenant_model().objects.get_or_create(
+        tenant, _created = get_tenant_model().objects.update_or_create(
             schema_name="test",
             client_name="test",
             defaults={

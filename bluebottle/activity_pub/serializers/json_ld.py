@@ -1,3 +1,5 @@
+from sphinx.cmd.quickstart import allow_empty
+
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
@@ -121,7 +123,8 @@ class OrganizationSerializer(BaseActorSerializer):
 
 class ActorSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        OrganizationSerializer, PersonSerializer
+        OrganizationSerializer,
+        PersonSerializer
     ]
 
     class Meta(PolymorphicActivityPubSerializer.Meta):
@@ -131,7 +134,7 @@ class ActorSerializer(PolymorphicActivityPubSerializer):
 class ImageSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
-    url = serializers.URLField()
+    url = serializers.URLField(allow_null=True, allow_blank=True)
     name = serializers.CharField(allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
@@ -179,7 +182,8 @@ class BaseEventSerializer(ActivityPubSerializer):
     organization = OrganizationSerializer(include=True, allow_null=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
+        fields = ActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization')
 
 
 class GoodDeedSerializer(BaseEventSerializer):

@@ -1,27 +1,24 @@
 
-from celery import shared_task
-import requests
+import logging
 from io import BytesIO
 
-from django.forms import model_to_dict
-from requests_http_signature import HTTPSignatureAuth, algorithms
+import requests
+from celery import shared_task
 from django.db import connection
-
-from bluebottle.activity_pub.parsers import JSONLDParser
-from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity, Publish, Announce, Accept
-from bluebottle.activity_pub.utils import get_platform_actor, is_local
-from bluebottle.activity_pub.authentication import key_resolver
-
-from bluebottle.clients.utils import LocalTenant
-from bluebottle.webfinger.client import client
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.forms import model_to_dict
+from requests_http_signature import HTTPSignatureAuth, algorithms
 
-import logging
-
+from bluebottle.activity_pub.authentication import key_resolver
+from bluebottle.activity_pub.models import Announce
+from bluebottle.activity_pub.models import Follow, Publish, Followers, Accept, Actor
 from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.parsers import JSONLDParser
+from bluebottle.activity_pub.renderers import JSONLDRenderer
+from bluebottle.activity_pub.utils import get_platform_actor, is_local
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.webfinger.client import client
 
 logger = logging.getLogger(__name__)
 
@@ -80,31 +77,36 @@ class JSONLDAdapter():
     @shared_task(
         autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
     )
-    def publish_to_inbox(self, activity, inbox, tenant):
+    def publish_to_inbox(self, iri, activity, tenant):
         from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
         with LocalTenant(tenant, clear_tenant=True):
             try:
                 data = ActivitySerializer().to_representation(activity)
                 auth = self.get_auth(activity.actor)
-
-                self.post(inbox.iri, data=data, auth=auth)
+                self.post(iri, data=data, auth=auth)
             except Exception as e:
                 logger.error(e)
                 print(e)
                 raise
 
-    def publish(self, activity, audience=None):
+    def publish(self, activity):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        if isinstance(audience, (list, tuple)):
-            for actor in audience:
-                if not actor.inbox.is_local:
-                    self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
-        else:
-            for actor in activity.audience:
-                if not actor.inbox.is_local:
-                    self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+        for item in activity.audience:
+            if item.is_local:
+                if isinstance(item, Followers):
+                    for accept in Accept.objects.filter(actor=item.actor):
+                        actor = accept.object.actor
+                        self.publish_to_inbox.delay(self, actor.inbox.iri, activity, connection.tenant)
+            else:
+                actor = Actor.objects.get(iri=item.iri)
+                self.publish_to_inbox.delay(self, actor.inbox.iri, activity, connection.tenant)
+
+            activity.to.append(item.pub_url)
+
+        activity.save()
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -119,6 +121,27 @@ class JSONLDAdapter():
 
         return serializer.save(owner=follow.default_owner, host_organization=organization)
 
+    @shared_task(
+        autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
+    )
+    def backfill(self, iri, tenant):
+        from bluebottle.activity_pub.serializers.json_ld import ActivitySerializer
+
+        with LocalTenant(tenant, clear_tenant=True):
+            outbox = self.fetch(iri)
+
+            if outbox['total_items']:
+                page_iri = outbox['last']
+
+                while page_iri:
+                    page = self.fetch(page_iri)
+                    for item in page['items']:
+                        serializer = ActivitySerializer(data=item)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save()
+
+                    page_iri = page.get('prev')
+
 
 adapter = JSONLDAdapter()
 
@@ -130,6 +153,16 @@ def publish_activity(sender, instance, **kwargs):
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")
+
+
+@receiver([post_save])
+def backfill_follow(sender, instance, **kwargs):
+    try:
+        if isinstance(instance, Accept) and kwargs['created'] and not instance.is_local:
+            outbox = instance.object.object.outbox
+            adapter.backfill.delay(adapter, outbox.iri, connection.tenant)
+    except Exception as e:
+        logger.error(f"Failed to backfill accepted follow: {str(e)}")
 
 
 @receiver([post_save])

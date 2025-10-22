@@ -36,3 +36,8 @@ class InboxPermission(permissions.BasePermission):
             return False
         else:
             return True
+
+
+class OutboxPermission(permissions.BasePermission):
+    def has_permission(self, request, view=None):
+        return request.auth and Accept.objects.filter(object__actor=request.auth).exists()

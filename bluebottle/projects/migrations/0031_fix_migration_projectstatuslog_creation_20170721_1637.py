@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.db import migrations, connection
 
 def forward(apps, schema_editor):
+    return
 
     with connection.cursor() as cursor:
         cursor.execute("SELECT applied FROM django_migrations WHERE name='0010_fix_export_permissions_migration'")

@@ -66,7 +66,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
     def to_representation(self, instance):
         representation = super().to_representation(instance)
 
-        if not self.parent:
+        if not self.parent or isinstance(self.parent, serializers.ListSerializer):
             return representation
         else:
             if self.include:
@@ -275,6 +275,9 @@ class PolymorphicActivityPubSerializer(
             return True
 
         return False
+
+    class Meta:
+        pass
 
 
 class FederatedObjectListSerializer(serializers.ListSerializer):

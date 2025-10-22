@@ -787,23 +787,9 @@ class ActivityChildAdmin(
     def share_activity(self, request, activity, form):
         platforms = form.cleaned_data['platforms']
         actors = [p.actor for p in platforms]
-
-        if not request.user.has_perm("activity.add_activity"):
-            raise PermissionDenied
-
-        try:
-            publish = activity.event.publish_set.get()
-
-            adapter.publish(publish, actors)
-        except ObjectDoesNotExist:
-            federated_serializer = FederatedActivitySerializer(activity)
-
-            serializer = EventSerializer(data=federated_serializer.data)
-            serializer.is_valid(raise_exception=True)
-            event = serializer.save(activity=activity)
-
-            publish = Publish.objects.create(actor=get_platform_actor(), object=event)
-            adapter.publish(publish, actors)
+        publish = activity.event.publish_set.get()
+        publish.to = actors
+        publish.save()
 
         self.message_user(
             request,

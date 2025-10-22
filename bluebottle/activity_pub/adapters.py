@@ -149,7 +149,7 @@ adapter = JSONLDAdapter()
 @receiver([post_save])
 def publish_activity(sender, instance, **kwargs):
     try:
-        if isinstance(instance, (Announce, Accept)) and kwargs['created'] and instance.is_local:
+        if isinstance(instance, (Announce, Accept, Follow)) and kwargs['created'] and instance.is_local:
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")

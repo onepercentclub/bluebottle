@@ -9,6 +9,7 @@ class PlatformMultipleChoiceField(forms.ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
         if 'queryset' not in kwargs:
             kwargs['queryset'] = Follow.objects.filter(object=get_platform_actor())
+
         super().__init__(*args, **kwargs)
     
     def label_from_instance(self, obj):

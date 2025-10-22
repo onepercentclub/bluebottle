@@ -117,3 +117,18 @@ class CreateTeamEffect(Effect):
 
     def is_valid(self):
         return not self.instance.team
+
+
+class DeleteRegistrationEffect(Effect):
+
+    title = _('Delete registration if it no longer has participants')
+    template = 'admin/delete_registration.html'
+
+    def post_save(self, **kwargs):
+        registration = self.instance.registration
+        if not registration.participants.exists():
+            registration.delete()
+
+    def is_valid(self):
+        registration = self.instance.registration
+        return not registration.participants.exists()

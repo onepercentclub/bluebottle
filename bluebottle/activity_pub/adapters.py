@@ -9,7 +9,7 @@ from django.db import connection
 
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
-from bluebottle.activity_pub.models import Follow, Activity, Publish
+from bluebottle.activity_pub.models import Follow, Activity, Publish, Announce, Accept
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.activity_pub.authentication import key_resolver
 
@@ -93,13 +93,18 @@ class JSONLDAdapter():
                 print(e)
                 raise
 
-    def publish(self, activity):
+    def publish(self, activity, audience=None):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        for actor in activity.audience:
-            if not actor.inbox.is_local:
-                self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+        if isinstance(audience, (list, tuple)):
+            for actor in audience:
+                if not actor.inbox.is_local:
+                    self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
+        else:
+            for actor in activity.audience:
+                if not actor.inbox.is_local:
+                    self.publish_to_inbox.delay(self, activity, actor.inbox, connection.tenant)
 
     def adopt(self, event, request):
         from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
@@ -121,7 +126,7 @@ adapter = JSONLDAdapter()
 @receiver([post_save])
 def publish_activity(sender, instance, **kwargs):
     try:
-        if isinstance(instance, Activity) and kwargs['created'] and instance.is_local:
+        if isinstance(instance, (Announce, Accept)) and kwargs['created'] and instance.is_local:
             adapter.publish(instance)
     except Exception as e:
         logger.error(f"Failed to publish activity: {str(e)}")

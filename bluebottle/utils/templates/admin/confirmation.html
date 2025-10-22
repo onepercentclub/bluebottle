@@ -14,9 +14,10 @@
 {% endblock %}
 
 {% block content %}
-  {% block confirmation_message %}{% endblock %} 
-  {% block confirmation_content %}{% endblock %}
-  <form action="" method="post">{% csrf_token %}
+  <form action="" method="post">
+    {% csrf_token %}
+    {% block confirmation_message %}{% endblock %}
+    {% block confirmation_content %}{% endblock %}
     <input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}"/>
     <div class="submit-row">
       <input type="hidden" name="action" value="{{ action }}"/>

@@ -1,0 +1,16 @@
+{% extends "admin/confirmation.html" %}
+{% load i18n l10n admin_urls %}
+
+{% block confirmation_message %}
+    <p>{% trans "Here you can publish this activity to other platforms for them to adopt it and show it on their search page." %}</p>
+{% endblock %} 
+
+{% block confirmation_content %}
+  <fieldset class="module aligned">
+    <p>
+        <b>{%  trans "Select to which platforms you want to publish this activity" %}</b>
+    </p>
+    {{ form }}
+  </fieldset>
+{% endblock %}
+

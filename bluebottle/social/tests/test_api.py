@@ -95,6 +95,34 @@ class SocialTokenAPITestCase(BluebottleTestCase):
         'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
         load_signed_request_mock
     )
+    def test_token_empty_email_address(self):
+        @httmock.urlmatch(netloc='graph.facebook.com', path='/[v0-9\.]+/me')
+        def facebook_me_mock(url, request):
+            return json.dumps({'first_name': 'First', 'last_name': 'Last', 'email': ''})
+
+        with httmock.HTTMock(facebook_me_mock):
+            response = self.client.post(
+                self.token_url,
+                {
+                    'data': {
+                        'type': 'social/tokens',
+
+                        'attributes': {
+                            'backend': 'facebook',
+                            'access-token': 'test_token',
+                            'signed-request': 'test-signed-request'
+                        }
+                    }
+                },
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            self.assertTrue('token' in response.json()['data']['attributes'])
+
+    @mock.patch(
+        'bluebottle.social.backends.NoStateFacebookOAuth2.load_signed_request',
+        load_signed_request_mock
+    )
     def test_token_invalid_signed_request(self):
         with httmock.HTTMock(facebook_me_mock):
             response = self.client.post(

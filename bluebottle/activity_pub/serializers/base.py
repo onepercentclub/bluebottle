@@ -45,7 +45,7 @@ class ActivityPubSerializerMetaclass(serializers.SerializerMetaclass):
 
         if 'Meta' in attrs and hasattr(attrs['Meta'], 'model'):
             if 'id' not in attrs or not isinstance(attrs['id'], ActivityPubIdField):
-                raise TypeError(f'{name} is missing an IdField')
+                raise TypeError(f'{name} is missing an ActivityPubIdField')
 
             if 'type' not in attrs or not isinstance(attrs['type'], TypeField):
                 raise TypeError(f'{name} is missing a TypeField')

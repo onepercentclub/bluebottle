@@ -83,6 +83,8 @@ class FollowersSerializer(ActivityPubSerializer):
 
 
 class BaseActorSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:actor')
+    type = TypeField('Actor')
     inbox = InboxSerializer()
     outbox = OutboxSerializer()
     public_key = PublicKeySerializer(include=True)

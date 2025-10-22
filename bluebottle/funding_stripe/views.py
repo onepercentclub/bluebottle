@@ -444,11 +444,16 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    payment.states.succeed()
-                    payment.update()
-                    payment.donation.save()
-                    payment.save()
+                if payment:
+                    if payment.status != payment.states.succeeded.value:
+                        payment.states.succeed()
+                        payment.update()
+                        payment.donation.save()
+                        payment.save()
+                else:
+                    grant_payment = self.get_grant_payment(event.data.object.id)
+                    if grant_payment:
+                        grant_payment.check_status()
 
                 return HttpResponse('Updated payment to succeeded')
 
@@ -484,17 +489,21 @@ class IntentWebHookView(View):
             return HttpResponse('Payment not found', status=400)
 
     def get_payment(self, payment_id):
-        intent = PaymentIntent.objects.get(intent_id=payment_id)
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
+        if PaymentIntent.objects.filter(intent_id=payment_id).exists():
+            intent = PaymentIntent.objects.get(intent_id=payment_id)
             try:
-                intent.donation.payment.payment_intent = intent
-                intent.donation.payment.save()
                 return intent.payment
-            except Donor.payment.RelatedObjectDoesNotExist:
-                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-                return payment
+            except StripePayment.DoesNotExist:
+                try:
+                    intent.donation.payment.payment_intent = intent
+                    intent.donation.payment.save()
+                    return intent.payment
+                except Donor.payment.RelatedObjectDoesNotExist:
+                    payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                    return payment
+
+    def get_grant_payment(self, payment_id):
+        return GrantPayment.objects.filter(intent_id=payment_id).first()
 
 
 class SessionWebHookView(View):

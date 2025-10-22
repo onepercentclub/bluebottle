@@ -49,7 +49,6 @@ class UpdateLedgerItemEffect(Effect):
 
     def __str__(self):
         return "Update ledger item"
-    
 
 
 class PrepareGrantApplicationPayoutsEffect(Effect):
@@ -63,10 +62,6 @@ class PrepareGrantApplicationPayoutsEffect(Effect):
         )
         for application in applications:
             GrantPayout.generate(application)
-        
-    @property
-    def is_valid(self, *args, **kwargs):
-        import ipdb; ipdb.set_trace()
 
     def __str__(self):
         return "Create payouts for a connected grant application that was granted"

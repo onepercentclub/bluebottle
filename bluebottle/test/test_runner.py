@@ -23,10 +23,12 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test2.localhost",
-            name="Test Too",
             schema_name="test2",
             client_name="test2",
+            defaults={
+                'domain_url': "test2.localhost",
+                'name': "Test Too",
+            }
         )
 
         connection.set_tenant(tenant2)
@@ -35,10 +37,12 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url="test.localhost",
-            name="Test",
             schema_name="test",
             client_name="test",
+            defaults={
+                'domain_url': "test.localhost",
+                'name': "Test",
+            }
         )
 
         connection.set_tenant(tenant)

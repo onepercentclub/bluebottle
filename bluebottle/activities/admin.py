@@ -28,7 +28,7 @@ from polymorphic.admin import (
 )
 from pytz import timezone
 
-from bluebottle.activities.forms import ImpactReminderConfirmationForm
+from bluebottle.activities.forms import ImpactReminderConfirmationForm, PublishActivityForm
 from bluebottle.activities.messages.activity_manager import ImpactReminderMessage
 from bluebottle.activities.models import (
     Activity,
@@ -54,7 +54,7 @@ from bluebottle.activity_pub.models import Publish
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form, admin_form
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor
 from bluebottle.deeds.models import Deed, DeedParticipant
@@ -772,22 +772,29 @@ class ActivityChildAdmin(
                 obj._meta.model_name
             ), args=(obj.id,))
             return format_html(
-                '<a href="{}">{}</a>',
+                '<a href="{}" class="button_select_option button">{}</a>',
                 url,
                 _('Share activity')
             )
 
     share_activity_link.short_description = _('Share activity')
 
-    def share_activity(self, request, pk):
+    @admin_form(
+        PublishActivityForm,
+        Activity,
+        'admin/activities/publish_activity.html'
+    )
+    def share_activity(self, request, activity, form):
+        platforms = form.cleaned_data['platforms']
+        actors = [p.actor for p in platforms]
+
         if not request.user.has_perm("activity.add_activity"):
             raise PermissionDenied
 
-        activity = get_object_or_404(Activity, pk=unquote(pk))
         try:
             publish = activity.event.publish_set.get()
 
-            adapter.publish(publish)
+            adapter.publish(publish, actors)
         except ObjectDoesNotExist:
             federated_serializer = FederatedActivitySerializer(activity)
 
@@ -795,7 +802,8 @@ class ActivityChildAdmin(
             serializer.is_valid(raise_exception=True)
             event = serializer.save(activity=activity)
 
-            Publish.objects.create(actor=get_platform_actor(), object=event)
+            publish = Publish.objects.create(actor=get_platform_actor(), object=event)
+            adapter.publish(publish, actors)
 
         self.message_user(
             request,

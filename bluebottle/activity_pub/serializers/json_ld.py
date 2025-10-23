@@ -1,9 +1,5 @@
-from bluebottle.activity_pub.serializers.base import (
-    ActivityPubSerializer, PolymorphicActivityPubSerializer
-)
 from rest_framework import serializers
 
-from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -25,6 +21,10 @@ from bluebottle.activity_pub.models import (
     DoGoodEvent,
     SubEvent,
 )
+from bluebottle.activity_pub.serializers.base import (
+    ActivityPubSerializer, PolymorphicActivityPubSerializer
+)
+from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -37,10 +37,31 @@ class InboxSerializer(ActivityPubSerializer):
 
 class OutboxSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:outbox')
-    type = TypeField('Outbox')
+    type = TypeField('OrderedCollection')
 
     class Meta(ActivityPubSerializer.Meta):
         model = Outbox
+
+    def to_representation(self, data):
+        result = super().to_representation(data)
+        if self.parent:
+            return result
+        else:
+            view = self.context['view']
+            request = self.context['request']
+
+            pagination = view.pagination_class()
+            pagination.paginate_queryset(
+                view.page_view(request=request, kwargs=view.kwargs).get_queryset(),
+                self.context['request'],
+                view
+            )
+
+            result['totalItems'] = pagination.page.paginator.count
+            result['first'] = pagination.get_link(1)
+            result['last'] = pagination.get_link(pagination.page.paginator.num_pages)
+
+            return result
 
 
 class PublicKeySerializer(ActivityPubSerializer):
@@ -53,49 +74,65 @@ class PublicKeySerializer(ActivityPubSerializer):
         fields = ActivityPubSerializer.Meta.fields + ('public_key_pem',)
 
 
-class PersonSerializer(ActivityPubSerializer):
-    id = ActivityPubIdField(url_name='json-ld:person')
-    type = TypeField('Person')
+class FollowersSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:followers')
+    type = TypeField('OrderedCollection')
+
+    class Meta(ActivityPubSerializer.Meta):
+        model = Inbox
+
+
+class BaseActorSerializer(ActivityPubSerializer):
+    id = ActivityPubIdField(url_name='json-ld:actor')
+    type = TypeField('Actor')
     inbox = InboxSerializer()
     outbox = OutboxSerializer()
     public_key = PublicKeySerializer(include=True)
+    followers = PublicKeySerializer(include=True)
 
     class Meta(ActivityPubSerializer.Meta):
         fields = ActivityPubSerializer.Meta.fields + ('inbox', 'outbox', 'public_key', 'name')
         model = Person
 
 
-class OrganizationSerializer(ActivityPubSerializer):
+class PersonSerializer(BaseActorSerializer):
+    id = ActivityPubIdField(url_name='json-ld:person')
+    type = TypeField('Person')
+
+    class Meta(BaseActorSerializer.Meta):
+        model = Person
+
+
+class OrganizationSerializer(BaseActorSerializer):
     id = ActivityPubIdField(url_name='json-ld:organization')
     type = TypeField('Organization')
-    inbox = InboxSerializer(required=False, allow_null=True)
-    outbox = OutboxSerializer(required=False, allow_null=True)
-    public_key = PublicKeySerializer(include=True, required=False, allow_null=True)
+
     name = serializers.CharField()
     summary = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     image = serializers.URLField(required=False, allow_blank=True, allow_null=True)
 
-    class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + (
-            'inbox', 'outbox', 'public_key', 'name', 'summary', 'content', 'image',
+    class Meta(BaseActorSerializer.Meta):
+        fields = BaseActorSerializer.Meta.fields + (
+            'name', 'summary', 'content', 'image',
         )
         model = Organization
 
 
 class ActorSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
-        OrganizationSerializer, PersonSerializer
+        OrganizationSerializer,
+        PersonSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Actor
 
 
 class ImageSerializer(ActivityPubSerializer):
     id = ActivityPubIdField(url_name='json-ld:image')
     type = TypeField('Image')
-    url = serializers.URLField()
+    url = serializers.URLField(allow_null=True, allow_blank=True)
     name = serializers.CharField(allow_null=True, allow_blank=True)
 
     class Meta(ActivityPubSerializer.Meta):
@@ -143,7 +180,8 @@ class BaseEventSerializer(ActivityPubSerializer):
     organization = OrganizationSerializer(include=True, allow_null=True, required=False)
 
     class Meta(ActivityPubSerializer.Meta):
-        fields = ActivityPubSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
+        fields = ActivityPubSerializer.Meta.fields + (
+            'name', 'summary', 'image', 'organization')
 
 
 class GoodDeedSerializer(BaseEventSerializer):
@@ -255,7 +293,7 @@ class EventSerializer(PolymorphicActivityPubSerializer):
         GoodDeedSerializer, CrowdFundingSerializer, DoGoodEventSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Event
 
 
@@ -308,5 +346,5 @@ class ActivitySerializer(PolymorphicActivityPubSerializer):
         FollowSerializer, AcceptSerializer, PublishSerializer, AnnounceSerializer
     ]
 
-    class Meta:
+    class Meta(PolymorphicActivityPubSerializer.Meta):
         model = Activity

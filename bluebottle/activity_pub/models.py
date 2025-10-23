@@ -8,6 +8,8 @@ from django.urls import reverse, resolve
 from django.utils.translation import gettext_lazy as _
 from polymorphic.models import PolymorphicManager, PolymorphicModel
 
+from django_better_admin_arrayfield.models.fields import ArrayField
+
 from bluebottle.members.models import Member
 from bluebottle.organizations.models import Organization as BluebottleOrganization
 from bluebottle.utils.models import ChoiceItem, DjangoChoices
@@ -30,6 +32,7 @@ class ActivityPubModel(PolymorphicModel):
         super().__init__(*args, **kwargs)
 
     iri = models.URLField(null=True, unique=True)
+    created = models.DateTimeField(auto_now_add=True)
 
     objects = ActivityPubManager()
 
@@ -47,11 +50,15 @@ class ActivityPubModel(PolymorphicModel):
                 reverse(f'json-ld:{model_name}', args=(str(self.pk),))
             )
 
+    class Meta:
+        ordering = ["-created"]
+
 
 class Actor(ActivityPubModel):
     inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.SET_NULL, null=True, blank=True)
     outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.SET_NULL, null=True, blank=True)
     public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.SET_NULL, null=True, blank=True)
+    followers = models.OneToOneField('activity_pub.Followers', on_delete=models.SET_NULL, null=True)
     preferred_username = models.CharField(blank=True, null=True)
 
     @property
@@ -81,6 +88,7 @@ class PersonManager(ActivityPubManager):
         except Member.person.RelatedObjectDoesNotExist:
             inbox = Inbox.objects.create()
             outbox = Outbox.objects.create()
+            followers = Followers.objects.create()
 
             public_key = PublicKey.objects.create()
 
@@ -89,6 +97,7 @@ class PersonManager(ActivityPubManager):
                 member=model,
                 outbox=outbox,
                 public_key=public_key,
+                followers=followers,
                 name=model.full_name
             )
 
@@ -117,6 +126,7 @@ class OrganizationManager(ActivityPubManager):
             outbox = Outbox.objects.create()
 
             public_key = PublicKey.objects.create()
+            followers = Followers.objects.create()
             logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
 
             return Organization.objects.create(
@@ -124,6 +134,7 @@ class OrganizationManager(ActivityPubManager):
                 organization=model,
                 outbox=outbox,
                 public_key=public_key,
+                followers=followers,
                 name=model.name,
                 image=logo,
                 summary=model.description,
@@ -192,6 +203,10 @@ class PublicKey(ActivityPubModel):
             ).decode('utf-8')
 
         super().save(*args, **kwargs)
+
+
+class Followers(ActivityPubModel):
+    pass
 
 
 class Address(ActivityPubModel):
@@ -358,6 +373,7 @@ class DoGoodEvent(Event):
 
 class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
+    to = ArrayField(models.URLField(), default=list)
 
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
@@ -424,9 +440,7 @@ class Publish(Activity):
 
     @property
     def audience(self):
-        # All followers of the actor
-        for follow in self.actor.follow_set.filter(accept__isnull=False):
-            yield follow.actor.inbox
+        return [self.actor.followers]
 
 
 class Announce(Activity):
@@ -434,6 +448,8 @@ class Announce(Activity):
 
     @property
     def audience(self):
-        for publish in self.object.publish_set.all():
-            for follow in publish.actor.follow_set.all():
-                yield follow.object.inbox
+        return [
+            Publish.objects.get(
+                object=self.object
+            ).actor
+        ]

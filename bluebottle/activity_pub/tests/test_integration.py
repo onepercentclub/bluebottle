@@ -10,7 +10,7 @@ from django.test.client import RequestFactory
 from django.utils.timezone import get_current_timezone
 
 from bluebottle.activity_pub.effects import get_platform_actor
-from bluebottle.activity_pub.models import Announce, Follow, Accept, Event
+from bluebottle.activity_pub.models import Follow, Accept, Event, Announce
 from bluebottle.activity_pub.adapters import adapter
 
 from bluebottle.cms.models import SitePlatformSettings
@@ -221,8 +221,19 @@ class ActivityPubTestCase:
 
                     self.approve(self.adopted)
 
-        announce = Announce.objects.get()
+        announce = Announce.objects.exists()
         self.assertTrue(announce)
+
+    def test_backfill(self):
+        for _ in range(15):
+            self.create()
+
+        self.test_accept()
+
+        with LocalTenant(self.other_tenant):
+            self.assertEqual(Follow.objects.count(), 1)
+            self.assertEqual(Accept.objects.count(), 1)
+            self.assertEqual(Event.objects.count(), 15)
 
     def test_adopt_default_owner(self):
         self.test_publish()

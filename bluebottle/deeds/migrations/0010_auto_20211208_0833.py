@@ -5,6 +5,7 @@ from django.utils.timezone import now
 
 
 def succeed_accepted_participants(apps, schema_editor):
+    return
     DeedParticipants = apps.get_model('deeds', 'DeedParticipant')
     DeedParticipants.objects.filter(
         status__in=['accepted', 'new'],

@@ -13,7 +13,7 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Image as ActivityPubImage, JoinModeChoices
+from bluebottle.activity_pub.models import EventAttendanceModeChoices, Follow, Image as ActivityPubImage, JoinModeChoices, Publish
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE
@@ -165,11 +165,20 @@ class BaseFederatedActivitySerializer(FederatedObjectSerializer):
     class Meta(FederatedObjectSerializer.Meta):
         fields = FederatedObjectSerializer.Meta.fields + ('name', 'summary', 'image', 'organization')
 
-    def save(self, *args, **kwargs):
-        if not kwargs.get('owner'):
-            kwargs['owner'] = self.context['request'].user
+    def create(self, validated_data):
+        if 'event' in validated_data:
+            event = validated_data.pop('event')
 
-        return super().save(**kwargs)
+            follow = Follow.objects.get(object=event.source)
+            organization = Publish.objects.filter(object=event).first().actor.organization
+
+            if 'owner' not in validated_data:
+                validated_data['owner'] = follow.default_owner or self.context['request'].user
+
+            if 'organization' not in validated_data:
+                validated_data['organization'] = organization
+
+        return super().create(validated_data)
 
 
 class FederatedDeedSerializer(BaseFederatedActivitySerializer):
@@ -374,9 +383,3 @@ class FederatedActivitySerializer(PolymorphicSerializer):
                 return 'DeadlineActivity'
 
         return super()._get_resource_type_from_mapping(data)
-
-    def save(self, *args, **kwargs):
-        if not kwargs.get('owner'):
-            kwargs['owner'] = self.context['request'].user
-
-        return super().save(**kwargs)

@@ -11,14 +11,15 @@ from django.forms import model_to_dict
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
-from bluebottle.activity_pub.models import Announce
-from bluebottle.activity_pub.models import Follow, Publish, Followers, Accept, Actor
-from bluebottle.activity_pub.models import Organization
+from bluebottle.activity_pub.models import (
+    Follow, Publish, Followers, Accept, Actor, PublishType
+)
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer
 from bluebottle.activity_pub.utils import get_platform_actor, is_local
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.webfinger.client import client
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,11 @@ class JSONLDAdapter():
         serializer = OrganizationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         actor = serializer.save()
-        return Follow.objects.create(object=actor)
+
+        follow = Follow.objects.create(object=actor)
+        self.publish(follow)
+
+        return follow
 
     @shared_task(
         autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
@@ -90,14 +95,19 @@ class JSONLDAdapter():
                 print(e)
                 raise
 
-    def publish(self, activity):
+    def publish(self, activity, audience=None):
         if not activity.is_local:
             raise TypeError('Only local activities can be published')
 
-        for item in activity.audience:
+        if not audience:
+            audience = activity.default_audience
+
+        for item in audience:
             if item.is_local:
                 if isinstance(item, Followers):
-                    for accept in Accept.objects.filter(actor=item.actor):
+                    for accept in Accept.objects.filter(
+                        actor=item.actor, object__publish_type=PublishType.automatic
+                    ):
                         actor = accept.object.actor
                         self.publish_to_inbox.delay(self, actor.inbox.iri, activity, connection.tenant)
             else:
@@ -116,10 +126,7 @@ class JSONLDAdapter():
         serializer = FederatedActivitySerializer(data=data, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
-        follow = Follow.objects.get(object=event.source)
-        organization = Publish.objects.filter(object=event).first().actor.organization
-
-        return serializer.save(owner=follow.default_owner, host_organization=organization)
+        return serializer.save(event=event)
 
     @shared_task(
         autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={'max_retries': 5}
@@ -144,37 +151,3 @@ class JSONLDAdapter():
 
 
 adapter = JSONLDAdapter()
-
-
-@receiver([post_save])
-def publish_activity(sender, instance, **kwargs):
-    try:
-        if isinstance(instance, (Announce, Accept, Follow)) and kwargs['created'] and instance.is_local:
-            adapter.publish(instance)
-    except Exception as e:
-        logger.error(f"Failed to publish activity: {str(e)}")
-
-
-@receiver([post_save])
-def backfill_follow(sender, instance, **kwargs):
-    try:
-        if isinstance(instance, Accept) and kwargs['created'] and not instance.is_local:
-            outbox = instance.object.object.outbox
-            adapter.backfill.delay(adapter, outbox.iri, connection.tenant)
-    except Exception as e:
-        logger.error(f"Failed to backfill accepted follow: {str(e)}")
-
-
-@receiver([post_save])
-def create_organization(sender, instance, **kwargs):
-    try:
-        if isinstance(instance, Organization) and kwargs['created'] and not instance.organization_id:
-            from bluebottle.activity_pub.serializers.federated_activities import OrganizationSerializer
-            serializer = OrganizationSerializer(data=model_to_dict(instance))
-            serializer.is_valid(raise_exception=True)
-            organization = serializer.save()
-            instance.organization = organization
-            instance.save(update_fields=['organization'])
-
-    except Exception as e:
-        logger.error(f"Failed to create related organization: {str(e)}")

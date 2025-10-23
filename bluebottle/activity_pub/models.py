@@ -55,9 +55,9 @@ class ActivityPubModel(PolymorphicModel):
 
 
 class Actor(ActivityPubModel):
-    inbox = models.ForeignKey('activity_pub.Inbox', on_delete=models.SET_NULL, null=True, blank=True)
-    outbox = models.ForeignKey('activity_pub.Outbox', on_delete=models.SET_NULL, null=True, blank=True)
-    public_key = models.ForeignKey('activity_pub.PublicKey', on_delete=models.SET_NULL, null=True, blank=True)
+    inbox = models.OneToOneField('activity_pub.Inbox', on_delete=models.SET_NULL, null=True, blank=True)
+    outbox = models.OneToOneField('activity_pub.Outbox', on_delete=models.SET_NULL, null=True, blank=True)
+    public_key = models.OneToOneField('activity_pub.PublicKey', on_delete=models.SET_NULL, null=True, blank=True)
     followers = models.OneToOneField('activity_pub.Followers', on_delete=models.SET_NULL, null=True)
     preferred_username = models.CharField(blank=True, null=True)
 
@@ -375,13 +375,23 @@ class Activity(ActivityPubModel):
     actor = models.ForeignKey('activity_pub.Actor', on_delete=models.CASCADE, related_name='activities')
     to = ArrayField(models.URLField(), default=list)
 
+    default_audience = []
+
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
+        from bluebottle.activity_pub.adapters import adapter
+
+        created = not self.pk
 
         if not hasattr(self, 'actor'):
             self.actor = get_platform_actor()
 
         super().save(*args, **kwargs)
+
+
+class PublishType(DjangoChoices):
+    automatic = ChoiceItem('automatic', label=_('Automatic'))
+    manual = ChoiceItem('manual', label=_('Manual'))
 
 
 class Follow(Activity):
@@ -399,8 +409,16 @@ class Follow(Activity):
         on_delete=models.SET_NULL,
     )
 
+    publish_type = models.CharField(
+        null=True,
+        blank=True,
+        choices=PublishType.choices,
+        default=PublishType.automatic,
+        verbose_name=_("Publish settings"),
+    )
+
     @property
-    def audience(self):
+    def default_audience(self):
         return [self.object]
 
 
@@ -431,7 +449,7 @@ class Accept(Activity):
     object = models.ForeignKey('activity_pub.Follow', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
+    def default_audience(self):
         return [self.object.actor]
 
 
@@ -439,7 +457,7 @@ class Publish(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
+    def default_audience(self):
         return [self.actor.followers]
 
 
@@ -447,7 +465,7 @@ class Announce(Activity):
     object = models.ForeignKey('activity_pub.Event', on_delete=models.CASCADE)
 
     @property
-    def audience(self):
+    def default_audience(self):
         return [
             Publish.objects.get(
                 object=self.object

@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('activity_pub', '0036_default_to'),
+        ('activity_pub', '0034_dogoodevent_slot'),
     ]
 
     operations = [

@@ -142,12 +142,16 @@ class ActivityPubTestCase:
         self.follow = Follow.objects.get(object=get_platform_actor())
         self.assertTrue(self.follow)
 
+        self.follow.publish_type = 'automatic'
+        self.follow.save()
+
     def test_accept(self):
         self.test_follow()
 
-        Accept.objects.create(
+        accept = Accept.objects.create(
             object=self.follow
         )
+        adapter.publish(accept)
 
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())

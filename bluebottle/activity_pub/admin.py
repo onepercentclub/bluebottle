@@ -367,7 +367,7 @@ class FollowerAdmin(FollowAdmin):
     list_display = ("platform", "accepted")
     actions = ['accept_follow_requests']
     readonly_fields = ('platform', 'accepted')
-    fields = readonly_fields
+    fields = readonly_fields + ('publish_type', )
 
     def platform(self, obj):
         return obj.actor

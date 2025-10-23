@@ -88,6 +88,11 @@ class ModelCreatedTrigger(Trigger):
         return str(_("Model has been created"))
 
 
+class ModelSavedTrigger(Trigger):
+    def __str__(self):
+        return str(_("Model has been saved"))
+
+
 @receiver(pre_delete)
 def pre_delete_trigger(sender, instance, **kwargs):
     if issubclass(sender, TriggerMixin) and hasattr(instance, 'triggers'):
@@ -193,6 +198,8 @@ class TriggerMixin(object):
                 if isinstance(trigger, ModelChangedTrigger):
                     if trigger.changed(self):
                         self._triggers.append(BoundTrigger(self, trigger))
+                elif isinstance(trigger, ModelSavedTrigger):
+                    self._triggers.append(BoundTrigger(self, trigger))
 
     def _check_model_created_triggers(self):
         if hasattr(self, 'triggers') and not self.pk:

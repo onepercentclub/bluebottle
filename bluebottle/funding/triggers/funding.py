@@ -40,7 +40,7 @@ from bluebottle.funding.states import (
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import CreatePublishEffect, AnnounceAdoptionEffect
 
 
 def should_finish(effect):
@@ -125,7 +125,7 @@ class FundingTriggers(ActivityTriggers):
                     conditions=[should_finish]
                 ),
                 NotificationEffect(FundingApprovedMessage),
-                PublishEffect,
+                CreatePublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

@@ -204,6 +204,15 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     )
 
     @property
+    def publish(self):
+        from bluebottle.activity_pub.models import Publish
+        try:
+            return Publish.objects.get(object=self.event)
+        except Publish.DoesNotExist:
+            return None
+
+
+    @property
     def event(self):
         from bluebottle.activity_pub.models import Event
         return Event.objects.get(object=self)
@@ -212,7 +221,7 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
     def activity_pub_url(self):
         from bluebottle.activity_pub.models import Event
         try:
-            return self.event.iri
+            return self.event.pub_url
         except Event.DoesNotExist:
             return None
 

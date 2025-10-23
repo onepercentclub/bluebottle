@@ -18,13 +18,14 @@ from bluebottle.activities.states import (
 )
 from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
-    TriggerManager, TransitionTrigger, ModelDeletedTrigger, register
+    TriggerManager, TransitionTrigger, ModelSavedTrigger, ModelDeletedTrigger, register
 )
 from bluebottle.funding.models import Funding
 from bluebottle.impact.effects import UpdateImpactGoalEffect
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.states import ParticipantStateMachine
+from bluebottle.activity_pub.effects import CreateOrUpdateEvent
 
 
 def should_approve_instantly(effect):
@@ -211,6 +212,9 @@ class ActivityTriggers(TriggerManager):
                 )
             ]
         ),
+        ModelSavedTrigger(
+            effects=[CreateOrUpdateEvent]
+        )
     ]
 
 

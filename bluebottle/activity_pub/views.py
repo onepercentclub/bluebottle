@@ -8,7 +8,7 @@ from rest_framework import status
 from bluebottle.activity_pub.authentication import HTTPSignatureAuthentication
 from bluebottle.activity_pub.models import (
     Person, Inbox, Outbox, PublicKey, Follow, Accept, Publish, Announce, Organization,
-    GoodDeed, Image, CrowdFunding, Place, Address, Activity, DoGoodEvent, SubEvent,
+    GoodDeed, Image, CrowdFunding, Place, Address, Activity, DoGoodEvent, PublishType, SubEvent,
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.permissions import (
@@ -26,7 +26,7 @@ from bluebottle.clients.utils import LocalTenant
 
 
 class CollectionPagination(pagination.PageNumberPagination):
-    page_size = 3
+    page_size = 10
     url_name = None
 
     def get_page_number(self, request, paginator):
@@ -142,7 +142,10 @@ class OutboxPageView(ActivityPubMixin, generics.ListAPIView):
     def get_queryset(self):
         outbox = Outbox.objects.get(pk=self.kwargs['pk'])
 
-        to = [self.request.auth.iri, outbox.actor.followers.pub_url]
+        to = [self.request.auth.iri]
+        if outbox.actor.follow_set.first().publish_type == PublishType.automatic:
+            to.append(outbox.actor.followers.pub_url)
+
         return super().get_queryset().filter(to__overlap=to)
 
 

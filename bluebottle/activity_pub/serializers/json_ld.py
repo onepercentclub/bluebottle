@@ -1,3 +1,4 @@
+from django.db import connection
 from bluebottle.activity_pub.serializers.base import (
     ActivityPubSerializer, PolymorphicActivityPubSerializer
 )
@@ -25,6 +26,12 @@ from bluebottle.activity_pub.models import (
     DoGoodEvent,
     SubEvent,
 )
+
+from bluebottle.activity_pub.serializers.federated_activities import (
+    OrganizationSerializer as FederatedOrganizationSerializer
+)
+from bluebottle.activity_pub.utils import is_local
+from bluebottle.activity_pub.adapters import adapter
 
 
 class InboxSerializer(ActivityPubSerializer):
@@ -118,6 +125,15 @@ class OrganizationSerializer(BaseActorSerializer):
         )
         model = Organization
 
+    def create(self, validated_data):
+        federated_serializer = FederatedOrganizationSerializer(data=dict(**validated_data))
+        instance = super().create(validated_data)
+
+        if not hasattr(instance, 'related_organization'):
+            federated_serializer.is_valid(raise_exception=True)
+            federated_serializer.save()
+
+        return instance
 
 class ActorSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
@@ -319,6 +335,15 @@ class AcceptSerializer(BaseActivitySerializer):
 
     class Meta(BaseActivitySerializer.Meta):
         model = Accept
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+
+        if not is_local(instance.iri):
+            outbox =  instance.object.object.outbox
+            adapter.backfill.delay(adapter, outbox.iri, connection.tenant)
+        
+        return instance
 
 
 class PublishSerializer(BaseActivitySerializer):

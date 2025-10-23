@@ -137,6 +137,7 @@ class ActivityPubSerializer(serializers.ModelSerializer, metaclass=ActivityPubSe
 
         if (
             is_local(id) and
+            'request' in self.context and
             self.context['request'].auth and
             is_local(self.context['request'].auth.iri)
         ):

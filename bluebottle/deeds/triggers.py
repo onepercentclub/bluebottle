@@ -40,7 +40,7 @@ from bluebottle.time_based.messages import (
     ParticipantRemovedOwnerNotification, ParticipantAddedNotification
 )
 from bluebottle.time_based.triggers.triggers import is_not_owner, is_not_user, is_user
-from bluebottle.activity_pub.effects import PublishEffect, AnnounceAdoptionEffect
+from bluebottle.activity_pub.effects import CreatePublishEffect, AnnounceAdoptionEffect
 
 
 def is_started(effect):
@@ -160,7 +160,7 @@ class DeedTriggers(ActivityTriggers):
         TransitionTrigger(
             ActivityStateMachine.approve,
             effects=[
-                PublishEffect,
+                CreatePublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),
@@ -176,7 +176,7 @@ class DeedTriggers(ActivityTriggers):
                     OrganizerStateMachine.succeed,
                     conditions=[has_organizer]
                 ),
-                PublishEffect,
+                CreatePublishEffect,
                 AnnounceAdoptionEffect
             ]
         ),

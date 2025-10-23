@@ -117,7 +117,7 @@ class OrganizationManager(ActivityPubManager):
             outbox = Outbox.objects.create()
 
             public_key = PublicKey.objects.create()
-            logo = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
+            logo_url = connection.tenant.build_absolute_url(model.logo.url) if model.logo else None
 
             return Organization.objects.create(
                 inbox=inbox,
@@ -125,17 +125,27 @@ class OrganizationManager(ActivityPubManager):
                 outbox=outbox,
                 public_key=public_key,
                 name=model.name,
-                image=logo,
+                logo=Image.objects.create(
+                    url=logo_url,
+                    name=model.logo.name
+                ) if logo_url else None,
                 summary=model.description,
                 preferred_username=model.slug
             )
+
+
+class Image(ActivityPubModel):
+    name = models.CharField(max_length=1000, null=True)
+    url = models.URLField(null=True)
 
 
 class Organization(Actor):
     name = models.CharField(max_length=300)
     summary = models.TextField(null=True, blank=True)
     content = models.TextField(null=True, blank=True)
-    image = models.URLField(null=True, blank=True)
+
+    image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
+    logo = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
 
     organization = models.OneToOneField(
         BluebottleOrganization,
@@ -209,11 +219,6 @@ class Place(ActivityPubModel):
     longitude = models.FloatField(null=True)
 
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
-
-
-class Image(ActivityPubModel):
-    name = models.CharField(max_length=1000, null=True)
-    url = models.URLField(null=True)
 
 
 class Event(ActivityPubModel):

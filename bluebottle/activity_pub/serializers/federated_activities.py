@@ -56,6 +56,16 @@ class ImageSerializer(FederatedObjectSerializer):
         )
 
 
+class ImageField(serializers.Field):
+    def to_internal_value(self, data):
+        image = ActivityPubImage.objects.from_iri(data)
+
+        response = requests.get(image.url, timeout=30)
+        response.raise_for_status()
+
+        return File(BytesIO(response.content), name=image.name)
+
+
 class DateField(serializers.Field):
     def to_internal_value(self, data):
         try:
@@ -119,10 +129,11 @@ class OrganizationSerializer(FederatedObjectSerializer):
         allow_null=True,
         required=False
     )
+    logo = ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'summary')
+        fields = ('id', 'name', 'summary', 'logo')
 
 
 class LocationSerializer(FederatedObjectSerializer):

@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from io import BytesIO
 from datetime import datetime, timedelta
 
+from django.core.files import File
 from django.db import connection
 from django.test import Client as TestClient
 from django.test.client import RequestFactory
@@ -99,8 +100,10 @@ class ActivityPubTestCase:
 
         self.other_tenant = Client.objects.get(schema_name='test2')
         site_settings = SitePlatformSettings.load()
-        site_settings.share_activities = True
-        site_settings.save()
+        with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
+            site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
+            site_settings.share_activities = True
+            site_settings.save()
 
         self.country = CountryFactory.create()
 
@@ -109,7 +112,10 @@ class ActivityPubTestCase:
                 alpha2_code=self.country.alpha2_code
             )
             CountryFactory.create()
+
             site_settings = SitePlatformSettings.load()
+            with open('./bluebottle/utils/tests/test_images/upload.png', 'rb') as image:
+                site_settings.favicon = File(BytesIO(image.read()), name='favion.png')
             site_settings.share_activities = True
             site_settings.save()
 
@@ -136,11 +142,16 @@ class ActivityPubTestCase:
 
     def test_follow(self):
         platform_url = self.build_absolute_url('/')
+
         with LocalTenant(self.other_tenant):
-            adapter.follow(platform_url)
+            with mock.patch('requests.get', return_value=self.mock_response):
+                adapter.follow(platform_url)
 
         self.follow = Follow.objects.get(object=get_platform_actor())
+
         self.assertTrue(self.follow)
+        self.assertTrue(self.follow.actor.organization)
+        self.assertTrue(self.follow.actor.organization.logo)
 
     def test_accept(self):
         self.test_follow()
@@ -152,6 +163,8 @@ class ActivityPubTestCase:
         with LocalTenant(self.other_tenant):
             accept = Accept.objects.get(object=Follow.objects.get())
             self.assertTrue(accept)
+            self.assertTrue(accept.actor.organization)
+            self.assertTrue(accept.actor.organization.logo)
 
     def create(self, **kwargs):
         self.model = self.factory.create(
@@ -198,13 +211,17 @@ class ActivityPubTestCase:
         activity.theme = ThemeFactory.create()
         activity.states.approve(save=True)
 
-    def test_adopt(self):
-        self.test_publish()
-
+    @property
+    def mock_response(self):
         with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
             mock_response = Response()
             mock_response.raw = BytesIO(image_file.read())
             mock_response.status_code = 200
+
+        return mock_response
+
+    def test_adopt(self):
+        self.test_publish()
 
         with LocalTenant(self.other_tenant):
             self.event = Event.objects.get()
@@ -212,7 +229,7 @@ class ActivityPubTestCase:
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=mock_response):
+            with mock.patch('requests.get', return_value=self.mock_response):
                 with mock.patch.object(Geolocation, 'update_location'):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.title, self.model.title)
@@ -232,11 +249,6 @@ class ActivityPubTestCase:
             follow.default_owner = BlueBottleUserFactory()
             follow.save()
 
-        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as image_file:
-            mock_response = Response()
-            mock_response.raw = BytesIO(image_file.read())
-            mock_response.status_code = 200
-
         with LocalTenant(self.other_tenant):
             follow = Follow.objects.get()
             self.event = Event.objects.get()
@@ -244,7 +256,7 @@ class ActivityPubTestCase:
             request = RequestFactory().get('/')
             request.user = BlueBottleUserFactory.create()
 
-            with mock.patch('requests.get', return_value=mock_response):
+            with mock.patch('requests.get', return_value=self.mock_response):
                 with mock.patch.object(Geolocation, 'update_location'):
                     self.adopted = adapter.adopt(self.event, request)
                     self.assertEqual(self.adopted.owner, follow.default_owner)

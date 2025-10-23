@@ -19,7 +19,6 @@ class CreateOrUpdateEvent(Effect):
         serializer.is_valid(raise_exception=True)
         serializer.save(activity=self.instance)
 
-
     @property
     def is_valid(self):
         return get_platform_actor() is not None
@@ -41,10 +40,9 @@ class CreatePublishEffect(Effect):
             publish = Publish.objects.create(object=event)
             adapter.publish(publish)
 
-
     @property
     def is_valid(self):
-        return get_platform_actor() is not None 
+        return get_platform_actor() is not None
 
     def __str__(self):
         return str(_('Publish activity to followers'))

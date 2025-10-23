@@ -5,14 +5,11 @@ from io import BytesIO
 import requests
 from celery import shared_task
 from django.db import connection
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.forms import model_to_dict
 from requests_http_signature import HTTPSignatureAuth, algorithms
 
 from bluebottle.activity_pub.authentication import key_resolver
 from bluebottle.activity_pub.models import (
-    Follow, Publish, Followers, Accept, Actor, PublishType
+    Follow, Followers, Accept, Actor, PublishType
 )
 from bluebottle.activity_pub.parsers import JSONLDParser
 from bluebottle.activity_pub.renderers import JSONLDRenderer

@@ -135,6 +135,7 @@ class OrganizationSerializer(BaseActorSerializer):
 
         return instance
 
+
 class ActorSerializer(PolymorphicActivityPubSerializer):
     polymorphic_serializers = [
         OrganizationSerializer, PersonSerializer
@@ -340,9 +341,9 @@ class AcceptSerializer(BaseActivitySerializer):
         instance = super().create(validated_data)
 
         if not is_local(instance.iri):
-            outbox =  instance.object.object.outbox
+            outbox = instance.object.object.outbox
             adapter.backfill.delay(adapter, outbox.iri, connection.tenant)
-        
+
         return instance
 
 

@@ -13,7 +13,9 @@ from rest_polymorphic.serializers import PolymorphicSerializer
 from bluebottle.activity_pub.serializers.base import FederatedObjectSerializer
 from bluebottle.activity_pub.serializers.fields import FederatedIdField
 
-from bluebottle.activity_pub.models import EventAttendanceModeChoices, Follow, Image as ActivityPubImage, JoinModeChoices, Publish
+from bluebottle.activity_pub.models import (
+    EventAttendanceModeChoices, Follow, Image as ActivityPubImage, JoinModeChoices, Publish
+)
 from bluebottle.deeds.models import Deed
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ORIGINAL_SIZE

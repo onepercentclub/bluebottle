@@ -379,9 +379,6 @@ class Activity(ActivityPubModel):
 
     def save(self, *args, **kwargs):
         from bluebottle.activity_pub.utils import get_platform_actor
-        from bluebottle.activity_pub.adapters import adapter
-
-        created = not self.pk
 
         if not hasattr(self, 'actor'):
             self.actor = get_platform_actor()

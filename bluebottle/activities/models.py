@@ -211,7 +211,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         except Publish.DoesNotExist:
             return None
 
-
     @property
     def event(self):
         from bluebottle.activity_pub.models import Event

@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from bluebottle.activity_pub.models import Follow, Publish
+from bluebottle.activity_pub.models import Follow
 from bluebottle.activity_pub.utils import get_platform_actor
 
 
@@ -11,7 +11,7 @@ class PlatformMultipleChoiceField(forms.ModelMultipleChoiceField):
             kwargs['queryset'] = Follow.objects.filter(object=get_platform_actor())
 
         super().__init__(*args, **kwargs)
-    
+
     def label_from_instance(self, obj):
         """Return the Actor's string representation as the label."""
         return str(obj.actor)

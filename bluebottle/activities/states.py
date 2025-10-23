@@ -241,7 +241,6 @@ class ActivityStateMachine(ModelStateMachine):
             "The activity will be visible in the frontend and people can apply to "
             "the activity."
         ),
-        conditions=[is_complete, is_valid, should_auto_approve],
     )
 
     approve = Transition(

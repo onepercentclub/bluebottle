@@ -3,7 +3,7 @@ from django.utils.timezone import now
 from django.utils.translation import gettext as _
 
 from bluebottle.fsm.effects import Effect
-from bluebottle.time_based.models import PeriodicSlot, Team
+from bluebottle.time_based.models import PeriodicSlot, Team, DateRegistration
 
 
 class CreateParticipantEffect(Effect):
@@ -125,10 +125,15 @@ class DeleteRegistrationEffect(Effect):
     template = 'admin/delete_registration.html'
 
     def post_save(self, **kwargs):
-        registration = self.instance.registration
-        if not registration.participants.exists():
-            registration.delete()
+        try:
+            registration = self.instance.registration
+            if not registration.participants.exists():
+                registration.delete()
+        except DateRegistration.DoesNotExist:
+            pass
 
     def is_valid(self):
+        if not self.instance.registration_id:
+            return False
         registration = self.instance.registration
         return not registration.participants.exists()

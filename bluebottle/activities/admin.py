@@ -787,7 +787,17 @@ class ActivityChildAdmin(
     def share_activity(self, request, activity, form):
         platforms = form.cleaned_data['platforms']
         actors = [p.actor for p in platforms]
-        publish = activity.event.publish_set.get()
+        from bluebottle.activity_pub.models import Event
+        try:
+            publish = activity.event.publish_set.get()
+        except Event.DoesNotExist:
+            # This can go if all activities will automatically get an Event & Publish
+            federated_serializer = FederatedActivitySerializer(activity)
+            serializer = EventSerializer(data=federated_serializer.data)
+            serializer.is_valid(raise_exception=True)
+            event = serializer.save(activity=activity)
+            publish = event.publish_set.get()
+
         publish.to = actors
         publish.save()
 

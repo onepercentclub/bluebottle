@@ -1,13 +1,9 @@
 import re
-from urllib.parse import unquote
 
 from django import forms
 from django.contrib import admin, messages
-
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
 from django.template import loader
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
@@ -49,11 +45,8 @@ from bluebottle.activities.models import (
     ConfirmationAnswer,
 )
 from bluebottle.activities.utils import bulk_add_participants
-from bluebottle.activity_pub.admin import adapter
-from bluebottle.activity_pub.models import Publish
 from bluebottle.activity_pub.serializers.federated_activities import FederatedActivitySerializer
 from bluebottle.activity_pub.serializers.json_ld import EventSerializer
-from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.bluebottle_dashboard.decorators import confirmation_form, admin_form
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.collect.models import CollectActivity, CollectContributor

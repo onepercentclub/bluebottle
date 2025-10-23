@@ -1,11 +1,5 @@
-from sphinx.cmd.quickstart import allow_empty
-
-from bluebottle.activity_pub.serializers.base import (
-    ActivityPubSerializer, PolymorphicActivityPubSerializer
-)
 from rest_framework import serializers
 
-from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 from bluebottle.activity_pub.models import (
     Accept,
     Announce,
@@ -27,6 +21,10 @@ from bluebottle.activity_pub.models import (
     DoGoodEvent,
     SubEvent,
 )
+from bluebottle.activity_pub.serializers.base import (
+    ActivityPubSerializer, PolymorphicActivityPubSerializer
+)
+from bluebottle.activity_pub.serializers.fields import ActivityPubIdField, TypeField
 
 
 class InboxSerializer(ActivityPubSerializer):

@@ -25,6 +25,7 @@ from bluebottle.time_based.messages.registrations import ManagerRegistrationCrea
     UserRegistrationAcceptedNotification, UserRegistrationRejectedNotification, UserRegistrationStoppedNotification, \
     UserRegistrationRestartedNotification, PeriodicUserAppliedNotification, PeriodicUserJoinedNotification, \
     ScheduleUserJoinedNotification
+from bluebottle.time_based.models import DateRegistration
 from bluebottle.time_based.states.participants import PeriodicParticipantStateMachine
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
@@ -274,6 +275,25 @@ class DateActivitySlotTriggerTestCase(BluebottleTestCase):
         self.assertStatus(self.slot, "full")
         self.assertStatus(self.slot2, "full")
         self.assertStatus(self.activity, "full")
+
+    def test_unlock_on_delete(self):
+
+        self.slot.capacity = 2
+        self.slot.save()
+
+        first = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+        second = DateRegistrationFactory.create(activity=self.activity, status='accepted')
+
+        self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)
+        participant2 = DateParticipantFactory.create(registration=first, slot=self.slot2)
+        participant = DateParticipantFactory.create(registration=first, slot=self.slot)
+        DateParticipantFactory.create(registration=second, slot=self.slot)
+        self.assertStatus(self.slot, "full")
+        participant.delete()
+        self.assertStatus(self.slot, "open")
+        self.assertTrue(DateRegistration.objects.filter(pk=first.pk).exists())
+        participant2.delete()
+        self.assertFalse(DateRegistration.objects.filter(pk=first.pk).exists())
 
     def test_fill_cancel_slot(self):
         self.slot2 = DateActivitySlotFactory.create(activity=self.activity, capacity=3)

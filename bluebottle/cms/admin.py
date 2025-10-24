@@ -157,12 +157,14 @@ class HomePageAdmin(TranslatableAdmin, SingletonModelAdmin, PlaceholderFieldAdmi
 @admin.register(SitePlatformSettings)
 class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
 
+    readonly_fields = ['organization']
+
     fieldsets = (
         (
             _('Contact'),
             {
                 'fields': (
-                    'contact_email', 'contact_phone', 'start_page'
+                    'share_activities', 'organization', 'contact_email', 'contact_phone', 'start_page'
                 )
             }
         ),

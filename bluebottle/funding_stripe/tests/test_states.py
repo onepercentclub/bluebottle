@@ -5,9 +5,9 @@ from mock import patch
 import stripe
 
 from bluebottle.funding.tests.factories import FundingFactory, BudgetLineFactory, DonorFactory
-from bluebottle.funding_stripe.models import StripePayoutAccount
+from bluebottle.funding_stripe.models import StripePayoutAccount, StripePaymentProvider
 from bluebottle.funding_stripe.tests.factories import StripePayoutAccountFactory, StripeSourcePaymentFactory, \
-    StripePaymentFactory, ExternalAccountFactory
+    StripePaymentFactory, ExternalAccountFactory, StripePaymentProviderFactory
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -270,6 +270,8 @@ class StripeBankAccountStateMachineTests(BluebottleTestCase):
 
     def setUp(self):
         account_id = 'some-connect-id'
+        if not StripePaymentProvider.objects.exists():
+            StripePaymentProviderFactory.create()
         self.user = BlueBottleUserFactory.create()
         self.account = StripePayoutAccount(
             owner=self.user,

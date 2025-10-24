@@ -63,12 +63,20 @@ class DeedsListViewAPITestCase(APITestCase):
         self.assertTransition('delete')
 
     def test_custom_question_not_required(self):
-        TextQuestionFactory.objects.create(
+        TextQuestionFactory.create(
             required=False
         )
         self.perform_create(user=self.user)
         self.assertStatus(status.HTTP_201_CREATED)
         self.assertTransition('publish')
+
+    def test_custom_question_required(self):
+        TextQuestionFactory.create(
+            required=True
+        )
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertNotTransition('publish')
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''

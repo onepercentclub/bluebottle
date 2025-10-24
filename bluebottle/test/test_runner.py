@@ -2,9 +2,9 @@ import locale
 from builtins import range
 
 from django.conf import settings
-from django.db import IntegrityError, connection
+from django.db import connection, IntegrityError
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
-from djmoney.contrib.exchange.models import ExchangeBackend, Rate
+from djmoney.contrib.exchange.models import Rate, ExchangeBackend
 from tenant_schemas.utils import get_tenant_model
 
 from bluebottle.test.utils import InitProjectDataMixin
@@ -22,37 +22,28 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
 
         connection.set_schema_to_public()
 
-        tenant2, _created = get_tenant_model().objects.update_or_create(
-            schema_name="test2",
-            client_name="test2",
-            defaults={
-                'domain_url': "test2.localhost",
-                'name': "Test Too",
-            }
-        )
+        tenant2, _created = get_tenant_model().objects.get_or_create(
+            domain_url='testserver2',
+            name='Test Too',
+            schema_name='test2',
+            client_name='test2')
 
         connection.set_tenant(tenant2)
         self.init_projects()
 
         connection.set_schema_to_public()
 
-        tenant, _created = get_tenant_model().objects.update_or_create(
-            schema_name="test",
-            client_name="test",
-            defaults={
-                'domain_url': "test.localhost",
-                'name': "Test",
-            }
-        )
+        tenant, _created = get_tenant_model().objects.get_or_create(
+            domain_url='testserver',
+            name='Test',
+            schema_name='test',
+            client_name='test')
 
         connection.set_tenant(tenant)
         self.init_projects()
 
         try:
-            backend, _created = ExchangeBackend.objects.get_or_create(
-                base_currency='USD',
-                name='openexchangerates.org'
-            )
+            backend, _created = ExchangeBackend.objects.get_or_create(base_currency='USD')
             Rate.objects.update_or_create(backend=backend, currency='USD', defaults={'value': 1})
             Rate.objects.update_or_create(backend=backend, currency='EUR', defaults={'value': 1.5})
             Rate.objects.update_or_create(backend=backend, currency='XOF', defaults={'value': 1000})

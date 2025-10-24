@@ -474,6 +474,16 @@ class TranslatedPolymorphicManager(PolymorphicManager, TranslatableManager):
 class ActivityQuestion(PolymorphicModel, TranslatableModel):
     objects = TranslatablePolymorphicManager()
 
+    VISIBILITY_CHOICES = (
+        ('all', _("Everyone")),
+        ('managers', _("Managers")),
+    )
+
+    class VisibilityChoices(DjangoChoices):
+
+        all = ChoiceItem('all', label=_("Everyone"))
+        managers = ChoiceItem('managers', label=_("Managers"))
+
     translations = TranslatedFields(
         name=models.CharField(
             _('Label'),
@@ -493,6 +503,12 @@ class ActivityQuestion(PolymorphicModel, TranslatableModel):
     )
 
     required = models.BooleanField(default=True)
+    visibility = models.CharField(
+        _('Who can see the answers?'),
+        max_length=255,
+        choices=VisibilityChoices.choices,
+        default=VisibilityChoices.all
+    )
 
     def __str__(self):
         return self.question

@@ -7,6 +7,8 @@ from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.tests.factories import TextQuestionFactory, \
+    TextAnwserFactory
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
@@ -59,6 +61,14 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertTransition('publish')
         self.assertTransition('delete')
+
+    def test_custom_question_not_required(self):
+        TextQuestionFactory.objects.create(
+            required=False
+        )
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertTransition('publish')
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''
@@ -170,6 +180,48 @@ class DeedsDetailViewAPITestCase(APITestCase):
                 reverse('activity-update-list', args=(self.model.pk,))
             ),
         )
+
+    def test_get_with_answer(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='all',
+        )
+        answer = TextAnwserFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [answer])
+
+    def test_get_with_answer_hidden(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='managers',
+        )
+        answer = TextAnwserFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [])
+
+    def test_get_with_answer_manager(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='managers',
+        )
+        answer = TextAnwserFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get(self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [answer])
 
     def test_get_with_segments(self):
         segment = SegmentFactory.create(

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-23 15:01+0200\n"
-"PO-Revision-Date: 2025-10-23 13:07\n"
+"POT-Creation-Date: 2025-10-23 14:59+0200\n"
+"PO-Revision-Date: 2025-10-23 12:59\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -9288,10 +9288,6 @@ msgstr "Ajuster le participant périodique initial et se connecter au créneau"
 #: bluebottle/time_based/effects/registrations.py:108
 msgid "Create team for this registration"
 msgstr "Créer une équipe pour cette inscription"
-
-#: bluebottle/time_based/effects/registrations.py:124
-msgid "Delete registration if it no longer has participants"
-msgstr ""
 
 #: bluebottle/time_based/effects/slots.py:8
 msgid "Create participants for this team slot"

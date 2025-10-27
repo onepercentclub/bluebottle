@@ -467,24 +467,34 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=254)
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
+    accepted = serializers.BooleanField(read_only=True)
 
     def create(self, validated_data):
+        member_settings = MemberPlatformSettings.load()
+        email = validated_data.get('email', '')
+        email_domain = email.split('@')[-1]
+        accepted = True
+        if member_settings.moderate_signup and email_domain not in member_settings.email_domains:
+            accepted = False
         (instance, _) = BB_USER_MODEL.objects.get_or_create(
             email__iexact=validated_data['email'],
-            defaults={'is_active': False, 'email': validated_data['email']}
+            defaults={
+                'is_active': False,
+                'accepted': accepted,
+                'email': validated_data['email']
+            }
         )
         return instance
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url', 'segment_id')
+        fields = ('id', 'email', 'url', 'segment_id', 'accepted',)
 
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
-        if (
-                settings.email_domain and
-                not email.endswith('@{}'.format(settings.email_domain))
-        ):
+        email_domain = email.split('@')[1]
+        email_domains = settings.email_domains
+        if not settings.moderate_signup and len(email_domains) and email_domain not in email_domains:
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
                     settings.email_domain)
@@ -877,8 +887,10 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'gtm_code',
             'closed',
             'email_domain',
+            'email_domains',
             'session_only',
             'confirm_signup',
+            'moderate_signup',
             'login_methods',
             'background',
             'enable_gender',

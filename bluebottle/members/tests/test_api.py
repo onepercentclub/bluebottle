@@ -345,7 +345,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
 
     def test_create_correct_domain(self):
         email = 'test@example.com'
-        self.settings.email_domain = 'example.com'
+        self.settings.email_domains = ['example.com']
         self.settings.save()
 
         response = self.client.post(
@@ -356,11 +356,12 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         member = Member.objects.get(email=email)
+        self.assertTrue(member.accepted)
         self.assertFalse(member.is_active)
 
     def test_create_incorrect_domain(self):
         email = 'test@secondexample.com'
-        self.settings.email_domain = 'example.com'
+        self.settings.email_domains = ['example.com']
         self.settings.save()
 
         response = self.client.post(
@@ -372,6 +373,23 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertTrue(
             'Only emails' in response.json()['errors'][0]['detail']
         )
+
+    def test_create_moderate_signup(self):
+        email = 'test@secondexample.com'
+        self.settings.email_domains = ['example.com']
+        self.settings.moderate_signup = True
+        self.settings.save()
+
+        response = self.client.post(
+            reverse('user-signup-token'),
+            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+
+        member = Member.objects.get(email=email)
+        self.assertFalse(member.is_active)
+        self.assertFalse(member.accepted)
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

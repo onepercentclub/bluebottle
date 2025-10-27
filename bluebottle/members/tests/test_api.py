@@ -385,11 +385,15 @@ class SignUpTokenTestCase(BluebottleTestCase):
             {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 0)
 
         member = Member.objects.get(email=email)
         self.assertFalse(member.is_active)
         self.assertFalse(member.accepted)
+        self.assertFalse(member.message_set.exists())
+        member.accepted = True
+        member.save()
+        self.assertEqual(mail.outbox[0].subject, "Activate your account for Test")
 
 
 @override_settings(SEND_WELCOME_MAIL=True)

@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.activities.models import ActivityQuestion, ActivityAnswer, TextQuestion, TextAnswer
+from bluebottle.activities.models import TextQuestion, TextAnswer
 
 
 class TextQuestionFactory(factory.DjangoModelFactory):
@@ -9,6 +9,6 @@ class TextQuestionFactory(factory.DjangoModelFactory):
         model = TextQuestion
 
 
-class TextAnwserFactory(factory.DjangoModelFactory):
+class TextAnswerFactory(factory.DjangoModelFactory):
     class Meta:
         model = TextAnswer

@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 from rest_framework import status
 
 from bluebottle.activities.tests.factories import TextQuestionFactory, \
-    TextAnwserFactory
+    TextAnswerFactory
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
@@ -195,7 +195,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             required=False,
             visibility='all',
         )
-        answer = TextAnwserFactory.create(
+        answer = TextAnswerFactory.create(
             question=question,
             activity=self.model,
         )
@@ -209,7 +209,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             required=False,
             visibility='managers',
         )
-        answer = TextAnwserFactory.create(
+        TextAnswerFactory.create(
             question=question,
             activity=self.model,
         )
@@ -223,7 +223,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             required=False,
             visibility='managers',
         )
-        answer = TextAnwserFactory.create(
+        answer = TextAnswerFactory.create(
             question=question,
             activity=self.model,
         )

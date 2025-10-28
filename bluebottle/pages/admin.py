@@ -1,3 +1,4 @@
+from adminsortable.admin import NonSortableParentAdmin
 from django.conf import settings
 from django.urls import re_path
 from django.contrib import admin
@@ -10,10 +11,12 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
+from parler.admin import TranslatableAdmin
 
-from .models import Page
+from .models import Page, PlatformPage
 
 
+@admin.register(Page)
 class PageAdmin(PlaceholderFieldAdmin):
     model = Page
     list_display = ('title', 'slug', 'online', 'status',
@@ -156,4 +159,10 @@ class PageAdmin(PlaceholderFieldAdmin):
     make_published.short_description = _("Mark selected entries as published")
 
 
-admin.site.register(Page, PageAdmin)
+@admin.register(PlatformPage)
+class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
+    model = Page
+    list_display = ('id', 'title', 'slug', )
+    fields = ['title', 'slug', 'body' ]
+
+    empty_value_display = '-empty-'

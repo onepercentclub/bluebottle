@@ -8,7 +8,7 @@ from bluebottle.cms.serializers import (
     HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer
 )
 from bluebottle.news.models import NewsItem
-from bluebottle.pages.models import Page
+from bluebottle.pages.models import Page, PlatformPage
 from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermission
 from bluebottle.utils.utils import get_language_from_request
 from bluebottle.utils.views import ListAPIView, RetrieveAPIView, JsonApiViewMixin
@@ -56,6 +56,12 @@ class PageDetail(CMSDetailView):
     serializer_class = PageSerializer
 
     queryset = Page.objects
+
+
+class PlatformPageDetail(CMSDetailView):
+    serializer_class = PageSerializer
+
+    queryset = PlatformPage.objects
 
 
 class NewsItemDetail(CMSDetailView):

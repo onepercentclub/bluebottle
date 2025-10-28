@@ -202,6 +202,7 @@ JET_SIDE_MENU_ITEMS = [
         "label": _("Content"),
         "permissions": ["pages.change_page"],
         "items": [
+            {"name": "pages.platformpage", "permissions": ["pages.change_platformpage"]},
             {"name": "pages.page", "permissions": ["pages.change_page"]},
             {
                 "name": "news.newsitem",

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-23 14:59+0200\n"
+"POT-Creation-Date: 2025-10-24 08:51+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -988,19 +988,19 @@ msgid ""
 "contribute to,"
 msgstr ""
 
-#: bluebottle/activities/states.py:264 bluebottle/funding/states.py:596
+#: bluebottle/activities/states.py:265 bluebottle/funding/states.py:596
 #: bluebottle/grant_management/states.py:277
 msgid "Request changes"
 msgstr ""
 
-#: bluebottle/activities/states.py:266
+#: bluebottle/activities/states.py:267
 msgid ""
 "The activity needs changes before it can be approved. Inform the activity "
 "manager of the changes required. The activity manager will then be able to "
 "edit and resubmit the activity."
 msgstr ""
 
-#: bluebottle/activities/states.py:281
+#: bluebottle/activities/states.py:282
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:49
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
@@ -1018,7 +1018,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: bluebottle/activities/states.py:283
+#: bluebottle/activities/states.py:284
 msgid ""
 "Cancel if the activity will not be executed. An activity manager will no "
 "longer be able edit the activity and it won't show up on the search page in "
@@ -1026,13 +1026,13 @@ msgid ""
 "appear in your reporting."
 msgstr ""
 
-#: bluebottle/activities/states.py:290
+#: bluebottle/activities/states.py:291
 msgid ""
 "The activity ends and people no longer register. All current participants "
 "will fail too."
 msgstr ""
 
-#: bluebottle/activities/states.py:304 bluebottle/initiatives/states.py:203
+#: bluebottle/activities/states.py:305 bluebottle/initiatives/states.py:203
 #: bluebottle/time_based/states/participants.py:197
 #: bluebottle/time_based/states/participants.py:235
 #: bluebottle/time_based/states/participants.py:317
@@ -1043,19 +1043,19 @@ msgstr ""
 msgid "Restore"
 msgstr ""
 
-#: bluebottle/activities/states.py:306
+#: bluebottle/activities/states.py:307
 msgid ""
 "The activity status is changed to 'Needs work'. Then you can make changes to "
 "the activity and submit it again."
 msgstr ""
 
-#: bluebottle/activities/states.py:310 bluebottle/deeds/states.py:75
+#: bluebottle/activities/states.py:311 bluebottle/deeds/states.py:75
 msgid ""
 "The activity will be set to the status ‘Needs work’. Then you can make "
 "changes to the activity and submit it again."
 msgstr ""
 
-#: bluebottle/activities/states.py:325 bluebottle/collect/states.py:57
+#: bluebottle/activities/states.py:326 bluebottle/collect/states.py:57
 #: bluebottle/collect/states.py:64 bluebottle/deeds/states.py:60
 #: bluebottle/deeds/states.py:70 bluebottle/time_based/states/slots.py:220
 #: bluebottle/time_based/states/states.py:57
@@ -1063,42 +1063,42 @@ msgstr ""
 msgid "Reopen"
 msgstr ""
 
-#: bluebottle/activities/states.py:327
+#: bluebottle/activities/states.py:328
 msgid "Open the activity again, e.g. when a slot reopens."
 msgstr ""
 
-#: bluebottle/activities/states.py:335 bluebottle/collect/states.py:34
+#: bluebottle/activities/states.py:336 bluebottle/collect/states.py:34
 #: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:186
 #: bluebottle/funding/states.py:360 bluebottle/time_based/states/states.py:127
 msgid "Expire"
 msgstr ""
 
-#: bluebottle/activities/states.py:337 bluebottle/deeds/states.py:38
+#: bluebottle/activities/states.py:338 bluebottle/deeds/states.py:38
 #: bluebottle/time_based/states/states.py:129
 msgid ""
 "The activity will be cancelled because no one has signed up for the "
 "registration deadline."
 msgstr ""
 
-#: bluebottle/activities/states.py:345
+#: bluebottle/activities/states.py:346
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
 #: bluebottle/initiatives/states.py:191 bluebottle/members/models.py:226
 msgid "Delete"
 msgstr ""
 
-#: bluebottle/activities/states.py:350
+#: bluebottle/activities/states.py:351
 msgid ""
 "Delete the activity if you do not want it to be included in the report. The "
 "activity will no longer be visible on the platform, but will still be "
 "available in the back office."
 msgstr ""
 
-#: bluebottle/activities/states.py:355
+#: bluebottle/activities/states.py:356
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
 msgstr ""
 
-#: bluebottle/activities/states.py:365 bluebottle/activities/states.py:383
-#: bluebottle/activities/states.py:436 bluebottle/activities/states.py:457
+#: bluebottle/activities/states.py:366 bluebottle/activities/states.py:384
+#: bluebottle/activities/states.py:437 bluebottle/activities/states.py:458
 #: bluebottle/collect/states.py:24 bluebottle/collect/states.py:142
 #: bluebottle/deeds/states.py:25 bluebottle/deeds/states.py:47
 #: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:218
@@ -1116,17 +1116,17 @@ msgstr ""
 msgid "Succeed"
 msgstr ""
 
-#: bluebottle/activities/states.py:371 bluebottle/activities/states.py:410
+#: bluebottle/activities/states.py:372 bluebottle/activities/states.py:411
 #: bluebottle/contact/models.py:20 bluebottle/funding/states.py:369
 #: bluebottle/grant_management/states.py:172
 msgid "New"
 msgstr ""
 
-#: bluebottle/activities/states.py:371 bluebottle/activities/states.py:410
+#: bluebottle/activities/states.py:372 bluebottle/activities/states.py:411
 msgid "The user started a contribution"
 msgstr ""
 
-#: bluebottle/activities/states.py:373 bluebottle/activities/states.py:412
+#: bluebottle/activities/states.py:374 bluebottle/activities/states.py:413
 #: bluebottle/funding/states.py:385 bluebottle/grant_management/states.py:27
 #: bluebottle/grant_management/states.py:175
 #: bluebottle/time_based/states/participants.py:48
@@ -1134,21 +1134,21 @@ msgstr ""
 msgid "Succeeded"
 msgstr ""
 
-#: bluebottle/activities/states.py:373 bluebottle/activities/states.py:384
-#: bluebottle/activities/states.py:412
+#: bluebottle/activities/states.py:374 bluebottle/activities/states.py:385
+#: bluebottle/activities/states.py:413
 msgid "The contribution was successful."
 msgstr ""
 
-#: bluebottle/activities/states.py:375 bluebottle/activities/states.py:414
+#: bluebottle/activities/states.py:376 bluebottle/activities/states.py:415
 #: bluebottle/funding/states.py:390 bluebottle/grant_management/states.py:177
 msgid "Failed"
 msgstr ""
 
-#: bluebottle/activities/states.py:375 bluebottle/activities/states.py:414
+#: bluebottle/activities/states.py:376 bluebottle/activities/states.py:415
 msgid "The contribution failed."
 msgstr ""
 
-#: bluebottle/activities/states.py:390 bluebottle/activities/states.py:422
+#: bluebottle/activities/states.py:391 bluebottle/activities/states.py:423
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
 #: bluebottle/funding_stripe/states.py:193
@@ -1165,59 +1165,59 @@ msgstr ""
 msgid "Initiate"
 msgstr ""
 
-#: bluebottle/activities/states.py:391 bluebottle/activities/states.py:423
+#: bluebottle/activities/states.py:392 bluebottle/activities/states.py:424
 #: bluebottle/collect/states.py:136 bluebottle/deeds/states.py:141
 msgid "The contribution was created."
 msgstr ""
 
-#: bluebottle/activities/states.py:397 bluebottle/activities/states.py:429
+#: bluebottle/activities/states.py:398 bluebottle/activities/states.py:430
 #: bluebottle/funding/states.py:326 bluebottle/funding/states.py:446
 #: bluebottle/funding/states.py:557 bluebottle/grant_management/states.py:164
 #: bluebottle/grant_management/states.py:210
 msgid "Fail"
 msgstr ""
 
-#: bluebottle/activities/states.py:398 bluebottle/activities/states.py:430
+#: bluebottle/activities/states.py:399 bluebottle/activities/states.py:431
 msgid "The contribution failed. It will not be visible in reports."
 msgstr ""
 
-#: bluebottle/activities/states.py:404 bluebottle/activities/states.py:443
+#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:444
 #: bluebottle/funding/states.py:540 bluebottle/grant_management/states.py:217
 #: bluebottle/time_based/states/participants.py:459
 #: bluebottle/time_based/states/slots.py:67
 msgid "Reset"
 msgstr ""
 
-#: bluebottle/activities/states.py:405
+#: bluebottle/activities/states.py:406
 msgid "Reset the contribution to new."
 msgstr ""
 
-#: bluebottle/activities/states.py:437
+#: bluebottle/activities/states.py:438
 msgid "The contribution succeeded. It will be visible in reports."
 msgstr ""
 
-#: bluebottle/activities/states.py:444
+#: bluebottle/activities/states.py:445
 msgid "The contribution is reset."
 msgstr ""
 
-#: bluebottle/activities/states.py:458
+#: bluebottle/activities/states.py:459
 msgid "The organizer was successful in setting up the activity."
 msgstr ""
 
-#: bluebottle/activities/states.py:467
+#: bluebottle/activities/states.py:468
 msgid "fail"
 msgstr ""
 
-#: bluebottle/activities/states.py:468
+#: bluebottle/activities/states.py:469
 msgid "The organizer failed to set up the activity."
 msgstr ""
 
-#: bluebottle/activities/states.py:477
+#: bluebottle/activities/states.py:478
 #: bluebottle/time_based/states/participants.py:461
 msgid "reset"
 msgstr ""
 
-#: bluebottle/activities/states.py:478
+#: bluebottle/activities/states.py:479
 msgid "The organizer is still busy setting up the activity."
 msgstr ""
 
@@ -9571,6 +9571,10 @@ msgstr ""
 
 #: bluebottle/time_based/effects/registrations.py:108
 msgid "Create team for this registration"
+msgstr ""
+
+#: bluebottle/time_based/effects/registrations.py:124
+msgid "Delete registration if it no longer has participants"
 msgstr ""
 
 #: bluebottle/time_based/effects/slots.py:8

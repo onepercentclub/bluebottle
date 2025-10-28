@@ -4,8 +4,9 @@ from fluent_contents.models import ContentItem
 
 from bluebottle.clients import properties
 from bluebottle.cms.models import HomePage
+from bluebottle.cms.permissions import PlatformPagePermission
 from bluebottle.cms.serializers import (
-    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer
+    HomeSerializer, PageSerializer, BlockSerializer, NewsItemSerializer, PlatformPageSerializer
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page, PlatformPage
@@ -59,9 +60,27 @@ class PageDetail(CMSDetailView):
 
 
 class PlatformPageDetail(CMSDetailView):
-    serializer_class = PageSerializer
-
+    serializer_class = PlatformPageSerializer
     queryset = PlatformPage.objects
+
+    permission_classes = [PlatformPagePermission]
+
+    def get_object(self, queryset=None):
+        queryset = self.get_queryset()
+        try:
+            return queryset.get(
+                slug=self.kwargs['slug']
+            )
+        except ObjectDoesNotExist:
+            try:
+                return queryset.get(
+                    slug=self.kwargs['slug']
+                )
+            except ObjectDoesNotExist:
+                page = queryset.filter(slug=self.kwargs['slug']).first()
+                if page:
+                    return page
+                raise Http404
 
 
 class NewsItemDetail(CMSDetailView):

@@ -162,7 +162,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 @admin.register(PlatformPage)
 class PlatformPageAdmin(TranslatableAdmin, PlaceholderFieldAdmin, NonSortableParentAdmin):
     model = Page
-    list_display = ('id', 'title', 'slug', )
+    list_display = ('slug', 'title', )
     fields = ['title', 'slug', 'body' ]
 
     empty_value_display = '-empty-'

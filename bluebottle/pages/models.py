@@ -325,7 +325,7 @@ class PlatformPage(TranslatableModel):
 
     class PageTypeChoices(DjangoChoices):
         start = ChoiceItem('start', label=_("Start initiative/activity"))
-        terms = ChoiceItem('terms', label=_("Terms of service"))
+        terms = ChoiceItem('terms', label=_("Terms and conditions"))
         privacy = ChoiceItem('privacy', label=_("Privacy policy"))
 
     slug = models.CharField(
@@ -345,3 +345,6 @@ class PlatformPage(TranslatableModel):
 
     def get_absolute_url(self):
         return f'/content/{self.slug}'
+
+    def __str__(self):
+        return str(self.PageTypeChoices.get_choice(self.slug).label if self.slug else _('Platform page'))

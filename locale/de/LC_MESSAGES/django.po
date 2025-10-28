@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-24 08:51+0200\n"
-"PO-Revision-Date: 2025-10-28 11:49\n"
+"PO-Revision-Date: 2025-10-24 06:52\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -302,12 +302,12 @@ msgstr "Nachricht zur Einschlagserinnerung senden"
 #: bluebottle/activities/messages/activity_manager.py:22
 msgctxt "email"
 msgid "crowdfunding campaign"
-msgstr "crowdfunding Kampagne"
+msgstr ""
 
 #: bluebottle/activities/messages/activity_manager.py:24
 msgctxt "email"
 msgid "grant application"
-msgstr "Antrag auf Förderung"
+msgstr ""
 
 #: bluebottle/activities/messages/activity_manager.py:26
 msgctxt "email"
@@ -1461,9 +1461,7 @@ msgctxt "email"
 msgid "\n"
 "            Thanks for creating a %(activity_type)s for \"%(title)s\". Here are the Terms of Service.\n"
 "        "
-msgstr "\n"
-"            Vielen Dank für die Erstellung einer %(activity_type)s für \"%(title)s\". Hier sind die Nutzungsbedingungen.\n"
-"        "
+msgstr ""
 
 #: bluebottle/activities/templates/mails/messages/matching/matching_activities.html:7
 #, python-format
@@ -2800,7 +2798,7 @@ msgstr "Personen"
 
 #: bluebottle/cms/models.py:294 bluebottle/cms/models.py:297
 msgid "News items"
-msgstr "Nachrichten"
+msgstr ""
 
 #: bluebottle/cms/models.py:306
 msgid "Platform Statistics"
@@ -5262,10 +5260,7 @@ msgid "\n"
 "    To be able to collect funds for your organisation on %(site_name)s, we need\n"
 "    some extra information from you. Please provide this information as soon as possible.\n"
 "    "
-msgstr "\n"
-"    Um Gelder für Ihre Organisation auf %(site_name)s zu sammeln, benötigen wir\n"
-"    einige zusätzliche Informationen von Ihnen. Bitte geben Sie diese Informationen so schnell wie möglich an.\n"
-"    "
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:6
 msgctxt "email"
@@ -5399,9 +5394,7 @@ msgctxt "email"
 msgid "\n"
 "Your grant application \"%(title)s\" has been reviewed and needs work. The platform manager\n"
 "will be in contact to help you make some changes to your application.\n"
-msgstr "\n"
-"Ihr Antrag auf Förderung \"%(title)s\" wurde geprüft und benötigt Änderungen. Der Plattformmanager\n"
-"wird sich mit Ihnen in Verbindung setzen, um Ihnen bei Änderungen an Ihrem Antrag zu helfen.\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/application_rejected.html:6
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_rejected.html:6
@@ -5434,19 +5427,7 @@ msgid "\n"
 "    </li>\n"
 "</ul>\n"
 "You will not be able to edit the application when it is in review.\n"
-msgstr "\n"
-"Ihr Antrag auf Förderung \"%(title)s\" wurde auf %(site_name)s eingereicht.<br>\n"
-"<br>\n"
-"<b>Was kommt als Nächstes?</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        Der Plattformmanager wird Ihren Antrag prüfen.\n"
-"    </li>\n"
-"    <li>\n"
-"        Nach der Genehmigung müssen Sie Ihre Bankdaten eingeben und Ihre Identität und/oder die der Organisation verifizieren, um die Förderung zu erhalten.  \n"
-"    </li>\n"
-"</ul>\n"
-"Sie können den Antrag nicht bearbeiten, während er geprüft wird.\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
@@ -5499,11 +5480,7 @@ msgid "\n"
 "Take your time to review and assess this activity.<br>\n"
 "<br>\n"
 "%(initiator_name)s will be waiting for your review, so please respond promptly.<br>\n"
-msgstr "\n"
-"Ein Antrag auf Förderung mit dem Titel \"%(title)s\" wurde von %(initiator_name)s eingereicht.<br>\n"
-"Nehmen Sie sich Zeit, um diese Aktivität zu überprüfen und zu bewerten.<br>\n"
-"<br>\n"
-"%(initiator_name)s erwartet Ihre Überprüfung, reagieren Sie bitte schnell.<br>\n"
+msgstr ""
 
 #: bluebottle/funding/templates/mails/messages/partials/donation_receipt.html:25
 msgid "Reward:"
@@ -5818,7 +5795,7 @@ msgstr "Verifizierungstyp"
 #: bluebottle/funding_stripe/models.py:426
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
-msgstr "Nicht anwendbar - Gelder für ein gemeinnütziges Projekt auf %(platform)s, einer GoodUp-Plattform, sammeln."
+msgstr ""
 
 #: bluebottle/funding_stripe/models.py:627
 msgid "stripe payout account"
@@ -6121,7 +6098,7 @@ msgstr "Der Betrag, den Sie noch für neue Förderungen verwenden können, abzü
 
 #: bluebottle/grant_management/admin.py:145
 msgid "Amount for approved applications waiting to be paid out."
-msgstr "Betrag für genehmigte Anträge, die auf die Auszahlung warten."
+msgstr ""
 
 #: bluebottle/grant_management/admin.py:146
 msgid "The total amount that has been paid out from this fund."
@@ -6137,7 +6114,7 @@ msgstr "Förderanträge, die ausgezahlt wurden."
 
 #: bluebottle/grant_management/admin.py:175
 msgid "Approved applications"
-msgstr "Genehmigte Anträge"
+msgstr ""
 
 #: bluebottle/grant_management/admin.py:184
 msgid "Fund balance"
@@ -6602,19 +6579,7 @@ msgid "\n"
 "    </li>\n"
 "</ul>\n"
 "<br>\n"
-msgstr "\n"
-"Gute Nachrichten, Ihr Antrag auf Förderung \"%(title)s\" wurde genehmigt!\n"
-"<br><br>\n"
-"<b>So geht es weiter:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        Sie müssen Ihre Bankdaten eingeben und Ihre Identität und/oder die der Organisation von der Seite des Antrags auf Förderung verifizieren.\n"
-"    </li>\n"
-"    <li>\n"
-"    Sobald der Verifizierungsprozess erfolgreich abgeschlossen ist, wird die Auszahlung verarbeitet.\n"
-"    </li>\n"
-"</ul>\n"
-"<br>\n"
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/application_needs_work.html:5
 #, python-format
@@ -6644,21 +6609,7 @@ msgid "\n"
 "<p>\n"
 "    You will not be able to edit the application when it is in review.\n"
 "</p>\n"
-msgstr "\n"
-"Ihr Antrag auf Förderung \"%(title)s\" wurde auf %(site_name)s eingereicht.<br>\n"
-"<br>\n"
-"<b>So geht es weiter:</b>\n"
-"<ul>\n"
-"    <li>\n"
-"        Ihr Antrag wird vom Plattformmanager geprüft.\n"
-"    </li>\n"
-"    <li>\n"
-"        Nach der Genehmigung müssen Sie Ihre Bankdaten eingeben und den Verifizierungsprozess abschließen.\n"
-"    </li>\n"
-"</ul>\n"
-"<p>\n"
-"    Sie können den Antrag nicht bearbeiten, während er geprüft wird.\n"
-"</p>\n"
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:6
 #, python-format
@@ -6670,13 +6621,7 @@ msgid "\n"
 "            <br/></br>\n"
 "            Please provide this as soon as possible to avoid issues with your grant application or to resolve them quickly.\n"
 "        "
-msgstr "\n"
-"            Sie arbeiten an einem Antrag auf Förderung auf %(site_name)s.\n"
-"            <br/><br/>\n\n"
-"            Sie haben einige Informationen eingereicht, um Ihre oder die Identität einer Organisation zu verifizieren, aber in einigen Fällen benötigen wir zusätzliche Informationen für eine erfolgreiche Verifizierung. \n"
-"            <br/></br>\n"
-"            Bitte geben Sie diese so schnell wie möglich an, um Probleme mit Ihrem Antrag auf Förderung zu vermeiden oder sie schnell zu lösen.\n"
-"        "
+msgstr ""
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_verified.html:6
 #, python-format
@@ -6912,7 +6857,7 @@ msgstr "Nutzungsbedingungen"
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:30
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/user_joined.html:24
 msgid "Hour registration"
-msgstr "Stundenregistrierung"
+msgstr ""
 
 #: bluebottle/initiatives/dashboard.py:15
 msgid "Recently submitted initiatives"
@@ -7112,11 +7057,11 @@ msgstr "Telefon"
 
 #: bluebottle/initiatives/models.py:331
 msgid "Unique per activity"
-msgstr "Einmalig pro Aktivität"
+msgstr ""
 
 #: bluebottle/initiatives/models.py:332
 msgid "Same for all activities"
-msgstr "Gilt für alle Aktivitäten"
+msgstr ""
 
 #: bluebottle/initiatives/models.py:339
 msgid "Enable team activities where teams sign-up instead of individuals."
@@ -7192,7 +7137,7 @@ msgstr "Administratoren erlauben Initiativen für jeden Benutzer zu eröffnen, A
 
 #: bluebottle/initiatives/models.py:434
 msgid "Add a link to activities so managers can download a contributor list."
-msgstr "Fügen Sie einen Link zu Aktivitäten hinzu, damit Manager eine Beitragsliste herunterladen können."
+msgstr ""
 
 #: bluebottle/initiatives/models.py:438
 msgid "Enable matching"
@@ -7200,15 +7145,15 @@ msgstr "Treffer aktivieren"
 
 #: bluebottle/initiatives/models.py:453
 msgid "Hour registration only applies to time-based activity types."
-msgstr "Die Stundenregistrierung gilt nur für zeitbasierte Aktivitätstypen."
+msgstr ""
 
 #: bluebottle/initiatives/models.py:457
 msgid "Code / URL"
-msgstr "Code / URL"
+msgstr ""
 
 #: bluebottle/initiatives/models.py:461
 msgid "Leave empty if ‘unique per activity’ was selected. If you selected ‘same for all activities’, this code or link will be used for every activity and can’t be changed."
-msgstr "Feld leer lassen, wenn 'einmalig pro Aktivität' ausgewählt wurde. Wenn Sie 'gilt für alle Aktivitäten' ausgewählt haben, wird dieser Code oder Link für jede Aktivität verwendet und kann nicht geändert werden."
+msgstr ""
 
 #: bluebottle/initiatives/models.py:467
 msgid "Enable reviewing"
@@ -7224,7 +7169,7 @@ msgstr "Aktivitäts- und Initiativeneinstellungen"
 
 #: bluebottle/initiatives/models.py:499
 msgid "Hour registration data is required when 'generic' hour registration is selected."
-msgstr "Stundenregistrierungsdaten sind erforderlich, wenn 'generische' Stundenregistrierung ausgewählt wurde."
+msgstr ""
 
 #: bluebottle/initiatives/models.py:517
 msgid "Select office"
@@ -8322,11 +8267,11 @@ msgstr "WhatsApp"
 
 #: bluebottle/notifications/models.py:61
 msgid "QR code"
-msgstr "QR-Code"
+msgstr ""
 
 #: bluebottle/notifications/models.py:70 bluebottle/notifications/models.py:71
 msgid "Sharing settings"
-msgstr "Freigabeeinstellungen"
+msgstr ""
 
 #: bluebottle/notifications/models.py:90
 msgid "Member activated"
@@ -9346,7 +9291,7 @@ msgstr "Team für diese Registrierung erstellen"
 
 #: bluebottle/time_based/effects/registrations.py:124
 msgid "Delete registration if it no longer has participants"
-msgstr "Registrierung löschen, wenn sie keine Teilnehmer mehr hat"
+msgstr ""
 
 #: bluebottle/time_based/effects/slots.py:8
 msgid "Create participants for this team slot"
@@ -9930,7 +9875,7 @@ msgstr "Vorbereitungszeit"
 
 #: bluebottle/time_based/models.py:116
 msgid "A link or code for participants to register their hours."
-msgstr "Ein Link oder Code für Teilnehmer, um ihre Stunden zu registrieren."
+msgstr ""
 
 #: bluebottle/time_based/models.py:121
 msgid "Time-based activity"
@@ -10596,7 +10541,7 @@ msgstr "hinzugefügt"
 
 #: bluebottle/time_based/states/registrations.py:114
 msgid "Restore after being withdrawn."
-msgstr "Wiederherstellen nach Rücknahme."
+msgstr ""
 
 #: bluebottle/time_based/states/registrations.py:154
 msgid "Stopped"
@@ -11938,9 +11883,7 @@ msgctxt "email"
 msgid "\n"
 "            Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "        "
-msgstr "\n"
-"            Stellen Sie sicher, dass Sie Ihre Stunden mit dem Code oder der URL auf der Detailseite der Aktivität registrieren.\n"
-"        "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/participants/user_date_participant_withdrew.html:4
 #, python-format
@@ -12045,9 +11988,7 @@ msgctxt "email"
 msgid "\n"
 "                Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "            "
-msgstr "\n"
-"                Stellen Sie sicher, dass Sie Ihre Stunden mit dem Code oder der URL auf der Detailseite der Aktivität registrieren.\n"
-"            "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:25
 #, python-format
@@ -12055,9 +11996,7 @@ msgctxt "email"
 msgid "\n"
 "                        Once accepted, you are expected to spend around %(duration)s hour during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
-msgstr "\n"
-"                        Wenn Sie akzeptiert werden, wird erwartet, dass Sie während des festgelegten Zeitraums etwa %(duration)s Stunde(n) verbringen, obwohl die tatsächliche Zeit variieren kann. Wenn kein Zeitraum definiert ist, können Sie jederzeit einen Beitrag leisten, der Ihnen passt.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_applied.html:29
 #, python-format
@@ -12065,9 +12004,7 @@ msgctxt "email"
 msgid "\n"
 "                        Once accepted, you are expected to spend around %(duration)s hours during the set period, although the actual time may vary. If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
-msgstr "\n"
-"                        Wenn Sie akzeptiert werden, wird erwartet, dass Sie während des festgelegten Zeitraums etwa %(duration)s Stunden verbringen, obwohl die tatsächliche Zeit variieren kann. Wenn kein Zeitraum definiert ist, können Sie jederzeit einen Beitrag leisten, der Ihnen passt.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:21
 #, python-format
@@ -12075,9 +12012,7 @@ msgctxt "email"
 msgid "\n"
 "                        Expect to spend around %(duration)s hour during the set period, although the actual time may vary.  If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
-msgstr "\n"
-"                        Erwarten Sie, dass Sie während des festgelegten Zeitraums etwa %(duration)s Stunde(n) verbringen, obwohl die tatsächliche Zeit variieren kann. Wenn kein Zeitraum definiert ist, können Sie jederzeit einen Beitrag leisten, der Ihnen passt.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:25
 #, python-format
@@ -12085,9 +12020,7 @@ msgctxt "email"
 msgid "\n"
 "                        Expect to spend around %(duration)s hours during the set period, although the actual time may vary.  If no period is defined, then you can contribute at anytime that suits you.\n"
 "                    "
-msgstr "\n"
-"                        Erwarten Sie, dass Sie während des festgelegten Zeitraums etwa %(duration)s Stunden verbringen, obwohl die tatsächliche Zeit variieren kann. Wenn kein Zeitraum definiert ist, können Sie jederzeit einen Beitrag leisten, der Ihnen passt.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/deadline/user_joined.html:33
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:31
@@ -12096,9 +12029,7 @@ msgctxt "email"
 msgid "\n"
 "                        Make sure to register your hours using the code or URL found on the activity detail page.\n"
 "                    "
-msgstr "\n"
-"                        Stellen Sie sicher, dass Sie Ihre Stunden mit dem Code oder der URL auf der Detailseite der Aktivität registrieren.\n"
-"                    "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/manager_registration_created.html:4
 #, python-format
@@ -12218,9 +12149,7 @@ msgstr "\n"
 msgid "\n"
 "                    Once accepted, you are expected to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
-msgstr "\n"
-"                    Wenn Sie akzeptiert werden, wird erwartet, dass Sie etwa %(duration)s Stunde(n) jeden %(period)s verbringen, obwohl die tatsächliche Zeit variieren kann.\n"
-"                "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_applied.html:29
 #: bluebottle/time_based/templates/mails/messages/registrations/periodic/user_joined.html:25
@@ -12238,9 +12167,7 @@ msgstr "Wenn Sie aufhören möchten, zur Aktivität beizutragen, stellen Sie sic
 msgid "\n"
 "                    Expect to spend around %(duration)s hour(s) every %(period)s, although the actual time may vary.\n"
 "                "
-msgstr "\n"
-"                    Erwarten Sie, dass Sie etwa %(duration)s Stunde(n) jeden %(period)s verbringen, obwohl die tatsächliche Zeit variieren kann.\n"
-"                "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/schedule/team_applied.html:6
 #, python-format
@@ -12320,9 +12247,7 @@ msgctxt "email"
 msgid "\n"
 "            <p>Good news, you have been accepted for the activity \"%(title)s\"!</p>\n"
 "        "
-msgstr "\n"
-"            <p>Gute Nachrichten, Sie wurden für die Aktivität \"%(title)s\" akzeptiert!</p>\n"
-"        "
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/registrations/user_removed.html:4
 #, python-format
@@ -12949,14 +12874,14 @@ msgstr[1] "Sekunden"
 #: tenants/brabant/settings.py:25 tenants/laatste-pluk/settings.py:25
 #: tenants/navara/settings.py:26
 msgid "Dutch"
-msgstr "Niederländisch"
+msgstr ""
 
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
-msgstr "Nederlands"
+msgstr ""
 
 #: tenants/laatste-pluk/settings.py:26 tenants/navara/settings.py:27
 #: tenants/rhi-magnesita/settings.py:25 tenants/shell-uk/settings.py:26
 msgid "English"
-msgstr "Englisch"
+msgstr ""
 

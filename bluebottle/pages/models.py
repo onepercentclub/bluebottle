@@ -344,7 +344,7 @@ class PlatformPage(TranslatableModel):
         )
 
     def get_absolute_url(self):
-        return f'/content/{self.slug}'
+        return f'/platform/{self.slug}'
 
     def __str__(self):
         return str(self.PageTypeChoices.get_choice(self.slug).label if self.slug else _('Platform page'))

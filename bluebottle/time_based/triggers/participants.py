@@ -10,7 +10,7 @@ from bluebottle.fsm.effects import TransitionEffect, RelatedTransitionEffect
 from bluebottle.fsm.triggers import (
     TransitionTrigger,
     register,
-    ModelChangedTrigger,
+    ModelChangedTrigger, ModelDeletedTrigger,
 )
 from bluebottle.notifications.effects import NotificationEffect
 from bluebottle.time_based.effects import CreatePreparationTimeContributionEffect, CreateSlotTimeContributionEffect, \
@@ -25,6 +25,7 @@ from bluebottle.time_based.effects.participants import (
     CreatePeriodicPreparationTimeContributionEffect, CreateScheduleSlotEffect, CreateDateRegistrationEffect,
     CreateRegisteredTimeContributionEffect,
 )
+from bluebottle.time_based.effects.registrations import DeleteRegistrationEffect
 from bluebottle.time_based.messages import (
     ParticipantAddedNotification, ManagerSlotParticipantRegisteredNotification,
     ParticipantSlotParticipantRegisteredNotification, ParticipantChangedNotification,
@@ -1145,6 +1146,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
         """
         the slot will be unfilled
         """
+        # Handle case where instance might be in deletion state
+        if not hasattr(effect.instance, 'slot') or not effect.instance.slot:
+            return False
+
         participant_count = effect.instance.slot.participants.filter(
             status='accepted',
             registration__status='accepted'
@@ -1187,6 +1192,10 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
 
     def no_active_participation(effect):
         """Related registration has no active participants"""
+        # Handle case where instance might be in deletion state
+        if not hasattr(effect.instance, 'registration') or not effect.instance.registration:
+            return False
+
         return not effect.instance.registration.participants.exclude(
             id=effect.instance.id
         ).filter(
@@ -1450,6 +1459,16 @@ class DateParticipantTriggers(RegistrationParticipantTriggers):
                 FollowActivityEffect,
             ],
         ),
+        ModelDeletedTrigger(
+            effects=[
+                RelatedTransitionEffect(
+                    'slot',
+                    DateActivitySlotStateMachine.unlock,
+                    conditions=[participant_slot_will_be_not_full]
+                ),
+                DeleteRegistrationEffect
+            ]
+        )
     ]
 
 

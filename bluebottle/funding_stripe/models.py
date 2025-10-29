@@ -640,6 +640,11 @@ class ExternalAccount(BankAccount):
     provider_class = StripePaymentProvider
     currency = models.CharField(max_length=10, null=True, blank=True)
 
+    iban_checked = models.BooleanField(
+        default=False,
+        help_text=_("Whether the IBAN has been checked.")
+    )
+
     @cached_property
     def account(self):
         if self.account_id:

@@ -8,7 +8,7 @@ def _cache_key(text: str, target_lang: str, provider: str="deepl") -> str:
     h = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return f"tr:{provider}:{target_lang.upper()}:{h}"
 
-def translate_text_cached(text, target_lang, source_lang):
+def translate_text_cached(text, target_lang, source_lang=None):
     if not text:
         return ""
     key = _cache_key(text, target_lang, "deepl")
@@ -28,8 +28,13 @@ def translate_text_cached(text, target_lang, source_lang):
     for attempt in range(3):
         resp = requests.post(url, data=params, timeout=20)
         if resp.status_code == 200:
-            translated = resp.json()["translations"][0]["text"]
-            cache.set(key, translated, 60 * 60 * 24 * 10)
+            data = resp.json()["translations"][0]
+            detected_source = data["detected_source_language"]
+            if detected_source == target_lang.upper():
+                translated = text
+            else:
+                translated = data["text"]
+            cache.set(key, translated, 60 * 60 * 24 * 1000)
             return translated
         if resp.status_code in (429, 500, 502, 503, 504):
             time.sleep(1.5 * (attempt + 1))

@@ -315,7 +315,6 @@ class TranslationsSerializer(serializers.Field):
                 for field in self.translation_fields
             }
         
-        source_language = self._get_source_language(instance)
         translated_data = {}
         
         for field_name in self.translation_fields:
@@ -328,7 +327,6 @@ class TranslationsSerializer(serializers.Field):
                 translated_value = self._translate_field(
                     text_value, 
                     target_language, 
-                    source_language
                 )
                 translated_data[field_name] = translated_value
             else:
@@ -336,35 +334,16 @@ class TranslationsSerializer(serializers.Field):
         
         return translated_data
     
-    def _translate_field(self, text, target, source):
-        """
-        Translate a text field using the cached translation service.
-        
-        Args:
-            text: The text to translate
-            target: Target language code
-            source: Source language code
-            
-        Returns:
-            Translated text or original text if translation fails
-        """
+    def _translate_field(self, text, target):
         if not text:
             return ""
-        
-        # If original already matches target language, return as-is
-        if source and source.lower().startswith(target.lower()):
-            return text
-            
+
         try:
-            return translate_text_cached(text=text, target_lang=target, source_lang=source)
+            return translate_text_cached(text=text, target_lang=target)
         except Exception as e:
             # Fail-safe: fall back to original text, don't explode the API
             return text
 
-    def _get_source_language(self, obj):
-        """Get the source language from the object."""
-        return getattr(obj, "language", "nl")
-    
     def _get_field_value(self, obj, field_name):
         """
         Get the value of a field from the object, handling nested attributes and special cases.

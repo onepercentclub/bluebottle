@@ -1,10 +1,5 @@
-from pygments.lexers import q
-
 from bluebottle.members.models import MemberPlatformSettings
-
-from rest_framework import permissions
-
-from bluebottle.utils.permissions import TenantConditionalOpenClose, BasePermission, ResourcePermission
+from bluebottle.utils.permissions import BasePermission
 
 
 class PlatformPagePermission(BasePermission):
@@ -23,4 +18,3 @@ class PlatformPagePermission(BasePermission):
 
     def __repr__(self):
         return 'PlatformPagePermission'
-

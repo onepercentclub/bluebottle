@@ -39,7 +39,7 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.serializers import ResourcePermissionField, TranslationsSerializer
 from bluebottle.utils.translations import translate_text_cached
 from bluebottle.utils.utils import get_current_language
 
@@ -212,9 +212,7 @@ class ActivityAnswerSerializer(PolymorphicModelSerializer):
 # This can't be in serializers because of circular imports
 class BaseActivitySerializer(ModelSerializer):
     title = serializers.CharField()
-    title_translated = serializers.SerializerMethodField()
     description = RichTextField()
-    description_translated = serializers.SerializerMethodField()
     status = FSMField(read_only=True)
     owner = ResourceRelatedField(read_only=True)
     categories = ResourceRelatedField(many=True, read_only=True)
@@ -255,43 +253,7 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
-    def _translate_field(self, text, target, source):
-        if not text:
-            return ""
-        # if original already matches target language, return as-is
-        if source and source.lower().startswith(target.lower()):
-            return text
-        try:
-            return translate_text_cached(text=text, target_lang=target, source_lang=source)
-        except Exception as e:
-            print('Oeps')
-            print(e)
-
-            # fail-safe: fall back to original text, don't explode the API
-            return text
-
-    def get_translation_lang(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return None
-        return get_current_language()
-
-    def get_title_translated(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return obj.title
-        target = get_current_language()
-        print('Translating title from {} to {}'.format(obj.title, target))
-        source = getattr(obj, "language", None)
-        return self._translate_field(obj.title, target, source)
-
-    def get_description_translated(self, obj):
-        request = self.context.get("request")
-        if not request:
-            return obj.description.html
-        target = get_current_language()
-        source = getattr(obj, "language", None)
-        return self._translate_field(obj.description.html, target, source)
+    translations = TranslationsSerializer(fields=['title', 'description'])
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -387,9 +349,7 @@ class BaseActivitySerializer(ModelSerializer):
             'goals',
             'owner',
             'title',
-            'title_translated',
             'description',
-            'description_translated',
             'is_follower',
             'status',
             'stats',
@@ -410,12 +370,13 @@ class BaseActivitySerializer(ModelSerializer):
             'partner_organization',
             'theme',
             'answers',
-            'tos_accepted'
+            'tos_accepted',
         )
 
         meta_fields = (
             'permissions',
             'transitions',
+            'translations',
             'created',
             'updated',
             'errors',
@@ -425,7 +386,7 @@ class BaseActivitySerializer(ModelSerializer):
             'contributor_count',
             'team_count',
             'current_status',
-            'admin_url'
+            'admin_url',
         )
 
     class JSONAPIMeta(object):

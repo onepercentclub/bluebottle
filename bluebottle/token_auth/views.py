@@ -13,6 +13,7 @@ from bluebottle.clients import properties
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.auth.saml import SAMLAuthentication
 from bluebottle.token_auth.models import SAMLDevice
+from bluebottle.utils.utils import get_client_ip
 
 
 def get_auth(request, settings, saml_request=None):
@@ -25,11 +26,17 @@ class TokenRedirectView(View):
     """
     permanent = False
     query_string = True
-    pattern_name = 'article-detail'
 
     def get(self, request, *args, **kwargs):
-        auth = get_auth(request, settings=properties.TOKEN_AUTH, **kwargs)
-        sso_url = auth.sso_url(target_url=request.GET.get('url'))
+        client_ip = get_client_ip(request)
+
+        if client_ip == settings.VPN_CLIENT_IP or client_ip == '127.0.0.1':
+            saml_settings = settings.SUPPORT_TOKEN_AUTH
+        else:
+            saml_settings = properties.TOKEN_AUTH
+
+        auth = get_auth(request, settings=saml_settings, **kwargs)
+        sso_url = auth.sso_url(target_url=request.build_absolute_uri(request.GET.get('url')))
         return HttpResponseRedirect(sso_url)
 
 

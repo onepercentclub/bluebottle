@@ -1,4 +1,3 @@
-# app/services/translation.py
 import hashlib, time, requests
 from django.conf import settings
 from django.core.cache import cache

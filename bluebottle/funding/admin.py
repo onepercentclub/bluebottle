@@ -217,6 +217,7 @@ class FundingAdmin(ActivityChildAdmin):
             (_("Management"), {"fields": self.get_status_fields(request, obj)}),
             (_("Information"), {"fields": self.get_detail_fields(request, obj)}),
             (_("Date & amount"), {"fields": self.campaign_fields}),
+            (_("Activity Pub"), {"fields": self.get_activity_pub_fields(request, obj)}),
         ]
         if Location.objects.count():
             if settings.enable_office_restrictions:

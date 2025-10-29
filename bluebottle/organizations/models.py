@@ -31,6 +31,10 @@ class Organization(ValidatedModelMixin, models.Model):
         settings.AUTH_USER_MODEL, verbose_name=_('owner'), null=True, on_delete=models.CASCADE
     )
 
+    origin = models.ForeignKey(
+        'activity_pub.Organization', null=True, related_name="organizations", on_delete=models.SET_NULL
+    )
+
     website = models.URLField(_('website'), blank=True)
     logo = ImageField(
         _('logo'),
@@ -63,8 +67,8 @@ class Organization(ValidatedModelMixin, models.Model):
 
     class Meta(object):
         ordering = ['name']
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
+        verbose_name = _("organisation")
+        verbose_name_plural = _("organisations")
 
     class JSONAPIMeta:
         resource_name = 'organizations'

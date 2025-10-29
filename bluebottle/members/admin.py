@@ -1,6 +1,8 @@
 import functools
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+
 from bluebottle.segments.filters import MemberSegmentAdminMixin
 from builtins import object
 from django import forms
@@ -441,7 +443,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         'can_pledge',
         'can_do_bank_transfer',
         'verified',
-        'kyc'
+        'kyc',
     ]
 
     def get_permission_fields(self, request, obj=None):

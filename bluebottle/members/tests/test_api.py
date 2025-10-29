@@ -204,7 +204,7 @@ class LoginTestCase(BluebottleTestCase):
                 reverse('token-auth'), {'email': self.email, 'password': 'wrong'}
             )
 
-        mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'testserver'})
+        mock_response = client.RecaptchaResponse(True, extra_data={'hostname': 'test.localhost'})
 
         with mock.patch.object(client, 'submit', return_value=mock_response):
             json_api_client = JSONAPITestClient()

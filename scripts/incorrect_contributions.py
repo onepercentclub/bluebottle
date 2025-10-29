@@ -1,4 +1,3 @@
-
 from django.db.models import Q, Count
 
 from bluebottle.clients.models import Client
@@ -6,7 +5,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.time_based.models import (
     DeadlineActivity, DeadlineRegistration, TimeContribution, DeadlineParticipant,
     ScheduleActivity,
-    PeriodicActivity, DateRegistration, DateParticipant, Registration
+    PeriodicActivity, DateRegistration, DateParticipant
 )
 
 
@@ -56,7 +55,7 @@ def run(*args):
                 contributor__activity__team_activity='individuals'
             ).exclude(
                 Q(contributor__scheduleparticipant__registration__status__in=('accepted', 'new')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled', 'unscheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_team_schedule_contributions = TimeContribution.objects.filter(
@@ -64,9 +63,13 @@ def run(*args):
                 contributor__teamscheduleparticipant__isnull=False,
                 contributor__activity__team_activity='teams'
             ).exclude(
-                Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=('succeeded', 'scheduled')) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
+                Q(contributor__teamscheduleparticipant__team_member__status__in=(
+                    'active',
+                )) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
+                    'succeeded', 'scheduled', 'accepted'
+                )) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_contributions = (

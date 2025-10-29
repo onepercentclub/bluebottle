@@ -112,7 +112,7 @@ class StripePaymentIntentList(JsonApiViewMixin, AutoPrefetchMixin, CreateAPIView
 
         payment_provider = StripePaymentProvider.objects.first()
 
-        platform_currency = payment_provider.get_default_currency()[0].lower()
+        platform_currency = payment_provider.currency.lower()
 
         if 'card_payments' in connect_account.account.capabilities:
             # Only do  on_behalf_of when card_payments are enabled
@@ -444,11 +444,16 @@ class IntentWebHookView(View):
         try:
             if event.type == 'payment_intent.succeeded':
                 payment = self.get_payment(event.data.object.id)
-                if payment.status != payment.states.succeeded.value:
-                    payment.states.succeed()
-                    payment.update()
-                    payment.donation.save()
-                    payment.save()
+                if payment:
+                    if payment.status != payment.states.succeeded.value:
+                        payment.states.succeed()
+                        payment.update()
+                        payment.donation.save()
+                        payment.save()
+                else:
+                    grant_payment = self.get_grant_payment(event.data.object.id)
+                    if grant_payment:
+                        grant_payment.check_status()
 
                 return HttpResponse('Updated payment to succeeded')
 
@@ -484,17 +489,21 @@ class IntentWebHookView(View):
             return HttpResponse('Payment not found', status=400)
 
     def get_payment(self, payment_id):
-        intent = PaymentIntent.objects.get(intent_id=payment_id)
-        try:
-            return intent.payment
-        except StripePayment.DoesNotExist:
+        if PaymentIntent.objects.filter(intent_id=payment_id).exists():
+            intent = PaymentIntent.objects.get(intent_id=payment_id)
             try:
-                intent.donation.payment.payment_intent = intent
-                intent.donation.payment.save()
                 return intent.payment
-            except Donor.payment.RelatedObjectDoesNotExist:
-                payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
-                return payment
+            except StripePayment.DoesNotExist:
+                try:
+                    intent.donation.payment.payment_intent = intent
+                    intent.donation.payment.save()
+                    return intent.payment
+                except Donor.payment.RelatedObjectDoesNotExist:
+                    payment = StripePayment.objects.create(payment_intent=intent, donation=intent.donation)
+                    return payment
+
+    def get_grant_payment(self, payment_id):
+        return GrantPayment.objects.filter(intent_id=payment_id).first()
 
 
 class SessionWebHookView(View):
@@ -572,9 +581,10 @@ class ConnectWebHookView(View):
                 return HttpResponse("Skipped event {}".format(event.type))
 
         except StripePayoutAccount.DoesNotExist:
-            error = "Payout not found"
+            tenant = connection.tenant
+            error = f"Payout account not found {event.data.object.id} on {tenant.name}"
             logger.error(error)
-            return HttpResponse(error, status=400)
+            return HttpResponse("Skipped event {}, account not found".format(event.type))
 
     def get_account(self, account_id):
         return StripePayoutAccount.objects.get(account_id=account_id)

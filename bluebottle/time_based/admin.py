@@ -143,7 +143,6 @@ class TimeBasedAdmin(ActivityChildAdmin):
         'image',
         'video_url',
         'organization',
-        'theme',
         'categories',
     )
 

@@ -2,7 +2,6 @@ from django.utils.translation import gettext_lazy as _
 
 from bluebottle.activities.models import EffortContribution, Organizer
 from bluebottle.fsm.state import (
-    AllStates,
     EmptyState,
     ModelStateMachine,
     State,
@@ -191,7 +190,7 @@ class ActivityStateMachine(ModelStateMachine):
     )
 
     reject = Transition(
-        AllStates(),
+        [draft, needs_work, submitted],
         rejected,
         name=_("Reject"),
         description=_(
@@ -257,6 +256,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),
+        conditions=[is_complete, is_valid, should_auto_approve],
     )
 
     request_changes = Transition(

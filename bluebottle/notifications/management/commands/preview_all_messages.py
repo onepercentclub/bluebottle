@@ -23,6 +23,8 @@ import os
 import json
 import importlib
 import inspect
+import re
+import ast
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -57,6 +59,171 @@ MESSAGE_MODULES = {
     'updates': 'bluebottle.updates.messages',
     'members': 'bluebottle.members.messages',
 }
+
+# Trigger file paths for analyzing transitions
+TRIGGER_MODULES = [
+    'bluebottle.activities.triggers',
+    'bluebottle.initiatives.triggers',
+    'bluebottle.funding.triggers.funding',
+    'bluebottle.deeds.triggers',
+    'bluebottle.collect.triggers',
+    'bluebottle.time_based.triggers.participants',
+    'bluebottle.time_based.triggers.registrations',
+    'bluebottle.time_based.triggers.slots',
+    'bluebottle.time_based.triggers.teams',
+    'bluebottle.time_based.triggers.contributions',
+    'bluebottle.time_based.triggers.activities',
+    'bluebottle.grant_management.triggers',
+]
+
+
+def analyze_triggers():
+    """
+    Analyze all trigger files to build a mapping of messages to their triggering transitions.
+    
+    Returns:
+        dict: Mapping of message class names to lists of trigger info dicts
+    """
+    message_triggers = {}
+    
+    for trigger_module_path in TRIGGER_MODULES:
+        try:
+            module = importlib.import_module(trigger_module_path)
+            
+            # Get the source file path
+            if not hasattr(module, '__file__'):
+                continue
+                
+            source_file = module.__file__
+            with open(source_file, 'r', encoding='utf-8') as f:
+                source_code = f.read()
+            
+            # Parse to find NotificationEffect calls
+            trigger_pattern = r'TransitionTrigger\s*\(\s*([^,]+),\s*effects=\[(.*?)\]'
+            
+            # Find all trigger blocks
+            trigger_matches = re.finditer(trigger_pattern, source_code, re.DOTALL)
+            
+            for match in trigger_matches:
+                transition_ref = match.group(1).strip()
+                effects_block = match.group(2)
+                
+                # Extract transition name (e.g., "ActivityStateMachine.submit" -> "submit")
+                transition_parts = transition_ref.split('.')
+                if len(transition_parts) >= 2:
+                    state_machine = transition_parts[0]
+                    transition_name = transition_parts[-1]
+                else:
+                    transition_name = transition_ref
+                    state_machine = "Unknown"
+                
+                # Find NotificationEffect entries
+                notification_pattern = r'NotificationEffect\s*\(\s*([^,\)]+)'
+                notification_matches = re.finditer(notification_pattern, effects_block)
+                
+                for notif_match in notification_matches:
+                    message_class_name = notif_match.group(1).strip()
+                    
+                    # Extract conditions if present
+                    # Look for conditions= near this NotificationEffect
+                    effect_start = notif_match.start()
+                    effect_context = effects_block[max(0, effect_start-50):effect_start+200]
+                    
+                    conditions = []
+                    conditions_match = re.search(r'conditions=\[(.*?)\]', effect_context, re.DOTALL)
+                    if conditions_match:
+                        cond_text = conditions_match.group(1)
+                        # Extract condition function names
+                        cond_funcs = re.findall(r'(\w+)', cond_text)
+                        conditions = [c for c in cond_funcs if not c in ['conditions', 'True', 'False']]
+                    
+                    # Build trigger info
+                    trigger_info = {
+                        'transition': transition_name,
+                        'state_machine': state_machine,
+                        'module': trigger_module_path.split('.')[-1],  # e.g., 'triggers', 'participants'
+                        'full_module': trigger_module_path,
+                        'conditions': conditions
+                    }
+                    
+                    if message_class_name not in message_triggers:
+                        message_triggers[message_class_name] = []
+                    
+                    message_triggers[message_class_name].append(trigger_info)
+            
+            # Also look for ModelChangedTrigger
+            model_changed_pattern = r'ModelChangedTrigger\s*\(\s*[\'"]?([^,\'"]+)[\'"]?,\s*effects=\[(.*?)\]'
+            model_matches = re.finditer(model_changed_pattern, source_code, re.DOTALL)
+            
+            for match in model_matches:
+                field_name = match.group(1).strip().strip('"\'')
+                effects_block = match.group(2)
+                
+                # Find NotificationEffect entries
+                notification_matches = re.finditer(notification_pattern, effects_block)
+                
+                for notif_match in notification_matches:
+                    message_class_name = notif_match.group(1).strip()
+                    
+                    trigger_info = {
+                        'transition': f'field_changed:{field_name}',
+                        'state_machine': 'ModelChanged',
+                        'module': trigger_module_path.split('.')[-1],
+                        'full_module': trigger_module_path,
+                        'conditions': []
+                    }
+                    
+                    if message_class_name not in message_triggers:
+                        message_triggers[message_class_name] = []
+                    
+                    message_triggers[message_class_name].append(trigger_info)
+                    
+        except Exception as e:
+            print(f"Warning: Could not analyze {trigger_module_path}: {e}")
+            continue
+    
+    return message_triggers
+
+
+def format_trigger_description(triggers):
+    """
+    Format trigger information into a human-readable description.
+    
+    Args:
+        triggers: List of trigger info dicts
+        
+    Returns:
+        str: HTML-formatted trigger description
+    """
+    if not triggers:
+        return ""
+    
+    descriptions = []
+    
+    # Group by state machine
+    by_machine = {}
+    for trigger in triggers:
+        machine = trigger['state_machine']
+        if machine not in by_machine:
+            by_machine[machine] = []
+        by_machine[machine].append(trigger)
+    
+    for machine, machine_triggers in sorted(by_machine.items()):
+        transitions = []
+        for t in machine_triggers:
+            trans_desc = f"<code>{t['transition']}</code>"
+            if t['conditions']:
+                cond_list = ', '.join([f'<code>{c}</code>' for c in t['conditions'][:3]])
+                if len(t['conditions']) > 3:
+                    cond_list += ', ...'
+                trans_desc += f" <small>(when: {cond_list})</small>"
+            transitions.append(trans_desc)
+        
+        machine_desc = f"<strong>{machine}</strong>: {', '.join(transitions)}"
+        descriptions.append(machine_desc)
+    
+    return "<br>".join(descriptions)
+
 
 #  Mock objects for different entity types
 class MockMember:
@@ -319,7 +486,7 @@ def save_preview(message_class_name, content, output_dir, module_name, language=
     # Return filepath and subject as a dict
     return {'filepath': filepath, 'subject': subject}
 
-def generate_index(output_dir, all_messages, languages):
+def generate_index(output_dir, all_messages, languages, trigger_map=None):
     """Generate comprehensive index page for all messages with modal support"""
     # Count by module
     module_counts = {}
@@ -340,9 +507,15 @@ def generate_index(output_dir, all_messages, languages):
             'messages': []
         }
         for msg_name, msg_class in messages:
+            # Get trigger information for this message
+            triggers = trigger_map.get(msg_name, []) if trigger_map else []
+            trigger_desc = format_trigger_description(triggers) if triggers else ""
+            
             msg_data = {
                 'name': msg_name,
                 'description': (msg_class.__doc__ or "").strip().replace('\n', ' '),
+                'triggers': triggers,
+                'trigger_description': trigger_desc,
                 'previews': {},
                 'subjects': {}
             }
@@ -461,6 +634,25 @@ def generate_index(output_dir, all_messages, languages):
             color: #666;
             margin-bottom: 10px;
             line-height: 1.4;
+        }}
+        .message-triggers {{
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+            border-radius: 3px;
+            line-height: 1.5;
+        }}
+        .message-triggers strong {{
+            color: #667eea;
+        }}
+        .message-triggers code {{
+            background: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 10px;
         }}
         .lang-links {{
             display: flex;
@@ -589,6 +781,26 @@ def generate_index(output_dir, all_messages, languages):
         .modal-subject:empty {{
             display: none;
         }}
+        .modal-triggers-section {{
+            padding: 15px 30px;
+            background: #fff8e1;
+            border-bottom: 2px solid #ffc107;
+            font-size: 13px;
+            color: #495057;
+            line-height: 1.6;
+        }}
+        .modal-triggers-section:empty {{
+            display: none;
+        }}
+        .modal-triggers-section strong {{
+            color: #667eea;
+        }}
+        .modal-triggers-section code {{
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }}
         .modal-body {{
             padding: 0;
             overflow-y: auto;
@@ -643,7 +855,7 @@ def generate_index(output_dir, all_messages, languages):
 <body>
     <div class="container">
         <header>
-            <h1>📧 Complete Email Message Gallery</h1>
+            <h1>📧 Email Message Gallery</h1>
             <p>All TransitionMessage Notifications Across Bluebottle</p>
         </header>
         
@@ -672,10 +884,16 @@ def generate_index(output_dir, all_messages, languages):
 """
         for msg_name, msg_class in sorted(messages):
             doc = (msg_class.__doc__ or "").strip().replace('\n', ' ')
+            
+            # Get trigger info from metadata
+            triggers = trigger_map.get(msg_name, []) if trigger_map else []
+            trigger_desc = format_trigger_description(triggers) if triggers else ""
+            
             html += f"""
                 <div class="message-item">
                     <div class="message-name">{msg_name}</div>
                     {f'<div class="message-description">{doc}</div>' if doc else ''}
+                    {f'<div class="message-triggers"><strong>🎯 Triggered by:</strong> {trigger_desc}</div>' if trigger_desc else ''}
                     <div class="lang-links">
 """
             # Show only EN and NL buttons in the overview
@@ -709,6 +927,7 @@ def generate_index(output_dir, all_messages, languages):
                     <span class="close" onclick="closeModal()">&times;</span>
                 </div>
             </div>
+            <div id="modal-triggers" class="modal-triggers-section"></div>
             <div id="modal-subject" class="modal-subject"></div>
             <div class="modal-body">
                 <iframe id="modal-iframe" src="about:blank"></iframe>
@@ -762,6 +981,7 @@ def generate_index(output_dir, all_messages, languages):
             const iframe = document.getElementById('modal-iframe');
             const title = document.getElementById('modal-title');
             const subjectDiv = document.getElementById('modal-subject');
+            const triggersDiv = document.getElementById('modal-triggers');
             const openNew = document.getElementById('modal-open-new');
             const langSelector = document.getElementById('modal-lang-selector');
             
@@ -775,6 +995,15 @@ def generate_index(output_dir, all_messages, languages):
             } else {
                 subjectDiv.textContent = '';
                 subjectDiv.style.display = 'none';
+            }
+            
+            // Set trigger information if available
+            if (messageData.trigger_description) {
+                triggersDiv.innerHTML = '<strong>🎯 Triggered by:</strong> ' + messageData.trigger_description;
+                triggersDiv.style.display = 'block';
+            } else {
+                triggersDiv.innerHTML = '';
+                triggersDiv.style.display = 'none';
             }
             
             // Load preview in iframe
@@ -951,6 +1180,11 @@ class Command(BaseCommand):
                     return
                 modules_to_process = matched
             
+            # Analyze triggers to map messages to their triggering transitions
+            self.stdout.write("\n🔍 Analyzing trigger files...")
+            trigger_map = analyze_triggers()
+            self.stdout.write(f"   Found trigger info for {len(trigger_map)} message classes\n")
+            
             all_messages = {}
             total_generated = 0
             subjects_cache = {}  # Cache for subjects
@@ -987,7 +1221,7 @@ class Command(BaseCommand):
             
             # Generate comprehensive index
             if all_messages:
-                generate_index(options['output_dir'], all_messages, languages)
+                generate_index(options['output_dir'], all_messages, languages, trigger_map)
             
             self.stdout.write(f"\n{'='*80}")
             self.stdout.write(self.style.SUCCESS(f"✅ COMPLETE!"))

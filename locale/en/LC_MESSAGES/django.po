@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-28 14:57+0100\n"
+"POT-Creation-Date: 2025-10-28 14:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -780,21 +780,33 @@ msgstr ""
 msgid "Team {name}"
 msgstr ""
 
-#: bluebottle/activities/models.py:479
+#: bluebottle/activities/models.py:478 bluebottle/activities/models.py:484
+msgid "Everyone"
+msgstr ""
+
+#: bluebottle/activities/models.py:479 bluebottle/activities/models.py:485
+msgid "Managers"
+msgstr ""
+
+#: bluebottle/activities/models.py:489
 msgid "Label"
 msgstr ""
 
-#: bluebottle/activities/models.py:481
+#: bluebottle/activities/models.py:491
 msgid ""
 "The label for this question. This is used for validation messages e.g. "
 "\"[label] is required\"."
 msgstr ""
 
-#: bluebottle/activities/models.py:501
+#: bluebottle/activities/models.py:507
+msgid "Who can see the answers?"
+msgstr ""
+
+#: bluebottle/activities/models.py:517
 msgid "Form question"
 msgstr ""
 
-#: bluebottle/activities/models.py:502
+#: bluebottle/activities/models.py:518
 msgid "Form questions"
 msgstr ""
 
@@ -1666,7 +1678,7 @@ msgid ""
 "promptly.<br>\n"
 msgstr ""
 
-#: bluebottle/activities/utils.py:498 bluebottle/activities/utils.py:499
+#: bluebottle/activities/utils.py:512 bluebottle/activities/utils.py:513
 msgid "Description is required"
 msgstr ""
 

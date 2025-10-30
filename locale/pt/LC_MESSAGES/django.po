@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-28 14:54+0100\n"
-"PO-Revision-Date: 2025-10-28 13:56\n"
+"POT-Creation-Date: 2025-10-30 09:56+0100\n"
+"PO-Revision-Date: 2025-10-30 09:14\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -45,7 +45,7 @@ msgstr "detalhes"
 #: bluebottle/funding/admin.py:467 bluebottle/funding/admin.py:645
 #: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:278
-#: bluebottle/grant_management/admin.py:532 bluebottle/initiatives/admin.py:220
+#: bluebottle/grant_management/admin.py:533 bluebottle/initiatives/admin.py:220
 #: bluebottle/time_based/admin.py:308 bluebottle/time_based/admin.py:438
 #: bluebottle/time_based/admin.py:819 bluebottle/time_based/admin.py:866
 #: bluebottle/time_based/admin.py:1136 bluebottle/time_based/admin.py:1804
@@ -135,12 +135,12 @@ msgid "Initiative"
 msgstr "Iniciativa"
 
 #: bluebottle/activities/admin.py:738 bluebottle/funding/admin.py:217
-#: bluebottle/grant_management/admin.py:522 bluebottle/initiatives/admin.py:190
+#: bluebottle/grant_management/admin.py:523 bluebottle/initiatives/admin.py:190
 msgid "Management"
 msgstr "Gestão"
 
 #: bluebottle/activities/admin.py:739 bluebottle/funding/admin.py:218
-#: bluebottle/grant_management/admin.py:523 bluebottle/initiatives/admin.py:207
+#: bluebottle/grant_management/admin.py:524 bluebottle/initiatives/admin.py:207
 msgid "Information"
 msgstr "Informacao"
 
@@ -150,14 +150,14 @@ msgid "Participation"
 msgstr "Participação"
 
 #: bluebottle/activities/admin.py:756 bluebottle/bb_accounts/models.py:139
-#: bluebottle/funding/admin.py:225 bluebottle/grant_management/admin.py:529
+#: bluebottle/funding/admin.py:225 bluebottle/grant_management/admin.py:530
 #: bluebottle/initiatives/models.py:283 bluebottle/initiatives/models.py:290
 #: bluebottle/initiatives/models.py:295
 msgid "Office"
 msgstr "Esporte"
 
 #: bluebottle/activities/admin.py:761 bluebottle/funding/admin.py:233
-#: bluebottle/grant_management/admin.py:537 bluebottle/members/admin.py:546
+#: bluebottle/grant_management/admin.py:538 bluebottle/members/admin.py:546
 #: bluebottle/settings/admin_dashboard.py:174
 msgid "Segments"
 msgstr "Segmentos"
@@ -621,7 +621,7 @@ msgstr "Permalink"
 #: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
-#: bluebottle/grant_management/models.py:423
+#: bluebottle/grant_management/models.py:452
 msgid "Description"
 msgstr "Descrição"
 
@@ -2311,15 +2311,15 @@ msgstr "Use este formulário para entrar nos tokens de backup para login. Estes 
 msgid "Or, alternatively, use one of your other authentication methods:"
 msgstr "Ou, em alternativa, use um de seus outros métodos de autenticação:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:46
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:47
 msgid "Login using SSO"
 msgstr "Entrar usando SSO"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:58
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:60
 msgid "As a last resort, you can use a backup token:"
 msgstr "Como último recurso, você pode usar um token de backup:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:61
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:63
 msgid "Use Backup Token"
 msgstr "Usar token do backup"
 
@@ -3878,7 +3878,7 @@ msgstr "Nenhuma"
 msgid "Funding activities"
 msgstr "Atividades de financiamento"
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:381
+#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:410
 #: bluebottle/members/admin.py:807
 msgid "Grant applications"
 msgstr "Aplicações para subsídios"
@@ -4184,8 +4184,8 @@ msgid "If you enter a duration, leave the deadline field empty for it to be auto
 msgstr "Se você inserir uma duração, deixe o campo de prazo vazio para que ele seja calculado automaticamente."
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:259
-#: bluebottle/grant_management/models.py:332
+#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:288
+#: bluebottle/grant_management/models.py:361
 msgid "started"
 msgstr "iniciado"
 
@@ -4245,11 +4245,11 @@ msgid "fundraisers"
 msgstr "fundraisers"
 
 #: bluebottle/funding/models.py:478 bluebottle/funding/states.py:480
-#: bluebottle/grant_management/models.py:258 bluebottle/utils/transitions.py:13
+#: bluebottle/grant_management/models.py:287 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "aprovado"
 
-#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:260
+#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:289
 msgid "completed"
 msgstr "concluído"
 
@@ -4261,7 +4261,7 @@ msgstr "Pagamento de financiamento"
 msgid "Funding payouts"
 msgstr "Pagamentos de financiamento"
 
-#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:317
+#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:346
 msgid "Payout"
 msgstr "Pagamento"
 
@@ -6097,9 +6097,9 @@ msgid "Enter 3 capital letters."
 msgstr "Insira 3 letras maiúsculas."
 
 #: bluebottle/grant_management/admin.py:98
-#: bluebottle/grant_management/models.py:242
-#: bluebottle/grant_management/models.py:343
-#: bluebottle/grant_management/models.py:380
+#: bluebottle/grant_management/models.py:271
+#: bluebottle/grant_management/models.py:372
+#: bluebottle/grant_management/models.py:409
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr "Solicitação de subsídio"
@@ -6154,23 +6154,23 @@ msgstr "Detalhes KYC"
 msgid "Manage"
 msgstr "Gerenciar"
 
-#: bluebottle/grant_management/admin.py:406
+#: bluebottle/grant_management/admin.py:407
 msgid "Generate payment link"
 msgstr "Gerar link de pagamento"
 
-#: bluebottle/grant_management/admin.py:411
+#: bluebottle/grant_management/admin.py:412
 msgid "Pay now"
 msgstr "Pagar agora"
 
-#: bluebottle/grant_management/admin.py:417
+#: bluebottle/grant_management/admin.py:418
 msgid "Payment Link"
 msgstr "Link de pagamento"
 
-#: bluebottle/grant_management/admin.py:444
+#: bluebottle/grant_management/admin.py:445
 msgid "Successfully generated payment link"
 msgstr "Link de pagamento gerado com sucesso"
 
-#: bluebottle/grant_management/admin.py:461
+#: bluebottle/grant_management/admin.py:462
 msgid "Successfully checked payment status"
 msgstr "Status do pagamento verificado com sucesso"
 
@@ -6221,14 +6221,14 @@ msgid "Enter the grant amount"
 msgstr "Insira o valor do subsídio"
 
 #: bluebottle/grant_management/forms.py:39
-#: bluebottle/grant_management/models.py:532
-#: bluebottle/grant_management/models.py:579
-#: bluebottle/grant_management/models.py:617
+#: bluebottle/grant_management/models.py:561
+#: bluebottle/grant_management/models.py:608
+#: bluebottle/grant_management/models.py:646
 msgid "Currency should match fund currency"
 msgstr "A moeda deve corresponder à moeda do fundo"
 
 #: bluebottle/grant_management/forms.py:42
-#: bluebottle/grant_management/models.py:582
+#: bluebottle/grant_management/models.py:611
 msgid "Insufficient funds"
 msgstr "Fundos insuficientes"
 
@@ -6319,68 +6319,68 @@ msgstr "Fornecedor de subsídio"
 msgid "Grant providers"
 msgstr "Fornecedores de subsídio"
 
-#: bluebottle/grant_management/models.py:115
+#: bluebottle/grant_management/models.py:116
 msgid "Grant payment"
 msgstr "Pagamento de subsídio"
 
-#: bluebottle/grant_management/models.py:116
+#: bluebottle/grant_management/models.py:117
 msgid "Grant payments"
 msgstr "Pagamentos de subsídio"
 
-#: bluebottle/grant_management/models.py:313
+#: bluebottle/grant_management/models.py:342
 msgid "Grant payout"
 msgstr "Pagamento de subsídio"
 
-#: bluebottle/grant_management/models.py:314
+#: bluebottle/grant_management/models.py:343
 msgid "Grant payouts"
 msgstr "Pagamentos de subsídio"
 
-#: bluebottle/grant_management/models.py:410
+#: bluebottle/grant_management/models.py:439
 msgid "Debit"
 msgstr "Débito"
 
-#: bluebottle/grant_management/models.py:414
+#: bluebottle/grant_management/models.py:443
 msgid "credit"
 msgstr "crédito"
 
-#: bluebottle/grant_management/models.py:439
+#: bluebottle/grant_management/models.py:468
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
 msgid "Grant fund"
 msgstr "Fundo de subsídio"
 
-#: bluebottle/grant_management/models.py:440
+#: bluebottle/grant_management/models.py:469
 msgid "Grant funds"
 msgstr "Fundos de subsídio"
 
-#: bluebottle/grant_management/models.py:471
+#: bluebottle/grant_management/models.py:500
 msgid "Total paid out"
 msgstr "Total pago"
 
-#: bluebottle/grant_management/models.py:477
+#: bluebottle/grant_management/models.py:506
 msgid "Paid out applications"
 msgstr "Solicitações pagas"
 
-#: bluebottle/grant_management/models.py:482
+#: bluebottle/grant_management/models.py:511
 msgid "Total budget"
 msgstr "Orçamento total"
 
-#: bluebottle/grant_management/models.py:488
+#: bluebottle/grant_management/models.py:517
 msgid "Pending payments"
 msgstr "Pagamentos pendentes"
 
-#: bluebottle/grant_management/models.py:496
+#: bluebottle/grant_management/models.py:525
 msgid "Pending applications"
 msgstr "Solicitações pendentes"
 
-#: bluebottle/grant_management/models.py:503
+#: bluebottle/grant_management/models.py:532
 msgid "Available budget"
 msgstr "Orçamento disponível"
 
-#: bluebottle/grant_management/models.py:560
+#: bluebottle/grant_management/models.py:589
 msgid "Grant"
 msgstr "Subsídio"
 
-#: bluebottle/grant_management/models.py:561
+#: bluebottle/grant_management/models.py:590
 msgid "Grants"
 msgstr "Subsídios"
 

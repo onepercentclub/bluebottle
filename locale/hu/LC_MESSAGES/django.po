@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-29 08:21+0100\n"
-"PO-Revision-Date: 2025-10-29 07:28\n"
+"POT-Creation-Date: 2025-10-30 09:56+0100\n"
+"PO-Revision-Date: 2025-10-30 09:14\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -766,19 +766,31 @@ msgstr "Csapat"
 msgid "Team {name}"
 msgstr "Csapat {name}"
 
-#: bluebottle/activities/models.py:479
+#: bluebottle/activities/models.py:478 bluebottle/activities/models.py:484
+msgid "Everyone"
+msgstr ""
+
+#: bluebottle/activities/models.py:479 bluebottle/activities/models.py:485
+msgid "Managers"
+msgstr ""
+
+#: bluebottle/activities/models.py:489
 msgid "Label"
 msgstr "Címke"
 
-#: bluebottle/activities/models.py:481
+#: bluebottle/activities/models.py:491
 msgid "The label for this question. This is used for validation messages e.g. \"[label] is required\"."
 msgstr "A kérdés címkéje. Ezt az érvényesítő üzenetekhez használják, pl.: \"[label] szükséges\"."
 
-#: bluebottle/activities/models.py:501
+#: bluebottle/activities/models.py:507
+msgid "Who can see the answers?"
+msgstr ""
+
+#: bluebottle/activities/models.py:517
 msgid "Form question"
 msgstr "Űrlap kérdés"
 
-#: bluebottle/activities/models.py:502
+#: bluebottle/activities/models.py:518
 msgid "Form questions"
 msgstr "Űrlap kérdések"
 
@@ -1610,7 +1622,7 @@ msgstr "\n"
 "Kérlek, szánj egy percet az aktivitás átnézésére, és döntsd el, hogy megfelelő-e a platformodhoz.<br>\n"
 "%(initiator_name)s várni fogja a véleményedet, ezért kérlek, válaszolj gyorsan.<br>\n"
 
-#: bluebottle/activities/utils.py:498 bluebottle/activities/utils.py:499
+#: bluebottle/activities/utils.py:512 bluebottle/activities/utils.py:513
 msgid "Description is required"
 msgstr "Leírás megadása kötelező."
 
@@ -2299,15 +2311,15 @@ msgstr "Használj ezt a formot a biztonsági tokenek megadására a bejelentkez�
 msgid "Or, alternatively, use one of your other authentication methods:"
 msgstr "Vagy is alternatív megoldásként, használj egy másik azonosító módszert:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:46
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:47
 msgid "Login using SSO"
 msgstr "Bejelentkezés SSO-val"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:58
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:60
 msgid "As a last resort, you can use a backup token:"
 msgstr "Mint utolsó lehetőség, használhatsz egy biztonsági tokent:"
 
-#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:61
+#: bluebottle/bluebottle_dashboard/templates/two_factor/core/login.html:63
 msgid "Use Backup Token"
 msgstr "Használj biztonsági tokent"
 

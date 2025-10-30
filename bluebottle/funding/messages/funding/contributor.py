@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
 
 class DonationSuccessDonorMessage(TransitionMessage):
-    subject = _("Thanks for your donation!")
+    subject = pgettext('email', "Thanks for your donation!")
     template = 'messages/funding/contributor/donation_success_donor'
 
     context = {
@@ -21,7 +21,7 @@ class DonationSuccessDonorMessage(TransitionMessage):
 
 
 class DonationRefundedDonorMessage(TransitionMessage):
-    subject = _('Your donation for the campaign "{title}" will be refunded')
+    subject = pgettext('email', 'Your donation for the campaign "{title}" will be refunded')
     template = 'messages/funding/contributor/donation_refunded_donor'
 
     context = {
@@ -37,7 +37,7 @@ class DonationRefundedDonorMessage(TransitionMessage):
 
 
 class DonationActivityRefundedDonorMessage(TransitionMessage):
-    subject = _('Your donation for the campaign "{title}" will be refunded')
+    subject = pgettext('email', 'Your donation for the campaign "{title}" will be refunded')
     template = 'messages/funding/contributor/donation_activity_refunded_donor'
 
     context = {

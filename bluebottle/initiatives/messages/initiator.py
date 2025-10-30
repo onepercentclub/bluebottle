@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _, pgettext
+from django.utils.translation import gettext_lazy as _, pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -20,30 +20,30 @@ class InitiativeInitiatorMessage(TransitionMessage):
 
 
 class InitiativeSubmittedInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('You submitted an initiative on {site_name}')
+    subject = pgettext('email', 'You submitted an initiative on {site_name}')
     template = 'messages/initiator/initiative_submitted'
 
 
 class InitiativeApprovedInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('Your initiative on {site_name} has been approved!')
+    subject = pgettext('email', 'Your initiative on {site_name} has been approved!')
     template = 'messages/initiator/initiative_approved'
 
 
 class InitiativePublishedInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('Your initiative on {site_name} has been published!')
+    subject = pgettext('email', 'Your initiative on {site_name} has been published!')
     template = 'messages/initiator/initiative_published'
 
 
 class InitiativeNeedsWorkInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('The initiative you submitted on {site_name} needs work')
+    subject = pgettext('email', 'The initiative you submitted on {site_name} needs work')
     template = 'messages/initiator/initiative_needs_work'
 
 
 class InitiativeRejectedInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('Your initiative on {site_name} has been rejected')
+    subject = pgettext('email', 'Your initiative on {site_name} has been rejected')
     template = 'messages/initiator/initiative_rejected'
 
 
 class InitiativeCancelledInitiatorMessage(InitiativeInitiatorMessage):
-    subject = _('The initiative "{title}" has been cancelled.')
+    subject = pgettext('email', 'The initiative "{title}" has been cancelled.')
     template = 'messages/initiator/initiative_cancelled'

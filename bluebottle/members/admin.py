@@ -1,6 +1,8 @@
 import functools
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+
 from bluebottle.segments.filters import MemberSegmentAdminMixin
 from builtins import object
 from django import forms
@@ -118,7 +120,7 @@ class MemberCreationForm(MemberForm):
         return user
 
 
-class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
+class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin, DynamicArrayMixin):
 
     def reminder_info(self, obj):
         return admin_info_box(
@@ -138,7 +140,8 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Login'),
             {
                 'fields': (
-                    'closed', 'confirm_signup', 'login_methods', 'email_domain',
+                    'closed', 'confirm_signup', 'login_methods',
+                    'moderate_signup', 'email_domains',
                     'background',
                 )
             }
@@ -424,6 +427,13 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
         return functools.partial(Form, current_user=request.user)
 
+    def get_list_filter(self, request):
+        filters = super().get_list_filter(request)
+        settings = MemberPlatformSettings.load()
+        if settings.moderate_signup:
+            filters += ('accepted',)
+        return filters
+
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "segment_manager":
             kwargs["queryset"] = Segment.objects.filter(
@@ -446,6 +456,9 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
+        settings = MemberPlatformSettings.load()
+        if settings.moderate_signup:
+            fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'subregion_manager')
         if Segment.objects.count():

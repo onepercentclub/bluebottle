@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
 
@@ -76,15 +77,31 @@ class MemberPlatformSettings(BasePlatformSettings):
         default=False,
     )
 
-    login_methods = MultiSelectField(_('login methods'), max_length=100, choices=LOGIN_METHODS, default=['password'])
+    login_methods = MultiSelectField(
+        _('login methods'),
+        max_length=100,
+        choices=LOGIN_METHODS,
+        default=['password']
+    )
     confirm_signup = models.BooleanField(
         _('confirm signup'), default=False, help_text=_('Require verifying the user\'s email before signup')
     )
+    moderate_signup = models.BooleanField(
+        _('moderate signup'),
+        default=False,
+        help_text=_("Require verifying the user's email before signup. This does not apply to white-listed domains.")
+    )
+
     email_domain = models.CharField(
-        _('email domains'),
+        _('Old email domain'),
         blank=True, null=True,
-        help_text=_('Domain that all email should belong to'),
-        max_length=256
+    )
+    email_domains = ArrayField(
+        models.CharField(),
+        verbose_name=_('email domains'),
+        blank=True, null=True,
+        default=list,
+        help_text=_('List of domains that emails should belong to'),
     )
     session_only = models.BooleanField(
         _('session only'),
@@ -263,6 +280,11 @@ class MemberPlatformSettings(BasePlatformSettings):
 @python_2_unicode_compatible
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
+    accepted = models.BooleanField(
+        _('Accepted'),
+        default=True,
+        help_text=_('Was approved by platform manager.')
+    )
     subscribed = models.BooleanField(
         _('Matching'),
         default=False,

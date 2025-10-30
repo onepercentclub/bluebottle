@@ -39,7 +39,9 @@ from bluebottle.time_based.models import (
 )
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import ResourcePermissionField
+from bluebottle.utils.serializers import ResourcePermissionField, TranslationsSerializer
+from bluebottle.utils.translations import translate_text_cached
+from bluebottle.utils.utils import get_current_language
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):
@@ -251,6 +253,8 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
+    translations = TranslationsSerializer(fields=['title', 'description'])
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = self.context["request"].user
@@ -366,12 +370,13 @@ class BaseActivitySerializer(ModelSerializer):
             'partner_organization',
             'theme',
             'answers',
-            'tos_accepted'
+            'tos_accepted',
         )
 
         meta_fields = (
             'permissions',
             'transitions',
+            'translations',
             'created',
             'updated',
             'errors',
@@ -381,7 +386,7 @@ class BaseActivitySerializer(ModelSerializer):
             'contributor_count',
             'team_count',
             'current_status',
-            'admin_url'
+            'admin_url',
         )
 
     class JSONAPIMeta(object):

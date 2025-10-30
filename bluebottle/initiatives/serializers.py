@@ -41,7 +41,7 @@ from bluebottle.utils.fields import (
     FSMField
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin
+    ResourcePermissionField, NoCommitMixin, TranslationsSerializer
 )
 from bluebottle.utils.utils import get_current_language
 
@@ -288,6 +288,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
 
     activities = ActivitiesField()
+    translations = TranslationsSerializer(fields=['title', 'pitch', 'story'])
 
     segments = SerializerMethodResourceRelatedField(
         ActivityListSerializer,
@@ -388,7 +389,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status'
+            'errors', 'stats', 'current_status', 'translations'
         )
 
     class JSONAPIMeta(object):

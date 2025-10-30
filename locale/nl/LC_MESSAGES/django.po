@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-29 08:21+0100\n"
-"PO-Revision-Date: 2025-10-29 07:28\n"
+"POT-Creation-Date: 2025-10-28 14:54+0100\n"
+"PO-Revision-Date: 2025-10-28 13:56\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -45,7 +45,7 @@ msgstr "Details"
 #: bluebottle/funding/admin.py:467 bluebottle/funding/admin.py:645
 #: bluebottle/funding/admin.py:829 bluebottle/funding_stripe/admin.py:245
 #: bluebottle/grant_management/admin.py:278
-#: bluebottle/grant_management/admin.py:533 bluebottle/initiatives/admin.py:220
+#: bluebottle/grant_management/admin.py:532 bluebottle/initiatives/admin.py:220
 #: bluebottle/time_based/admin.py:308 bluebottle/time_based/admin.py:438
 #: bluebottle/time_based/admin.py:819 bluebottle/time_based/admin.py:866
 #: bluebottle/time_based/admin.py:1136 bluebottle/time_based/admin.py:1804
@@ -135,12 +135,12 @@ msgid "Initiative"
 msgstr "Initiatief"
 
 #: bluebottle/activities/admin.py:738 bluebottle/funding/admin.py:217
-#: bluebottle/grant_management/admin.py:523 bluebottle/initiatives/admin.py:190
+#: bluebottle/grant_management/admin.py:522 bluebottle/initiatives/admin.py:190
 msgid "Management"
 msgstr "Beheer"
 
 #: bluebottle/activities/admin.py:739 bluebottle/funding/admin.py:218
-#: bluebottle/grant_management/admin.py:524 bluebottle/initiatives/admin.py:207
+#: bluebottle/grant_management/admin.py:523 bluebottle/initiatives/admin.py:207
 msgid "Information"
 msgstr "Informatie"
 
@@ -150,14 +150,14 @@ msgid "Participation"
 msgstr "Deelname"
 
 #: bluebottle/activities/admin.py:756 bluebottle/bb_accounts/models.py:139
-#: bluebottle/funding/admin.py:225 bluebottle/grant_management/admin.py:530
+#: bluebottle/funding/admin.py:225 bluebottle/grant_management/admin.py:529
 #: bluebottle/initiatives/models.py:283 bluebottle/initiatives/models.py:290
 #: bluebottle/initiatives/models.py:295
 msgid "Office"
 msgstr "Kantoor"
 
 #: bluebottle/activities/admin.py:761 bluebottle/funding/admin.py:233
-#: bluebottle/grant_management/admin.py:538 bluebottle/members/admin.py:546
+#: bluebottle/grant_management/admin.py:537 bluebottle/members/admin.py:546
 #: bluebottle/settings/admin_dashboard.py:174
 msgid "Segments"
 msgstr "Segmenten"
@@ -621,7 +621,7 @@ msgstr "Slug"
 #: bluebottle/activities/models.py:110 bluebottle/cms/models.py:51
 #: bluebottle/funding/models.py:350
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripepayoutaccount/business_fields.html:7
-#: bluebottle/grant_management/models.py:452
+#: bluebottle/grant_management/models.py:423
 msgid "Description"
 msgstr "Omschrijving"
 
@@ -766,19 +766,31 @@ msgstr "Team"
 msgid "Team {name}"
 msgstr "Team {name}"
 
-#: bluebottle/activities/models.py:479
+#: bluebottle/activities/models.py:478 bluebottle/activities/models.py:484
+msgid "Everyone"
+msgstr "Iedereen"
+
+#: bluebottle/activities/models.py:479 bluebottle/activities/models.py:485
+msgid "Managers"
+msgstr "Managers"
+
+#: bluebottle/activities/models.py:489
 msgid "Label"
 msgstr "Label"
 
-#: bluebottle/activities/models.py:481
+#: bluebottle/activities/models.py:491
 msgid "The label for this question. This is used for validation messages e.g. \"[label] is required\"."
 msgstr "Het label voor deze vraag. Dit wordt gebruikt voor validatieberichten, bijvoorbeeld \"[label] is verplicht\"."
 
-#: bluebottle/activities/models.py:501
+#: bluebottle/activities/models.py:507
+msgid "Who can see the answers?"
+msgstr "Wie kan de antwoorden zien?"
+
+#: bluebottle/activities/models.py:517
 msgid "Form question"
 msgstr "Formulier vraag"
 
-#: bluebottle/activities/models.py:502
+#: bluebottle/activities/models.py:518
 msgid "Form questions"
 msgstr "Formulier vragen"
 
@@ -1609,7 +1621,7 @@ msgstr "\n"
 "De activiteit \"%(title)s\" is ingediend door %(initiator_name)s.<br>\n"
 "Neem de tijd om deze activiteit te bekijken en te beoordelen.<br>\n"
 
-#: bluebottle/activities/utils.py:498 bluebottle/activities/utils.py:499
+#: bluebottle/activities/utils.py:512 bluebottle/activities/utils.py:513
 msgid "Description is required"
 msgstr "Beschrijving is verplicht"
 
@@ -3860,7 +3872,7 @@ msgstr "Geen"
 msgid "Funding activities"
 msgstr "Crowdfunding campagnes"
 
-#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:410
+#: bluebottle/funding/admin.py:616 bluebottle/grant_management/models.py:381
 #: bluebottle/members/admin.py:807
 msgid "Grant applications"
 msgstr "Fondsaanvragen"
@@ -4166,8 +4178,8 @@ msgid "If you enter a duration, leave the deadline field empty for it to be auto
 msgstr "Als je een looptijd opgeeft, laat dan het veld voor deadline leeg."
 
 #: bluebottle/funding/models.py:169 bluebottle/funding/models.py:479
-#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:288
-#: bluebottle/grant_management/models.py:361
+#: bluebottle/funding/states.py:490 bluebottle/grant_management/models.py:259
+#: bluebottle/grant_management/models.py:332
 msgid "started"
 msgstr "gestart"
 
@@ -4227,11 +4239,11 @@ msgid "fundraisers"
 msgstr "fundraisers"
 
 #: bluebottle/funding/models.py:478 bluebottle/funding/states.py:480
-#: bluebottle/grant_management/models.py:287 bluebottle/utils/transitions.py:13
+#: bluebottle/grant_management/models.py:258 bluebottle/utils/transitions.py:13
 msgid "approved"
 msgstr "goedgekeurd"
 
-#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:289
+#: bluebottle/funding/models.py:480 bluebottle/grant_management/models.py:260
 msgid "completed"
 msgstr "gerealiseerd"
 
@@ -4243,7 +4255,7 @@ msgstr "Crowdfunding uitbetaling"
 msgid "Funding payouts"
 msgstr "Crowdfunding uitbetalingen"
 
-#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:346
+#: bluebottle/funding/models.py:531 bluebottle/grant_management/models.py:317
 msgid "Payout"
 msgstr "Uitbetaling"
 
@@ -6087,9 +6099,9 @@ msgid "Enter 3 capital letters."
 msgstr "Voer 3 hoofdletters in."
 
 #: bluebottle/grant_management/admin.py:98
-#: bluebottle/grant_management/models.py:271
-#: bluebottle/grant_management/models.py:372
-#: bluebottle/grant_management/models.py:409
+#: bluebottle/grant_management/models.py:242
+#: bluebottle/grant_management/models.py:343
+#: bluebottle/grant_management/models.py:380
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:15
 msgid "Grant application"
 msgstr "Fondsaanvraag"
@@ -6144,23 +6156,23 @@ msgstr "KYC-gegevens"
 msgid "Manage"
 msgstr "Beheer"
 
-#: bluebottle/grant_management/admin.py:407
+#: bluebottle/grant_management/admin.py:406
 msgid "Generate payment link"
 msgstr "Betaallink aanmaken"
 
-#: bluebottle/grant_management/admin.py:412
+#: bluebottle/grant_management/admin.py:411
 msgid "Pay now"
 msgstr "Betaal nu"
 
-#: bluebottle/grant_management/admin.py:418
+#: bluebottle/grant_management/admin.py:417
 msgid "Payment Link"
 msgstr "Betaallink"
 
-#: bluebottle/grant_management/admin.py:445
+#: bluebottle/grant_management/admin.py:444
 msgid "Successfully generated payment link"
 msgstr "Betalaallink is aangemaakt"
 
-#: bluebottle/grant_management/admin.py:462
+#: bluebottle/grant_management/admin.py:461
 msgid "Successfully checked payment status"
 msgstr "Betalingsstatus is gecontroleerd"
 
@@ -6211,14 +6223,14 @@ msgid "Enter the grant amount"
 msgstr "Vul het bedrag in dat je wilt aanvragen"
 
 #: bluebottle/grant_management/forms.py:39
-#: bluebottle/grant_management/models.py:561
-#: bluebottle/grant_management/models.py:608
-#: bluebottle/grant_management/models.py:646
+#: bluebottle/grant_management/models.py:532
+#: bluebottle/grant_management/models.py:579
+#: bluebottle/grant_management/models.py:617
 msgid "Currency should match fund currency"
 msgstr "Valuta moet overeenkomen met de valuta van het fonds"
 
 #: bluebottle/grant_management/forms.py:42
-#: bluebottle/grant_management/models.py:611
+#: bluebottle/grant_management/models.py:582
 msgid "Insufficient funds"
 msgstr "Onvoldoende saldo"
 
@@ -6309,68 +6321,68 @@ msgstr "Fondsverstrekker"
 msgid "Grant providers"
 msgstr "Fondsverstrekkers"
 
-#: bluebottle/grant_management/models.py:116
+#: bluebottle/grant_management/models.py:115
 msgid "Grant payment"
 msgstr "Fonds storting"
 
-#: bluebottle/grant_management/models.py:117
+#: bluebottle/grant_management/models.py:116
 msgid "Grant payments"
 msgstr "Fonds stortingen"
 
-#: bluebottle/grant_management/models.py:342
+#: bluebottle/grant_management/models.py:313
 msgid "Grant payout"
 msgstr "Fonds uitbetaling"
 
-#: bluebottle/grant_management/models.py:343
+#: bluebottle/grant_management/models.py:314
 msgid "Grant payouts"
 msgstr "Fonds uitbetalingen"
 
-#: bluebottle/grant_management/models.py:439
+#: bluebottle/grant_management/models.py:410
 msgid "Debit"
 msgstr "Debet"
 
-#: bluebottle/grant_management/models.py:443
+#: bluebottle/grant_management/models.py:414
 msgid "credit"
 msgstr "krediet"
 
-#: bluebottle/grant_management/models.py:468
+#: bluebottle/grant_management/models.py:439
 #: bluebottle/grant_management/templates/mails/messages/grant_application/grant_provider/grant_payment_request.html:23
 msgid "Grant fund"
 msgstr "Fonds"
 
-#: bluebottle/grant_management/models.py:469
+#: bluebottle/grant_management/models.py:440
 msgid "Grant funds"
 msgstr "Fondsen"
 
-#: bluebottle/grant_management/models.py:500
+#: bluebottle/grant_management/models.py:471
 msgid "Total paid out"
 msgstr "Totaal uitbetaald"
 
-#: bluebottle/grant_management/models.py:506
+#: bluebottle/grant_management/models.py:477
 msgid "Paid out applications"
 msgstr "Uitbetaalde aanvragen"
 
-#: bluebottle/grant_management/models.py:511
+#: bluebottle/grant_management/models.py:482
 msgid "Total budget"
 msgstr "Totale budget"
 
-#: bluebottle/grant_management/models.py:517
+#: bluebottle/grant_management/models.py:488
 msgid "Pending payments"
 msgstr "Openstaande betalingen"
 
-#: bluebottle/grant_management/models.py:525
+#: bluebottle/grant_management/models.py:496
 msgid "Pending applications"
 msgstr "Openstaande aanvragen"
 
-#: bluebottle/grant_management/models.py:532
+#: bluebottle/grant_management/models.py:503
 msgid "Available budget"
 msgstr "Beschikbaar budget"
 
-#: bluebottle/grant_management/models.py:589
+#: bluebottle/grant_management/models.py:560
 msgid "Grant"
 msgstr "Fonds"
 
-#: bluebottle/grant_management/models.py:590
+#: bluebottle/grant_management/models.py:561
 msgid "Grants"
 msgstr "Fondsen"
 

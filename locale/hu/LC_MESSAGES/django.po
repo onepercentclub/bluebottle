@@ -1317,7 +1317,7 @@ msgid "\n"
 msgstr "\n"
 "Jó hír, az aktivitásod \"%(title)s\" jóváhagyásra került! Most már él a %(site_name)s oldalon, ahol az emberek hozzájárulhatnak.<br>\n"
 "<br>\n"
-"Oszd meg széles körben az aktivitásodat, hogy támogathassák és hozzájárulhassanak!"
+"Oszd meg széles körben az aktivitásodat, hogy támogathassák és hozzájárulhassanak!\n"
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_cancelled.html:6
 #, python-format
@@ -1380,7 +1380,7 @@ msgid "\n"
 msgstr "\n"
 "Szép munka! Az aktivitásod \"%(title)s\" most már él a %(site_name)s oldalon, ahol az emberek hozzájárulhatnak.<br>\n"
 "<br>\n"
-"Oszd meg széles körben az aktivitásodat, hogy támogathassák és hozzájárulhassanak!"
+"Oszd meg széles körben az aktivitásodat, hogy támogathassák és hozzájárulhassanak!\n"
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_rejected.html:6
 #, python-format
@@ -1608,7 +1608,7 @@ msgid "\n"
 "and is now live on %(site_name)s for people to contribute to.\n"
 msgstr "\n"
 "Az aktivitásod \"%(title)s\" sikeresen közzétették,\n"
-"hol most már az emberek hozzájárulhatnak.\n"
+"hol most már az emberek hozzájárulhatnak  %(site_name)s.\n"
 
 #: bluebottle/activities/templates/mails/messages/reviewer/activity_submitted.html:5
 #, python-format
@@ -6705,7 +6705,7 @@ msgid "\n"
 "A grant payment request of %(total)s is ready on %(site_name)s.<br>\n\n"
 "Here's a summary of the payment request:\n"
 msgstr "\n"
-"Egy támogatási kifizetési kérelmed kész van a(z) %(site_name)s oldalon.<br>\n\n"
+"Egy támogatási kifizetési %(total)s kérelmed kész van a(z) %(site_name)s oldalon.<br>\n\n"
 "Itt egy összegzés a kifizetési kérrelemről:\n"
 
 #: bluebottle/grant_management/templates/mails/messages/grant_application/reviewer/application_submitted.html:5
@@ -11072,7 +11072,7 @@ msgstr "Résztvevő módosítása"
 msgid "\n"
 "    Adjust a participant for \"%(activity)s\"\n"
 msgstr "\n"
-"    Módosítson egy résztvevőt a \"% (activity)s\"-hez\n"
+"    Módosítson egy résztvevőt a \"%(activity)s\"-hez\n"
 
 #: bluebottle/time_based/templates/admin/adjust_participant.html:10
 #: bluebottle/time_based/templates/admin/check_preparation_time_contribution.html:10
@@ -11150,7 +11150,7 @@ msgstr "Résztvevő létrehozása"
 msgid "\n"
 "    Create a participant for \"%(instance.activity)s\"\n"
 msgstr "\n"
-"    Hozzon létre egy résztvevőt a \"% (instance.activity)s\"-hez\n"
+"    Hozzon létre egy résztvevőt a \"%(instance.activity)s\"-hez\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_participant.html:14
 #: bluebottle/time_based/templates/admin/create_deadline_time_contribution.html:14
@@ -11159,7 +11159,7 @@ msgstr "\n"
 msgid "\n"
 "with a duration of %(duration)s.\n"
 msgstr "\n"
-", % (duration)s időtartammal.\n"
+", %(duration)s időtartammal.\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_registration.html:2
 #: bluebottle/time_based/templates/admin/create_team_registration.html:2
@@ -11171,7 +11171,7 @@ msgstr "Regisztráció létrehozása"
 msgid "\n"
 "    Create a registration for \"%(instance.activity)s\"\n"
 msgstr "\n"
-"    Hozzon létre egy regisztrációt a \"% (instance.activity)s\"-hez\n"
+"    Hozzon létre egy regisztrációt a \"%(instance.activity)s\"-hez\n"
 
 #: bluebottle/time_based/templates/admin/create_deadline_time_contribution.html:2
 #: bluebottle/time_based/templates/admin/create_period_time_contribution.html:2
@@ -11185,7 +11185,7 @@ msgstr "Időbeli hozzájárulás létrehozása"
 msgid "\n"
 "    Create a time contribution for \"%(instance.activity)s\"\n"
 msgstr "\n"
-"    Hozzon létre egy időbeli hozzájárulást a \"% (instance.activity)s\"-hez\n"
+"    Hozzon létre egy időbeli hozzájárulást a \"%(instance.activity)s\"-hez\n"
 
 #: bluebottle/time_based/templates/admin/create_participant.html:2
 msgid "Create participant"
@@ -11196,7 +11196,7 @@ msgstr "Résztvevő létrehozása"
 msgid "\n"
 "    Create a participant for \"%(activity)s\"\n"
 msgstr "\n"
-"    Hozzon létre egy résztvevőt a \"% (activity)s\"-hez\n"
+"    Hozzon létre egy résztvevőt a \"%(activity)s\"-hez\n"
 
 #: bluebottle/time_based/templates/admin/create_preparation_time_contribution.html:2
 msgid "Create a preparation time contribution"

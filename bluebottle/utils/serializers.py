@@ -283,42 +283,24 @@ class ManyAnonymizedResourceRelatedField(ManyRelatedField):
 
 
 class TranslationsSerializer(serializers.Field):
-    """
-    A field that translates specified fields from an object to the current language.
-    
-    Usage:
-        class MySerializer(serializers.ModelSerializer):
-            translations = TranslationsSerializer(fields=['title', 'description'])
-        
-        # API response will include:
-        # "translations": {"title": "Translated title", "description": "Translated description"}
-    """
-    
+
     def __init__(self, fields=None, **kwargs):
         self.translation_fields = fields or []
         kwargs['read_only'] = True
         super().__init__(**kwargs)
 
     def get_attribute(self, instance):
-        """Return the instance itself so we can access all fields in to_representation."""
         return instance
 
     def to_representation(self, instance):
         if not instance:
             return {}
         
-        target_language = get_current_language()
-        if not target_language:
-            # If no target language available, return original values
-            return {
-                field: self._get_field_value(instance, field) 
-                for field in self.translation_fields
-            }
-        
+        target_language = get_current_language() or Language.objects.first().code
         translated_data = {}
         
         for field_name in self.translation_fields:
-            original_value = self._get_field_value(instance, field_name)
+            original_value = getattr(instance, field_name, None)
             
             if original_value:
                 if hasattr(original_value, 'html'):
@@ -341,31 +323,4 @@ class TranslationsSerializer(serializers.Field):
         try:
             return translate_text_cached(text=text, target_lang=target)
         except Exception as e:
-            # Fail-safe: fall back to original text, don't explode the API
             return text
-
-    def _get_field_value(self, obj, field_name):
-        """
-        Get the value of a field from the object, handling nested attributes and special cases.
-        
-        Args:
-            obj: The object to get the field value from
-            field_name: The name of the field to get
-            
-        Returns:
-            The field value or None if not found
-        """
-        try:
-            # Handle nested field access (e.g., 'description.html')
-            if '.' in field_name:
-                value = obj
-                for attr in field_name.split('.'):
-                    value = getattr(value, attr, None)
-                    if value is None:
-                        break
-                return value
-            else:
-                return getattr(obj, field_name, None)
-        except (AttributeError, TypeError):
-            return None
-

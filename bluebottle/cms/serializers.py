@@ -387,7 +387,7 @@ class PlainTextBlockSerializer(BaseBlockSerializer):
 
 class ImagePlainTextBlockSerializer(BaseBlockSerializer):
     image = ImageSerializer()
-    text = SafeField()
+    text = RichTextField()
 
     class Meta(object):
         model = ImagePlainTextItem

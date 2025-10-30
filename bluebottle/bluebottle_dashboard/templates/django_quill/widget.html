@@ -1,14 +1,30 @@
 {% load static %}
 
 <script type="text/javascript" src="{% static "admin/js/quill.imageUploader.min.js" %}"></script>
+<script type="text/javascript" src="{% static "admin/js/quill.htmlEditButton.min.js" %}"></script>
 <div class="vLargeTextField django-quill-widget-container form-row {{ class }}">
     <div id="quill-{{ id }}" class="quill-resizable django-quill-widget" data-config="{{ config }}" data-type="django-quill"></div>
     <input id="quill-input-{{ id }}" name="{{ name }}" type="hidden">
+    <style>
+        .ql-snow .ql-editor a.quill-button-link {
+            background-color: {{ action_color }};
+            color: {{ action_text_color }};
+        }
+        .ql-snow .ql-editor a.quill-button-link:hover {
+            background-color: {{ action_color }};
+            color: {{ action_text_color }};
+        }
+        .ql-snow .ql-editor a.quill-button-link:active {
+            background-color: {{ action_color }};
+            color: {{ action_text_color }};
+        }
+    </style>
     <script>
-        function customizeQuill() {
+
+
+        function customizeQuill(quillConfig) {
 
               const Link = Quill.import('formats/link');
-
               class ButtonLink extends Link {
                   static blotName = 'buttonLink';
                   static tagName = 'a';
@@ -40,20 +56,23 @@
 
               Quill.register(ButtonLink);
 
+
               const icons = Quill.import('ui/icons');
               icons['buttonLink'] = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><rect x="0" fill="none" width="20" height="20"/><g><path d="M17 5H3c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm1 7c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h14c.6 0 1 .4 1 1v5z"/></g></svg>';
 
-              Quill.register(
-                  { 'modules/imageUploader': ImageUploader },
-                  true,
-              )
-        }
+              if (!('modules/imageUploader' in Quill.imports)) {
+                 Quill.register({ 'modules/imageUploader': ImageUploader }, true);
+              }
+              if (!('modules/htmlEditButton' in Quill.imports)) {
+                Quill.register({ 'modules/htmlEditButton': htmlEditButton }, true);
+              }
 
+        }
 
         (function () {
           const quillConfig = JSON.parse('{{ config|safe|escapejs }}');
           if (!('modules/imageUploader' in Quill.imports)) {
-            customizeQuill()
+            customizeQuill(quillConfig)
           }
 
           async function upload(file) {
@@ -70,6 +89,17 @@
               const data = await response.json()
               return data.links.cover
           }
+          let colors = [
+            '{{ action_color }}',
+            '{{ description_color }}',
+
+            '#000000', '#434343', '#666666', '#999999', '#cccccc',
+            '#b71c1c', '#e53935', '#f57c00', '#fbc02d',
+            '#43a047', '#1b5e20',
+            '#1e88e5', '#1565c0', '#283593',
+            '#6a1b9a', '#8e24aa',
+            '#795548', '#607d8b'
+        ];
 
           quillConfig.modules.imageUploader = {
               upload: upload
@@ -81,6 +111,8 @@
                   ['bold', 'italic'],
                   ['link', 'buttonLink'],
                   [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                  [{ 'color': colors }],
+                  [{ 'align': ['', 'center', 'right'] }],
                   ['clean']
               ],
               handlers: {
@@ -99,6 +131,13 @@
                       }
                   }
               }
+          };
+
+          quillConfig.modules.htmlEditButton = {
+              buttonHTML: '&lt;&gt;',
+              buttonTitle: 'Show HTML source',
+              syntax: false,
+
           };
 
 

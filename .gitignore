@@ -126,3 +126,6 @@ reef-prod-current.sql.bz2
 bluebottle-data
 elasticsearch-data
 postgres-data
+
+# Email preview system (generated files)
+bluebottle/notifications/static/email_previews/

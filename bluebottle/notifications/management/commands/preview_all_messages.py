@@ -396,6 +396,14 @@ class MockFunding:
         return f"https://example.goodup.com/en/initiatives/activities/funding/{self.id}/{self.slug}"
 
 
+class MockPayoutAccount:
+    """Mock PayoutAccount object"""
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.funding = MockFunding(language)
+
+
 class MockGrantApplication:
     """Mock Grant Application object"""
 
@@ -464,6 +472,7 @@ MOCK_OBJECT_MAP = {
     'TeamMember': MockTeamMember,
     'Team': MockTeam,
     'Slot': MockSlot,
+    'PayoutAccount': MockPayoutAccount,
     'Funding': MockFunding,
     'GrantApplication': MockGrantApplication,
     'Donation': MockDonation,
@@ -497,11 +506,15 @@ def get_mock_object_for_message(message_class, language='en'):
             from bluebottle.updates.models import Update
             return get_real_or_mock_object(Update, MockUpdate, language)
         
-        if 'funding' in module_name and 'contributor' in module_name:
-            from bluebottle.funding.models import Donation
-            return get_real_or_mock_object(Donation, MockDonation, language)
-        
         if 'funding' in module_name:
+            if 'contributor' in module_name or 'Donation' in class_name:
+                from bluebottle.funding.models import Donation
+                return get_real_or_mock_object(Donation, MockDonation, language)
+        
+            if 'PayoutAccount' in class_name:
+                from bluebottle.funding.models import PayoutAccount
+                return get_real_or_mock_object(PayoutAccount, MockPayoutAccount, language)
+
             from bluebottle.funding.models import Funding
             return get_real_or_mock_object(Funding, MockFunding, language)
         

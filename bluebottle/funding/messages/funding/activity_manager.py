@@ -2,7 +2,7 @@
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
-from bluebottle.funding.models import Funding
+from bluebottle.funding.models import Funding, PayoutAccount
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -139,6 +139,7 @@ class BaseFundingPayoutAccountMessage(FundingActivityManagerMessage):
 
     class Meta:
         abstract = True
+        model = PayoutAccount
 
 
 class FundingPayoutAccountRejected(BaseFundingPayoutAccountMessage):

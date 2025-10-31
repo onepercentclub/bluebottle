@@ -683,13 +683,13 @@ def preview_message(message_class_name, message_class, language='en', output_for
 
             if output_format == 'subject':
                 context = message_instance.get_context(mock_recipient)
-                subject = str(message_instance.subject.format(**context))
+                subject = str(message_instance.subject.format(**context, obj=mock_obj))
                 if verbose:
                     print(f"Subject: {subject}\n")
                 return subject
             
             elif output_format == 'html':
-                html_content = message_instance.get_content_html(mock_recipient)
+                html_content = message_instance.get_content_html(mock_recipient, obj=mock_obj)
                 context = message_instance.get_context(mock_recipient)
                 subject = str(message_instance.subject.format(**context))
                 

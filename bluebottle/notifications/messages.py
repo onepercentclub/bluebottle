@@ -89,10 +89,12 @@ class TransitionMessage(object):
     def generic_content_text(self):
         return to_text.handle(self.generic_content_html)
 
-    def get_content_html(self, recipient):
+    def get_content_html(self, recipient, obj=None):
         # Force language activation for template rendering
         django_translation.activate(recipient.primary_language)
         context = self.get_context(recipient)
+        if obj:
+            context['obj'] = obj
         template = loader.get_template("mails/{}.html".format(self.template))
         return template.render(context)
 
@@ -142,7 +144,6 @@ class TransitionMessage(object):
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
-            "obj": self.obj,
             "site": tenant_url(),
             "site_name": tenant_name(),
             "language": recipient.primary_language,
@@ -164,7 +165,6 @@ class TransitionMessage(object):
 
         if self.get_event_data(recipient):
             context['attachments'] = self.get_calendar_attachments(recipient)
-
         return context
 
     def __init__(self, obj, **options):

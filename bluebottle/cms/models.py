@@ -700,6 +700,12 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
         )
     )
 
+    terminated = models.BooleanField(
+        _("Terminated"),
+        default=False,
+        help_text=_('Is the platform terminated?')
+    )
+
     @property
     def link_color(self):
         return self.alternative_link_color or self.action_color

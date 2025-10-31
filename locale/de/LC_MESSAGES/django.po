@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-10-31 16:50+0100\n"
-"PO-Revision-Date: 2025-10-31 16:01\n"
+"PO-Revision-Date: 2025-10-31 16:06\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -4068,110 +4068,110 @@ msgstr "Sie können dem Kampagneninhaber eine benutzerdefinierte Nachricht zukom
 #: bluebottle/funding/messages/funding/activity_manager.py:32
 msgctxt "email"
 msgid "You have a new donation!💰"
-msgstr ""
+msgstr "Du hast eine neue Spende!💰"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:48
 msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
-msgstr ""
+msgstr "Ihre Crowdfunding-Kampagne ist abgelaufen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:56
 #, python-brace-format
 msgctxt "email"
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
-msgstr ""
+msgstr "Deine Kampagne \"{title}\" wurde erfolgreich abgeschlossen! 🎉"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:64
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been rejected"
-msgstr ""
+msgstr "Deine Crowdfunding-Kampagne auf {site_name} wurde abgelehnt"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:72
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted a crowdfunding campaign on {site_name}"
-msgstr ""
+msgstr "Sie haben eine Crowdfunding-Kampagne auf {site_name} eingereicht"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:80
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} needs work"
-msgstr ""
+msgstr "Ihre Crowdfunding-Kampagne auf {site_name} benötigt Änderungen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:88
 msgctxt "email"
 msgid "Your crowdfunding campaign has expired"
-msgstr ""
+msgstr "Ihre Crowdfunding-Kampagne ist abgelaufen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:96
 #, python-brace-format
 msgctxt "email"
 msgid "The donations received for your campaign \"{title}\" will be refunded"
-msgstr ""
+msgstr "Die Spenden für Ihre Kampagne \"{title}\" werden zurückerstattet"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
-msgstr ""
+msgstr "Deine Crowdfunding-Kampagne auf {site_name} wurde genehmigt!"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:112
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
-msgstr ""
+msgstr "Deine Crowdfunding-Kampagne \"{title}\" ist offen für neue Spenden 💸"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
-msgstr ""
+msgstr "Deine Crowdfunding-Kampagne \"{title}\" wurde abgebrochen"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:149
 #: bluebottle/funding/messages/funding/activity_manager.py:157
 msgctxt "email"
 msgid "Action required for your crowdfunding campaign"
-msgstr ""
+msgstr "Aktion für Ihre Crowdfunding-Kampagne erforderlich"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:165
 #: bluebottle/funding/messages/funding/activity_manager.py:189
 #, python-brace-format
 msgctxt "email"
 msgid "Your identity has been verified on {site_name}"
-msgstr ""
+msgstr "Ihre Identität wurde auf {site_name} verifiziert"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:173
 msgctxt "email"
 msgid "Action required for your identity verification"
-msgstr ""
+msgstr "Aktion für die Identitätsüberprüfung erforderlich"
 
 #: bluebottle/funding/messages/funding/activity_manager.py:181
 msgctxt "email"
 msgid "Action required for identity verification"
-msgstr ""
+msgstr "Aktion für Identitätsüberprüfung erforderlich"
 
 #: bluebottle/funding/messages/funding/contributor.py:8
 msgctxt "email"
 msgid "Thanks for your donation!"
-msgstr ""
+msgstr "Vielen Dank für Ihre Spende!"
 
 #: bluebottle/funding/messages/funding/contributor.py:24
 #: bluebottle/funding/messages/funding/contributor.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
-msgstr ""
+msgstr "Ihre Spende für die Kampagne \"{title}\" wird zurückerstattet"
 
 #: bluebottle/funding/messages/funding/platform_manager.py:12
 msgctxt "email"
 msgid "Live campaign identity verification failed!"
-msgstr ""
+msgstr "Identitätsüberprüfung der Live-Kampagne fehlgeschlagen!"
 
 #: bluebottle/funding/messages/funding/platform_manager.py:34
 msgctxt "email"
 msgid "Incomplete payout account for running campaign"
-msgstr ""
+msgstr "Unvollständiges Auszahlungskonto für laufende Kampagne"
 
 #: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
@@ -5051,7 +5051,11 @@ msgid "\n"
 "Your campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
-msgstr ""
+msgstr "\n"
+"Gute Nachrichten, deine Crowdfunding-Kampagne \"%(title)s\" wurde genehmigt!\n"
+"Deine Kampagne wird live sein und Menschen können mit dem Spenden beginnen.<br>\n"
+"<br>\n"
+"Teile deine Crowdfunding-Kampagne weit und breit, um Unterstützung zu inspirieren und Beiträge zu sammeln!\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
@@ -5060,7 +5064,10 @@ msgid "\n"
 "    Your crowdfunding campaign \"%(title)s\" has been reviewed and needs work.\n"
 "    <br><br>\n"
 "    The platform manager will be in contact to help you make some changes to your campaign.\n"
-msgstr ""
+msgstr "\n"
+"Ihre Crowdfunding-Kampagne \"%(title)s\" wurde überprüft und benötigt Änderungen.\n"
+"<br><br>\n"
+"Der Plattform-Manager wird sich mit Ihnen in Verbindung setzen, um Ihnen zu helfen, einige Änderungen an Ihrer Kampagne vorzunehmen.\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_rejected.html:6
 #, python-format
@@ -5070,7 +5077,10 @@ msgid "\n"
 "            <br /><br />\n"
 "            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"Leider wurde Ihre Crowdfunding-Kampagne \"%(title)s\" abgelehnt.\n"
+"<br /><br />\n"
+"Wenn Sie Fragen haben, können Sie den Plattform-Manager unter %(contact_email)s kontaktieren.\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_submitted.html:5
 #, python-format
@@ -5091,7 +5101,22 @@ msgid "\n"
 "        </ul>\n"
 "        You will not be able to edit the application when it is in review.\n"
 "    </p>\n"
-msgstr ""
+msgstr "\n"
+"    <p>\n"
+"        Ihre Crowdfunding-Kampagne \"%(title)s\" wurde auf %(site_name)s eingereicht.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>So geht's weiter:</b>\n"
+"        <ul>\n"
+"            <li>\n"
+"                Ihre Kampagne wird vom Plattform-Manager überprüft.\n"
+"            </li>\n"
+"            <li>\n"
+"                Nach Genehmigung wird Ihre Kampagne live sein und Menschen können mit dem Spenden beginnen.\n"
+"            </li>\n"
+"        </ul>\n"
+"        Sie können die Bewerbung während der Überprüfung nicht bearbeiten.\n"
+"    </p>\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "email"
@@ -5149,7 +5174,10 @@ msgid "\n"
 "            Your campaign deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Ihre Frist für die Kampagne <i>%(title)s\"</i> ist abgelaufen. Leider haben Sie Ihr Kampagnenziel nicht innerhalb der Frist erreicht.\n"
+"            Wir senden Ihnen bald eine Nachfass-E-Mail mit weiteren Informationen.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_realised_owner.html:5
 #, python-format
@@ -5158,7 +5186,10 @@ msgid "\n"
 "        Congratulations, your campaign deadline for \"%(title)s\" has passed and you've successfully reached your campaign goal!<br>\n"
 "        Head over to your campaign page and thank your awesome backers for their donations and support.<br>\n"
 "    "
-msgstr ""
+msgstr "\n"
+"            Herzlichen Glückwunsch, Ihre Frist für die Kampagne \"%(title)s\" ist abgelaufen und Sie haben Ihr Kampagnenziel erfolgreich erreicht!<br>\n"
+"            Gehen Sie auf Ihre Kampagnenseite und danken Sie Ihren tollen Unterstützern für ihre Spenden und Unterstützung.<br>\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:6
 #, python-format
@@ -5227,12 +5258,18 @@ msgid "\n"
 "            <br/><br/>\n"
 "            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Sie arbeiten an einer Crowdfunding-Kampagne \"%(title)s\".\n"
+"            <br/><br/>\n"
+"            Sie haben einige Informationen zur Überprüfung Ihrer Identität oder der einer Organisation eingereicht, aber in einigen Fällen benötigen wir zusätzliche Informationen für eine erfolgreiche Überprüfung.\n"
+"            <br/><br/>\n"
+"            Bitte stellen Sie dies so schnell wie möglich zur Verfügung, um Probleme mit Ihrer Kampagne zu vermeiden oder um diese schnell zu lösen.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:19
 msgctxt "email"
 msgid "Provide details"
-msgstr ""
+msgstr "Details angeben"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_rejected.html:6
 #, python-format
@@ -5282,7 +5319,19 @@ msgid "\n"
 "                </li>\n"
 "            </ol>\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Gute Nachrichten, Ihre Identität wurde erfolgreich verifiziert und Sie können mit Ihrer Crowdfunding-Kampagne fortfahren.\n"
+"            <br><br>\n"
+"            <b>So geht's weiter:</b>\n"
+"            <ol>\n"
+"                <li>\n"
+"                    Reichen Sie Ihre Kampagne ein und sie wird vom Plattform-Manager überprüft.\n"
+"                </li>\n"
+"                <li>\n"
+"                    Nach Genehmigung wird Ihre Kampagne live sein und Menschen können mit dem Spenden beginnen.\n"
+"                </li>\n"
+"            </ol>\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:6
 #, python-format
@@ -5317,7 +5366,16 @@ msgid "\n"
 "    <br />\n"
 "    <br />\n"
 "    Please do this as soon as possible. "
-msgstr ""
+msgstr "\n"
+"    Die Identitätsüberprüfung für eine Organisation, die Sie verwalten, fehlgeschlagen.\n"
+"    <br />\n"
+"    <br />\n"
+"    Frühere Informationen zur Überprüfung Ihrer Identität wurden übermittelt, jedoch war dies leider nicht erfolgreich. Dies kann verschiedene Gründe haben.\n"
+"    Bitte überprüfen Sie den untenstehenden Link und finden Sie einen Link, um Ihre\n"
+"    Informationen zu aktualisieren. Wenn Sie weiterhin Probleme haben, kontaktieren Sie den Plattform-Manager unter %(contact_email)s.\n"
+"    <br />\n"
+"    <br />\n"
+"    Bitte tun Sie dies so schnell wie möglich. "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
 msgctxt "email"
@@ -5333,7 +5391,12 @@ msgid "\n"
 "            This means that people can now collect funds for your organisation.\n"
 "            These funds will be paid out straight to your organisation once a crowdfudning campaign has come to an end.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Tolle Neuigkeiten! Ihre Identität wurde erfolgreich auf %(site_name)s verifiziert.\n"
+"            <br/>\n"
+"            Das bedeutet, dass Menschen jetzt Gelder für Ihre Organisation sammeln können.\n"
+"            Diese Gelder werden direkt an Ihre Organisation ausgezahlt, sobald eine Crowdfunding-Kampagne zu Ende gegangen ist.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_activity_refunded_donor.html:7
 #, python-format
@@ -5362,7 +5425,12 @@ msgid "\n"
 "            Either you requested this refund or the campaign didn’t reach its campaign goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
-msgstr ""
+msgstr "\n"
+"            Hallo %(recipient_name)s,<br/>\n"
+"            Ihre Spende an \"%(title)s\" wird innerhalb von 10 Tagen vollständig zurückerstattet.\n"
+"            Entweder haben Sie diese Rückerstattung beantragt oder die Kampagne hat ihr Kampagnenziel nicht erreicht.\n"
+"            Wenn Sie Fragen zu dieser Rückerstattung haben, kontaktieren Sie bitte %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:8
 #, python-format
@@ -5371,7 +5439,10 @@ msgid "\n"
 "        Hi %(recipient_name)s,<br />\n"
 "        Thanks for your donation!\n"
 "    "
-msgstr ""
+msgstr "\n"
+"        Hallo %(recipient_name)s,<br />\n"
+"        Vielen Dank für Ihre Spende!\n"
+"    "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:17
 #, python-format
@@ -6273,42 +6344,42 @@ msgstr "Kontodaten nicht verfügbar"
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been rejected"
-msgstr ""
+msgstr "Ihre Förderantrag auf {site_name} wurde abgelehnt"
 
 #: bluebottle/grant_management/messages/activity_manager.py:42
 #, python-brace-format
 msgctxt "email"
 msgid "You have submitted a grant application on {site_name}"
-msgstr ""
+msgstr "Sie haben einen Förderantrag auf {site_name} eingereicht"
 
 #: bluebottle/grant_management/messages/activity_manager.py:47
 #, python-brace-format
 msgctxt "email"
 msgid "The grant application you submitted on {site_name} needs work"
-msgstr ""
+msgstr "Der von Ihnen eingereichte Förderantrag auf {site_name} benötigt Änderungen"
 
 #: bluebottle/grant_management/messages/activity_manager.py:52
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been approved!"
-msgstr ""
+msgstr "Ihr Förderantrag auf {site_name} wurde genehmigt!"
 
 #: bluebottle/grant_management/messages/activity_manager.py:57
 #, python-brace-format
 msgctxt "email"
 msgid "Your grant application on {site_name} has been cancelled"
-msgstr ""
+msgstr "Ihr Förderantrag auf {site_name} wurde abgebrochen"
 
 #: bluebottle/grant_management/messages/activity_manager.py:62
 #: bluebottle/grant_management/messages/activity_manager.py:71
 msgctxt "email"
 msgid "Action required for your grant application"
-msgstr ""
+msgstr "Aktion für Ihren Förderantrag erforderlich"
 
 #: bluebottle/grant_management/messages/activity_manager.py:80
 msgctxt "email"
 msgid "Your identity has been verified"
-msgstr ""
+msgstr "Ihre Identität wurde verifiziert"
 
 #: bluebottle/grant_management/messages/grant_provider.py:9
 #, python-brace-format
@@ -6973,55 +7044,55 @@ msgstr "Initiative ansehen"
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an initiative on {site_name}"
-msgstr ""
+msgstr "Sie haben eine Initiative auf {site_name} eingereicht"
 
 #: bluebottle/initiatives/messages/initiator.py:30
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been approved!"
-msgstr ""
+msgstr "Ihre Initiative auf {site_name} wurde genehmigt!"
 
 #: bluebottle/initiatives/messages/initiator.py:35
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been published!"
-msgstr ""
+msgstr "Ihre Initiative auf {site_name} wurde veröffentlicht!"
 
 #: bluebottle/initiatives/messages/initiator.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative you submitted on {site_name} needs work"
-msgstr ""
+msgstr "Die von Ihnen eingereichte Initiative auf {site_name} benötigt Änderungen"
 
 #: bluebottle/initiatives/messages/initiator.py:45
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been rejected"
-msgstr ""
+msgstr "Ihre Initiative auf {site_name} wurde abgelehnt"
 
 #: bluebottle/initiatives/messages/initiator.py:50
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative \"{title}\" has been cancelled."
-msgstr ""
+msgstr "Die Initiative \"{title}\" wurde abgebrochen."
 
 #: bluebottle/initiatives/messages/reviewer.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "A new initiative is ready to be reviewed on {site_name}"
-msgstr ""
+msgstr "Eine neue Initiative steht auf {site_name} zur Überprüfung bereit"
 
 #: bluebottle/initiatives/messages/reviewer.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "A new initiative has been published on {site_name}!"
-msgstr ""
+msgstr "Eine neue Initiative wurde auf {site_name} veröffentlicht!"
 
 #: bluebottle/initiatives/messages/reviewer.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "You are assigned to review \"{title}\"."
-msgstr ""
+msgstr "Sie sind der Prüfung \"{title}\" zugeordnet."
 
 #: bluebottle/initiatives/models.py:52
 msgid "reviewer"
@@ -7747,13 +7818,13 @@ msgstr "Willkommens-E-Mail senden"
 #, python-brace-format
 msgctxt "email"
 msgid "Welcome to {site_name}!"
-msgstr ""
+msgstr "Willkommen bei {site_name}!"
 
 #: bluebottle/members/messages.py:16
 #, python-brace-format
 msgctxt "email"
 msgid "Activate your account for {site_name}"
-msgstr ""
+msgstr "Aktivieren Sie Ihr Konto für {site_name}"
 
 #: bluebottle/members/models.py:28
 msgid "Email/password combination"

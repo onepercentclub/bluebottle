@@ -1,0 +1,113 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  DEED STATE MACHINE VISUALIZATION                        ║
+║                          Getting Started                                 ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+📂 WHAT YOU HAVE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 9 Deed state pages (draft, submitted, needs_work, open, succeeded, 
+  expired, cancelled, rejected, deleted)
+✓ 6 DeedParticipant state pages (accepted, succeeded, withdrawn, 
+  rejected, new, failed)
+✓ 1 Beautiful index page with state overview
+✓ Professional styling with responsive design
+✓ Complete documentation with all transitions, effects & notifications
+
+
+🚀 HOW TO VIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open this folder in your file manager:
+   deed_states_visualization/
+
+2. Double-click on: index.html
+
+3. Your browser will open with the interactive visualization!
+
+
+🎯 WHAT TO EXPLORE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+On the index page:
+  • See all states color-coded by type
+  • Click any state to explore it in detail
+
+On state pages:
+  • 📤 Outgoing Transitions - Where you can go from here
+  • 📥 Incoming Transitions - How you got here
+  • 🎯 Triggers - What automatically triggers transitions
+  • ✅ Conditions - What must be true for transitions
+  • 🔐 Permissions - Who can trigger transitions
+  • ⚡ Effects - What happens after transitions
+  • 📧 Notifications - Email notifications sent
+
+
+💡 EXAMPLE WORKFLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Question: "What happens when a deed's end date passes?"
+
+1. Open index.html
+2. Click on "Open" state (blue card)
+3. Look at the "Triggers" section at the bottom
+4. Find "ModelChangedTrigger: end"
+5. See all effects:
+   - Reopen if not finished
+   - Succeed if finished and has participants
+   - Expire if finished and has no participants
+   - Reschedule all effort contributions
+   - Send date changed notification
+
+
+📧 NOTIFICATION EXAMPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Each notification effect shows:
+  • Subject: What the email says
+  • Recipient: Who receives it
+  • Condition: When it's sent (if applicable)
+
+Example from "succeed" transition in Open state:
+  📧 NotificationEffect
+  Subject: Your activity "{title}" has succeeded 🎉
+  Recipient: Activity owner
+
+
+🔄 NAVIGATION TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• All state names are clickable links
+• "← Back to Overview" returns to index
+• Automatic transitions are marked in GREEN
+• Manual transitions are marked in BLUE
+• Notifications have yellow background
+
+
+🎨 COLOR GUIDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+States:
+  • Green gradients   = Initial/Draft states
+  • Blue gradients    = Active states  
+  • Orange gradients  = Success states
+  • Red gradients     = Terminal/Failed states
+  • Gray gradients    = Neutral states
+
+Transitions:
+  • Green badge       = Automatic
+  • Blue badge        = Manual
+
+
+📚 MORE INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• README.md - Full documentation
+• ../DEED_LIFECYCLE.md - Detailed lifecycle documentation
+• ../DEED_VISUALIZATION_SUMMARY.md - Complete summary
+
+
+🔧 REGENERATING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+If the code changes, regenerate with:
+
+  cd ..
+  python3 generate_deed_state_pages.py
+  python3 generate_participant_state_pages.py
+
+
+═══════════════════════════════════════════════════════════════════════════
+                        ENJOY EXPLORING! 🚀
+═══════════════════════════════════════════════════════════════════════════

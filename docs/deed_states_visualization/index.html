@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deed & DeedParticipant State Machine Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            color: #555;
+        }
+        
+        .section {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .states-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .state-card {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 18px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.2s ease;
+            border-left: 3px solid #666;
+        }
+        
+        .state-card:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border-left-width: 4px;
+            background: #fff;
+        }
+        
+        .state-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .state-value {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: #555;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .state-description {
+            color: #555;
+            line-height: 1.5;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .legend {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .legend h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+            border: 1px solid #ddd;
+        }
+        
+        .initial-state { background: #28a745; }
+        .active-state { background: #0066cc; }
+        .final-state { background: #fd7e14; }
+        .terminal-state { background: #dc3545; }
+        
+        .info-box {
+            background: #e7f3ff;
+            border-left: 3px solid #0066cc;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 3px;
+            border: 1px solid #b3d9ff;
+            font-size: 0.95em;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Deed State Machine Visualization</h1>
+            <p class="subtitle">Interactive exploration of Deed and DeedParticipant lifecycles</p>
+        </header>
+        
+        <div class="section">
+            <h2>📊 Deed States</h2>
+            
+            <div class="legend">
+                <h3>State Types</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color initial-state"></div>
+                        <span>Initial/Draft States</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color active-state"></div>
+                        <span>Active States</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color final-state"></div>
+                        <span>Success States</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color terminal-state"></div>
+                        <span>Terminal States</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <strong>💡 Tip:</strong> Click on any state to see all its transitions, effects, conditions, and notifications.
+            </div>
+            
+            <div class="states-grid">
+                <a href="deed_draft.html" class="state-card" style="border-left-color: #28a745;">
+                    <div class="state-name">Draft</div>
+                    <div class="state-value">draft</div>
+                    <div class="state-description">
+                        The activity has been created but not yet completed. Activity manager is still editing.
+                    </div>
+                </a>
+                
+                <a href="deed_submitted.html" class="state-card" style="border-left-color: #6c757d;">
+                    <div class="state-name">Submitted</div>
+                    <div class="state-value">submitted</div>
+                    <div class="state-description">
+                        The activity has been submitted and is ready to be reviewed.
+                    </div>
+                </a>
+                
+                <a href="deed_needs_work.html" class="state-card" style="border-left-color: #fd7e14;">
+                    <div class="state-name">Needs Work</div>
+                    <div class="state-value">needs_work</div>
+                    <div class="state-description">
+                        The activity needs changes before it can be approved.
+                    </div>
+                </a>
+                
+                <a href="deed_open.html" class="state-card" style="border-left-color: #0066cc;">
+                    <div class="state-name">Open</div>
+                    <div class="state-value">open</div>
+                    <div class="state-description">
+                        The activity is accepting new contributions.
+                    </div>
+                </a>
+                
+                <a href="deed_succeeded.html" class="state-card" style="border-left-color: #28a745;">
+                    <div class="state-name">Succeeded</div>
+                    <div class="state-value">succeeded</div>
+                    <div class="state-description">
+                        The activity has ended successfully.
+                    </div>
+                </a>
+                
+                <a href="deed_expired.html" class="state-card" style="border-left-color: #6c757d;">
+                    <div class="state-name">Expired</div>
+                    <div class="state-value">expired</div>
+                    <div class="state-description">
+                        The activity has ended without any contributions.
+                    </div>
+                </a>
+                
+                <a href="deed_cancelled.html" class="state-card" style="border-left-color: #dc3545;">
+                    <div class="state-name">Cancelled</div>
+                    <div class="state-value">cancelled</div>
+                    <div class="state-description">
+                        The activity is not executed and no longer visible on platform.
+                    </div>
+                </a>
+                
+                <a href="deed_rejected.html" class="state-card" style="border-left-color: #dc3545;">
+                    <div class="state-name">Rejected</div>
+                    <div class="state-value">rejected</div>
+                    <div class="state-description">
+                        The activity does not fit the programme or comply with rules.
+                    </div>
+                </a>
+                
+                <a href="deed_deleted.html" class="state-card" style="border-left-color: #343a40;">
+                    <div class="state-name">Deleted</div>
+                    <div class="state-value">deleted</div>
+                    <div class="state-description">
+                        The activity has been removed and does not count in reports.
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>👥 DeedParticipant States</h2>
+            
+            <div class="info-box">
+                <strong>💡 Tip:</strong> Participant states manage individual contributions and can trigger activity state changes.
+            </div>
+            
+            <div class="states-grid">
+                <a href="participant_accepted.html" class="state-card" style="border-left-color: #28a745;">
+                    <div class="state-name">Accepted</div>
+                    <div class="state-value">accepted</div>
+                    <div class="state-description">
+                        This person has been signed up for the activity and was accepted automatically.
+                    </div>
+                </a>
+                
+                <a href="participant_succeeded.html" class="state-card" style="border-left-color: #28a745;">
+                    <div class="state-name">Succeeded</div>
+                    <div class="state-value">succeeded</div>
+                    <div class="state-description">
+                        The contribution was successful.
+                    </div>
+                </a>
+                
+                <a href="participant_withdrawn.html" class="state-card" style="border-left-color: #fd7e14;">
+                    <div class="state-name">Withdrawn</div>
+                    <div class="state-value">withdrawn</div>
+                    <div class="state-description">
+                        This person has withdrawn from the activity.
+                    </div>
+                </a>
+                
+                <a href="participant_rejected.html" class="state-card" style="border-left-color: #dc3545;">
+                    <div class="state-name">Rejected</div>
+                    <div class="state-value">rejected</div>
+                    <div class="state-description">
+                        This person has been removed from the activity.
+                    </div>
+                </a>
+                
+                <a href="participant_new.html" class="state-card" style="border-left-color: #6c757d;">
+                    <div class="state-name">New</div>
+                    <div class="state-value">new</div>
+                    <div class="state-description">
+                        The user started a contribution (inherited state, rarely used).
+                    </div>
+                </a>
+                
+                <a href="participant_failed.html" class="state-card" style="border-left-color: #343a40;">
+                    <div class="state-name">Failed</div>
+                    <div class="state-value">failed</div>
+                    <div class="state-description">
+                        The contribution failed (inherited state).
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Generated from bluebottle/deeds/states.py and bluebottle/deeds/triggers.py</p>
+            <p>Last updated: October 30, 2025</p>
+        </div>
+    </div>
+</body>
+</html>
+

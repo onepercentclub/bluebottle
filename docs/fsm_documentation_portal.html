@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluebottle FSM Documentation Portal</title>
+    <link rel="stylesheet" href="deed_states_visualization/state_styles.css">
+    <style>
+        .portal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .portal-header h1 {
+            color: white;
+            margin: 0 0 15px 0;
+            font-size: 42px;
+        }
+        .portal-header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin: 0;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e1e4e8;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #586069;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .quick-link-card {
+            background: white;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 25px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+        }
+        .quick-link-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+        .quick-link-card h3 {
+            margin: 0 0 10px 0;
+            color: #24292e;
+            font-size: 20px;
+        }
+        .quick-link-card p {
+            margin: 0;
+            color: #586069;
+            font-size: 14px;
+        }
+        .quick-link-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .model-card-enhanced {
+            background: white;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .model-card-enhanced:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.15);
+        }
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .model-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #24292e;
+            margin: 0;
+        }
+        .complexity-badge {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+        }
+        .model-description {
+            color: #586069;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .state-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .state-badge-small {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            background: #6c757d;
+        }
+        .model-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e1e4e8;
+        }
+        .model-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .model-link:hover {
+            text-decoration: underline;
+        }
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            transition: border-color 0.3s;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .category-header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin: 40px 0 25px 0;
+        }
+        .category-header h2 {
+            margin: 0;
+            color: white;
+            font-size: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="portal-header">
+            <h1>🔄 Bluebottle FSM Documentation Portal</h1>
+            <p>Comprehensive documentation for all Finite State Machines</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">18</span>
+                    <span class="stat-label">Models</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Categories</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">141</span>
+                    <span class="stat-label">Total States</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Coverage</span>
+                </div>
+            </div>
+        </header>
+        
+        <div class="quick-links">
+            <a href="FSM_COMPLETE_DOCUMENTATION.md" class="quick-link-card">
+                <span class="quick-link-icon">📚</span>
+                <h3>Complete Documentation</h3>
+                <p>All 18 models with states, transitions, triggers, and effects</p>
+            </a>
+            <a href="FSM_QUICK_START.md" class="quick-link-card">
+                <span class="quick-link-icon">⚡</span>
+                <h3>Quick Start Guide</h3>
+                <p>Get started in 5 minutes with examples and common queries</p>
+            </a>
+            <a href="deed_states_visualization/index.html" class="quick-link-card">
+                <span class="quick-link-icon">🎨</span>
+                <h3>Interactive Demo</h3>
+                <p>Explore Deed states with clickable transitions</p>
+            </a>
+            <a href="FSM_DOCUMENTATION_SUMMARY.md" class="quick-link-card">
+                <span class="quick-link-icon">📊</span>
+                <h3>Project Summary</h3>
+                <p>Overview, statistics, and maintenance guide</p>
+            </a>
+        </div>
+        
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search models (e.g., 'funding', 'participant', 'deadline')..." onkeyup="filterModels()">
+
+        <div class="category-header">
+            <h2>Time-Based Activities</h2>
+        </div>
+
+        <div class="model-card-enhanced" data-search="dateactivity time-based activities with specific start dates and times time-based activities">
+            <div class="model-header">
+                <h3 class="model-title">DateActivity</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Time-based activities with specific start dates and times</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #fd7e14;">full</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+1 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#1-dateactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="deadlineactivity activities with registration and completion deadlines time-based activities">
+            <div class="model-header">
+                <h3 class="model-title">DeadlineActivity</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Activities with registration and completion deadlines</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #fd7e14;">full</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+1 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#2-deadlineactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="scheduleactivity activities with flexible scheduling slots time-based activities">
+            <div class="model-header">
+                <h3 class="model-title">ScheduleActivity</h3>
+                <span class="complexity-badge" style="background-color: #dc3545;">Very High</span>
+            </div>
+            <p class="model-description">Activities with flexible scheduling slots</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #fd7e14;">full</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+1 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#3-scheduleactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="periodicactivity recurring activities that repeat on a schedule time-based activities">
+            <div class="model-header">
+                <h3 class="model-title">PeriodicActivity</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Recurring activities that repeat on a schedule</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #fd7e14;">full</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+1 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#4-periodicactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="registereddateactivity past activities registered retroactively time-based activities">
+            <div class="model-header">
+                <h3 class="model-title">RegisteredDateActivity</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Past activities registered retroactively</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">planned</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#5-registereddateactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="category-header">
+            <h2>Time-Based Participants</h2>
+        </div>
+
+        <div class="model-card-enhanced" data-search="dateparticipant participants for date-based activities time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">DateParticipant</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Participants for date-based activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#6-dateparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="deadlineparticipant participants for deadline-based activities time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">DeadlineParticipant</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Participants for deadline-based activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#7-deadlineparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="scheduleparticipant participants assigned to schedule slots time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">ScheduleParticipant</h3>
+                <span class="complexity-badge" style="background-color: #dc3545;">Very High</span>
+            </div>
+            <p class="model-description">Participants assigned to schedule slots</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">scheduled</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#8-scheduleparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="teamscheduleparticipant team members in scheduled activities time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">TeamScheduleParticipant</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Team members in scheduled activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">scheduled</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#9-teamscheduleparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="periodicparticipant participants in recurring activities time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">PeriodicParticipant</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Participants in recurring activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#10-periodicparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="registereddateparticipant retroactively registered participants time-based participants">
+            <div class="model-header">
+                <h3 class="model-title">RegisteredDateParticipant</h3>
+                <span class="complexity-badge" style="background-color: #28a745;">Low</span>
+            </div>
+            <p class="model-description">Retroactively registered participants</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">removed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#11-registereddateparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="category-header">
+            <h2>Funding</h2>
+        </div>
+
+        <div class="model-card-enhanced" data-search="funding crowdfunding campaigns with financial goals funding">
+            <div class="model-header">
+                <h3 class="model-title">Funding</h3>
+                <span class="complexity-badge" style="background-color: #ffc107;">High</span>
+            </div>
+            <p class="model-description">Crowdfunding campaigns with financial goals</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">on_hold</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">partially_funded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">refunded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+2 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#12-funding" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="donor individual donations and donor management funding">
+            <div class="model-header">
+                <h3 class="model-title">Donor</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Individual donations and donor management</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">pending</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">failed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">refunded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">activity_refunded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#13-donor" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="payment payment processing and transaction states funding">
+            <div class="model-header">
+                <h3 class="model-title">Payment</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Payment processing and transaction states</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">pending</span>
+                <span class="state-badge-small" style="background-color: #007bff;">action_needed</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">failed</span>
+                <span class="state-badge-small" style="background-color: #007bff;">refund_requested</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">refunded</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#14-payment" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="category-header">
+            <h2>Collect Activities</h2>
+        </div>
+
+        <div class="model-card-enhanced" data-search="collectactivity collection activities for gathering items or pledges collect activities">
+            <div class="model-header">
+                <h3 class="model-title">CollectActivity</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Collection activities for gathering items or pledges</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#15-collectactivity" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="collectcontributor contributors to collection activities collect activities">
+            <div class="model-header">
+                <h3 class="model-title">CollectContributor</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Contributors to collection activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">failed</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#16-collectcontributor" class="model-link">
+                    📖 View Documentation
+                </a>
+            </div>
+        </div>
+
+        <div class="category-header">
+            <h2>Deeds</h2>
+        </div>
+
+        <div class="model-card-enhanced" data-search="deed one-off volunteering activities deeds">
+            <div class="model-header">
+                <h3 class="model-title">Deed</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">One-off volunteering activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #28a745;">draft</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">submitted</span>
+                <span class="state-badge-small" style="background-color: #ffc107;">needs_work</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">open</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">expired</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">cancelled</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">+1 more</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#17-deed" class="model-link">
+                    📖 View Documentation
+                </a>
+                <a href="deed_states_visualization/index.html" class="model-link">
+                    🌐 Interactive HTML
+                </a>
+            </div>
+        </div>
+
+        <div class="model-card-enhanced" data-search="deedparticipant participants in deed activities deeds">
+            <div class="model-header">
+                <h3 class="model-title">DeedParticipant</h3>
+                <span class="complexity-badge" style="background-color: #17a2b8;">Medium</span>
+            </div>
+            <p class="model-description">Participants in deed activities</p>
+            
+            <div class="state-badges">
+                <span class="state-badge-small" style="background-color: #17a2b8;">new</span>
+                <span class="state-badge-small" style="background-color: #17a2b8;">accepted</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">rejected</span>
+                <span class="state-badge-small" style="background-color: #6c757d;">withdrawn</span>
+                <span class="state-badge-small" style="background-color: #28a745;">succeeded</span>
+                <span class="state-badge-small" style="background-color: #dc3545;">failed</span>
+            </div>
+            
+            <div class="model-links">
+                <a href="FSM_COMPLETE_DOCUMENTATION.md#18-deedparticipant" class="model-link">
+                    📖 View Documentation
+                </a>
+                <a href="deed_states_visualization/index.html" class="model-link">
+                    🌐 Interactive HTML
+                </a>
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        function filterModels() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const modelCards = document.querySelectorAll('[data-search]');
+            
+            modelCards.forEach(card => {
+                const searchText = card.getAttribute('data-search');
+                if (searchText.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

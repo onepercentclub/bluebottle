@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deed State: Expired</title>
+    <link rel="stylesheet" href="state_styles.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Overview</a>
+        
+        <header class="state-header expired-header">
+            <h1>Expired</h1>
+            <div class="state-value">expired</div>
+            <p class="state-description">
+                The activity has ended, but did not have any contributions. The activity does not appear on the platform, but counts in the report.
+            </p>
+        </header>
+        <div class="section">
+            <h2>📤 Outgoing Transitions</h2>
+            
+            <div class="transition-card automatic">
+                <div class="transition-header">
+                    <span class="transition-name">succeed</span>
+                    <span class="transition-type">Automatic</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_succeeded.html" class="state-link">succeeded</a>
+                </div>
+                <div class="transition-description">
+                    The activity ends successfully.
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>can_succeed() - Has at least one participant</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Succeed all participants</div>
+                        </li>
+                        <li class="notification-item">
+                            <div class="effect-type">📧 NotificationEffect</div>
+                            <div class="notification-subject">Subject: Your activity "{title}" has succeeded 🎉</div>
+                            <div class="notification-recipient">Recipient: Activity owner</div>
+                        </li>
+                        <li class="effect-item">
+                            <div class="effect-type">SetEndDateEffect</div>
+                            <div>Set end date to today if not set</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card automatic">
+                <div class="transition-header">
+                    <span class="transition-name">reopen</span>
+                    <span class="transition-type">Automatic</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_open.html" class="state-link">open</a>
+                </div>
+                <div class="transition-description">
+                    Reopen the activity.
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Re-accept participants (if not finished)</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">reopen_manually</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_draft.html" class="state-link">draft</a>
+                </div>
+                <div class="transition-description">
+                    The activity will be set to the status 'Needs work'.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - User is the activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">restore</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_needs_work.html" class="state-link">needs_work</a>
+                </div>
+                <div class="transition-description">
+                    The activity status is changed to 'Needs work'.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - User is the activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Reset organizer</div>
+                        </li>
+                        <li class="notification-item">
+                            <div class="effect-type">📧 NotificationEffect</div>
+                            <div class="notification-subject">Subject: The activity "{title}" has been restored</div>
+                            <div class="notification-recipient">Recipient: Activity owner</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📥 Incoming Transitions</h2>
+            
+            <div class="incoming-item">
+                <strong>expire</strong> from <a href="deed_open.html">open</a>, <a href="deed_submitted.html">submitted</a>, <a href="deed_succeeded.html">succeeded</a> (Automatic)
+                <p>The activity will be cancelled because no one has signed up.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

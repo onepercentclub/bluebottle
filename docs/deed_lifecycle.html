@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deed Lifecycle - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>Deed Lifecycle Documentation</h1></p>
+
+<p>This document describes the finite state machine (FSM) implementation for Deeds and DeedParticipants, including all states, transitions, triggers, and effects.</p>
+
+<p><h2 id="Table of Contents">Table of Contents</h2></p>
+<ol>
+<li><a href="#deed-state-machine">Deed State Machine</a></li>
+<li><a href="#deedparticipant-state-machine">DeedParticipant State Machine</a></li>
+<li><a href="#model-relationships">Model Relationships</a></li>
+<li><a href="#triggers-and-effects">Triggers and Effects</a></li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="Deed State Machine">Deed State Machine</h2></p>
+
+<p><h3>Overview</h3></p>
+<p>The <code>DeedStateMachine</code> extends <code>ActivityStateMachine</code> and manages the lifecycle of a Deed activity. Deeds are activities with optional start and end dates where participants can sign up.</p>
+
+<p><h3>States</h3></p>
+
+<p><h4>Inherited States (from ActivityStateMachine)</h4></p>
+<p>| State | Value | Description |</p>
+<p>|-------|-------|-------------|</p>
+<p>| <strong>draft</strong> | <code>draft</code> | The activity has been created, but not yet completed. An activity manager is still editing the activity. |</p>
+<p>| <strong>submitted</strong> | <code>submitted</code> | The activity has been submitted and is ready to be reviewed. |</p>
+<p>| <strong>needs_work</strong> | <code>needs_work</code> | The activity needs changes before it can be approved. |</p>
+<p>| <strong>rejected</strong> | <code>rejected</code> | The activity does not fit the programme or does not comply with the rules. The activity does not appear on the platform, but counts in the report. |</p>
+<p>| <strong>deleted</strong> | <code>deleted</code> | The activity has been removed. The activity does not appear on the platform and does not count in the report. |</p>
+<p>| <strong>cancelled</strong> | <code>cancelled</code> | The activity is not executed. The activity does not appear on the platform, but counts in the report. |</p>
+<p>| <strong>expired</strong> | <code>expired</code> | The activity has ended, but did not have any contributions. The activity does not appear on the platform, but counts in the report. |</p>
+<p>| <strong>open</strong> | <code>open</code> | The activity is accepting new contributions. |</p>
+<p>| <strong>succeeded</strong> | <code>succeeded</code> | The activity has ended successfully. |</p>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Inherited Transitions (from ActivityStateMachine)</h4></p>
+
+<p>##### 1. <strong>initiate</strong></p>
+<ul>
+<li><strong>From:</strong> EmptyState</li>
+<li><strong>To:</strong> draft</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> The activity will be created.</li>
+</ul>
+
+<p>##### 2. <strong>submit</strong></p>
+<ul>
+<li><strong>From:</strong> draft, needs_work</li>
+<li><strong>To:</strong> submitted</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<p>  - can_submit</p>
+<ul>
+<li><strong>Description:</strong> The activity will be submitted for review.</li>
+</ul>
+
+<p>##### 3. <strong>auto_submit</strong></p>
+<ul>
+<li><strong>From:</strong> draft, needs_work</li>
+<li><strong>To:</strong> submitted</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<ul>
+<li><strong>Description:</strong> The activity will be submitted for review.</li>
+</ul>
+
+<p>##### 4. <strong>reject</strong></p>
+<ul>
+<li><strong>From:</strong> draft, needs_work, submitted</li>
+<li><strong>To:</strong> rejected</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_staff</li>
+<li><strong>Description:</strong> Reject if the activity does not align with your program or guidelines.</li>
+</ul>
+
+<p>##### 5. <strong>publish</strong></p>
+<ul>
+<li><strong>From:</strong> submitted, draft, needs_work</li>
+<li><strong>To:</strong> open</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<p>  - can_publish</p>
+<ul>
+<li><strong>Description:</strong> Your activity will be open to contributions.</li>
+</ul>
+
+<p>##### 6. <strong>auto_publish</strong></p>
+<ul>
+<li><strong>From:</strong> submitted, draft, needs_work</li>
+<li><strong>To:</strong> open</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<p>  - should_auto_approve</p>
+<ul>
+<li><strong>Description:</strong> Automatically publish activity when initiative is approved.</li>
+</ul>
+
+<p>##### 7. <strong>auto_approve</strong></p>
+<ul>
+<li><strong>From:</strong> submitted, rejected</li>
+<li><strong>To:</strong> open</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<p>  - should_auto_approve</p>
+<ul>
+<li><strong>Description:</strong> The activity will be visible in the frontend and people can apply to the activity.</li>
+</ul>
+
+<p>##### 8. <strong>approve</strong></p>
+<ul>
+<li><strong>From:</strong> submitted, needs_work, draft</li>
+<li><strong>To:</strong> open</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_staff</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - is_complete</p>
+<p>  - is_valid</p>
+<p>  - should_auto_approve</p>
+<ul>
+<li><strong>Description:</strong> The activity will be published and visible in the frontend for people to contribute to.</li>
+</ul>
+
+<p>##### 9. <strong>request_changes</strong></p>
+<ul>
+<li><strong>From:</strong> submitted</li>
+<li><strong>To:</strong> needs_work</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_staff</li>
+<li><strong>Description:</strong> The activity needs changes before it can be approved.</li>
+</ul>
+
+<p>##### 10. <strong>restore</strong></p>
+<ul>
+<li><strong>From:</strong> rejected, cancelled, deleted, expired</li>
+<li><strong>To:</strong> needs_work</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Description:</strong> The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again.</li>
+</ul>
+
+<p>##### 11. <strong>delete</strong></p>
+<ul>
+<li><strong>From:</strong> draft, needs_work</li>
+<li><strong>To:</strong> deleted</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Description:</strong> Delete the activity if you do not want it to be included in the report.</li>
+</ul>
+
+<p><h4>Deed-Specific Transitions</h4></p>
+
+<p>##### 12. <strong>succeed</strong></p>
+<ul>
+<li><strong>From:</strong> open, expired</li>
+<li><strong>To:</strong> succeeded</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - can_succeed (has participants)</p>
+<ul>
+<li><strong>Description:</strong> The activity ends successfully.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Transition all participants to succeeded (if not started)</p>
+<p>  - Send ActivitySucceededNotification</p>
+<p>  - Set end date if not already set</p>
+
+<p>##### 13. <strong>expire</strong></p>
+<ul>
+<li><strong>From:</strong> open, submitted, succeeded</li>
+<li><strong>To:</strong> expired</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> The activity will be cancelled because no one has signed up for the registration deadline.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Fail organizer</p>
+<p>  - Send ActivityExpiredNotification</p>
+
+<p>##### 14. <strong>succeed_manually</strong></p>
+<ul>
+<li><strong>From:</strong> open</li>
+<li><strong>To:</strong> succeeded</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - has_no_end_date</p>
+<p>  - can_succeed (has participants)</p>
+<ul>
+<li><strong>Description:</strong> The activity ends and people can no longer register.</li>
+</ul>
+
+<p>##### 15. <strong>reopen</strong></p>
+<ul>
+<li><strong>From:</strong> expired, succeeded</li>
+<li><strong>To:</strong> open</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> Reopen the activity.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Re-accept participants (if not finished)</p>
+
+<p>##### 16. <strong>reopen_manually</strong></p>
+<ul>
+<li><strong>From:</strong> succeeded, expired</li>
+<li><strong>To:</strong> draft</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Description:</strong> The activity will be set to the status 'Needs work'. Then you can make changes to the activity and submit it again.</li>
+</ul>
+
+<p>##### 17. <strong>cancel</strong></p>
+<ul>
+<li><strong>From:</strong> open, succeeded</li>
+<li><strong>To:</strong> cancelled</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner</li>
+<li><strong>Description:</strong> Cancel if the activity will not be executed. An activity manager can no longer edit the activity and it will no longer be visible on the platform.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Fail organizer</p>
+<p>  - Send ActivityCancelledNotification</p>
+
+<p>---</p>
+
+<p><h2 id="DeedParticipant State Machine">DeedParticipant State Machine</h2></p>
+
+<p><h3>Overview</h3></p>
+<p>The <code>DeedParticipantStateMachine</code> extends <code>ContributorStateMachine</code> and manages the lifecycle of participants in a Deed activity.</p>
+
+<p><h3>States</h3></p>
+
+<p><h4>Inherited States (from ContributorStateMachine)</h4></p>
+<p>| State | Value | Description |</p>
+<p>|-------|-------|-------------|</p>
+<p>| <strong>new</strong> | <code>new</code> | The user started a contribution |</p>
+<p>| <strong>succeeded</strong> | <code>succeeded</code> | The contribution was successful. |</p>
+<p>| <strong>failed</strong> | <code>failed</code> | The contribution failed. |</p>
+
+<p><h4>DeedParticipant-Specific States</h4></p>
+<p>| State | Value | Description |</p>
+<p>|-------|-------|-------------|</p>
+<p>| <strong>accepted</strong> | <code>accepted</code> | This person has been signed up for the activity and was accepted automatically. |</p>
+<p>| <strong>withdrawn</strong> | <code>withdrawn</code> | This person has withdrawn. |</p>
+<p>| <strong>rejected</strong> | <code>rejected</code> | This person has been removed from the activity. |</p>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>1. <strong>initiate</strong></h4></p>
+<ul>
+<li><strong>From:</strong> EmptyState</li>
+<li><strong>To:</strong> accepted</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> The contribution was created.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Succeed immediately if activity already started</p>
+<p>  - Create EffortContribution</p>
+<p>  - Send NewParticipantNotification (if user joins themselves)</p>
+<p>  - Send ParticipantAddedNotification (if added by manager, user is active)</p>
+<p>  - Send InactiveParticipantAddedNotification (if added by manager, user is inactive)</p>
+<p>  - Send ManagerParticipantAddedOwnerNotification (if added by manager, not owner)</p>
+<p>  - Send ParticipantJoinedNotification (if user joins themselves)</p>
+<p>  - Follow activity</p>
+
+<p><h4>2. <strong>succeed</strong></h4></p>
+<ul>
+<li><strong>From:</strong> accepted</li>
+<li><strong>To:</strong> succeeded</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> The contribution was successful.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Succeed activity if it's finished</p>
+<p>  - Succeed effort contributions</p>
+
+<p><h4>3. <strong>re_accept</strong></h4></p>
+<ul>
+<li><strong>From:</strong> succeeded</li>
+<li><strong>To:</strong> accepted</li>
+<li><strong>Type:</strong> Automatic</li>
+<li><strong>Description:</strong> Put a participant back as participating after it was successful.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Reset effort contributions</p>
+<p>  - Follow activity</p>
+
+<p><h4>4. <strong>withdraw</strong></h4></p>
+<ul>
+<li><strong>From:</strong> succeeded, accepted</li>
+<li><strong>To:</strong> withdrawn</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_user (the participant themselves)</li>
+<li><strong>Description:</strong> Stop your participation in the activity.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Fail effort contributions</p>
+<p>  - Send ParticipantWithdrewNotification</p>
+<p>  - Send ParticipantWithdrewConfirmationNotification</p>
+<p>  - Unfollow activity</p>
+
+<p><h4>5. <strong>reapply</strong></h4></p>
+<ul>
+<li><strong>From:</strong> withdrawn</li>
+<li><strong>To:</strong> accepted</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_user (the participant themselves)</li>
+<li><strong>Conditions:</strong></li>
+</ul>
+<p>  - activity_is_open</p>
+<ul>
+<li><strong>Description:</strong> Reapply after previously withdrawing.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Reset effort contributions</p>
+<p>  - Succeed immediately if activity already started</p>
+<p>  - Follow activity</p>
+
+<p><h4>6. <strong>remove</strong></h4></p>
+<ul>
+<li><strong>From:</strong> accepted, succeeded</li>
+<li><strong>To:</strong> rejected</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner (activity owner or staff)</li>
+<li><strong>Description:</strong> Remove participant from the activity.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Expire activity if finished and will be empty</p>
+<p>  - Fail effort contributions</p>
+<p>  - Send ParticipantRemovedOwnerNotification (if removed by non-owner)</p>
+<p>  - Send ParticipantRemovedNotification (if removed by non-owner)</p>
+<p>  - Unfollow activity</p>
+
+<p><h4>7. <strong>accept</strong></h4></p>
+<ul>
+<li><strong>From:</strong> rejected, withdrawn</li>
+<li><strong>To:</strong> accepted</li>
+<li><strong>Type:</strong> Manual</li>
+<li><strong>Permission:</strong> is_owner (activity owner or staff)</li>
+<li><strong>Description:</strong> Reaccept user after previously withdrawing or rejecting.</li>
+<li><strong>Effects:</strong></li>
+</ul>
+<p>  - Succeed immediately if activity already started</p>
+<p>  - Succeed activity if finished and was expired</p>
+
+<p>---</p>
+
+<p><h2 id="Model Relationships">Model Relationships</h2></p>
+
+<p><h3>Deed Model</h3></p>
+<p><pre><code class="language-python">class Deed(Activity):</p>
+<p>    start = DateField(blank=True, null=True)</p>
+<p>    end = DateField(blank=True, null=True)</p>
+<p>    enable_impact = BooleanField(default=False)</p>
+<p>    target = IntegerField(blank=True, null=True)</code></pre></p>
+
+<p><strong>Key Properties:</strong></p>
+<ul>
+<li><code>participants</code>: Returns contributors with status 'accepted' or 'succeeded'</li>
+<li><code>efforts</code>: Returns all EffortContribution objects for the deed</li>
+<li><code>realized</code>: Count of succeeded effort contributions</li>
+</ul>
+
+<p><h3>DeedParticipant Model</h3></p>
+<p><pre><code class="language-python">class DeedParticipant(Contributor):</p>
+<p>    # Inherits user, activity, status from Contributor</code></pre></p>
+
+<p><strong>Relationships:</strong></p>
+<ul>
+<li>Belongs to a Deed (activity)</li>
+<li>Has a User</li>
+<li>Has EffortContribution(s)</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Triggers and Effects">Triggers and Effects</h2></p>
+
+<p><h3>Deed Triggers</h3></p>
+
+<p><h4>1. <strong>ModelChangedTrigger: 'end' field</strong></h4></p>
+<p>Triggered when the end date changes.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(DeedStateMachine.reopen)</strong> - Conditions: is_not_finished</li>
+<li><strong>TransitionEffect(DeedStateMachine.succeed)</strong> - Conditions: is_finished AND has_participants</li>
+<li><strong>TransitionEffect(DeedStateMachine.expire)</strong> - Conditions: is_finished AND has_no_participants</li>
+<li><strong>RescheduleEffortsEffect</strong> - Reschedule all effort contributions</li>
+<li><strong>NotificationEffect(DeedDateChangedNotification)</strong> - Conditions: is_not_finished</li>
+</ul>
+
+<p><h4>2. <strong>ModelChangedTrigger: 'start' field</strong></h4></p>
+<p>Triggered when the start date changes.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('participants', DeedParticipantStateMachine.re_accept)</strong> - Conditions: has_start_date AND is_not_started</li>
+<li><strong>RelatedTransitionEffect('participants', DeedParticipantStateMachine.succeed)</strong> - Conditions: is_started</li>
+<li><strong>RescheduleEffortsEffect</strong> - Reschedule all effort contributions</li>
+<li><strong>NotificationEffect(DeedDateChangedNotification)</strong> - Conditions: is_not_started</li>
+</ul>
+
+<p><h4>3. <strong>ModelChangedTrigger: 'target' field</strong></h4></p>
+<p>Triggered when the target number of participants changes.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>UpdateImpactGoalsForActivityEffect</strong> - Update impact goals</li>
+</ul>
+
+<p><h4>4. <strong>TransitionTrigger: DeedStateMachine.auto_approve</strong></h4></p>
+<p>Triggered when deed is auto-approved.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(DeedStateMachine.reopen)</strong> - Conditions: is_not_finished</li>
+<li><strong>TransitionEffect(DeedStateMachine.succeed)</strong> - Conditions: is_finished AND has_participants</li>
+<li><strong>TransitionEffect(DeedStateMachine.expire)</strong> - Conditions: is_finished AND has_no_participants</li>
+</ul>
+
+<p><h4>5. <strong>TransitionTrigger: DeedStateMachine.publish</strong></h4></p>
+<p>Triggered when deed is published.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(DeedStateMachine.reopen)</strong> - Conditions: is_not_finished</li>
+<li><strong>TransitionEffect(DeedStateMachine.succeed)</strong> - Conditions: is_finished AND has_participants</li>
+<li><strong>TransitionEffect(DeedStateMachine.expire)</strong> - Conditions: is_finished AND has_no_participants</li>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed)</strong> - Conditions: has_organizer</li>
+</ul>
+
+<p><h4>6. <strong>TransitionTrigger: DeedStateMachine.reopen</strong></h4></p>
+<p>Triggered when deed is reopened.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('participants', DeedParticipantStateMachine.re_accept)</strong> - Conditions: is_not_finished</li>
+</ul>
+
+<p><h4>7. <strong>TransitionTrigger: DeedStateMachine.succeed</strong></h4></p>
+<p>Triggered when deed succeeds.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('participants', DeedParticipantStateMachine.succeed)</strong> - Conditions: is_not_started</li>
+<li><strong>NotificationEffect(ActivitySucceededNotification)</strong></li>
+<li><strong>SetEndDateEffect</strong> - Set end date to today if not set</li>
+</ul>
+
+<p><h4>8. <strong>TransitionTrigger: DeedStateMachine.expire</strong></h4></p>
+<p>Triggered when deed expires.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+<li><strong>NotificationEffect(ActivityExpiredNotification)</strong></li>
+</ul>
+
+<p><h4>9. <strong>TransitionTrigger: DeedStateMachine.reject</strong></h4></p>
+<p>Triggered when deed is rejected.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+<li><strong>NotificationEffect(ActivityRejectedNotification)</strong></li>
+</ul>
+
+<p><h4>10. <strong>TransitionTrigger: DeedStateMachine.cancel</strong></h4></p>
+<p>Triggered when deed is cancelled.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+<li><strong>NotificationEffect(ActivityCancelledNotification)</strong></li>
+</ul>
+
+<p><h4>11. <strong>TransitionTrigger: DeedStateMachine.restore</strong></h4></p>
+<p>Triggered when deed is restored.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.reset)</strong></li>
+<li><strong>NotificationEffect(ActivityRestoredNotification)</strong></li>
+</ul>
+
+<p><h3>DeedParticipant Triggers</h3></p>
+
+<p><h4>1. <strong>TransitionTrigger: DeedParticipantStateMachine.initiate</strong></h4></p>
+<p>Triggered when a participant is created.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(DeedParticipantStateMachine.succeed)</strong> - Conditions: activity_did_start</li>
+<li><strong>CreateEffortContribution</strong> - Create effort contribution record</li>
+<li><strong>NotificationEffect(NewParticipantNotification)</strong> - Conditions: is_user</li>
+<li><strong>NotificationEffect(ParticipantAddedNotification)</strong> - Conditions: is_not_user AND participant_is_active</li>
+<li><strong>NotificationEffect(InactiveParticipantAddedNotification)</strong> - Conditions: is_not_user AND participant_is_inactive</li>
+<li><strong>NotificationEffect(ManagerParticipantAddedOwnerNotification)</strong> - Conditions: is_not_user AND is_not_owner</li>
+<li><strong>NotificationEffect(ParticipantJoinedNotification)</strong> - Conditions: is_user</li>
+<li><strong>FollowActivityEffect</strong> - User follows the activity</li>
+</ul>
+
+<p><h4>2. <strong>TransitionTrigger: DeedParticipantStateMachine.remove</strong></h4></p>
+<p>Triggered when a participant is removed.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('activity', DeedStateMachine.expire)</strong> - Conditions: activity_is_finished AND activity_will_be_empty</li>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)</strong></li>
+<li><strong>NotificationEffect(ParticipantRemovedOwnerNotification)</strong> - Conditions: is_not_owner</li>
+<li><strong>NotificationEffect(ParticipantRemovedNotification)</strong> - Conditions: is_not_owner</li>
+<li><strong>UnFollowActivityEffect</strong> - User unfollows the activity</li>
+</ul>
+
+<p><h4>3. <strong>TransitionTrigger: DeedParticipantStateMachine.succeed</strong></h4></p>
+<p>Triggered when a participant succeeds.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('activity', DeedStateMachine.succeed)</strong> - Conditions: activity_is_finished</li>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed)</strong> - Conditions: contributor_is_active</li>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.succeed)</strong> - (duplicate in code)</li>
+</ul>
+
+<p><h4>4. <strong>TransitionTrigger: DeedParticipantStateMachine.accept</strong></h4></p>
+<p>Triggered when a participant is accepted (after rejection/withdrawal).</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(DeedParticipantStateMachine.succeed)</strong> - Conditions: activity_did_start</li>
+<li><strong>RelatedTransitionEffect('activity', DeedStateMachine.succeed)</strong> - Conditions: activity_is_finished AND activity_expired</li>
+</ul>
+
+<p><h4>5. <strong>TransitionTrigger: DeedParticipantStateMachine.re_accept</strong></h4></p>
+<p>Triggered when a participant is re-accepted.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset)</strong></li>
+<li><strong>FollowActivityEffect</strong> - User follows the activity</li>
+</ul>
+
+<p><h4>6. <strong>TransitionTrigger: DeedParticipantStateMachine.withdraw</strong></h4></p>
+<p>Triggered when a participant withdraws.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.fail)</strong></li>
+<li><strong>NotificationEffect(ParticipantWithdrewNotification)</strong></li>
+<li><strong>NotificationEffect(ParticipantWithdrewConfirmationNotification)</strong></li>
+<li><strong>UnFollowActivityEffect</strong> - User unfollows the activity</li>
+</ul>
+
+<p><h4>7. <strong>TransitionTrigger: DeedParticipantStateMachine.reapply</strong></h4></p>
+<p>Triggered when a participant reapplies after withdrawal.</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('contributions', EffortContributionStateMachine.reset)</strong></li>
+<li><strong>TransitionEffect(DeedParticipantStateMachine.succeed)</strong> - Conditions: activity_did_start</li>
+<li><strong>FollowActivityEffect</strong> - User follows the activity</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Condition Functions">Condition Functions</h2></p>
+
+<p><h3>Deed Conditions</h3></p>
+
+<p>| Condition | Description |</p>
+<p>|-----------|-------------|</p>
+<p>| <code>has_no_end_date()</code> | Deed has no end date set |</p>
+<p>| <code>can_succeed()</code> | Deed has at least one participant |</p>
+<p>| <code>is_started()</code> | Start date is in the past |</p>
+<p>| <code>is_not_started()</code> | Start date is not in the past or not set |</p>
+<p>| <code>is_finished()</code> | End date is in the past |</p>
+<p>| <code>is_not_finished()</code> | End date is not in the past or not set |</p>
+<p>| <code>has_participants()</code> | Deed has at least one participant |</p>
+<p>| <code>has_no_participants()</code> | Deed has no participants |</p>
+<p>| <code>has_no_start_date()</code> | Deed has no start date set |</p>
+<p>| <code>has_start_date()</code> | Deed has a start date set |</p>
+
+<p><h3>DeedParticipant Conditions</h3></p>
+
+<p>| Condition | Description |</p>
+<p>|-----------|-------------|</p>
+<p>| <code>is_user(user)</code> | User is the participant |</p>
+<p>| <code>is_owner(user)</code> | User is the activity owner, staff, or superuser |</p>
+<p>| <code>activity_is_open()</code> | Activity status is 'open' |</p>
+<p>| <code>activity_is_finished()</code> | Activity end date is in the past |</p>
+<p>| <code>activity_expired()</code> | Activity status is 'expired' |</p>
+<p>| <code>activity_not_expired()</code> | Activity status is not 'expired' |</p>
+<p>| <code>activity_did_start()</code> | Activity start date is in the past or not set |</p>
+<p>| <code>activity_will_be_empty()</code> | Only one participant remaining |</p>
+<p>| <code>activity_has_no_end()</code> | Activity has no end date |</p>
+<p>| <code>contributor_is_active()</code> | Contributor status is 'new' |</p>
+<p>| <code>participant_is_active()</code> | User account is active and platform is open |</p>
+<p>| <code>participant_is_inactive()</code> | User account is inactive or platform is closed |</p>
+
+<p>---</p>
+
+<p><h2 id="Lifecycle Diagrams">Lifecycle Diagrams</h2></p>
+
+<p><h3>Deed Lifecycle Flow</h3></p>
+
+<p><pre><code class="language-text">[Create] → draft</p>
+<p>    ↓</p>
+<p>    ├─[submit]─→ submitted ─┬─[approve]─────→ open</p>
+<p>    │                       ├─[reject]──────→ rejected</p>
+<p>    │                       └─[request_changes]→ needs_work</p>
+<p>    │                                              ↓</p>
+<p>    ├─[publish]──────────────────────────────────┘</p>
+<p>    │</p>
+<p>    └─[delete]──→ deleted</p>
+
+<p>open ──┬─[succeed]──→ succeeded</p>
+<p>       ├─[expire]───→ expired</p>
+<p>       ├─[cancel]───→ cancelled</p>
+<p>       └─[reopen]←──┐</p>
+<p>                     │</p>
+<p>succeeded/expired/cancelled/rejected/deleted</p>
+<p>       └─[restore]──→ needs_work</code></pre></p>
+
+<p><h3>DeedParticipant Lifecycle Flow</h3></p>
+
+<p><pre><code class="language-text">[Create] → accepted</p>
+<p>    ↓</p>
+<p>    ├─[succeed (auto)]───→ succeeded</p>
+<p>    │                         ↓</p>
+<p>    │                    [re_accept]</p>
+<p>    │                         ↓</p>
+<p>    ├─[withdraw]────→ withdrawn ─[reapply]→ accepted</p>
+<p>    │</p>
+<p>    └─[remove]──────→ rejected ──[accept]─→ accepted</code></pre></p>
+
+<p>---</p>
+
+<p><h2 id="Key Behaviors">Key Behaviors</h2></p>
+
+<p><h3>Automatic Transitions</h3></p>
+
+<ol>
+<li><strong>When a deed is published/approved:</strong></li>
+</ol>
+<p>   - If the end date has passed and there are participants → succeed</p>
+<p>   - If the end date has passed and there are no participants → expire</p>
+<p>   - If the end date hasn't passed → stay open/reopen</p>
+
+<ol>
+<li><strong>When the start date changes:</strong></li>
+</ol>
+<p>   - If start date is now in the past → all participants succeed</p>
+<p>   - If start date is moved to future → participants re-accept</p>
+
+<ol>
+<li><strong>When the end date changes:</strong></li>
+</ol>
+<p>   - If end date is now in the past and has participants → deed succeeds</p>
+<p>   - If end date is now in the past and no participants → deed expires</p>
+<p>   - If end date is moved to future → deed reopens</p>
+
+<ol>
+<li><strong>When a participant joins:</strong></li>
+</ol>
+<p>   - If the activity already started → participant immediately succeeds</p>
+<p>   - Otherwise → participant is in 'accepted' state</p>
+
+<ol>
+<li><strong>When the last participant is removed:</strong></li>
+</ol>
+<p>   - If the activity has finished → deed expires</p>
+
+<p><h3>Notifications</h3></p>
+
+<p><strong>Activity Manager Notifications:</strong></p>
+<ul>
+<li>ActivitySucceededNotification (deed succeeds)</li>
+<li>ActivityExpiredNotification (deed expires)</li>
+<li>ActivityRejectedNotification (deed rejected)</li>
+<li>ActivityCancelledNotification (deed cancelled)</li>
+<li>ActivityRestoredNotification (deed restored)</li>
+<li>DeedDateChangedNotification (start/end date changes)</li>
+<li>ParticipantRemovedOwnerNotification (participant removed by manager)</li>
+<li>ManagerParticipantAddedOwnerNotification (participant added by manager)</li>
+</ul>
+
+<p><strong>Participant Notifications:</strong></p>
+<ul>
+<li>NewParticipantNotification (participant joins themselves)</li>
+<li>ParticipantAddedNotification (participant added by manager, active user)</li>
+<li>InactiveParticipantAddedNotification (participant added by manager, inactive user)</li>
+<li>ParticipantJoinedNotification (participant joins themselves)</li>
+<li>ParticipantWithdrewNotification (participant withdraws)</li>
+<li>ParticipantWithdrewConfirmationNotification (participant withdraws confirmation)</li>
+<li>ParticipantRemovedNotification (participant removed by manager)</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Implementation Files">Implementation Files</h2></p>
+
+<ul>
+<li><strong>States:</strong> <code>bluebottle/deeds/states.py</code></li>
+<li><strong>Triggers:</strong> <code>bluebottle/deeds/triggers.py</code></li>
+<li><strong>Models:</strong> <code>bluebottle/deeds/models.py</code></li>
+<li><strong>Base Activity States:</strong> <code>bluebottle/activities/states.py</code></li>
+<li><strong>Base Activity Triggers:</strong> <code>bluebottle/activities/triggers.py</code></li>
+</ul>
+
+<p>---</p>
+
+<p><em>Generated: 2025-10-30</em></p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deed Inherited Triggers - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>Deed Inherited Triggers & Effects - Addendum</h1></p>
+
+<p><h2 id="⚠️ Important: Inherited Behavior">⚠️ Important: Inherited Behavior</h2></p>
+
+<p>This document supplements the main <code>DEED_LIFECYCLE.md</code> documentation with <strong>inherited triggers and effects</strong> from base classes that were not fully documented in the HTML visualization.</p>
+
+<p>The <code>DeedTriggers</code> class extends <code>ActivityTriggers</code>, which means <strong>all Deed activities inherit these additional triggers and effects</strong> beyond what's specific to Deeds.</p>
+
+<p>---</p>
+
+<p><h2 id="Inherited from ActivityTriggers">Inherited from ActivityTriggers</h2></p>
+
+<p><h3>1. TransitionTrigger: ActivityStateMachine.initiate</h3></p>
+<p><strong>When:</strong> A new Deed is created</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>CreateOrganizer</strong> - Automatically create an Organizer object for the activity owner</li>
+<li><strong>CopyCategories</strong> - Copy categories from the initiative if applicable</li>
+</ul>
+
+<p><strong>Impact:</strong> Every Deed gets an associated Organizer when created.</p>
+
+<p>---</p>
+
+<p><h3>2. TransitionTrigger: ActivityStateMachine.submit</h3></p>
+<p><strong>When:</strong> Deed is submitted for review (manual)</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(auto_approve)</strong> </li>
+</ul>
+<p>  - Condition: <code>should_approve_instantly</code> - If reviewing is disabled or initiative already approved</p>
+<p>  - Automatically approves the deed immediately</p>
+
+<ul>
+<li><strong>NotificationEffect: ActivitySubmittedReviewerNotification</strong></li>
+</ul>
+<p>  - Condition: <code>should_review</code> - If reviewing is enabled</p>
+<p>  - Recipient: Platform reviewers/staff</p>
+<p>  - Purpose: Notify reviewers that a new deed needs review</p>
+
+<ul>
+<li><strong>NotificationEffect: ActivitySubmittedNotification</strong></li>
+</ul>
+<p>  - Subject: "You submitted an activity on {site_name}"</p>
+<p>  - Condition: <code>should_review AND is_not_funding</code></p>
+<p>  - Recipient: Activity owner</p>
+<p>  - Purpose: Confirm submission to the owner</p>
+
+<p><strong>Impact:</strong> Submission may trigger automatic approval and notifies both owner and reviewers.</p>
+
+<p>---</p>
+
+<p><h3>3. TransitionTrigger: ActivityStateMachine.auto_submit</h3></p>
+<p><strong>When:</strong> Deed is automatically submitted</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>TransitionEffect(auto_approve)</strong></li>
+</ul>
+<p>  - Condition: <code>should_approve_instantly</code></p>
+<p>  - Automatically approves if conditions met</p>
+
+<p><strong>Impact:</strong> Auto-submitted deeds can immediately become approved/open.</p>
+
+<p>---</p>
+
+<p><h3>4. TransitionTrigger: ActivityStateMachine.approve</h3></p>
+<p><strong>When:</strong> Staff approves a submitted deed</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>NotificationEffect: ActivityApprovedNotification</strong></li>
+</ul>
+<p>  - Subject: "Your activity on {site_name} has been approved!"</p>
+<p>  - Condition: <code>is_not_funding</code></p>
+<p>  - Recipient: Activity owner</p>
+
+<ul>
+<li><strong>NotificationEffect: TermsOfServiceNotification</strong></li>
+</ul>
+<p>  - Subject: "Terms of service"</p>
+<p>  - Condition: <code>should_mail_tos</code> - If platform settings enable ToS mailing</p>
+<p>  - Recipient: Activity owner</p>
+<p>  - Purpose: Send terms of service agreement</p>
+
+<p><strong>Impact:</strong> Approval notifies owner and optionally sends ToS.</p>
+
+<p>---</p>
+
+<p><h3>5. TransitionTrigger: ActivityStateMachine.request_changes</h3></p>
+<p><strong>When:</strong> Staff requests changes to a submitted deed</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>NotificationEffect: ActivityNeedsWorkNotification</strong></li>
+</ul>
+<p>  - Subject: "The activity you submitted on {site_name} needs work"</p>
+<p>  - Condition: <code>is_not_funding</code></p>
+<p>  - Recipient: Activity owner</p>
+
+<p><strong>Impact:</strong> Owner is notified their deed needs changes before approval.</p>
+
+<p>---</p>
+
+<p><h3>6. TransitionTrigger: ActivityStateMachine.reject</h3></p>
+<p><strong>When:</strong> Staff rejects a deed</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Fails the organizer when deed is rejected</p>
+
+<p><strong>Impact:</strong> Rejection cascades to fail the organizer contributor.</p>
+
+<p>---</p>
+
+<p><h3>7. TransitionTrigger: ActivityStateMachine.auto_approve</h3></p>
+<p><strong>When:</strong> Deed is auto-approved (after submit or when initiative approved)</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>SetPublishedDateEffect</strong> - Sets the <code>published</code> timestamp</li>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Marks the organizer as succeeded</p>
+
+<p><strong>Impact:</strong> Auto-approval publishes the deed and succeeds the organizer.</p>
+
+<p>---</p>
+
+<p><h3>8. TransitionTrigger: ActivityStateMachine.publish</h3></p>
+<p><strong>When:</strong> Owner manually publishes a deed</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>SetPublishedDateEffect</strong> - Sets the <code>published</code> timestamp</li>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.succeed)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Marks the organizer as succeeded</p>
+
+<ul>
+<li><strong>NotificationEffect: ActivityPublishedReviewerNotification</strong></li>
+</ul>
+<p>  - Recipient: Platform reviewers/staff</p>
+<p>  - Purpose: Inform reviewers that activity was published</p>
+
+<ul>
+<li><strong>NotificationEffect: ActivityPublishedNotification</strong></li>
+</ul>
+<p>  - Subject: "Your activity on {site_name} has been published!"</p>
+<p>  - Recipient: Activity owner</p>
+<p>  - Purpose: Confirm publication to owner</p>
+
+<p><strong>Impact:</strong> Publishing sets timestamps, succeeds organizer, and notifies both owner and reviewers.</p>
+
+<p>---</p>
+
+<p><h3>9. TransitionTrigger: ActivityStateMachine.cancel</h3></p>
+<p><strong>When:</strong> Owner or staff cancels a deed</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Fails the organizer when deed is cancelled</p>
+
+<p><strong>Impact:</strong> Cancellation fails the organizer.</p>
+
+<p>---</p>
+
+<p><h3>10. TransitionTrigger: ActivityStateMachine.expire</h3></p>
+<p><strong>When:</strong> Deed expires (automatic)</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Fails the organizer when deed expires</p>
+
+<p><strong>Impact:</strong> Expiration fails the organizer.</p>
+
+<p>---</p>
+
+<p><h3>11. TransitionTrigger: ActivityStateMachine.restore</h3></p>
+<p><strong>When:</strong> Deed is restored from rejected/cancelled/expired/deleted state</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.reset)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Resets the organizer back to 'new' state</p>
+
+<p><strong>Impact:</strong> Restoring the deed resets the organizer to allow re-attempt.</p>
+
+<p>---</p>
+
+<p><h3>12. TransitionTrigger: ActivityStateMachine.delete</h3></p>
+<p><strong>When:</strong> Owner deletes a deed in draft/needs_work state</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>RelatedTransitionEffect('organizer', OrganizerStateMachine.fail)</strong></li>
+</ul>
+<p>  - Condition: <code>has_organizer</code></p>
+<p>  - Fails the organizer when deed is deleted</p>
+
+<p><strong>Impact:</strong> Deletion fails the organizer.</p>
+
+<p>---</p>
+
+<p><h2 id="Inherited from ContributorTriggers">Inherited from ContributorTriggers</h2></p>
+
+<p><h3>1. ModelDeletedTrigger (for DeedParticipant)</h3></p>
+<p><strong>When:</strong> A DeedParticipant is deleted from the database</p>
+
+<p><strong>Effects:</strong></p>
+<ul>
+<li><strong>DeleteRelatedContributionsEffect</strong> - Cascades deletion to all related contribution objects</li>
+</ul>
+
+<p><strong>Impact:</strong> Deleting a participant cleans up their contribution records.</p>
+
+<p>---</p>
+
+<p><h2 id="Summary of Additional Notifications">Summary of Additional Notifications</h2></p>
+
+<p>Beyond the deed-specific notifications documented in the main lifecycle doc, these <strong>inherited notifications</strong> also apply:</p>
+
+<p><h3>To Activity Owner (5 additional):</h3></p>
+<ol>
+<li><strong>ActivitySubmittedNotification</strong> - "You submitted an activity on {site_name}"</li>
+<li><strong>ActivityApprovedNotification</strong> - "Your activity on {site_name} has been approved!"</li>
+<li><strong>ActivityNeedsWorkNotification</strong> - "The activity you submitted on {site_name} needs work"</li>
+<li><strong>ActivityPublishedNotification</strong> - "Your activity on {site_name} has been published!"</li>
+<li><strong>TermsOfServiceNotification</strong> - "Terms of service" (conditional)</li>
+</ol>
+
+<p><h3>To Reviewers/Staff (2 additional):</h3></p>
+<ol>
+<li><strong>ActivitySubmittedReviewerNotification</strong> - Deed submitted for review</li>
+<li><strong>ActivityPublishedReviewerNotification</strong> - Deed was published</li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="Key Condition Functions (Inherited)">Key Condition Functions (Inherited)</h2></p>
+
+<p><h3>should_approve_instantly(effect)</h3></p>
+<ul>
+<li>Returns <code>True</code> if:</li>
+</ul>
+<p>  - Reviewing is disabled in platform settings, OR</p>
+<p>  - The deed's initiative is already approved</p>
+<ul>
+<li>Used to determine if deed should skip review process</li>
+</ul>
+
+<p><h3>should_review(effect)</h3></p>
+<ul>
+<li>Returns <code>True</code> if:</li>
+</ul>
+<p>  - Reviewing is enabled in platform settings, OR</p>
+<p>  - The deed's initiative is not yet approved</p>
+<ul>
+<li>Used to determine if deed needs manual review</li>
+</ul>
+
+<p><h3>is_not_funding(effect)</h3></p>
+<ul>
+<li>Returns <code>True</code> if the activity is not a Funding activity</li>
+<li>Used to filter notifications specific to non-funding activities (like Deeds)</li>
+</ul>
+
+<p><h3>has_organizer(effect)</h3></p>
+<ul>
+<li>Returns <code>True</code> if the activity has an organizer object</li>
+<li>Used to conditionally trigger organizer state changes</li>
+</ul>
+
+<p><h3>should_mail_tos(effect)</h3></p>
+<ul>
+<li>Returns <code>True</code> if platform settings have "mail_terms_of_service" enabled</li>
+<li>Used to determine if ToS email should be sent</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Impact on State Diagrams">Impact on State Diagrams</h2></p>
+
+<p><h3>Enhanced Submit Flow:</h3></p>
+<p><pre><code class="language-text">draft → [submit] → submitted</p>
+<p>                     ↓</p>
+<p>            [if should_review]</p>
+<p>                     ↓</p>
+<p>            Send notifications to:</p>
+<p>              - Owner (confirmation)</p>
+<p>              - Reviewers (action needed)</p>
+<p>                     ↓</p>
+<p>            [if should_approve_instantly]</p>
+<p>                     ↓</p>
+<p>                  [auto_approve]</p>
+<p>                     ↓</p>
+<p>                    open</code></pre></p>
+
+<p><h3>Enhanced Publish Flow:</h3></p>
+<p><pre><code class="language-text">draft/submitted → [publish] → open</p>
+<p>                               ↓</p>
+<p>                      Set published date</p>
+<p>                               ↓</p>
+<p>                      Succeed organizer</p>
+<p>                               ↓</p>
+<p>                      Send notifications to:</p>
+<p>                        - Owner (confirmation)</p>
+<p>                        - Reviewers (info)</code></pre></p>
+
+<p><h3>Organizer Lifecycle (Related):</h3></p>
+<p><pre><code class="language-text">[Deed initiate] → Create organizer (new state)</p>
+<p>                        ↓</p>
+<p>[Deed publish/approve] → Organizer succeeds</p>
+<p>                        ↓</p>
+<p>[Deed cancel/expire/delete/reject] → Organizer fails</p>
+<p>                        ↓</p>
+<p>[Deed restore] → Organizer resets to new</code></pre></p>
+
+<p>---</p>
+
+<p><h2 id="Why This Matters">Why This Matters</h2></p>
+
+<p><h3>For Developers:</h3></p>
+<ul>
+<li><strong>Organizer objects</strong> are automatically created for every Deed</li>
+<li><strong>Automatic approval</strong> can bypass the review process based on settings</li>
+<li><strong>Multiple notification paths</strong> exist depending on platform configuration</li>
+<li><strong>Organizer state</strong> is tightly coupled to activity state</li>
+</ul>
+
+<p><h3>For Product/QA:</h3></p>
+<ul>
+<li>Activities may <strong>skip submission</strong> if reviewing is disabled</li>
+<li><strong>ToS emails</strong> are conditionally sent based on platform settings</li>
+<li><strong>Reviewers receive notifications</strong> when deeds are submitted</li>
+<li><strong>Organizer contributors</strong> track the activity owner's success/failure</li>
+</ul>
+
+<p><h3>For Testing:</h3></p>
+<ul>
+<li>Test with <strong>reviewing enabled/disabled</strong> to see different flows</li>
+<li>Verify <strong>organizer creation</strong> on deed creation</li>
+<li>Check <strong>reviewer notifications</strong> are sent appropriately</li>
+<li>Validate <strong>organizer state changes</strong> cascade correctly</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Integration with Deed-Specific Triggers">Integration with Deed-Specific Triggers</h2></p>
+
+<p>The <strong>DeedTriggers</strong> class uses:</p>
+<p><pre><code class="language-python">class DeedTriggers(ActivityTriggers):</p>
+<p>    triggers = ActivityTriggers.triggers + [</p>
+<p>        # Deed-specific triggers here</p>
+<p>    ]</code></pre></p>
+
+<p>This means:</p>
+<ul>
+<li>✅ All ActivityTriggers execute first</li>
+<li>✅ Then Deed-specific triggers execute</li>
+<li>✅ Both sets of effects are applied</li>
+<li>✅ Conditions are evaluated for each trigger</li>
+</ul>
+
+<p>Example: When a deed is published:</p>
+<ol>
+<li><strong>ActivityTriggers.publish</strong> runs:</li>
+</ul>
+<p>   - Sets published date</p>
+<p>   - Succeeds organizer</p>
+<p>   - Sends owner/reviewer notifications</p>
+<ol>
+<li><strong>DeedTriggers.publish</strong> runs:</li>
+</ol>
+<p>   - Conditionally reopens if not finished</p>
+<p>   - Conditionally succeeds if finished with participants</p>
+<p>   - Conditionally expires if finished without participants</p>
+
+<p>---</p>
+
+<p><h2 id="Complete Notification List for Deeds">Complete Notification List for Deeds</h2></p>
+
+<p><h3>Activity Owner Receives:</h3></p>
+<p>From ActivityTriggers:</p>
+<ol>
+<li>ActivitySubmittedNotification</li>
+<li>ActivityApprovedNotification</li>
+<li>ActivityNeedsWorkNotification</li>
+<li>ActivityPublishedNotification</li>
+<li>TermsOfServiceNotification (conditional)</li>
+</ol>
+
+<p>From DeedTriggers:</p>
+<ol>
+<li>ActivitySucceededNotification</li>
+<li>ActivityExpiredNotification</li>
+<li>ActivityRejectedNotification</li>
+<li>ActivityCancelledNotification</li>
+<li>ActivityRestoredNotification</li>
+<li>DeedDateChangedNotification</li>
+</ol>
+
+<p><strong>Total: Up to 11 different notifications</strong></p>
+
+<p><h3>Platform Reviewers/Staff Receive:</h3></p>
+<ol>
+<li>ActivitySubmittedReviewerNotification</li>
+<li>ActivityPublishedReviewerNotification</li>
+</ol>
+
+<p><h3>Participants Receive:</h3></p>
+<p>(From DeedParticipantTriggers)</p>
+<ol>
+<li>NewParticipantNotification</li>
+<li>ParticipantAddedNotification</li>
+<li>InactiveParticipantAddedNotification</li>
+<li>ManagerParticipantAddedOwnerNotification</li>
+<li>ParticipantJoinedNotification</li>
+<li>ParticipantWithdrewNotification</li>
+<li>ParticipantWithdrewConfirmationNotification</li>
+<li>ParticipantRemovedNotification</li>
+<li>ParticipantRemovedOwnerNotification</li>
+</ol>
+
+<p><strong>Total: 9 participant notifications</strong></p>
+
+<p>---</p>
+
+<p><h2 id="Files Referenced">Files Referenced</h2></p>
+
+<ul>
+<li><strong>Base Triggers:</strong> <code>bluebottle/activities/triggers.py</code> (lines 70-214)</li>
+<li><strong>Deed Triggers:</strong> <code>bluebottle/deeds/triggers.py</code></li>
+<li><strong>Base Messages:</strong> <code>bluebottle/activities/messages/activity_manager.py</code></li>
+<li><strong>Reviewer Messages:</strong> <code>bluebottle/activities/messages/reviewer.py</code></li>
+<li><strong>Deed Messages:</strong> <code>bluebottle/deeds/messages.py</code></li>
+</ul>
+
+<p>---</p>
+
+<p><strong>Generated:</strong> October 30, 2025  </p>
+<p><strong>Status:</strong> Supplemental documentation to DEED_LIFECYCLE.md  </p>
+<p><strong>Purpose:</strong> Document inherited behavior from base classes</p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

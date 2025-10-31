@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deed State: Needs Work</title>
+    <link rel="stylesheet" href="state_styles.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Overview</a>
+        
+        <header class="state-header needs-work-header">
+            <h1>Needs Work</h1>
+            <div class="state-value">needs_work</div>
+            <p class="state-description">
+                The activity needs changes before it can be approved.
+            </p>
+        </header>
+        <div class="section">
+            <h2>📤 Outgoing Transitions</h2>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">submit</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_submitted.html" class="state-link">submitted</a>
+                </div>
+                <div class="transition-description">
+                    The activity will be submitted for review.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - User is the activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>is_complete() - All required information has been submitted</code></li>
+                        <li><code>is_valid() - All fields passed validation and are correct</code></li>
+                        <li><code>can_submit() - The activity can be submitted</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card automatic">
+                <div class="transition-header">
+                    <span class="transition-name">auto_submit</span>
+                    <span class="transition-type">Automatic</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_submitted.html" class="state-link">submitted</a>
+                </div>
+                <div class="transition-description">
+                    The activity will be submitted for review automatically.
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>is_complete() - All required information has been submitted</code></li>
+                        <li><code>is_valid() - All fields passed validation and are correct</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">publish</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_open.html" class="state-link">open</a>
+                </div>
+                <div class="transition-description">
+                    Your activity will be open to contributions.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - User is the activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>is_complete() - All required information has been submitted</code></li>
+                        <li><code>is_valid() - All fields passed validation and are correct</code></li>
+                        <li><code>can_publish() - The activity can be published</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">approve</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_open.html" class="state-link">open</a>
+                </div>
+                <div class="transition-description">
+                    The activity will be published and visible in the frontend for people to contribute to.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_staff - User is a staff member or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>is_complete() - All required information has been submitted</code></li>
+                        <li><code>is_valid() - All fields passed validation and are correct</code></li>
+                        <li><code>should_auto_approve() - The activity should be approved automatically</code></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">reject</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_rejected.html" class="state-link">rejected</a>
+                </div>
+                <div class="transition-description">
+                    Reject if the activity does not align with your program or guidelines.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_staff - User is a staff member or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Fail organizer</div>
+                        </li>
+                        <li class="notification-item">
+                            <div class="effect-type">📧 NotificationEffect</div>
+                            <div class="notification-subject">Subject: Your activity "{title}" has been rejected</div>
+                            <div class="notification-recipient">Recipient: Activity owner</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">delete</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="deed_deleted.html" class="state-link">deleted</a>
+                </div>
+                <div class="transition-description">
+                    Delete the activity if you do not want it to be included in the report.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - User is the activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📥 Incoming Transitions</h2>
+            
+            <div class="incoming-item">
+                <strong>request_changes</strong> from <a href="deed_submitted.html">submitted</a> (Manual)
+                <p>The activity needs changes before it can be approved.</p>
+            </div>
+            
+            <div class="incoming-item">
+                <strong>restore</strong> from <a href="deed_rejected.html">rejected</a>, <a href="deed_cancelled.html">cancelled</a>, <a href="deed_deleted.html">deleted</a>, <a href="deed_expired.html">expired</a> (Manual)
+                <p>The activity status is changed to 'Needs work'.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

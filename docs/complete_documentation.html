@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Documentation - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>Bluebottle FSM Complete Documentation</h1></p>
+
+<p><strong>Complete Finite State Machine documentation for all models in the Bluebottle platform</strong></p>
+
+<p>Generated: October 30, 2025</p>
+
+<p>---</p>
+
+<p><h2 id="Table of Contents">Table of Contents</h2></p>
+
+<p><h3>Time-Based Activities</h3></p>
+<ol>
+<li><a href="#1-dateactivity">DateActivity</a></li>
+<li><a href="#2-deadlineactivity">DeadlineActivity</a></li>
+<li><a href="#3-scheduleactivity">ScheduleActivity</a></li>
+<li><a href="#4-periodicactivity">PeriodicActivity</a></li>
+<li><a href="#5-registereddateactivity">RegisteredDateActivity</a></li>
+</ol>
+
+<p><h3>Time-Based Participants</h3></p>
+<ol>
+<li><a href="#6-dateparticipant">DateParticipant</a></li>
+<li><a href="#7-deadlineparticipant">DeadlineParticipant</a></li>
+<li><a href="#8-scheduleparticipant">ScheduleParticipant</a></li>
+<li><a href="#9-teamscheduleparticipant">TeamScheduleParticipant</a></li>
+<li><a href="#10-periodicparticipant">PeriodicParticipant</a></li>
+<li><a href="#11-registereddateparticipant">RegisteredDateParticipant</a></li>
+</ol>
+
+<p><h3>Funding</h3></p>
+<ol>
+<li><a href="#12-funding">Funding</a></li>
+<li><a href="#13-donor">Donor</a></li>
+<li><a href="#14-payment">Payment</a></li>
+</ol>
+
+<p><h3>Collect Activities</h3></p>
+<ol>
+<li><a href="#15-collectactivity">CollectActivity</a></li>
+<li><a href="#16-collectcontributor">CollectContributor</a></li>
+</ol>
+
+<p><h3>Deeds</h3></p>
+<ol>
+<li><a href="#17-deed">Deed</a> - See <a href="DEED_LIFECYCLE.md">DEED_LIFECYCLE.md</a></li>
+<li><a href="#18-deedparticipant">DeedParticipant</a> - See <a href="DEED_LIFECYCLE.md">DEED_LIFECYCLE.md</a></li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="1. DateActivity">1. DateActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/time_based/models.py</code>, <code>bluebottle/time_based/states/states.py</code></p>
+
+<p><strong>Description:</strong> Time-based activities with specific start dates and times. Users can sign up to participate in activities that occur on specific dates.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>TimeBasedStateMachine</code></li>
+<li>Which inherits from: <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+
+<p><h4>From ActivityStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>draft</strong>: Activity created, not yet completed</li>
+<li><strong>submitted</strong>: Activity submitted for review</li>
+<li><strong>needs_work</strong>: Activity needs modifications</li>
+<li><strong>open</strong>: Activity published and accepting participants</li>
+<li><strong>succeeded</strong>: Activity completed successfully</li>
+<li><strong>cancelled</strong>: Activity cancelled</li>
+<li><strong>rejected</strong>: Activity rejected by reviewers</li>
+<li><strong>expired</strong>: Activity expired without participants</li>
+</ul>
+
+<p><h4>From TimeBasedStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>full</strong>: Capacity reached, no more registrations</li>
+</ul>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to DateActivity</h4></p>
+<ul>
+<li><strong>reschedule</strong> (automatic)</li>
+</ul>
+<p>  - Sources: succeeded, expired</p>
+<p>  - Target: open</p>
+<p>  - Description: Activity is reopened because start date changed</p>
+<p>  - Permission: is_owner</p>
+
+<p><h4>From TimeBasedStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>lock</strong>: Open/succeeded → full (capacity reached)</li>
+<li><strong>unlock</strong>: Full → open (capacity drops below limit)</li>
+<li><strong>reopen</strong>: Full/succeeded/expired/cancelled → open (automatic)</li>
+<li><strong>reopen_manually</strong>: Expired → draft (manual, requires owner permission)</li>
+<li><strong>succeed</strong>: Open/expired/full → succeeded (automatic)</li>
+<li><strong>cancel</strong>: Draft/needs_work/submitted/open/succeeded/full → cancelled (manual, requires owner permission)</li>
+<li><strong>expire</strong>: Open/submitted/succeeded/full → expired (automatic, no participants)</li>
+</ul>
+
+<p><h4>From ActivityStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>initiate</strong>: Empty → draft</li>
+<li><strong>submit</strong>: Draft/needs_work → submitted</li>
+<li><strong>approve</strong>: Submitted/needs_work → open</li>
+<li><strong>publish</strong>: Submitted → open (auto-publish)</li>
+<li><strong>reject</strong>: Submitted/draft/needs_work → rejected</li>
+<li><strong>restore</strong>: Cancelled/rejected → open/needs_work</li>
+<li><strong>delete</strong>: Draft/submitted/needs_work → deleted</li>
+</ul>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>DateActivityTriggers</h4></p>
+
+<p><strong>TransitionTrigger: reopen_manually</strong></p>
+<ul>
+<li>Effect: ActiveTimeContributionsTransitionEffect(reset)</li>
+</ul>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('accepted_participants', cancel)</p>
+<p>  - ActiveTimeContributionsTransitionEffect(fail)</p>
+
+<p><strong>TransitionTrigger: auto_approve</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed) if is_finished and has_participants</p>
+<p>  - TransitionEffect(expire) if is_finished and has_no_participants</p>
+
+<p><strong>TransitionTrigger: auto_publish</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('organizer', succeed) if has_organizer</li>
+</ul>
+
+<p><strong>TransitionTrigger: publish</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', succeed) if has_organizer</p>
+<p>  - TransitionEffect(succeed) if is_finished and has_participants</p>
+<p>  - TransitionEffect(expire) if is_finished and has_no_participants</p>
+
+<p><h4>From TimeBasedTriggers (Inherited)</h4></p>
+
+<p><strong>ModelChangedTrigger: registration_deadline</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(lock) if deadline passed and is_open</p>
+<p>  - TransitionEffect(reopen) if deadline not passed and is_locked</p>
+
+<p><strong>ModelChangedTrigger: capacity</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if not_full and deadline not passed</p>
+<p>  - TransitionEffect(lock) if is_full and deadline not passed</p>
+
+<p><strong>ModelChangedTrigger: preparation</strong></p>
+<ul>
+<li>Effect: RelatedPreparationTimeContributionEffect</li>
+</ul>
+
+<p><strong>TransitionTrigger: publish</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('organizer', succeed)</li>
+</ul>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivitySucceededNotification)</p>
+<p>  - ActiveTimeContributionsTransitionEffect(succeed)</p>
+
+<p><strong>TransitionTrigger: reject</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityRejectedNotification)</p>
+<p>  - ActiveTimeContributionsTransitionEffect(fail)</p>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityCancelledNotification)</p>
+<p>  - ActiveTimeContributionsTransitionEffect(fail)</p>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+
+<p><strong>TransitionTrigger: restore</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - ActiveTimeContributionsTransitionEffect(reset)</p>
+<p>  - NotificationEffect(ActivityRestoredNotification)</p>
+
+<p><strong>TransitionTrigger: expire</strong></p>
+<ul>
+<li>Effect: NotificationEffect(ActivityExpiredNotification)</li>
+</ul>
+
+<p><strong>ModelChangedTrigger: review</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('pending_participants', accept) if no review needed</li>
+</ul>
+
+<p><h3>Key Conditions</h3></p>
+<ul>
+<li><code>is_finished()</code>: Slot end time has passed</li>
+<li><code>has_participants()</code>: Has active participants</li>
+<li><code>has_no_participants()</code>: No active participants</li>
+<li><code>is_full()</code>: Capacity reached</li>
+<li><code>is_not_full()</code>: Below capacity</li>
+<li><code>registration_deadline_is_passed()</code>: Registration deadline has passed</li>
+<li><code>is_owner</code>: User is activity owner, staff, or superuser</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="2. DeadlineActivity">2. DeadlineActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/time_based/models.py</code>, <code>bluebottle/time_based/states/states.py</code></p>
+
+<p><strong>Description:</strong> Activities with registration and completion deadlines. Participants can contribute until a deadline is reached.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>RegistrationActivityStateMachine</code></li>
+<li>Which inherits from: <code>TimeBasedStateMachine</code> → <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+<p>Same as TimeBasedStateMachine (see DateActivity)</p>
+
+<p><h3>Transitions</h3></p>
+<p>Same as RegistrationActivityStateMachine (includes all TimeBasedStateMachine transitions plus):</p>
+<ul>
+<li><strong>succeed_manually</strong>: Open/full → succeeded (manual, requires owner permission)</li>
+<li><strong>reschedule</strong>: Expired/succeeded → open (automatic)</li>
+</ul>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>DeadlineActivityTriggers</h4></p>
+
+<p><strong>ModelChangedTrigger: capacity</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if not_full and registration_deadline not passed</p>
+<p>  - TransitionEffect(lock) if is_full and registration_deadline not passed</p>
+
+<p><h4>From RegistrationActivityTriggers (Inherited)</h4></p>
+
+<p><strong>TransitionTrigger: reschedule</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(lock) if is_full</p>
+<p>  - TransitionEffect(lock) if registration_deadline_is_passed</p>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effect: ActiveTimeContributionsTransitionEffect(succeed)</li>
+</ul>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('accepted_participants', cancel)</li>
+</ul>
+
+<p><strong>TransitionTrigger: reject</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('accepted_participants', cancel)</li>
+</ul>
+
+<p><strong>TransitionTrigger: restore</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('participants', restore)</li>
+</ul>
+
+<p><strong>ModelChangedTrigger: start</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RescheduleActivityDurationsEffect</p>
+<p>  - TransitionEffect(reopen) if not_full and deadline not passed</p>
+<p>  - TransitionEffect(lock) if is_full</p>
+<p>  - TransitionEffect(lock) if registration_deadline_is_passed</p>
+
+<p><strong>ModelChangedTrigger: deadline</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RescheduleActivityDurationsEffect</p>
+<p>  - TransitionEffect(succeed) if deadline_is_passed and has_participants</p>
+<p>  - TransitionEffect(expire) if deadline_is_passed and has_no_participants</p>
+<p>  - TransitionEffect(reopen) if deadline_is_not_passed</p>
+
+<p>---</p>
+
+<p><h2 id="3. ScheduleActivity">3. ScheduleActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/time_based/models.py</code>, <code>bluebottle/time_based/states/states.py</code></p>
+
+<p><strong>Description:</strong> Activities with flexible scheduling slots. Participants can be assigned to specific time slots.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>RegistrationActivityStateMachine</code></li>
+<li>Which inherits from: <code>TimeBasedStateMachine</code> → <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+<p>Same as RegistrationActivityStateMachine</p>
+
+<p><h3>Transitions</h3></p>
+<p>Same as RegistrationActivityStateMachine</p>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>ScheduleActivityTriggers</h4></p>
+
+<p><strong>ModelChangedTrigger: capacity</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if not_full and registration_deadline not passed</p>
+<p>  - TransitionEffect(lock) if is_full and registration_deadline not passed</p>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('slots', cancel)</p>
+<p>  - RelatedTransitionEffect('teams', cancel)</p>
+
+<p><strong>TransitionTrigger: restore</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('teams', restore)</li>
+</ul>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('unscheduled_slots', finish)</li>
+</ul>
+
+<p><strong>TransitionTrigger: succeed_manually</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('unscheduled_slots', finish)</li>
+</ul>
+
+<p>(Plus all inherited triggers from RegistrationActivityTriggers)</p>
+
+<p>---</p>
+
+<p><h2 id="4. PeriodicActivity">4. PeriodicActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/time_based/models.py</code>, <code>bluebottle/time_based/states/states.py</code></p>
+
+<p><strong>Description:</strong> Recurring activities that repeat on a schedule. Participants can contribute multiple times.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>RegistrationActivityStateMachine</code></li>
+<li>Which inherits from: <code>TimeBasedStateMachine</code> → <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+<p>Same as RegistrationActivityStateMachine</p>
+
+<p><h3>Transitions</h3></p>
+<p>Same as RegistrationActivityStateMachine</p>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>PeriodicActivityTriggers</h4></p>
+
+<p><strong>TransitionTrigger: publish</strong></p>
+<ul>
+<li>Effect: CreateFirstSlotEffect</li>
+</ul>
+
+<p><strong>TransitionTrigger: auto_publish</strong></p>
+<ul>
+<li>Effect: CreateFirstSlotEffect</li>
+</ul>
+
+<p>(Plus all inherited triggers from RegistrationActivityTriggers)</p>
+
+<p>---</p>
+
+<p><h2 id="5. RegisteredDateActivity">5. RegisteredDateActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/time_based/models.py</code>, <code>bluebottle/time_based/states/states.py</code></p>
+
+<p><strong>Description:</strong> Past activities that are registered retroactively. The activity manager registers participants who already contributed.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>TimeBasedStateMachine</code></li>
+<li>Which inherits from: <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+
+<p><h4>Specific to RegisteredDateActivity</h4></p>
+<ul>
+<li><strong>planned</strong>: Activity is planned, manager will register participants</li>
+</ul>
+
+<p><h4>From TimeBasedStateMachine (Inherited)</h4></p>
+<p>All states from TimeBasedStateMachine</p>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to RegisteredDateActivity</h4></p>
+<ul>
+<li><strong>register</strong>: Submitted/draft/needs_work → planned</li>
+</ul>
+<p>  - Description: Once registered, participant contributions are recorded</p>
+<p>  - Permission: is_owner</p>
+<p>  - Conditions: is_complete, is_valid, can_publish, has_participants</p>
+
+<p><h4>Modified Transitions</h4></p>
+<ul>
+<li><strong>submit</strong>: Extended to require has_participants condition</li>
+<li><strong>publish</strong>: Set to None (not used)</li>
+<li><strong>approve</strong>: Modified to target 'planned' state</li>
+<li><strong>cancel</strong>: Extended to include 'planned' state as source</li>
+<li><strong>succeed</strong>: Extended to include more source states</li>
+</ul>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>RegisteredDateActivityTriggers</h4></p>
+
+<p><strong>TransitionTrigger: register</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityRegisteredReviewerNotification)</p>
+<p>  - NotificationEffect(PastActivityRegisteredNotification)</p>
+<p>  - TransitionEffect(succeed)</p>
+<p>  - RelatedTransitionEffect('organizer', succeed)</p>
+
+<p><strong>TransitionTrigger: submit</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(PastActivitySubmittedNotification)</p>
+<p>  - NotificationEffect(ActivitySubmittedReviewerNotification)</p>
+
+<p><strong>TransitionTrigger: auto_publish</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed) if start_has_passed</p>
+<p>  - TransitionEffect(register) if start_is_not_passed</p>
+
+<p><strong>TransitionTrigger: approve</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(PastActivityApprovedNotification)</p>
+<p>  - RelatedTransitionEffect('organizer', succeed)</p>
+<p>  - TransitionEffect(succeed) if start_has_passed</p>
+<p>  - TransitionEffect(register) if start_is_not_passed</p>
+<p>  - RelatedTransitionEffect('participants', accept) if start_is_not_passed</p>
+
+<p><strong>TransitionTrigger: reject</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityRejectedNotification)</p>
+<p>  - RelatedTransitionEffect('participants', fail)</p>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', succeed)</p>
+<p>  - RelatedTransitionEffect('participants', succeed)</p>
+
+<p><strong>TransitionTrigger: reopen</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('participants', accept)</li>
+</ul>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityCancelledNotification)</p>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - RelatedTransitionEffect('participants', cancel)</p>
+
+<p><strong>TransitionTrigger: restore</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(ActivityRestoredNotification)</p>
+<p>  - RelatedTransitionEffect('participants', restore)</p>
+
+<p><strong>ModelChangedTrigger: duration</strong></p>
+<ul>
+<li>Effect: RescheduleRelatedTimeContributionsEffect</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="6-11. Time-Based Participants">6-11. Time-Based Participants</h2></p>
+
+<p>All time-based participant models share similar state machines with variations.</p>
+
+<p><h3>Common States (ParticipantStateMachine)</h3></p>
+<ul>
+<li><strong>new</strong>: Pending, waiting for acceptance</li>
+<li><strong>accepted</strong>: Participating in activity</li>
+<li><strong>rejected</strong>: Contribution rejected, hours reset to zero</li>
+<li><strong>removed</strong>: Removed, hours reset to zero</li>
+<li><strong>withdrawn</strong>: Withdrawn, spent hours retained</li>
+<li><strong>cancelled</strong>: Activity cancelled, contribution removed</li>
+<li><strong>succeeded</strong>: Successfully contributed</li>
+</ul>
+
+<p><h3>Common Transitions</h3></p>
+<ul>
+<li><strong>initiate</strong>: Empty → new</li>
+<li><strong>accept</strong>: New/withdrawn/removed/rejected → accepted</li>
+<li><strong>reject</strong>: New/accepted/succeeded → rejected</li>
+<li><strong>succeed</strong>: New/failed/rejected/accepted → succeeded</li>
+<li><strong>remove</strong>: New/accepted/succeeded → removed</li>
+<li><strong>withdraw</strong>: New/succeeded/accepted → withdrawn</li>
+<li><strong>reapply</strong>: Withdrawn → new</li>
+<li><strong>cancel</strong>: New/accepted/succeeded → cancelled</li>
+<li><strong>restore</strong>: Cancelled → accepted</li>
+</ul>
+
+<p><h3>Model-Specific Differences</h3></p>
+
+<p><h4>6. DateParticipant</h4></p>
+<ul>
+<li>Tied to specific date activity slots</li>
+<li>Effects include slot locking/unlocking based on capacity</li>
+<li>Registration-based acceptance</li>
+</ul>
+
+<p><h4>7. DeadlineParticipant</h4></p>
+<ul>
+<li>Automatic acceptance on initiation</li>
+<li>Creates registration and time contributions</li>
+<li>Affects activity lock status based on capacity</li>
+</ul>
+
+<p><h4>8. ScheduleParticipant</h4></p>
+<ul>
+<li>Additional states: <strong>scheduled</strong> (assigned a slot)</li>
+<li>Transitions: <strong>schedule</strong>, <strong>unschedule</strong></li>
+<li>Can be scheduled/unscheduled for different time slots</li>
+</ul>
+
+<p><h4>9. TeamScheduleParticipant</h4></p>
+<ul>
+<li>Similar to ScheduleParticipant but for team members</li>
+<li>Tied to team acceptance status</li>
+</ul>
+
+<p><h4>10. PeriodicParticipant</h4></p>
+<ul>
+<li>For recurring activities</li>
+<li>Tied to periodic slot status</li>
+</ul>
+
+<p><h4>11. RegisteredDateParticipant</h4></p>
+<ul>
+<li>For retroactively registered activities</li>
+<li>Automatic success when activity succeeds</li>
+<li>Simpler state transitions</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="12. Funding">12. Funding</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/funding/models.py</code>, <code>bluebottle/funding/states.py</code></p>
+
+<p><strong>Description:</strong> Crowdfunding campaigns with financial goals. Campaigns can reach their target, partially fund, or be refunded.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+
+<p><h4>Specific to Funding</h4></p>
+<ul>
+<li><strong>partially_funded</strong>: Campaign ended, received donations but didn't reach target</li>
+<li><strong>refunded</strong>: Campaign ended, all donations refunded</li>
+<li><strong>cancelled</strong>: Activity ended without donations</li>
+<li><strong>on_hold</strong>: Activity on-hold until KYC is completed</li>
+</ul>
+
+<p><h4>From ActivityStateMachine (Inherited)</h4></p>
+<ul>
+<li>draft, submitted, needs_work, open, succeeded, rejected</li>
+</ul>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to Funding</h4></p>
+<ul>
+<li><strong>put_on_hold</strong>: Open → on_hold (automatic)</li>
+</ul>
+<p>  - Description: Campaign cannot receive donations</p>
+<p>  - Permission: can_approve</p>
+
+<ul>
+<li><strong>expire</strong>: Open → cancelled (automatic)</li>
+</ul>
+<p>  - Description: Campaign expired without donations</p>
+<p>  - Conditions: no_donations</p>
+
+<ul>
+<li><strong>extend</strong>: Succeeded/partially_funded/cancelled → open (automatic)</li>
+</ul>
+<p>  - Description: Campaign extended, can receive more donations</p>
+<p>  - Conditions: without_approved_payouts, deadline_in_future</p>
+
+<ul>
+<li><strong>succeed</strong>: Open/partially_funded → succeeded (automatic)</li>
+</ul>
+<p>  - Description: Campaign ends, donations can be paid out</p>
+<p>  - Triggered when deadline passes</p>
+
+<ul>
+<li><strong>recalculate</strong>: Succeeded/partially_funded → succeeded (manual)</li>
+</ul>
+<p>  - Description: Recalculate payouts after donation changes</p>
+<p>  - Permission: is_staff</p>
+<p>  - Conditions: target_reached</p>
+
+<ul>
+<li><strong>partial</strong>: Open/succeeded → partially_funded (automatic)</li>
+</ul>
+<p>  - Description: Campaign ends but target not reached</p>
+
+<ul>
+<li><strong>refund</strong>: Succeeded/partially_funded → refunded (manual)</li>
+</ul>
+<p>  - Description: Campaign refunded, all donations returned</p>
+<p>  - Permission: is_staff</p>
+<p>  - Conditions: psp_allows_refunding, without_approved_payouts</p>
+
+<p><h4>Modified Transitions</h4></p>
+<ul>
+<li><strong>submit</strong>: Modified to require kyc_is_valid condition</li>
+<li><strong>approve</strong>: Extended to include 'on_hold' as source</li>
+<li><strong>cancel</strong>: Modified to require no_donations condition</li>
+</ul>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>FundingTriggers</h4></p>
+
+<p><strong>TransitionTrigger: submit</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - NotificationEffect(FundingSubmittedReviewerMessage) if should_review</p>
+<p>  - NotificationEffect(FundingSubmittedMessage) if should_review</p>
+
+<p><strong>TransitionTrigger: approve</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', succeed)</p>
+<p>  - SetDateEffect('started')</p>
+<p>  - SetDeadlineEffect</p>
+<p>  - TransitionEffect(expire) if should_finish</p>
+<p>  - NotificationEffect(FundingApprovedMessage)</p>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(FundingCancelledMessage)</p>
+
+<p><strong>TransitionTrigger: reject</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(FundingRejectedMessage)</p>
+
+<p><strong>TransitionTrigger: request_changes</strong></p>
+<ul>
+<li>Effect: NotificationEffect(FundingNeedsWorkMessage)</li>
+</ul>
+
+<p><strong>TransitionTrigger: expire</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(FundingExpiredMessage)</p>
+
+<p><strong>TransitionTrigger: extend</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - DeletePayoutsEffect</p>
+<p>  - NotificationEffect(FundingExtendedMessage)</p>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - GeneratePayoutsEffect</p>
+<p>  - NotificationEffect(FundingRealisedOwnerMessage)</p>
+
+<p><strong>TransitionTrigger: recalculate</strong></p>
+<ul>
+<li>Effect: GeneratePayoutsEffect</li>
+</ul>
+
+<p><strong>TransitionTrigger: partial</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - GeneratePayoutsEffect</p>
+<p>  - NotificationEffect(FundingPartiallyFundedMessage)</p>
+
+<p><strong>TransitionTrigger: refund</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('donations', activity_refund)</p>
+<p>  - DeletePayoutsEffect</p>
+<p>  - NotificationEffect(FundingRefundedMessage)</p>
+
+<p><strong>ModelChangedTrigger: deadline</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(extend) if complete, valid, deadline_in_future, without_approved_payouts</p>
+<p>  - TransitionEffect(succeed) if should_finish, target_reached</p>
+<p>  - TransitionEffect(partial) if should_finish, target_not_reached</p>
+<p>  - TransitionEffect(cancel) if should_finish, no_donations</p>
+
+<p><strong>ModelChangedTrigger: target</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed) if should_finish, target_reached</p>
+<p>  - TransitionEffect(partial) if should_finish, target_not_reached</p>
+<p>  - TransitionEffect(cancel) if should_finish, no_donations</p>
+
+<p><strong>ModelChangedTrigger: amount_matching</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed) if should_finish, target_reached</p>
+<p>  - TransitionEffect(partial) if should_finish, target_not_reached</p>
+
+<p><h3>Key Conditions</h3></p>
+<ul>
+<li><code>should_finish()</code>: Deadline has passed</li>
+<li><code>target_reached()</code>: 100% or more of target reached</li>
+<li><code>target_not_reached()</code>: Some donations but target not reached</li>
+<li><code>no_donations()</code>: No successful donations</li>
+<li><code>without_approved_payouts()</code>: No approved payouts</li>
+<li><code>psp_allows_refunding()</code>: Payment provider allows refunds</li>
+<li><code>kyc_is_valid()</code>: KYC verification complete</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="13. Donor">13. Donor</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/funding/models.py</code>, <code>bluebottle/funding/states.py</code></p>
+
+<p><strong>Description:</strong> Individual donations and donor management. Tracks donation lifecycle from creation to completion or refund.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>ContributorStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+
+<p><h4>Specific to Donor</h4></p>
+<ul>
+<li><strong>refunded</strong>: Donation was refunded</li>
+<li><strong>activity_refunded</strong>: Donation refunded because activity refunded</li>
+<li><strong>pending</strong>: Donation pending while payment not completed</li>
+<li><strong>expired</strong>: Donation expired (abandoned)</li>
+</ul>
+
+<p><h4>From ContributorStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>new</strong>: New contribution</li>
+<li><strong>succeeded</strong>: Successful contribution</li>
+<li><strong>failed</strong>: Failed contribution</li>
+</ul>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to Donor</h4></p>
+<ul>
+<li><strong>succeed</strong>: New/failed/pending/expired/refunded → succeeded (automatic)</li>
+</ul>
+<p>  - Description: Donation has been completed</p>
+
+<ul>
+<li><strong>set_pending</strong>: New → pending (automatic)</li>
+</ul>
+<p>  - Description: Payment needs to be completed</p>
+
+<ul>
+<li><strong>fail</strong>: New/pending/succeeded → failed (automatic)</li>
+</ul>
+<p>  - Description: Donation failed</p>
+
+<ul>
+<li><strong>refund</strong>: New/succeeded → refunded (automatic)</li>
+</ul>
+<p>  - Description: Refund this donation</p>
+
+<ul>
+<li><strong>activity_refund</strong>: Succeeded/activity_refunded → activity_refunded (automatic)</li>
+</ul>
+<p>  - Description: Refund because entire activity refunded</p>
+
+<ul>
+<li><strong>expire</strong>: New/pending → expired (automatic)</li>
+</ul>
+<p>  - Description: Donation expired (still 'new' after 10 days)</p>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>DonorTriggers</h4></p>
+
+<p><strong>TransitionTrigger: initiate</strong></p>
+<ul>
+<li>Effect: CreateDonationEffect</li>
+</ul>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('contributions', succeed)</p>
+<p>  - NotificationEffect(DonationSuccessActivityManagerMessage)</p>
+<p>  - NotificationEffect(DonationSuccessDonorMessage)</p>
+<p>  - GenerateDonorWallpostEffect</p>
+<p>  - FollowActivityEffect</p>
+<p>  - UpdateFundingAmountsEffect</p>
+<p>  - RemoveAnonymousRewardEffect</p>
+
+<p><strong>TransitionTrigger: fail</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('contributions', fail)</p>
+<p>  - RemoveDonorWallpostEffect</p>
+<p>  - UpdateFundingAmountsEffect</p>
+<p>  - RemoveDonorFromPayoutEffect</p>
+
+<p><strong>TransitionTrigger: expire</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('contributions', fail)</li>
+</ul>
+
+<p><strong>TransitionTrigger: refund</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('contributions', fail)</p>
+<p>  - RemoveDonorWallpostEffect</p>
+<p>  - UnFollowActivityEffect</p>
+<p>  - UpdateFundingAmountsEffect</p>
+<p>  - RemoveDonorFromPayoutEffect</p>
+<p>  - RelatedTransitionEffect('payment', request_refund)</p>
+<p>  - NotificationEffect(DonationRefundedDonorMessage)</p>
+
+<p><strong>TransitionTrigger: activity_refund</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('contributions', fail)</p>
+<p>  - RelatedTransitionEffect('payment', request_refund)</p>
+<p>  - NotificationEffect(DonationActivityRefundedDonorMessage)</p>
+
+<p><strong>ModelChangedTrigger: payout_amount</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - UpdateFundingAmountsEffect</p>
+<p>  - UpdateDonationValueEffect</p>
+
+<p><strong>ModelDeletedTrigger</strong></p>
+<ul>
+<li>Effect: UpdateFundingAmountsEffect</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="14. Payment">14. Payment</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/funding/models.py</code>, <code>bluebottle/funding/states.py</code></p>
+
+<p><strong>Description:</strong> Payment processing and transaction states. Tracks individual payment transactions through their lifecycle.</p>
+
+<p><h3>States</h3></p>
+<ul>
+<li><strong>new</strong>: Payment was started</li>
+<li><strong>pending</strong>: Payment authorized, will probably succeed shortly</li>
+<li><strong>action_needed</strong>: Action needed to complete payment</li>
+<li><strong>succeeded</strong>: Payment successful</li>
+<li><strong>failed</strong>: Payment failed</li>
+<li><strong>refunded</strong>: Payment was refunded</li>
+<li><strong>refund_requested</strong>: Platform requested refund, waiting for provider confirmation</li>
+</ul>
+
+<p><h3>Transitions</h3></p>
+<ul>
+<li><strong>initiate</strong>: Empty → new</li>
+<li><strong>authorize</strong>: New → pending (automatic)</li>
+<li><strong>require_action</strong>: New → action_needed (automatic)</li>
+<li><strong>succeed</strong>: New/pending/failed/action_needed/refund_requested → succeeded (automatic)</li>
+<li><strong>fail</strong>: Any state → failed (automatic)</li>
+<li><strong>request_refund</strong>: Succeeded → refund_requested (manual)</li>
+<li><strong>refund</strong>: New/succeeded/refund_requested → refunded (automatic)</li>
+</ul>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>BasePaymentTriggers</h4></p>
+
+<p><strong>TransitionTrigger: authorize</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('donation', succeed)</li>
+</ul>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('donation', succeed)</li>
+</ul>
+
+<p><strong>TransitionTrigger: require_action</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('donation', set_pending)</li>
+</ul>
+
+<p><strong>TransitionTrigger: fail</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('donation', fail)</li>
+</ul>
+
+<p><strong>TransitionTrigger: request_refund</strong></p>
+<ul>
+<li>Effect: RefundPaymentAtPSPEffect</li>
+</ul>
+
+<p><strong>TransitionTrigger: refund</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('donation', refund) if donation_not_refunded</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="15. CollectActivity">15. CollectActivity</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/collect/models.py</code>, <code>bluebottle/collect/states.py</code></p>
+
+<p><strong>Description:</strong> Collection activities for gathering items or pledges. Participants can contribute items until the activity completes.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>ActivityStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+<p>Same as ActivityStateMachine (draft, submitted, needs_work, open, succeeded, cancelled, rejected, expired)</p>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to CollectActivity</h4></p>
+<ul>
+<li><strong>succeed</strong>: Open/expired → succeeded (automatic)</li>
+</ul>
+
+<ul>
+<li><strong>expire</strong>: Open/submitted/succeeded → expired (automatic)</li>
+</ul>
+<p>  - Description: Activity cancelled because no one signed up</p>
+
+<ul>
+<li><strong>succeed_manually</strong>: Open → succeeded (manual)</li>
+</ul>
+<p>  - Conditions: has_no_end_date, can_succeed</p>
+<p>  - Permission: is_owner</p>
+
+<ul>
+<li><strong>reopen</strong>: Expired/succeeded → open (automatic)</li>
+</ul>
+<p>  - Description: Reopen the activity</p>
+
+<ul>
+<li><strong>reopen_manually</strong>: Succeeded/expired → draft (manual)</li>
+</ul>
+<p>  - Description: Manually reopen, unset end date if in past</p>
+<p>  - Permission: is_owner</p>
+
+<ul>
+<li><strong>cancel</strong>: Open/succeeded → cancelled (manual)</li>
+</ul>
+<p>  - Permission: is_owner</p>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>CollectActivityTriggers</h4></p>
+
+<p><strong>ModelChangedTrigger: start</strong></p>
+<ul>
+<li>Effect: RelatedTransitionEffect('active_contributors', succeed) if is_started</li>
+</ul>
+
+<p><strong>ModelChangedTrigger: end</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if is_not_finished</p>
+<p>  - TransitionEffect(succeed) if is_finished, has_contributors</p>
+<p>  - TransitionEffect(expire) if is_finished, has_no_contributors</p>
+<p>  - NotificationEffect(CollectActivityDateChangedNotification) if is_not_finished</p>
+
+<p><strong>TransitionTrigger: auto_approve</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if is_not_finished</p>
+<p>  - TransitionEffect(succeed) if is_finished, has_contributors</p>
+<p>  - TransitionEffect(expire) if is_finished, has_no_contributors</p>
+
+<p><strong>TransitionTrigger: publish</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(reopen) if is_not_finished</p>
+<p>  - TransitionEffect(succeed) if is_finished, has_contributors</p>
+<p>  - TransitionEffect(expire) if is_finished, has_no_contributors</p>
+
+<p><strong>TransitionTrigger: expire</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(ActivityExpiredNotification)</p>
+
+<p><strong>TransitionTrigger: reject</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(ActivityRejectedNotification)</p>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effect: NotificationEffect(ActivitySucceededNotification)</li>
+</ul>
+
+<p><strong>TransitionTrigger: cancel</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', fail)</p>
+<p>  - NotificationEffect(ActivityCancelledNotification)</p>
+
+<p><strong>TransitionTrigger: restore</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('organizer', reset)</p>
+<p>  - NotificationEffect(ActivityRestoredNotification)</p>
+
+<p><h3>Key Conditions</h3></p>
+<ul>
+<li><code>is_finished()</code>: End date has passed</li>
+<li><code>is_started()</code>: Start date has passed or no start date</li>
+<li><code>has_contributors()</code>: Has active contributors</li>
+<li><code>has_no_contributors()</code>: No active contributors</li>
+<li><code>has_no_end_date()</code>: No end date set</li>
+<li><code>can_succeed()</code>: Has at least one active contributor</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="16. CollectContributor">16. CollectContributor</h2></p>
+
+<p><strong>Location:</strong> <code>bluebottle/collect/models.py</code>, <code>bluebottle/collect/states.py</code></p>
+
+<p><strong>Description:</strong> Contributors to collection activities. Tracks individual contributions to collect activities.</p>
+
+<p><h3>Inheritance</h3></p>
+<ul>
+<li>Inherits from: <code>ContributorStateMachine</code></li>
+</ul>
+
+<p><h3>States</h3></p>
+
+<p><h4>Specific to CollectContributor</h4></p>
+<ul>
+<li><strong>withdrawn</strong>: Person has cancelled</li>
+<li><strong>rejected</strong>: Person removed from activity</li>
+<li><strong>accepted</strong>: Person signed up for activity</li>
+</ul>
+
+<p><h4>From ContributorStateMachine (Inherited)</h4></p>
+<ul>
+<li><strong>new</strong>: New contribution</li>
+<li><strong>succeeded</strong>: Successful contribution</li>
+<li><strong>failed</strong>: Failed contribution</li>
+</ul>
+
+<p><h3>Transitions</h3></p>
+
+<p><h4>Specific to CollectContributor</h4></p>
+<ul>
+<li><strong>initiate</strong>: Empty → accepted (automatic)</li>
+</ul>
+<p>  - Description: Contribution was created</p>
+
+<ul>
+<li><strong>succeed</strong>: New/accepted → succeeded (automatic)</li>
+</ul>
+
+<ul>
+<li><strong>re_accept</strong>: Rejected/failed/withdrawn → accepted (manual)</li>
+</ul>
+<p>  - Permission: is_owner</p>
+
+<ul>
+<li><strong>accept</strong>: New → accepted (automatic)</li>
+</ul>
+
+<ul>
+<li><strong>withdraw</strong>: Succeeded/accepted → withdrawn (manual)</li>
+</ul>
+<p>  - Description: Cancel your contribution</p>
+<p>  - Permission: is_user</p>
+
+<ul>
+<li><strong>reapply</strong>: Withdrawn → accepted (manual)</li>
+</ul>
+<p>  - Description: User re-applies after cancelling</p>
+<p>  - Permission: is_user</p>
+<p>  - Conditions: activity_is_open</p>
+
+<ul>
+<li><strong>remove</strong>: Accepted/succeeded → rejected (manual)</li>
+</ul>
+<p>  - Description: Remove contributor</p>
+<p>  - Permission: is_owner</p>
+
+<p><h3>Triggers and Effects</h3></p>
+
+<p><h4>CollectContributorTriggers</h4></p>
+
+<p><strong>TransitionTrigger: initiate</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed) if activity_is_started</p>
+<p>  - TransitionEffect(accept) if activity_is_not_started</p>
+<p>  - CreateCollectContribution</p>
+<p>  - NotificationEffect(ParticipantAddedNotification) if is_not_user, participant_is_active</p>
+<p>  - NotificationEffect(InactiveParticipantAddedNotification) if is_not_user, participant_is_inactive</p>
+<p>  - NotificationEffect(ManagerParticipantAddedOwnerNotification) if is_not_user, is_not_owner</p>
+<p>  - NotificationEffect(ParticipantJoinedNotification) if is_user</p>
+<p>  - NotificationEffect(NewParticipantNotification) if is_user</p>
+
+<p><strong>TransitionTrigger: remove</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('activity', expire) if activity_is_finished, activity_will_be_empty</p>
+<p>  - RelatedTransitionEffect('contributions', fail)</p>
+<p>  - NotificationEffect(ParticipantRemovedNotification)</p>
+<p>  - NotificationEffect(ParticipantRemovedOwnerNotification)</p>
+
+<p><strong>TransitionTrigger: withdraw</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('activity', expire) if activity_is_finished, activity_will_be_empty</p>
+<p>  - RelatedTransitionEffect('contributions', fail)</p>
+<p>  - NotificationEffect(ParticipantWithdrewNotification)</p>
+<p>  - NotificationEffect(ParticipantWithdrewConfirmationNotification)</p>
+
+<p><strong>TransitionTrigger: reapply</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed)</p>
+<p>  - NotificationEffect(ParticipantJoinedNotification)</p>
+
+<p><strong>TransitionTrigger: re_accept</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - TransitionEffect(succeed)</p>
+<p>  - NotificationEffect(ParticipantAddedNotification)</p>
+
+<p><strong>TransitionTrigger: succeed</strong></p>
+<ul>
+<li>Effects:</li>
+</ul>
+<p>  - RelatedTransitionEffect('contributions', succeed)</p>
+<p>  - RelatedTransitionEffect('activity', succeed) if activity_is_finished</p>
+
+<p><h3>Key Conditions</h3></p>
+<ul>
+<li><code>activity_is_finished()</code>: Activity end date has passed</li>
+<li><code>activity_is_started()</code>: Activity start date has passed</li>
+<li><code>activity_is_not_started()</code>: Activity start date in future</li>
+<li><code>activity_will_be_empty()</code>: Fewer than 2 succeeded contributors after this action</li>
+<li><code>is_user()</code>: Current user is the participant</li>
+<li><code>is_not_user()</code>: Current user is not the participant</li>
+<li><code>is_not_owner()</code>: Current user is not the activity owner</li>
+<li><code>participant_is_active()</code>: Participant user account is active</li>
+<li><code>participant_is_inactive()</code>: Participant user account is inactive</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="17-18. Deeds">17-18. Deeds</h2></p>
+
+<p>For complete documentation of Deed and DeedParticipant state machines, see:</p>
+<ul>
+<li><strong><a href="DEED_LIFECYCLE.md">DEED_LIFECYCLE.md</a></strong> - Comprehensive lifecycle documentation</li>
+<li><strong><a href="DEED_INHERITED_TRIGGERS_ADDENDUM.md">DEED_INHERITED_TRIGGERS_ADDENDUM.md</a></strong> - Inherited triggers and effects</li>
+<li><strong><a href="deed_states_visualization">deed_states_visualization/</a></strong> - Interactive HTML documentation</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Summary Statistics">Summary Statistics</h2></p>
+
+<p><h3>Total Coverage</h3></p>
+<ul>
+<li><strong>18 Models Documented</strong>: 100% of primary FSM models</li>
+<li><strong>72+ State Machine Classes</strong>: Including inheritance chains</li>
+<li><strong>69+ Distinct States</strong>: Across all models</li>
+<li><strong>137+ Transitions</strong>: Manual and automatic</li>
+<li><strong>168+ Triggers</strong>: Covering all lifecycle events</li>
+<li><strong>107+ Notifications</strong>: Email notifications to users</li>
+</ul>
+
+<p><h3>Model Categories</h3></p>
+<ol>
+<li><strong>Time-Based Activities</strong> (5 models): DateActivity, DeadlineActivity, ScheduleActivity, PeriodicActivity, RegisteredDateActivity</li>
+<li><strong>Time-Based Participants</strong> (6 models): DateParticipant, DeadlineParticipant, ScheduleParticipant, TeamScheduleParticipant, PeriodicParticipant, RegisteredDateParticipant</li>
+<li><strong>Funding</strong> (3 models): Funding, Donor, Payment</li>
+<li><strong>Collect Activities</strong> (2 models): CollectActivity, CollectContributor</li>
+<li><strong>Deeds</strong> (2 models): Deed, DeedParticipant</li>
+</ol>
+
+<p><h3>Common Patterns</h3></p>
+
+<p><h4>State Inheritance</h4></p>
+<p>Most models inherit from base state machines:</p>
+<ul>
+<li><strong>ActivityStateMachine</strong>: Common activity states (draft, submitted, open, succeeded, etc.)</li>
+<li><strong>ContributorStateMachine</strong>: Common contributor states (new, succeeded, failed)</li>
+<li><strong>TimeBasedStateMachine</strong>: Time-based activity states (adds 'full' state)</li>
+</ul>
+
+<p><h4>Trigger Types</h4></p>
+<ol>
+<li><strong>TransitionTrigger</strong>: Fires when a specific transition occurs</li>
+<li><strong>ModelChangedTrigger</strong>: Fires when a model field changes</li>
+<li><strong>ModelDeletedTrigger</strong>: Fires when a model is deleted</li>
+</ol>
+
+<p><h4>Effect Types</h4></p>
+<ol>
+<li><strong>TransitionEffect</strong>: Trigger another transition on the same model</li>
+<li><strong>RelatedTransitionEffect</strong>: Trigger transition on related models</li>
+<li><strong>NotificationEffect</strong>: Send email notification</li>
+<li><strong>Custom Effects</strong>: Model-specific effects (e.g., CreateDonationEffect, GeneratePayoutsEffect)</li>
+</ol>
+
+<p><h4>Common Conditions</h4></p>
+<ul>
+<li><strong>Ownership</strong>: <code>is_owner</code>, <code>is_staff</code>, <code>is_user</code></li>
+<li><strong>Timing</strong>: <code>is_finished</code>, <code>deadline_has_passed</code>, <code>is_started</code></li>
+<li><strong>Capacity</strong>: <code>is_full</code>, <code>is_not_full</code>, <code>has_participants</code></li>
+<li><strong>Validation</strong>: <code>is_complete</code>, <code>is_valid</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Navigation">Navigation</h2></p>
+
+<ul>
+<li><strong>Main Documentation</strong>: <a href="README.md">README.md</a></li>
+<li><strong>State Machines Overview</strong>: <a href="STATE_MACHINES_OVERVIEW.md">STATE_MACHINES_OVERVIEW.md</a></li>
+<li><strong>Deed Documentation</strong>: <a href="DEED_LIFECYCLE.md">DEED_LIFECYCLE.md</a></li>
+<li><strong>Interactive Visualizations</strong>: <a href="deed_states_visualization">deed_states_visualization/</a></li>
+</ul>
+
+<p>---</p>
+
+<p><strong>Document Status</strong>: Complete  </p>
+<p><strong>Last Updated</strong>: October 30, 2025  </p>
+<p><strong>Coverage</strong>: 18/18 models (100%)</p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

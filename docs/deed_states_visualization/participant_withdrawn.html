@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeedParticipant State: Withdrawn</title>
+    <link rel="stylesheet" href="state_styles.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Overview</a>
+        
+        <header class="state-header withdrawn-header">
+            <h1>Withdrawn</h1>
+            <div class="state-value">withdrawn</div>
+            <p class="state-description">
+                This person has withdrawn from the activity.
+            </p>
+        </header>
+        <div class="section">
+            <h2>📤 Outgoing Transitions</h2>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">reapply</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="participant_accepted.html" class="state-link">accepted</a>
+                </div>
+                <div class="transition-description">
+                    Reapply after previously withdrawing.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_user - The participant themselves</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>✅ Conditions</h4>
+                    <ul>
+                        <li><code>activity_is_open - Activity status is "open"</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Reset effort contributions</div>
+                        </li>
+                        <li class="effect-item">
+                            <div class="effect-type">ConditionalTransitionEffect</div>
+                            <div>Succeed immediately if activity already started</div>
+                            <div class="notification-condition">Condition: activity_did_start</div>
+                        </li>
+                        <li class="effect-item">
+                            <div class="effect-type">FollowActivityEffect</div>
+                            <div>User follows the activity</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="transition-card manual">
+                <div class="transition-header">
+                    <span class="transition-name">accept</span>
+                    <span class="transition-type">Manual</span>
+                </div>
+                <div class="transition-to">
+                    → <a href="participant_accepted.html" class="state-link">accepted</a>
+                </div>
+                <div class="transition-description">
+                    Reaccept user after previously withdrawing or rejecting.
+                </div>
+                
+                <div class="details-section">
+                    <h4>🔐 Permission Required</h4>
+                    <ul>
+                        <li><code>is_owner - Activity owner, staff, or superuser</code></li>
+                    </ul>
+                </div>
+                
+                <div class="details-section">
+                    <h4>⚡ Effects</h4>
+                    <ul class="effects-list">
+                        <li class="effect-item">
+                            <div class="effect-type">ConditionalTransitionEffect</div>
+                            <div>Succeed immediately if activity already started</div>
+                            <div class="notification-condition">Condition: activity_did_start</div>
+                        </li>
+                        <li class="effect-item">
+                            <div class="effect-type">RelatedTransitionEffect</div>
+                            <div>Succeed activity if finished and was expired</div>
+                            <div class="notification-condition">Condition: activity_is_finished AND activity_expired</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📥 Incoming Transitions</h2>
+            
+            <div class="incoming-item">
+                <strong>withdraw</strong> from <a href="participant_succeeded.html">succeeded</a>, <a href="participant_accepted.html">accepted</a> (Manual)
+                <p>Stop your participation in the activity.</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎯 Triggers</h2>
+            <div class="triggers-section">
+                
+                <div class="trigger-item">
+                    <div class="trigger-type">TransitionTrigger: withdraw</div>
+                    <div>When participant withdraws</div>
+                    <ul>
+                        <li>Fail effort contributions</li>
+                        <li>Send ParticipantWithdrewNotification to owner</li>
+                        <li>Send ParticipantWithdrewConfirmationNotification to participant</li>
+                        <li>Unfollow activity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Machines Overview - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>Bluebottle Platform - State Machines Overview</h1></p>
+
+<p><h2 id="Summary">Summary</h2></p>
+
+<p>The Bluebottle platform uses <strong>finite state machines (FSM)</strong> to manage the lifecycle of activities, participants, and related entities. This document provides an overview of all state machines in the system.</p>
+
+<p><h2 id="Documentation Status">Documentation Status</h2></p>
+
+<p><h3>✅ Completed</h3></p>
+<ul>
+<li><strong>Deeds</strong> - Full HTML visualization with all states, transitions, triggers, and effects</li>
+</ul>
+<p>  - <code>deed_states_visualization/</code> directory with 16 HTML pages</p>
+<p>  - Comprehensive markdown documentation in <code>DEED_LIFECYCLE.md</code></p>
+<p>  - Inherited triggers documented in <code>DEED_INHERITED_TRIGGERS_ADDENDUM.md</code></p>
+
+<p><h3>⏳ Pending Documentation</h3></p>
+
+<p><h2 id="Activity Types (6 groups, 11 models)">Activity Types (6 groups, 11 models)</h2></p>
+
+<p><h3>1. Time-Based Activities ⭐ Most Complex</h3></p>
+<p><strong>Description:</strong> Activities with dates, deadlines, or schedules where volunteers contribute their time</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>DateActivity</code> - Activities on specific dates</li>
+<li><code>DeadlineActivity</code> - Activities with deadlines</li>
+<li><code>ScheduleActivity</code> - Activities with flexible schedules</li>
+<li><code>PeriodicActivity</code> - Recurring activities</li>
+<li><code>PeriodActivity</code> - Activities during a period</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/time_based/states/states.py</code></li>
+<li>Triggers: <code>bluebottle/time_based/triggers/activities.py</code></li>
+<li>Messages: <code>bluebottle/time_based/messages.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>TimeBasedStateMachine</code> (base)</li>
+<li><code>DateStateMachine</code></li>
+<li><code>RegistrationActivityStateMachine</code></li>
+<li><code>DeadlineActivityStateMachine</code></li>
+<li><code>ScheduleActivityStateMachine</code></li>
+<li><code>PeriodicActivityStateMachine</code></li>
+<li><code>RegisteredDateActivityStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>2. Funding/Crowdfunding ⭐ High Priority</h3></p>
+<p><strong>Description:</strong> Crowdfunding campaigns where people donate money</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>Funding</code> - Crowdfunding campaign</li>
+<li><code>Donor</code> - Donor contributor</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/funding/states.py</code></li>
+<li>Triggers: <code>bluebottle/funding/triggers/funding.py</code></li>
+<li>Messages: <code>bluebottle/funding/messages.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>FundingStateMachine</code></li>
+<li><code>DonorStateMachine</code></li>
+<li><code>BasePaymentStateMachine</code></li>
+<li><code>PayoutStateMachine</code></li>
+<li><code>BankAccountStateMachine</code></li>
+<li><code>PayoutAccountStateMachine</code></li>
+<li><code>DonationStateMachine</code></li>
+</ul>
+
+<p><strong>Additional Payment Integrations:</strong></p>
+<ul>
+<li>Stripe, Flutterwave, Lipisha, Telesom, Vitepay, Pledge</li>
+</ul>
+
+<p>---</p>
+
+<p><h3>3. Deeds ✅ COMPLETED</h3></p>
+<p><strong>Description:</strong> Simple activities where people sign up to participate</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>Deed</code> - Deed activity</li>
+<li><code>DeedParticipant</code> - Deed participant</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/deeds/states.py</code></li>
+<li>Triggers: <code>bluebottle/deeds/triggers.py</code></li>
+<li>Messages: <code>bluebottle/deeds/messages.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>DeedStateMachine</code></li>
+<li><code>DeedParticipantStateMachine</code></li>
+</ul>
+
+<p><strong>Documentation:</strong></p>
+<ul>
+<li>✅ HTML visualization: <code>deed_states_visualization/</code></li>
+<li>✅ Markdown docs: <code>DEED_LIFECYCLE.md</code>, <code>DEED_INHERITED_TRIGGERS_ADDENDUM.md</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>4. Collect Activities</h3></p>
+<p><strong>Description:</strong> Activities where people collect and contribute items</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>CollectActivity</code> - Collection activity</li>
+<li><code>CollectContributor</code> - Collection contributor</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/collect/states.py</code></li>
+<li>Triggers: <code>bluebottle/collect/triggers.py</code></li>
+<li>Messages: <code>bluebottle/collect/messages.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>CollectActivityStateMachine</code></li>
+<li><code>CollectContributorStateMachine</code></li>
+<li><code>CollectContributionStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>5. Grant Applications</h3></p>
+<p><strong>Description:</strong> Grant application and management system</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>GrantApplication</code> - Grant application</li>
+<li><code>GrantDonor</code> - Grant donor</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/grant_management/states.py</code></li>
+<li>Triggers: <code>bluebottle/grant_management/triggers.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>GrantApplicationStateMachine</code></li>
+<li><code>GrantDonorStateMachine</code></li>
+<li><code>GrantPaymentStateMachine</code></li>
+<li><code>GrantPayoutStateMachine</code></li>
+<li><code>BankAccountStateMachine</code></li>
+<li><code>PayoutAccountStateMachine</code></li>
+<li><code>GrantDepositStateMachine</code></li>
+<li><code>LedgerItemStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>6. Initiatives</h3></p>
+<p><strong>Description:</strong> Parent initiatives that contain activities</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>Initiative</code> - Initiative/Campaign</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/initiatives/states.py</code></li>
+<li>Triggers: <code>bluebottle/initiatives/triggers.py</code></li>
+<li>Messages: <code>bluebottle/initiatives/messages.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>ReviewStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Participant/Contributor Types (3 groups, 14 models)">Participant/Contributor Types (3 groups, 14 models)</h2></p>
+
+<p><h3>7. Time-Based Participants ⭐ High Priority</h3></p>
+<p><strong>Description:</strong> Participants in time-based activities</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>DateParticipant</code> - Date activity participant</li>
+<li><code>DeadlineParticipant</code> - Deadline activity participant</li>
+<li><code>ScheduleParticipant</code> - Schedule activity participant</li>
+<li><code>TeamScheduleParticipant</code> - Team schedule participant</li>
+<li><code>PeriodicParticipant</code> - Periodic activity participant</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/time_based/states/participants.py</code></li>
+<li>Triggers: <code>bluebottle/time_based/triggers/participants.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>ParticipantStateMachine</code> (base)</li>
+<li><code>RegistrationParticipantStateMachine</code></li>
+<li><code>DeadlineParticipantStateMachine</code></li>
+<li><code>RegisteredDateParticipantStateMachine</code></li>
+<li><code>ScheduleParticipantStateMachine</code></li>
+<li><code>TeamScheduleParticipantStateMachine</code></li>
+<li><code>PeriodicParticipantStateMachine</code></li>
+<li><code>DateParticipantStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>8. Teams</h3></p>
+<p><strong>Description:</strong> Team management for team-based activities</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>Team</code> - Team</li>
+<li><code>TeamMember</code> - Team member</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/time_based/states/teams.py</code></li>
+<li>Triggers: <code>bluebottle/time_based/triggers/teams.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>TeamStateMachine</code></li>
+<li><code>TeamMemberStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h3>9. Activity Slots</h3></p>
+<p><strong>Description:</strong> Time slots for scheduled activities</p>
+
+<p><strong>Models:</strong></p>
+<ul>
+<li><code>Slot</code> - Activity slot</li>
+<li><code>PeriodicSlot</code> - Periodic slot</li>
+<li><code>ScheduleSlot</code> - Schedule slot</li>
+<li><code>TeamScheduleSlot</code> - Team schedule slot</li>
+<li><code>DateActivitySlot</code> - Date activity slot</li>
+</ul>
+
+<p><strong>Files:</strong></p>
+<ul>
+<li>States: <code>bluebottle/time_based/states/slots.py</code></li>
+<li>Triggers: <code>bluebottle/time_based/triggers/slots.py</code></li>
+</ul>
+
+<p><strong>State Machine Classes:</strong></p>
+<ul>
+<li><code>SlotStateMachine</code></li>
+<li><code>PeriodicSlotStateMachine</code></li>
+<li><code>ScheduleSlotStateMachine</code></li>
+<li><code>TeamScheduleSlotStateMachine</code></li>
+<li><code>DateActivitySlotStateMachine</code></li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Base/Shared State Machines">Base/Shared State Machines</h2></p>
+
+<p><h3>Activity Base Classes</h3></p>
+<p>Located in <code>bluebottle/activities/states.py</code>:</p>
+<ul>
+<li><code>ActivityStateMachine</code> - Base for all activities</li>
+<li><code>ContributorStateMachine</code> - Base for all contributors/participants</li>
+<li><code>ContributionStateMachine</code> - Base for all contributions</li>
+<li><code>OrganizerStateMachine</code> - Activity organizers</li>
+<li><code>EffortContributionStateMachine</code> - Time-based contributions</li>
+</ul>
+
+<p><h3>Supporting Classes</h3></p>
+<ul>
+<li><code>TimeContributionStateMachine</code> - Time-based contributions</li>
+<li><code>RegistrationStateMachine</code> - Registration management</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Statistics">Statistics</h2></p>
+
+<p><h3>Overall Counts</h3></p>
+<ul>
+<li><strong>Total State Machine Classes:</strong> 72+</li>
+<li><strong>Total Activity Types:</strong> 6 main groups</li>
+<li><strong>Total Participant Types:</strong> 3 main groups</li>
+<li><strong>Total Models with State Machines:</strong> 25+</li>
+<li><strong>Documented:</strong> 2 (Deed, DeedParticipant)</li>
+<li><strong>Pending:</strong> 23+</li>
+</ul>
+
+<p><h3>Priority Levels</h3></p>
+
+<p><h4>⭐⭐⭐ Critical (Most Used)</h4></p>
+<ol>
+<li>Time-Based Activities (5 models)</li>
+<li>Time-Based Participants (5 models)</li>
+<li>Funding & Donor (2 models)</li>
+</ol>
+
+<p><h4>⭐⭐ High Priority</h4></p>
+<ol>
+<li>Collect Activities (2 models)</li>
+<li>Teams & Slots (7 models)</li>
+</ol>
+
+<p><h4>⭐ Medium Priority</h4></p>
+<ol>
+<li>Grant Applications (2 models)</li>
+<li>Initiatives (1 model)</li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="Documentation Approach">Documentation Approach</h2></p>
+
+<p><h3>What We Did for Deeds (Template for Others)</h3></p>
+
+<ol>
+<li><strong>Markdown Documentation</strong> (<code>DEED_LIFECYCLE.md</code>)</li>
+</ol>
+<p>   - All states with descriptions</p>
+<p>   - All transitions with conditions & permissions</p>
+<p>   - All triggers with effects</p>
+<p>   - All notifications with subjects & recipients</p>
+<p>   - Lifecycle diagrams</p>
+<p>   - Key behaviors and patterns</p>
+
+<ol>
+<li><strong>Inherited Behavior</strong> (<code>DEED_INHERITED_TRIGGERS_ADDENDUM.md</code>)</li>
+</ol>
+<p>   - Documented base class triggers</p>
+<p>   - Additional notifications</p>
+<p>   - Organizer lifecycle</p>
+<p>   - Integration patterns</p>
+
+<ol>
+<li><strong>HTML Visualization</strong> (<code>deed_states_visualization/</code>)</li>
+</ol>
+<p>   - Interactive index page</p>
+<p>   - Individual page per state (15 total)</p>
+<p>   - Clickable state transitions</p>
+<p>   - Color-coded transition types</p>
+<p>   - Detailed effects and notifications</p>
+<p>   - Professional, condensed styling</p>
+
+<ol>
+<li><strong>Generator Scripts</strong></li>
+</ol>
+<p>   - <code>generate_deed_state_pages.py</code></p>
+<p>   - <code>generate_participant_state_pages.py</code></p>
+<p>   - Reusable for updates</p>
+
+<p><h3>Recommended Next Steps</h3></p>
+
+<p><h4>Phase 1: Time-Based Activities (Highest Complexity)</h4></p>
+<p>Since time-based activities are the most complex with multiple variants:</p>
+
+<ol>
+<li>Create <code>TIME_BASED_LIFECYCLE.md</code></li>
+<li>Document each activity type state machine</li>
+<li>Document participant state machines</li>
+<li>Create HTML visualization</li>
+<li>Generator scripts</li>
+</ol>
+
+<p><strong>Estimated:</strong> ~300-400 lines of states/transitions to document</p>
+
+<p><h4>Phase 2: Funding Activities</h4></p>
+<ol>
+<li>Create <code>FUNDING_LIFECYCLE.md</code></li>
+<li>Document Funding and Donor state machines</li>
+<li>Document payment state machines</li>
+<li>Create HTML visualization</li>
+<li>Generator scripts</li>
+</ol>
+
+<p><strong>Estimated:</strong> ~200-300 lines of states/transitions</p>
+
+<p><h4>Phase 3: Collect & Other Activities</h4></p>
+<ol>
+<li>Create individual lifecycle docs</li>
+<li>HTML visualizations</li>
+<li>Generator scripts</li>
+</ol>
+
+<p><strong>Estimated:</strong> ~100-150 lines each</p>
+
+<p><h4>Phase 4: Unified Index</h4></p>
+<p>Create a master index page that links to all activity type visualizations:</p>
+<ul>
+<li><code>state_machines_visualization/index.html</code></li>
+<li>Links to deed, time-based, funding, collect, etc.</li>
+<li>Overview of all activity types</li>
+<li>Search/filter functionality</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Files Structure">Files Structure</h2></p>
+
+<p><pre><code class="language-text">bluebottle/</p>
+<p>├── state_machines_visualization/         ← NEW: Master index</p>
+<p>│   ├── index.html                        ← Links to all visualizations</p>
+<p>│   ├── deed/                             ← Existing (rename from deed_states_visualization)</p>
+<p>│   ├── time_based/                       ← NEW</p>
+<p>│   ├── funding/                          ← NEW</p>
+<p>│   ├── collect/                          ← NEW</p>
+<p>│   ├── grants/                           ← NEW</p>
+<p>│   ├── initiatives/                      ← NEW</p>
+<p>│   └── shared_styles.css                 ← Shared styling</p>
+<p>│</p>
+<p>├── documentation/                        ← NEW: Markdown docs</p>
+<p>│   ├── README.md                         ← Overview</p>
+<p>│   ├── DEED_LIFECYCLE.md                 ← Existing</p>
+<p>│   ├── TIME_BASED_LIFECYCLE.md           ← NEW</p>
+<p>│   ├── FUNDING_LIFECYCLE.md              ← NEW</p>
+<p>│   ├── COLLECT_LIFECYCLE.md              ← NEW</p>
+<p>│   ├── GRANTS_LIFECYCLE.md               ← NEW</p>
+<p>│   └── INITIATIVES_LIFECYCLE.md          ← NEW</p>
+<p>│</p>
+<p>└── generators/                           ← NEW: Generator scripts</p>
+<p>    ├── generate_master_index.py</p>
+<p>    ├── generate_deed_states.py           ← Existing</p>
+<p>    ├── generate_time_based_states.py     ← NEW</p>
+<p>    ├── generate_funding_states.py        ← NEW</p>
+<p>    └── ...</code></pre></p>
+
+<p>---</p>
+
+<p><h2 id="Complexity Estimates">Complexity Estimates</h2></p>
+
+<p><h3>Lines of Documentation (Approximate)</h3></p>
+
+<p>| Activity Type | States | Transitions | Triggers | Notifications | Total Lines |</p>
+<p>|---------------|--------|-------------|----------|---------------|-------------|</p>
+<p>| Deeds (done) | 9 | 17 | 18 | 15 | ~600 |</p>
+<p>| Time-Based | 15+ | 30+ | 40+ | 25+ | ~1000 |</p>
+<p>| Funding | 12+ | 25+ | 30+ | 20+ | ~800 |</p>
+<p>| Collect | 8 | 15 | 20 | 12 | ~500 |</p>
+<p>| Grants | 10+ | 20+ | 25+ | 15+ | ~700 |</p>
+<p>| Others | 15+ | 30+ | 35+ | 20+ | ~600 |</p>
+<p>| <strong>TOTAL</strong> | <strong>69+</strong> | <strong>137+</strong> | <strong>168+</strong> | <strong>107+</strong> | <strong>~4200</strong> |</p>
+
+<p><h3>Time Estimates</h3></p>
+
+<ul>
+<li>Markdown documentation: ~2 hours per activity type</li>
+<li>HTML generation scripts: ~3 hours per activity type  </li>
+<li>Testing and refinement: ~1 hour per activity type</li>
+<li><strong>Total per activity type: ~6 hours</strong></li>
+<li><strong>Total for all types: ~30-40 hours</strong></li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Benefits of Complete Documentation">Benefits of Complete Documentation</h2></p>
+
+<p><h3>For Developers</h3></p>
+<ul>
+<li>Quick reference for all state transitions</li>
+<li>Understanding of cascade effects</li>
+<li>Clear visibility of notification triggers</li>
+<li>Easier debugging of state-related issues</li>
+</ul>
+
+<p><h3>For Product Owners</h3></p>
+<ul>
+<li>Complete understanding of user journeys</li>
+<li>Visibility into all notifications sent</li>
+<li>Clear picture of permission requirements</li>
+<li>Documentation of business rules</li>
+</ul>
+
+<p><h3>For QA/Testing</h3></p>
+<ul>
+<li>Comprehensive test scenarios</li>
+<li>All edge cases documented</li>
+<li>State transition validation</li>
+<li>Notification verification</li>
+</ul>
+
+<p><h3>For New Team Members</h3></p>
+<ul>
+<li>Self-service learning resource</li>
+<li>Visual state flow understanding</li>
+<li>Complete system behavior documentation</li>
+<li>Reduces onboarding time</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="Next Action Items">Next Action Items</h2></p>
+
+<p><h3>Immediate (This Session)</h3></p>
+<ul>
+<li>[x] Create overview analysis</li>
+<li>[ ] Decide on priority order</li>
+<li>[ ] Start with highest priority type</li>
+</ul>
+
+<p><h3>Short Term</h3></p>
+<ul>
+<li>[ ] Document Time-Based Activities</li>
+<li>[ ] Document Funding Activities</li>
+<li>[ ] Create unified master index</li>
+</ul>
+
+<p><h3>Long Term</h3></p>
+<ul>
+<li>[ ] Document all remaining activity types</li>
+<li>[ ] Create search/filter functionality</li>
+<li>[ ] Add visual state diagrams (SVG)</li>
+<li>[ ] API integration for live data</li>
+</ul>
+
+<p>---</p>
+
+<p><strong>Last Updated:</strong> October 30, 2025  </p>
+<p><strong>Status:</strong> Planning phase - 2/25 models documented (8%)</p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

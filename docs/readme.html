@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>Bluebottle FSM Documentation</h1></p>
+
+<p><strong>Complete documentation for all Finite State Machine models in the Bluebottle platform</strong></p>
+
+<p>---</p>
+
+<p><h2 id="🚀 Quick Start">🚀 Quick Start</h2></p>
+
+<p><h3>1. <strong>Open the Master Portal</strong> (Recommended!)</h3></p>
+
+<p><pre><code class="language-bash"># Open in browser:</p>
+<p>open fsm_documentation_portal.html</code></pre></p>
+
+<p><strong>Features:</strong></p>
+<ul>
+<li>🔍 Search all 18 models</li>
+<li>📊 Visual model cards with complexity indicators</li>
+<li>🔗 Direct links to documentation</li>
+<li>📱 Mobile-friendly interface</li>
+</ul>
+
+<p><h3>2. <strong>View Complete Documentation</strong></h3></p>
+
+<p><pre><code class="language-bash"># Open the comprehensive guide:</p>
+<p>open FSM_COMPLETE_DOCUMENTATION.md</code></pre></p>
+
+<p><strong>Includes:</strong></p>
+<ul>
+<li>All 18 models fully documented</li>
+<li>States, transitions, triggers, effects</li>
+<li>Notifications with subjects and recipients</li>
+<li>Complete inheritance chains</li>
+</ul>
+
+<p><h3>3. <strong>Try Interactive Example</strong></h3></p>
+
+<p><pre><code class="language-bash"># Open Deed interactive visualization:</p>
+<p>open deed_states_visualization/index.html</code></pre></p>
+
+<p><strong>Features:</strong></p>
+<ul>
+<li>Clickable state transitions</li>
+<li>Visual effects and notifications</li>
+<li>Professional design</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="📚 Documentation Files">📚 Documentation Files</h2></p>
+
+<p><h3>Main Documentation</h3></p>
+
+<p>| File | Description | Size |</p>
+<p>|------|-------------|------|</p>
+<p>| <strong>fsm_documentation_portal.html</strong> | Master portal with search | NEW! |</p>
+<p>| <strong>FSM_COMPLETE_DOCUMENTATION.md</strong> | All 18 models documented | 33KB |</p>
+<p>| <strong>FSM_QUICK_START.md</strong> | 5-minute guide | 9KB |</p>
+<p>| <strong>FSM_DOCUMENTATION_SUMMARY.md</strong> | Project overview | 13KB |</p>
+<p>| <strong>DEED_LIFECYCLE.md</strong> | Detailed Deed docs | 22KB |</p>
+<p>| <strong>STATE_MACHINES_OVERVIEW.md</strong> | Architecture analysis | 21KB |</p>
+
+<p><h3>Interactive Visualizations</h3></p>
+
+<p>| Directory | Models | Pages |</p>
+<p>|-----------|--------|-------|</p>
+<p>| <strong>deed_states_visualization/</strong> | Deed, DeedParticipant | 16 HTML pages |</p>
+
+<p><h3>Generators</h3></p>
+
+<p>| Script | Purpose |</p>
+<p>|--------|---------|</p>
+<p>| <strong>generate_master_fsm_portal.py</strong> | Master portal |</p>
+<p>| <strong>generate_deed_state_pages.py</strong> | Deed HTML generator |</p>
+<p>| <strong>generate_participant_state_pages.py</strong> | Participant HTML |</p>
+<p>| <strong>generate_universal_fsm_docs.py</strong> | Universal generator |</p>
+
+<p>---</p>
+
+<p><h2 id="📊 Coverage">📊 Coverage</h2></p>
+
+<p><h3>✅ 100% Complete (18/18 Models)</h3></p>
+
+<p><strong>Time-Based Activities</strong> (5 models)</p>
+<ul>
+<li>DateActivity, DeadlineActivity, ScheduleActivity, PeriodicActivity, RegisteredDateActivity</li>
+</ul>
+
+<p><strong>Time-Based Participants</strong> (6 models)</p>
+<ul>
+<li>DateParticipant, DeadlineParticipant, ScheduleParticipant, TeamScheduleParticipant, PeriodicParticipant, RegisteredDateParticipant</li>
+</ul>
+
+<p><strong>Funding</strong> (3 models)</p>
+<ul>
+<li>Funding, Donor, Payment</li>
+</ul>
+
+<p><strong>Collect Activities</strong> (2 models)</p>
+<ul>
+<li>CollectActivity, CollectContributor</li>
+</ul>
+
+<p><strong>Deeds</strong> (2 models)</p>
+<ul>
+<li>Deed, DeedParticipant</li>
+</ul>
+
+<p><h3>Documentation Statistics</h3></p>
+
+<ul>
+<li><strong>72+</strong> State Machine Classes</li>
+<li><strong>69+</strong> Distinct States</li>
+<li><strong>137+</strong> Transitions</li>
+<li><strong>168+</strong> Triggers</li>
+<li><strong>107+</strong> Notifications</li>
+<li><strong>~60,000</strong> Lines of documentation</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="🎯 Usage Guide">🎯 Usage Guide</h2></p>
+
+<p><h3>For Developers</h3></p>
+
+<p><strong>Understanding a model:</strong></p>
+<p><pre><code class="language-bash">1. Open fsm_documentation_portal.html</p>
+<ol>
+<li>Search for your model</li>
+<li>Click "View Documentation"</li>
+<li>Review states, transitions, triggers</code></pre></li>
+</ol>
+
+<p><strong>Debugging state issues:</strong></p>
+<p><pre><code class="language-bash">1. Find model in FSM_COMPLETE_DOCUMENTATION.md</p>
+<ol>
+<li>Check current state</li>
+<li>Verify transition conditions</li>
+<li>Check required permissions</code></pre></li>
+</ol>
+
+<p><h3>For Product Managers</h3></p>
+
+<p><strong>Understanding user flows:</strong></p>
+<p><pre><code class="language-bash">1. Open fsm_documentation_portal.html</p>
+<ol>
+<li>Find relevant model</li>
+<li>Review state descriptions</li>
+<li>Follow transition paths</li>
+<li>Check notification triggers</code></pre></li>
+</ol>
+
+<p><h3>For QA/Testing</h3></p>
+
+<p><strong>Test coverage:</strong></p>
+<p><pre><code class="language-bash">1. Review all transitions for model</p>
+<ol>
+<li>Test all conditions (true/false)</li>
+<li>Verify notifications sent</li>
+<li>Test permission checks</code></pre></li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="🔍 Finding Information">🔍 Finding Information</h2></p>
+
+<p><h3>By Model Name</h3></p>
+
+<ol>
+<li>Open <code>fsm_documentation_portal.html</code></li>
+<li>Use search box (e.g., "funding", "deadline")</li>
+<li>Click model card</li>
+<li>View documentation</li>
+</ol>
+
+<p><h3>By Feature</h3></p>
+
+<ol>
+<li>Open <code>FSM_COMPLETE_DOCUMENTATION.md</code></li>
+<li>Use Ctrl+F / Cmd+F</li>
+<li>Search for: state name, transition, notification</li>
+</ol>
+
+<p><h3>By Category</h3></p>
+
+<ol>
+<li>Open <code>fsm_documentation_portal.html</code></li>
+<li>Scroll to category section</li>
+<li>Browse models in category</li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="🛠️ Generating HTML for Other Models">🛠️ Generating HTML for Other Models</h2></p>
+
+<p>To create interactive HTML visualization (like Deeds) for any model:</p>
+
+<p><pre><code class="language-bash"># Step 1: Copy the template</p>
+<p>cp generate_deed_state_pages.py generate_YOUR_MODEL_pages.py</p>
+
+<p><h1>Step 2: Edit dictionaries (lines 10-800)</h1></p>
+<p><h1>- Replace DEED_STATES with YOUR_MODEL_STATES</h1></p>
+<p><h1>- Copy data from FSM_COMPLETE_DOCUMENTATION.md</h1></p>
+<p><h1>- Format as Python dictionaries</h1></p>
+
+<p><h1>Step 3: Run generator</h1></p>
+<p>source ~/.virtualenvs/bluebottle/bin/activate</p>
+<p>python generate_YOUR_MODEL_pages.py</p>
+
+<p><h1>Output: your_model_visualization/ directory</code></pre></h1></p>
+
+<p>See <code>GENERATE_COLLECT_DOCS.md</code> for detailed instructions.</p>
+
+<p>---</p>
+
+<p><h2 id="📖 Documentation Formats">📖 Documentation Formats</h2></p>
+
+<p><h3>1. Master Portal (HTML)</h3></p>
+<ul>
+<li><strong>File:</strong> <code>fsm_documentation_portal.html</code></li>
+<li><strong>Best for:</strong> Overview, browsing, discovery</li>
+<li><strong>Features:</strong> Search, visual cards, quick links</li>
+</ul>
+
+<p><h3>2. Complete Guide (Markdown)</h3></p>
+<ul>
+<li><strong>File:</strong> <code>FSM_COMPLETE_DOCUMENTATION.md</code></li>
+<li><strong>Best for:</strong> Reference, detailed lookup</li>
+<li><strong>Features:</strong> Complete, searchable, printable</li>
+</ul>
+
+<p><h3>3. Interactive Visualizations (HTML)</h3></p>
+<ul>
+<li><strong>Directory:</strong> <code>deed_states_visualization/</code></li>
+<li><strong>Best for:</strong> Learning, presentations</li>
+<li><strong>Features:</strong> Clickable, visual, engaging</li>
+</ul>
+
+<p><h3>4. Quick Reference (Markdown)</h3></p>
+<ul>
+<li><strong>File:</strong> <code>FSM_QUICK_START.md</code></li>
+<li><strong>Best for:</strong> Getting started, common queries</li>
+<li><strong>Features:</strong> Examples, shortcuts, FAQ</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="🔄 Keeping Documentation Current">🔄 Keeping Documentation Current</h2></p>
+
+<p><h3>When code changes:</h3></p>
+
+<ol>
+<li><strong>Update markdown:</strong></li>
+</ol>
+<p>   <pre><code class="language-bash">   # Edit FSM_COMPLETE_DOCUMENTATION.md</p>
+<p>   # Update relevant sections</p>
+<p>   ``<code></p>
+
+<ol>
+<li><strong>Regenerate portal:</strong></li>
+</ol>
+<p>   </code>`<code>bash</p>
+<p>   python generate_master_fsm_portal.py</p>
+<p>   </code>`<code></p>
+
+<ol>
+<li><strong>Regenerate HTML (if needed):</strong></li>
+</ol>
+<p>   </code>`<code>bash</p>
+<p>   source ~/.virtualenvs/bluebottle/bin/activate</p>
+<p>   python generate_deed_state_pages.py</p>
+<p>   </code>`<code></p>
+
+<p><h3>Periodic reviews:</h3></p>
+
+<ul>
+<li>Compare docs to source code</li>
+<li>Update statistics</li>
+<li>Add new models/states</li>
+<li>Refresh examples</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="📁 Project Structure">📁 Project Structure</h2></p>
+<p></code></pre></p>
+<p>bluebottle/</p>
+<p>├── fsm_documentation_portal.html    # ⭐ Master portal (START HERE)</p>
+<p>│</p>
+<p>├── FSM_COMPLETE_DOCUMENTATION.md    # Complete reference</p>
+<p>├── FSM_QUICK_START.md               # Quick guide</p>
+<p>├── FSM_DOCUMENTATION_SUMMARY.md     # Project overview</p>
+<p>├── FSM_README.md                    # This file</p>
+<p>│</p>
+<p>├── DEED_LIFECYCLE.md                # Detailed Deed docs</p>
+<p>├── DEED_INHERITED_TRIGGERS_ADDENDUM.md</p>
+<p>├── STATE_MACHINES_OVERVIEW.md       # Architecture</p>
+<p>├── GENERATE_COLLECT_DOCS.md         # How-to guide</p>
+<p>│</p>
+<p>├── deed_states_visualization/       # Interactive HTML</p>
+<p>│   ├── index.html</p>
+<p>│   ├── state_styles.css</p>
+<p>│   └── [14 state pages]</p>
+<p>│</p>
+<p>└── generators/</p>
+<p>    ├── generate_master_fsm_portal.py</p>
+<p>    ├── generate_deed_state_pages.py</p>
+<p>    ├── generate_participant_state_pages.py</p>
+<p>    └── generate_universal_fsm_docs.py</p>
+<p><pre><code class="language-text"></p>
+<p>---</p>
+
+<p><h2 id="🎨 Features">🎨 Features</h2></p>
+
+<p><h3>Master Portal</h3></p>
+<p>✅ Search functionality  </p>
+<p>✅ Visual model cards  </p>
+<p>✅ Complexity indicators  </p>
+<p>✅ Category organization  </p>
+<p>✅ Direct documentation links  </p>
+<p>✅ Mobile-responsive  </p>
+
+<p><h3>Complete Documentation</h3></p>
+<p>✅ All 18 models  </p>
+<p>✅ States &amp; descriptions  </p>
+<p>✅ Transitions &amp; conditions  </p>
+<p>✅ Triggers &amp; effects  </p>
+<p>✅ Notifications  </p>
+<p>✅ Inheritance chains  </p>
+
+<p><h3>Interactive Visualizations</h3></p>
+<p>✅ Clickable transitions  </p>
+<p>✅ Visual effects  </p>
+<p>✅ Professional design  </p>
+<p>✅ Mobile-friendly  </p>
+
+<p>---</p>
+
+<p><h2 id="🚨 Important Notes">🚨 Important Notes</h2></p>
+
+<ol>
+<li><strong>Markdown is authoritative:</strong> </code>FSM_COMPLETE_DOCUMENTATION.md<code> is the single source of truth</li>
+<li><strong>HTML is generated:</strong> Portal and visualizations are generated from markdown</li>
+<li><strong>Always update markdown first:</strong> Then regenerate HTML if needed</li>
+<li><strong>Portal is entry point:</strong> Use </code>fsm_documentation_portal.html<code> for navigation</li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="💡 Tips">💡 Tips</h2></p>
+
+<p><h3>For Quick Lookups</code></pre>bash</h3></p>
+<p><h1>Search in complete docs</h1></p>
+<p>grep -i "collectactivity" FSM_COMPLETE_DOCUMENTATION.md</p>
+
+<p><h1>Or use portal search</h1></p>
+<p>open fsm_documentation_portal.html</p>
+<p><pre><code class="language-text"></p>
+<p><h3>For Deep Dives</code></pre>bash</h3></p>
+<p><h1>Read specific section</h1></p>
+<p>less FSM_COMPLETE_DOCUMENTATION.md</p>
+<p><h1>Then search: /CollectActivity</h1></p>
+<p><pre><code class="language-text"></p>
+<p><h3>For Presentations</code></pre>bash</h3></p>
+<p><h1>Use interactive HTML</h1></p>
+<p>open deed_states_visualization/index.html</p>
+<p></code>`<code></p>
+
+<p>---</p>
+
+<p><h2 id="🎯 Success Metrics">🎯 Success Metrics</h2></p>
+
+<ul>
+<li>✅ <strong>100% model coverage</strong> (18/18)</li>
+<li>✅ <strong>Complete documentation</strong> (states, transitions, triggers, effects)</li>
+<li>✅ <strong>Multiple formats</strong> (HTML portal, markdown, interactive)</li>
+<li>✅ <strong>Searchable</strong> (portal search + text search)</li>
+<li>✅ <strong>Maintainable</strong> (generators for updates)</li>
+<li>✅ <strong>Professional</strong> (polished design, good UX)</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="🙏 Credits">🙏 Credits</h2></p>
+
+<p>Documentation generated through systematic analysis of:</p>
+<ul>
+<li>State machine definitions (</code>bluebottle/*/states.py<code>)</li>
+<li>Trigger definitions (</code>bluebottle/*/triggers.py<code>)</li>
+<li>Message definitions (</code>bluebottle/*/messages/<code>)</li>
+<li>FSM framework (</code>bluebottle/fsm/<code>)</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="📞 Support">📞 Support</h2></p>
+
+<p><strong>Questions about documentation?</strong></p>
+<ul>
+<li>Check </code>FSM_QUICK_START.md<code> for common queries</li>
+<li>Search </code>FSM_COMPLETE_DOCUMENTATION.md<code></li>
+<li>Browse </code>fsm_documentation_portal.html<code></li>
+</ul>
+
+<p><strong>Need to generate HTML for a model?</strong></p>
+<ul>
+<li>See </code>GENERATE_COLLECT_DOCS.md<code> for step-by-step guide</li>
+<li>Copy </code>generate_deed_state_pages.py<code> as template</li>
+</ul>
+
+<p><strong>Want to update documentation?</strong></p>
+<ul>
+<li>Edit </code>FSM_COMPLETE_DOCUMENTATION.md<code></li>
+<li>Run </code>python generate_master_fsm_portal.py<code></li>
+<li>Regenerate HTML if needed</li>
+</ul>
+
+<p>---</p>
+
+<p><strong>🎉 You're all set! Start with </code>fsm_documentation_portal.html`</strong></p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

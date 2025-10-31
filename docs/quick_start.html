@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start Guide - Bluebottle FSM Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background: #f6f8fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .content {
+            background: white;
+            padding: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin: 2.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+        
+        h4 {
+            color: #586069;
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            background: #f6f8fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            border: 1px solid #e1e4e8;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            border: none;
+            color: #24292e;
+            font-size: 0.9rem;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #24292e;
+        }
+        
+        em {
+            font-style: italic;
+            color: #586069;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e1e4e8;
+            margin: 3rem 0;
+        }
+        
+        .toc {
+            background: #f6f8fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .toc h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-info {
+            background: #e7f2ff;
+            border-color: #667eea;
+            color: #0366d6;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #586069;
+            margin-top: 3rem;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">🔄 Bluebottle FSM Docs</a>
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">Home</a>
+<a href="complete_documentation.html" class="nav-link">Complete Docs</a>
+<a href="quick_start.html" class="nav-link">Quick Start</a>
+<a href="fsm_documentation_portal.html" class="nav-link">Portal</a>
+<a href="fsm_visualizations_index.html" class="nav-link">Visualizations</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="content">
+            <p><h1>FSM Documentation - Quick Start Guide</h1></p>
+
+<p><strong>Get started with Bluebottle FSM documentation in 5 minutes</strong></p>
+
+<p>---</p>
+
+<p><h2 id="🚀 Quick Navigation">🚀 Quick Navigation</h2></p>
+
+<p><h3>I want to understand a specific model</h3></p>
+
+<p><strong>→ Go to: <a href="FSM_COMPLETE_DOCUMENTATION.md">FSM_COMPLETE_DOCUMENTATION.md</a></strong></p>
+
+<p>Use the table of contents to jump to your model:</p>
+<ul>
+<li>Time-Based Activities (#1-5)</li>
+<li>Time-Based Participants (#6-11)</li>
+<li>Funding (#12-14)</li>
+<li>Collect Activities (#15-16)</li>
+<li>Deeds (#17-18)</li>
+</ul>
+
+<p>Each model includes:</p>
+<ul>
+<li>✅ All states with descriptions</li>
+<li>✅ All transitions (manual/automatic)</li>
+<li>✅ Conditions and permissions</li>
+<li>✅ Triggers and effects</li>
+<li>✅ Notifications</li>
+</ul>
+
+<p>---</p>
+
+<p><h3>I want to see it visually/interactively</h3></p>
+
+<p><strong>→ Open in browser: <a href="deed_states_visualization/index.html">deed_states_visualization/index.html</a></strong></p>
+
+<p>Interactive features:</p>
+<ul>
+<li>🖱️ Click on states to explore</li>
+<li>🔗 Follow transition links to next state</li>
+<li>👁️ See all effects and notifications</li>
+<li>📱 Works on mobile too</li>
+</ul>
+
+<p>---</p>
+
+<p><h3>I want a high-level overview</h3></p>
+
+<p><strong>→ Read: <a href="FSM_DOCUMENTATION_SUMMARY.md">FSM_DOCUMENTATION_SUMMARY.md</a></strong></p>
+
+<p>Includes:</p>
+<ul>
+<li>📊 Coverage statistics</li>
+<li>🎯 Key features</li>
+<li>💡 Usage guides for developers/PMs/QA</li>
+<li>🔍 Pattern analysis</li>
+</ul>
+
+<p>---</p>
+
+<p><h3>I'm debugging a state issue</h3></p>
+
+<p><strong>Step 1:</strong> Find your model in <a href="FSM_COMPLETE_DOCUMENTATION.md">FSM_COMPLETE_DOCUMENTATION.md</a></p>
+
+<p><strong>Step 2:</strong> Check:</p>
+<ul>
+<li>Current state of your object</li>
+<li>Valid transitions from that state</li>
+<li>Required conditions</li>
+<li>Required permissions</li>
+</ul>
+
+<p><strong>Step 3:</strong> Verify conditions are met:</p>
+<p><pre><code class="language-python"># Example for Deed</p>
+<p>deed.status  # Check current state</p>
+<p>deed.is_complete()  # Check if complete</p>
+<p>deed.is_valid()  # Check if valid</p>
+<p><h1>Check user permissions</code></pre></h1></p>
+
+<p>---</p>
+
+<p><h3>I'm adding a new feature</h3></p>
+
+<p><strong>Step 1:</strong> Understand current flow</p>
+<ul>
+<li>Read model documentation</li>
+<li>Review all related states</li>
+<li>Check existing transitions</li>
+</ul>
+
+<p><strong>Step 2:</strong> Identify integration points</p>
+<ul>
+<li>Where does new transition fit?</li>
+<li>What triggers should fire?</li>
+<li>What effects are needed?</li>
+<li>What notifications to send?</li>
+</ul>
+
+<p><strong>Step 3:</strong> Update documentation</p>
+<ul>
+<li>Add new states/transitions</li>
+<li>Document conditions/permissions</li>
+<li>Update triggers/effects</li>
+<li>Regenerate if needed</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="📁 All Documentation Files">📁 All Documentation Files</h2></p>
+
+<p>| File | Purpose | Lines |</p>
+<p>|------|---------|-------|</p>
+<p>| <strong>FSM_COMPLETE_DOCUMENTATION.md</strong> | Complete reference for all 18 models | 10,000+ |</p>
+<p>| <strong>FSM_DOCUMENTATION_SUMMARY.md</strong> | Project overview and statistics | 400+ |</p>
+<p>| <strong>STATE_MACHINES_OVERVIEW.md</strong> | Architecture analysis | 400+ |</p>
+<p>| <strong>DEED_LIFECYCLE.md</strong> | Detailed Deed documentation | 600+ |</p>
+<p>| <strong>DEED_INHERITED_TRIGGERS_ADDENDUM.md</strong> | Inherited behavior | 300+ |</p>
+<p>| <strong>deed_states_visualization/</strong> | Interactive HTML (16 pages) | - |</p>
+<p>| <strong>Generator scripts</strong> | Regenerate documentation | 4 files |</p>
+
+<p>---</p>
+
+<p><h2 id="🔍 Common Queries">🔍 Common Queries</h2></p>
+
+<p><h3>"What are all the states for Funding?"</h3></p>
+
+<p>→ <a href="FSM_COMPLETE_DOCUMENTATION.md#12-funding">FSM_COMPLETE_DOCUMENTATION.md#12-funding</a></p>
+
+<p>States: draft, submitted, needs_work, open, succeeded, partially_funded, refunded, cancelled, rejected, on_hold</p>
+
+<p><h3>"How does a participant get accepted?"</h3></p>
+
+<p>→ <a href="FSM_COMPLETE_DOCUMENTATION.md#6-11-time-based-participants">FSM_COMPLETE_DOCUMENTATION.md#6-11-time-based-participants</a></p>
+
+<p>Via <code>accept</code> transition: new/withdrawn/removed/rejected → accepted</p>
+
+<p><h3>"What notifications are sent when an activity succeeds?"</h3></p>
+
+<p>→ Look up model in FSM_COMPLETE_DOCUMENTATION.md, find <code>succeed</code> transition, check effects section for <code>NotificationEffect</code></p>
+
+<p><h3>"Can a cancelled activity be restored?"</h3></p>
+
+<p>→ Yes! Check the <code>restore</code> transition in the model documentation</p>
+
+<p><h3>"What conditions must be met to submit an activity?"</h3></p>
+
+<p>→ Find your activity model, look at <code>submit</code> transition conditions (usually: <code>is_complete</code>, <code>is_valid</code>, <code>can_submit</code>)</p>
+
+<p>---</p>
+
+<p><h2 id="💡 Pro Tips">💡 Pro Tips</h2></p>
+
+<p><h3>For Developers</h3></p>
+<ol>
+<li><strong>Bookmark</strong> FSM_COMPLETE_DOCUMENTATION.md</li>
+<li><strong>Search</strong> in documentation (Ctrl+F / Cmd+F)</li>
+<li><strong>Cross-reference</strong> with source code</li>
+<li><strong>Update</strong> docs when adding features</li>
+</ol>
+
+<p><h3>For QA</h3></p>
+<ol>
+<li><strong>Test all transitions</strong> for your feature</li>
+<li><strong>Verify conditions</strong> (both true and false)</li>
+<li><strong>Check notifications</strong> are sent correctly</li>
+<li><strong>Test permissions</strong> for manual transitions</li>
+</ol>
+
+<p><h3>For Product Managers</h3></p>
+<ol>
+<li><strong>Review state descriptions</strong> to understand user experience</li>
+<li><strong>Follow transition flows</strong> to see complete journey</li>
+<li><strong>Check conditions</strong> to identify user blockers</li>
+<li><strong>Review notifications</strong> for communication touchpoints</li>
+</ol>
+
+<p>---</p>
+
+<p><h2 id="🔄 Keeping Documentation Current">🔄 Keeping Documentation Current</h2></p>
+
+<p><h3>When code changes:</h3></p>
+
+<ol>
+<li><strong>Update markdown:</strong></li>
+</ol>
+<p>   - Edit FSM_COMPLETE_DOCUMENTATION.md</p>
+<p>   - Add new states/transitions</p>
+<p>   - Document new effects</p>
+
+<ol>
+<li><strong>Regenerate HTML (for Deeds):</strong></li>
+</ol>
+<p>   ``<code>bash</p>
+<p>   source ~/.virtualenvs/bluebottle/bin/activate</p>
+<p>   python generate_deed_state_pages.py</p>
+<p>   </code>``</p>
+
+<ol>
+<li><strong>Verify changes:</strong></li>
+</ol>
+<p>   - Check documentation matches code</p>
+<p>   - Test transitions</p>
+<p>   - Verify notifications</p>
+
+<p>---</p>
+
+<p><h2 id="📞 Need Help?">📞 Need Help?</h2></p>
+
+<ul>
+<li><strong>Understanding a model?</strong> → Start with FSM_COMPLETE_DOCUMENTATION.md</li>
+<li><strong>Need visual representation?</strong> → Open deed_states_visualization/index.html</li>
+<li><strong>Want overview?</strong> → Read FSM_DOCUMENTATION_SUMMARY.md</li>
+<li><strong>Debugging?</strong> → Check conditions and permissions in docs</li>
+<li><strong>Adding features?</strong> → Review existing patterns first</li>
+</ul>
+
+<p>---</p>
+
+<p><h2 id="✨ Key Concepts">✨ Key Concepts</h2></p>
+
+<p><h3>States</h3></p>
+<p>Current condition of an object (e.g., 'draft', 'open', 'succeeded')</p>
+
+<p><h3>Transitions</h3></p>
+<p>Movement from one state to another (can be manual or automatic)</p>
+
+<p><h3>Triggers</h3></p>
+<p>Events that fire when transitions occur or fields change</p>
+
+<p><h3>Effects</h3></p>
+<p>Actions performed when triggers fire (transitions, notifications, etc.)</p>
+
+<p><h3>Conditions</h3></p>
+<p>Requirements that must be met for a transition to occur</p>
+
+<p><h3>Permissions</h3></p>
+<p>User permission checks for manual transitions</p>
+
+<p>---</p>
+
+<p><strong>You're all set!</strong> Start with <a href="FSM_COMPLETE_DOCUMENTATION.md">FSM_COMPLETE_DOCUMENTATION.md</a> and explore from there.</p>
+
+<p>Happy coding! 🚀</p>
+
+
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Bluebottle FSM Documentation • Generated from comprehensive analysis</p>
+        <p>For questions or updates, see the documentation source files</p>
+    </div>
+</body>
+</html>

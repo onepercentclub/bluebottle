@@ -630,6 +630,8 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
             background: #f5f5f5;
             border-radius: 8px;
             border-left: 4px solid #667eea;
+            display: flex;
+            flex-direction: column;
         }}
         .message-name {{
             font-weight: 600;
@@ -665,6 +667,7 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
         .lang-links {{
             display: flex;
             gap: 8px;
+            margin-top: auto;
         }}
         .lang-btn {{
             padding: 6px 14px;

@@ -1514,8 +1514,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Total errors: {total_errors}"))
             self.stdout.write(f"Output directory: {os.path.abspath(options['output_dir'])}")
             self.stdout.write(f"\nView in browser:")
-            self.stdout.write(f"  Static URL: /static/email_previews/index_all.html")
-            self.stdout.write(f"  Or open: xdg-open {os.path.abspath(options['output_dir'])}/index_all.html")
+            self.stdout.write(f"  Static URL: /static/email_previews/index.html")
+            self.stdout.write(f"  Or open: xdg-open {os.path.abspath(options['output_dir'])}/index.html")
         
         else:
             self.print_help('manage.py', 'preview_all_messages')

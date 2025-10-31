@@ -30,7 +30,9 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.template import loader
 from django.utils import translation
+from django.db import connection
 from bluebottle.notifications.messages import TransitionMessage
+from bluebottle.clients.models import Client
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -384,6 +386,12 @@ def discover_message_classes(module_path):
             if (issubclass(obj, TransitionMessage) and 
                 obj != TransitionMessage and
                 obj.__module__ == module_path):
+                # Skip abstract message classes (only if Meta is defined on this class itself)
+                # Check if this class defines its own Meta (not inherited)
+                if 'Meta' in obj.__dict__:
+                    # This class defines its own Meta, check if it's abstract
+                    if hasattr(obj.Meta, 'abstract') and obj.Meta.abstract:
+                        continue
                 message_classes.append((name, obj))
         
         return sorted(message_classes)
@@ -1128,14 +1136,22 @@ class Command(BaseCommand):
                            help='Output directory (default: notifications/static/email_previews)')
     
     def handle(self, *args, **options):
+        # Set up a real tenant for the preview generation
+        try:
+            tenant = Client.objects.first()
+            if tenant:
+                connection.set_tenant(tenant)
+                self.stdout.write(f"Using tenant: {tenant.client_name}")
+            else:
+                self.stderr.write("Warning: No tenant found in database. Some features may not work correctly.")
+        except Exception as e:
+            self.stderr.write(f"Warning: Could not set up tenant: {e}")
+        
         # Set default output directory to static folder
         if not options['output_dir']:
             options['output_dir'] = os.path.join(
                 settings.BASE_DIR,
-                'bluebottle',
-                'notifications',
-                'static',
-                'email_previews'
+                'mails',
             )
         
         if options['list_modules']:

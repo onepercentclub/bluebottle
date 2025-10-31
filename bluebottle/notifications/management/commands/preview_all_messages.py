@@ -1435,6 +1435,10 @@ class Command(BaseCommand):
             languages = available_languages
         else:
             languages = ['en']
+            self.stdout.write(self.style.WARNING(
+                f"\n💡 Tip: Use --all-languages to generate previews in all {len(available_languages)} languages "
+                f"(de, en, es, fr, hu, nl, pt)\n"
+            ))
         
         self.stdout.write(f"Generating previews for languages: {', '.join(languages)}\n")
         

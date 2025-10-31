@@ -539,14 +539,22 @@ class StripePayoutAccount(PayoutAccount):
         if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
             self.tos_accepted = False
 
-        try:
-            self.verified = data.individual.verification.status == "verified"
-        except AttributeError:
-            stripe = get_stripe()
-            persons = stripe.Account.persons(data.id)
-            self.verified = len(persons) and all(
-                person.verification.status == 'verified' for person in persons
-            )
+        if data.business_type == BusinessTypeChoices.individual:
+            try:
+                self.verified = data.individual.verification.status == "verified"
+            except AttributeError:
+                stripe = get_stripe()
+                persons = stripe.Account.persons(data.id)
+                self.verified = len(persons) and all(
+                    person.verification.status == 'verified' for person in persons
+                )
+        else:
+            self.verified = len(self.requirements) == 0
+            if len(self.requirements) == 0:
+                self.verified = True
+            elif self.id:
+                self.states.set_incomplete()
+                pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

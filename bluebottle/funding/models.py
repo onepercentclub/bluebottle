@@ -695,16 +695,21 @@ class PayoutAccount(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
 
     @property
     def funding(self):
-        return Funding.objects.filter(
-            bank_account__in=self.external_accounts.all()
-        ).all()
+        if self.id:
+            return Funding.objects.filter(
+                bank_account__in=self.external_accounts.all()
+            ).all()
+        else:
+            return Funding.objects.none()
 
     @property
     def grant_application(self):
         from bluebottle.grant_management.models import GrantApplication
-        return GrantApplication.objects.filter(
-            bank_account__in=self.external_accounts.all()
-        ).all()
+        if self.id:
+            return GrantApplication.objects.filter(
+                bank_account__in=self.external_accounts.all()
+            ).all()
+        return GrantApplication.objects.none()
 
     def __str__(self):
         return "Payout account #{}".format(self.id)

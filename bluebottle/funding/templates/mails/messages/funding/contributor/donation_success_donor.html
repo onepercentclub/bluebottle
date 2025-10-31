@@ -5,8 +5,10 @@
 
 {% block content %}
 <p class="donation-intro">
-    {% blocktrans context 'email' %} Hi {{ recipient_name }},<br />
-    Thanks for your donation! {% endblocktrans %}
+    {% blocktrans context 'email' %}
+        Hi {{ recipient_name }},<br />
+        Thanks for your donation!
+    {% endblocktrans %}
 </p>
 <br><br>
 {% include 'mails/messages/partials/donation_receipt.html' %}

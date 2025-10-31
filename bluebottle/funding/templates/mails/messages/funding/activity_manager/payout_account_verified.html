@@ -4,12 +4,17 @@
 {% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            You are working on a crowdfunding campaign on {{ site_name }}.
-            <br/><br/>
-            We have good news! Your identity has been verified, and you can continue with your crowdfunding campaign.
-            <br/><br/>
-            If your campaign has already started, you don’t need to do anything else. If it hasn’t started yet,
-            please check that everything is in order and submit your campaign for approval.
+            Good news, your identity has been successfully verified and you can continue with your crowdfunding campaign.
+            <br><br>
+            <b>Here’s what happens next:</b>
+            <ol>
+                <li>
+                    Submit your campaign and it will be reviewed by the platform manager.
+                </li>
+                <li>
+                    Once approved, your campaign will be live and people can start donating.
+                </li>
+            </ol>
         {% endblocktrans %}
     </p>
 {% endblock message %} 

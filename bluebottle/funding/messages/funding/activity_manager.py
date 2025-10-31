@@ -77,7 +77,7 @@ class FundingNeedsWorkMessage(FundingActivityManagerMessage):
     """
     Notify the activity manager that their funding campaign needs work.
     """
-    subject = pgettext('email', u"The crowdfunding campaign you submitted on {site_name} needs work")
+    subject = pgettext('email', u"Your crowdfunding campaign on {site_name} needs work")
     template = 'messages/funding/activity_manager/campaign_needs_work'
 
 

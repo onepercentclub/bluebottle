@@ -25,12 +25,16 @@ import importlib
 import inspect
 import re
 import ast
+from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.template import loader
 from django.utils import translation
 from django.db import connection
+from django.utils.timezone import now
+from djmoney.money import Money
+
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.clients.models import Client
 
@@ -246,6 +250,9 @@ class MockActivity:
         self.title = "Clean up the local park"
         self.slug = "clean-up-the-local-park"
         self.description = "Help us clean the local park!"
+        self.start = now() + timedelta(days=24)
+        self.end = now() + timedelta(days=30, hours=3)
+        self.duration = timedelta(hours=3)
         self.status = "open"
         self.owner = MockMember(language)
         self.organization = None
@@ -304,9 +311,10 @@ class MockFunding:
         self.id = 111
         self.title = "Support our community garden"
         self.slug = "support-community-garden"
-        self.target = 5000
-        self.amount_raised = 3200
+        self.target = Money(3500, 'EUR')
+        self.amount_raised = Money(1700, 'EUR')
         self.owner = MockMember(language)
+        self.partner_organization = None  # For donation receipt template
         
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/funding/{self.id}/{self.slug}"
@@ -315,9 +323,11 @@ class MockDonation:
     """Mock Donation object"""
     def __init__(self, language='en'):
         self.id = 222
-        self.amount = 50
+        self.amount = Money(35, 'EUR')
         self.user = MockMember(language)
         self.activity = MockFunding(language)
+        self.reward = None  # For donation receipt template
+        self.created = now()  # For donation receipt template
         
     @property
     def owner(self):
@@ -345,6 +355,7 @@ class MockUpdate:
         self.message = "We've made amazing progress..."
         self.author = MockMember(language)
         self.activity = MockActivity(language)
+        self.parent = None  # For ParentNotification
         
     @property
     def owner(self):
@@ -365,8 +376,19 @@ MOCK_OBJECT_MAP = {
 }
 
 def get_mock_object_for_message(message_class, language='en'):
-    """Determine appropriate mock object based on message class name"""
+    """Determine appropriate mock object based on message class name and module"""
     class_name = message_class.__name__
+    module_name = message_class.__module__
+    
+    # Check module name first for better matching
+    if 'updates' in module_name:
+        return MockUpdate(language)
+    if 'funding' in module_name and 'contributor' in module_name:
+        return MockDonation(language)
+    if 'funding' in module_name:
+        return MockFunding(language)
+    if 'grant_management' in module_name:
+        return MockFunding(language)  # Grant applications are similar to funding
     
     # Try to match by class name patterns
     for key, mock_class in MOCK_OBJECT_MAP.items():
@@ -407,7 +429,6 @@ def preview_message(message_class_name, message_class, language='en', output_for
     
     # Get appropriate mock object
     mock_obj = get_mock_object_for_message(message_class, language)
-    
     # Create message instance
     try:
         message_instance = message_class(mock_obj)
@@ -1141,7 +1162,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Set up a real tenant for the preview generation
         try:
-            tenant = Client.objects.first()
+            tenant = Client.objects.get(schema_name='goodup_demo')
             if tenant:
                 connection.set_tenant(tenant)
                 self.stdout.write(f"Using tenant: {tenant.client_name}")

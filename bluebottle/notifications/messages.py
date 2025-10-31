@@ -142,6 +142,7 @@ class TransitionMessage(object):
     def get_context(self, recipient):
         from bluebottle.clients.utils import tenant_url, tenant_name
         context = {
+            "obj": self.obj,
             "site": tenant_url(),
             "site_name": tenant_name(),
             "language": recipient.primary_language,

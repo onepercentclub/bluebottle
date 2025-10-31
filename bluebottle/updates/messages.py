@@ -4,6 +4,9 @@ from bluebottle.notifications.messages import TransitionMessage
 
 
 class UpdateMessage(TransitionMessage):
+    class Meta:
+        abstract = True
+
     @property
     def action_link(self):
         return self.obj.activity.get_absolute_url()

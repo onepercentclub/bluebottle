@@ -4,9 +4,10 @@
 {% block message %}
     <p class="donation-intro">
         {% blocktrans context 'email' %}
-            You are working on a crowdfunding campaign on {{ site_name }}.
+            You are working on a crowdfunding campaign "{{ title }}".
             <br/><br/>
-            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.
+            You submitted some information to verify you or an organisations identity but in some cases we need extra information for a successful verification.
+            <br/><br/>
             Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.
         {% endblocktrans %}
     </p>
@@ -15,6 +16,6 @@
 
 {% block action %}
     <a href="{{ site }}/activities/stripe/kyc/{{ obj.pk }}" class="action-email">
-       {% trans 'Provide additional details' context 'email' %}
+       {% trans 'Provide details' context 'email' %}
     </a>
 {% endblock %}`

@@ -584,7 +584,7 @@ class PlainPayoutAccountStateMachineTests(BluebottleTestCase):
     def test_accept_mail(self):
         self.account.states.verify(save=True)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_reject(self):
         self.account.states.reject(save=True)

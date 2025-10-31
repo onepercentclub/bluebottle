@@ -20,6 +20,8 @@ class ManagerTeamNotification(TransitionMessage):
         """manager"""
         return [self.obj.activity.owner]
 
+    class Meta:
+        abstract = True
 
 class ManagerTeamRemovedNotification(ManagerTeamNotification):
     """
@@ -54,6 +56,9 @@ class UserTeamNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class UserTeamRemovedNotification(UserTeamNotification):
@@ -112,6 +117,9 @@ class CaptainTeamMemberNotification(TransitionMessage):
         """manager"""
         return [self.obj.team.user]
 
+    class Meta:
+        abstract = True
+
 
 class CaptainTeamMemberJoinedNotification(CaptainTeamMemberNotification):
     """
@@ -160,6 +168,9 @@ class UserTeamMemberNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class UserTeamMemberJoinedNotification(UserTeamMemberNotification):

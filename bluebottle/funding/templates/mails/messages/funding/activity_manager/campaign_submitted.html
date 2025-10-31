@@ -3,19 +3,20 @@
 
 {% block message %}
 {% blocktrans context 'email' %}
-Your activity "{{title}}" has been submitted on {{ site_name }}.<br>
-<br>
-<b>What’s next?</b>
-<ul>
-    <li>
-        The platform manager will review your activity.
-    </li>
-    <li>
-        If no changes are needed, it will be approved and made visible on the platform and people can contribute.
-    </li>
-    <li>
-        If any changes are needed, you’ll receive an email with suggested improvements.
-    </li>
-</ul>
+    <p>
+        Your crowdfunding campaign "{{title}}" has been submitted on {{ site_name }}.
+        <br/>
+        <br/>
+        <b>Here’s what happens next:</b>
+        <ul>
+            <li>
+                Your campaign will be reviewed by the platform manager.
+            </li>
+            <li>
+                Once approved, your campaign will be live and people can start donating.
+            </li>
+        </ul>
+        You will not be able to edit the application when it is in review.
+    </p>
 {% endblocktrans %}
 {% endblock message %}

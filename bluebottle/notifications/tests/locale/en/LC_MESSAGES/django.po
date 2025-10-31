@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-03-06 15:13+0100\n"
+"POT-Creation-Date: 2025-10-31 16:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,9 +19,11 @@ msgstr ""
 
 #: bluebottle/notifications/tests/test_messages.py:14
 #, python-brace-format
+msgctxt "email"
 msgid "Test message for {title}"
 msgstr ""
 
 #: bluebottle/notifications/tests/test_messages.py:25
+msgctxt "email"
 msgid "Test message"
 msgstr ""

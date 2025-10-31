@@ -2,6 +2,7 @@
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
+from bluebottle.funding.models import Funding
 from bluebottle.notifications.messages import TransitionMessage
 
 
@@ -9,7 +10,6 @@ class FundingActivityManagerMessage(TransitionMessage):
     context = {
         'title': 'title',
     }
-
     action_title = pgettext('email', 'View campaign')
 
     @property
@@ -19,6 +19,10 @@ class FundingActivityManagerMessage(TransitionMessage):
     def get_recipients(self):
         """the activity organizer"""
         return [self.obj.owner]
+
+    class Meta:
+        abstract = True
+        model = Funding
 
 
 class DonationSuccessActivityManagerMessage(FundingActivityManagerMessage):
@@ -99,6 +103,9 @@ class BaseFundingPayoutAccountMessage(FundingActivityManagerMessage):
         if self.activity:
             return [self.activity.owner]
         return []
+
+    class Meta:
+        abstract = True
 
 
 class FundingPayoutAccountRejected(BaseFundingPayoutAccountMessage):

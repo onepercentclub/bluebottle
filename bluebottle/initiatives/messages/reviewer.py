@@ -33,6 +33,9 @@ class InitiativeReviewerMessage(TransitionMessage):
 
         return list(recipients)
 
+    class Meta:
+        abstract = True
+
 
 class InitiativeSubmittedReviewerMessage(InitiativeReviewerMessage):
     subject = pgettext('email', 'A new initiative is ready to be reviewed on {site_name}')

@@ -35,8 +35,12 @@ from django.db import connection
 from django.utils.timezone import now
 from djmoney.money import Money
 
+from bluebottle.deeds.models import DeedParticipant
+from bluebottle.funding.models import Payout
+from bluebottle.initiatives.models import Theme
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.clients.models import Client
+from bluebottle.time_based.models import DateParticipant, DateActivitySlot
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -236,40 +240,61 @@ class MockMember:
     """Mock Member/User object"""
     def __init__(self, language='en'):
         self.id = 1
+        self.pk = 1
         self.first_name = "Jane"
         self.last_name = "Doe"
         self.short_name = "Jane D."
         self.full_name = "Jane Doe"
         self.email = "jane.doe@example.com"
         self.primary_language = language
+        self.favourite_themes = Theme.objects.none()
 
 class MockActivity:
     """Mock Activity object"""
     def __init__(self, language='en'):
         self.id = 123
+        self.pk = 123
         self.title = "Clean up the local park"
         self.slug = "clean-up-the-local-park"
         self.description = "Help us clean the local park!"
         self.start = now() + timedelta(days=24)
         self.end = now() + timedelta(days=30, hours=3)
+        self.deadline = now() + timedelta(days=30, hours=3)
         self.duration = timedelta(hours=3)
         self.status = "open"
         self.owner = MockMember(language)
         self.organization = None
-        
+        self.participants = DeedParticipant.objects.none()
+        self.slots = DateActivitySlot.objects.none()
+        self.accepted_participants = DeedParticipant.objects.none()
+        self.hour_registration_data = None
+        self.even_data = None
+        self.period = 'weeks'
+
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/details/deed/{self.id}/{self.slug}"
+
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/admin/activities/deed/{self.id}/{self.slug}"
+
 
 class MockParticipant:
     """Mock Participant object"""
     def __init__(self, language='en'):
         self.id = 456
+        self.pk = 456
         self.user = MockMember(language)
         self.activity = MockActivity(language)
         self.status = "accepted"
         self.motivation = "I love helping the community!"
         self.time_spent = None
-        
+        self.participants = DeedParticipant.objects.none()
+        # Create an empty queryset that supports .all() and .filter() but returns nothing
+        # This prevents ORM errors when templates try to query relationships
+        from django.db.models import QuerySet
+        self.slot_participants = DateParticipant.objects.none()
+        self.slot = MockSlot(language)
+
     @property
     def owner(self):
         return self.user
@@ -277,16 +302,46 @@ class MockParticipant:
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/participants/{self.id}"
 
+
+class MockRegistration:
+    """Mock Registration object"""
+
+    def __init__(self, language='en'):
+        self.id = 456
+        self.pk = 456
+        self.user = MockMember(language)
+        self.activity = MockActivity(language)
+        self.status = "accepted"
+        self.motivation = "I love helping the community!"
+        self.participants = DateParticipant.objects.all()
+        self.slot = MockSlot(language)
+
+    @property
+    def owner(self):
+        return self.user
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/activities/participants/{self.id}"
+
+
 class MockSlot:
     """Mock Activity Slot object"""
     def __init__(self, language='en'):
         self.id = 789
+        self.pk = 789
         self.title = "Morning Shift"
         self.activity = MockActivity(language)
-        self.start = None
-        self.duration = None
+        self.start = now() + timedelta(days=1)
+        self.end = now() + timedelta(days=1, hours=3)
+        self.duration = timedelta(hours=3)
         self.capacity = 10
-        
+        self.participants = DeedParticipant.objects.none()
+        self.location = None
+        self.event_data = None  # For calendar event generation
+        self.is_online = True
+        self.online_meeting_url = f"https://example.goodup.com/en/meeting/vzzbxx"
+        self.location_hint = ""
+
     @property
     def owner(self):
         return self.activity.owner
@@ -298,31 +353,73 @@ class MockTeam:
     """Mock Team object"""
     def __init__(self, language='en'):
         self.id = 321
+        self.pk = 321
         self.name = "Team Awesome"
         self.activity = MockActivity(language)
         self.owner = MockMember(language)
-        
+        self.slots = DateActivitySlot.objects.all()
+        self.event_data = None
+
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/activities/teams/{self.id}"
 
+
+class MockTeamMember:
+    """Mock Team object"""
+
+    def __init__(self, language='en'):
+        self.id = 321
+        self.pk = 321
+        self.user = MockMember(language)
+        self.team = MockTeam(language)
+        self.participants = DeedParticipant.objects.none()
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/activities/teams/{self.id}"
+
+
 class MockFunding:
     """Mock Funding/Campaign object"""
+
     def __init__(self, language='en'):
         self.id = 111
+        self.pk = 111
         self.title = "Support our community garden"
         self.slug = "support-community-garden"
         self.target = Money(3500, 'EUR')
         self.amount_raised = Money(1700, 'EUR')
         self.owner = MockMember(language)
         self.partner_organization = None  # For donation receipt template
-        
+        self.payouts = Payout.objects.none()
+
     def get_absolute_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/funding/{self.id}/{self.slug}"
+
+
+class MockGrantApplication:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.title = "Support our community garden"
+        self.slug = "support-community-garden"
+        self.target = Money(3500, 'EUR')
+        self.owner = MockMember(language)
+        self.partner_organization = None  # For donation receipt template
+        self.total = Money(1700, 'EUR')
+        self.organization = None
+        self.payouts = Payout.objects.none()
+
+    def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
 
 class MockDonation:
     """Mock Donation object"""
     def __init__(self, language='en'):
         self.id = 222
+        self.pk = 222
         self.amount = Money(35, 'EUR')
         self.user = MockMember(language)
         self.activity = MockFunding(language)
@@ -364,37 +461,142 @@ class MockUpdate:
 # Mapping of message classes to appropriate mock objects
 MOCK_OBJECT_MAP = {
     'Participant': MockParticipant,
+    'TeamMember': MockTeamMember,
     'Team': MockTeam,
     'Slot': MockSlot,
     'Funding': MockFunding,
+    'GrantApplication': MockGrantApplication,
     'Donation': MockDonation,
     'Donor': MockDonation,
     'Initiative': MockInitiative,
     'Update': MockUpdate,
     'Activity': MockActivity,
     'Member': MockMember,
+    'Registration': MockRegistration
 }
+
+def get_real_or_mock_object(model_class, mock_class, language='en'):
+    """Try to get a real object from database, fallback to mock"""
+    try:
+        obj = model_class.objects.filter().first()
+        if obj:
+            return obj
+    except Exception:
+        pass
+    return mock_class(language)
 
 def get_mock_object_for_message(message_class, language='en'):
     """Determine appropriate mock object based on message class name and module"""
     class_name = message_class.__name__
     module_name = message_class.__module__
     
-    # Check module name first for better matching
-    if 'updates' in module_name:
-        return MockUpdate(language)
-    if 'funding' in module_name and 'contributor' in module_name:
-        return MockDonation(language)
-    if 'funding' in module_name:
-        return MockFunding(language)
-    if 'grant_management' in module_name:
-        return MockFunding(language)  # Grant applications are similar to funding
+    # Try to use real database objects when available
+    try:
+        # Check module name first for better matching
+        if 'updates' in module_name:
+            from bluebottle.updates.models import Update
+            return get_real_or_mock_object(Update, MockUpdate, language)
+        
+        if 'funding' in module_name and 'contributor' in module_name:
+            from bluebottle.funding.models import Donation
+            return get_real_or_mock_object(Donation, MockDonation, language)
+        
+        if 'funding' in module_name:
+            from bluebottle.funding.models import Funding
+            return get_real_or_mock_object(Funding, MockFunding, language)
+        
+        if 'grant_management' in module_name:
+            # Grant applications might be a subclass of Funding
+            try:
+                from bluebottle.funding.models import Funding
+                grant_app = Funding.objects.filter().first()
+                if grant_app:
+                    return grant_app
+            except Exception:
+                pass
+            return MockGrantApplication(language)
+        
+        if 'time_based' in module_name:
+            # Check for specific time-based types
+            if 'Participant' in class_name or 'participant' in module_name:
+                from bluebottle.time_based.models import DateParticipant, PeriodParticipant
+                # Try DateParticipant first
+                participant = DateParticipant.objects.filter().first()
+                if participant:
+                    return participant
+                # Try PeriodParticipant
+                participant = PeriodParticipant.objects.filter().first()
+                if participant:
+                    return participant
+                return MockParticipant(language)
+            
+            if 'Slot' in class_name or 'Changed' in class_name:
+                # Messages about slot changes need slot objects
+                from bluebottle.time_based.models import DateActivitySlot
+                slot = DateActivitySlot.objects.filter().first()
+                if slot:
+                    return slot
+                return MockSlot(language)
+            
+            if 'Team' in class_name and 'Member' in class_name:
+                from bluebottle.time_based.models import TeamMember
+                return get_real_or_mock_object(TeamMember, MockTeamMember, language)
+            
+            if 'Team' in class_name:
+                from bluebottle.time_based.models import Team
+                return get_real_or_mock_object(Team, MockTeam, language)
+            
+            if 'Registration' in class_name or 'registrations' in module_name:
+                from bluebottle.time_based.models import PeriodParticipant
+                return get_real_or_mock_object(PeriodParticipant, MockRegistration, language)
+            
+            # Messages with "Date" likely need DateActivity
+            if 'Date' in class_name or 'Reminder' in class_name:
+                from bluebottle.time_based.models import DateActivity
+                activity = DateActivity.objects.filter().first()
+                if activity:
+                    return activity
+            
+            # Default to any time-based activity
+            from bluebottle.time_based.models import DateActivity, PeriodActivity
+            activity = DateActivity.objects.filter().first()
+            if activity:
+                return activity
+            activity = PeriodActivity.objects.filter().first()
+            if activity:
+                return activity
+        
+        # Check for deeds
+        if 'deeds' in module_name:
+            if 'Participant' in class_name:
+                from bluebottle.deeds.models import DeedParticipant
+                return get_real_or_mock_object(DeedParticipant, MockParticipant, language)
+
+            from bluebottle.deeds.models import Deed
+            return get_real_or_mock_object(Deed, MockActivity, language)
+        
+        # Check for collect
+        if 'collect' in module_name:
+            if 'Participant' in class_name:
+                from bluebottle.collect.models import CollectContributor
+                return get_real_or_mock_object(CollectContributor, MockParticipant, language)
+            from bluebottle.collect.models import CollectActivity
+            return get_real_or_mock_object(CollectActivity, MockActivity, language)
+
+        # Check for initiatives
+        if 'initiatives' in module_name:
+            from bluebottle.initiatives.models import Initiative
+            return get_real_or_mock_object(Initiative, MockInitiative, language)
+
+    except Exception as e:
+        # If there's an error importing or querying, fall back to mock logic
+        pass
     
-    # Try to match by class name patterns
+    # Fallback to class name pattern matching with mocks
     for key, mock_class in MOCK_OBJECT_MAP.items():
         if key.lower() in class_name.lower():
             return mock_class(language)
-    
+
     # Default to Activity
     return MockActivity(language)
 
@@ -421,14 +623,22 @@ def discover_message_classes(module_path):
         print(f"Warning: Could not import {module_path}: {e}")
         return []
 
-def preview_message(message_class_name, message_class, language='en', output_format='html'):
+def preview_message(message_class_name, message_class, language='en', output_format='html', verbose=False):
     """Generate preview for a single message"""
-    print(f"\n{'='*80}")
-    print(f"Message: {message_class_name} ({language.upper()})")
-    print(f"{'='*80}\n")
+    if verbose:
+        print(f"\n{'='*80}")
+        print(f"Message: {message_class_name} ({language.upper()})")
+        print(f"{'='*80}\n")
     
-    # Get appropriate mock object
+    # Get appropriate object (try real DB object first, fallback to mock)
     mock_obj = get_mock_object_for_message(message_class, language)
+    
+    # Determine if it's a real DB object or mock
+    is_real_object = hasattr(mock_obj, '_state') and hasattr(mock_obj._state, 'db')
+    
+    if verbose:
+        obj_type = "DB object" if is_real_object else "Mock object"
+        print(f"Using: {mock_obj.__class__.__name__} ({obj_type})")
     # Create message instance
     try:
         message_instance = message_class(mock_obj)
@@ -436,9 +646,21 @@ def preview_message(message_class_name, message_class, language='en', output_for
         print(f"❌ Could not instantiate {message_class_name}: {e}")
         return None
     
-    # Get mock recipient
-    mock_recipient = MockMember(language)
-    mock_recipient.primary_language = language
+    # Get mock recipient - try to use a real user from the database if available
+    # This allows Django ORM queries like .filter(user=recipient) to work
+    from bluebottle.members.models import Member
+    try:
+        # Try to get a real user from database for ORM compatibility
+        mock_recipient = Member.objects.filter(is_active=True).first()
+        if not mock_recipient:
+            # Fallback to mock object
+            mock_recipient = MockMember(language)
+        # Ensure language is set correctly
+        mock_recipient.primary_language = language
+    except Exception:
+        # If database query fails, use mock object
+        mock_recipient = MockMember(language)
+        mock_recipient.primary_language = language
     
     try:
         with translation.override(language):
@@ -449,7 +671,8 @@ def preview_message(message_class_name, message_class, language='en', output_for
             if output_format == 'subject':
                 context = message_instance.get_context(mock_recipient)
                 subject = str(message_instance.subject.format(**context))
-                print(f"Subject: {subject}\n")
+                if verbose:
+                    print(f"Subject: {subject}\n")
                 return subject
             
             elif output_format == 'html':
@@ -457,18 +680,27 @@ def preview_message(message_class_name, message_class, language='en', output_for
                 context = message_instance.get_context(mock_recipient)
                 subject = str(message_instance.subject.format(**context))
                 
-                print(f"Subject: {subject}")
-                print(f"Template: mails/{message_instance.template}.html")
-                print(f"HTML length: {len(html_content)} characters")
+                if verbose:
+                    print(f"Subject: {subject}")
+                    print(f"Template: mails/{message_instance.template}.html")
+                    print(f"HTML length: {len(html_content)} characters")
                 return {'html': html_content, 'subject': subject, 'context': context}
     
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        error_msg = str(e)
+        # Check if it's a known mock data limitation
+        if "Field 'id' expected a number" in error_msg:
+            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database objects for ORM queries")
+        elif "matching query does not exist" in error_msg or "DoesNotExist" in type(e).__name__:
+            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database relationships")
+        else:
+            print(f"❌ Error rendering {message_class_name} with ({mock_obj.__class__.__name__}) ({language}): {error_msg}")
+        if verbose:
+            import traceback
+            traceback.print_exc()
         return None
 
-def save_preview(message_class_name, content, output_dir, module_name, language='en'):
+def save_preview(message_class_name, content, output_dir, module_name, language='en', verbose=False):
     """Save preview to file with module organization"""
     if not content:
         return None
@@ -510,7 +742,8 @@ def save_preview(message_class_name, content, output_dir, module_name, language=
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(html_content)
     
-    print(f"✅ Saved: {filepath}")
+    if verbose:
+        print(f"✅ Saved: {filepath}")
     
     # Return filepath and subject as a dict
     return {'filepath': filepath, 'subject': subject}
@@ -1141,7 +1374,6 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(html)
     
-    print(f"\n✅ Generated index: {index_path}")
     return index_path
 
 class Command(BaseCommand):
@@ -1158,6 +1390,8 @@ class Command(BaseCommand):
         parser.add_argument('--output-dir', type=str, 
                            default=None,
                            help='Output directory (default: notifications/static/email_previews)')
+        parser.add_argument('--verbose', action='store_true',
+                           help='Show detailed output for each message preview')
     
     def handle(self, *args, **options):
         # Set up a real tenant for the preview generation
@@ -1221,37 +1455,46 @@ class Command(BaseCommand):
                 modules_to_process = matched
             
             # Analyze triggers to map messages to their triggering transitions
-            self.stdout.write("\n🔍 Analyzing trigger files...")
+            if options.get('verbose'):
+                self.stdout.write("\n🔍 Analyzing trigger files...")
             trigger_map = analyze_triggers()
-            self.stdout.write(f"   Found trigger info for {len(trigger_map)} message classes\n")
+            if options.get('verbose'):
+                self.stdout.write(f"   Found trigger info for {len(trigger_map)} message classes\n")
             
             all_messages = {}
             total_generated = 0
+            total_errors = 0
             subjects_cache = {}  # Cache for subjects
+            verbose = options.get('verbose', False)
             
             for module_name, module_path in modules_to_process.items():
-                self.stdout.write(f"\n{'='*80}")
-                self.stdout.write(f"📦 Processing module: {module_name}")
-                self.stdout.write(f"{'='*80}")
+                if verbose:
+                    self.stdout.write(f"\n{'='*80}")
+                    self.stdout.write(f"📦 Processing module: {module_name}")
+                    self.stdout.write(f"{'='*80}")
                 
                 messages = discover_message_classes(module_path)
                 if not messages:
-                    self.stdout.write(f"  No messages found in {module_name}")
+                    if verbose:
+                        self.stdout.write(f"  No messages found in {module_name}")
                     continue
                 
                 all_messages[module_name] = messages
-                self.stdout.write(f"  Found {len(messages)} message classes")
+                if verbose:
+                    self.stdout.write(f"  Found {len(messages)} message classes")
                 
                 for msg_name, msg_class in messages:
                     for lang in languages:
-                        content = preview_message(msg_name, msg_class, lang, 'html')
+                        content = preview_message(msg_name, msg_class, lang, 'html', verbose=verbose)
                         if content:
-                            result = save_preview(msg_name, content, options['output_dir'], module_name, lang)
+                            result = save_preview(msg_name, content, options['output_dir'], module_name, lang, verbose=verbose)
                             # Cache the subject
                             if result and result.get('subject'):
                                 cache_key = f"{module_name}:{msg_name}:{lang}"
                                 subjects_cache[cache_key] = result['subject']
                             total_generated += 1
+                        else:
+                            total_errors += 1
             
             # Save subjects cache
             if subjects_cache:
@@ -1267,6 +1510,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"✅ COMPLETE!"))
             self.stdout.write(f"{'='*80}")
             self.stdout.write(f"Total messages generated: {total_generated}")
+            if total_errors > 0:
+                self.stdout.write(self.style.WARNING(f"Total errors: {total_errors}"))
             self.stdout.write(f"Output directory: {os.path.abspath(options['output_dir'])}")
             self.stdout.write(f"\nView in browser:")
             self.stdout.write(f"  Static URL: /static/email_previews/index_all.html")

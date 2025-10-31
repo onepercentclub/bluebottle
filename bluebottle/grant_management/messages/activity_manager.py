@@ -30,6 +30,8 @@ class GrantApplicationManagerMessage(TransitionMessage):
         """the activity organizer"""
         return [self.obj.owner]
 
+    class Meta:
+        abstract = True
 
 class GrantApplicationRejectedMessage(GrantApplicationManagerMessage):
     subject = pgettext('email', "Your grant application on {site_name} has been rejected")

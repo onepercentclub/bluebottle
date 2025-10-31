@@ -18,6 +18,8 @@ class InitiativeInitiatorMessage(TransitionMessage):
         """the initiator"""
         return [self.obj.owner]
 
+    class Meta:
+        abstract = True
 
 class InitiativeSubmittedInitiatorMessage(InitiativeInitiatorMessage):
     subject = pgettext('email', 'You submitted an initiative on {site_name}')

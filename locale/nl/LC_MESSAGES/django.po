@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-30 09:56+0100\n"
-"PO-Revision-Date: 2025-10-30 09:14\n"
+"POT-Creation-Date: 2025-10-31 16:50+0100\n"
+"PO-Revision-Date: 2025-10-31 16:01\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -299,36 +299,36 @@ msgstr "Online / op afstand"
 msgid "Send impact reminder message"
 msgstr "Verzend herinneringsmail"
 
-#: bluebottle/activities/messages/activity_manager.py:22
+#: bluebottle/activities/messages/activity_manager.py:26
 msgctxt "email"
 msgid "crowdfunding campaign"
 msgstr "crowdfunding campagne"
 
-#: bluebottle/activities/messages/activity_manager.py:24
+#: bluebottle/activities/messages/activity_manager.py:28
 msgctxt "email"
 msgid "grant application"
 msgstr "fondsaanvraag"
 
-#: bluebottle/activities/messages/activity_manager.py:26
+#: bluebottle/activities/messages/activity_manager.py:30
 msgctxt "email"
 msgid "activity"
 msgstr "activiteit"
 
-#: bluebottle/activities/messages/activity_manager.py:33
+#: bluebottle/activities/messages/activity_manager.py:37
 #: bluebottle/funding/messages/funding/activity_manager.py:13
-#: bluebottle/funding/messages/funding/reviewer.py:13
+#: bluebottle/funding/messages/funding/reviewer.py:16
 msgctxt "email"
 msgid "View campaign"
 msgstr "Bekijk campagne"
 
-#: bluebottle/activities/messages/activity_manager.py:35
+#: bluebottle/activities/messages/activity_manager.py:39
 #: bluebottle/grant_management/messages/activity_manager.py:15
 #: bluebottle/grant_management/messages/reviewer.py:13
 msgctxt "email"
 msgid "View application"
 msgstr "Aanvraag bekijken"
 
-#: bluebottle/activities/messages/activity_manager.py:37
+#: bluebottle/activities/messages/activity_manager.py:41
 #: bluebottle/collect/messages.py:33 bluebottle/collect/messages.py:77
 #: bluebottle/deeds/messages.py:34 bluebottle/deeds/messages.py:78
 #: bluebottle/time_based/messages.py:84 bluebottle/time_based/messages.py:127
@@ -364,87 +364,88 @@ msgstr "Aanvraag bekijken"
 #: bluebottle/time_based/messages/messages.py:707
 #: bluebottle/time_based/messages/messages.py:728
 #: bluebottle/time_based/messages/messages.py:849
-#: bluebottle/time_based/messages/participants.py:62
-#: bluebottle/time_based/messages/participants.py:127
-#: bluebottle/time_based/messages/registrations.py:91
+#: bluebottle/time_based/messages/participants.py:65
+#: bluebottle/time_based/messages/participants.py:133
+#: bluebottle/time_based/messages/registrations.py:94
 msgctxt "email"
 msgid "View activity"
 msgstr "Bekijk activiteit"
 
-#: bluebottle/activities/messages/activity_manager.py:45
+#: bluebottle/activities/messages/activity_manager.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "Please share the impact results for your activity \"{title}\"."
 msgstr "Deel de impactresultaten van jouw activiteit \"{title}."
 
-#: bluebottle/activities/messages/activity_manager.py:56
+#: bluebottle/activities/messages/activity_manager.py:66
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has succeeded 🎉"
 msgstr "Jouw activiteit \"{title}\" is succesvol afgerond! 🎉"
 
-#: bluebottle/activities/messages/activity_manager.py:64
+#: bluebottle/activities/messages/activity_manager.py:74
 #, python-brace-format
 msgctxt "email"
 msgid "The activity \"{title}\" has been restored"
 msgstr "De activiteit \"{title}\" is hersteld"
 
-#: bluebottle/activities/messages/activity_manager.py:72
+#: bluebottle/activities/messages/activity_manager.py:82
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been rejected"
 msgstr "Je activiteit \"{title}\" is afgewezen"
 
-#: bluebottle/activities/messages/activity_manager.py:80
+#: bluebottle/activities/messages/activity_manager.py:90
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity \"{title}\" has been cancelled"
 msgstr "Je activiteit \"{title}\" is geannuleerd"
 
-#: bluebottle/activities/messages/activity_manager.py:88
+#: bluebottle/activities/messages/activity_manager.py:98
 #, python-brace-format
 msgctxt "email"
 msgid "The registration deadline for your activity \"{title}\" has expired"
 msgstr "De registratiedeadline voor uw activiteit \"{title}\" is verlopen"
 
-#: bluebottle/activities/messages/activity_manager.py:96
+#: bluebottle/activities/messages/activity_manager.py:106
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been published!"
 msgstr "Je activiteit op {site_name} is gepubliceerd!"
 
-#: bluebottle/activities/messages/activity_manager.py:104
+#: bluebottle/activities/messages/activity_manager.py:114
 #: bluebottle/time_based/messages/activity_manager.py:18
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an activity on {site_name}"
 msgstr "Je hebt een activiteit ingediend op {site_name}"
 
-#: bluebottle/activities/messages/activity_manager.py:112
+#: bluebottle/activities/messages/activity_manager.py:122
 #: bluebottle/time_based/messages/activity_manager.py:26
+#: test_translations.py:20 test_translations.py:23 test_translations.py:29
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been approved!"
 msgstr "Je activiteit op {site_name} is goedgekeurd!"
 
-#: bluebottle/activities/messages/activity_manager.py:120
+#: bluebottle/activities/messages/activity_manager.py:130
 #, python-brace-format
 msgctxt "email"
 msgid "The activity you submitted on {site_name} needs work"
 msgstr "De activiteit die je op {site_name} hebt ingediend heeft aanpassingen nodig"
 
-#: bluebottle/activities/messages/activity_manager.py:125
+#: bluebottle/activities/messages/activity_manager.py:138
 #, python-brace-format
 msgctxt "email"
 msgid "Publish your activity \"{title}\""
 msgstr "Publiceer jouw activiteit \"{title}\""
 
-#: bluebottle/activities/messages/activity_manager.py:133
+#: bluebottle/activities/messages/activity_manager.py:146
 msgctxt "email"
 msgid "Publish your activity"
 msgstr "Publiceer jouw activiteit"
 
-#: bluebottle/activities/messages/activity_manager.py:137
+#: bluebottle/activities/messages/activity_manager.py:154
 msgctxt "email"
 msgid "Terms of service"
 msgstr "Gebruiksvoorwaarden"
@@ -486,27 +487,27 @@ msgctxt "email"
 msgid "starts immediately"
 msgstr "begint direct"
 
-#: bluebottle/activities/messages/matching.py:127
+#: bluebottle/activities/messages/matching.py:133
 msgctxt "email"
 msgid "Find activities"
 msgstr "Bekijk activiteiten"
 
-#: bluebottle/activities/messages/matching.py:181
+#: bluebottle/activities/messages/matching.py:190
 msgctxt "email"
 msgid "It’s a new year, let's make some impact!"
 msgstr "Het is een nieuw jaar, laten we impact maken!"
 
-#: bluebottle/activities/messages/matching.py:186
+#: bluebottle/activities/messages/matching.py:198
 msgctxt "email"
 msgid "Haven’t joined an activity yet? Let’s get started!"
 msgstr "Nog niet aangemeld voor een activiteit? Laten we beginnen!"
 
-#: bluebottle/activities/messages/matching.py:191
+#: bluebottle/activities/messages/matching.py:206
 msgctxt "email"
 msgid "Half way through the year and still plenty of activities to join"
 msgstr "Halverwege het jaar en nog steeds genoeg activiteiten om je voor aan te melden"
 
-#: bluebottle/activities/messages/matching.py:196
+#: bluebottle/activities/messages/matching.py:214
 #, python-brace-format
 msgctxt "email"
 msgid "Make use of your {do_good_hours} hours of impact!"
@@ -519,8 +520,8 @@ msgid "You have been added to the activity {title}"
 msgstr "Je bent toegevoegd aan de activiteit {title}"
 
 #: bluebottle/activities/messages/participant.py:44
-#: bluebottle/time_based/messages/participants.py:81
-#: bluebottle/time_based/messages/participants.py:89
+#: bluebottle/time_based/messages/participants.py:87
+#: bluebottle/time_based/messages/participants.py:95
 #, python-brace-format
 msgctxt "email"
 msgid "You have withdrawn from the activity \"{title}\""
@@ -551,13 +552,13 @@ msgctxt "email"
 msgid "View this activity"
 msgstr "Bekijk deze activiteit"
 
-#: bluebottle/activities/messages/reviewer.py:42
+#: bluebottle/activities/messages/reviewer.py:45
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity is ready to be reviewed on {site_name}"
 msgstr "Een nieuwe activiteit staat klaar om beoordeeld te worden op {site_name}"
 
-#: bluebottle/activities/messages/reviewer.py:48
+#: bluebottle/activities/messages/reviewer.py:51
 #, python-brace-format
 msgctxt "email"
 msgid "A new activity has been published on {site_name}"
@@ -1405,7 +1406,6 @@ msgid "Head over to your activity page to see what you need to do to open up you
 msgstr "Ga naar je activiteitenpagina en voeg de resultaten van je evenement toe, zodat iedereen kan zien wat je activiteit heeft bereikt."
 
 #: bluebottle/activities/templates/mails/messages/activity_manager/activity_submitted.html:5
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_submitted.html:5
 #, python-format
 msgctxt "email"
 msgid "\n"
@@ -3143,11 +3143,11 @@ msgstr "Je activiteit \"{title}\" start morgen!"
 #: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:68
 #: bluebottle/time_based/messages.py:480
 #: bluebottle/time_based/messages/messages.py:483
-#: bluebottle/time_based/messages/registrations.py:158
-#: bluebottle/time_based/messages/registrations.py:168
-#: bluebottle/time_based/messages/registrations.py:178
-#: bluebottle/time_based/messages/registrations.py:201
-#: bluebottle/time_based/messages/registrations.py:211
+#: bluebottle/time_based/messages/registrations.py:164
+#: bluebottle/time_based/messages/registrations.py:174
+#: bluebottle/time_based/messages/registrations.py:184
+#: bluebottle/time_based/messages/registrations.py:207
+#: bluebottle/time_based/messages/registrations.py:217
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
@@ -4057,96 +4057,115 @@ msgstr "Aanpasbaar bericht"
 msgid "You can provide a custom message to the campaign owner explaining why the funding needs work."
 msgstr "Je kunt een persoonlijke boodschap aan de activiteitenbeheerder geven met uitleg om tips om de campagne geschikt te maken."
 
-#: bluebottle/funding/messages/funding/activity_manager.py:25
+#: bluebottle/funding/messages/funding/activity_manager.py:32
+msgctxt "email"
 msgid "You have a new donation!💰"
 msgstr "Je hebt een nieuwe donatie!💰"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:38
+#: bluebottle/funding/messages/funding/activity_manager.py:48
+msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
 msgstr "Je crowdfunding deadline is verstreken"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:43
+#: bluebottle/funding/messages/funding/activity_manager.py:56
 #, python-brace-format
+msgctxt "email"
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
 msgstr "Je crowdfunding campagne \"{title}\" is afgerond! 🎉"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:48
+#: bluebottle/funding/messages/funding/activity_manager.py:64
 #, python-brace-format
+msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been rejected"
 msgstr "Je crowdfunding campagne op {site_name} is afgewezen"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:53
+#: bluebottle/funding/messages/funding/activity_manager.py:72
 #, python-brace-format
+msgctxt "email"
 msgid "You submitted a crowdfunding campaign on {site_name}"
 msgstr "Je hebt een crowdfunding campagne ingediend op {site_name}"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:58
+#: bluebottle/funding/messages/funding/activity_manager.py:80
 #, python-brace-format
-msgid "The crowdfunding campaign you submitted on {site_name} needs work"
-msgstr "De crowdfunding campagne die je op {site_name} hebt ingediend heeft aanpassingen nodig"
+msgctxt "email"
+msgid "Your crowdfunding campaign on {site_name} needs work"
+msgstr "Je crowdfunding campagne op {site_name} moet nog worden verbeterd"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:63
+#: bluebottle/funding/messages/funding/activity_manager.py:88
+msgctxt "email"
 msgid "Your crowdfunding campaign has expired"
 msgstr "Je crowdfunding campagne is verlopen"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:68
+#: bluebottle/funding/messages/funding/activity_manager.py:96
 #, python-brace-format
+msgctxt "email"
 msgid "The donations received for your campaign \"{title}\" will be refunded"
 msgstr "De ontvangen donaties voor je campagne \"{title}\" worden terugbetaald"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:73
+#: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
+msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
 msgstr "Je crowdfunding campagne op {site_name} is goedgekeurd!"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:78
+#: bluebottle/funding/messages/funding/activity_manager.py:112
 #, python-brace-format
+msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
-msgstr "Je crowdfunding campagne \"{title}\" is weer open voor donaties 💸"
+msgstr "Je crowdfunding campagne \"{title}\" is open voor nieuwe donaties 💸"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:83
+#: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
+msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
 msgstr "Je crowdfunding campagne \"{title}\" is geannuleerd"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:105
-#: bluebottle/funding/messages/funding/activity_manager.py:110
+#: bluebottle/funding/messages/funding/activity_manager.py:149
+#: bluebottle/funding/messages/funding/activity_manager.py:157
+msgctxt "email"
 msgid "Action required for your crowdfunding campaign"
 msgstr "Actie vereist voor je crowdfunding campagne"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:115
-#: bluebottle/funding/messages/funding/activity_manager.py:130
-#: bluebottle/grant_management/messages/activity_manager.py:78
-msgid "Your identity has been verified"
-msgstr "Je identiteit is geverifieerd"
+#: bluebottle/funding/messages/funding/activity_manager.py:165
+#: bluebottle/funding/messages/funding/activity_manager.py:189
+#, python-brace-format
+msgctxt "email"
+msgid "Your identity has been verified on {site_name}"
+msgstr "Je identiteit is geverifieerd op {site_name}"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:120
+#: bluebottle/funding/messages/funding/activity_manager.py:173
+msgctxt "email"
 msgid "Action required for your identity verification"
 msgstr "Actie vereist voor uw identiteitsverificatie"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:125
+#: bluebottle/funding/messages/funding/activity_manager.py:181
+msgctxt "email"
 msgid "Action required for identity verification"
 msgstr "Actie vereist voor identiteitsverificatie"
 
 #: bluebottle/funding/messages/funding/contributor.py:8
+msgctxt "email"
 msgid "Thanks for your donation!"
 msgstr "Bedankt voor je donatie!"
 
 #: bluebottle/funding/messages/funding/contributor.py:24
 #: bluebottle/funding/messages/funding/contributor.py:40
 #, python-brace-format
+msgctxt "email"
 msgid "Your donation for the campaign \"{title}\" will be refunded"
 msgstr "Je donatie voor de campagne \"{title}\" zal worden terugbetaald"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:9
+#: bluebottle/funding/messages/funding/platform_manager.py:12
+msgctxt "email"
 msgid "Live campaign identity verification failed!"
 msgstr "Identiteitsverificatie van live campagne mislukt!"
 
-#: bluebottle/funding/messages/funding/platform_manager.py:28
+#: bluebottle/funding/messages/funding/platform_manager.py:34
+msgctxt "email"
 msgid "Incomplete payout account for running campaign"
-msgstr "Onvolledige uitbetaalgegevens voor het uitvoeren van campagne"
+msgstr "Onvolledige uitbetaalgegevens voor een live campagne"
 
-#: bluebottle/funding/messages/funding/reviewer.py:9
+#: bluebottle/funding/messages/funding/reviewer.py:12
 #, python-brace-format
 msgctxt "email"
 msgid "A new crowdfunding campaign is ready to be reviewed on {site_name}"
@@ -5021,35 +5040,76 @@ msgstr "Uiterste aanmelddatum"
 msgctxt "email"
 msgid "\n"
 "Good news, your crowdfunding campaign \"%(title)s\" has been approved!\n"
-"The campaign is now open for donations on %(site_name)s.<br>\n"
+"Your campaign will be live and people can start donating.<br>\n"
 "<br>\n"
 "Share your crowdfunding campaign far and wide to inspire support and attract contributions!\n"
 msgstr "\n"
 "Goed nieuws, je crowdfunding campagne \"%(title)s\" is goedgekeurd!\n"
-"De campagne is nu open voor donaties op %(site_name)s.<br>\n"
+"Je campagne is nu live en mensen kunnen beginnen met doneren.<br>\n"
 "<br>\n"
-"Deel je crowdfunding campagne om zoveel mogelijk aandacht te krijgen!\n"
+"Deel je crowdfunding campagne om zoveel mogelijk aandacht te krijgen en bijdrages aan te trekken!\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_needs_work.html:5
 #, python-format
 msgctxt "email"
 msgid "\n"
-"Your crowdfunding campaign \"%(title)s\" has been reviewed and needs work. The platform manager\n"
-"will be in contact to help you make some changes to your campaign.\n"
+"    Your crowdfunding campaign \"%(title)s\" has been reviewed and needs work.\n"
+"    <br><br>\n"
+"    The platform manager will be in contact to help you make some changes to your campaign.\n"
 msgstr "\n"
-"Je crowdfunding campagne \"%(title)s\" is beoordeeld en heeft nog wat werk nodig. Er wordt contact met je opgenomen om je te helpen met het doorvoeren van de benodigde aanpassingen.\n"
+"    Je crowdfunding campagne \"%(title)s\" is beoordeeld en heeft nog wat werk nodig.\n"
+"    <br><br>\n"
+"    De platformbeheerder neemt contact met je op om je te helpen met het doorvoeren van de benodigde aanpassingen.\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_rejected.html:6
 #, python-format
 msgctxt "email"
 msgid "\n"
 "            Unfortunately your crowdfunding campaign \"%(title)s\" has been rejected.\n"
+"            <br /><br />\n"
 "            If you have any questions, you can contact the platform manager at %(contact_email)s.\n"
 "        "
 msgstr "\n"
-"        Helaas is je crowdfunding campagne \"%(title)s\" afgewezen.\n"
-"        Als je vragen hebt, kun je contact opnemen met de platformbeheerder via %(contact_email)s.\n"
+"            Bedankt dat je de tijd hebt genomen om je aanvraag \"%(title)s\" in te dienen. We hebben je aanvraag zorgvuldig beoordeeld, maar kunnen deze helaas niet goedkeuren.\n"
+"            <br />\n"
+"            Heb je vragen? Neem dan gerust contact op via %(contact_email)s.\n"
 "        "
+
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_submitted.html:5
+#, python-format
+msgctxt "email"
+msgid "\n"
+"    <p>\n"
+"        Your crowdfunding campaign \"%(title)s\" has been submitted on %(site_name)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>Here’s what happens next:</b>\n"
+"        <ul>\n"
+"            <li>\n"
+"                Your campaign will be reviewed by the platform manager.\n"
+"            </li>\n"
+"            <li>\n"
+"                Once approved, your campaign will be live and people can start donating.\n"
+"            </li>\n"
+"        </ul>\n"
+"        You will not be able to edit the application when it is in review.\n"
+"    </p>\n"
+msgstr "\n"
+"    <p>\n"
+"        Je crowdfunding campagne \"%(title)s\" is ingediend op %(site_name)s.\n"
+"        <br/>\n"
+"        <br/>\n"
+"        <b>Dit gebeurt er nu:</b>\n"
+"        <ul>\n"
+"            <li>\n"
+"                Je campagne wordt beoordeeld door de platformbeheerder.\n"
+"            </li>\n"
+"            <li>\n"
+"                Zodra deze goedgekeurd is, gaat je campagne live en kunnen mensen beginnen met doneren.\n"
+"            </li>\n"
+"        </ul>\n"
+"        Je kunt de aanmelding niet bewerken terwijl deze in beoordeling is.\n"
+"    </p>\n"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/donation_success_owner.html:5
 msgctxt "email"
@@ -5103,7 +5163,7 @@ msgstr "\n"
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            Your funding deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your funding goal within the deadline.\n"
+"            Your campaign deadline for <i>%(title)s\"</i> passed. Unfortunately, you didn’t reach your campaign goal within the deadline.\n"
 "            We will send you a follow-up email with more information soon.\n"
 "        "
 msgstr "\n"
@@ -5115,11 +5175,11 @@ msgstr "\n"
 #, python-format
 msgctxt "email"
 msgid "\n"
-"        Congratulations, your funding deadline for \"%(title)s\" has passed and you've successfully reached your funding goal!<br>\n"
+"        Congratulations, your campaign deadline for \"%(title)s\" has passed and you've successfully reached your campaign goal!<br>\n"
 "        Head over to your campaign page and thank your awesome backers for their donations and support.<br>\n"
 "    "
 msgstr "\n"
-"Gefeliciteerd, De deadline voor je campagne \"%(title)s\" is gepasseerd en je hebt je doelbedrag behaald!<br>\n"
+"Gefeliciteerd, de deadline voor je campagne \"%(title)s\" is gepasseerd en je hebt je doelbedrag behaald!<br>\n"
 "            Ga naar je campagnepagina en bedank al je fantastische supporters voor hun donaties en steun.<br>\n"
 "    "
 
@@ -5138,7 +5198,7 @@ msgstr "\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/funding_refunded.html:15
-#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:24
+#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:26
 msgctxt "email"
 msgid "Go to campaign"
 msgstr "Naar campagne"
@@ -5181,24 +5241,24 @@ msgstr "\n"
 #, python-format
 msgctxt "email"
 msgid "\n"
-"            You are working on a crowdfunding campaign on %(site_name)s.\n"
+"            You are working on a crowdfunding campaign \"%(title)s\".\n"
 "            <br/><br/>\n"
-"            Earlier, you submitted information to verify your identity. In some cases, we need extra information from you.\n"
+"            You submitted some information to verify you or an organisations identity but in some cases we need extra information for a successful verification.\n"
+"            <br/><br/>\n"
 "            Please provide this as soon as possible to avoid issues with your campaign or to resolve them quickly.\n"
 "        "
 msgstr "\n"
-"            Je bent bezig met een crowdfunding campagne op %(site_name)s.\n"
+"            Je bent bezig met een crowdfunding campagne \"%(title)s\".\n"
 "            <br/><br/>\n"
-"            Eerder heb je gegevens ingediend om jouw identiteit of die van de organisatie te verifiëren. In sommige gevallen hebben we extra informatie van je nodig. Lever dit zo snel mogelijk aan om problemen met je campagne te voorkomen of ze snel op te lossen.\n"
+"            Eerder heb je informatie ingediend om jouw identiteit of die van een organisatie te controleren, maar in sommige gevallen hebben we extra informatie nodig voor een succesvolle verificatie.\n"
+"            <br/><br/>\n"
+"            Lever dit zo snel mogelijk aan om problemen met je campagne te voorkomen of om ze snel op te lossen.\n"
 "        "
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:18
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:18
-#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:20
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_marked_incomplete.html:19
 msgctxt "email"
-msgid "Provide additional details"
-msgstr "Gegevens aanvullen"
+msgid "Provide details"
+msgstr "Geef details op"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_rejected.html:6
 #, python-format
@@ -5227,29 +5287,39 @@ msgstr "\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_rejected.html:22
-#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:22
+#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:23
 #: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_rejected.html:22
 msgctxt "email"
 msgid "Check your details"
 msgstr "Controleer je gegevens"
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/payout_account_verified.html:6
-#, python-format
 msgctxt "email"
 msgid "\n"
-"            You are working on a crowdfunding campaign on %(site_name)s.\n"
-"            <br/><br/>\n"
-"            We have good news! Your identity has been verified, and you can continue with your crowdfunding campaign.\n"
-"            <br/><br/>\n"
-"            If your campaign has already started, you don’t need to do anything else. If it hasn’t started yet,\n"
-"            please check that everything is in order and submit your campaign for approval.\n"
+"            Good news, your identity has been successfully verified and you can continue with your crowdfunding campaign.\n"
+"            <br><br>\n"
+"            <b>Here’s what happens next:</b>\n"
+"            <ol>\n"
+"                <li>\n"
+"                    Submit your campaign and it will be reviewed by the platform manager.\n"
+"                </li>\n"
+"                <li>\n"
+"                    Once approved, your campaign will be live and people can start donating.\n"
+"                </li>\n"
+"            </ol>\n"
 "        "
 msgstr "\n"
-"            Je bent bezig met een crowdfunding campagne op %(site_name)s.\n"
-"            <br/><br/>\n"
-"            We hebben goed nieuws! Je identiteit is gecontroleerd en je kunt verder met je crowdfunding campagne.\n"
-"            <br/><br/>\n"
-"            Als je campagne al is gestart, hoef je verder niets te doen. Als dat niet zo is, controleer dan of alles in orde is en dien je campagne in voor goedkeuring.\n"
+"            Goed nieuws, je identiteit is met succes geverifieerd en je kunt verder met je crowdfunding campagne.\n"
+"            <br><br>\n"
+"            <b>Dit gebeurt er nu:</b>\n"
+"            <ol>\n"
+"                <li>\n"
+"                    Dien je campagne in en deze zal worden beoordeeld door de platformbeheerder.\n"
+"                </li>\n"
+"                <li>\n"
+"                    Zodra deze is goedgekeurd, zal je campagne live zijn en kunnen mensen beginnen met doneren.\n"
+"                </li>\n"
+"            </ol>\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:6
@@ -5265,17 +5335,24 @@ msgstr "\n"
 "    Om geld te ontvangen voor uw organisatie te kunnen verzamelen op %(site_name)s,  hebben we extra informatie van u nodig. Verstrek deze informatie zo snel mogelijk.\n"
 "    "
 
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_marked_incomplete.html:14
+#: bluebottle/funding/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:17
+#: bluebottle/grant_management/templates/mails/messages/grant_application/activity_manager/payout_account_marked_incomplete.html:20
+msgctxt "email"
+msgid "Provide additional details"
+msgstr "Gegevens aanvullen"
+
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:6
+#, python-format
 msgctxt "email"
 msgid "\n"
 "    Identity verification failed for an organization you manage.\n"
 "    <br />\n"
 "    <br />\n"
-"    Earlier, you information to verify your identity was submitted, but\n"
+"    Earlier, information to verify your identity was submitted, but\n"
 "    unfortunately, this was not successful. This could be due to various\n"
 "    reasons. Please check the link below and find a link to update your\n"
-"    information If you still have problems, contact the platform manager at {{\n"
-"    contact_email }}.\n"
+"    information If you still have problems, contact the platform manager at %(contact_email)s.\n"
 "    <br />\n"
 "    <br />\n"
 "    Please do this as soon as possible. "
@@ -5286,13 +5363,12 @@ msgstr "\n"
 "    Eerder is informatie ter verificatie ingediend, maar\n"
 "    helaas is dit niet gelukt. Dit kan verschillende\n"
 "    redenen hebben. Gebruik onderstaande link om de\n"
-"    informatie te controleren en bij te werken. Heb je vragen? Neem dan contact op via {{\n"
-"    contact_email }}.\n"
+"    informatie te controleren en bij te werken. Heb je vragen? Neem dan contact op via de platformbeheerder op %(contact_email)s.\n"
 "    <br />\n"
 "    <br />\n"
 "    Doe dit zo snel mogelijk. "
 
-#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:23
+#: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
 msgctxt "email"
 msgid "Check details"
 msgstr "Gegevens controleren"
@@ -5303,12 +5379,14 @@ msgctxt "email"
 msgid "\n"
 "            Great news! Your identity has been successfully verified on %(site_name)s.\n"
 "            <br/>\n"
-"            This means that people can now collect funds for your organisation. These funds will be paid out straight to your organisation once a funding campaign has come to an end.\n"
+"            This means that people can now collect funds for your organisation.\n"
+"            These funds will be paid out straight to your organisation once a crowdfudning campaign has come to an end.\n"
 "        "
 msgstr "\n"
 "            Goed nieuws! Je identiteit is met succes geverifieerd op %(site_name)s.\n"
 "            <br/>\n"
-"            Dit betekent dat mensen nu geld kunnen ophalen voor jouw organisatie. De opgehaalde bedragen zullen rechtstreeks aan jouw organisatie worden uitbetaald zodra een crowdfunding campagne is afgelopen.\n"
+"            Dit betekent dat mensen nu geld kunnen ophalen voor jouw organisatie.\n"
+"            De opgehaalde bedragen zullen rechtstreeks aan jouw organisatie worden uitbetaald zodra een crowdfunding campagne is afgelopen.\n"
 "        "
 
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_activity_refunded_donor.html:7
@@ -5335,12 +5413,12 @@ msgctxt "email"
 msgid "\n"
 "            Hi %(recipient_name)s,<br/>\n"
 "            Your donation to \"%(title)s\" will be fully refunded within 10 days.\n"
-"            Either you requested this refund or the campaign didn’t reach its funding goal.\n"
+"            Either you requested this refund or the campaign didn’t reach its campaign goal.\n"
 "            If you have any questions about this refund, please contact %(contact_email)s.\n"
 "        "
 msgstr "\n"
 "            Hi %(recipient_name)s,<br/>\n"
-"            Je donatie aan %(title)s zal binnen 10 dagen volledig worden terugbetaald.\n"
+"            Je donatie aan \"%(title)s\" zal binnen 10 dagen volledig worden terugbetaald.\n"
 "            Je hebt deze terugbetaling zelf aangevraagd of de campagne heeft zijn doelbedrag niet gehaald.\n"
 "            Als je vragen hebt over deze terugbetaling neem dan contact op met %(contact_email)s.\n"
 "        "
@@ -5348,12 +5426,16 @@ msgstr "\n"
 #: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:8
 #, python-format
 msgctxt "email"
-msgid " Hi %(recipient_name)s,<br />\n"
-"    Thanks for your donation! "
-msgstr " Hi %(recipient_name)s,<br />       \n"
-" Bedankt voor je donatie! "
+msgid "\n"
+"        Hi %(recipient_name)s,<br />\n"
+"        Thanks for your donation!\n"
+"    "
+msgstr "\n"
+"        Hi %(recipient_name)s,<br />\n"
+"        Bedankt voor je donatie!\n"
+"    "
 
-#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:15
+#: bluebottle/funding/templates/mails/messages/funding/contributor/donation_success_donor.html:17
 #, python-format
 msgid "\n"
 "    <strong>Please transfer the amount of %(amount)s to \"%(title)s\".</strong><br />\n"
@@ -6246,35 +6328,46 @@ msgstr "Know Your Customer informatie"
 msgid "Account details not available"
 msgstr "Bankgegevens niet beschikbaar"
 
-#: bluebottle/grant_management/messages/activity_manager.py:35
+#: bluebottle/grant_management/messages/activity_manager.py:37
 #, python-brace-format
+msgctxt "email"
 msgid "Your grant application on {site_name} has been rejected"
 msgstr "Je aanvraag op {site_name} is afgewezen"
 
-#: bluebottle/grant_management/messages/activity_manager.py:40
+#: bluebottle/grant_management/messages/activity_manager.py:42
 #, python-brace-format
+msgctxt "email"
 msgid "You have submitted a grant application on {site_name}"
 msgstr "Je hebt een aanvraag ingediend op {site_name}"
 
-#: bluebottle/grant_management/messages/activity_manager.py:45
+#: bluebottle/grant_management/messages/activity_manager.py:47
 #, python-brace-format
+msgctxt "email"
 msgid "The grant application you submitted on {site_name} needs work"
 msgstr "De aanvraag die je hebt ingediend op {site_name} heeft aanpassingen nodig"
 
-#: bluebottle/grant_management/messages/activity_manager.py:50
+#: bluebottle/grant_management/messages/activity_manager.py:52
 #, python-brace-format
+msgctxt "email"
 msgid "Your grant application on {site_name} has been approved!"
 msgstr "Je aanvraag op {site_name} is goedgekeurd!"
 
-#: bluebottle/grant_management/messages/activity_manager.py:55
+#: bluebottle/grant_management/messages/activity_manager.py:57
 #, python-brace-format
+msgctxt "email"
 msgid "Your grant application on {site_name} has been cancelled"
 msgstr "Je aanvraag op {site_name} is geannuleerd"
 
-#: bluebottle/grant_management/messages/activity_manager.py:60
-#: bluebottle/grant_management/messages/activity_manager.py:69
+#: bluebottle/grant_management/messages/activity_manager.py:62
+#: bluebottle/grant_management/messages/activity_manager.py:71
+msgctxt "email"
 msgid "Action required for your grant application"
 msgstr "Actie vereist voor je aanvraag"
+
+#: bluebottle/grant_management/messages/activity_manager.py:80
+msgctxt "email"
+msgid "Your identity has been verified"
+msgstr "Je identiteit is geverifieerd"
 
 #: bluebottle/grant_management/messages/grant_provider.py:9
 #, python-brace-format
@@ -6930,48 +7023,57 @@ msgctxt "email"
 msgid "View initiative"
 msgstr "Bekijk initiatief"
 
-#: bluebottle/initiatives/messages/initiator.py:23
+#: bluebottle/initiatives/messages/initiator.py:25
 #, python-brace-format
+msgctxt "email"
 msgid "You submitted an initiative on {site_name}"
 msgstr "Je hebt een initiatief ingediend op {site_name}"
 
-#: bluebottle/initiatives/messages/initiator.py:28
+#: bluebottle/initiatives/messages/initiator.py:30
 #, python-brace-format
+msgctxt "email"
 msgid "Your initiative on {site_name} has been approved!"
 msgstr "Je initiatief op {site_name} is goedgekeurd!"
 
-#: bluebottle/initiatives/messages/initiator.py:33
+#: bluebottle/initiatives/messages/initiator.py:35
 #, python-brace-format
+msgctxt "email"
 msgid "Your initiative on {site_name} has been published!"
 msgstr "Je initiatief op {site_name} is gepubliceerd!"
 
-#: bluebottle/initiatives/messages/initiator.py:38
+#: bluebottle/initiatives/messages/initiator.py:40
 #, python-brace-format
+msgctxt "email"
 msgid "The initiative you submitted on {site_name} needs work"
 msgstr "Het initiatief die je op {site_name} hebt ingediend heeft aanpassingen nodig"
 
-#: bluebottle/initiatives/messages/initiator.py:43
+#: bluebottle/initiatives/messages/initiator.py:45
 #, python-brace-format
+msgctxt "email"
 msgid "Your initiative on {site_name} has been rejected"
 msgstr "Je initiatief op {site_name} is afgewezen"
 
-#: bluebottle/initiatives/messages/initiator.py:48
+#: bluebottle/initiatives/messages/initiator.py:50
 #, python-brace-format
+msgctxt "email"
 msgid "The initiative \"{title}\" has been cancelled."
 msgstr "Je initiatief \"{title}\" is geannuleerd."
 
-#: bluebottle/initiatives/messages/reviewer.py:38
+#: bluebottle/initiatives/messages/reviewer.py:41
 #, python-brace-format
+msgctxt "email"
 msgid "A new initiative is ready to be reviewed on {site_name}"
 msgstr "Een nieuw initiatief staat klaar om te worden beoordeeld op {site_name}"
 
-#: bluebottle/initiatives/messages/reviewer.py:43
+#: bluebottle/initiatives/messages/reviewer.py:46
 #, python-brace-format
+msgctxt "email"
 msgid "A new initiative has been published on {site_name}!"
 msgstr "Er is een nieuw initiatief gepubliceerd op {site_name}!"
 
-#: bluebottle/initiatives/messages/reviewer.py:52
+#: bluebottle/initiatives/messages/reviewer.py:55
 #, python-brace-format
+msgctxt "email"
 msgid "You are assigned to review \"{title}\"."
 msgstr "Je bent aangewezen als beoordelaar voor \"{title}\"."
 
@@ -7693,11 +7795,13 @@ msgstr "Stuur welkomst-e-mail"
 
 #: bluebottle/members/messages.py:8
 #, python-brace-format
+msgctxt "email"
 msgid "Welcome to {site_name}!"
 msgstr "Welkom bij {site_name}!"
 
 #: bluebottle/members/messages.py:16
 #, python-brace-format
+msgctxt "email"
 msgid "Activate your account for {site_name}"
 msgstr "Activeer je account voor {site_name}"
 
@@ -8285,6 +8389,10 @@ msgstr "aan {}"
 #: bluebottle/notifications/effects.py:117
 msgid "Raise error"
 msgstr "Fout opvoeren"
+
+#: bluebottle/notifications/management/commands/preview_all_messages.py:682
+msgid "test"
+msgstr "test"
 
 #: bluebottle/notifications/models.py:54
 msgid "Twitter"
@@ -9156,12 +9264,12 @@ msgid "Passed"
 msgstr "Gepasseerd"
 
 #: bluebottle/time_based/admin.py:1171
-#: bluebottle/time_based/messages/registrations.py:68
+#: bluebottle/time_based/messages/registrations.py:71
 msgid "day"
 msgstr "dag"
 
 #: bluebottle/time_based/admin.py:1172
-#: bluebottle/time_based/messages/registrations.py:70
+#: bluebottle/time_based/messages/registrations.py:73
 msgid "week"
 msgstr "week"
 
@@ -9505,7 +9613,7 @@ msgstr "Je bent toegevoegd aan een team voor '{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:411
 #: bluebottle/time_based/messages/messages.py:414
-#: bluebottle/time_based/messages/registrations.py:38
+#: bluebottle/time_based/messages/registrations.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new participant for your activity \"{title}\" 🎉"
@@ -9535,11 +9643,11 @@ msgstr "Je hebt je aanmelding aangepast voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages.py:560
 #: bluebottle/time_based/messages/messages.py:563
-#: bluebottle/time_based/messages/registrations.py:153
-#: bluebottle/time_based/messages/registrations.py:163
-#: bluebottle/time_based/messages/registrations.py:173
-#: bluebottle/time_based/messages/registrations.py:183
-#: bluebottle/time_based/messages/registrations.py:206
+#: bluebottle/time_based/messages/registrations.py:159
+#: bluebottle/time_based/messages/registrations.py:169
+#: bluebottle/time_based/messages/registrations.py:179
+#: bluebottle/time_based/messages/registrations.py:189
+#: bluebottle/time_based/messages/registrations.py:212
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
@@ -9561,7 +9669,7 @@ msgstr "Je bent geselecteerd voor de activiteit \"{title}\""
 
 #: bluebottle/time_based/messages.py:651
 #: bluebottle/time_based/messages/messages.py:654
-#: bluebottle/time_based/messages/registrations.py:111
+#: bluebottle/time_based/messages/registrations.py:117
 #, python-brace-format
 msgctxt "email"
 msgid "You have not been selected for the activity \"{title}\""
@@ -9576,7 +9684,7 @@ msgstr "Bekijk alle activiteiten"
 
 #: bluebottle/time_based/messages.py:672
 #: bluebottle/time_based/messages/messages.py:675
-#: bluebottle/time_based/messages/participants.py:73
+#: bluebottle/time_based/messages/participants.py:79
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed as participant for the activity \"{title}\""
@@ -9598,7 +9706,7 @@ msgstr "Jouw bijdrage aan de activiteit \"{title}\" is succesvol 🎉"
 
 #: bluebottle/time_based/messages.py:736
 #: bluebottle/time_based/messages/messages.py:739
-#: bluebottle/time_based/messages/participants.py:37
+#: bluebottle/time_based/messages/participants.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your activity \"{title}\""
@@ -9647,7 +9755,7 @@ msgstr "Een team is toegevoegd aan jouw activiteit \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:894
 #: bluebottle/time_based/messages/messages.py:909
-#: bluebottle/time_based/messages/participants.py:29
+#: bluebottle/time_based/messages/participants.py:32
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your activity \"{title}\""
@@ -9666,105 +9774,105 @@ msgctxt "email"
 msgid "Your activity on {site_name} has been registered!"
 msgstr "Je activiteit op {site_name} is geregistreerd!"
 
-#: bluebottle/time_based/messages/participants.py:103
+#: bluebottle/time_based/messages/participants.py:109
 #, python-brace-format
 msgctxt "email"
 msgid "You have been scheduled for the activity \"{title}\""
 msgstr "Je bent ingeroosterd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/participants.py:117
+#: bluebottle/time_based/messages/participants.py:123
 #, python-brace-format
 msgctxt "email"
 msgid "You have been added to the activity \"{title}\""
 msgstr "Je bent toegevoegd aan de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/registrations.py:33
+#: bluebottle/time_based/messages/registrations.py:36
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new application for your activity \"{title}\" 🎉"
 msgstr "Je hebt een nieuwe aanmelding voor je activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:43
+#: bluebottle/time_based/messages/registrations.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "A participant for your activity \"{title}\" has stopped"
 msgstr "Een deelnemer voor je activiteit \"{title}\" is gestopt"
 
-#: bluebottle/time_based/messages/registrations.py:49
+#: bluebottle/time_based/messages/registrations.py:52
 #, python-brace-format
 msgctxt "email"
 msgid "A participant for your activity \"{title}\" has restarted"
 msgstr "Een deelnemer voor je activiteit \"{title}\" heeft zijn deelname hervat"
 
-#: bluebottle/time_based/messages/registrations.py:72
+#: bluebottle/time_based/messages/registrations.py:75
 msgid "month"
 msgstr "maand"
 
-#: bluebottle/time_based/messages/registrations.py:99
+#: bluebottle/time_based/messages/registrations.py:105
 #, python-brace-format
 msgctxt "email"
 msgid "You have been selected for the activity \"{title}\""
 msgstr "Je bent geaccepteerd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/registrations.py:105
+#: bluebottle/time_based/messages/registrations.py:111
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been selected for the activity \"{title}\""
 msgstr "Je team is geaccepteerd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/registrations.py:116
+#: bluebottle/time_based/messages/registrations.py:122
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed from the activity \"{title}\""
 msgstr "Je bent verwijderd van de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/registrations.py:122
+#: bluebottle/time_based/messages/registrations.py:128
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has not been selected for the activity \"{title}\""
 msgstr "Je team is niet geaccepteerd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/registrations.py:129
+#: bluebottle/time_based/messages/registrations.py:135
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" has been stopped"
 msgstr "Je deelname aan de activiteit \"{title}\" is gestopt"
 
-#: bluebottle/time_based/messages/registrations.py:136
+#: bluebottle/time_based/messages/registrations.py:142
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" has been restarted"
 msgstr "Je deelname aan de activiteit \"{title}\" is hervat"
 
-#: bluebottle/time_based/messages/registrations.py:144
+#: bluebottle/time_based/messages/registrations.py:150
 msgctxt "email"
 msgid "day"
 msgstr "dag"
 
-#: bluebottle/time_based/messages/registrations.py:146
+#: bluebottle/time_based/messages/registrations.py:152
 msgctxt "email"
 msgid "week"
 msgstr "week"
 
-#: bluebottle/time_based/messages/registrations.py:148
+#: bluebottle/time_based/messages/registrations.py:154
 msgctxt "email"
 msgid "months"
 msgstr "maanden"
 
-#: bluebottle/time_based/messages/registrations.py:216
+#: bluebottle/time_based/messages/registrations.py:222
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
 msgstr "Een nieuw team heeft zich aangemeld voor je activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:221
+#: bluebottle/time_based/messages/registrations.py:227
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
 msgstr "Er is een nieuw team voor je activiteit \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:226
-#: bluebottle/time_based/messages/registrations.py:231
+#: bluebottle/time_based/messages/registrations.py:232
+#: bluebottle/time_based/messages/registrations.py:237
 #, python-brace-format
 msgctxt "email"
 msgid "You have registered your team on \"{site_name}\""
@@ -9777,86 +9885,86 @@ msgid "A new activity has been registered on {site_name}"
 msgstr "Een nieuwe activiteit is geregistreerd op {site_name}"
 
 #: bluebottle/time_based/messages/teams.py:17
-#: bluebottle/time_based/messages/teams.py:109
+#: bluebottle/time_based/messages/teams.py:114
 msgctxt "email"
 msgid "Open your team"
 msgstr "Bekijk je team"
 
-#: bluebottle/time_based/messages/teams.py:29
+#: bluebottle/time_based/messages/teams.py:31
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been removed from your activity \"{title}\""
 msgstr "Een team is verwijderd van je activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:38
+#: bluebottle/time_based/messages/teams.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "A team has withdrawn from your activity \"{title}\""
 msgstr "Een team heeft zich afgemeld voor je activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:52
-#: bluebottle/time_based/messages/teams.py:158
-#: bluebottle/time_based/messages/teams.py:242
+#: bluebottle/time_based/messages/teams.py:54
+#: bluebottle/time_based/messages/teams.py:166
+#: bluebottle/time_based/messages/teams.py:253
 msgctxt "email"
 msgid "View team"
 msgstr "Bekijk team"
 
-#: bluebottle/time_based/messages/teams.py:64
+#: bluebottle/time_based/messages/teams.py:69
 #, python-brace-format
 msgctxt "email"
 msgid "Your team was removed from the activity \"{title}\""
 msgstr "Je team is verwijderd van de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:73
+#: bluebottle/time_based/messages/teams.py:78
 #, python-brace-format
 msgctxt "email"
 msgid "You withdrew your team from the activity \"{title}\""
 msgstr "Je hebt je team afgemeld voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:83
-#: bluebottle/time_based/messages/teams.py:202
+#: bluebottle/time_based/messages/teams.py:88
+#: bluebottle/time_based/messages/teams.py:213
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been scheduled for the activity \"{title}\""
 msgstr "Je team is ingeroosterd voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:121
+#: bluebottle/time_based/messages/teams.py:129
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team on {site_name}"
 msgstr "Je hebt een nieuw lid voor je team op {site_name}"
 
-#: bluebottle/time_based/messages/teams.py:132
+#: bluebottle/time_based/messages/teams.py:140
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your team for the activity \"{title}\""
 msgstr "Een deelnemer is verwijderd uit je team voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:143
+#: bluebottle/time_based/messages/teams.py:151
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for the activity \"{title}\""
 msgstr "Een deelnemer heeft zich afgemeld voor je team voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:170
+#: bluebottle/time_based/messages/teams.py:181
 #, python-brace-format
 msgctxt "email"
 msgid "You are now part of {name}'s team on {site_name}"
 msgstr "Je doet mee met team {name} op {site_name}"
 
-#: bluebottle/time_based/messages/teams.py:180
+#: bluebottle/time_based/messages/teams.py:191
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed from {name}'s team for the activity \"{title}\""
 msgstr "Je bent verwijderd uit team {name} voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:191
+#: bluebottle/time_based/messages/teams.py:202
 #, python-brace-format
 msgctxt "email"
 msgid "You have withdrawn from {name}'s team for the activity \"{title}\""
 msgstr "Je hebt je afgemeld voor team {name} voor de activiteit \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:218
+#: bluebottle/time_based/messages/teams.py:229
 #, python-brace-format
 msgctxt "email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
@@ -12656,19 +12764,19 @@ msgstr "Moet minstens 1 tijdsblok bevatten."
 msgid "Recent wall updates"
 msgstr "Recente wall-updates"
 
-#: bluebottle/updates/messages.py:18
+#: bluebottle/updates/messages.py:21
 #, python-brace-format
 msgctxt "email"
 msgid "New update from '{title}'"
 msgstr "Nieuwe update van '{title}'"
 
-#: bluebottle/updates/messages.py:34
+#: bluebottle/updates/messages.py:37
 #, python-brace-format
 msgctxt "email"
 msgid "A new message is posted on '{title}'"
 msgstr "Een nieuw bericht is geplaatst op '{title}'"
 
-#: bluebottle/updates/messages.py:46
+#: bluebottle/updates/messages.py:49
 #, python-brace-format
 msgctxt "email"
 msgid "You have a reply on '{title}'"

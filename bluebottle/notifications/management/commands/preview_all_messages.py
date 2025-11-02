@@ -40,7 +40,7 @@ from bluebottle.funding.models import Payout
 from bluebottle.initiatives.models import Theme
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.clients.models import Client
-from bluebottle.time_based.models import DateParticipant, DateActivitySlot
+from bluebottle.time_based.models import DateParticipant, DateActivitySlot, ScheduleSlot
 
 # Import all message modules
 MESSAGE_MODULES = {
@@ -419,7 +419,23 @@ class MockGrantApplication:
         self.organization = None
         self.payouts = Payout.objects.none()
 
+    def get_admin_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
     def get_absolute_url(self):
+        return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
+
+
+class MockGrantPayment:
+    """Mock Grant Application object"""
+
+    def __init__(self, language='en'):
+        self.id = 111
+        self.pk = 111
+        self.payouts = Payout.objects.none()
+        self.total = Money(1700, 'EUR')
+
+    def get_admin_url(self):
         return f"https://example.goodup.com/en/initiatives/activities/grant-application/{self.id}/{self.slug}"
 
 
@@ -521,18 +537,23 @@ def get_mock_object_for_message(message_class, language='en'):
 
             from bluebottle.funding.models import Funding
             return get_real_or_mock_object(Funding, MockFunding, language)
-        
+
+        if 'GrantPayment' in class_name:
+            return MockGrantPayment(language)
+
         if 'grant_management' in module_name:
-            # Grant applications might be a subclass of Funding
+            if 'PayoutAccount' in class_name:
+                from bluebottle.funding_stripe.models import StripePayoutAccount
+                return get_real_or_mock_object(StripePayoutAccount, MockPayoutAccount, language)
             try:
-                from bluebottle.funding.models import Funding
-                grant_app = Funding.objects.filter().first()
+                from bluebottle.grant_management.models import GrantApplication
+                grant_app = GrantApplication.objects.filter().first()
                 if grant_app:
                     return grant_app
             except Exception:
                 pass
             return MockGrantApplication(language)
-        
+
         if 'time_based' in module_name:
             # Check for specific time-based types
             if 'Participant' in class_name or 'participant' in module_name:
@@ -555,11 +576,17 @@ def get_mock_object_for_message(message_class, language='en'):
                     return slot
                 return MockSlot(language)
             
-            if 'Team' in class_name and 'Member' in class_name:
-                from bluebottle.time_based.models import TeamMember
-                return get_real_or_mock_object(TeamMember, MockTeamMember, language)
-            
+
             if 'Team' in class_name:
+                if 'Scheduled' in class_name:
+                    from bluebottle.time_based.models import TeamMember
+                    return get_real_or_mock_object(TeamMember, MockTeam, language)
+                if 'DetailsChanged' in class_name:
+                    from bluebottle.time_based.models import TeamScheduleSlot
+                    return get_real_or_mock_object(TeamScheduleSlot, MockTeam, language)
+                if 'Member' in class_name:
+                    from bluebottle.time_based.models import TeamMember
+                    return get_real_or_mock_object(TeamMember, MockTeamMember, language)
                 from bluebottle.time_based.models import Team
                 return get_real_or_mock_object(Team, MockTeam, language)
             

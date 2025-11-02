@@ -202,6 +202,9 @@ class DateUserBaseNotification(UserRegistrationNotification):
         return context
     delay = 60
 
+    class Meta:
+        abstract = True
+
 
 class DateUserJoinedNotification(DateUserBaseNotification):
     subject = pgettext('email', 'You have joined the activity "{title}"')

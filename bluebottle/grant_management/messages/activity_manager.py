@@ -82,4 +82,4 @@ class GrantApplicationPayoutAccountVerified(GrantApplicationManagerMessage):
 
     @property
     def action_link(self):
-        return self.obj.grant_applications.order_by('-created').first().get_absolute_url()
+        return self.obj.grant_application.get_absolute_url()

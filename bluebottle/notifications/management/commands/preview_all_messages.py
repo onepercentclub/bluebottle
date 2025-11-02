@@ -1085,7 +1085,6 @@ def generate_index(output_dir, all_messages, languages, trigger_map=None):
             font-size: 16px;
             font-weight: 600;
             color: #495057;
-            font-style: italic;
         }}
         .modal-subject:empty {{
             display: none;

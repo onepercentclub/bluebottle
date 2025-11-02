@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-31 16:50+0100\n"
-"PO-Revision-Date: 2025-10-31 16:01\n"
+"POT-Creation-Date: 2025-11-02 08:37+0100\n"
+"PO-Revision-Date: 2025-11-02 08:13\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -354,16 +354,16 @@ msgstr "Прегледайте заявлението"
 #: bluebottle/time_based/messages/messages.py:375
 #: bluebottle/time_based/messages/messages.py:400
 #: bluebottle/time_based/messages/messages.py:472
-#: bluebottle/time_based/messages/messages.py:506
-#: bluebottle/time_based/messages/messages.py:529
-#: bluebottle/time_based/messages/messages.py:552
-#: bluebottle/time_based/messages/messages.py:574
-#: bluebottle/time_based/messages/messages.py:596
-#: bluebottle/time_based/messages/messages.py:619
-#: bluebottle/time_based/messages/messages.py:640
-#: bluebottle/time_based/messages/messages.py:707
-#: bluebottle/time_based/messages/messages.py:728
-#: bluebottle/time_based/messages/messages.py:849
+#: bluebottle/time_based/messages/messages.py:509
+#: bluebottle/time_based/messages/messages.py:532
+#: bluebottle/time_based/messages/messages.py:555
+#: bluebottle/time_based/messages/messages.py:577
+#: bluebottle/time_based/messages/messages.py:599
+#: bluebottle/time_based/messages/messages.py:622
+#: bluebottle/time_based/messages/messages.py:643
+#: bluebottle/time_based/messages/messages.py:710
+#: bluebottle/time_based/messages/messages.py:731
+#: bluebottle/time_based/messages/messages.py:852
 #: bluebottle/time_based/messages/participants.py:65
 #: bluebottle/time_based/messages/participants.py:133
 #: bluebottle/time_based/messages/registrations.py:94
@@ -535,12 +535,12 @@ msgstr "Вие се оттегляхте от дейността \"{title}\""
 #: bluebottle/time_based/messages.py:905 bluebottle/time_based/messages.py:942
 #: bluebottle/time_based/messages/messages.py:426
 #: bluebottle/time_based/messages/messages.py:450
-#: bluebottle/time_based/messages/messages.py:750
-#: bluebottle/time_based/messages/messages.py:777
-#: bluebottle/time_based/messages/messages.py:872
-#: bluebottle/time_based/messages/messages.py:895
-#: bluebottle/time_based/messages/messages.py:920
-#: bluebottle/time_based/messages/messages.py:957
+#: bluebottle/time_based/messages/messages.py:753
+#: bluebottle/time_based/messages/messages.py:780
+#: bluebottle/time_based/messages/messages.py:875
+#: bluebottle/time_based/messages/messages.py:898
+#: bluebottle/time_based/messages/messages.py:923
+#: bluebottle/time_based/messages/messages.py:960
 #: bluebottle/time_based/messages/participants.py:18
 #: bluebottle/time_based/messages/registrations.py:25
 msgctxt "email"
@@ -3146,12 +3146,12 @@ msgstr "Вашата активност \"{title}\" ще започне утре
 
 #: bluebottle/collect/messages.py:67 bluebottle/deeds/messages.py:68
 #: bluebottle/time_based/messages.py:480
-#: bluebottle/time_based/messages/messages.py:483
+#: bluebottle/time_based/messages/messages.py:486
 #: bluebottle/time_based/messages/registrations.py:164
 #: bluebottle/time_based/messages/registrations.py:174
 #: bluebottle/time_based/messages/registrations.py:184
-#: bluebottle/time_based/messages/registrations.py:207
-#: bluebottle/time_based/messages/registrations.py:217
+#: bluebottle/time_based/messages/registrations.py:210
+#: bluebottle/time_based/messages/registrations.py:220
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined the activity \"{title}\""
@@ -5832,28 +5832,28 @@ msgstr "Започва с 'acct_...'"
 msgid "Verification type"
 msgstr "Тип проверка"
 
-#: bluebottle/funding_stripe/models.py:426
+#: bluebottle/funding_stripe/models.py:430
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Не се отнася - набиране на средства за проект с добро намерение на %(platform)s, платформа на GoodUp."
 
-#: bluebottle/funding_stripe/models.py:627
+#: bluebottle/funding_stripe/models.py:631
 msgid "stripe payout account"
 msgstr "сметка за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:628
+#: bluebottle/funding_stripe/models.py:632
 msgid "stripe payout accounts"
 msgstr "сметки за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:639
+#: bluebottle/funding_stripe/models.py:643
 msgid "Starts with 'ba_...'"
 msgstr "Започва с 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:687
+#: bluebottle/funding_stripe/models.py:691
 msgid "Bank account"
 msgstr "Банкова сметка"
 
-#: bluebottle/funding_stripe/models.py:688
+#: bluebottle/funding_stripe/models.py:692
 msgid "Bank accounts"
 msgstr "Банкови сметки"
 
@@ -8333,7 +8333,7 @@ msgstr "до {}"
 msgid "Raise error"
 msgstr "Повдигнете грешка"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:682
+#: bluebottle/notifications/management/commands/preview_all_messages.py:713
 msgid "test"
 msgstr ""
 
@@ -9569,48 +9569,48 @@ msgid "A new participant has joined your activity \"{title}\" 🎉"
 msgstr "Нов участник се присъедини към вашата дейност \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:514 bluebottle/time_based/messages.py:582
-#: bluebottle/time_based/messages/messages.py:517
-#: bluebottle/time_based/messages/messages.py:585
+#: bluebottle/time_based/messages/messages.py:520
+#: bluebottle/time_based/messages/messages.py:588
 #, python-brace-format
 msgctxt "email"
 msgid "You have registered your team for \"{title}\""
 msgstr "Регистрирали сте отбора си за \"{title}\""
 
 #: bluebottle/time_based/messages.py:537
-#: bluebottle/time_based/messages/messages.py:540
+#: bluebottle/time_based/messages/messages.py:543
 #, python-brace-format
 msgctxt "email"
 msgid "You have changed your application on the activity \"{title}\""
 msgstr "Променили сте заявката си за дейността \"{title}\""
 
 #: bluebottle/time_based/messages.py:560
-#: bluebottle/time_based/messages/messages.py:563
+#: bluebottle/time_based/messages/messages.py:566
 #: bluebottle/time_based/messages/registrations.py:159
 #: bluebottle/time_based/messages/registrations.py:169
 #: bluebottle/time_based/messages/registrations.py:179
 #: bluebottle/time_based/messages/registrations.py:189
-#: bluebottle/time_based/messages/registrations.py:212
+#: bluebottle/time_based/messages/registrations.py:215
 #, python-brace-format
 msgctxt "email"
 msgid "You have applied to the activity \"{title}\""
 msgstr "Кандидатствали сте за дейността \"{title}\""
 
 #: bluebottle/time_based/messages.py:604
-#: bluebottle/time_based/messages/messages.py:607
+#: bluebottle/time_based/messages/messages.py:610
 #, python-brace-format
 msgctxt "email"
 msgid "You have joined {team_name} for \"{title}\""
 msgstr "Присъединили сте се към {team_name} за \"{title}\""
 
 #: bluebottle/time_based/messages.py:627
-#: bluebottle/time_based/messages/messages.py:630
+#: bluebottle/time_based/messages/messages.py:633
 #, python-brace-format
 msgctxt "email"
 msgid "You have been selected for the activity \"{title}\" 🎉"
 msgstr "Вие сте избрани за дейността \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:651
-#: bluebottle/time_based/messages/messages.py:654
+#: bluebottle/time_based/messages/messages.py:657
 #: bluebottle/time_based/messages/registrations.py:117
 #, python-brace-format
 msgctxt "email"
@@ -9618,14 +9618,14 @@ msgid "You have not been selected for the activity \"{title}\""
 msgstr "Не сте избрани за дейността \"{title}\""
 
 #: bluebottle/time_based/messages.py:661 bluebottle/time_based/messages.py:682
-#: bluebottle/time_based/messages/messages.py:664
-#: bluebottle/time_based/messages/messages.py:685
+#: bluebottle/time_based/messages/messages.py:667
+#: bluebottle/time_based/messages/messages.py:688
 msgctxt "email"
 msgid "View all activities"
 msgstr "Прегледайте всички дейности"
 
 #: bluebottle/time_based/messages.py:672
-#: bluebottle/time_based/messages/messages.py:675
+#: bluebottle/time_based/messages/messages.py:678
 #: bluebottle/time_based/messages/participants.py:79
 #, python-brace-format
 msgctxt "email"
@@ -9633,21 +9633,21 @@ msgid "You have been removed as participant for the activity \"{title}\""
 msgstr "Били сте премахнати като участник от дейността \"{title}\""
 
 #: bluebottle/time_based/messages.py:693
-#: bluebottle/time_based/messages/messages.py:696
+#: bluebottle/time_based/messages/messages.py:699
 #, python-brace-format
 msgctxt "email"
 msgid "Your team participation in ‘{title}’ has been cancelled"
 msgstr "Вашето участие на екипа в „{title}“ беше анулирано"
 
 #: bluebottle/time_based/messages.py:715
-#: bluebottle/time_based/messages/messages.py:718
+#: bluebottle/time_based/messages/messages.py:721
 #, python-brace-format
 msgctxt "email"
 msgid "Your contribution to the activity \"{title}\" is successful 🎉"
 msgstr "Вашето участие в дейността \"{title}\" е успешно 🎉"
 
 #: bluebottle/time_based/messages.py:736
-#: bluebottle/time_based/messages/messages.py:739
+#: bluebottle/time_based/messages/messages.py:742
 #: bluebottle/time_based/messages/participants.py:40
 #, python-brace-format
 msgctxt "email"
@@ -9655,48 +9655,48 @@ msgid "A participant has withdrawn from your activity \"{title}\""
 msgstr "Участник се е отказал от вашата дейност \"{title}\""
 
 #: bluebottle/time_based/messages.py:758
-#: bluebottle/time_based/messages/messages.py:761
+#: bluebottle/time_based/messages/messages.py:764
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from a time slot for your activity \"{title}\""
 msgstr "Участник се е отказал от времевия слот за вашата дейност \"{title}\""
 
 #: bluebottle/time_based/messages.py:785
-#: bluebottle/time_based/messages/messages.py:788
+#: bluebottle/time_based/messages/messages.py:791
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has registered for a time slot for your activity \"{title}\""
 msgstr "Участник се е регистрирал за времеви слот за вашата дейност \"{title}\""
 
 #: bluebottle/time_based/messages.py:803
-#: bluebottle/time_based/messages/messages.py:812
+#: bluebottle/time_based/messages/messages.py:815
 msgctxt "email"
 msgid "View your activity"
 msgstr "Прегледайте вашата дейност"
 
 #: bluebottle/time_based/messages.py:815
-#: bluebottle/time_based/messages/messages.py:824
+#: bluebottle/time_based/messages/messages.py:827
 #, python-brace-format
 msgctxt "email"
 msgid "You've registered for a time slot for the activity \"{title}\""
 msgstr "Регистрирали сте се за времеви слот за дейността \"{title}\""
 
 #: bluebottle/time_based/messages.py:846
-#: bluebottle/time_based/messages/messages.py:861
+#: bluebottle/time_based/messages/messages.py:864
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been added to your activity \"{title}\" 🎉"
 msgstr "Участник е добавен към вашата дейност \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:872
-#: bluebottle/time_based/messages/messages.py:887
+#: bluebottle/time_based/messages/messages.py:890
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been added to your activity \"{title}\" 🎉"
 msgstr "Екип е добавен към вашата дейност \"{title}\" 🎉"
 
 #: bluebottle/time_based/messages.py:894
-#: bluebottle/time_based/messages/messages.py:909
+#: bluebottle/time_based/messages/messages.py:912
 #: bluebottle/time_based/messages/participants.py:32
 #, python-brace-format
 msgctxt "email"
@@ -9704,7 +9704,7 @@ msgid "A participant has been removed from your activity \"{title}\""
 msgstr "Участник е бил премахнат от вашата дейност \"{title}\""
 
 #: bluebottle/time_based/messages.py:916
-#: bluebottle/time_based/messages/messages.py:931
+#: bluebottle/time_based/messages/messages.py:934
 #, python-brace-format
 msgctxt "email"
 msgid "A slot for your activity \"{title}\" has been cancelled"
@@ -9801,20 +9801,20 @@ msgctxt "email"
 msgid "months"
 msgstr "месеци"
 
-#: bluebottle/time_based/messages/registrations.py:222
+#: bluebottle/time_based/messages/registrations.py:225
 #, python-brace-format
 msgctxt "email"
 msgid "A new team has applied to your activity \"{title}\" 🎉"
 msgstr "Нов екип подаде заявление за вашата дейност \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:227
+#: bluebottle/time_based/messages/registrations.py:230
 #, python-brace-format
 msgctxt "email"
 msgid "You have a new team for your activity \"{title}\" 🎉"
 msgstr "Имате нов екип за вашата дейност \"{title}\" 🎉"
 
-#: bluebottle/time_based/messages/registrations.py:232
-#: bluebottle/time_based/messages/registrations.py:237
+#: bluebottle/time_based/messages/registrations.py:235
+#: bluebottle/time_based/messages/registrations.py:240
 #, python-brace-format
 msgctxt "email"
 msgid "You have registered your team on \"{site_name}\""
@@ -12091,7 +12091,7 @@ msgid "\n"
 "      You joined an activity on <b>%(site_name)s!</b>\n"
 "    "
 msgstr "\n"
-"      Вие се регистрирахте за активност на <b>%(title)s!</b>\n"
+"      Вие се регистрирахте за активност на <b>%(site_name)s!</b>\n"
 "    "
 
 #: bluebottle/time_based/templates/mails/messages/registrations/date/user_joined.html:16
@@ -12594,6 +12594,14 @@ msgid "\n"
 "<p>%(name)s's team has withdrawn from your activity \"%(title)s\"!</p>\n"
 msgstr "\n"
 "<p>%(name)s екипът се е оттеглил от вашата активност \"%(title)s\"!</p>\n"
+
+#: bluebottle/time_based/templates/mails/messages/teams/user_team_added.html:4
+#, python-format
+msgctxt "email"
+msgid "\n"
+"<p>Your team was added to the activity \"%(title)s\".</p>\n\n"
+"<p>You can view your team on the activity detail page.</p>\n"
+msgstr ""
 
 #: bluebottle/time_based/templates/mails/messages/teams/user_team_removed.html:4
 #, python-format

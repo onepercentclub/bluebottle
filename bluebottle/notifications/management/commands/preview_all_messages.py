@@ -502,6 +502,10 @@ def get_mock_object_for_message(message_class, language='en'):
     # Try to use real database objects when available
     try:
         # Check module name first for better matching
+        if 'Matching' in class_name:
+            from bluebottle.deeds.models import Deed
+            return Deed.objects
+
         if 'updates' in module_name:
             from bluebottle.updates.models import Update
             return get_real_or_mock_object(Update, MockUpdate, language)
@@ -543,7 +547,7 @@ def get_mock_object_for_message(message_class, language='en'):
                     return participant
                 return MockParticipant(language)
             
-            if 'Slot' in class_name or 'Changed' in class_name:
+            if 'Slot' in class_name or ('Changed' in class_name and 'Date' in class_name):
                 # Messages about slot changes need slot objects
                 from bluebottle.time_based.models import DateActivitySlot
                 slot = DateActivitySlot.objects.filter().first()
@@ -705,7 +709,7 @@ def preview_message(message_class_name, message_class, language='en', output_for
         if "Field 'id' expected a number" in error_msg:
             print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database objects for ORM queries")
         elif "matching query does not exist" in error_msg or "DoesNotExist" in type(e).__name__:
-            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database relationships")
+            print(f"⚠️  Skipping {message_class_name} ({language}): Requires real database relationships", e)
         else:
             print(f"❌ Error rendering {message_class_name} with ({mock_obj.__class__.__name__}) ({language}): {error_msg}")
         if verbose:

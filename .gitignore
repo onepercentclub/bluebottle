@@ -50,7 +50,7 @@ frontend/static/refactor-sass/lib
 bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
-mails
+mails/++
 
 # Misc stuff
 data
@@ -129,5 +129,3 @@ bluebottle-data
 elasticsearch-data
 postgres-data
 
-# Email preview system (generated files)
-bluebottle/notifications/static/email_previews/

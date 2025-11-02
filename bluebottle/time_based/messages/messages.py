@@ -10,7 +10,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, DateActivitySlot
+    DateParticipant, PeriodParticipant, DateActivitySlot, Participant
 )
 
 
@@ -363,7 +363,7 @@ class TeamAddedNotification(TransitionMessage):
     """
 
     subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
-    template = "messages/team_added"
+    template = "messages/teams/user_team_added"
     context = {
         "title": "activity.title",
     }
@@ -474,6 +474,9 @@ class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):

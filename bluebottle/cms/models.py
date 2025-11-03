@@ -682,8 +682,8 @@ class SitePlatformSettings(TranslatableModel, BasePlatformSettings):
             raise ValidationError(u'File not supported!')
 
     share_activities = models.BooleanField(
-        _('Share activities'),
-        help_text=_('Share activities with/from other platforms.'),
+        _('Connect'),
+        help_text=_('Allow this platform to share and receive activities with other connected partners.'),
         default=False
     )
 

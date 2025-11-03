@@ -254,6 +254,20 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        user = self.context["request"].user
+
+        if not (
+                user in instance.owners
+                or user.is_staff
+                or user.is_superuser
+        ):
+            visible_answers = instance.answers.filter(question__visibility="all")
+            field = self.fields["answers"]
+            data["answers"] = field.to_representation(list(visible_answers))
+        return data
+
     def __init__(self, instance=None, *args, **kwargs):
         super().__init__(instance, *args, **kwargs)
 

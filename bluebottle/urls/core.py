@@ -160,6 +160,11 @@ urlpatterns = [
         include('bluebottle.social.urls.api')
     ),
 
+    re_path(
+        r'^api/json-ld/',
+        include('bluebottle.activity_pub.urls.jsonld', namespace='json-ld')
+    ),
+
     re_path(r'token/', include('bluebottle.token_auth.urls')),
 
     re_path(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
@@ -169,6 +174,7 @@ urlpatterns = [
         LoginWithView.as_view(), name='login-with'
     ),
 
+    re_path(r'^.well-known/webfinger', include('bluebottle.webfinger.urls'))
 ]
 
 

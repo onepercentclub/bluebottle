@@ -490,6 +490,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                             'deleted',
                             'partner_organization',
                             'primary_language',
+                            'translate_user_content',
                         ]
                     }
                 ],

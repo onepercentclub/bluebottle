@@ -366,6 +366,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'is_active', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids',
             'subscribed', 'segments', 'can_pledge', 'can_do_bank_transfer',
+            'translate_user_content',
         )
 
 
@@ -727,7 +728,7 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar', 'gender'
+            'has_usable_password', 'avatar', 'gender', 'translate_user_content'
         )
 
     class JSONAPIMeta():

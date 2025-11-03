@@ -163,6 +163,8 @@ class CurrentMemberSerializer(MemberSerializer):
             "can_pledge",
             "can_do_bank_transfer",
             "payout_account",
+            "primary_language",
+            "translate_user_content"
         )
         meta_fields = ('permissions', )
 

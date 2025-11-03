@@ -569,7 +569,6 @@ class EventAdminMixin:
         "display_description",
         "display_image",
         "source",
-        "activity",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -581,6 +580,10 @@ class EventAdminMixin:
     adopted.short_description = _("Adopted")
 
     inlines = []
+
+    def source(self, obj):
+        return obj.source
+    source.short_description = _("Partner")
 
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)

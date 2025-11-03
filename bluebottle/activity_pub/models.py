@@ -222,7 +222,7 @@ class Place(ActivityPubModel):
 
 
 class Event(ActivityPubModel):
-    name = models.CharField()
+    name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField()
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(

@@ -200,9 +200,11 @@ class TransitionMessage(object):
 
                 # Explicitly activate language to force lazy translation evaluation
                 django_translation.activate(recipient.primary_language)
-                
                 context = self.get_context(recipient, **base_context)
                 subject = str(self.subject.format(**context))
+                print('recipient', recipient)
+                print('language', recipient.primary_language)
+                print('subject', subject)
 
                 body_html = None
                 insert_method = 'append'

@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _, pgettext_lazy as pgettext
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 
@@ -20,6 +20,7 @@ class InitiativeInitiatorMessage(TransitionMessage):
 
     class Meta:
         abstract = True
+
 
 class InitiativeSubmittedInitiatorMessage(InitiativeInitiatorMessage):
     subject = pgettext('email', 'You submitted an initiative on {site_name}')

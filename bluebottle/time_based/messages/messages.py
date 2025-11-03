@@ -10,7 +10,7 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.notifications.messages import TransitionMessage
 from bluebottle.notifications.models import Message
 from bluebottle.time_based.models import (
-    DateParticipant, PeriodParticipant, DateActivitySlot, Participant
+    DateParticipant, PeriodParticipant, DateActivitySlot
 )
 
 

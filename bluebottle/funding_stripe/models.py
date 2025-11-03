@@ -1,15 +1,14 @@
 import json
 import logging
 from builtins import object
+
 from django.conf import settings
 from django.db import models, connection
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
-from djmoney.money import Money
-
 from djchoices import DjangoChoices, ChoiceItem
-
+from djmoney.money import Money
 from future.utils import python_2_unicode_compatible
 from memoize import memoize
 from past.utils import old_div
@@ -17,14 +16,13 @@ from stripe import InvalidRequestError
 from stripe.error import AuthenticationError, StripeError
 
 from bluebottle.funding.exception import PaymentException
-from bluebottle.funding.models import Donor, Funding, IbanCheck
+from bluebottle.funding.models import Donor, IbanCheck
 from bluebottle.funding.models import (
     Payment, PaymentProvider, PayoutAccount, BankAccount, BusinessTypeChoices,
     FundingPlatformSettings
 )
 from bluebottle.funding_stripe.utils import get_stripe
 from bluebottle.utils.utils import get_current_host, get_tenant_name
-from bluebottle.grant_management.models import GrantApplication
 
 logger = logging.getLogger(__name__)
 

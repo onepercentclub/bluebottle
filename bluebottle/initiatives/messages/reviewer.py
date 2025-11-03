@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.utils.translation import gettext_lazy as _, pgettext_lazy as pgettext
+from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.notifications.messages import TransitionMessage
 

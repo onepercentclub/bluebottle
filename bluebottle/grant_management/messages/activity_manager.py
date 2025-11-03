@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy as pgettext
 
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -32,6 +31,7 @@ class GrantApplicationManagerMessage(TransitionMessage):
 
     class Meta:
         abstract = True
+
 
 class GrantApplicationRejectedMessage(GrantApplicationManagerMessage):
     subject = pgettext('email', "Your grant application on {site_name} has been rejected")

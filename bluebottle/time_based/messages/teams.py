@@ -23,6 +23,7 @@ class ManagerTeamNotification(TransitionMessage):
     class Meta:
         abstract = True
 
+
 class ManagerTeamRemovedNotification(ManagerTeamNotification):
     """
     A participant removed notify owner

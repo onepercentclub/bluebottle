@@ -367,18 +367,6 @@ class StripePayoutAccount(PayoutAccount):
     provider = 'stripe'
 
     @property
-    def crowdfunding_campaigns(self):
-        return Funding.objects.filter(bank_account__connect_account=self).all()
-
-    @property
-    def grant_applications(self):
-        return GrantApplication.objects.filter(bank_account__connect_account=self).all()
-
-    @property
-    def grant_application(self):
-        return self.grant_applications.order_by('-id').first()
-
-    @property
     def account_settings(self):
         statement_descriptor = connection.tenant.name[:22]
         while len(statement_descriptor) < 5:

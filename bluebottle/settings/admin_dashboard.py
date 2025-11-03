@@ -162,7 +162,7 @@ JET_SIDE_MENU_ITEMS = [
         ],
     },
     {
-        "label": _("Publishing"),
+        "label": _("Connect"),
         "app_label": "activity_pub",
         "permissions": ["activity_pub.change_event"],
         "items": [
@@ -184,17 +184,13 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "activity_pub.following",
                 "permissions": ["activity_pub.change_event"],
                 "url": "/en/admin/activity_pub/following/",
-                "label": _("Followed platforms"),
+                "label": _("Connections"),
             },
             {
                 "name": "activity_pub.follower",
                 "permissions": ["activity_pub.change_event"],
                 "url": "/en/admin/activity_pub/follower/",
                 "label": _("Followers"),
-            },
-            {
-                "name": "activity_pub.activitypubmodel",
-                "permissions": ["cms.change_site_platform_settings"],
             },
         ],
     },

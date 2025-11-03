@@ -834,7 +834,7 @@ class ActivityChildAdmin(
                 )
             elif site_settings.is_publishing_activities:
                 fieldsets.append(
-                    (_("Federate"), {"fields": self.get_activity_pub_fields(request, obj)})
+                    (_("Connect"), {"fields": self.get_activity_pub_fields(request, obj)})
                 )
 
         if self.get_registration_fields(request, obj):

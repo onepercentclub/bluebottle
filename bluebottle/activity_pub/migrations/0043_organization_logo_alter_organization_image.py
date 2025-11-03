@@ -16,7 +16,11 @@ class Migration(migrations.Migration):
             name='logo',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='activity_pub.image'),
         ),
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name='organization',
+            name='image',
+        ),
+        migrations.AddField(
             model_name='organization',
             name='image',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='activity_pub.image'),

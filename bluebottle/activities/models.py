@@ -47,8 +47,6 @@ class Activity(TriggerMixin, ValidatedModelMixin, PolymorphicModel):
         default=False, help_text=_("Highlight this activity to show it on homepage")
     )
 
-    language = 'nl'
-
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(auto_now=True)
 

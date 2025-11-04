@@ -28,6 +28,9 @@ class ManagerRegistrationNotification(TransitionMessage):
         """activity owner"""
         return [self.obj.activity.owner]
 
+    class Meta:
+        abstract = True
+
 
 class ManagerRegistrationCreatedReviewNotification(ManagerRegistrationNotification):
     subject = pgettext('email', 'You have a new application for your activity "{title}" 🎉')
@@ -93,6 +96,9 @@ class UserRegistrationNotification(TransitionMessage):
     def get_recipients(self):
         """applicant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class UserRegistrationAcceptedNotification(UserRegistrationNotification):
@@ -195,6 +201,9 @@ class DateUserBaseNotification(UserRegistrationNotification):
         ]
         return context
     delay = 60
+
+    class Meta:
+        abstract = True
 
 
 class DateUserJoinedNotification(DateUserBaseNotification):

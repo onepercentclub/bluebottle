@@ -506,7 +506,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
 
         upcoming_participants = 0
         for slot in slots:
-            upcoming_participants += slot.contributor_count()
+            upcoming_participants += slot.contributor_count
 
         spots_left = capacity - upcoming_participants
 

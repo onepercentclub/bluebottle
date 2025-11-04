@@ -36,6 +36,7 @@ from bluebottle.activity_pub.models import (
 from bluebottle.activity_pub.serializers.json_ld import OrganizationSerializer
 from bluebottle.activity_pub.utils import get_platform_actor
 from bluebottle.members.models import Member
+from bluebottle.utils.admin import admin_info_box
 from bluebottle.webfinger.client import client
 
 
@@ -85,8 +86,8 @@ class OutboxAdmin(ActivityPubModelChildAdmin):
 
 class FollowForm(forms.ModelForm):
     url = forms.URLField(
-        label=_("Platform URL"),
-        help_text=_("Enter the Platform URL to follow"),
+        label=_("Partner URL"),
+        help_text=_("This is the website address of the partner you want to follow."),
         max_length=400
     )
 
@@ -214,8 +215,8 @@ class AdoptedFilter(admin.SimpleListFilter):
 
 
 class SourceFilter(admin.SimpleListFilter):
-    title = _('Source')
-    parameter_name = 'source'
+    title = _('Partner')
+    parameter_name = 'partner'
 
     def lookups(self, request, model_admin):
         options = Organization.objects.values_list('id', 'name')
@@ -229,18 +230,19 @@ class SourceFilter(admin.SimpleListFilter):
 
 class FollowingAddForm(forms.ModelForm):
     platform_url = forms.URLField(
-        label=_("Platform URL"),
-        help_text=_("Enter the Platform URL to follow!!!"),
+        label=_("Partner URL"),
+        help_text=_("This is the website address of the partner you want to follow."),
     )
     default_owner = forms.ModelChoiceField(
         Member.objects.all(),
         widget=ForeignKeyRawIdWidget(Following._meta.get_field("default_owner").remote_field, admin.site),
+        help_text=_("This person will be the activity manager of the activities that are adopted."),
         required=False
     )
 
     class Meta:
         model = Following
-        fields = ['default_owner', 'platform_url']
+        fields = '__all__'
         widgets = {
             'default_owner': admin.widgets.ForeignKeyRawIdWidget(
                 Following._meta.get_field('default_owner').remote_field,
@@ -254,6 +256,7 @@ class FollowingAddForm(forms.ModelForm):
             kwargs['instance'] = Following()
 
         super().__init__(*args, **kwargs)
+
 
     def clean(self):
         super().clean()
@@ -273,6 +276,8 @@ class FollowingAddForm(forms.ModelForm):
 class FollowingAdmin(FollowAdmin):
     list_display = ("object", "accepted")
     raw_id_fields = ('default_owner',)
+    
+    readonly_fields = ('object', 'accepted')
 
     def accepted(self, obj):
         """Check if this follow request has been accepted"""
@@ -283,15 +288,30 @@ class FollowingAdmin(FollowAdmin):
     accepted.short_description = _("Accepted")
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return ['object', 'accepted']
+        readonly = ['object', 'accepted']
+        return readonly
+
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            # When adding a new Following
+            return (
+                (None, {
+                    'fields': ('platform_url', 'default_owner')
+                }),
+            )
         else:
-            return []
+            # When viewing/editing an existing Following
+            return (
+                (None, {
+                    'fields': ('object', 'accepted', 'default_owner')
+                }),
+            )
 
     def get_fields(self, request, obj=None):
+        # This will be overridden by get_fieldsets
         fields = ['default_owner']
         if not obj:
-            fields = ['platform_url'] + fields
+            fields = ['connect_info', 'platform_url'] + fields
         else:
             fields = ['object', 'accepted'] + fields
 
@@ -329,7 +349,7 @@ class FollowingAdmin(FollowAdmin):
                     follow_obj.save()
                 self.message_user(
                     request,
-                    f"Successfully created Follow relationship to {platform_url}",
+                    f"Follow request sent to {platform_url}. Your platforms will be connected when the request is accepted.",
                     level="success"
                 )
                 # Store the created object for response_add
@@ -338,6 +358,7 @@ class FollowingAdmin(FollowAdmin):
                 self.message_user(
                     request,
                     (
+
                         "Could not determine platform information needed for subscribing. "
                         "Are you sure the url is correct?"
                     ),
@@ -372,7 +393,7 @@ class FollowerAdmin(FollowAdmin):
     def platform(self, obj):
         return obj.actor
 
-    platform.short_description = _("Platform")
+    platform.short_description = _("Partner")
 
     def get_queryset(self, request):
         qs = Follow.objects.all()
@@ -445,6 +466,9 @@ class FollowerAdmin(FollowAdmin):
             extra_context['accept_url'] = reverse('admin:activity_pub_follower_accept', args=[object_id])
 
         return super().change_view(request, object_id, form_url, extra_context)
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
     def has_change_permission(self, request, obj=None):
         # Allow viewing but not actual changing
@@ -544,11 +568,7 @@ class EventAdminMixin:
         "name",
         "display_description",
         "display_image",
-        "organization",
         "source",
-        "activity",
-        "iri",
-        "pub_url",
     )
     fields = readonly_fields
     list_filter = [AdoptedFilter, SourceFilter]
@@ -561,6 +581,10 @@ class EventAdminMixin:
 
     inlines = []
 
+    def source(self, obj):
+        return obj.source
+    source.short_description = _("Partner")
+
     def get_inline_instances(self, request, obj=None):
         inlines = super().get_inline_instances(request, obj)
         if obj and obj.is_local:
@@ -570,7 +594,7 @@ class EventAdminMixin:
 
     def display_description(self, obj):
         return format_html(
-            '<div style="display: table-cell; border:1px solid #aaa; padding: 12px">' + obj.summary + "</div>"
+            '<div style="display: table-cell; border-left:1px solid #aaa; padding: 0 12px">' + obj.summary + "</div>"
         )
 
     display_description.short_description = _("Description")
@@ -655,7 +679,7 @@ class EventPolymorphicAdmin(EventAdminMixin, PolymorphicParentModelAdmin):
         change_url = reverse(f'admin:{app_label}_{model_name}_change', args=[obj.pk])
         return format_html('<a href="{}">{}</a>', change_url, obj.name)
 
-    name_link.short_description = _("Name")
+    name_link.short_description = _("Activity title")
     name_link.admin_order_field = "name"  # Allow sorting by name
 
 
@@ -674,6 +698,10 @@ class ReceivedActivityAdmin(EventPolymorphicAdmin):
     model = ReceivedActivity
     list_display = ("name_link", "type", "source", "adopted")
     list_display_links = ("name_link",)
+
+    def source(self, obj):
+        return obj.source
+    source.short_description = _('Partner')
 
     def get_queryset(self, request):
         return Event.objects.filter(iri__isnull=False)
@@ -720,6 +748,21 @@ class SubEventInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    readonly_fields = [
+        'start_time',
+        'end_time',
+        'display_location'
+    ]
+
+    fields = readonly_fields
+
+    extra = 0
+
+    def display_location(self, obj):
+        if obj.location:
+            return obj.location.name or obj.location.address
+    display_location.short_description = _('Location')
+
 
 @admin.register(DoGoodEvent)
 class DoGoodEventAdmin(EventChildAdmin):
@@ -739,7 +782,5 @@ class DoGoodEventAdmin(EventChildAdmin):
         'start_time',
         'end_time',
         'registration_deadline',
-        'join_mode',
-        'event_attendance_mode'
     )
     fields = readonly_fields

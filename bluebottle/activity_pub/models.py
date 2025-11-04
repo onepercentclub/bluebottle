@@ -157,8 +157,8 @@ class Organization(Actor):
     objects = OrganizationManager()
 
     class Meta:
-        verbose_name = _("Platform")
-        verbose_name_plural = _("Platforms")
+        verbose_name = _("partner")
+        verbose_name_plural = _("partners")
 
     def __str__(self):
         return self.name
@@ -222,7 +222,7 @@ class Place(ActivityPubModel):
 
 
 class Event(ActivityPubModel):
-    name = models.CharField()
+    name = models.CharField(verbose_name=_('Activity title'))
     summary = models.TextField()
     image = models.ForeignKey(Image, null=True, on_delete=models.SET_NULL)
     activity = models.OneToOneField(
@@ -376,7 +376,7 @@ class Activity(ActivityPubModel):
 class Follow(Activity):
     object = models.ForeignKey(
         'activity_pub.Actor',
-        verbose_name=_("Platform"),
+        verbose_name=_("Partner"),
         on_delete=models.CASCADE
     )
 
@@ -385,6 +385,7 @@ class Follow(Activity):
         null=True,
         blank=True,
         verbose_name=_("Default activity owner"),
+        help_text=_("This person will be the activity manager of the activities that are adopted."),
         on_delete=models.SET_NULL,
     )
 
@@ -396,8 +397,8 @@ class Follow(Activity):
 class Follower(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('Follower')
-        verbose_name_plural = _('Followers')
+        verbose_name = _('Partner')
+        verbose_name_plural = _('Partners')
 
     def __str__(self):
         return str(self.actor)
@@ -406,8 +407,8 @@ class Follower(Follow):
 class Following(Follow):
     class Meta:
         proxy = True
-        verbose_name = _('Following')
-        verbose_name_plural = _('Following')
+        verbose_name = _('connection')
+        verbose_name_plural = _('connections')
 
     def __str__(self):
         try:

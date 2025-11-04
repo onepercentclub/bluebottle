@@ -75,4 +75,3 @@ def translate_text_cached(text, target_language):
         translation=translated["value"],
     )
     return translated
-

@@ -38,7 +38,7 @@ from bluebottle.deeds.serializers import (
 )
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, DocumentSerializer
-from bluebottle.fsm.serializers import CurrentStatusField, TransitionSerializer
+from bluebottle.fsm.serializers import CurrentStatusField
 from bluebottle.funding.models import Donor
 from bluebottle.funding.serializers import (
     DonorListSerializer,
@@ -47,11 +47,11 @@ from bluebottle.funding.serializers import (
     FundingSerializer,
     TinyFundingSerializer,
 )
+from bluebottle.geo.serializers import PointSerializer
 from bluebottle.grant_management.serializers import (
     GrantSerializer,
     GrantApplicationSerializer
 )
-from bluebottle.geo.serializers import PointSerializer
 from bluebottle.time_based.models import (
     DateParticipant,
     PeriodicParticipant,
@@ -75,12 +75,11 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
+from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
-from bluebottle.transitions.serializers import TransitionSerializer
-
 
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
 

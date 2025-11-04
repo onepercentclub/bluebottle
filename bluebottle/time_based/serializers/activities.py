@@ -508,7 +508,12 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
         for slot in slots:
             upcoming_participants += slot.contributor_count
 
-        spots_left = capacity - upcoming_participants
+        if capacity:
+            spots_left = capacity - upcoming_participants
+
+        if slots.count() == 0 or slots.filter(capacity__isnull=True).exists():
+            spots_left = None
+            capacity = None
 
         return {
             'total': total,

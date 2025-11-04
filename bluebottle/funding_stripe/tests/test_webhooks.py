@@ -546,7 +546,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         self.assertEqual(self.payout_account.status, 'verified')
         message = mail.outbox[0]
         self.assertEqual(
-            message.subject, u'Your identity has been verified'
+            message.subject, u'Your identity has been verified on Test'
         )
         self.assertTrue(
             self.funding.get_absolute_url() in message.body

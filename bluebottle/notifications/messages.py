@@ -19,6 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.notifications.models import Message, MessageTemplate
 from bluebottle.utils import translation
 from bluebottle.utils.utils import get_current_language, to_text, get_tenant_name
+from django.utils import translation as django_translation
 
 logger = logging.getLogger(__name__)
 
@@ -88,8 +89,12 @@ class TransitionMessage(object):
     def generic_content_text(self):
         return to_text.handle(self.generic_content_html)
 
-    def get_content_html(self, recipient):
+    def get_content_html(self, recipient, obj=None):
+        # Force language activation for template rendering
+        django_translation.activate(recipient.primary_language)
         context = self.get_context(recipient)
+        if obj:
+            context['obj'] = obj
         template = loader.get_template("mails/{}.html".format(self.template))
         return template.render(context)
 
@@ -160,7 +165,6 @@ class TransitionMessage(object):
 
         if self.get_event_data(recipient):
             context['attachments'] = self.get_calendar_attachments(recipient)
-
         return context
 
     def __init__(self, obj, **options):
@@ -194,8 +198,11 @@ class TransitionMessage(object):
                 if self.send_once and self.already_send(recipient):
                     continue
 
+                # Explicitly activate language to force lazy translation evaluation
+                django_translation.activate(recipient.primary_language)
                 context = self.get_context(recipient, **base_context)
-                subject = str(self.subject.format(**context))
+                # Force evaluation of lazy translation string in correct language context
+                subject = str(self.subject).format(**context)
 
                 body_html = None
                 insert_method = 'append'
@@ -203,6 +210,8 @@ class TransitionMessage(object):
                 if not custom_message and custom_template:
                     custom_template.set_current_language(recipient.primary_language)
                     try:
+                        # Force language activation for custom template formatting
+                        django_translation.activate(recipient.primary_language)
                         subject = custom_template.subject.format(**context)
                         body_html = format_html(custom_template.body_html.html, **context)
                         insert_method = custom_template.insert_method

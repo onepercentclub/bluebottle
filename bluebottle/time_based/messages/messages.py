@@ -363,7 +363,7 @@ class TeamAddedNotification(TransitionMessage):
     """
 
     subject = pgettext("email", 'Your team was added to the activity "{title}" 🎉')
-    template = "messages/team_added"
+    template = "messages/teams/user_team_added"
     context = {
         "title": "activity.title",
     }
@@ -474,6 +474,9 @@ class ParticipantNotification(TimeBasedInfoMixin, TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class ParticipantJoinedNotification(TimeBasedInfoMixin, TransitionMessage):

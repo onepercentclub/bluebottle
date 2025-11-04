@@ -217,7 +217,6 @@ class UpdateDetailView(APITestCase):
         self.assertRelationship('activity')
 
     def test_get_other_user(self):
-
         self.perform_get(user=BlueBottleUserFactory.create())
         self.assertStatus(status.HTTP_200_OK)
 
@@ -283,20 +282,20 @@ class UpdateDetailView(APITestCase):
             'value': 'In het Nederlands',
             'source_language': 'en'
         }
-        
+
         with mock.patch(
                 'bluebottle.translations.utils.get_translation_response',
                 return_value=mock_translation_response
         ):
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
-            
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = json.loads(response.content)
-            
+
             self.assertIn('meta', data['data'])
-            
+
             self.assertIn('translations', data['data']['meta'])
-            
+
             self.assertIn('message', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['message']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['message']['source_language'], 'en')

@@ -606,28 +606,28 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             'value': 'In het Nederlands',
             'source_language': 'en'
         }
-        
+
         with mock.patch(
                 'bluebottle.translations.utils.get_translation_response',
                 return_value=mock_translation_response
         ):
             response = self.client.get(self.url, LANGUAGE_CODE='nl')
-            
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = json.loads(response.content)
-            
+
             self.assertIn('meta', data['data'])
-            
+
             self.assertIn('translations', data['data']['meta'])
-            
+
             self.assertIn('title', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['title']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'en')
-            
+
             self.assertIn('pitch', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['pitch']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['pitch']['source_language'], 'en')
-            
+
             self.assertIn('story', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['story']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['story']['source_language'], 'en')

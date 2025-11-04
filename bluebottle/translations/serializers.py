@@ -24,12 +24,12 @@ class TranslationsSerializer(serializers.Field):
     def _get_nested_attribute(self, obj, attr_path):
         attrs = attr_path.split('.')
         current = obj
-        
+
         for attr in attrs:
             current = getattr(current, attr, None)
             if current is None:
                 return None
-        
+
         return current
 
     def to_representation(self, instance):
@@ -44,7 +44,7 @@ class TranslationsSerializer(serializers.Field):
                 name, field_name = field
             else:
                 field_name = name = field
-            
+
             original_value = self._get_nested_attribute(instance, field_name)
 
             if original_value:

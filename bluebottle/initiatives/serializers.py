@@ -34,6 +34,7 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -41,9 +42,11 @@ from bluebottle.utils.fields import (
     FSMField
 )
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, NoCommitMixin, TranslationsSerializer
+    ResourcePermissionField, NoCommitMixin
 )
 from bluebottle.utils.utils import get_current_language
+
+from bluebottle.transitions.serializers import TransitionSerializer
 
 
 class ThemeSerializer(ModelSerializer):

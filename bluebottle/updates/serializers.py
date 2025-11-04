@@ -16,8 +16,9 @@ from bluebottle.activities.serializers import ActivitySerializer, ContributorSer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.updates.models import Update, UpdateImage
-from bluebottle.utils.serializers import ResourcePermissionField, TranslationsSerializer
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 def no_nested_replies_validator(value):

@@ -1,32 +1,34 @@
-import hashlib
 import time
+
 import requests
 from django.conf import settings
-from django.core.cache import cache
+
+from bluebottle.translations.models import Translation
 
 
 class TranslationError(Exception):
     pass
 
 
-def _cache_key(text, target_lang, provider="deepl"):
-    h = hashlib.sha256(text.encode("utf-8")).hexdigest()
-    return f"tr:{provider}:{target_lang.upper()}:{h}"
 
-
-def translate_text_cached(text, target_lang):
+def translate_text_cached(text, target_language):
     if not text:
         return ""
-    key = _cache_key(text, target_lang, "deepl")
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
+    trans = Translation.objects.filter(
+        text=text,
+        target_language=target_language
+    ).first()
+    if trans:
+        return {
+            "value": trans.translation,
+            "source_language": trans.source_language,
+        }
 
     url = settings.DEEPL_API_URL
     params = {
         "auth_key": settings.DEEPL_API_KEY,
         "text": text,
-        "target_lang": target_lang.upper(),
+        "target_lang": target_language.upper(),
     }
 
     for attempt in range(3):
@@ -34,7 +36,7 @@ def translate_text_cached(text, target_lang):
         if resp.status_code == 200:
             data = resp.json()["translations"][0]
             detected_source = data["detected_source_language"]
-            if detected_source == target_lang.upper():
+            if detected_source == target_language.upper():
                 translated = {
                     'value': text,
                     'source_language': detected_source
@@ -44,7 +46,12 @@ def translate_text_cached(text, target_lang):
                     'value': data["text"],
                     'source_language': detected_source
                 }
-            cache.set(key, translated, 60 * 60 * 24 * 1000)
+            Translation.objects.create(
+                target_language=target_language,
+                source_language=detected_source.lower(),
+                text=text,
+                translation=translated["value"],
+            )
             return translated
 
         if resp.status_code in (429, 500, 502, 503, 504):

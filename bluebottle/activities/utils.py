@@ -37,9 +37,10 @@ from bluebottle.time_based.models import (
     TimeContribution, DeadlineActivity, DeadlineParticipant,
     DateActivitySlot, DateParticipant, RegisteredDateParticipant, RegisteredDateActivity
 )
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
-from bluebottle.utils.serializers import ResourcePermissionField, TranslationsSerializer
+from bluebottle.utils.serializers import ResourcePermissionField
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):

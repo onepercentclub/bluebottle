@@ -24,8 +24,7 @@ from rest_framework.relations import ManyRelatedField
 
 from django_recaptcha import client
 
-from bluebottle.utils.utils import get_client_ip, get_current_language
-from bluebottle.utils.translations import translate_text_cached
+from bluebottle.utils.utils import get_client_ip
 from .models import Language, TranslationPlatformSettings
 
 
@@ -281,47 +280,3 @@ class ManyAnonymizedResourceRelatedField(ManyRelatedField):
             result = [AnonymousUser() for item in result.all()]
 
         return result
-
-
-class TranslationsSerializer(serializers.Field):
-
-    def __init__(self, fields=None, **kwargs):
-        self.translation_fields = fields or []
-        kwargs['read_only'] = True
-        super().__init__(**kwargs)
-
-    def get_attribute(self, instance):
-        return instance
-
-    def to_representation(self, instance):
-        if not instance:
-            return {}
-
-        target_language = get_current_language() or Language.objects.first().code
-        translated_data = {}
-
-        for field_name in self.translation_fields:
-            original_value = getattr(instance, field_name, None)
-
-            if original_value:
-                if hasattr(original_value, 'html'):
-                    original_value = original_value.html
-                text_value = str(original_value)
-                translated_value = self._translate_field(
-                    text_value,
-                    target_language,
-                )
-                translated_data[field_name] = translated_value
-            else:
-                translated_data[field_name] = original_value
-
-        return translated_data
-
-    def _translate_field(self, text, target):
-        if not text:
-            return ""
-
-        try:
-            return translate_text_cached(text=text, target_lang=target)
-        except Exception:
-            return text

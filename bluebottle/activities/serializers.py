@@ -75,9 +75,11 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
+from bluebottle.transitions.serializers import TransitionSerializer
 
 
 ActivityLocation = namedtuple("Position", ["pk", "created", "position", "activity"])
@@ -216,6 +218,7 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
+    translations = TranslationsSerializer(fields=['title', ('initiative_title', 'initiative.title')])
 
     def get_activity(self, obj):
         return {"id": obj.meta["id"], "type": obj.resource_name}
@@ -569,7 +572,11 @@ class ActivityPreviewSerializer(ModelSerializer):
             "capacity",
             "contributor_count",
         )
-        meta_fields = ("current_status", "created")
+        meta_fields = (
+            "current_status",
+            "created",
+            "translations"
+        )
 
     class JSONAPIMeta:
         resource_name = "activities/preview"

@@ -817,4 +817,4 @@ IBAN_CHECK_API = {
 }
 
 DEEPL_API_KEY = "deepl-key"
-DEEPL_API_URL  = "https://api-free.deepl.com/v2/translate"
+DEEPL_API_URL = "https://api-free.deepl.com/v2/translate"

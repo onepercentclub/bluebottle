@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 
 from operator import attrgetter
@@ -155,6 +156,7 @@ class PermissionField(BasePermissionField):
 
     (E.g.) the permissions field on the current user object
     """
+
     def _method_permissions(self, method, user, view, value):
         return all(perm.has_action_permission(
             method, user, view.model
@@ -167,8 +169,8 @@ class ResourcePermissionField(BasePermissionField):
     def _method_permissions(self, method, user, view, value):
         for permission in view.get_permissions():
             if not (
-                permission.has_object_action_permission(method, user, value)
-                and permission.has_action_permission(method, user, view.model)
+                    permission.has_object_action_permission(method, user, value)
+                    and permission.has_action_permission(method, user, view.model)
             ):
                 return False
 
@@ -177,7 +179,7 @@ class ResourcePermissionField(BasePermissionField):
                 related_obj = attrgetter(related)(value)
                 for permission in permissions:
                     if not permission().has_object_action_permission(
-                        method, user, related_obj
+                            method, user, related_obj
                     ):
                         return False
 
@@ -249,7 +251,6 @@ class TruncatedCharField(serializers.CharField):
 
 
 class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
-
     class Meta(object):
         model = TranslationPlatformSettings
         fields = '__all__'
@@ -295,32 +296,32 @@ class TranslationsSerializer(serializers.Field):
     def to_representation(self, instance):
         if not instance:
             return {}
-        
+
         target_language = get_current_language() or Language.objects.first().code
         translated_data = {}
-        
+
         for field_name in self.translation_fields:
             original_value = getattr(instance, field_name, None)
-            
+
             if original_value:
                 if hasattr(original_value, 'html'):
                     original_value = original_value.html
                 text_value = str(original_value)
                 translated_value = self._translate_field(
-                    text_value, 
-                    target_language, 
+                    text_value,
+                    target_language,
                 )
                 translated_data[field_name] = translated_value
             else:
                 translated_data[field_name] = original_value
-        
+
         return translated_data
-    
+
     def _translate_field(self, text, target):
         if not text:
             return ""
 
         try:
             return translate_text_cached(text=text, target_lang=target)
-        except Exception as e:
+        except Exception:
             return text

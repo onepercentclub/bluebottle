@@ -1,12 +1,18 @@
-import hashlib, time, requests
+import hashlib
+import time
+import requests
 from django.conf import settings
 from django.core.cache import cache
 
-class TranslationError(Exception): pass
+
+class TranslationError(Exception):
+    pass
+
 
 def _cache_key(text, target_lang, provider="deepl"):
     h = hashlib.sha256(text.encode("utf-8")).hexdigest()
     return f"tr:{provider}:{target_lang.upper()}:{h}"
+
 
 def translate_text_cached(text, target_lang):
     if not text:

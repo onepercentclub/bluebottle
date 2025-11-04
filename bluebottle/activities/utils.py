@@ -40,8 +40,6 @@ from bluebottle.time_based.models import (
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import FSMField, RichTextField, ValidationErrorsField, RequiredErrorsField
 from bluebottle.utils.serializers import ResourcePermissionField, TranslationsSerializer
-from bluebottle.utils.translations import translate_text_cached
-from bluebottle.utils.utils import get_current_language
 
 
 class MatchingPropertiesField(serializers.ReadOnlyField):

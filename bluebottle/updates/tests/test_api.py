@@ -1,3 +1,6 @@
+import json
+from unittest import mock
+
 from django.core import mail
 from django.urls import reverse
 from rest_framework import status
@@ -274,6 +277,29 @@ class UpdateDetailView(APITestCase):
         self.perform_delete()
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_meta_translations_in_response(self):
+        mock_translation_response = {
+            'value': 'In het Nederlands',
+            'source_language': 'en'
+        }
+        
+        with mock.patch(
+                'bluebottle.translations.utils.get_translation_response',
+                return_value=mock_translation_response
+        ):
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+            
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+            
+            self.assertIn('meta', data['data'])
+            
+            self.assertIn('translations', data['data']['meta'])
+            
+            self.assertIn('message', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['message']['value'], 'In het Nederlands')
+            self.assertEqual(data['data']['meta']['translations']['message']['source_language'], 'en')
 
 
 class ActivityUpdateListTestCase(APITestCase):

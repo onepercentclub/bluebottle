@@ -1,6 +1,7 @@
 import datetime
 import json
 from builtins import str
+from unittest import mock
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.gis.geos import Point
@@ -599,6 +600,37 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             response.json()['data']['attributes']['story'],
             '<p>Test</p><img src="/media/test.jpg"><ul><li class="bla">List</li></ul>'
         )
+
+    def test_meta_translations_in_response(self):
+        mock_translation_response = {
+            'value': 'In het Nederlands',
+            'source_language': 'en'
+        }
+        
+        with mock.patch(
+                'bluebottle.translations.utils.get_translation_response',
+                return_value=mock_translation_response
+        ):
+            response = self.client.get(self.url, LANGUAGE_CODE='nl')
+            
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+            
+            self.assertIn('meta', data['data'])
+            
+            self.assertIn('translations', data['data']['meta'])
+            
+            self.assertIn('title', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['title']['value'], 'In het Nederlands')
+            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'en')
+            
+            self.assertIn('pitch', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['pitch']['value'], 'In het Nederlands')
+            self.assertEqual(data['data']['meta']['translations']['pitch']['source_language'], 'en')
+            
+            self.assertIn('story', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['story']['value'], 'In het Nederlands')
+            self.assertEqual(data['data']['meta']['translations']['story']['source_language'], 'en')
 
 
 @override_settings(

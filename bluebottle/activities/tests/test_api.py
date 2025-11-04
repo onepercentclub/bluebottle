@@ -1536,6 +1536,49 @@ class ActivityListSearchAPITestCase(ESTestCase, BluebottleTestCase):
 
         self.assertFound(matching)
 
+    def test_meta_translations_in_response(self):
+        from unittest import mock
+        
+        initiative = InitiativeFactory.create(
+            status='approved',
+            title='Test Initiative Title'
+        )
+        activity = DeadlineActivityFactory.create(
+            status='open',
+            title='Test Activity Title',
+            initiative=initiative
+        )
+        
+        mock_translation_response = {
+            'value': 'In het Nederlands',
+            'source_language': 'en'
+        }
+        
+        with mock.patch(
+                'bluebottle.translations.utils.get_translation_response',
+                return_value=mock_translation_response
+        ):
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+            
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+            
+            self.assertGreater(len(data['data']), 0)
+            
+            first_activity = data['data'][0]
+            
+            self.assertIn('meta', first_activity)
+            
+            self.assertIn('translations', first_activity['meta'])
+            
+            self.assertIn('title', first_activity['meta']['translations'])
+            self.assertEqual(first_activity['meta']['translations']['title']['value'], 'In het Nederlands')
+            self.assertEqual(first_activity['meta']['translations']['title']['source_language'], 'en')
+            
+            self.assertIn('initiative_title', first_activity['meta']['translations'])
+            self.assertEqual(first_activity['meta']['translations']['initiative_title']['value'], 'In het Nederlands')
+            self.assertEqual(first_activity['meta']['translations']['initiative_title']['source_language'], 'en')
+
 
 class ActivityRelatedImageAPITestCase(BluebottleTestCase):
     def setUp(self):

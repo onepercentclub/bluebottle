@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-03 15:03+0100\n"
-"PO-Revision-Date: 2025-11-04 08:23\n"
+"POT-Creation-Date: 2025-11-02 08:37+0100\n"
+"PO-Revision-Date: 2025-11-02 08:13\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -315,14 +315,14 @@ msgid "activity"
 msgstr "дейност"
 
 #: bluebottle/activities/messages/activity_manager.py:37
-#: bluebottle/funding/messages/funding/activity_manager.py:12
+#: bluebottle/funding/messages/funding/activity_manager.py:13
 #: bluebottle/funding/messages/funding/reviewer.py:16
 msgctxt "email"
 msgid "View campaign"
 msgstr "Преглед на кампанията"
 
 #: bluebottle/activities/messages/activity_manager.py:39
-#: bluebottle/grant_management/messages/activity_manager.py:14
+#: bluebottle/grant_management/messages/activity_manager.py:15
 #: bluebottle/grant_management/messages/reviewer.py:13
 msgctxt "email"
 msgid "View application"
@@ -422,6 +422,7 @@ msgstr "Вие подадохте активност на {site_name}"
 
 #: bluebottle/activities/messages/activity_manager.py:122
 #: bluebottle/time_based/messages/activity_manager.py:26
+#: test_translations.py:20 test_translations.py:23 test_translations.py:29
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been approved!"
@@ -3805,7 +3806,7 @@ msgid "Payment"
 msgstr "Плащане"
 
 #: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:290
+#: bluebottle/funding_stripe/models.py:292
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 msgid "Currency"
 msgstr "Валута"
@@ -4063,88 +4064,88 @@ msgstr "Персонализирано съобщение"
 msgid "You can provide a custom message to the campaign owner explaining why the funding needs work."
 msgstr "Можете да предоставите персонализирано съобщение на собственика на кампанията, обясняващо защо финансирането нуждае се от работа."
 
-#: bluebottle/funding/messages/funding/activity_manager.py:31
+#: bluebottle/funding/messages/funding/activity_manager.py:32
 msgctxt "email"
 msgid "You have a new donation!💰"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:47
+#: bluebottle/funding/messages/funding/activity_manager.py:48
 msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:55
+#: bluebottle/funding/messages/funding/activity_manager.py:56
 #, python-brace-format
 msgctxt "email"
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:63
+#: bluebottle/funding/messages/funding/activity_manager.py:64
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been rejected"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:71
+#: bluebottle/funding/messages/funding/activity_manager.py:72
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted a crowdfunding campaign on {site_name}"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:79
+#: bluebottle/funding/messages/funding/activity_manager.py:80
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} needs work"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:87
+#: bluebottle/funding/messages/funding/activity_manager.py:88
 msgctxt "email"
 msgid "Your crowdfunding campaign has expired"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:95
+#: bluebottle/funding/messages/funding/activity_manager.py:96
 #, python-brace-format
 msgctxt "email"
 msgid "The donations received for your campaign \"{title}\" will be refunded"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:103
+#: bluebottle/funding/messages/funding/activity_manager.py:104
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:111
+#: bluebottle/funding/messages/funding/activity_manager.py:112
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:119
+#: bluebottle/funding/messages/funding/activity_manager.py:120
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:148
-#: bluebottle/funding/messages/funding/activity_manager.py:156
+#: bluebottle/funding/messages/funding/activity_manager.py:149
+#: bluebottle/funding/messages/funding/activity_manager.py:157
 msgctxt "email"
 msgid "Action required for your crowdfunding campaign"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:164
-#: bluebottle/funding/messages/funding/activity_manager.py:188
+#: bluebottle/funding/messages/funding/activity_manager.py:165
+#: bluebottle/funding/messages/funding/activity_manager.py:189
 #, python-brace-format
 msgctxt "email"
 msgid "Your identity has been verified on {site_name}"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:172
+#: bluebottle/funding/messages/funding/activity_manager.py:173
 msgctxt "email"
 msgid "Action required for your identity verification"
 msgstr ""
 
-#: bluebottle/funding/messages/funding/activity_manager.py:180
+#: bluebottle/funding/messages/funding/activity_manager.py:181
 msgctxt "email"
 msgid "Action required for identity verification"
 msgstr ""
@@ -5770,89 +5771,89 @@ msgstr "Отвори дейности, които са спряни"
 msgid "Update business type at stripe"
 msgstr "Актуализирай типа на бизнеса в Stripe"
 
-#: bluebottle/funding_stripe/models.py:241
+#: bluebottle/funding_stripe/models.py:243
 msgid "Country of primary stripe account"
 msgstr "Държава на основната сметка в stripe"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:245
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Обикновено това е Нидерландия, но чрез заместване на ключа на stripe, може да се избере друга основна сметка в stripe."
 
-#: bluebottle/funding_stripe/models.py:251
+#: bluebottle/funding_stripe/models.py:253
 msgid "Stripe publishable key"
 msgstr "публикуем ключ на Stripe"
 
-#: bluebottle/funding_stripe/models.py:252
-#: bluebottle/funding_stripe/models.py:260
+#: bluebottle/funding_stripe/models.py:254
+#: bluebottle/funding_stripe/models.py:262
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Това е необходимо само ако искаш да използваш конкретна сметка в Stripe."
 
-#: bluebottle/funding_stripe/models.py:259
+#: bluebottle/funding_stripe/models.py:261
 msgid "Stripe secret key"
 msgstr "тайен ключ на Stripe"
 
-#: bluebottle/funding_stripe/models.py:267
+#: bluebottle/funding_stripe/models.py:269
 msgid "Stripe connect webhook secret"
 msgstr "тайна за свързващия webhook на Stripe"
 
-#: bluebottle/funding_stripe/models.py:268
+#: bluebottle/funding_stripe/models.py:270
 msgid "The secret for connect webhook."
 msgstr "Тайна за свързващия webhook."
 
-#: bluebottle/funding_stripe/models.py:275
+#: bluebottle/funding_stripe/models.py:277
 msgid "Stripe payment intents webhook secret"
 msgstr "тайна на Stripe за уебхук на плащанията"
 
-#: bluebottle/funding_stripe/models.py:276
+#: bluebottle/funding_stripe/models.py:278
 msgid "The secret for payment intents webhook."
 msgstr "Тайна за уебхук за плащания."
 
-#: bluebottle/funding_stripe/models.py:283
+#: bluebottle/funding_stripe/models.py:285
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Тайна на уебхука за сесия за плащане Stripe"
 
-#: bluebottle/funding_stripe/models.py:284
+#: bluebottle/funding_stripe/models.py:286
 msgid "The secret for payment checkout session webhook."
 msgstr "Тайната за уебхука на сесията за плащане."
 
-#: bluebottle/funding_stripe/models.py:291
+#: bluebottle/funding_stripe/models.py:293
 msgid "The currency for the global account."
 msgstr "Валутата за глобалната сметка."
 
-#: bluebottle/funding_stripe/models.py:336
+#: bluebottle/funding_stripe/models.py:338
 msgid "Personal"
 msgstr "Личен"
 
-#: bluebottle/funding_stripe/models.py:341
+#: bluebottle/funding_stripe/models.py:343
 msgid "Starts with 'acct_...'"
 msgstr "Започва с 'acct_...'"
 
-#: bluebottle/funding_stripe/models.py:344
+#: bluebottle/funding_stripe/models.py:346
 msgid "Verification type"
 msgstr "Тип проверка"
 
-#: bluebottle/funding_stripe/models.py:416
+#: bluebottle/funding_stripe/models.py:430
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Не се отнася - набиране на средства за проект с добро намерение на %(platform)s, платформа на GoodUp."
 
-#: bluebottle/funding_stripe/models.py:617
+#: bluebottle/funding_stripe/models.py:631
 msgid "stripe payout account"
 msgstr "сметка за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:618
+#: bluebottle/funding_stripe/models.py:632
 msgid "stripe payout accounts"
 msgstr "сметки за плащания на Stripe"
 
-#: bluebottle/funding_stripe/models.py:629
+#: bluebottle/funding_stripe/models.py:643
 msgid "Starts with 'ba_...'"
 msgstr "Започва с 'ba_...'"
 
-#: bluebottle/funding_stripe/models.py:677
+#: bluebottle/funding_stripe/models.py:691
 msgid "Bank account"
 msgstr "Банкова сметка"
 
-#: bluebottle/funding_stripe/models.py:678
+#: bluebottle/funding_stripe/models.py:692
 msgid "Bank accounts"
 msgstr "Банкови сметки"
 
@@ -6967,37 +6968,37 @@ msgctxt "email"
 msgid "View initiative"
 msgstr "Преглед на инициативата"
 
-#: bluebottle/initiatives/messages/initiator.py:26
+#: bluebottle/initiatives/messages/initiator.py:25
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an initiative on {site_name}"
 msgstr ""
 
-#: bluebottle/initiatives/messages/initiator.py:31
+#: bluebottle/initiatives/messages/initiator.py:30
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been approved!"
 msgstr ""
 
-#: bluebottle/initiatives/messages/initiator.py:36
+#: bluebottle/initiatives/messages/initiator.py:35
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been published!"
 msgstr ""
 
-#: bluebottle/initiatives/messages/initiator.py:41
+#: bluebottle/initiatives/messages/initiator.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative you submitted on {site_name} needs work"
 msgstr ""
 
-#: bluebottle/initiatives/messages/initiator.py:46
+#: bluebottle/initiatives/messages/initiator.py:45
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been rejected"
 msgstr ""
 
-#: bluebottle/initiatives/messages/initiator.py:51
+#: bluebottle/initiatives/messages/initiator.py:50
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative \"{title}\" has been cancelled."
@@ -8332,7 +8333,7 @@ msgstr "до {}"
 msgid "Raise error"
 msgstr "Повдигнете грешка"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:727
+#: bluebottle/notifications/management/commands/preview_all_messages.py:713
 msgid "test"
 msgstr ""
 
@@ -8873,82 +8874,26 @@ msgstr "Настройки"
 msgid "Manage Reporting"
 msgstr "Управление на отчетност"
 
-#: bluebottle/settings/local.py:737 tenants/accenture/settings.py:30
-#: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
-#: tenants/bedrijven-voor-amsterdam/settings.py:27
-#: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
-#: tenants/boost-your-business/settings.py:26
-#: tenants/bright-future-afghanistan/settings.py:26
-#: tenants/bugaboo/settings.py:26 tenants/close-the-gap/settings.py:26
-#: tenants/corona/settings.py:26
-#: tenants/deloitte-impact-foundation/settings.py:30
-#: tenants/deloitte-uk/settings.py:29 tenants/dll/settings.py:29
-#: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
-#: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
-#: tenants/good-growth-in-action/settings.py:27
-#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
-#: tenants/innovating-justice/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:27
-#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
-#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
-#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
-#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
-#: tenants/nlcares/settings.py:27 tenants/nlmtd/settings.py:30
-#: tenants/nn/settings.py:27 tenants/nola-connects/settings.py:26
-#: tenants/nordea/settings.py:27 tenants/onepercent/settings.py:26
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
-#: tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
-#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
-#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
-#: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
+#: bluebottle/settings/local.py:734 tenants/laatste-pluk/settings.py:26
+#: tenants/navara/settings.py:27 tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-uk/settings.py:26
 msgid "English"
 msgstr "Английски"
 
-#: bluebottle/settings/local.py:738 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
-#: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
-#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
-#: tenants/crowdfunding-voornatuur/settings.py:26
-#: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
-#: tenants/gent/settings.py:25 tenants/goes/settings.py:25
-#: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
-#: tenants/join-rabo-foundation/settings.py:26
-#: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
-#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
-#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
-#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
-#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
-#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:25
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
-#: tenants/rabobank-cooperatief/settings.py:25
-#: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
-#: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
-#: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
-#: tenants/tilburg/settings.py:25 tenants/transavia/settings.py:26
-#: tenants/utrecht/settings.py:25 tenants/venlo/settings.py:23
-#: tenants/voor-apeldoorn/settings.py:26
-#: tenants/voor-je-buurt-belgie/settings.py:23
-#: tenants/voor-je-buurt/settings.py:26 tenants/voor-je-stadsie/settings.py:26
-#: tenants/voor-leeuwarden/settings.py:26
-#: tenants/voor-overijssel/settings.py:25 tenants/west-friesland/settings.py:25
-#: tenants/zaanstad/settings.py:25
+#: bluebottle/settings/local.py:735 tenants/brabant/settings.py:25
+#: tenants/laatste-pluk/settings.py:25 tenants/navara/settings.py:26
 msgid "Dutch"
 msgstr "Холандски"
 
-#: bluebottle/settings/local.py:739 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:736
 msgid "Spanish"
 msgstr "Испански"
 
-#: bluebottle/settings/local.py:740 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:737
 msgid "German"
 msgstr "Немски"
 
-#: bluebottle/settings/local.py:741 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:738
 msgid "Hungarian"
 msgstr "Унгарски"
 
@@ -9882,86 +9827,86 @@ msgid "A new activity has been registered on {site_name}"
 msgstr "Нова дейност е регистрирана на {site_name}"
 
 #: bluebottle/time_based/messages/teams.py:17
-#: bluebottle/time_based/messages/teams.py:115
+#: bluebottle/time_based/messages/teams.py:114
 msgctxt "email"
 msgid "Open your team"
 msgstr "Отворете отбора си"
 
-#: bluebottle/time_based/messages/teams.py:32
+#: bluebottle/time_based/messages/teams.py:31
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been removed from your activity \"{title}\""
 msgstr "Отбор е премахнат от вашата активност \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:41
+#: bluebottle/time_based/messages/teams.py:40
 #, python-brace-format
 msgctxt "email"
 msgid "A team has withdrawn from your activity \"{title}\""
 msgstr "Отборът се е оттеглил от вашата активност \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:55
-#: bluebottle/time_based/messages/teams.py:167
-#: bluebottle/time_based/messages/teams.py:254
+#: bluebottle/time_based/messages/teams.py:54
+#: bluebottle/time_based/messages/teams.py:166
+#: bluebottle/time_based/messages/teams.py:253
 msgctxt "email"
 msgid "View team"
 msgstr "Вижте отбора"
 
-#: bluebottle/time_based/messages/teams.py:70
+#: bluebottle/time_based/messages/teams.py:69
 #, python-brace-format
 msgctxt "email"
 msgid "Your team was removed from the activity \"{title}\""
 msgstr "Вашият отбор е премахнат от активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:79
+#: bluebottle/time_based/messages/teams.py:78
 #, python-brace-format
 msgctxt "email"
 msgid "You withdrew your team from the activity \"{title}\""
 msgstr "Вие се оттеглихте от отбора във активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:89
-#: bluebottle/time_based/messages/teams.py:214
+#: bluebottle/time_based/messages/teams.py:88
+#: bluebottle/time_based/messages/teams.py:213
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been scheduled for the activity \"{title}\""
 msgstr "Вашият отбор е заплануван за активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:130
+#: bluebottle/time_based/messages/teams.py:129
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team on {site_name}"
 msgstr "Някой се е присъединил към вашия отбор на {site_name}"
 
-#: bluebottle/time_based/messages/teams.py:141
+#: bluebottle/time_based/messages/teams.py:140
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your team for the activity \"{title}\""
 msgstr "Участник е премахнат от вашия отбор за активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:152
+#: bluebottle/time_based/messages/teams.py:151
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for the activity \"{title}\""
 msgstr "Участник се е оттеглил от вашия отбор за активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:182
+#: bluebottle/time_based/messages/teams.py:181
 #, python-brace-format
 msgctxt "email"
 msgid "You are now part of {name}'s team on {site_name}"
 msgstr "Вие вече сте част от отбора на {name} на {site_name}"
 
-#: bluebottle/time_based/messages/teams.py:192
+#: bluebottle/time_based/messages/teams.py:191
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed from {name}'s team for the activity \"{title}\""
 msgstr "Вие сте премахнати от отбора на {name} за активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:203
+#: bluebottle/time_based/messages/teams.py:202
 #, python-brace-format
 msgctxt "email"
 msgid "You have withdrawn from {name}'s team for the activity \"{title}\""
 msgstr "Вие се оттеглихте от отбора на {name} за активността \"{title}\""
 
-#: bluebottle/time_based/messages/teams.py:230
+#: bluebottle/time_based/messages/teams.py:229
 #, python-brace-format
 msgctxt "email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
@@ -13070,8 +13015,4 @@ msgstr[1] "Секунди"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Нидерландски"
-
-#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
-msgid "French"
-msgstr ""
 

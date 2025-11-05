@@ -493,7 +493,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         # Set explicit title and description
         self.model.title = 'This is my activity'
-        self.model.description = "We're going to change the world!"
+        self.model.description = json.dumps({"html": "We're going to change the world!", "delta": ""})
         self.model.save()
 
         # Mock function that reverses string for 'nl' language and uppercases for 'de' language

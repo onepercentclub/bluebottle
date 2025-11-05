@@ -21,7 +21,7 @@ from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import (
-    AvailableTransitionsField, CurrentStatusField
+    AvailableTransitionsField, CurrentStatusField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -35,7 +35,6 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
-from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,

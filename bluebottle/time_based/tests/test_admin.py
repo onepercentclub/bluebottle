@@ -131,6 +131,66 @@ class DateActivityAdminScenarioTestCase(BluebottleAdminTestCase):
 
         self.assertEqual(slot.participants.count(), 1)
 
+    def test_duplicate_activity(self):
+        """Test that the 'Duplicate' button in DateActivity admin works correctly."""
+        activity = DateActivityFactory.create(
+            initiative=self.initiative,
+            title='Original Activity',
+            description=json.dumps({'html': 'Original description', 'delta': ''}),
+            slots=[]
+        )
+        slot1 = DateActivitySlotFactory.create(
+            activity=activity,
+            start=now().replace(hour=12, minute=0,second=0,microsecond=0) + timedelta(days=5),
+            capacity=10
+        )
+        DateActivitySlotFactory.create(
+            activity=activity,
+            start=now().replace(hour=12, minute=0,second=0,microsecond=0) + timedelta(days=6),
+            capacity=15
+        )
+        registration = DateRegistrationFactory.create(activity=activity)
+        DateParticipantFactory.create(slot=slot1, activity=activity, registration=registration)
+
+        original_activity_count = DateActivity.objects.count()
+        original_slot_count = activity.slots.count()
+        original_registration_count = activity.registrations.count()
+        
+        url = reverse('admin:time_based_dateactivity_change', args=(activity.pk,))
+        page = self.app.get(url)
+        self.assertEqual(page.status, '200 OK')
+        
+        form = page.forms['dateactivity_form']
+        page = form.submit(name='_saveasnew')
+        if 'confirm' in page.forms:
+            page.forms['confirm'].submit().follow()
+        else:
+            page.follow()
+        
+        self.assertEqual(DateActivity.objects.count(), original_activity_count + 1)
+        
+        new_activities = DateActivity.objects.exclude(pk=activity.pk)
+        self.assertEqual(new_activities.count(), 1)
+        new_activity = new_activities.last()
+        
+        self.assertEqual(new_activity.title, activity.title)
+
+        self.assertEqual(new_activity.slots.count(), original_slot_count)
+        self.assertEqual(new_activity.slots.count(), 2)
+        
+        new_slots = list(new_activity.slots.order_by('start'))
+        original_slots = list(activity.slots.order_by('start'))
+        for slot in new_slots:
+            self.assertEqual(slot.activity_id, new_activity.pk)
+        self.assertEqual(new_slots[0].start, original_slots[0].start)
+        self.assertEqual(new_slots[1].start, original_slots[1].start)
+        self.assertNotEqual(new_slots[0].pk, original_slots[0].pk)
+        self.assertNotEqual(new_slots[1].pk, original_slots[1].pk)
+        
+        self.assertEqual(new_activity.registrations.count(), 0)
+        activity.refresh_from_db()
+        self.assertEqual(activity.registrations.count(), original_registration_count)
+
 
 class DateParticipantAdminTestCase(BluebottleAdminTestCase):
     extra_environ = {}

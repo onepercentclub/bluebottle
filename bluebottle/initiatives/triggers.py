@@ -65,8 +65,7 @@ class InitiativeTriggers(TriggerManager):
         TransitionTrigger(
             ReviewStateMachine.cancel,
             effects=[
-                RelatedTransitionEffect('activities', ActivityStateMachine.cancel),
-                RelatedTransitionEffect('activities', TimeBasedStateMachine.cancel),
+                RelatedTransitionEffect('activities', ActivityStateMachine.auto_cancel),
                 NotificationEffect(InitiativeCancelledInitiatorMessage)
             ]
         ),

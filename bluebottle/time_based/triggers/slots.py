@@ -33,7 +33,7 @@ from bluebottle.time_based.states import (
     PeriodicSlotStateMachine,
     TeamScheduleParticipantStateMachine,
     DateActivitySlot,
-    TimeContributionStateMachine
+    TimeContributionStateMachine, ParticipantStateMachine, RegistrationParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import DateParticipantStateMachine
 
@@ -147,6 +147,15 @@ class ScheduleSlotTriggers(TriggerManager):
         ),
         TransitionTrigger(
             ScheduleSlotStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.auto_cancel,
             effects=[
                 RelatedTransitionEffect(
                     "participants",
@@ -552,8 +561,8 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 NotificationEffect(SlotCancelledNotification),
                 RelatedTransitionEffect(
-                    "active_and_new_participants",
-                    DateParticipantStateMachine.cancel,
+                    "participants",
+                    ParticipantStateMachine.cancel,
                 ),
 
                 RelatedTransitionEffect(
@@ -575,6 +584,16 @@ class DateActivitySlotTriggers(TriggerManager):
                     "activity",
                     DateStateMachine.cancel,
                     conditions=[all_slots_cancelled]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DateActivitySlotStateMachine.auto_cancel,
+            effects=[
+                NotificationEffect(SlotCancelledNotification),
+                RelatedTransitionEffect(
+                    "participants",
+                    ParticipantStateMachine.cancel,
                 ),
             ],
         ),

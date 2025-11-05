@@ -3,30 +3,30 @@
 Base utilities for exporting and importing content items with placeholder fields.
 """
 import os
-import requests
 from urllib.parse import urlparse
+
+import requests
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from fluent_contents.models import Placeholder, ContentItem
 
 
 def get_image_url(obj, field_name, request=None):
     """
     Get the URL for an image field.
-    
+
     Args:
         obj: Model instance
         field_name: Name of the image field
         request: Optional request object to build absolute URLs
-        
+
     Returns:
         str or None: URL of the image, or None if not set
     """
     try:
         from django.db import connection
-        
+
         image = getattr(obj, field_name, None)
         if image and hasattr(image, 'file'):
             # For ImageField (ForeignKey to Image model)
@@ -63,11 +63,11 @@ def get_image_url(obj, field_name, request=None):
 def download_image_from_url(image_url, base_url=None):
     """
     Download an image from a URL and return a ContentFile.
-    
+
     Args:
         image_url: URL of the image to download
         base_url: Optional base URL to prepend if image_url is relative
-        
+
     Returns:
         tuple: (ContentFile, filename) or (None, None) if download fails
     """
@@ -78,11 +78,11 @@ def download_image_from_url(image_url, base_url=None):
                 image_url = '/' + image_url
             parsed_base = urlparse(base_url)
             image_url = f"{parsed_base.scheme}://{parsed_base.netloc}{image_url}"
-        
+
         # Download the image
         response = requests.get(image_url, timeout=30, stream=True)
         response.raise_for_status()
-        
+
         # Get filename from URL or Content-Disposition header
         filename = os.path.basename(urlparse(image_url).path)
         if not filename or '.' not in filename:
@@ -95,7 +95,7 @@ def download_image_from_url(image_url, base_url=None):
                 content_type = response.headers.get('Content-Type', 'image/jpeg')
                 ext = content_type.split('/')[-1] if '/' in content_type else 'jpg'
                 filename = f"imported_image.{ext}"
-        
+
         # Create ContentFile from downloaded content
         content = ContentFile(response.content)
         return content, filename
@@ -108,43 +108,43 @@ def get_block_fields(block, request=None):
     """
     Extract serializable fields from a block, excluding internal Django fields.
     Handles image fields by exporting their URLs.
-    
+
     Args:
         block: Content block instance
         request: Optional request object to build absolute URLs
-        
+
     Returns:
         dict: Dictionary of serializable field values
     """
     from django.db import connection
-    
+
     fields = block.__dict__.copy()
     skip_fields = [
         'id', '_state', 'parent_type_id', 'parent_id',
         'polymorphic_ctype_id', 'contentitem_ptr_id',
         'placeholder_id', 'block_id', 'order_field',
         'order_field_name', '_block_cache', '_django_version']
-    
+
     # Get the model's field definitions to check field types
     model_fields = {f.name: f for f in block._meta.get_fields()}
-    
+
     # Check for image fields and export URLs
     for field_name in list(fields.keys()):
         if field_name in skip_fields:
             del fields[field_name]
             continue
-        
+
         # Check if this field is an image field by looking at the model field definition
         is_image_field = False
         field_value = fields[field_name]
-        
+
         if field_name in model_fields:
             field = model_fields[field_name]
             # Check if it's an ImageField (ForeignKey to Image) or ImageFieldFile
             from bluebottle.files.fields import ImageField as FileImageField
             from bluebottle.utils.fields import ImageField as UtilImageField
             from fluent_contents.extensions.model_fields import PluginImageField
-            
+
             if isinstance(field, (FileImageField, UtilImageField, PluginImageField)):
                 is_image_field = True
         elif field_value and hasattr(field_value, '__class__'):
@@ -152,11 +152,11 @@ def get_block_fields(block, request=None):
             class_name = field_value.__class__.__name__
             if 'Image' in class_name or (hasattr(field_value, 'file') or hasattr(field_value, 'url')):
                 is_image_field = True
-        
+
         if is_image_field:
             # Get the actual field value using getattr to ensure we get the related object
             actual_value = getattr(block, field_name, None)
-            
+
             if actual_value:
                 # Try to get the image URL
                 image_url = get_image_url(block, field_name, request=request)
@@ -180,18 +180,18 @@ def get_block_fields(block, request=None):
             else:
                 # No image set, remove from export
                 del fields[field_name]
-    
+
     return fields
 
 
 def dump_content(placeholder_field, request=None):
     """
     Dump all content blocks and items from a placeholder field.
-    
+
     Args:
         placeholder_field: PlaceholderField instance (e.g., page.content or news_item.contents)
         request: Optional request object to build absolute URLs
-        
+
     Returns:
         list: List of dictionaries containing block data
     """
@@ -218,26 +218,22 @@ def dump_content(placeholder_field, request=None):
 def create_content_block(block_data, placeholder, base_url=None):
     """
     Create a content block from imported data.
-    
+
     Args:
         block_data: Dictionary containing block data
         placeholder: Placeholder instance
         base_url: Optional base URL for relative image URLs
     """
-    from bluebottle.files.models import Image
-    from django.contrib.auth import get_user_model
-    
-    User = get_user_model()
-    
+
     # Handle image fields in block data
     block_fields = block_data['fields'].copy()
     image_fields = {}
-    
+
     for key, value in list(block_fields.items()):
         if isinstance(value, dict) and '_image_url' in value:
             image_fields[key] = value
             del block_fields[key]
-    
+
     model = apps.get_model(block_data['app'], block_data['model'])
     content_type = ContentType.objects.get_for_model(model)
 
@@ -246,7 +242,7 @@ def create_content_block(block_data, placeholder, base_url=None):
         polymorphic_ctype=content_type,
         **block_fields
     )
-    
+
     # Handle image imports for the block
     for field_name, image_data in image_fields.items():
         handle_image_import(field_name, image_data, content_block, base_url=base_url)
@@ -256,18 +252,18 @@ def create_content_block(block_data, placeholder, base_url=None):
             item_model = apps.get_model(item_data['app'], item_data['model'])
             item_fields = item_data['data'].copy()
             item_image_fields = {}
-            
+
             # Separate image fields from item data
             for key, value in list(item_fields.items()):
                 if isinstance(value, dict) and '_image_url' in value:
                     item_image_fields[key] = value
                     del item_fields[key]
-            
+
             item = item_model.objects.create(
                 block=content_block,
                 **item_fields
             )
-            
+
             # Handle image imports for items
             for field_name, image_data in item_image_fields.items():
                 handle_image_import(field_name, image_data, item, base_url=base_url)
@@ -276,13 +272,13 @@ def create_content_block(block_data, placeholder, base_url=None):
 def handle_image_import(field_name, image_data, item, base_url=None):
     """
     Handle importing an image field from exported data.
-    
+
     Args:
         field_name: Name of the image field
         image_data: Dictionary with '_image_url' key or image ID
         item: Model instance to set the image on
         base_url: Optional base URL for relative image URLs
-        
+
     Returns:
         bool: True if image was successfully imported, False otherwise
     """
@@ -290,47 +286,47 @@ def handle_image_import(field_name, image_data, item, base_url=None):
     from bluebottle.files.fields import ImageField as FileImageField
     from bluebottle.members.models import Member
     from django.db import models
-    
+
     if not image_data:
         return False
-    
+
     # Check the field type to determine how to handle it
     field = item._meta.get_field(field_name)
     is_foreign_key_to_image = isinstance(field, FileImageField) or (
-        isinstance(field, models.ForeignKey) and 
-        hasattr(field.remote_field, 'model') and 
+        isinstance(field, models.ForeignKey) and
+        hasattr(field.remote_field, 'model') and
         field.remote_field.model == Image
     )
-    
+
     # Check if it's an image URL to download
     if isinstance(image_data, dict) and '_image_url' in image_data:
         image_url = image_data['_image_url']
         if not image_url:
             return False
-        
+
         try:
             # Download the image
             content_file, filename = download_image_from_url(image_url, base_url=base_url)
             if not content_file:
                 return False
-            
+
             if is_foreign_key_to_image:
                 # This is a ForeignKey to Image model - create Image instance
                 # Get or create a Member for the image owner (use first superuser or first member)
                 owner = Member.objects.filter(is_superuser=True).first()
                 if not owner:
                     owner = Member.objects.first()
-                
+
                 if not owner:
                     print(f"Error importing image for {field_name}: No Member found to assign as owner")
                     return False
-                
+
                 # Create and save Image instance first
                 image = Image(owner=owner)
                 image.save()  # Save the instance first
                 # Then assign the file
                 image.file.save(filename, content_file, save=True)
-                
+
                 # Set the image field on the item and save
                 setattr(item, field_name, image)
                 item.save()
@@ -341,7 +337,7 @@ def handle_image_import(field_name, image_data, item, base_url=None):
                     item.save()
                 getattr(item, field_name).save(filename, content_file, save=True)
                 item.save()
-            
+
             return True
         except Exception as e:
             print(f"Error importing image for {field_name}: {e}")
@@ -357,102 +353,97 @@ def handle_image_import(field_name, image_data, item, base_url=None):
             return True
         except Image.DoesNotExist:
             return False
-    
+
     return False
 
 
 def import_content_item_from_data(item_data, lookup_fields, slot='blog_contents', base_url=None):
     """
     Import a single content item from data dictionary.
-    
+
     Args:
         item_data: Dictionary containing item data
         lookup_fields: List of fields to use for get_or_create lookup
         slot: Placeholder slot name (default: 'blog_contents')
         base_url: Optional base URL for relative image URLs
-        
+
     Returns:
         tuple: (item, created) - Item instance and whether it was created
     """
-    from bluebottle.utils.models import Language
-    
     model = apps.get_model(item_data['app'], item_data['model'])
-    language = Language.objects.get(code=item_data['properties']['language'])
-    
-    # Make publication_date tz aware (same as loadpages.py)
+
     if item_data['properties'].get('publication_date'):
         item_data['properties']['publication_date'] += '+00:00'
-    
-    # Separate image fields from regular properties
+
     properties = item_data['properties'].copy()
     image_fields = {}
-    
+
     for key, value in list(properties.items()):
         # Check if this is an image field (contains _image_url or is a ForeignKey to Image)
         if isinstance(value, dict) and '_image_url' in value:
             image_fields[key] = value
             del properties[key]
-    
+
     # Build lookup kwargs
     lookup_kwargs = {}
     for field in lookup_fields:
         lookup_kwargs[field] = properties[field]
-    
+
     # Create or update item
     item, created = model.objects.get_or_create(
         **lookup_kwargs,
         defaults=properties
     )
-    
+
     # Update existing items with new properties
     if not created:
         for key, value in properties.items():
             setattr(item, key, value)
-    
+
     # Handle image imports
     for field_name, image_data in image_fields.items():
         handle_image_import(field_name, image_data, item, base_url=base_url)
-    
+
     item.save()
-    
+
     item_type = ContentType.objects.get_for_model(item)
-    
+
     (placeholder, _created) = Placeholder.objects.get_or_create(
         parent_id=item.pk,
         parent_type_id=item_type.pk,
         slot=slot,
         role='m'
     )
-    
+
     # Delete existing content items
     for content_item in ContentItem.objects.filter(parent_id=item.pk, parent_type=item_type):
         content_item.delete()
-    
+
     # Create new content blocks
     for block_data in item_data['data']:
         create_content_block(block_data, placeholder, base_url=base_url)
-    
+
     return item, created
 
 
 def import_content_items_from_data(data, model_name, lookup_fields, slot='blog_contents', base_url=None):
     """
     Import content items from a list of data dictionaries.
-    
+
     Args:
         data: List of dictionaries containing item data
         model_name: Name of the model to import (e.g., 'Page', 'NewsItem')
         lookup_fields: List of fields to use for get_or_create lookup
         slot: Placeholder slot name (default: 'blog_contents')
         base_url: Optional base URL for relative image URLs
-        
+
     Returns:
         dict: Dictionary with 'imported', 'updated' counts, and 'last_item' instance
     """
     imported_count = 0
     updated_count = 0
     last_item = None
-    
+
     for item_data in data:
         if item_data['model'] == model_name:
             item, created = import_content_item_from_data(
@@ -463,10 +454,9 @@ def import_content_items_from_data(data, model_name, lookup_fields, slot='blog_c
                 imported_count += 1
             else:
                 updated_count += 1
-    
+
     return {
         'imported': imported_count,
         'updated': updated_count,
         'last_item': last_item
     }
-

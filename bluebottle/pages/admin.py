@@ -1,21 +1,21 @@
+import json
+
 from adminsortable.admin import NonSortableParentAdmin
+from django import forms
 from django.conf import settings
-from django.urls import re_path
 from django.contrib import admin
+from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.forms import Form
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _, gettext
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.http import HttpResponse
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib import messages
-from django.forms import Form
-from django import forms
-import json
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
@@ -39,8 +39,8 @@ class PageAdmin(PlaceholderFieldAdmin):
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author', )
-    readonly_fields = ('online', )
+    raw_id_fields = ('author',)
+    readonly_fields = ('online',)
 
     radio_fields = {
         'status': admin.HORIZONTAL,
@@ -63,6 +63,7 @@ class PageAdmin(PlaceholderFieldAdmin):
                 (obj.publication_end_date is None or obj.publication_end_date > now()):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+
     online.help_text = _("Is this item currently visible online or not.")
 
     def preview_slide(self, obj):
@@ -149,7 +150,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         if change and obj:
             context.update({
                 'export_url': reverse('admin:{0}_{1}_export'.format(*info),
-                                     kwargs={'pk': obj.pk}),
+                                      kwargs={'pk': obj.pk}),
             })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
@@ -279,7 +280,6 @@ class PageAdmin(PlaceholderFieldAdmin):
         else:
             form = PageImportForm()
 
-        info = self.model._meta.app_label, self.model._meta.model_name
         context = {
             'form': form,
             'opts': self.model._meta,

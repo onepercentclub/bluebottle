@@ -219,8 +219,8 @@ class PageAdmin(PlaceholderFieldAdmin):
                 "Page object with primary key '%s' does not exist." % pk
             )
 
-        # Export page data using utility function
-        export_data = [export_page_to_dict(page)]
+        # Export page data using utility function (request is used for absolute image URLs)
+        export_data = [export_page_to_dict(page, request=request)]
 
         # Create JSON response
         response = HttpResponse(

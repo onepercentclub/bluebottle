@@ -158,7 +158,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         """Export selected news items to JSON file."""
         export_data = []
         for news_item in queryset:
-            export_data.append(export_news_item_to_dict(news_item))
+            export_data.append(export_news_item_to_dict(news_item, request=request))
         
         if not export_data:
             self.message_user(request, _("No news items were selected."), messages.WARNING)
@@ -184,8 +184,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                 "NewsItem object with primary key '%s' does not exist." % pk
             )
 
-        # Export news item data using utility function
-        export_data = [export_news_item_to_dict(news_item)]
+        # Export news item data using utility function (request is used for absolute image URLs)
+        export_data = [export_news_item_to_dict(news_item, request=request)]
 
         # Create JSON response
         response = HttpResponse(

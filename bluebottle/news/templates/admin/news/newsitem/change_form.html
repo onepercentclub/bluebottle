@@ -1,0 +1,12 @@
+{% extends 'admin/blogs/change_form.html' %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  {% if export_url %}
+    <a href="{{ export_url }}" class="button">
+      {% trans 'Export news item' %}
+    </a>
+  {% endif %}
+{{ block.super }}
+{% endblock %}
+

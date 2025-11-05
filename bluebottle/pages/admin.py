@@ -1,17 +1,29 @@
 from django.conf import settings
 from django.urls import re_path
 from django.contrib import admin
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, gettext
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.http import HttpResponse
+from django.core.serializers.json import DjangoJSONEncoder
+from django.contrib import messages
+from django.forms import Form
+from django import forms
+import json
+
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 
 from .models import Page
+from .utils import export_page_to_dict, import_pages_from_data
+
+
+class PageImportForm(Form):
+    json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
 
 
 class PageAdmin(PlaceholderFieldAdmin):
@@ -21,7 +33,7 @@ class PageAdmin(PlaceholderFieldAdmin):
     list_filter = ('status', 'language')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
-    actions = ['make_published']
+    actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ('author', )
@@ -64,6 +76,20 @@ class PageAdmin(PlaceholderFieldAdmin):
                     self.preview_canvas
                 ),
                 name="{0}_{1}_preview".format(*info)
+            ),
+            re_path(
+                r'^(?P<pk>\d+)/export/$',
+                self.admin_site.admin_view(
+                    self.export_page
+                ),
+                name="{0}_{1}_export".format(*info)
+            ),
+            re_path(
+                r'^import/$',
+                self.admin_site.admin_view(
+                    self.import_pages
+                ),
+                name="{0}_{1}_import".format(*info)
             ),
         ]
 
@@ -117,6 +143,11 @@ class PageAdmin(PlaceholderFieldAdmin):
             'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
                                           kwargs={'pk': obj.pk if obj else 0}),
         })
+        if change and obj:
+            context.update({
+                'export_url': reverse('admin:{0}_{1}_export'.format(*info),
+                                     kwargs={'pk': obj.pk}),
+            })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
 
@@ -154,6 +185,114 @@ class PageAdmin(PlaceholderFieldAdmin):
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
+
+    def export_selected(self, request, queryset):
+        """Export selected pages to JSON file."""
+        export_data = []
+        for page in queryset:
+            export_data.append(export_page_to_dict(page))
+        
+        if not export_data:
+            self.message_user(request, _("No pages were selected."), messages.WARNING)
+            return
+        
+        # Create JSON response
+        response = HttpResponse(
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
+            content_type='application/json'
+        )
+        filename = f"pages_export_{now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    
+    export_selected.short_description = _("Export selected pages")
+
+    def export_page(self, request, pk):
+        """Export a single page to JSON file."""
+        page = self.get_object(request, pk)
+        if page is None:
+            from django.contrib.admin.exceptions import DisallowedModelAdminToField
+            raise DisallowedModelAdminToField(
+                "Page object with primary key '%s' does not exist." % pk
+            )
+
+        # Export page data using utility function
+        export_data = [export_page_to_dict(page)]
+
+        # Create JSON response
+        response = HttpResponse(
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
+            content_type='application/json'
+        )
+        filename = f"page_{page.slug}_{page.pk}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    def import_pages(self, request):
+        """Import pages from JSON file."""
+        if request.method == 'POST':
+            form = PageImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                json_file = form.cleaned_data['json_file']
+                try:
+                    # Read the uploaded file
+                    json_file.seek(0)  # Reset file pointer
+                    data = json.load(json_file)
+                    
+                    # Import pages using utility function
+                    result = import_pages_from_data(data)
+                    imported_count = result['imported']
+                    updated_count = result['updated']
+                    last_page = result['last_page']
+                    
+                    # Show success message
+                    parts = []
+                    if imported_count > 0:
+                        if imported_count == 1:
+                            parts.append(gettext("1 page was imported"))
+                        else:
+                            parts.append(gettext("{0} pages were imported").format(imported_count))
+                    if updated_count > 0:
+                        if updated_count == 1:
+                            parts.append(gettext("1 page was updated"))
+                        else:
+                            parts.append(gettext("{0} pages were updated").format(updated_count))
+                    
+                    if parts:
+                        messages.success(request, ". ".join(parts) + ".")
+                    else:
+                        messages.info(request, _("No pages were imported or updated."))
+                    
+                    # Redirect to the last imported/updated page if available, otherwise changelist
+                    if last_page:
+                        return redirect('admin:pages_page_change', last_page.pk)
+                    else:
+                        return redirect('admin:pages_page_changelist')
+                except json.JSONDecodeError:
+                    messages.error(request, _("Invalid JSON file. Please check the file format."))
+                except Exception as e:
+                    messages.error(request, _("Error importing pages: {0}").format(str(e)))
+        else:
+            form = PageImportForm()
+        
+        info = self.model._meta.app_label, self.model._meta.model_name
+        context = {
+            'form': form,
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request),
+            'has_add_permission': self.has_add_permission(request),
+            'has_change_permission': self.has_change_permission(request),
+            'has_delete_permission': self.has_delete_permission(request),
+            'title': _('Import pages'),
+        }
+        return render(request, 'admin/pages/page/import.html', context)
+
+    def changelist_view(self, request, extra_context=None):
+        """Override to add import URL to context."""
+        extra_context = extra_context or {}
+        info = self.model._meta.app_label, self.model._meta.model_name
+        extra_context['import_url'] = reverse('admin:{0}_{1}_import'.format(*info))
+        return super(PageAdmin, self).changelist_view(request, extra_context)
 
 
 admin.site.register(Page, PageAdmin)

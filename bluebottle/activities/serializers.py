@@ -39,6 +39,7 @@ from bluebottle.deeds.serializers import (
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import IMAGE_SIZES, ImageField, ImageSerializer, DocumentSerializer
 from bluebottle.fsm.serializers import CurrentStatusField
+from bluebottle.fsm.serializers import TransitionSerializer
 from bluebottle.funding.models import Donor
 from bluebottle.funding.serializers import (
     DonorListSerializer,
@@ -75,7 +76,6 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
-from bluebottle.transitions.serializers import TransitionSerializer
 from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer

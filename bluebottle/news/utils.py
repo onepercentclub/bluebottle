@@ -11,20 +11,20 @@ from bluebottle.utils.content_import_export import (
 def export_news_item_to_dict(news_item, request=None):
     """
     Export a news item to a dictionary in the format expected by import functions.
-    
+
     Args:
         news_item: NewsItem instance
         request: Optional request object to build absolute URLs for images
-        
+
     Returns:
         dict: Dictionary containing news item export data
     """
     from bluebottle.utils.content_import_export import get_image_url
-    
+
     # Handle main_image export
     main_image_data = None
     main_image = getattr(news_item, 'main_image', None)
-    
+
     # Try to get the image URL first
     image_url = get_image_url(news_item, 'main_image', request=request)
     if image_url:
@@ -44,7 +44,7 @@ def export_news_item_to_dict(news_item, request=None):
                 elif hasattr(connection, 'tenant') and connection.tenant:
                     url = connection.tenant.build_absolute_url(url)
                 main_image_data = {'_image_url': url}
-    
+
     return {
         'model': 'NewsItem',
         'app': 'news',
@@ -55,8 +55,14 @@ def export_news_item_to_dict(news_item, request=None):
             'language': news_item.language,
             'main_image': main_image_data,
             'allow_comments': getattr(news_item, 'allow_comments', True),
-            'publication_date': news_item.publication_date.strftime('%Y-%m-%d %H:%M') if news_item.publication_date else None,
-            'publication_end_date': news_item.publication_end_date.strftime('%Y-%m-%d %H:%M') if news_item.publication_end_date else None,
+            'publication_date': (
+                news_item.publication_date.strftime('%Y-%m-%d %H:%M')
+                if news_item.publication_date else None
+            ),
+            'publication_end_date': (
+                news_item.publication_end_date.strftime('%Y-%m-%d %H:%M')
+                if news_item.publication_end_date else None
+            ),
         },
         'data': dump_content(news_item.contents, request=request)
     }
@@ -65,10 +71,10 @@ def export_news_item_to_dict(news_item, request=None):
 def import_news_items_from_data(data):
     """
     Import news items from a list of news data dictionaries.
-    
+
     Args:
         data: List of dictionaries containing news item data
-        
+
     Returns:
         dict: Dictionary with 'imported', 'updated' counts, and 'last_item' instance
     """
@@ -78,4 +84,3 @@ def import_news_items_from_data(data):
         lookup_fields=['language', 'slug'],
         slot='blog_contents'
     )
-

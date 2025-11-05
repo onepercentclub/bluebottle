@@ -1,20 +1,20 @@
+import json
+
+from django import forms
 from django.conf import settings
-from django.urls import re_path
 from django.contrib import admin
+from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.forms import Form
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _, gettext
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.http import HttpResponse
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib import messages
-from django.forms import Form
-from django import forms
-import json
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 
@@ -36,8 +36,8 @@ class PageAdmin(PlaceholderFieldAdmin):
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author', )
-    readonly_fields = ('online', )
+    raw_id_fields = ('author',)
+    readonly_fields = ('online',)
 
     radio_fields = {
         'status': admin.HORIZONTAL,
@@ -60,6 +60,7 @@ class PageAdmin(PlaceholderFieldAdmin):
                 (obj.publication_end_date is None or obj.publication_end_date > now()):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+
     online.help_text = _("Is this item currently visible online or not.")
 
     def preview_slide(self, obj):
@@ -146,7 +147,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         if change and obj:
             context.update({
                 'export_url': reverse('admin:{0}_{1}_export'.format(*info),
-                                     kwargs={'pk': obj.pk}),
+                                      kwargs={'pk': obj.pk}),
             })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
@@ -191,11 +192,11 @@ class PageAdmin(PlaceholderFieldAdmin):
         export_data = []
         for page in queryset:
             export_data.append(export_page_to_dict(page, request=request))
-        
+
         if not export_data:
             self.message_user(request, _("No pages were selected."), messages.WARNING)
             return
-        
+
         # Create JSON response
         response = HttpResponse(
             json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
@@ -204,7 +205,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         filename = f"pages_export_{now().strftime('%Y%m%d_%H%M%S')}.json"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
-    
+
     export_selected.short_description = _("Export selected pages")
 
     def export_page(self, request, pk):
@@ -238,13 +239,13 @@ class PageAdmin(PlaceholderFieldAdmin):
                     # Read the uploaded file
                     json_file.seek(0)  # Reset file pointer
                     data = json.load(json_file)
-                    
+
                     # Import pages using utility function
                     result = import_pages_from_data(data)
                     imported_count = result['imported']
                     updated_count = result['updated']
                     last_page = result['last_page']
-                    
+
                     # Show success message
                     parts = []
                     if imported_count > 0:
@@ -257,12 +258,12 @@ class PageAdmin(PlaceholderFieldAdmin):
                             parts.append(gettext("1 page was updated"))
                         else:
                             parts.append(gettext("{0} pages were updated").format(updated_count))
-                    
+
                     if parts:
                         messages.success(request, ". ".join(parts) + ".")
                     else:
                         messages.info(request, _("No pages were imported or updated."))
-                    
+
                     # Redirect to the page if only one was imported/updated, otherwise changelist
                     total_count = imported_count + updated_count
                     if total_count == 1 and last_page:
@@ -275,8 +276,7 @@ class PageAdmin(PlaceholderFieldAdmin):
                     messages.error(request, _("Error importing pages: {0}").format(str(e)))
         else:
             form = PageImportForm()
-        
-        info = self.model._meta.app_label, self.model._meta.model_name
+
         context = {
             'form': form,
             'opts': self.model._meta,

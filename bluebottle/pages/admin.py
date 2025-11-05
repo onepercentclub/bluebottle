@@ -266,8 +266,9 @@ class PageAdmin(PlaceholderFieldAdmin):
                     else:
                         messages.info(request, _("No pages were imported or updated."))
 
-                    # Redirect to the last imported/updated page if available, otherwise changelist
-                    if last_page:
+                    # Redirect to the page if only one was imported/updated, otherwise changelist
+                    total_count = imported_count + updated_count
+                    if total_count == 1 and last_page:
                         return redirect('admin:pages_page_change', last_page.pk)
                     else:
                         return redirect('admin:pages_page_changelist')

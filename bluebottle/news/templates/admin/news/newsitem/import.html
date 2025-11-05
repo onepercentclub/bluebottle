@@ -2,44 +2,41 @@
 {% load i18n admin_urls static %}
 
 {% block breadcrumbs %}
-<div class="breadcrumbs">
-<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
-&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-&rsaquo; {% trans 'Import news items' %}
-</div>
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+        &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        &rsaquo; {% trans 'Import news items' %}
+    </div>
 {% endblock %}
 
 {% block content %}
-<h1>{% trans 'Import news items' %}</h1>
+    <p>{% trans 'Upload a JSON file exported from another platform to import news items.' %}</p>
 
-<p>{% trans 'Upload a JSON file exported from another platform to import news items.' %}</p>
-
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <fieldset class="module aligned">
-        <div class="form-row">
-            <div>
-                <label for="{{ form.json_file.id_for_label }}">{{ form.json_file.label }}:</label>
-                {{ form.json_file }}
-                {% if form.json_file.help_text %}
-                    <p class="help">{{ form.json_file.help_text }}</p>
-                {% endif %}
-                {% if form.json_file.errors %}
-                    <ul class="errorlist">
-                        {% for error in form.json_file.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset class="module aligned">
+            <div class="form-row">
+                <div>
+                    <label for="{{ form.json_file.id_for_label }}">{{ form.json_file.label }}:</label>
+                    {{ form.json_file }}
+                    {% if form.json_file.help_text %}
+                        <p class="help">{{ form.json_file.help_text }}</p>
+                    {% endif %}
+                    {% if form.json_file.errors %}
+                        <ul class="errorlist">
+                            {% for error in form.json_file.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
             </div>
+        </fieldset>
+
+        <div class="submit-row">
+            <input type="submit" value="{% trans 'Import' %}" class="default"/>
         </div>
-    </fieldset>
-    
-    <div class="submit-row">
-        <input type="submit" value="{% trans 'Import' %}" class="default" />
-        <a href="{% url opts|admin_urlname:'changelist' %}" class="button">{% trans 'Cancel' %}</a>
-    </div>
-</form>
+    </form>
 {% endblock %}
 

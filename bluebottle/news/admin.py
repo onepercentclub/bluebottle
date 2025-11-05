@@ -231,8 +231,9 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     else:
                         messages.info(request, _("No news items were imported or updated."))
                     
-                    # Redirect to the last imported/updated item if available, otherwise changelist
-                    if last_item:
+                    # Redirect to the item if only one was imported/updated, otherwise changelist
+                    total_count = imported_count + updated_count
+                    if total_count == 1 and last_item:
                         return redirect('admin:news_newsitem_change', last_item.pk)
                     else:
                         return redirect('admin:news_newsitem_changelist')

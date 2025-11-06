@@ -3,60 +3,85 @@
 Base utilities for exporting and importing content items with placeholder fields.
 """
 import os
+import traceback
 from urllib.parse import urlparse
 
 import requests
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
+from django.db import connection, models
+
+from bluebottle.files.fields import ImageField as FileImageField
+from bluebottle.files.models import Image
+from bluebottle.members.models import Member
+from bluebottle.utils.fields import ImageField as UtilImageField
+from fluent_contents.extensions.model_fields import PluginImageField
 from fluent_contents.models import Placeholder, ContentItem
 
 
 def get_image_url(obj, field_name, request=None):
-    """
-    Get the URL for an image field.
-
-    Args:
-        obj: Model instance
-        field_name: Name of the image field
-        request: Optional request object to build absolute URLs
-
-    Returns:
-        str or None: URL of the image, or None if not set
-    """
     try:
-        from django.db import connection
-
         image = getattr(obj, field_name, None)
         if image and hasattr(image, 'file'):
-            # For ImageField (ForeignKey to Image model)
             if hasattr(image, 'file') and image.file:
                 url = image.file.url if hasattr(image.file, 'url') else None
                 if url:
-                    # Build absolute URL using Client.build_absolute_url or request
-                    if request:
-                        return request.build_absolute_uri(url)
-                    elif hasattr(connection, 'tenant') and connection.tenant:
-                        return connection.tenant.build_absolute_url(url)
-                    elif not url.startswith(('http://', 'https://')):
-                        # Fallback: assume relative URL needs base
-                        return url
+                    return connection.tenant.build_absolute_url(url)
                 return url
         elif image and hasattr(image, 'url'):
-            # For direct FileField
             url = image.url
             if url:
-                # Build absolute URL using Client.build_absolute_url or request
-                if request:
-                    return request.build_absolute_uri(url)
-                elif hasattr(connection, 'tenant') and connection.tenant:
+                if hasattr(connection, 'tenant') and connection.tenant:
                     return connection.tenant.build_absolute_url(url)
                 elif not url.startswith(('http://', 'https://')):
-                    # Fallback: assume relative URL needs base
                     return url
             return url
     except Exception:
         pass
+    return None
+
+
+def export_image_field(obj, field_name, request=None):
+    """
+    Export an image field from an object to a dictionary format.
+    
+    This function handles different types of image fields:
+    - ForeignKey to Image model (returns {'image_url': url} or {'image_id': id})
+    - FileField/ImageFieldFile (returns {'image_url': url})
+    
+    Args:
+        obj: Model instance containing the image field
+        field_name: Name of the image field
+        request: Optional request object to build absolute URLs
+        
+    Returns:
+        dict: Dictionary with 'image_url' or 'image_id' key, or None if no image
+    """
+    image = getattr(obj, field_name, None)
+    if not image:
+        return None
+    
+    # Try to get the image URL first
+    image_url = get_image_url(obj, field_name, request=request)
+    if image_url:
+        return {'image_url': image_url}
+    
+    # Fallback: check if it's an Image model instance (has pk attribute)
+    if hasattr(image, 'pk'):
+        return {'image_id': image.pk}
+    
+    # Fallback: check if it's a FileField/ImageFieldFile (has url attribute)
+    if hasattr(image, 'url'):
+        url = image.url
+        if url:
+            # Build absolute URL
+            if request:
+                url = request.build_absolute_uri(url)
+            elif hasattr(connection, 'tenant') and connection.tenant:
+                url = connection.tenant.build_absolute_url(url)
+            return {'image_url': url}
+    
     return None
 
 
@@ -116,8 +141,6 @@ def get_block_fields(block, request=None):
     Returns:
         dict: Dictionary of serializable field values
     """
-    from django.db import connection
-
     fields = block.__dict__.copy()
     skip_fields = [
         'id', '_state', 'parent_type_id', 'parent_id',
@@ -141,10 +164,6 @@ def get_block_fields(block, request=None):
         if field_name in model_fields:
             field = model_fields[field_name]
             # Check if it's an ImageField (ForeignKey to Image) or ImageFieldFile
-            from bluebottle.files.fields import ImageField as FileImageField
-            from bluebottle.utils.fields import ImageField as UtilImageField
-            from fluent_contents.extensions.model_fields import PluginImageField
-
             if isinstance(field, (FileImageField, UtilImageField, PluginImageField)):
                 is_image_field = True
         elif field_value and hasattr(field_value, '__class__'):
@@ -158,25 +177,18 @@ def get_block_fields(block, request=None):
             actual_value = getattr(block, field_name, None)
 
             if actual_value:
-                # Try to get the image URL
-                image_url = get_image_url(block, field_name, request=request)
-                if image_url:
-                    fields[field_name] = {'_image_url': image_url}
-                elif hasattr(actual_value, 'pk'):
-                    # It's an Image model instance, keep the ID as fallback
-                    fields[field_name + '_id'] = actual_value.pk
-                    del fields[field_name]
-                elif hasattr(actual_value, 'url'):
-                    # It's a FileField/ImageFieldFile, get URL and make absolute
-                    url = actual_value.url
-                    if url:
-                        if request:
-                            url = request.build_absolute_uri(url)
-                        elif hasattr(connection, 'tenant') and connection.tenant:
-                            url = connection.tenant.build_absolute_url(url)
-                        fields[field_name] = {'_image_url': url}
-                    else:
+                # Export the image field using the shared function
+                image_data = export_image_field(block, field_name, request=request)
+                if image_data:
+                    # If we got image_id, store it as field_name_id for consistency
+                    if 'image_id' in image_data:
+                        fields[field_name + '_id'] = image_data['image_id']
                         del fields[field_name]
+                    else:
+                        fields[field_name] = image_data
+                else:
+                    # No image data could be extracted, remove from export
+                    del fields[field_name]
             else:
                 # No image set, remove from export
                 del fields[field_name]
@@ -230,7 +242,7 @@ def create_content_block(block_data, placeholder, base_url=None):
     image_fields = {}
 
     for key, value in list(block_fields.items()):
-        if isinstance(value, dict) and '_image_url' in value:
+        if isinstance(value, dict) and 'image_url' in value:
             image_fields[key] = value
             del block_fields[key]
 
@@ -255,7 +267,7 @@ def create_content_block(block_data, placeholder, base_url=None):
 
             # Separate image fields from item data
             for key, value in list(item_fields.items()):
-                if isinstance(value, dict) and '_image_url' in value:
+                if isinstance(value, dict) and 'image_url' in value:
                     item_image_fields[key] = value
                     del item_fields[key]
 
@@ -275,18 +287,13 @@ def handle_image_import(field_name, image_data, item, base_url=None):
 
     Args:
         field_name: Name of the image field
-        image_data: Dictionary with '_image_url' key or image ID
+        image_data: Dictionary with 'image_url' key or image ID
         item: Model instance to set the image on
         base_url: Optional base URL for relative image URLs
 
     Returns:
         bool: True if image was successfully imported, False otherwise
     """
-    from bluebottle.files.models import Image
-    from bluebottle.files.fields import ImageField as FileImageField
-    from bluebottle.members.models import Member
-    from django.db import models
-
     if not image_data:
         return False
 
@@ -299,8 +306,8 @@ def handle_image_import(field_name, image_data, item, base_url=None):
     )
 
     # Check if it's an image URL to download
-    if isinstance(image_data, dict) and '_image_url' in image_data:
-        image_url = image_data['_image_url']
+    if isinstance(image_data, dict) and 'image_url' in image_data:
+        image_url = image_data['image_url']
         if not image_url:
             return False
 
@@ -341,7 +348,6 @@ def handle_image_import(field_name, image_data, item, base_url=None):
             return True
         except Exception as e:
             print(f"Error importing image for {field_name}: {e}")
-            import traceback
             traceback.print_exc()
             return False
     elif isinstance(image_data, (int, str)) and is_foreign_key_to_image:
@@ -379,8 +385,8 @@ def import_content_item_from_data(item_data, lookup_fields, slot='blog_contents'
     image_fields = {}
 
     for key, value in list(properties.items()):
-        # Check if this is an image field (contains _image_url or is a ForeignKey to Image)
-        if isinstance(value, dict) and '_image_url' in value:
+        # Check if this is an image field (contains image_url or is a ForeignKey to Image)
+        if isinstance(value, dict) and 'image_url' in value:
             image_fields[key] = value
             del properties[key]
 

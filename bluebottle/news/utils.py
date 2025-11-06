@@ -4,6 +4,7 @@ Utilities for exporting and importing news items.
 """
 from bluebottle.utils.content_import_export import (
     dump_content,
+    export_image_field,
     import_content_items_from_data
 )
 
@@ -19,31 +20,8 @@ def export_news_item_to_dict(news_item, request=None):
     Returns:
         dict: Dictionary containing news item export data
     """
-    from bluebottle.utils.content_import_export import get_image_url
-
     # Handle main_image export
-    main_image_data = None
-    main_image = getattr(news_item, 'main_image', None)
-
-    # Try to get the image URL first
-    image_url = get_image_url(news_item, 'main_image', request=request)
-    if image_url:
-        main_image_data = {'_image_url': image_url}
-    elif main_image:
-        # Check if main_image is actually an Image model instance (has pk attribute)
-        if hasattr(main_image, 'pk'):
-            # Fallback to ID if URL couldn't be determined
-            main_image_data = {'_image_id': main_image.pk}
-        elif hasattr(main_image, 'url'):
-            # It's a FileField/ImageFieldFile, get URL and make absolute
-            from django.db import connection
-            url = main_image.url
-            if url:
-                if request:
-                    url = request.build_absolute_uri(url)
-                elif hasattr(connection, 'tenant') and connection.tenant:
-                    url = connection.tenant.build_absolute_url(url)
-                main_image_data = {'_image_url': url}
+    main_image_data = export_image_field(news_item, 'main_image', request=request)
 
     return {
         'model': 'NewsItem',

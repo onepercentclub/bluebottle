@@ -71,10 +71,12 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         return urlpatterns + base_urls
 
     def online(self, obj):
-        if obj.status == 'published' and \
-            obj.publication_date and \
-            obj.publication_date < now() and \
-            (obj.publication_end_date is None or obj.publication_end_date > now()):
+        if (
+            obj.status == 'published' and
+            obj.publication_date and
+            obj.publication_date < now() and
+            (obj.publication_end_date is None or obj.publication_end_date > now())
+        ):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
 

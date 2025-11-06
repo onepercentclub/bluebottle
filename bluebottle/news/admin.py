@@ -130,7 +130,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.model_name
-        if change and obj:
+        if change and obj and request.user.is_superuser:
             context.update({
                 'export_url': reverse('admin:{0}_{1}_export'.format(*info),
                                       kwargs={'pk': obj.pk}),
@@ -261,7 +261,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         """Override to add import URL to context."""
         extra_context = extra_context or {}
         info = self.model._meta.app_label, self.model._meta.model_name
-        extra_context['import_url'] = reverse('admin:{0}_{1}_import'.format(*info))
+        if request.user.is_superuser:
+            extra_context['import_url'] = reverse('admin:{0}_{1}_import'.format(*info))
         return super(NewsItemAdmin, self).changelist_view(request, extra_context)
 
 

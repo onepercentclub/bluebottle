@@ -11,7 +11,7 @@ from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, gettext
+from django.utils.translation import gettext_lazy as _, ngettext
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 
 from bluebottle.utils.models import PublishedStatus
@@ -216,15 +216,17 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     # Show success message
                     parts = []
                     if imported_count > 0:
-                        if imported_count == 1:
-                            parts.append(gettext("1 news item was imported"))
-                        else:
-                            parts.append(gettext("{0} news items were imported").format(imported_count))
+                        parts.append(ngettext(
+                            "1 news item was imported",
+                            "{0} news items were imported",
+                            imported_count
+                        ).format(imported_count))
                     if updated_count > 0:
-                        if updated_count == 1:
-                            parts.append(gettext("1 news item was updated"))
-                        else:
-                            parts.append(gettext("{0} news items were updated").format(updated_count))
+                        parts.append(ngettext(
+                            "1 news item was updated",
+                            "{0} news items were updated",
+                            updated_count
+                        ).format(updated_count))
 
                     if parts:
                         messages.success(request, ". ".join(parts) + ".")

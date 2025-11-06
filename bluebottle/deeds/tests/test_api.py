@@ -1,5 +1,5 @@
-import json
 import io
+import json
 from datetime import timedelta, date
 from unittest import mock
 
@@ -464,8 +464,8 @@ class DeedsDetailViewAPITestCase(APITestCase):
         }
 
         with mock.patch(
-                'bluebottle.translations.utils.get_translation_response',
-                return_value=mock_translation_response
+            'bluebottle.translations.utils.get_translation_response',
+            return_value=mock_translation_response
         ):
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
 
@@ -489,7 +489,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
         # Create Language objects for testing
         LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
-        LanguageFactory.create(code='de', language_name='German', native_name='Deutsch')
+        LanguageFactory.create(code='en', language_name='English', native_name='English')
 
         # Set explicit title and description
         self.model.title = 'This is my activity'
@@ -504,20 +504,20 @@ class DeedsDetailViewAPITestCase(APITestCase):
                     'value': text[::-1],
                     'source_language': 'en'
                 }
-            elif target_language == 'de':
+            elif target_language == 'en':
                 # Uppercase the string
                 return {
                     'value': text.upper(),
-                    'source_language': 'en'
+                    'source_language': 'bg'
                 }
             return {
                 'value': text,
-                'source_language': 'en'
+                'source_language': 'bg'
             }
 
         with mock.patch(
-                'bluebottle.translations.utils.get_translation_response',
-                side_effect=mock_translation_side_effect
+            'bluebottle.translations.utils.get_translation_response',
+            side_effect=mock_translation_side_effect
         ):
             # Test with 'nl' language - should reverse the strings
             response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
@@ -538,7 +538,7 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
 
             # Test with 'de' language - should uppercase the strings
-            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='de')
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='en')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             data = json.loads(response.content)
@@ -548,12 +548,12 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
             self.assertIn('title', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['title']['value'], 'THIS IS MY ACTIVITY')
-            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'en')
+            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'bg')
 
             self.assertIn('description', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['description']['value'],
                              "WE'RE GOING TO CHANGE THE WORLD!")
-            self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
+            self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'bg')
 
 
 class DeedTransitionListViewAPITestCase(APITestCase):

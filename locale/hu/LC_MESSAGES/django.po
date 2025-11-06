@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-02 08:37+0100\n"
-"PO-Revision-Date: 2025-11-02 08:04\n"
+"POT-Creation-Date: 2025-11-06 08:36+0100\n"
+"PO-Revision-Date: 2025-11-06 07:37\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -315,14 +315,14 @@ msgid "activity"
 msgstr "tevékenység"
 
 #: bluebottle/activities/messages/activity_manager.py:37
-#: bluebottle/funding/messages/funding/activity_manager.py:13
+#: bluebottle/funding/messages/funding/activity_manager.py:12
 #: bluebottle/funding/messages/funding/reviewer.py:16
 msgctxt "email"
 msgid "View campaign"
 msgstr "Kampány megtekintése"
 
 #: bluebottle/activities/messages/activity_manager.py:39
-#: bluebottle/grant_management/messages/activity_manager.py:15
+#: bluebottle/grant_management/messages/activity_manager.py:14
 #: bluebottle/grant_management/messages/reviewer.py:13
 msgctxt "email"
 msgid "View application"
@@ -422,7 +422,6 @@ msgstr "Benyújtott egy aktivitást a {site_name} oldalon"
 
 #: bluebottle/activities/messages/activity_manager.py:122
 #: bluebottle/time_based/messages/activity_manager.py:26
-#: test_translations.py:20 test_translations.py:23 test_translations.py:29
 #, python-brace-format
 msgctxt "email"
 msgid "Your activity on {site_name} has been approved!"
@@ -799,32 +798,32 @@ msgstr "Űrlap kérdések"
 msgid "Send a reminder whe activities are unpublished for more then 3 days"
 msgstr "Emlékeztető küldése, ha a tevékenységek több mint 3 napig nem jelentek meg"
 
-#: bluebottle/activities/states.py:17 bluebottle/time_based/states/slots.py:136
+#: bluebottle/activities/states.py:16 bluebottle/time_based/states/slots.py:136
 #: bluebottle/utils/transitions.py:10
 msgid "draft"
 msgstr "tervezet"
 
-#: bluebottle/activities/states.py:20
+#: bluebottle/activities/states.py:19
 msgid "The activity has been created, but not yet completed. An activity manager is still editing the activity."
 msgstr "A tevékenység létrejött, de még nem fejeződött be. Egy tevékenységvezető még mindig szerkeszti a tevékenységet."
 
-#: bluebottle/activities/states.py:24 bluebottle/utils/transitions.py:11
+#: bluebottle/activities/states.py:23 bluebottle/utils/transitions.py:11
 msgid "submitted"
 msgstr "benyújtva"
 
-#: bluebottle/activities/states.py:26
+#: bluebottle/activities/states.py:25
 msgid "The activity has been submitted and is ready to be reviewed."
 msgstr "Az aktivitás benyújtva van és vár a felülvizsgálatra."
 
-#: bluebottle/activities/states.py:29 bluebottle/utils/transitions.py:12
+#: bluebottle/activities/states.py:28 bluebottle/utils/transitions.py:12
 msgid "needs work"
 msgstr "munkát kér"
 
-#: bluebottle/activities/states.py:32
+#: bluebottle/activities/states.py:31
 msgid "The activity needs changes before it can be approved."
 msgstr "Az aktivitásnak szüksége van változtatásokra a jóváhagyás előtt."
 
-#: bluebottle/activities/states.py:36 bluebottle/funding/states.py:581
+#: bluebottle/activities/states.py:35 bluebottle/funding/states.py:581
 #: bluebottle/funding/states.py:635 bluebottle/grant_management/states.py:262
 #: bluebottle/grant_management/states.py:316
 #: bluebottle/time_based/states/teams.py:54
@@ -832,22 +831,22 @@ msgstr "Az aktivitásnak szüksége van változtatásokra a jóváhagyás előtt
 msgid "rejected"
 msgstr "elutasítva"
 
-#: bluebottle/activities/states.py:39
+#: bluebottle/activities/states.py:38
 msgid "The activity does not fit the programme or does not comply with the rules. The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "A tevékenység nem illik a programba vagy nem felel meg a szabályoknak. A tevékenység nem jelenik meg a platformon, de a jelentésben számít. A tevékenységet nem szerkesztheti egy tevékenység vezető."
 
-#: bluebottle/activities/states.py:45 bluebottle/bb_accounts/models.py:131
+#: bluebottle/activities/states.py:44 bluebottle/bb_accounts/models.py:131
 msgid "deleted"
 msgstr "törölve"
 
-#: bluebottle/activities/states.py:48
+#: bluebottle/activities/states.py:47
 msgid "The activity has been removed. The activity does not appear on the platform and does not count in the report. The activity cannot be edited by an activity manager."
 msgstr "A tevékenység törölve lett. A tevékenység nem jelenik meg a platformon és nem számít a jelentésben. A tevékenységet nem lehet szerkeszteni egy tevékenység vezető által."
 
-#: bluebottle/activities/states.py:54 bluebottle/deeds/states.py:87
+#: bluebottle/activities/states.py:53 bluebottle/deeds/states.py:87
 #: bluebottle/funding/states.py:24 bluebottle/grant_management/states.py:389
 #: bluebottle/time_based/states/participants.py:189
-#: bluebottle/time_based/states/participants.py:473
+#: bluebottle/time_based/states/participants.py:474
 #: bluebottle/time_based/states/slots.py:166
 #: bluebottle/time_based/states/states.py:114
 #: bluebottle/time_based/states/teams.py:129
@@ -855,51 +854,51 @@ msgstr "A tevékenység törölve lett. A tevékenység nem jelenik meg a platfo
 msgid "cancelled"
 msgstr "törölve"
 
-#: bluebottle/activities/states.py:57
+#: bluebottle/activities/states.py:56
 msgid "The activity is not executed. The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "A tevékenység nem valósul meg. A tevékenység nem jelenik meg a platformon, de számít a jelentésben. A tevékenységet nem szerkesztheti egy tevékenység vezető."
 
-#: bluebottle/activities/states.py:63
+#: bluebottle/activities/states.py:62
 #: bluebottle/common/templates/widget/widget.html:43
 #: bluebottle/funding/states.py:291
 msgid "expired"
 msgstr "lejárt"
 
-#: bluebottle/activities/states.py:66
+#: bluebottle/activities/states.py:65
 msgid "The activity has ended, but did have any contributions . The activity does not appear on the platform, but counts in the report. The activity cannot be edited by an activity manager."
 msgstr "Az aktivitás véget ért, de voltak hozzájárulások. Az aktivitás nem jelenik meg a platformon, de számít a jelentésben. Az aktivitást nem lehet szerkeszteni egy aktivitás menedzser által."
 
-#: bluebottle/activities/states.py:70 bluebottle/time_based/states/slots.py:142
+#: bluebottle/activities/states.py:69 bluebottle/time_based/states/slots.py:142
 msgid "open"
 msgstr "nyitott"
 
-#: bluebottle/activities/states.py:70
+#: bluebottle/activities/states.py:69
 msgid "The activity is accepting new contributions."
 msgstr "Az aktivitás új hozzájárulásokat fogad."
 
-#: bluebottle/activities/states.py:72 bluebottle/deeds/states.py:48
+#: bluebottle/activities/states.py:71 bluebottle/deeds/states.py:48
 #: bluebottle/funding/states.py:495
-#: bluebottle/time_based/states/participants.py:452
+#: bluebottle/time_based/states/participants.py:453
 msgid "succeeded"
 msgstr "sikerült"
 
-#: bluebottle/activities/states.py:72
+#: bluebottle/activities/states.py:71
 msgid "The activity has ended successfully."
 msgstr "Az aktivitás sikeresen véget ért."
 
-#: bluebottle/activities/states.py:163
+#: bluebottle/activities/states.py:162
 msgid "Create"
 msgstr "Létrehoz"
 
-#: bluebottle/activities/states.py:164
+#: bluebottle/activities/states.py:163
 msgid "The activity will be created."
 msgstr "Az aktivitás létre leszhozva."
 
-#: bluebottle/activities/states.py:173 bluebottle/activities/states.py:186
+#: bluebottle/activities/states.py:172 bluebottle/activities/states.py:185
 msgid "The activity will be submitted for review."
 msgstr "Az aktivitás elbírálásra kerül."
 
-#: bluebottle/activities/states.py:175 bluebottle/activities/states.py:188
+#: bluebottle/activities/states.py:174 bluebottle/activities/states.py:187
 #: bluebottle/funding/states.py:88 bluebottle/funding/states.py:667
 #: bluebottle/grant_management/states.py:57
 #: bluebottle/grant_management/states.py:348
@@ -907,7 +906,7 @@ msgstr "Az aktivitás elbírálásra kerül."
 msgid "Submit"
 msgstr "Bead"
 
-#: bluebottle/activities/states.py:195 bluebottle/funding/states.py:167
+#: bluebottle/activities/states.py:194 bluebottle/funding/states.py:167
 #: bluebottle/funding/states.py:604 bluebottle/funding/states.py:684
 #: bluebottle/funding/states.py:722 bluebottle/funding_stripe/states.py:203
 #: bluebottle/grant_management/states.py:109
@@ -915,71 +914,71 @@ msgstr "Bead"
 #: bluebottle/grant_management/states.py:365
 #: bluebottle/initiatives/states.py:163
 #: bluebottle/time_based/states/participants.py:107
-#: bluebottle/time_based/states/participants.py:227
-#: bluebottle/time_based/states/participants.py:364
+#: bluebottle/time_based/states/participants.py:228
+#: bluebottle/time_based/states/participants.py:365
 #: bluebottle/time_based/states/registrations.py:86
 #: bluebottle/time_based/states/teams.py:53
 msgid "Reject"
 msgstr "Elutasít"
 
-#: bluebottle/activities/states.py:197
+#: bluebottle/activities/states.py:196
 msgid "Reject if the activity does not align with your program or guidelines The activity manager will not be able to edit or resubmit it, and it will not appear on the search page in the frontend. The activity will still be available in the back office and appear in your reporting."
 msgstr "Utasson el, ha az aktivitás nem illeszkedik a programjához vagy irányelveihez. Az aktivitás menedzsere nem tudja szerkeszteni vagy újra benyújtani, és nem fog megjelenni a kereső oldalán a frontendben. Az aktivitás továbbra is elérhető lesz a hátsó irodában, és meg fog jelenni a riportjaiban."
 
-#: bluebottle/activities/states.py:213 bluebottle/initiatives/states.py:122
+#: bluebottle/activities/states.py:212 bluebottle/initiatives/states.py:122
 #: bluebottle/news/templates/admin/blogs/change_form.html:119
 #: bluebottle/slides/templates/admin/banners/change_form.html:130
 msgid "Publish"
 msgstr "Közzététel"
 
-#: bluebottle/activities/states.py:214
+#: bluebottle/activities/states.py:213
 msgid "Your activity will be open to contributions."
 msgstr "A tevékenység nyitott lesz a hozzájárulásokra."
 
-#: bluebottle/activities/states.py:216
+#: bluebottle/activities/states.py:215
 msgid "published"
 msgstr "megjelenítve"
 
-#: bluebottle/activities/states.py:228
+#: bluebottle/activities/states.py:227
 msgid "Automatically publish activity when initiative is approved"
 msgstr "Automatikusan közzéteszi az aktivitást, amikor az kezdeményezés elfogadva van"
 
-#: bluebottle/activities/states.py:230
+#: bluebottle/activities/states.py:229
 msgid "Auto-publish"
 msgstr "Automatikus közzététel"
 
-#: bluebottle/activities/states.py:237 bluebottle/activities/states.py:253
+#: bluebottle/activities/states.py:236 bluebottle/activities/states.py:252
 #: bluebottle/funding/states.py:105 bluebottle/funding/states.py:515
 #: bluebottle/grant_management/states.py:71
 #: bluebottle/initiatives/states.py:131
 msgid "Approve"
 msgstr "Jóváhagy"
 
-#: bluebottle/activities/states.py:241
+#: bluebottle/activities/states.py:240
 msgid "The activity will be visible in the frontend and people can apply to the activity."
 msgstr "Az aktivitás látható lesz a frontend felületen, és az emberek jelentkezhetnek az aktivitásra."
 
-#: bluebottle/activities/states.py:257
+#: bluebottle/activities/states.py:256
 msgid "The activity will be published and visible in the frontend for people to contribute to,"
 msgstr "Az aktivitás közzétételre kerül és látható lesz a frontendben, hogy az emberek hozzájárulhassanak."
 
-#: bluebottle/activities/states.py:265 bluebottle/funding/states.py:596
+#: bluebottle/activities/states.py:264 bluebottle/funding/states.py:596
 #: bluebottle/grant_management/states.py:277
 msgid "Request changes"
 msgstr "Kérje a változást"
 
-#: bluebottle/activities/states.py:267
+#: bluebottle/activities/states.py:266
 msgid "The activity needs changes before it can be approved. Inform the activity manager of the changes required. The activity manager will then be able to edit and resubmit the activity."
 msgstr "Az aktivitásnak szüksége van változtatásokra a jóváhagyás előtt. Értesítse az aktivitás menedzserét a szükséges változtatásokról. Az aktivitás menedzsere ezután szerkesztheti és újra benyújthatja az aktivitást."
 
-#: bluebottle/activities/states.py:282
+#: bluebottle/activities/states.py:283
 #: bluebottle/activities/templates/admin/activities/bulk_add.html:49
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:49
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:138
-#: bluebottle/initiatives/states.py:177
+#: bluebottle/initiatives/states.py:181
 #: bluebottle/time_based/states/participants.py:188
-#: bluebottle/time_based/states/participants.py:472
+#: bluebottle/time_based/states/participants.py:473
 #: bluebottle/time_based/states/slots.py:95
 #: bluebottle/time_based/states/slots.py:209
 #: bluebottle/time_based/states/states.py:105
@@ -990,18 +989,28 @@ msgstr "Az aktivitásnak szüksége van változtatásokra a jóváhagyás előtt
 msgid "Cancel"
 msgstr "Mégse"
 
-#: bluebottle/activities/states.py:284
+#: bluebottle/activities/states.py:285
 msgid "Cancel if the activity will not be executed. An activity manager will no longer be able edit the activity and it won't show up on the search page in the frontend. The activity will still be visible in the back office and appear in your reporting."
 msgstr "Cancellálja, ha az aktivitást nem kívánják végrehajtani. Az aktivitás menedzsere már nem tudja szerkeszteni az aktivitást, és nem fog megjelenni a kereső oldalán a frontendben. Az aktivitás továbbra is látható lesz a hátsó irodában, és meg fog jelenni a riportjaiban."
 
-#: bluebottle/activities/states.py:291
+#: bluebottle/activities/states.py:292
 msgid "The activity ends and people no longer register. All current participants will fail too."
 msgstr "Az aktivitás véget ér, és az emberek már nem jelentkeznek. Minden aktuális résztvevő is kudarcot vall."
 
-#: bluebottle/activities/states.py:305 bluebottle/initiatives/states.py:203
-#: bluebottle/time_based/states/participants.py:197
-#: bluebottle/time_based/states/participants.py:235
-#: bluebottle/time_based/states/participants.py:317
+#: bluebottle/activities/states.py:301
+#: bluebottle/time_based/states/slots.py:103
+#: bluebottle/time_based/states/slots.py:221
+msgid "Auto cancel"
+msgstr "Automatikus törlés"
+
+#: bluebottle/activities/states.py:303
+msgid "Cancel the activity automatically, because the initiative is cancelled."
+msgstr ""
+
+#: bluebottle/activities/states.py:318 bluebottle/initiatives/states.py:207
+#: bluebottle/time_based/states/participants.py:198
+#: bluebottle/time_based/states/participants.py:236
+#: bluebottle/time_based/states/participants.py:318
 #: bluebottle/time_based/states/registrations.py:111
 #: bluebottle/time_based/states/slots.py:112
 #: bluebottle/time_based/states/teams.py:139
@@ -1009,53 +1018,53 @@ msgstr "Az aktivitás véget ér, és az emberek már nem jelentkeznek. Minden a
 msgid "Restore"
 msgstr "Visszaállít"
 
-#: bluebottle/activities/states.py:307
+#: bluebottle/activities/states.py:320
 msgid "The activity status is changed to 'Needs work'. Then you can make changes to the activity and submit it again."
 msgstr "Az aktivitás állapota \"Szükséges munka\"-ra változik. Ezután módosíthatja az aktivitást, és újra benyújthatja."
 
-#: bluebottle/activities/states.py:311 bluebottle/deeds/states.py:75
+#: bluebottle/activities/states.py:324 bluebottle/deeds/states.py:75
 msgid "The activity will be set to the status ‘Needs work’. Then you can make changes to the activity and submit it again."
 msgstr "A tevékenység állapota 'Munka folyamatban' lesz. Ekkor változtatásokat végezhetsz a tevékenységen, és újra benyújthatod."
 
-#: bluebottle/activities/states.py:326 bluebottle/collect/states.py:57
+#: bluebottle/activities/states.py:339 bluebottle/collect/states.py:57
 #: bluebottle/collect/states.py:64 bluebottle/deeds/states.py:60
-#: bluebottle/deeds/states.py:70 bluebottle/time_based/states/slots.py:220
+#: bluebottle/deeds/states.py:70 bluebottle/time_based/states/slots.py:228
 #: bluebottle/time_based/states/states.py:57
 #: bluebottle/time_based/states/states.py:70
 msgid "Reopen"
 msgstr "Újbóli megnyitás"
 
-#: bluebottle/activities/states.py:328
+#: bluebottle/activities/states.py:341
 msgid "Open the activity again, e.g. when a slot reopens."
 msgstr "Nyisd meg újra az aktivitást, pl. amikor egy hely újra megnyílik."
 
-#: bluebottle/activities/states.py:336 bluebottle/collect/states.py:34
+#: bluebottle/activities/states.py:349 bluebottle/collect/states.py:34
 #: bluebottle/deeds/states.py:36 bluebottle/funding/states.py:186
 #: bluebottle/funding/states.py:360 bluebottle/time_based/states/states.py:127
 msgid "Expire"
 msgstr "Lejár"
 
-#: bluebottle/activities/states.py:338 bluebottle/deeds/states.py:38
+#: bluebottle/activities/states.py:351 bluebottle/deeds/states.py:38
 #: bluebottle/time_based/states/states.py:129
 msgid "The activity will be cancelled because no one has signed up for the registration deadline."
 msgstr "Az aktivitás lemondásra kerül, mert senki sem jelentkezett a regisztrációs határidőre."
 
-#: bluebottle/activities/states.py:346
+#: bluebottle/activities/states.py:359
 #: bluebottle/bluebottle_dashboard/templates/admin/submit_line.html:7
-#: bluebottle/initiatives/states.py:191 bluebottle/members/models.py:226
+#: bluebottle/initiatives/states.py:195 bluebottle/members/models.py:226
 msgid "Delete"
 msgstr "Töröl"
 
-#: bluebottle/activities/states.py:351
+#: bluebottle/activities/states.py:364
 msgid "Delete the activity if you do not want it to be included in the report. The activity will no longer be visible on the platform, but will still be available in the back office."
 msgstr "Törölje az aktivitást, ha nem szeretné, hogy az a jelentésben szerepeljen. Az aktivitás nem lesz látható a platformon, de a hátsó irodában még elérhető marad."
 
-#: bluebottle/activities/states.py:356
+#: bluebottle/activities/states.py:369
 msgid "Delete the activity. You will not be able to retrieve it afterwards."
 msgstr "Törölje az aktivitást. Azután már nem tudja visszaszerezni."
 
-#: bluebottle/activities/states.py:366 bluebottle/activities/states.py:384
-#: bluebottle/activities/states.py:437 bluebottle/activities/states.py:458
+#: bluebottle/activities/states.py:379 bluebottle/activities/states.py:397
+#: bluebottle/activities/states.py:450 bluebottle/activities/states.py:471
 #: bluebottle/collect/states.py:24 bluebottle/collect/states.py:142
 #: bluebottle/deeds/states.py:25 bluebottle/deeds/states.py:47
 #: bluebottle/deeds/states.py:147 bluebottle/funding/states.py:218
@@ -1065,25 +1074,25 @@ msgstr "Törölje az aktivitást. Azután már nem tudja visszaszerezni."
 #: bluebottle/grant_management/states.py:153
 #: bluebottle/grant_management/states.py:182
 #: bluebottle/time_based/states/participants.py:121
-#: bluebottle/time_based/states/participants.py:248
-#: bluebottle/time_based/states/participants.py:450
+#: bluebottle/time_based/states/participants.py:249
+#: bluebottle/time_based/states/participants.py:451
 #: bluebottle/time_based/states/states.py:87
 #: bluebottle/time_based/states/states.py:156
 #: bluebottle/time_based/states/teams.py:148
 msgid "Succeed"
 msgstr "Sikerül"
 
-#: bluebottle/activities/states.py:372 bluebottle/activities/states.py:411
+#: bluebottle/activities/states.py:385 bluebottle/activities/states.py:424
 #: bluebottle/contact/models.py:20 bluebottle/funding/states.py:369
 #: bluebottle/grant_management/states.py:172
 msgid "New"
 msgstr "Új"
 
-#: bluebottle/activities/states.py:372 bluebottle/activities/states.py:411
+#: bluebottle/activities/states.py:385 bluebottle/activities/states.py:424
 msgid "The user started a contribution"
 msgstr "A felhasználó hozzájárulást indított."
 
-#: bluebottle/activities/states.py:374 bluebottle/activities/states.py:413
+#: bluebottle/activities/states.py:387 bluebottle/activities/states.py:426
 #: bluebottle/funding/states.py:385 bluebottle/grant_management/states.py:27
 #: bluebottle/grant_management/states.py:175
 #: bluebottle/time_based/states/participants.py:48
@@ -1091,21 +1100,21 @@ msgstr "A felhasználó hozzájárulást indított."
 msgid "Succeeded"
 msgstr "Sikerült"
 
-#: bluebottle/activities/states.py:374 bluebottle/activities/states.py:385
-#: bluebottle/activities/states.py:413
+#: bluebottle/activities/states.py:387 bluebottle/activities/states.py:398
+#: bluebottle/activities/states.py:426
 msgid "The contribution was successful."
 msgstr "A hozzájárulás sikeres volt."
 
-#: bluebottle/activities/states.py:376 bluebottle/activities/states.py:415
+#: bluebottle/activities/states.py:389 bluebottle/activities/states.py:428
 #: bluebottle/funding/states.py:390 bluebottle/grant_management/states.py:177
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: bluebottle/activities/states.py:376 bluebottle/activities/states.py:415
+#: bluebottle/activities/states.py:389 bluebottle/activities/states.py:428
 msgid "The contribution failed."
 msgstr "A hozzájárulás meghiúsult."
 
-#: bluebottle/activities/states.py:391 bluebottle/activities/states.py:423
+#: bluebottle/activities/states.py:404 bluebottle/activities/states.py:436
 #: bluebottle/funding/states.py:415 bluebottle/funding/states.py:508
 #: bluebottle/funding/states.py:589 bluebottle/funding/states.py:660
 #: bluebottle/funding_stripe/states.py:193
@@ -1113,7 +1122,7 @@ msgstr "A hozzájárulás meghiúsult."
 #: bluebottle/grant_management/states.py:270
 #: bluebottle/grant_management/states.py:341
 #: bluebottle/time_based/states/participants.py:75
-#: bluebottle/time_based/states/participants.py:484
+#: bluebottle/time_based/states/participants.py:485
 #: bluebottle/time_based/states/registrations.py:49
 #: bluebottle/time_based/states/slots.py:49
 #: bluebottle/time_based/states/slots.py:182
@@ -1122,59 +1131,59 @@ msgstr "A hozzájárulás meghiúsult."
 msgid "Initiate"
 msgstr "Kezdeményez"
 
-#: bluebottle/activities/states.py:392 bluebottle/activities/states.py:424
+#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:437
 #: bluebottle/collect/states.py:136 bluebottle/deeds/states.py:141
 msgid "The contribution was created."
 msgstr "A hozzájárulás létrejött."
 
-#: bluebottle/activities/states.py:398 bluebottle/activities/states.py:430
+#: bluebottle/activities/states.py:411 bluebottle/activities/states.py:443
 #: bluebottle/funding/states.py:326 bluebottle/funding/states.py:446
 #: bluebottle/funding/states.py:557 bluebottle/grant_management/states.py:164
 #: bluebottle/grant_management/states.py:210
 msgid "Fail"
 msgstr "meghibásodás"
 
-#: bluebottle/activities/states.py:399 bluebottle/activities/states.py:431
+#: bluebottle/activities/states.py:412 bluebottle/activities/states.py:444
 msgid "The contribution failed. It will not be visible in reports."
 msgstr "A hozzájárulás meghiúsult. Nem lesz látható a jelentésekben."
 
-#: bluebottle/activities/states.py:405 bluebottle/activities/states.py:444
+#: bluebottle/activities/states.py:418 bluebottle/activities/states.py:457
 #: bluebottle/funding/states.py:540 bluebottle/grant_management/states.py:217
-#: bluebottle/time_based/states/participants.py:459
+#: bluebottle/time_based/states/participants.py:460
 #: bluebottle/time_based/states/slots.py:67
 msgid "Reset"
 msgstr "Visszaállít"
 
-#: bluebottle/activities/states.py:406
+#: bluebottle/activities/states.py:419
 msgid "Reset the contribution to new."
 msgstr "Állítsd a hozzájárulást újra."
 
-#: bluebottle/activities/states.py:438
+#: bluebottle/activities/states.py:451
 msgid "The contribution succeeded. It will be visible in reports."
 msgstr "A hozzájárulás sikerült. látható lesz a jelentésekben."
 
-#: bluebottle/activities/states.py:445
+#: bluebottle/activities/states.py:458
 msgid "The contribution is reset."
 msgstr "A hozzájárulás visszaállítva."
 
-#: bluebottle/activities/states.py:459
+#: bluebottle/activities/states.py:472
 msgid "The organizer was successful in setting up the activity."
 msgstr "A szervező sikeresen beállította az aktivitást."
 
-#: bluebottle/activities/states.py:468
+#: bluebottle/activities/states.py:481
 msgid "fail"
 msgstr "meghiúsul"
 
-#: bluebottle/activities/states.py:469
+#: bluebottle/activities/states.py:482
 msgid "The organizer failed to set up the activity."
 msgstr "A szervező nem tudta beállítani az aktivitást."
 
-#: bluebottle/activities/states.py:478
-#: bluebottle/time_based/states/participants.py:461
+#: bluebottle/activities/states.py:491
+#: bluebottle/time_based/states/participants.py:462
 msgid "reset"
 msgstr "nulla"
 
-#: bluebottle/activities/states.py:479
+#: bluebottle/activities/states.py:492
 msgid "The organizer is still busy setting up the activity."
 msgstr "A szervező még mindig éppen az aktivitás beállításán dolgozik."
 
@@ -3098,8 +3107,8 @@ msgstr "Adjon hozzá egy másik %(verbose_name)s"
 #: bluebottle/collect/states.py:191 bluebottle/deeds/states.py:184
 #: bluebottle/grant_management/states.py:460
 #: bluebottle/time_based/states/participants.py:134
-#: bluebottle/time_based/states/participants.py:260
-#: bluebottle/time_based/states/participants.py:377
+#: bluebottle/time_based/states/participants.py:261
+#: bluebottle/time_based/states/participants.py:378
 #: bluebottle/time_based/states/registrations.py:183
 #: bluebottle/time_based/states/teams.py:80
 #: bluebottle/time_based/states/teams.py:188
@@ -3316,8 +3325,8 @@ msgstr "Újbóli elfogadás"
 
 #: bluebottle/collect/states.py:161
 #: bluebottle/time_based/states/participants.py:87
-#: bluebottle/time_based/states/participants.py:214
-#: bluebottle/time_based/states/participants.py:350
+#: bluebottle/time_based/states/participants.py:215
+#: bluebottle/time_based/states/participants.py:351
 #: bluebottle/time_based/states/registrations.py:58
 #: bluebottle/time_based/states/registrations.py:76
 #: bluebottle/time_based/states/teams.py:44
@@ -3326,8 +3335,8 @@ msgstr "Elfogadás"
 
 #: bluebottle/collect/states.py:168 bluebottle/deeds/states.py:161
 #: bluebottle/time_based/states/participants.py:161
-#: bluebottle/time_based/states/participants.py:406
-#: bluebottle/time_based/states/participants.py:495
+#: bluebottle/time_based/states/participants.py:407
+#: bluebottle/time_based/states/participants.py:496
 #: bluebottle/time_based/states/registrations.py:98
 #: bluebottle/time_based/states/teams.py:100
 #: bluebottle/time_based/states/teams.py:218
@@ -3340,7 +3349,7 @@ msgstr "Lemondja a hozzájárulását ehhez a tevékenységhez."
 
 #: bluebottle/collect/states.py:178 bluebottle/deeds/states.py:171
 #: bluebottle/time_based/states/participants.py:172
-#: bluebottle/time_based/states/participants.py:506
+#: bluebottle/time_based/states/participants.py:507
 msgid "Reapply"
 msgstr "Újbóli jelentkezés"
 
@@ -3536,8 +3545,8 @@ msgstr "A tevékenység véget ér, és az emberek már nem tudnak regisztrálni
 
 #: bluebottle/deeds/states.py:106
 #: bluebottle/time_based/states/participants.py:162
-#: bluebottle/time_based/states/participants.py:407
-#: bluebottle/time_based/states/participants.py:500
+#: bluebottle/time_based/states/participants.py:408
+#: bluebottle/time_based/states/participants.py:501
 #: bluebottle/time_based/states/registrations.py:99
 #: bluebottle/time_based/states/teams.py:101
 #: bluebottle/time_based/states/teams.py:219
@@ -3803,7 +3812,7 @@ msgid "Payment"
 msgstr "Fizetés"
 
 #: bluebottle/funding/admin.py:122 bluebottle/funding/filters.py:39
-#: bluebottle/funding_stripe/models.py:292
+#: bluebottle/funding_stripe/models.py:290
 #: bluebottle/funding_stripe/templates/admin/funding_stripe/stripebankaccount/detail_fields.html:22
 msgid "Currency"
 msgstr "Pénznem"
@@ -4061,88 +4070,88 @@ msgstr "Egyedi üzenet"
 msgid "You can provide a custom message to the campaign owner explaining why the funding needs work."
 msgstr "Megadhatsz egy egyedi üzenetet a kampány tulajdonosának, amely elmagyarázza, miért van szükség a támogatásra."
 
-#: bluebottle/funding/messages/funding/activity_manager.py:32
+#: bluebottle/funding/messages/funding/activity_manager.py:31
 msgctxt "email"
 msgid "You have a new donation!💰"
 msgstr "Új adományod érkezett!💰"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:48
+#: bluebottle/funding/messages/funding/activity_manager.py:47
 msgctxt "email"
 msgid "Your crowdfunding campaign deadline passed"
 msgstr "A crowdfunding kampányod határideje lejárt"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:56
+#: bluebottle/funding/messages/funding/activity_manager.py:55
 #, python-brace-format
 msgctxt "email"
 msgid "Your campaign \"{title}\" has been successfully completed! 🎉"
 msgstr "A kampányod \"{title}\" sikeresen befejeződött! 🎉"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:64
+#: bluebottle/funding/messages/funding/activity_manager.py:63
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been rejected"
 msgstr "A crowdfunding kampányod a {site_name} oldalon elutasításra került"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:72
+#: bluebottle/funding/messages/funding/activity_manager.py:71
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted a crowdfunding campaign on {site_name}"
 msgstr "Benyújtottál egy crowdfunding kampányt a {site_name} oldalon"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:80
+#: bluebottle/funding/messages/funding/activity_manager.py:79
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} needs work"
 msgstr "A crowdfunding kampányod a {site_name} oldalon fejlesztésre szorul"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:88
+#: bluebottle/funding/messages/funding/activity_manager.py:87
 msgctxt "email"
 msgid "Your crowdfunding campaign has expired"
 msgstr "A crowdfunding kampányod lejárt"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:96
+#: bluebottle/funding/messages/funding/activity_manager.py:95
 #, python-brace-format
 msgctxt "email"
 msgid "The donations received for your campaign \"{title}\" will be refunded"
 msgstr "A \"{title}\" kampányodhoz érkezett adományokat visszatérítjük"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:104
+#: bluebottle/funding/messages/funding/activity_manager.py:103
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign on {site_name} has been approved!"
 msgstr "A crowdfunding kampányod a {site_name} oldalon jóváhagyásra került!"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:112
+#: bluebottle/funding/messages/funding/activity_manager.py:111
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" is open for new donations 💸"
 msgstr "A \"{title}\" crowdfunding kampányod nyitva áll új adományok számára 💸"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:120
+#: bluebottle/funding/messages/funding/activity_manager.py:119
 #, python-brace-format
 msgctxt "email"
 msgid "Your crowdfunding campaign \"{title}\" has been cancelled"
 msgstr "A \"{title}\" crowdfunding kampányod törlésre került"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:149
-#: bluebottle/funding/messages/funding/activity_manager.py:157
+#: bluebottle/funding/messages/funding/activity_manager.py:148
+#: bluebottle/funding/messages/funding/activity_manager.py:156
 msgctxt "email"
 msgid "Action required for your crowdfunding campaign"
 msgstr "A crowdfunding kampányodhoz akció szükséges"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:165
-#: bluebottle/funding/messages/funding/activity_manager.py:189
+#: bluebottle/funding/messages/funding/activity_manager.py:164
+#: bluebottle/funding/messages/funding/activity_manager.py:188
 #, python-brace-format
 msgctxt "email"
 msgid "Your identity has been verified on {site_name}"
 msgstr "Az identitásod a {site_name} oldalon ellenőrzésre került"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:173
+#: bluebottle/funding/messages/funding/activity_manager.py:172
 msgctxt "email"
 msgid "Action required for your identity verification"
 msgstr "Akció szükséges az identitás ellenőrzéséhez"
 
-#: bluebottle/funding/messages/funding/activity_manager.py:181
+#: bluebottle/funding/messages/funding/activity_manager.py:180
 msgctxt "email"
 msgid "Action required for identity verification"
 msgstr "Akció szükséges az identitás ellenőrzéséhez"
@@ -4719,7 +4728,7 @@ msgid "Approve the payout so it will be scheduled for execution."
 msgstr "Jóváhagyja a kifizetést, így az ütemezve lesz a végrehajtásra."
 
 #: bluebottle/funding/states.py:524
-#: bluebottle/time_based/states/participants.py:424
+#: bluebottle/time_based/states/participants.py:425
 #: bluebottle/time_based/states/slots.py:59
 #: bluebottle/time_based/states/teams.py:62
 #: bluebottle/time_based/states/teams.py:71
@@ -4736,7 +4745,7 @@ msgstr "Ütemezze a kifizetést. A kifizetési alkalmazás által indítva."
 
 #: bluebottle/funding/states.py:532 bluebottle/initiatives/states.py:106
 #: bluebottle/time_based/admin.py:906 bluebottle/time_based/states/slots.py:75
-#: bluebottle/time_based/states/slots.py:253
+#: bluebottle/time_based/states/slots.py:261
 msgid "Start"
 msgstr "Kezd"
 
@@ -5837,89 +5846,89 @@ msgstr "Nyissa meg a szüneteltetett tevékenységeket"
 msgid "Update business type at stripe"
 msgstr "Frissítse az üzleti típust a Stripe-nál"
 
-#: bluebottle/funding_stripe/models.py:243
+#: bluebottle/funding_stripe/models.py:241
 msgid "Country of primary stripe account"
 msgstr "A fő stripe fiók országa"
 
-#: bluebottle/funding_stripe/models.py:245
+#: bluebottle/funding_stripe/models.py:243
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
 msgstr "Általában ez NL, de a stripe kulcs felülbírálásával másik fő stripe fiókot lehet választani. "
 
-#: bluebottle/funding_stripe/models.py:253
+#: bluebottle/funding_stripe/models.py:251
 msgid "Stripe publishable key"
 msgstr "Stripe publikálási kulcs"
 
-#: bluebottle/funding_stripe/models.py:254
-#: bluebottle/funding_stripe/models.py:262
+#: bluebottle/funding_stripe/models.py:252
+#: bluebottle/funding_stripe/models.py:260
 msgid "This is only needed if you want to use a specific Stripe account."
 msgstr "Ez csak akkor szükséges, ha szeretne egy adott Stripe fiókot használni."
 
-#: bluebottle/funding_stripe/models.py:261
+#: bluebottle/funding_stripe/models.py:259
 msgid "Stripe secret key"
 msgstr "Stripe titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:269
+#: bluebottle/funding_stripe/models.py:267
 msgid "Stripe connect webhook secret"
 msgstr "Stripe connect webhook titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:270
+#: bluebottle/funding_stripe/models.py:268
 msgid "The secret for connect webhook."
 msgstr "A titok a connect webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:277
+#: bluebottle/funding_stripe/models.py:275
 msgid "Stripe payment intents webhook secret"
 msgstr "Stripe fizetési szándékok webhook titkos kulcs"
 
-#: bluebottle/funding_stripe/models.py:278
+#: bluebottle/funding_stripe/models.py:276
 msgid "The secret for payment intents webhook."
 msgstr "A titok a fizetési szándékok webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:285
+#: bluebottle/funding_stripe/models.py:283
 msgid "Stripe payment checkout session webhook secret"
 msgstr "Stripe kifizetési folyamat szekció webhook titkos"
 
-#: bluebottle/funding_stripe/models.py:286
+#: bluebottle/funding_stripe/models.py:284
 msgid "The secret for payment checkout session webhook."
 msgstr "A titkos kód a kifizetési folyamat webhookhoz."
 
-#: bluebottle/funding_stripe/models.py:293
+#: bluebottle/funding_stripe/models.py:291
 msgid "The currency for the global account."
 msgstr "A valuta a globális fiók számára."
 
-#: bluebottle/funding_stripe/models.py:338
+#: bluebottle/funding_stripe/models.py:336
 msgid "Personal"
 msgstr "Személyes"
 
-#: bluebottle/funding_stripe/models.py:343
+#: bluebottle/funding_stripe/models.py:341
 msgid "Starts with 'acct_...'"
 msgstr "\"acct_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:346
+#: bluebottle/funding_stripe/models.py:344
 msgid "Verification type"
 msgstr "Az ellenőrzés típusa"
 
-#: bluebottle/funding_stripe/models.py:430
+#: bluebottle/funding_stripe/models.py:416
 #, python-format
 msgid "Not applicable - raising funds for a do-good project on %(platform)s, a GoodUp platform."
 msgstr "Nem alkalmazható - jótékonysági projekt finanszírozása a %(platform)s platformon, egy GoodUp platform."
 
-#: bluebottle/funding_stripe/models.py:631
+#: bluebottle/funding_stripe/models.py:617
 msgid "stripe payout account"
 msgstr "stripe kifizetési fiók"
 
-#: bluebottle/funding_stripe/models.py:632
+#: bluebottle/funding_stripe/models.py:618
 msgid "stripe payout accounts"
 msgstr "stripe kifizetési fiókok"
 
-#: bluebottle/funding_stripe/models.py:643
+#: bluebottle/funding_stripe/models.py:629
 msgid "Starts with 'ba_...'"
 msgstr "\"ba_...\"-val kezdődik..."
 
-#: bluebottle/funding_stripe/models.py:691
+#: bluebottle/funding_stripe/models.py:677
 msgid "Bank account"
 msgstr "Banki számla"
 
-#: bluebottle/funding_stripe/models.py:692
+#: bluebottle/funding_stripe/models.py:678
 msgid "Bank accounts"
 msgstr "Banki számlák"
 
@@ -6622,10 +6631,10 @@ msgstr "A könyvelési tétel véglegessé vált"
 #: bluebottle/grant_management/states.py:436
 #: bluebottle/time_based/states/participants.py:135
 #: bluebottle/time_based/states/participants.py:149
-#: bluebottle/time_based/states/participants.py:261
-#: bluebottle/time_based/states/participants.py:275
-#: bluebottle/time_based/states/participants.py:378
-#: bluebottle/time_based/states/participants.py:393
+#: bluebottle/time_based/states/participants.py:262
+#: bluebottle/time_based/states/participants.py:276
+#: bluebottle/time_based/states/participants.py:379
+#: bluebottle/time_based/states/participants.py:394
 #: bluebottle/time_based/states/teams.py:81
 #: bluebottle/time_based/states/teams.py:189
 #: bluebottle/time_based/states/teams.py:198
@@ -7034,37 +7043,37 @@ msgctxt "email"
 msgid "View initiative"
 msgstr "Kezdeményezés megtekintése"
 
-#: bluebottle/initiatives/messages/initiator.py:25
+#: bluebottle/initiatives/messages/initiator.py:26
 #, python-brace-format
 msgctxt "email"
 msgid "You submitted an initiative on {site_name}"
 msgstr "Benyújtottál egy kezdeményezést a {site_name} oldalon"
 
-#: bluebottle/initiatives/messages/initiator.py:30
+#: bluebottle/initiatives/messages/initiator.py:31
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been approved!"
 msgstr "a {site_name} oldalon jóváhagyták a kezdeményezésedet!"
 
-#: bluebottle/initiatives/messages/initiator.py:35
+#: bluebottle/initiatives/messages/initiator.py:36
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been published!"
 msgstr "a {site_name} oldalon közzétették a kezdeményezésedet!"
 
-#: bluebottle/initiatives/messages/initiator.py:40
+#: bluebottle/initiatives/messages/initiator.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative you submitted on {site_name} needs work"
 msgstr "a {site_name} oldalon benyújtott kezdeményezésed fejlesztésre szorul"
 
-#: bluebottle/initiatives/messages/initiator.py:45
+#: bluebottle/initiatives/messages/initiator.py:46
 #, python-brace-format
 msgctxt "email"
 msgid "Your initiative on {site_name} has been rejected"
 msgstr "a {site_name} oldalon benyújtott kezdeményezésed elutasításra került"
 
-#: bluebottle/initiatives/messages/initiator.py:50
+#: bluebottle/initiatives/messages/initiator.py:51
 #, python-brace-format
 msgctxt "email"
 msgid "The initiative \"{title}\" has been cancelled."
@@ -7445,15 +7454,15 @@ msgstr "A kezdeményezésnek szüksége van változtatásokra a jóváhagyás el
 msgid "Reject if the initiative does not align with your program or guidelines. The initiator will not be able to edit or resubmit it, and it will not appear on the search page in the front end. The initiative will still be available in the back office and appear in your reporting."
 msgstr "Utasson el, ha a kezdeményezés nem illeszkedik a programjához vagy az irányelveihez. A kezdeményező nem tudja szerkeszteni vagy újra benyújtani, és nem fog megjelenni a keresési oldalán a frontendben. A kezdeményezés továbbra is elérhető lesz a hátsó irodában, és meg fog jelenni a riportjaiban."
 
-#: bluebottle/initiatives/states.py:179
+#: bluebottle/initiatives/states.py:183
 msgid "Cancel if the initiative will not be executed. The initiator will not be able to edit the initiative and it won't show up on the search page in the front end. The initiative will still be available in the back office and appear in your reporting."
 msgstr "Töröld, ha a kezdeményezés nem kerül végrehajtásra. A kezdeményező nem tudja szerkeszteni a kezdeményezést, és az nem jelenik meg a front-end keresési oldalon. A kezdeményezés még mindig elérhető a belső irodában és megjelenik a jelentéseidben."
 
-#: bluebottle/initiatives/states.py:193
+#: bluebottle/initiatives/states.py:197
 msgid "Delete the initiative if you don't want it to appear in your reporting. The initiative will still be available in the back office."
 msgstr "Töröld a kezdeményezést, ha nem szeretnéd, hogy megjelenjen a jelentéseidben. A kezdeményezés még mindig elérhető a belső irodában."
 
-#: bluebottle/initiatives/states.py:205
+#: bluebottle/initiatives/states.py:209
 msgid "The status of the initiative is set to 'needs work'. The initiator can edit and submit the initiative again"
 msgstr "A kezdeményezés állapota \"munkát igényel\". A kezdeményező szerkesztheti a kezdeményezést és újból benyújthatja"
 
@@ -8402,7 +8411,7 @@ msgstr "hoz {}"
 msgid "Raise error"
 msgstr "Hiba kiváltása"
 
-#: bluebottle/notifications/management/commands/preview_all_messages.py:713
+#: bluebottle/notifications/management/commands/preview_all_messages.py:727
 msgid "test"
 msgstr "teszt"
 
@@ -8943,26 +8952,82 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:734 tenants/laatste-pluk/settings.py:26
-#: tenants/navara/settings.py:27 tenants/rhi-magnesita/settings.py:25
-#: tenants/shell-uk/settings.py:26
+#: bluebottle/settings/local.py:732 tenants/accenture/settings.py:30
+#: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
+#: tenants/bedrijven-voor-amsterdam/settings.py:27
+#: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
+#: tenants/boost-your-business/settings.py:26
+#: tenants/bright-future-afghanistan/settings.py:26
+#: tenants/bugaboo/settings.py:26 tenants/close-the-gap/settings.py:26
+#: tenants/corona/settings.py:26
+#: tenants/deloitte-impact-foundation/settings.py:30
+#: tenants/deloitte-uk/settings.py:29 tenants/dll/settings.py:29
+#: tenants/do-good-up/settings.py:27 tenants/dsm/settings.py:26
+#: tenants/ey/settings.py:26 tenants/gasunie/settings.py:27
+#: tenants/good-growth-in-action/settings.py:27
+#: tenants/goodup-demo/settings.py:26 tenants/impact-booster/settings.py:28
+#: tenants/innovating-justice/settings.py:25
+#: tenants/join-rabo-foundation/settings.py:27
+#: tenants/jong-ondernemen/settings.py:27 tenants/laatste-pluk/settings.py:26
+#: tenants/leap2/settings.py:26 tenants/mars-demo/settings.py:25
+#: tenants/mars/settings.py:26 tenants/maximising-potential/settings.py:27
+#: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
+#: tenants/nlcares/settings.py:27 tenants/nlmtd/settings.py:30
+#: tenants/nn/settings.py:27 tenants/nola-connects/settings.py:26
+#: tenants/nordea/settings.py:27 tenants/onepercent/settings.py:26
+#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
+#: tenants/purpose-in-action/settings.py:27
+#: tenants/rhi-magnesita/settings.py:25
+#: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
+#: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
+#: tenants/twoscale/settings.py:26 tenants/voor-je-buurt-belgie/settings.py:24
+#: tenants/voor-je-buurt/settings.py:27 tenants/voor-je-stadsie/settings.py:27
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:735 tenants/brabant/settings.py:25
-#: tenants/laatste-pluk/settings.py:25 tenants/navara/settings.py:26
+#: bluebottle/settings/local.py:733 tenants/abn/settings.py:26
+#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
+#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
+#: tenants/bedrijven-voor-amsterdam/settings.py:26
+#: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
+#: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
+#: tenants/crowdfunding-voornatuur/settings.py:26
+#: tenants/gasunie/settings.py:26 tenants/geef-om-zorg/settings.py:26
+#: tenants/gent/settings.py:25 tenants/goes/settings.py:25
+#: tenants/haarlemmermeer/settings.py:25 tenants/hollandskroon/settings.py:25
+#: tenants/join-rabo-foundation/settings.py:26
+#: tenants/jong-ondernemen/settings.py:26 tenants/kerstactie/settings.py:25
+#: tenants/kwf/settings.py:26 tenants/laatste-pluk/settings.py:25
+#: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
+#: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
+#: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
+#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:25
+#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
+#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/rabobank-cooperatief/settings.py:25
+#: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
+#: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
+#: tenants/startsomething/settings.py:30 tenants/studentbattle/settings.py:26
+#: tenants/tilburg/settings.py:25 tenants/transavia/settings.py:26
+#: tenants/utrecht/settings.py:25 tenants/venlo/settings.py:23
+#: tenants/voor-apeldoorn/settings.py:26
+#: tenants/voor-je-buurt-belgie/settings.py:23
+#: tenants/voor-je-buurt/settings.py:26 tenants/voor-je-stadsie/settings.py:26
+#: tenants/voor-leeuwarden/settings.py:26
+#: tenants/voor-overijssel/settings.py:25 tenants/west-friesland/settings.py:25
+#: tenants/zaanstad/settings.py:25
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:736
+#: bluebottle/settings/local.py:734 tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:737
+#: bluebottle/settings/local.py:735 tenants/mars/settings.py:29
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/local.py:738
+#: bluebottle/settings/local.py:736 tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Magyar"
 
@@ -9174,7 +9239,7 @@ msgid "Timezone"
 msgstr "Időzóna"
 
 #: bluebottle/time_based/admin.py:269
-#: bluebottle/time_based/states/participants.py:438
+#: bluebottle/time_based/states/participants.py:439
 msgid "unscheduled"
 msgstr "tervezett nélküli"
 
@@ -9896,86 +9961,86 @@ msgid "A new activity has been registered on {site_name}"
 msgstr "Új tevékenység került nyilvántartásba a {site_name} oldalon"
 
 #: bluebottle/time_based/messages/teams.py:17
-#: bluebottle/time_based/messages/teams.py:114
+#: bluebottle/time_based/messages/teams.py:115
 msgctxt "email"
 msgid "Open your team"
 msgstr "Nyisd meg a csapatodat"
 
-#: bluebottle/time_based/messages/teams.py:31
+#: bluebottle/time_based/messages/teams.py:32
 #, python-brace-format
 msgctxt "email"
 msgid "A team has been removed from your activity \"{title}\""
 msgstr "Egy csapatot eltávolítottak a \"{title}\" tevékenységedből"
 
-#: bluebottle/time_based/messages/teams.py:40
+#: bluebottle/time_based/messages/teams.py:41
 #, python-brace-format
 msgctxt "email"
 msgid "A team has withdrawn from your activity \"{title}\""
 msgstr "Egy csapat kiszállt a \"{title}\" tevékenységedből"
 
-#: bluebottle/time_based/messages/teams.py:54
-#: bluebottle/time_based/messages/teams.py:166
-#: bluebottle/time_based/messages/teams.py:253
+#: bluebottle/time_based/messages/teams.py:55
+#: bluebottle/time_based/messages/teams.py:167
+#: bluebottle/time_based/messages/teams.py:254
 msgctxt "email"
 msgid "View team"
 msgstr "Nézd meg a csapatot"
 
-#: bluebottle/time_based/messages/teams.py:69
+#: bluebottle/time_based/messages/teams.py:70
 #, python-brace-format
 msgctxt "email"
 msgid "Your team was removed from the activity \"{title}\""
 msgstr "A csapatodat eltávolították a \"{title}\" tevékenységről"
 
-#: bluebottle/time_based/messages/teams.py:78
+#: bluebottle/time_based/messages/teams.py:79
 #, python-brace-format
 msgctxt "email"
 msgid "You withdrew your team from the activity \"{title}\""
 msgstr "Kiszálltál a csapatodtól a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:88
-#: bluebottle/time_based/messages/teams.py:213
+#: bluebottle/time_based/messages/teams.py:89
+#: bluebottle/time_based/messages/teams.py:214
 #, python-brace-format
 msgctxt "email"
 msgid "Your team has been scheduled for the activity \"{title}\""
 msgstr "A csapatodat beütemezték a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:129
+#: bluebottle/time_based/messages/teams.py:130
 #, python-brace-format
 msgctxt "email"
 msgid "Someone has joined your team on {site_name}"
 msgstr "Valaki csatlakozott a csapatodhoz a {site_name} weboldalon"
 
-#: bluebottle/time_based/messages/teams.py:140
+#: bluebottle/time_based/messages/teams.py:141
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has been removed from your team for the activity \"{title}\""
 msgstr "Egy résztvevőt eltávolítottak a csapatodból a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:151
+#: bluebottle/time_based/messages/teams.py:152
 #, python-brace-format
 msgctxt "email"
 msgid "A participant has withdrawn from your team for the activity \"{title}\""
 msgstr "Egy résztvevő kiszállt a csapatodból a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:181
+#: bluebottle/time_based/messages/teams.py:182
 #, python-brace-format
 msgctxt "email"
 msgid "You are now part of {name}'s team on {site_name}"
 msgstr "Most már részese vagy {name} csapatának a {site_name} weboldalon"
 
-#: bluebottle/time_based/messages/teams.py:191
+#: bluebottle/time_based/messages/teams.py:192
 #, python-brace-format
 msgctxt "email"
 msgid "You have been removed from {name}'s team for the activity \"{title}\""
 msgstr "Eltávolítottalak {name} csapatából a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:202
+#: bluebottle/time_based/messages/teams.py:203
 #, python-brace-format
 msgctxt "email"
 msgid "You have withdrawn from {name}'s team for the activity \"{title}\""
 msgstr "Kiszálltál {name} csapatából a \"{title}\" tevékenységre"
 
-#: bluebottle/time_based/messages/teams.py:229
+#: bluebottle/time_based/messages/teams.py:230
 #, python-brace-format
 msgctxt "email"
 msgid "The date or location for your team has been changed for the activity \"{title}\""
@@ -10505,13 +10570,13 @@ msgid "User applied to join the task."
 msgstr "A felhasználó jelentkezett a feladatra."
 
 #: bluebottle/time_based/states/participants.py:88
-#: bluebottle/time_based/states/participants.py:351
+#: bluebottle/time_based/states/participants.py:352
 msgid "Accept this person as a participant of this Activity."
 msgstr "Fogadd el ezt a személyt az aktivitás résztvevőjeként."
 
 #: bluebottle/time_based/states/participants.py:89
-#: bluebottle/time_based/states/participants.py:216
-#: bluebottle/time_based/states/participants.py:352
+#: bluebottle/time_based/states/participants.py:217
+#: bluebottle/time_based/states/participants.py:353
 #: bluebottle/time_based/states/registrations.py:60
 #: bluebottle/time_based/states/registrations.py:78
 #: bluebottle/time_based/states/teams.py:45
@@ -10520,39 +10585,39 @@ msgid "accepted"
 msgstr "elfogadva"
 
 #: bluebottle/time_based/states/participants.py:99
-#: bluebottle/time_based/states/participants.py:299
-#: bluebottle/time_based/states/participants.py:310
+#: bluebottle/time_based/states/participants.py:300
+#: bluebottle/time_based/states/participants.py:311
 #: bluebottle/time_based/states/registrations.py:67
 msgid "Add"
 msgstr "Hozzáadás"
 
 #: bluebottle/time_based/states/participants.py:100
-#: bluebottle/time_based/states/participants.py:300
-#: bluebottle/time_based/states/participants.py:311
+#: bluebottle/time_based/states/participants.py:301
+#: bluebottle/time_based/states/participants.py:312
 msgid "Add this person as a participant of this activity."
 msgstr "Add hozzá ezt a személyt az aktivitás résztvevőjeként."
 
 #: bluebottle/time_based/states/participants.py:108
-#: bluebottle/time_based/states/participants.py:228
-#: bluebottle/time_based/states/participants.py:365
+#: bluebottle/time_based/states/participants.py:229
+#: bluebottle/time_based/states/participants.py:366
 #: bluebottle/time_based/states/registrations.py:87
 msgid "Reject this person as a participant of this activity."
 msgstr "Utass el ezt a személyt az aktivitás résztvevőjeként."
 
 #: bluebottle/time_based/states/participants.py:122
-#: bluebottle/time_based/states/participants.py:249
+#: bluebottle/time_based/states/participants.py:250
 msgid "This participant has completed their contribution."
 msgstr "Ez a résztvevő befejezte a hozzájárulását."
 
 #: bluebottle/time_based/states/participants.py:136
-#: bluebottle/time_based/states/participants.py:262
-#: bluebottle/time_based/states/participants.py:379
+#: bluebottle/time_based/states/participants.py:263
+#: bluebottle/time_based/states/participants.py:380
 msgid "Remove this person as a participant of this activity."
 msgstr "Távolítsd el ezt a személyt az aktivitás résztvevőjeként."
 
 #: bluebottle/time_based/states/participants.py:148
-#: bluebottle/time_based/states/participants.py:274
-#: bluebottle/time_based/states/participants.py:392
+#: bluebottle/time_based/states/participants.py:275
+#: bluebottle/time_based/states/participants.py:393
 #: bluebottle/time_based/states/teams.py:197
 msgid "Auto remove"
 msgstr "Automatikusan eltávolítva"
@@ -10562,7 +10627,7 @@ msgid "Remove this person because a parent object was removed."
 msgstr "Távolítsd el ezt a személyt, mert egy szülő objektum eltávolítva lett."
 
 #: bluebottle/time_based/states/participants.py:163
-#: bluebottle/time_based/states/participants.py:409
+#: bluebottle/time_based/states/participants.py:410
 #: bluebottle/time_based/states/registrations.py:101
 msgid "Cancel your participation in the activity. Participation hours will not be counted."
 msgstr "Töröld a részvételed a tevékenységben. A részvételi órák nem fognak számítani."
@@ -10580,110 +10645,110 @@ msgid "Do you want to sign up for this activity again?"
 msgstr "Szeretnél újra jelentkezni erre a tevékenységre?"
 
 #: bluebottle/time_based/states/participants.py:190
-#: bluebottle/time_based/states/participants.py:474
+#: bluebottle/time_based/states/participants.py:475
 msgid "Cancel the participant, because the activity was cancelled."
 msgstr "Töröld a résztvevőt, mert a tevékenység törölve lett."
 
-#: bluebottle/time_based/states/participants.py:198
+#: bluebottle/time_based/states/participants.py:199
 #: bluebottle/time_based/states/registrations.py:112
 #: bluebottle/time_based/states/teams.py:141
 #: bluebottle/time_based/states/teams.py:267
 msgid "restored"
 msgstr "visszaállítva"
 
-#: bluebottle/time_based/states/participants.py:199
+#: bluebottle/time_based/states/participants.py:200
 msgid "Restore the participant, because the activity was restored."
 msgstr "Állítsd vissza a résztvevőt, mert a tevékenység visszaállítva lett."
 
-#: bluebottle/time_based/states/participants.py:215
+#: bluebottle/time_based/states/participants.py:216
 #: bluebottle/time_based/states/registrations.py:77
 msgid "Accept this person as a participant of this activity."
 msgstr "Fogadja el ezt a személyt az aktivitás résztvevőjeként."
 
-#: bluebottle/time_based/states/participants.py:236
-#: bluebottle/time_based/states/participants.py:318
+#: bluebottle/time_based/states/participants.py:237
+#: bluebottle/time_based/states/participants.py:319
 msgid "Restore previously cancelled participant"
 msgstr "Előzőleg törölt résztvevő visszaállítása"
 
-#: bluebottle/time_based/states/participants.py:276
+#: bluebottle/time_based/states/participants.py:277
 msgid "Remove this person as a participant because a parent object has been removed."
 msgstr "Távolítsd el ezt a személyt résztvevőként, mert egy szülő objektumot eltávolítottak."
 
-#: bluebottle/time_based/states/participants.py:286
-#: bluebottle/time_based/states/participants.py:326
+#: bluebottle/time_based/states/participants.py:287
+#: bluebottle/time_based/states/participants.py:327
 #: bluebottle/time_based/states/teams.py:90
 #: bluebottle/time_based/states/teams.py:210
 msgid "Re-add"
 msgstr "Újra hozzáadás"
 
-#: bluebottle/time_based/states/participants.py:287
+#: bluebottle/time_based/states/participants.py:288
 #: bluebottle/time_based/states/teams.py:91
 #: bluebottle/time_based/states/teams.py:211
 msgid "re-added"
 msgstr "újra hozzáadva"
 
-#: bluebottle/time_based/states/participants.py:288
+#: bluebottle/time_based/states/participants.py:289
 msgid "Re-add this person as a participant of this activity"
 msgstr "Add hozzá ezt a személyt az aktivitás résztvevőjeként"
 
-#: bluebottle/time_based/states/participants.py:327
+#: bluebottle/time_based/states/participants.py:328
 msgid "Add previously removed participant"
 msgstr "Add hozzá a korábban eltávolított résztvevőt"
 
-#: bluebottle/time_based/states/participants.py:337
+#: bluebottle/time_based/states/participants.py:338
 #: bluebottle/time_based/states/slots.py:15
 #: bluebottle/time_based/states/teams.py:10
 msgid "Unscheduled"
 msgstr "Ütemezés nélküli"
 
-#: bluebottle/time_based/states/participants.py:339
+#: bluebottle/time_based/states/participants.py:340
 msgid "This person takes part in the activity, but needs to be assigned a slot."
 msgstr "Ez a személy részt vesz a tevékenységben, de helyet kell neki rendelni."
 
-#: bluebottle/time_based/states/participants.py:341
-#: bluebottle/time_based/states/participants.py:426
+#: bluebottle/time_based/states/participants.py:342
+#: bluebottle/time_based/states/participants.py:427
 #: bluebottle/time_based/states/slots.py:17
 #: bluebottle/time_based/states/teams.py:14
 msgid "Scheduled"
 msgstr "Ütemezett"
 
-#: bluebottle/time_based/states/participants.py:341
+#: bluebottle/time_based/states/participants.py:342
 msgid "This person is assigned a slot."
 msgstr "Ez a személy egy helyet kapott."
 
-#: bluebottle/time_based/states/participants.py:394
+#: bluebottle/time_based/states/participants.py:395
 msgid "Remove this person as a participant because a parent object got removed."
 msgstr "Távolítsa el ezt a személyt, mint résztvevőt, mert egy szülőobjektum törlődött."
 
-#: bluebottle/time_based/states/participants.py:425
+#: bluebottle/time_based/states/participants.py:426
 msgid "Schedule this participant the Activity."
 msgstr "Ütemezze be ezt a résztvevőt az aktivitásra."
 
-#: bluebottle/time_based/states/participants.py:436
+#: bluebottle/time_based/states/participants.py:437
 msgid "Unschedule"
 msgstr "Törölje az ütemezést"
 
-#: bluebottle/time_based/states/participants.py:437
+#: bluebottle/time_based/states/participants.py:438
 msgid "Unschedule this participant."
 msgstr "Törölje ezt a résztvevőt az ütemezésből."
 
-#: bluebottle/time_based/states/participants.py:451
+#: bluebottle/time_based/states/participants.py:452
 msgid "Succeed this participant for the Activity."
 msgstr "Sikeres a résztvevő az aktivitáson."
 
-#: bluebottle/time_based/states/participants.py:460
+#: bluebottle/time_based/states/participants.py:461
 msgid "Reset participant to scheduled"
 msgstr "Visszaállítás ütemezett állapotra"
 
-#: bluebottle/time_based/states/participants.py:485
+#: bluebottle/time_based/states/participants.py:486
 msgid "Member signs up for team"
 msgstr "A tag jelentkezett a csapatra."
 
-#: bluebottle/time_based/states/participants.py:499
+#: bluebottle/time_based/states/participants.py:500
 msgid "Participant withdraws from the team slot."
 msgstr "A résztvevő visszavonja a csapat helyét."
 
-#: bluebottle/time_based/states/participants.py:510
+#: bluebottle/time_based/states/participants.py:511
 msgid "Participant joins the team slot."
 msgstr "A résztvevő csatlakozik a csapat helyéhez."
 
@@ -10817,7 +10882,7 @@ msgid "The slot has started."
 msgstr "A hely elkezdődött."
 
 #: bluebottle/time_based/states/slots.py:85
-#: bluebottle/time_based/states/slots.py:261
+#: bluebottle/time_based/states/slots.py:269
 msgid "Finish"
 msgstr "Befejezés"
 
@@ -10829,13 +10894,10 @@ msgstr "A hely befejeződött."
 msgid "The slot was cancelled."
 msgstr "A hely törölve lett."
 
-#: bluebottle/time_based/states/slots.py:103
-msgid "Auto cancel"
-msgstr "Automatikus törlés"
-
 #: bluebottle/time_based/states/slots.py:104
-msgid "The slot was cancelled because a parent object was cancelled"
-msgstr "A hely törölve lett, mert egy szülőobjektum törlésre került"
+#: bluebottle/time_based/states/slots.py:222
+msgid "The slot was cancelled because the activity was cancelled"
+msgstr ""
 
 #: bluebottle/time_based/states/slots.py:113
 msgid "The slot was restored."
@@ -10863,7 +10925,7 @@ msgid "running"
 msgstr "fut"
 
 #: bluebottle/time_based/states/slots.py:156
-#: bluebottle/time_based/states/slots.py:255
+#: bluebottle/time_based/states/slots.py:263
 msgid "The slot is currently taking place."
 msgstr "A hely jelenleg folyamatban van."
 
@@ -10895,43 +10957,43 @@ msgstr "A hely hiányosnak lett megjelölve."
 msgid "This time slot will not take place. People can no longer join and contributions will not be counted."
 msgstr "Ez az időpont nem fog megtörténni. Az emberek már nem csatlakozhatnak, és a hozzájárulások nem lesznek számítva."
 
-#: bluebottle/time_based/states/slots.py:223
+#: bluebottle/time_based/states/slots.py:231
 msgid "Reopen a cancelled slot. People can apply again. Contributions are counted again"
 msgstr "Újra nyissa meg a törölt helyet. Az emberek újra jelentkezhetnek. A hozzájárulások ismét számítva lesznek"
 
-#: bluebottle/time_based/states/slots.py:226
+#: bluebottle/time_based/states/slots.py:234
 msgid "Reopening a time slot will allow people to join again and their contributions will be counted."
 msgstr "A hely újra megnyitása lehetővé teszi az emberek számára, hogy ismét csatlakozzanak, és a hozzájárulásaik számítva lesznek."
 
-#: bluebottle/time_based/states/slots.py:233
+#: bluebottle/time_based/states/slots.py:241
 #: bluebottle/time_based/states/states.py:33
 msgid "Lock"
 msgstr "Zár"
 
-#: bluebottle/time_based/states/slots.py:235
+#: bluebottle/time_based/states/slots.py:243
 msgid "People can no longer join the slot. Triggered when the attendee limit is reached."
 msgstr "Az emberek már nem csatlakozhatnak a helyhez. Akkor történik, amikor a résztvevői határérték elérve."
 
-#: bluebottle/time_based/states/slots.py:243
+#: bluebottle/time_based/states/slots.py:251
 #: bluebottle/time_based/states/states.py:42
 msgid "Unlock"
 msgstr "Nyit"
 
-#: bluebottle/time_based/states/slots.py:245
+#: bluebottle/time_based/states/slots.py:253
 msgid "The number of participants has fallen below the required number. People can sign up again for the slot."
 msgstr "A résztvevők száma a szükséges szám alá csökkent. Az emberek ismét jelentkezhetnek a helyre."
 
-#: bluebottle/time_based/states/slots.py:263
+#: bluebottle/time_based/states/slots.py:271
 msgid "The slot has ended. Triggered when slot has ended."
 msgstr "A hely véget ért. Akkor történik, amikor a hely véget ért."
 
-#: bluebottle/time_based/states/slots.py:271
+#: bluebottle/time_based/states/slots.py:279
 #: bluebottle/time_based/states/states.py:140
 #: bluebottle/time_based/states/states.py:169
 msgid "Reschedule"
 msgstr "Ütemezés módosítása"
 
-#: bluebottle/time_based/states/slots.py:273
+#: bluebottle/time_based/states/slots.py:281
 msgid "Reopen the slot. Triggered when start of the slot is changed."
 msgstr "Nyissa meg újra a helyet. Akkor történik, amikor a hely kezdete megváltozik."
 
@@ -12792,7 +12854,7 @@ msgstr "A határidőnek a kezdő dátum után kell lennie."
 msgid "At least one time slot should have all required fields filled out."
 msgstr "Legalább egy időblokknak ki kell töltenie minden kötelező mezőt."
 
-#: bluebottle/time_based/validators.py:76
+#: bluebottle/time_based/validators.py:78
 msgid "Should have at least one time slot."
 msgstr "Legalább egy időpontnak kell lennie."
 
@@ -13086,4 +13148,8 @@ msgstr[1] "Másodpercek"
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
 msgstr "Holland"
+
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
+msgid "French"
+msgstr ""
 

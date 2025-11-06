@@ -55,9 +55,9 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def online(self, obj):
         if obj.status == 'published' and \
-                obj.publication_date and \
-                obj.publication_date < now() and \
-                (obj.publication_end_date is None or obj.publication_end_date > now()):
+            obj.publication_date and \
+            obj.publication_date < now() and \
+            (obj.publication_end_date is None or obj.publication_end_date > now()):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
 
@@ -218,7 +218,7 @@ class PageAdmin(PlaceholderFieldAdmin):
             )
 
         # Export page data using utility function (request is used for absolute image URLs)
-        export_data = [export_page_to_dict(page, request=request)]
+        export_data = [export_page_to_dict(page)]
 
         # Create JSON response
         response = HttpResponse(
@@ -244,7 +244,7 @@ class PageAdmin(PlaceholderFieldAdmin):
                     result = import_pages_from_data(data)
                     imported_count = result['imported']
                     updated_count = result['updated']
-                    last_page = result['last_page']
+                    last_page = result['last_item']
 
                     # Show success message
                     parts = []

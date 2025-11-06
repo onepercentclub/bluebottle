@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, gettext
+from django.utils.translation import gettext_lazy as _, ngettext
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
@@ -252,15 +252,17 @@ class PageAdmin(PlaceholderFieldAdmin):
                     # Show success message
                     parts = []
                     if imported_count > 0:
-                        if imported_count == 1:
-                            parts.append(gettext("1 page was imported"))
-                        else:
-                            parts.append(gettext("{0} pages were imported").format(imported_count))
+                        parts.append(ngettext(
+                            "1 page was imported",
+                            "{0} pages were imported",
+                            imported_count
+                        ).format(imported_count))
                     if updated_count > 0:
-                        if updated_count == 1:
-                            parts.append(gettext("1 page was updated"))
-                        else:
-                            parts.append(gettext("{0} pages were updated").format(updated_count))
+                        parts.append(ngettext(
+                            "1 page was updated",
+                            "{0} pages were updated",
+                            updated_count
+                        ).format(updated_count))
 
                     if parts:
                         messages.success(request, ". ".join(parts) + ".")

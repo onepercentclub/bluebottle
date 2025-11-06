@@ -32,8 +32,8 @@ class FundingStateMachineTests(BluebottleTestCase):
 
     def test_submit(self):
         with self.assertRaisesMessage(
-            TransitionNotPossible,
-            'Conditions not met for transition'
+                TransitionNotPossible,
+                'Conditions not met for transition'
         ):
             self.funding.states.publish(save=True)
 
@@ -119,8 +119,8 @@ class FundingStateMachineTests(BluebottleTestCase):
         mail.outbox = []
 
         with self.assertRaisesMessage(
-            TransitionNotPossible,
-            'Conditions not met for transition'
+                TransitionNotPossible,
+                'Conditions not met for transition'
         ):
             self.funding.states.publish(save=True)
 
@@ -649,3 +649,18 @@ class PayoutStateMachineTests(BluebottleTestCase):
         self.assertIsNone(self.payout.date_approved)
         self.assertIsNone(self.payout.date_started)
         self.assertIsNone(self.payout.date_completed)
+
+    @patch('bluebottle.payouts_dorado.adapters.DoradoPayoutAdapter.trigger_payout')
+    def test_approve_transition_not_available_after_approval(self, mock_trigger_payout):
+        """Test that after approving a Payout, the 'approve' transition is no longer available."""
+        payout = PayoutFactory.create()
+
+        # Initially, approve should be available (status is 'new')
+        self.assertEqual(payout.status, 'new')
+        payout.states.approve(save=True)
+        self.assertEqual(payout.status, 'approved')
+
+        # After approval, approve should not be available
+        payout.refresh_from_db()
+        with self.assertRaises(TransitionNotPossible):
+            payout.states.approve(save=True)

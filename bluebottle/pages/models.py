@@ -25,7 +25,6 @@ from bluebottle.utils.validators import FileMimetypeValidator, validate_file_inf
 
 
 class DocumentItem(ContentItem):
-
     text = models.CharField(_('Link title'), max_length=100)
     document = models.FileField(
         _("Document"),
@@ -55,7 +54,6 @@ class DocumentItem(ContentItem):
 
 
 class ActionItem(ContentItem):
-
     link = models.CharField(_('link'), max_length=200)
     title = models.CharField(_('title'), max_length=100)
 
@@ -288,7 +286,7 @@ class Page(PublishableModel):
         return self.title
 
     def get_absolute_url(self):
-        return f'/pages/{self.slug}'
+        return f'/{self.language}/pages/{self.slug}'
 
     def get_meta_description(self, **kwargs):
         request = kwargs.get('request')

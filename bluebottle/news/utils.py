@@ -10,18 +10,7 @@ from bluebottle.utils.content_import_export import (
 
 
 def export_news_item_to_dict(news_item, request=None):
-    """
-    Export a news item to a dictionary in the format expected by import functions.
-
-    Args:
-        news_item: NewsItem instance
-        request: Optional request object to build absolute URLs for images
-
-    Returns:
-        dict: Dictionary containing news item export data
-    """
-    # Handle main_image export
-    main_image_data = export_image_field(news_item, 'main_image', request=request)
+    main_image_data = export_image_field(news_item, 'main_image')
 
     return {
         'model': 'NewsItem',
@@ -32,30 +21,12 @@ def export_news_item_to_dict(news_item, request=None):
             'status': news_item.status,
             'language': news_item.language,
             'main_image': main_image_data,
-            'allow_comments': getattr(news_item, 'allow_comments', True),
-            'publication_date': (
-                news_item.publication_date.strftime('%Y-%m-%d %H:%M')
-                if news_item.publication_date else None
-            ),
-            'publication_end_date': (
-                news_item.publication_end_date.strftime('%Y-%m-%d %H:%M')
-                if news_item.publication_end_date else None
-            ),
         },
-        'data': dump_content(news_item.contents, request=request)
+        'data': dump_content(news_item.contents)
     }
 
 
 def import_news_items_from_data(data):
-    """
-    Import news items from a list of news data dictionaries.
-
-    Args:
-        data: List of dictionaries containing news item data
-
-    Returns:
-        dict: Dictionary with 'imported', 'updated' counts, and 'last_item' instance
-    """
     return import_content_items_from_data(
         data,
         model_name='NewsItem',

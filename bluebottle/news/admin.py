@@ -72,9 +72,9 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     def online(self, obj):
         if obj.status == 'published' and \
-                obj.publication_date and \
-                obj.publication_date < now() and \
-                (obj.publication_end_date is None or obj.publication_end_date > now()):
+            obj.publication_date and \
+            obj.publication_date < now() and \
+            (obj.publication_end_date is None or obj.publication_end_date > now()):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
 
@@ -186,7 +186,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             )
 
         # Export news item data using utility function (request is used for absolute image URLs)
-        export_data = [export_news_item_to_dict(news_item, request=request)]
+        export_data = [export_news_item_to_dict(news_item)]
 
         # Create JSON response
         response = HttpResponse(
@@ -204,8 +204,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             if form.is_valid():
                 json_file = form.cleaned_data['json_file']
                 try:
-                    # Read the uploaded file
-                    json_file.seek(0)  # Reset file pointer
+                    json_file.seek(0)
                     data = json.load(json_file)
 
                     # Import news items using utility function

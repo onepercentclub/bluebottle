@@ -3,10 +3,9 @@ from datetime import timedelta
 from django.core import mail
 from django.utils.timezone import now
 
-from bluebottle.activities.messages.activity_manager import ActivityCancelledNotification
-from bluebottle.deeds.tests.factories import DeedFactory
-
+from bluebottle.activities.states import ActivityStateMachine
 from bluebottle.deeds.states import DeedStateMachine
+from bluebottle.deeds.tests.factories import DeedFactory
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding.tests.factories import FundingFactory
 from bluebottle.funding_stripe.tests.factories import (
@@ -22,20 +21,15 @@ from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, TriggerTestCase
-from bluebottle.time_based.messages import SlotCancelledNotification
 from bluebottle.time_based.models import TimeContribution
 from bluebottle.time_based.states import (
-    DateStateMachine,
-    DateActivitySlotStateMachine,
-    DateParticipantStateMachine,
-    TimeContributionStateMachine
+    DateActivitySlotStateMachine
 )
 from bluebottle.time_based.tests.factories import (
     DateActivityFactory,
     DateActivitySlotFactory,
     DateParticipantFactory,
 )
-from bluebottle.activities.states import ActivityStateMachine
 
 
 class InitiativeOldTriggerTests(BluebottleTestCase):

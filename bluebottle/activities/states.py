@@ -6,8 +6,7 @@ from bluebottle.fsm.state import (
     ModelStateMachine,
     State,
     Transition,
-    register, AllStates,
-)
+    register, )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.utils import is_api_request
 

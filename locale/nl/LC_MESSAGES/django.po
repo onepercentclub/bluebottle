@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-06 10:41+0100\n"
-"PO-Revision-Date: 2025-11-06 09:45\n"
+"PO-Revision-Date: 2025-11-06 10:53\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -8316,14 +8316,14 @@ msgstr "Exporteer geselecteerde nieuwsitems"
 msgid "1 news item was imported"
 msgid_plural "{0} news items were imported"
 msgstr[0] "1 nieuwsitem is geïmporteerd"
-msgstr[1] ""
+msgstr[1] "{0} nieuwsitems zijn geïmporteerd"
 
 #: bluebottle/news/admin.py:228
 #, python-brace-format
 msgid "1 news item was updated"
 msgid_plural "{0} news items were updated"
 msgstr[0] "1 nieuwsitem is bijgewerkt"
-msgstr[1] ""
+msgstr[1] "{0} nieuwsitems zijn bijgewerkt"
 
 #: bluebottle/news/admin.py:236
 msgid "No news items were imported or updated."
@@ -8680,7 +8680,7 @@ msgstr[1] "{0} pagina's zijn geïmporteerd"
 msgid "1 page was updated"
 msgid_plural "{0} pages were updated"
 msgstr[0] "1 pagina is bijgewerkt"
-msgstr[1] ""
+msgstr[1] "{0} pagina's zijn bijgewerkt"
 
 #: bluebottle/pages/admin.py:269
 msgid "No pages were imported or updated."

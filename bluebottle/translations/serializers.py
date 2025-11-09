@@ -1,5 +1,7 @@
 from future import standard_library
 
+from bluebottle.members.models import MemberPlatformSettings
+
 standard_library.install_aliases()
 
 from builtins import str
@@ -34,6 +36,10 @@ class TranslationsSerializer(serializers.Field):
 
     def to_representation(self, instance):
         if not instance:
+            return {}
+
+        member_settings = MemberPlatformSettings.load()
+        if not member_settings.translate_user_content:
             return {}
 
         target_language = get_current_language() or Language.objects.first().code

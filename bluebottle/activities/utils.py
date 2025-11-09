@@ -137,7 +137,7 @@ class BaseAnswerSerializer(ModelSerializer):
 class TextAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = TextAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+        fields = BaseAnswerSerializer.Meta.fields + ('answer',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'text-answers'
@@ -146,7 +146,7 @@ class TextAnswerSerializer(BaseAnswerSerializer):
 class ConfirmationAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
+        fields = BaseAnswerSerializer.Meta.fields + ('confirmed',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'confirmation-answers'
@@ -155,7 +155,7 @@ class ConfirmationAnswerSerializer(BaseAnswerSerializer):
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+        fields = BaseAnswerSerializer.Meta.fields + ('segment',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'segment-answers'
@@ -176,7 +176,7 @@ class FileUploadAnswerDocumentSerializer(DocumentSerializer):
 class FileUploadAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = FileUploadAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+        fields = BaseAnswerSerializer.Meta.fields + ('file',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'file-upload-answers'
@@ -252,16 +252,16 @@ class BaseActivitySerializer(ModelSerializer):
         many=True
     )
 
-    translations = TranslationsSerializer(fields=['title', 'description'])
+    translations = TranslationsSerializer(fields=['description'])
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         user = self.context["request"].user
 
         if not (
-                user in instance.owners
-                or user.is_staff
-                or user.is_superuser
+            user in instance.owners
+            or user.is_staff
+            or user.is_superuser
         ):
             visible_answers = instance.answers.filter(question__visibility="all")
             field = self.fields["answers"]
@@ -678,8 +678,8 @@ def get_stats_for_activities(activities):
 
     contributor_count += anonymous_donations
 
-    contributor_count += Activity.objects.filter(id__in=ids).\
-        aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
+    contributor_count += Activity.objects.filter(id__in=ids). \
+                             aggregate(total=Sum('deleted_successful_contributors'))['total'] or 0
 
     types = CollectType.objects.all()
     collect = (

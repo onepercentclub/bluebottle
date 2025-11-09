@@ -11,7 +11,6 @@ from html.parser import HTMLParser
 from urllib.error import HTTPError
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
-from django.db import models
 from django.urls import resolve, reverse
 from django.core.validators import BaseValidator
 from django.http.request import validate_host
@@ -25,7 +24,7 @@ from rest_framework.relations import ManyRelatedField
 from django_recaptcha import client
 
 from bluebottle.utils.utils import get_client_ip
-from .models import Language, TranslationPlatformSettings
+from .models import Language
 
 
 class MaxAmountValidator(BaseValidator):
@@ -168,8 +167,8 @@ class ResourcePermissionField(BasePermissionField):
     def _method_permissions(self, method, user, view, value):
         for permission in view.get_permissions():
             if not (
-                    permission.has_object_action_permission(method, user, value)
-                    and permission.has_action_permission(method, user, view.model)
+                permission.has_object_action_permission(method, user, value)
+                and permission.has_action_permission(method, user, view.model)
             ):
                 return False
 
@@ -178,7 +177,7 @@ class ResourcePermissionField(BasePermissionField):
                 related_obj = attrgetter(related)(value)
                 for permission in permissions:
                     if not permission().has_object_action_permission(
-                            method, user, related_obj
+                        method, user, related_obj
                     ):
                         return False
 
@@ -247,29 +246,6 @@ class TruncatedCharField(serializers.CharField):
 
     def to_internal_value(self, data):
         return data[:self.length]
-
-
-class TranslationPlatformSettingsSerializer(serializers.ModelSerializer):
-    class Meta(object):
-        model = TranslationPlatformSettings
-        fields = '__all__'
-
-    def get_fields(self):
-        try:
-            translation = self.instance.get_translation(self.instance.language_code)
-        except self.instance.DoesNotExist:
-            return {}
-
-        result = dict(
-            (field.verbose_name, serializers.CharField(max_length=100, source=field.name))
-            for field in translation._meta.fields
-            if isinstance(field, models.CharField) and field.name != 'language_code'
-        )
-
-        return result
-
-    def to_representation(self, obj):
-        return super(TranslationPlatformSettingsSerializer, self).to_representation(obj)
 
 
 class ManyAnonymizedResourceRelatedField(ManyRelatedField):

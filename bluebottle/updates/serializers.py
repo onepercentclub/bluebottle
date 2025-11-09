@@ -16,7 +16,6 @@ from bluebottle.activities.serializers import ActivitySerializer, ContributorSer
 from bluebottle.files.models import Image
 from bluebottle.files.serializers import ImageSerializer, ORIGINAL_SIZE
 from bluebottle.funding.models import FundingPlatformSettings
-from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.updates.models import Update, UpdateImage
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -76,8 +75,6 @@ class UpdateSerializer(ModelSerializer):
             )
         return value
 
-    translations = TranslationsSerializer(fields=('message',))
-
     class Meta(object):
         model = Update
 
@@ -98,7 +95,6 @@ class UpdateSerializer(ModelSerializer):
         )
         meta_fields = (
             'permissions',
-            'translations',
         )
 
     class JSONAPIMeta(object):
@@ -166,7 +162,7 @@ class UpdateImageSerializer(ImageSerializer):
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(obj.pk, size, )) + '?_={}'.format(hash)
+                        reverse(self.content_view_name, args=(obj.pk, size,)) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
 

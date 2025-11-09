@@ -30,16 +30,12 @@ class TranslationSettingsTestCase(BluebottleTestCase):
         )
 
     def test_with_translation(self):
-        TranslationPlatformSettings.objects.create(
-            office='Site',
-            whats_the_location_of_your_office='What is your office site'
-        )
+        trans_settngs = TranslationPlatformSettings.load()
+        trans_settngs.translate_user_content = True
+        trans_settngs.save()
+
         response = self.client.get(self.settings_url)
         self.assertEqual(
-            response.data['platform']['translations']['Office'],
-            'Site'
-        )
-        self.assertEqual(
-            response.data['platform']['translations'][u'What\u2019s the location of your office?'],
-            'What is your office site'
+            response.data['platform']['translations']['translate_user_content'],
+            True
         )

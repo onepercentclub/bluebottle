@@ -1,8 +1,8 @@
 import functools
+from builtins import object
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
-from bluebottle.segments.filters import MemberSegmentAdminMixin
-from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
@@ -42,6 +42,7 @@ from bluebottle.members.forms import (
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
+from bluebottle.segments.filters import MemberSegmentAdminMixin
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.time_based.models import (
     DateParticipant,
@@ -149,13 +150,20 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 )
             }
         ),
-
         (
             _('Profile'),
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate',
                     'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Translations'),
+            {
+                'fields': (
+                    'translate_user_content',
                 )
             }
         ),
@@ -284,9 +292,9 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
             data = request.POST
             if (
-                    data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
+                data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
             ) or (
-                    data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
+                data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
             ):
                 context = dict(
                     obj=obj,
@@ -463,12 +471,12 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             fieldsets = (
                 (
                     None, {
-                        'classes': ('wide',),
-                        'fields': [
-                            'first_name', 'last_name', 'email', 'is_active',
-                            'is_staff', 'groups'
-                        ]
-                    }
+                    'classes': ('wide',),
+                    'fields': [
+                        'first_name', 'last_name', 'email', 'is_active',
+                        'is_staff', 'groups'
+                    ]
+                }
                 ),
             )
         else:
@@ -490,7 +498,6 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
                             'deleted',
                             'partner_organization',
                             'primary_language',
-                            'translate_user_content',
                         ]
                     }
                 ],
@@ -551,11 +558,11 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             if SegmentType.objects.count():
                 extra = (
                     _('Segments'), {
-                        'fields': [
-                            segment_type.field_name
-                            for segment_type in SegmentType.objects.all()
-                        ]
-                    }
+                    'fields': [
+                        segment_type.field_name
+                        for segment_type in SegmentType.objects.all()
+                    ]
+                }
                 )
 
                 fieldsets.insert(2, extra)

@@ -1,17 +1,15 @@
-from bluebottle.segments.models import SegmentType
-
-from bluebottle.categories.models import Category
-
-from bluebottle.geo.models import Location
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, permission_required
 from django.urls import re_path
-from django.views.generic import DetailView
 from django.utils.decorators import method_decorator
-
+from django.views.generic import DetailView
 from jet.dashboard.dashboard import urls
 
+from bluebottle.categories.models import Category
+from bluebottle.geo.models import Location
 from bluebottle.looker.models import LookerEmbed
 from bluebottle.looker.utils import LookerSSOEmbed
+from bluebottle.segments.models import SegmentType
 
 
 @method_decorator(login_required, name='dispatch')
@@ -49,12 +47,15 @@ class LookerEmbedView(DetailView):
             hide_filters.append('Activity segment type')
             hide_filters.append('Activity segment')
 
-        context['looker_embed_url'] = LookerSSOEmbed(
-            self.request.user,
-            type=context['object'].type,
-            id=context['object'].looker_id,
-            hide_filters=hide_filters
-        ).url
+        if settings.LOOKER_HOST and settings.LOOKER_SECRET:
+            context['looker_embed_url'] = LookerSSOEmbed(
+                self.request.user,
+                type=context['object'].type,
+                id=context['object'].looker_id,
+                hide_filters=hide_filters
+            ).url
+        else:
+            context['looker_embed_url'] = None
         return context
 
 

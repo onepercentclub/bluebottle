@@ -116,6 +116,20 @@ class LookerEmbedViewTest(BluebottleAdminTestCase):
         )
         self.assertNotContains(response, 'Manage Reporting')
 
+    @override_settings(LOOKER_SECRET='')
+    def test_no_settings(self):
+        staff_user = BlueBottleUserFactory.create(is_staff=True)
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename='access_looker_embeds')
+        )
+
+        self.client.force_login(staff_user)
+        response = self.client.get(self.embed_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            '<iframe src="{}'.format(self.target_url) in response.content.decode()
+        )
+
     def test_view_not_authenticated(self):
         response = self.client.get(self.embed_url)
         path = urlparse(response['location']).path

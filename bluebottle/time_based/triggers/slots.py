@@ -20,8 +20,8 @@ from bluebottle.time_based.effects.slots import (
 from bluebottle.time_based.messages import (
     ChangedMultipleDateNotification, ChangedSingleDateNotification, SlotCancelledNotification
 )
-from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.messages.teams import UserTeamDetailsChangedNotification
+from bluebottle.time_based.models import PeriodicSlot, ScheduleSlot, TeamScheduleSlot
 from bluebottle.time_based.states import (
     DateStateMachine,
     DateActivitySlotStateMachine,
@@ -33,7 +33,7 @@ from bluebottle.time_based.states import (
     PeriodicSlotStateMachine,
     TeamScheduleParticipantStateMachine,
     DateActivitySlot,
-    TimeContributionStateMachine
+    TimeContributionStateMachine, ParticipantStateMachine
 )
 from bluebottle.time_based.states.participants import DateParticipantStateMachine
 
@@ -104,7 +104,6 @@ def slot_has_no_end(effect):
 
 @register(ScheduleSlot)
 class ScheduleSlotTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             ScheduleSlotStateMachine.initiate,
@@ -147,6 +146,15 @@ class ScheduleSlotTriggers(TriggerManager):
         ),
         TransitionTrigger(
             ScheduleSlotStateMachine.cancel,
+            effects=[
+                RelatedTransitionEffect(
+                    "participants",
+                    ScheduleParticipantStateMachine.cancel,
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            ScheduleSlotStateMachine.auto_cancel,
             effects=[
                 RelatedTransitionEffect(
                     "participants",
@@ -211,7 +219,6 @@ def slot_is_incomplete(effect):
 
 @register(TeamScheduleSlot)
 class TeamScheduleSlotTriggers(ScheduleSlotTriggers):
-
     triggers = ScheduleSlotTriggers.triggers + [
         TransitionTrigger(
             ScheduleSlotStateMachine.initiate,
@@ -434,7 +441,6 @@ def all_slots_cancelled(effect):
 
 @register(DateActivitySlot)
 class DateActivitySlotTriggers(TriggerManager):
-
     triggers = [
         TransitionTrigger(
             DateActivitySlotStateMachine.initiate,
@@ -552,8 +558,8 @@ class DateActivitySlotTriggers(TriggerManager):
             effects=[
                 NotificationEffect(SlotCancelledNotification),
                 RelatedTransitionEffect(
-                    "active_and_new_participants",
-                    DateParticipantStateMachine.cancel,
+                    "participants",
+                    ParticipantStateMachine.cancel,
                 ),
 
                 RelatedTransitionEffect(
@@ -575,6 +581,16 @@ class DateActivitySlotTriggers(TriggerManager):
                     "activity",
                     DateStateMachine.cancel,
                     conditions=[all_slots_cancelled]
+                ),
+            ],
+        ),
+        TransitionTrigger(
+            DateActivitySlotStateMachine.auto_cancel,
+            effects=[
+                NotificationEffect(SlotCancelledNotification),
+                RelatedTransitionEffect(
+                    "participants",
+                    ParticipantStateMachine.cancel,
                 ),
             ],
         ),

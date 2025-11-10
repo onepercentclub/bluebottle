@@ -61,6 +61,7 @@ class TranslationsSerializer(serializers.Field):
                     text_value,
                     target_language,
                 )
+
                 translated_data[name] = translated_value
             else:
                 translated_data[name] = original_value

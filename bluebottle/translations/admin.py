@@ -11,6 +11,7 @@ class TranslationAdmin(admin.ModelAdmin):
 
     def truncated_text(self, obj):
         return obj.text[:70]
+
     truncated_text.admin_order_field = _('Text')
 
     fields = (

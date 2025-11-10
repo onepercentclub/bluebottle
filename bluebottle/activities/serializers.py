@@ -76,7 +76,6 @@ from bluebottle.time_based.serializers import (
     ScheduleParticipantSerializer,
     TeamScheduleParticipantSerializer, RegisteredDateActivitySerializer,
 )
-from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import PolymorphicSerializerMethodResourceRelatedField
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.utils import get_current_language
@@ -217,7 +216,6 @@ class ActivityPreviewSerializer(ModelSerializer):
     collect_type = serializers.SerializerMethodField()
     collect_target = serializers.SerializerMethodField()
     realized = serializers.SerializerMethodField()
-    translations = TranslationsSerializer(fields=['title', ('initiative_title', 'initiative.title')])
 
     def get_activity(self, obj):
         return {"id": obj.meta["id"], "type": obj.resource_name}
@@ -261,9 +259,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             try:
                 start, end = (
                     dateutil.parser.parse(date).astimezone(tz)
-                    for date in self.context["request"]
-                    .GET.get("filter[date]")
-                    .split(",")
+                    for date in self.context["request"].GET.get("filter[date]").split(",")
                 )
             except (ValueError, AttributeError):
                 start = None
@@ -574,7 +570,6 @@ class ActivityPreviewSerializer(ModelSerializer):
         meta_fields = (
             "current_status",
             "created",
-            "translations"
         )
 
     class JSONAPIMeta:
@@ -895,7 +890,7 @@ class TextQuestionSerializer(BaseQuestionSerializer):
 class ConfirmationQuestionSerializer(BaseQuestionSerializer):
     class Meta(BaseQuestionSerializer.Meta):
         model = ConfirmationQuestion
-        fields = BaseQuestionSerializer.Meta.fields + ('text', )
+        fields = BaseQuestionSerializer.Meta.fields + ('text',)
 
     class JSONAPIMeta(BaseQuestionSerializer.JSONAPIMeta):
         resource_name = 'confirmation-questions'
@@ -904,7 +899,7 @@ class ConfirmationQuestionSerializer(BaseQuestionSerializer):
 class SegmentQuestionSerializer(BaseQuestionSerializer):
     class Meta(BaseQuestionSerializer.Meta):
         model = SegmentQuestion
-        fields = BaseQuestionSerializer.Meta.fields + ('segment_type', )
+        fields = BaseQuestionSerializer.Meta.fields + ('segment_type',)
 
     class JSONAPIMeta(BaseQuestionSerializer.JSONAPIMeta):
         resource_name = 'segment-questions'
@@ -963,7 +958,7 @@ class BaseAnswerSerializer(ModelSerializer):
 class TextAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = TextAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('answer', )
+        fields = BaseAnswerSerializer.Meta.fields + ('answer',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'text-answers'
@@ -972,7 +967,7 @@ class TextAnswerSerializer(BaseAnswerSerializer):
 class ConfirmationAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = ConfirmationAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('confirmed', )
+        fields = BaseAnswerSerializer.Meta.fields + ('confirmed',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'confirmation-answers'
@@ -981,7 +976,7 @@ class ConfirmationAnswerSerializer(BaseAnswerSerializer):
 class SegmentAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = SegmentAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('segment', )
+        fields = BaseAnswerSerializer.Meta.fields + ('segment',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'segment-answers'
@@ -1002,7 +997,7 @@ class FileUploadAnswerDocumentSerializer(DocumentSerializer):
 class FileUploadAnswerSerializer(BaseAnswerSerializer):
     class Meta(BaseAnswerSerializer.Meta):
         model = FileUploadAnswer
-        fields = BaseAnswerSerializer.Meta.fields + ('file', )
+        fields = BaseAnswerSerializer.Meta.fields + ('file',)
 
     class JSONAPIMeta(BaseAnswerSerializer.JSONAPIMeta):
         resource_name = 'file-upload-answers'

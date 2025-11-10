@@ -1,12 +1,14 @@
 from future import standard_library
 
+from bluebottle.members.models import MemberPlatformSettings
+
 standard_library.install_aliases()
 
 from builtins import str
 
 from rest_framework import serializers
 
-from bluebottle.utils.utils import get_current_language
+from bluebottle.utils.utils import get_api_language
 from bluebottle.translations.utils import translate_text_cached
 from bluebottle.utils.models import Language
 
@@ -36,7 +38,11 @@ class TranslationsSerializer(serializers.Field):
         if not instance:
             return {}
 
-        target_language = get_current_language() or Language.objects.first().code
+        member_settings = MemberPlatformSettings.load()
+        if not member_settings.translate_user_content:
+            return {}
+
+        target_language = get_api_language() or Language.objects.first().code
         translated_data = {}
 
         for field in self.translation_fields:
@@ -55,6 +61,7 @@ class TranslationsSerializer(serializers.Field):
                     text_value,
                     target_language,
                 )
+
                 translated_data[name] = translated_value
             else:
                 translated_data[name] = original_value

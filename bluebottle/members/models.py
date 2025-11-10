@@ -135,6 +135,12 @@ class MemberPlatformSettings(BasePlatformSettings):
         ]
     )
 
+    translate_user_content = models.BooleanField(
+        _('translate user content'),
+        help_text=_('Give users the option to translate user generated content.'),
+        default=False
+    )
+
     enable_gender = models.BooleanField(
         _('enable gender'),
         default=False,
@@ -453,7 +459,6 @@ class UserSegment(models.Model):
 
 
 class UserActivity(models.Model):
-
     user = models.ForeignKey(Member, null=True, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     path = models.CharField(max_length=200, null=True, blank=True)

@@ -162,6 +162,17 @@ def get_current_language():
     """
     request = ThreadLocal.get_current_request()
     if request:
+        return request.LANGUAGE_CODE
+    else:
+        return properties.LANGUAGE_CODE
+
+
+def get_api_language():
+    """
+    Get the current language from request
+    """
+    request = ThreadLocal.get_current_request()
+    if request:
         return get_language_from_request(request)
     else:
         return properties.LANGUAGE_CODE

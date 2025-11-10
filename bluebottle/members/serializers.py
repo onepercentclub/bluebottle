@@ -14,9 +14,9 @@ from rest_framework_json_api.serializers import Serializer, ModelSerializer, Res
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.files.serializers import ImageField
 from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.clients import properties
+from bluebottle.files.serializers import ImageField
 from bluebottle.geo.models import Location, Place
 from bluebottle.geo.serializers import OldPlaceSerializer
 from bluebottle.initiatives.models import Theme
@@ -220,11 +220,11 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
         representation = BaseUserPreviewSerializer(instance, context=self.context).to_representation(instance)
         if not (
-                user.is_staff or
-                user.is_superuser
+            user.is_staff or
+            user.is_superuser
         ) and (
-                self.hide_last_name and
-                MemberPlatformSettings.objects.get().display_member_names == 'first_name'
+            self.hide_last_name and
+            MemberPlatformSettings.objects.get().display_member_names == 'first_name'
         ):
             del representation['last_name']
             representation['full_name'] = representation['first_name']
@@ -483,8 +483,8 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     def validate_email(self, email):
         settings = MemberPlatformSettings.objects.get()
         if (
-                settings.email_domain and
-                not email.endswith('@{}'.format(settings.email_domain))
+            settings.email_domain and
+            not email.endswith('@{}'.format(settings.email_domain))
         ):
             raise serializers.ValidationError(
                 ('Only emails for the domain {} are allowed').format(
@@ -826,7 +826,7 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         self.instance.save()
 
     class Meta(PasswordProtectedMemberSerializer.Meta):
-        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+        fields = ('new_password',) + PasswordProtectedMemberSerializer.Meta.fields
 
     class JSONAPIMeta:
         resource_name = 'profile-password'
@@ -907,6 +907,7 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'retention_anonymize',
             'retention_delete',
             'read_only_fields',
+            'translate_user_content',
             'social_login_methods'
         )
 

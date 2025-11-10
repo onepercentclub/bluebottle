@@ -63,9 +63,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data = json.load(hook_file)
             data['object']['id'] = self.intent.intent_id
 
-        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer = stripe.Transfer(data['object']['latest_charge']['transfer'])
         transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
+            'id': data['object']['latest_charge']['transfer'],
             'amount': 2500,
             'currency': 'eur'
         })
@@ -83,20 +83,20 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'latest_charge': charge.id
         })
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent('payment_intent.succeeded', data)
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent('payment_intent.succeeded', data)
         ):
             with mock.patch(
-                    'stripe.Transfer.retrieve',
-                    return_value=transfer
+                'stripe.Transfer.retrieve',
+                return_value=transfer
             ):
                 with mock.patch(
-                        'stripe.Charge.retrieve',
-                        return_value=charge
+                    'stripe.Charge.retrieve',
+                    return_value=charge
                 ):
                     with mock.patch(
-                            'stripe.PaymentIntent.retrieve',
-                            return_value=payment_intent
+                        'stripe.PaymentIntent.retrieve',
+                        return_value=payment_intent
                     ):
                         response = self.client.post(
                             self.webhook,
@@ -126,10 +126,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data['payment_intent'] = self.intent.intent_id
 
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'charge.pending', {'object': {'payment_intent': self.intent.intent_id}}
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.pending', {'object': {'payment_intent': self.intent.intent_id}}
+            )
         ):
             response = self.client.post(
                 self.webhook,
@@ -155,10 +155,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
 
     def test_failed(self):
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'payment_intent.payment_failed', {'object': {'id': self.intent.intent_id}}
+            )
         ):
             response = self.client.post(
                 self.webhook,
@@ -215,20 +215,20 @@ class IntentWebhookTestCase(BluebottleTestCase):
             'latest_charge': charge.id
         })
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent('payment_intent.succeeded', data)
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent('payment_intent.succeeded', data)
         ):
             with mock.patch(
-                    'stripe.Transfer.retrieve',
-                    return_value=transfer
+                'stripe.Transfer.retrieve',
+                return_value=transfer
             ):
                 with mock.patch(
-                        'stripe.Charge.retrieve',
-                        return_value=charge
+                    'stripe.Charge.retrieve',
+                    return_value=charge
                 ):
                     with mock.patch(
-                            'stripe.PaymentIntent.retrieve',
-                            return_value=payment_intent
+                        'stripe.PaymentIntent.retrieve',
+                        return_value=payment_intent
                     ):
                         response = self.client.post(
                             self.webhook,
@@ -254,10 +254,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data['object']['payment_intent'] = self.intent.intent_id
 
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'charge.refunded', data
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
         ):
             response = self.client.post(
                 self.webhook,
@@ -280,10 +280,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data['object']['payment_intent'] = None
 
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'charge.refunded', data
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
         ):
             response = self.client.post(
                 self.webhook,
@@ -297,7 +297,7 @@ class IntentWebhookTestCase(BluebottleTestCase):
         self.test_success()
 
         with mock.patch(
-                'bluebottle.funding_stripe.models.StripePayment.refund',
+            'bluebottle.funding_stripe.models.StripePayment.refund',
         ):
             self.intent.payment.states.request_refund(save=True)
 
@@ -306,10 +306,10 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data['object']['payment_intent'] = self.intent.intent_id
 
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'charge.refunded', data
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'charge.refunded', data
+            )
         ):
             response = self.client.post(
                 self.webhook,
@@ -370,24 +370,24 @@ class IntentWebhookTestCase(BluebottleTestCase):
         })
 
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent('payment_intent.succeeded', data)
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent('payment_intent.succeeded', data)
         ):
             with mock.patch(
-                    'stripe.Transfer.retrieve',
-                    return_value=transfer
+                'stripe.Transfer.retrieve',
+                return_value=transfer
             ):
                 with mock.patch(
-                        'stripe.Charge.retrieve',
-                        return_value=charge
+                    'stripe.Charge.retrieve',
+                    return_value=charge
                 ):
                     with mock.patch(
-                            'stripe.PaymentIntent.retrieve',
-                            return_value=payment_intent
+                        'stripe.PaymentIntent.retrieve',
+                        return_value=payment_intent
                     ):
                         with mock.patch(
-                                'stripe.checkout.Session.retrieve',
-                                return_value=checkout
+                            'stripe.checkout.Session.retrieve',
+                            return_value=checkout
                         ):
                             response = self.client.post(
                                 self.webhook,
@@ -513,10 +513,10 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
 
         data = {"object": self.connect_account}
         with mock.patch(
-                'stripe.Webhook.construct_event',
-                return_value=MockEvent(
-                    'account.updated', data
-                )
+            'stripe.Webhook.construct_event',
+            return_value=MockEvent(
+                'account.updated', data
+            )
         ):
             response = self.client.post(
                 reverse("stripe-connect-webhook"),

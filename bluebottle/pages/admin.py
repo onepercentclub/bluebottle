@@ -1,4 +1,5 @@
 import json
+import re
 
 from django import forms
 from django.conf import settings
@@ -10,7 +11,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import re_path
 from django.urls import reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, strip_tags
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _, ngettext
@@ -18,12 +19,35 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 
+from bluebottle.translations.utils import translate_text_cached
+from bluebottle.utils.models import Language
+
 from .models import Page
 from .utils import export_page_to_dict, import_pages_from_data
 
 
 class PageImportForm(Form):
     json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
+
+
+class PageTranslateForm(Form):
+    target_language = forms.ChoiceField(
+        label=_('Target Language'),
+        help_text=_('Select the language to translate this page to')
+    )
+
+    def __init__(self, *args, **kwargs):
+        current_language = kwargs.pop('current_language', None)
+        super().__init__(*args, **kwargs)
+        
+        # Get all available languages except the current one
+        languages = Language.objects.all().order_by('language_name')
+        choices = []
+        for lang in languages:
+            if lang.full_code != current_language:
+                choices.append((lang.full_code, lang.language_name))
+        
+        self.fields['target_language'].choices = choices
 
 
 class PageAdmin(PlaceholderFieldAdmin):
@@ -94,6 +118,13 @@ class PageAdmin(PlaceholderFieldAdmin):
                 ),
                 name="{0}_{1}_import".format(*info)
             ),
+            re_path(
+                r'^(?P<pk>\d+)/translate/$',
+                self.admin_site.admin_view(
+                    self.translate_page
+                ),
+                name="{0}_{1}_translate".format(*info)
+            ),
         ]
 
         return urlpatterns + base_urls
@@ -150,6 +181,8 @@ class PageAdmin(PlaceholderFieldAdmin):
             context.update({
                 'export_url': reverse('admin:{0}_{1}_export'.format(*info),
                                       kwargs={'pk': obj.pk}),
+                'translate_url': reverse('admin:{0}_{1}_translate'.format(*info),
+                                        kwargs={'pk': obj.pk}),
             })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
@@ -291,6 +324,191 @@ class PageAdmin(PlaceholderFieldAdmin):
             'title': _('Import pages'),
         }
         return render(request, 'admin/pages/page/import.html', context)
+
+    def translate_page(self, request, pk):
+        """Translate a page to another language."""
+        page = self.get_object(request, pk)
+        if page is None:
+            from django.contrib.admin.exceptions import DisallowedModelAdminToField
+            raise DisallowedModelAdminToField(
+                "Page object with primary key '%s' does not exist." % pk
+            )
+
+        if request.method == 'POST':
+            form = PageTranslateForm(request.POST, current_language=page.language)
+            if form.is_valid():
+                target_language = form.cleaned_data['target_language']
+                
+                # Check if page with same slug and language already exists
+                if Page.objects.filter(slug=page.slug, language=target_language).exists():
+                    messages.error(
+                        request,
+                        _('A page with slug "{slug}" already exists for language {language}.').format(
+                            slug=page.slug,
+                            language=target_language
+                        )
+                    )
+                    return redirect('admin:pages_page_change', page.pk)
+
+                try:
+                    # Create new page with translated title
+                    translated_title = translate_text_cached(page.title, target_language)['value']
+                    
+                    new_page = Page.objects.create(
+                        title=translated_title,
+                        slug=page.slug,
+                        language=target_language,
+                        author=request.user,
+                        status=page.status,
+                        full_page=page.full_page,
+                        show_title=page.show_title,
+                        publication_date=page.publication_date,
+                        publication_end_date=page.publication_end_date,
+                    )
+
+                    # Copy and translate content blocks
+                    self._copy_and_translate_blocks(page, new_page, target_language)
+
+                    messages.success(
+                        request,
+                        _('Page "{title}" has been translated to {language}.').format(
+                            title=new_page.title,
+                            language=target_language
+                        )
+                    )
+                    return redirect('admin:pages_page_change', new_page.pk)
+                except Exception as e:
+                    messages.error(
+                        request,
+                        _('Error translating page: {error}').format(error=str(e))
+                    )
+        else:
+            form = PageTranslateForm(current_language=page.language)
+
+        context = {
+            'form': form,
+            'page': page,
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request),
+            'has_add_permission': self.has_add_permission(request),
+            'has_change_permission': self.has_change_permission(request),
+            'has_delete_permission': self.has_delete_permission(request),
+            'title': _('Translate page'),
+        }
+        return render(request, 'admin/pages/page/translate.html', context)
+
+    def _copy_and_translate_blocks(self, source_page, target_page, target_language):
+        """Copy blocks from source page to target page and translate text fields."""
+        from django.apps import apps
+        from django.contrib.contenttypes.models import ContentType
+        from fluent_contents.models import Placeholder, ContentItem
+        from bluebottle.utils.content_import_export import (
+            dump_content, create_content_block, get_block_fields
+        )
+
+        # Get source placeholder (it should exist, but handle gracefully)
+        source_content_type = ContentType.objects.get_for_model(source_page)
+        try:
+            source_placeholder = Placeholder.objects.get(
+                parent_id=source_page.pk,
+                parent_type_id=source_content_type.pk,
+                slot='blog_contents'
+            )
+        except Placeholder.DoesNotExist:
+            # If no placeholder exists, create an empty one and return
+            target_content_type = ContentType.objects.get_for_model(target_page)
+            Placeholder.objects.get_or_create(
+                parent_id=target_page.pk,
+                parent_type_id=target_content_type.pk,
+                slot='blog_contents',
+                role='m'
+            )
+            return
+
+        # Get or create target placeholder
+        target_content_type = ContentType.objects.get_for_model(target_page)
+        target_placeholder, _ = Placeholder.objects.get_or_create(
+            parent_id=target_page.pk,
+            parent_type_id=target_content_type.pk,
+            slot='blog_contents',
+            role='m'
+        )
+
+        # Get all content blocks from source
+        source_blocks = dump_content(source_page.body)
+
+        # Process and translate each block
+        for block_data in source_blocks:
+            # Translate text fields in block
+            translated_fields = self._translate_block_fields(
+                block_data['fields'], target_language
+            )
+            block_data['fields'] = translated_fields
+
+            # Translate items if they exist
+            if 'items' in block_data:
+                for item_data in block_data['items']:
+                    translated_item_fields = self._translate_block_fields(
+                        item_data['data'], target_language
+                    )
+                    item_data['data'] = translated_item_fields
+
+            # Create the block in target placeholder
+            create_content_block(block_data, target_placeholder)
+
+    def _translate_block_fields(self, fields, target_language):
+        """Translate text fields in block data."""
+        translated_fields = {}
+        text_field_patterns = [
+            'text', 'title', 'heading', 'subtitle', 'description',
+            'content', 'caption', 'label', 'name', 'body'
+        ]
+
+        for key, value in fields.items():
+            if value is None:
+                translated_fields[key] = None
+                continue
+
+            # Skip image fields and non-text fields
+            if isinstance(value, dict) and 'image_url' in value:
+                translated_fields[key] = value
+                continue
+
+            # Check if this looks like a text field
+            is_text_field = any(pattern in key.lower() for pattern in text_field_patterns)
+
+            if is_text_field and isinstance(value, str) and value.strip():
+                # Handle HTML content
+                if '<' in value and '>' in value:
+                    # Extract text from HTML, translate, and preserve structure
+                    translated_value = self._translate_html_content(value, target_language)
+                else:
+                    # Plain text translation
+                    translated_value = translate_text_cached(value, target_language)['value']
+                translated_fields[key] = translated_value
+            else:
+                # Keep non-text fields as-is
+                translated_fields[key] = value
+
+        return translated_fields
+
+    def _translate_html_content(self, html_content, target_language):
+        """Translate HTML content while preserving HTML structure."""
+        # Extract text nodes and translate them
+        # Simple approach: translate text between tags
+        def translate_match(match):
+            text = match.group(1)
+            if text.strip():
+                translated = translate_text_cached(text.strip(), target_language)['value']
+                return match.group(0).replace(text, translated)
+            return match.group(0)
+
+        # Pattern to match text content (not inside tags)
+        # This is a simplified approach - for complex HTML, consider using BeautifulSoup
+        pattern = r'>([^<]+)<'
+        translated_html = re.sub(pattern, translate_match, html_content)
+        
+        return translated_html
 
     def changelist_view(self, request, extra_context=None):
         """Override to add import URL to context."""

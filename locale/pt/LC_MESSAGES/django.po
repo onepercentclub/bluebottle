@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-06 10:41+0100\n"
-"PO-Revision-Date: 2025-11-06 09:45\n"
+"POT-Creation-Date: 2025-11-06 08:36+0100\n"
+"PO-Revision-Date: 2025-11-06 07:37\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese\n"
 "Language: pt_PT\n"
@@ -607,13 +607,13 @@ msgstr "Número de contribuidores com sucesso excluídos"
 #: bluebottle/activities/models.py:108 bluebottle/cms/models.py:49
 #: bluebottle/cms/models.py:125 bluebottle/cms/models.py:142
 #: bluebottle/funding/models.py:349 bluebottle/news/models.py:23
-#: bluebottle/pages/models.py:231 bluebottle/slides/models.py:46
+#: bluebottle/pages/models.py:233 bluebottle/slides/models.py:46
 #: bluebottle/statistics/models.py:235
 msgid "Title"
 msgstr "Título"
 
 #: bluebottle/activities/models.py:109 bluebottle/cms/models.py:50
-#: bluebottle/news/models.py:24 bluebottle/pages/models.py:232
+#: bluebottle/news/models.py:24 bluebottle/pages/models.py:234
 #: bluebottle/slides/models.py:27
 msgid "Slug"
 msgstr "Permalink"
@@ -1005,7 +1005,7 @@ msgstr "Cancelar automaticamente"
 
 #: bluebottle/activities/states.py:303
 msgid "Cancel the activity automatically, because the initiative is cancelled."
-msgstr "Cancelar a atividade automaticamente, porque a iniciativa foi cancelada."
+msgstr ""
 
 #: bluebottle/activities/states.py:318 bluebottle/initiatives/states.py:207
 #: bluebottle/time_based/states/participants.py:198
@@ -1192,9 +1192,7 @@ msgstr "O organizador ainda está ocupado configurando a atividade."
 #: bluebottle/bluebottle_dashboard/templates/admin/merge.html:6
 #: bluebottle/fsm/templates/admin/change_effects_confirmation.html:15
 #: bluebottle/members/templates/admin/members/set_retention_confirmation.html:15
-#: bluebottle/news/templates/admin/news/newsitem/import.html:6
 #: bluebottle/notifications/templates/admin/change_confirmation.html:14
-#: bluebottle/pages/templates/admin/pages/page/import.html:6
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:6
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:6
 #: bluebottle/utils/templates/admin/confirmation.html:9
@@ -1885,7 +1883,7 @@ msgstr "Designa se esse usuário deve ser tratado como ativo. Desmarque isso em 
 msgid "date joined"
 msgstr "data de cadastro"
 
-#: bluebottle/bb_accounts/models.py:128 bluebottle/clients/models.py:15
+#: bluebottle/bb_accounts/models.py:128 bluebottle/clients/models.py:13
 #: bluebottle/funding/models.py:675 bluebottle/organizations/models.py:26
 #: bluebottle/organizations/models.py:85 bluebottle/terms/models.py:14
 msgid "updated"
@@ -2527,7 +2525,7 @@ msgid "categories"
 msgstr "Categorias"
 
 #: bluebottle/categories/models.py:87 bluebottle/funding/models.py:427
-#: bluebottle/initiatives/models.py:39 bluebottle/pages/models.py:57
+#: bluebottle/initiatives/models.py:39 bluebottle/pages/models.py:59
 #: bluebottle/time_based/models.py:294
 msgid "title"
 msgstr "Título"
@@ -2566,7 +2564,7 @@ msgstr "bloco de conteúdo"
 msgid "content blocks"
 msgstr "blocos de conteúdo"
 
-#: bluebottle/clients/models.py:14 bluebottle/files/models.py:26
+#: bluebottle/clients/models.py:12 bluebottle/files/models.py:26
 #: bluebottle/funding/models.py:674 bluebottle/organizations/models.py:25
 #: bluebottle/organizations/models.py:84 bluebottle/terms/models.py:13
 #: bluebottle/updates/models.py:53
@@ -2786,8 +2784,8 @@ msgstr "Use isto para entrada 'manual' ou a substituição do valor calculado."
 #: bluebottle/cms/models.py:205 bluebottle/cms/models.py:228
 #: bluebottle/cms/models.py:500 bluebottle/cms/models.py:581
 #: bluebottle/cms/models.py:619 bluebottle/cms/models.py:840
-#: bluebottle/cms/models.py:900 bluebottle/pages/models.py:108
-#: bluebottle/pages/models.py:166 bluebottle/pages/models.py:199
+#: bluebottle/cms/models.py:900 bluebottle/pages/models.py:110
+#: bluebottle/pages/models.py:168 bluebottle/pages/models.py:201
 msgid "Image"
 msgstr "Imagem:"
 
@@ -3059,13 +3057,13 @@ msgstr "Texto sem Formatação"
 msgid "Video URL"
 msgstr "URL do vídeo"
 
-#: bluebottle/cms/models.py:870 bluebottle/pages/models.py:119
-#: bluebottle/pages/models.py:209
+#: bluebottle/cms/models.py:870 bluebottle/pages/models.py:121
+#: bluebottle/pages/models.py:211
 msgid "Left"
 msgstr "Esquerda"
 
-#: bluebottle/cms/models.py:871 bluebottle/pages/models.py:120
-#: bluebottle/pages/models.py:210
+#: bluebottle/cms/models.py:871 bluebottle/pages/models.py:122
+#: bluebottle/pages/models.py:212
 msgid "Right"
 msgstr "Direita"
 
@@ -3073,7 +3071,7 @@ msgstr "Direita"
 msgid "1:2 (Text twice as wide)"
 msgstr "1:2 (texto duas vezes maior)"
 
-#: bluebottle/cms/models.py:876 bluebottle/pages/models.py:125
+#: bluebottle/cms/models.py:876 bluebottle/pages/models.py:127
 msgid "1:1 (Equal width)"
 msgstr "1:1 (largura igual)"
 
@@ -3081,11 +3079,11 @@ msgstr "1:1 (largura igual)"
 msgid "2:1 (Media twice as wide)"
 msgstr "2:1 (Mídia duas vezes de largura)"
 
-#: bluebottle/cms/models.py:880 bluebottle/pages/models.py:129
+#: bluebottle/cms/models.py:880 bluebottle/pages/models.py:131
 msgid "Picture placement"
 msgstr "Posição da imagem"
 
-#: bluebottle/cms/models.py:881 bluebottle/pages/models.py:130
+#: bluebottle/cms/models.py:881 bluebottle/pages/models.py:132
 msgid "Picture / Text ratio"
 msgstr "Taxa de imagem / texto"
 
@@ -3897,7 +3895,7 @@ msgid "Grant applications"
 msgstr "Aplicações para subsídios"
 
 #: bluebottle/funding/admin.py:641 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:178 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:144 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -7378,7 +7376,7 @@ msgstr "O nome é obrigatório"
 msgid "Email is required"
 msgstr "E-mail é obrigatório"
 
-#: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:229
+#: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:231
 #: bluebottle/slides/models.py:25 bluebottle/utils/models.py:165
 msgid "Draft"
 msgstr "Rascunho"
@@ -8296,76 +8294,27 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Crie a sua senha"
 
-#: bluebottle/news/admin.py:23 bluebottle/pages/admin.py:26
-msgid "JSON file"
-msgstr "Arquivo JSON"
-
-#: bluebottle/news/admin.py:23 bluebottle/pages/admin.py:26
-msgid "Select a JSON file exported from another platform"
-msgstr "Selecione um arquivo JSON exportado de outra plataforma"
-
-#: bluebottle/news/admin.py:39 bluebottle/pages/admin.py:51
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:39
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Configurações de publicação"
 
-#: bluebottle/news/admin.py:80 bluebottle/pages/admin.py:63
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:49
 msgid "Online"
 msgstr "Disponível"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:64
+#: bluebottle/news/admin.py:41 bluebottle/pages/admin.py:50
 msgid "Offline"
 msgstr "Desconectado"
 
-#: bluebottle/news/admin.py:83 bluebottle/pages/admin.py:66
+#: bluebottle/news/admin.py:42 bluebottle/pages/admin.py:51
 msgid "Is this item currently visible online or not."
 msgstr "Este item está atualmente visível online ou não."
 
-#: bluebottle/news/admin.py:158 bluebottle/pages/admin.py:190
+#: bluebottle/news/admin.py:106 bluebottle/pages/admin.py:156
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "Marcar entradas selecionadas como publicadas"
-
-#: bluebottle/news/admin.py:167
-msgid "No news items were selected."
-msgstr "Nenhum item de notícias foi selecionado."
-
-#: bluebottle/news/admin.py:179
-msgid "Export selected news items"
-msgstr "Exportar itens de notícias selecionados"
-
-#: bluebottle/news/admin.py:222
-#, python-brace-format
-msgid "1 news item was imported"
-msgid_plural "{0} news items were imported"
-msgstr[0] "1 item de notícias foi importado"
-msgstr[1] "{0} itens de notícias foram importados"
-
-#: bluebottle/news/admin.py:228
-#, python-brace-format
-msgid "1 news item was updated"
-msgid_plural "{0} news items were updated"
-msgstr[0] "1 item de notícias foi atualizado"
-msgstr[1] "{0} itens de notícias foram atualizados"
-
-#: bluebottle/news/admin.py:236
-msgid "No news items were imported or updated."
-msgstr "Nenhum item de notícias foi importado ou atualizado."
-
-#: bluebottle/news/admin.py:245 bluebottle/pages/admin.py:278
-msgid "Invalid JSON file. Please check the file format."
-msgstr "Arquivo JSON inválido. Verifique o formato do arquivo."
-
-#: bluebottle/news/admin.py:247
-#, python-brace-format
-msgid "Error importing news items: {0}"
-msgstr "Erro ao importar itens de notícias: {0}"
-
-#: bluebottle/news/admin.py:258
-#: bluebottle/news/templates/admin/news/newsitem/change_list.html:8
-#: bluebottle/news/templates/admin/news/newsitem/import.html:9
-msgid "Import news items"
-msgstr "Importar itens de notícias"
 
 #: bluebottle/news/models.py:28
 msgid "Main image"
@@ -8375,7 +8324,7 @@ msgstr "Imagem principal"
 msgid "Shows at the top of your post."
 msgstr "Mostra no topo do seu post."
 
-#: bluebottle/news/models.py:39 bluebottle/pages/models.py:246
+#: bluebottle/news/models.py:39 bluebottle/pages/models.py:248
 #: bluebottle/slides/models.py:39 bluebottle/statistics/models.py:252
 msgid "language"
 msgstr "Idioma"
@@ -8384,11 +8333,11 @@ msgstr "Idioma"
 msgid "Allow comments"
 msgstr "Permitir comentários"
 
-#: bluebottle/news/models.py:74
+#: bluebottle/news/models.py:71
 msgid "news item"
 msgstr "item de notícia"
 
-#: bluebottle/news/models.py:75
+#: bluebottle/news/models.py:72
 msgid "news items"
 msgstr "itens de notícias"
 
@@ -8420,19 +8369,6 @@ msgstr "Pré-visualização da postagem no blog"
 #: bluebottle/news/templates/admin/blogs/preview_canvas.html:24
 msgid "now"
 msgstr "format@@0number@@1format@@2s"
-
-#: bluebottle/news/templates/admin/news/newsitem/change_form.html:7
-msgid "Export news item"
-msgstr "Exportar item de notícias"
-
-#: bluebottle/news/templates/admin/news/newsitem/import.html:14
-msgid "Upload a JSON file exported from another platform to import news items."
-msgstr "Faça upload de um arquivo JSON exportado de outra plataforma para importar itens de notícias."
-
-#: bluebottle/news/templates/admin/news/newsitem/import.html:38
-#: bluebottle/pages/templates/admin/pages/page/import.html:38
-msgid "Import"
-msgstr "Importar"
 
 #: bluebottle/notifications/admin.py:141
 msgid "URL of the platform"
@@ -8682,129 +8618,84 @@ msgstr "site"
 msgid "Phone Number"
 msgstr "Número de telefone"
 
-#: bluebottle/pages/admin.py:199
-msgid "No pages were selected."
-msgstr "Nenhuma página foi selecionada."
-
-#: bluebottle/pages/admin.py:211
-msgid "Export selected pages"
-msgstr "Exportar páginas selecionadas"
-
-#: bluebottle/pages/admin.py:255
-#, python-brace-format
-msgid "1 page was imported"
-msgid_plural "{0} pages were imported"
-msgstr[0] "1 página foi importada"
-msgstr[1] "{0} páginas foram importadas"
-
-#: bluebottle/pages/admin.py:261
-#, python-brace-format
-msgid "1 page was updated"
-msgid_plural "{0} pages were updated"
-msgstr[0] "1 página foi atualizada"
-msgstr[1] "{0} páginas foram atualizadas"
-
-#: bluebottle/pages/admin.py:269
-msgid "No pages were imported or updated."
-msgstr "Nenhuma página foi importada ou atualizada."
-
-#: bluebottle/pages/admin.py:280
-#, python-brace-format
-msgid "Error importing pages: {0}"
-msgstr "Erro ao importar páginas: {0}"
-
-#: bluebottle/pages/admin.py:291
-#: bluebottle/pages/templates/admin/pages/page/change_list.html:8
-#: bluebottle/pages/templates/admin/pages/page/import.html:9
-msgid "Import pages"
-msgstr "Importar páginas"
-
-#: bluebottle/pages/models.py:27
+#: bluebottle/pages/models.py:28
 msgid "Link title"
 msgstr "Título do link"
 
-#: bluebottle/pages/models.py:29 bluebottle/pages/models.py:51
-#: bluebottle/pages/models.py:52
+#: bluebottle/pages/models.py:30 bluebottle/pages/models.py:52
+#: bluebottle/pages/models.py:53
 msgid "Document"
 msgstr "Documento"
 
-#: bluebottle/pages/models.py:56
+#: bluebottle/pages/models.py:58
 msgid "link"
 msgstr "ligação"
 
-#: bluebottle/pages/models.py:63
+#: bluebottle/pages/models.py:65
 msgid "Call to action"
 msgstr "Chamar a ação"
 
-#: bluebottle/pages/models.py:64
+#: bluebottle/pages/models.py:66
 msgid "Call to actions"
 msgstr "Chamada para ações"
 
-#: bluebottle/pages/models.py:71
+#: bluebottle/pages/models.py:73
 msgid "text left"
 msgstr "texto à esquerda"
 
-#: bluebottle/pages/models.py:73
+#: bluebottle/pages/models.py:75
 msgid "text right"
 msgstr "texto à direita"
 
-#: bluebottle/pages/models.py:79 bluebottle/pages/models.py:80
+#: bluebottle/pages/models.py:81 bluebottle/pages/models.py:82
 msgid "Text in columns"
 msgstr "Texto em colunas"
 
-#: bluebottle/pages/models.py:105 bluebottle/pages/models.py:163
-#: bluebottle/pages/models.py:197
+#: bluebottle/pages/models.py:107 bluebottle/pages/models.py:165
+#: bluebottle/pages/models.py:199
 msgid "text"
 msgstr "Texto"
 
-#: bluebottle/pages/models.py:124
+#: bluebottle/pages/models.py:126
 msgid "2:1 (Text twice as wide)"
 msgstr "2:1 (Texto duas vezes de largura)"
 
-#: bluebottle/pages/models.py:126
+#: bluebottle/pages/models.py:128
 msgid "1:2 (Image twice as wide)"
 msgstr "1:2 (Imagem duas vezes maior)"
 
-#: bluebottle/pages/models.py:142 bluebottle/pages/models.py:143
+#: bluebottle/pages/models.py:144 bluebottle/pages/models.py:145
 msgid "Text + Image"
 msgstr "Texto + Imagem"
 
-#: bluebottle/pages/models.py:179 bluebottle/pages/models.py:180
+#: bluebottle/pages/models.py:181 bluebottle/pages/models.py:182
 msgid "Text + Round Image"
 msgstr "Texto + Imagem redonda"
 
-#: bluebottle/pages/models.py:213
+#: bluebottle/pages/models.py:215
 msgid "Image placement"
 msgstr "Posicionamento da imagem"
 
-#: bluebottle/pages/models.py:218 bluebottle/pages/models.py:219
+#: bluebottle/pages/models.py:220 bluebottle/pages/models.py:221
 msgid "Text + Scaled Image"
 msgstr "Texto + Imagem escalonada"
 
-#: bluebottle/pages/models.py:228 bluebottle/slides/models.py:24
+#: bluebottle/pages/models.py:230 bluebottle/slides/models.py:24
 #: bluebottle/utils/models.py:164
 msgid "Published"
 msgstr "Publicado"
 
-#: bluebottle/pages/models.py:234
+#: bluebottle/pages/models.py:236
 msgid "Page without sub-navigation"
 msgstr "Página sem subnavegação"
 
-#: bluebottle/pages/models.py:236
+#: bluebottle/pages/models.py:238
 msgid "Show this page in full width and hide the sub-navigation"
 msgstr "Mostrar esta página na largura total e ocultar a subnavegação"
 
-#: bluebottle/pages/models.py:241
+#: bluebottle/pages/models.py:243
 msgid "Show the title of this page in the header"
 msgstr "Mostrar o título desta página no cabeçalho"
-
-#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
-msgid "Export page"
-msgstr "Exportar página"
-
-#: bluebottle/pages/templates/admin/pages/page/import.html:14
-msgid "Upload a JSON file exported from another platform to import pages."
-msgstr "Faça upload de um arquivo JSON exportado de outra plataforma para importar páginas."
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -11017,7 +10908,7 @@ msgstr "O slot foi cancelado."
 #: bluebottle/time_based/states/slots.py:104
 #: bluebottle/time_based/states/slots.py:222
 msgid "The slot was cancelled because the activity was cancelled"
-msgstr "O slot foi cancelado porque a atividade foi cancelada"
+msgstr ""
 
 #: bluebottle/time_based/states/slots.py:113
 msgid "The slot was restored."
@@ -13272,5 +13163,5 @@ msgstr "Neerlandês"
 
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
-msgstr "Francês"
+msgstr ""
 

@@ -8,7 +8,7 @@ from builtins import str
 
 from rest_framework import serializers
 
-from bluebottle.utils.utils import get_current_language
+from bluebottle.utils.utils import get_api_language
 from bluebottle.translations.utils import translate_text_cached
 from bluebottle.utils.models import Language
 
@@ -42,7 +42,7 @@ class TranslationsSerializer(serializers.Field):
         if not member_settings.translate_user_content:
             return {}
 
-        target_language = get_current_language() or Language.objects.first().code
+        target_language = get_api_language() or Language.objects.first().code
         translated_data = {}
 
         for field in self.translation_fields:

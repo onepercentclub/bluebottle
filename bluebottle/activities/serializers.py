@@ -259,9 +259,7 @@ class ActivityPreviewSerializer(ModelSerializer):
             try:
                 start, end = (
                     dateutil.parser.parse(date).astimezone(tz)
-                    for date in self.context["request"]
-                .GET.get("filter[date]")
-                .split(",")
+                    for date in self.context["request"].GET.get("filter[date]").split(",")
                 )
             except (ValueError, AttributeError):
                 start = None

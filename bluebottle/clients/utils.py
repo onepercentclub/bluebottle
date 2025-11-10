@@ -102,13 +102,15 @@ def get_currencies():
     ]))
     min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
 
-    currencies = list({
-                          code: {
-                              'code': code,
-                              'name': get_currency_name(code),
-                              'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
-                          } for code in currencies
-                      }.values())
+    currencies = list(
+        {
+            code: {
+                'code': code,
+                'name': get_currency_name(code),
+                'symbol': get_currency_symbol(code).replace('US$', '$').replace('NGN', '₦')
+            } for code in currencies
+        }.values()
+    )
 
     for currency in currencies:
         if currency['code'] in min_amounts:

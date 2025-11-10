@@ -58,6 +58,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
                 elif text == '<div>Test content</div>':
                     return {'value': '<div>Testinhoud</div>', 'source_language': 'en'}
                 return {'value': text, 'source_language': 'en'}
+
             mock_translate.side_effect = translation_side_effect
             result = _translate_block_fields(fields, 'nl')
 
@@ -107,12 +108,12 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
 
         # Create placeholder and add content items
         source_placeholder = Placeholder.objects.create_for_object(source_page, 'blog_contents')
-        action_item = ActionItem.objects.create_for_placeholder(
+        ActionItem.objects.create_for_placeholder(
             source_placeholder,
             title='Click here',
             link='/test'
         )
-        columns_item = ColumnsItem.objects.create_for_placeholder(
+        ColumnsItem.objects.create_for_placeholder(
             source_placeholder,
             text1='Left column',
             text2='Right column'
@@ -129,6 +130,7 @@ class TestPageTranslationUtils(BluebottleAdminTestCase):
                     'value': translations.get(text, text),
                     'source_language': 'en'
                 }
+
             mock_translate.side_effect = translation_side_effect
 
             copy_and_translate_blocks(source_page, target_page, 'nl')
@@ -203,7 +205,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
 
     def test_translate_form_excludes_current_language(self):
         """Test that translate form excludes the current page language."""
-        page = PageFactory.create(language='en')
+        PageFactory.create(language='en')
         form = PageTranslateForm(current_language='en')
 
         # Should only have nl and fr, not en
@@ -260,7 +262,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
 
         # Should redirect back to original page with error
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.endswith(f'/change/'))
+        self.assertTrue(response.url.endswith('/change/'))
 
         # Verify no new page was created (should still be only 1 nl page)
         nl_pages = Page.objects.filter(slug='test-page', language='nl')
@@ -334,6 +336,7 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
                 if text == 'Original Title':
                     return {'value': 'Translated Title', 'source_language': 'en'}
                 return {'value': text, 'source_language': 'en'}
+
             mock_translate.side_effect = translation_side_effect
 
             url = reverse('admin:pages_page_translate', args=(page.pk,))
@@ -366,4 +369,3 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
 
         # Should be forbidden or redirect
         self.assertIn(response.status_code, [302, 403])
-

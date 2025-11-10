@@ -43,13 +43,12 @@ def copy_and_translate_blocks(source_page, target_page, target_language):
     # Get source placeholder (it should exist, but handle gracefully)
     source_content_type = ContentType.objects.get_for_model(source_page)
     try:
-        source_placeholder = Placeholder.objects.get(
+        Placeholder.objects.get(
             parent_id=source_page.pk,
             parent_type_id=source_content_type.pk,
             slot='blog_contents'
         )
     except Placeholder.DoesNotExist:
-        # If no placeholder exists, create an empty one and return
         target_content_type = ContentType.objects.get_for_model(target_page)
         Placeholder.objects.get_or_create(
             parent_id=target_page.pk,

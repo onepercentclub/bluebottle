@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import re_path
 from django.urls import reverse
-from django.utils.html import format_html, strip_tags
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _, ngettext
@@ -20,7 +20,6 @@ from fluent_contents.rendering import render_placeholder
 
 from bluebottle.translations.utils import translate_text_cached
 from bluebottle.utils.models import Language
-
 from .models import Page
 from .utils import export_page_to_dict, import_pages_from_data
 
@@ -38,14 +37,14 @@ class PageTranslateForm(Form):
     def __init__(self, *args, **kwargs):
         current_language = kwargs.pop('current_language', None)
         super().__init__(*args, **kwargs)
-        
+
         # Get all available languages except the current one
         languages = Language.objects.all().order_by('language_name')
         choices = []
         for lang in languages:
             if lang.full_code != current_language:
                 choices.append((lang.full_code, lang.language_name))
-        
+
         self.fields['target_language'].choices = choices
 
 
@@ -178,10 +177,14 @@ class PageAdmin(PlaceholderFieldAdmin):
         })
         if change and obj and request.user.is_superuser:
             context.update({
-                'export_url': reverse('admin:{0}_{1}_export'.format(*info),
-                                      kwargs={'pk': obj.pk}),
-                'translate_url': reverse('admin:{0}_{1}_translate'.format(*info),
-                                        kwargs={'pk': obj.pk}),
+                'export_url': reverse(
+                    'admin:{0}_{1}_export'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
+                'translate_url': reverse(
+                    'admin:{0}_{1}_translate'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
             })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
@@ -337,7 +340,7 @@ class PageAdmin(PlaceholderFieldAdmin):
             form = PageTranslateForm(request.POST, current_language=page.language)
             if form.is_valid():
                 target_language = form.cleaned_data['target_language']
-                
+
                 # Check if page with same slug and language already exists
                 if Page.objects.filter(slug=page.slug, language=target_language).exists():
                     messages.error(
@@ -352,7 +355,7 @@ class PageAdmin(PlaceholderFieldAdmin):
                 try:
                     # Create new page with translated title
                     translated_title = translate_text_cached(page.title, target_language)['value']
-                    
+
                     new_page = Page.objects.create(
                         title=translated_title,
                         slug=page.slug,

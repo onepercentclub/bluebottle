@@ -172,7 +172,11 @@ class ReviewStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        approved,
+        [
+            approved,
+            submitted,
+            draft,
+        ],
         cancelled,
         name=_("Cancel"),
         description=_(

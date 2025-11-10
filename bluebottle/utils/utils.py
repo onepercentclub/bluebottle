@@ -1,4 +1,3 @@
-
 from future import standard_library
 
 standard_library.install_aliases()
@@ -28,13 +27,11 @@ from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
 
-
 to_text = html2text.HTML2Text()
 to_text.ignore_tables = True
 to_text.ignore_images = True
 to_text.body_width = 0
 to_text.ignore_emphasis = True
-
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
         'br', 'pre', 'blockquote', 'img', 'hr', 'span', 'em', 'u', 'img']
@@ -44,7 +41,6 @@ ATTRIBUTES = {
     'li': ['data-list', 'class']
 }
 EMPTY = ['hr', 'a', 'br', 'img']
-
 
 sanitizer = Sanitizer({
     'tags': TAGS,
@@ -166,7 +162,7 @@ def get_current_language():
     """
     request = ThreadLocal.get_current_request()
     if request:
-        return request.LANGUAGE_CODE
+        return get_language_from_request(request)
     else:
         return properties.LANGUAGE_CODE
 

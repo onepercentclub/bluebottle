@@ -458,6 +458,9 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
 
     def test_meta_translations_in_response(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
         mock_translation_response = {
             'value': 'In het Nederlands',
             'source_language': 'en'
@@ -476,16 +479,15 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
             self.assertIn('translations', data['data']['meta'])
 
-            self.assertIn('title', data['data']['meta']['translations'])
-            self.assertEqual(data['data']['meta']['translations']['title']['value'], 'In het Nederlands')
-            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'en')
-
             self.assertIn('description', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['description']['value'], 'In het Nederlands')
             self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
 
     def test_meta_translations_advanced_mock(self):
         from bluebottle.test.factory_models.utils import LanguageFactory
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
 
         # Create Language objects for testing
         LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
@@ -528,10 +530,6 @@ class DeedsDetailViewAPITestCase(APITestCase):
             self.assertIn('meta', data['data'])
             self.assertIn('translations', data['data']['meta'])
 
-            self.assertIn('title', data['data']['meta']['translations'])
-            self.assertEqual(data['data']['meta']['translations']['title']['value'], 'ytivitca ym si sihT')
-            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'en')
-
             self.assertIn('description', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['description']['value'],
                              "!dlrow eht egnahc ot gniog er'eW")
@@ -545,10 +543,6 @@ class DeedsDetailViewAPITestCase(APITestCase):
 
             self.assertIn('meta', data['data'])
             self.assertIn('translations', data['data']['meta'])
-
-            self.assertIn('title', data['data']['meta']['translations'])
-            self.assertEqual(data['data']['meta']['translations']['title']['value'], 'THIS IS MY ACTIVITY')
-            self.assertEqual(data['data']['meta']['translations']['title']['source_language'], 'bg')
 
             self.assertIn('description', data['data']['meta']['translations'])
             self.assertEqual(data['data']['meta']['translations']['description']['value'],

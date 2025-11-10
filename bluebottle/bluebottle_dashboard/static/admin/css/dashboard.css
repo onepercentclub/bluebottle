@@ -18,12 +18,12 @@
     clear: both;
 }
 
-form .aligned strong+p.help {
+form .aligned strong + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
 
-form .aligned p.file-upload+p.help {
+form .aligned p.file-upload + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
@@ -50,11 +50,11 @@ form .aligned p.file-upload+p.help {
     content: ''
 }
 
-label+div {
+label + div {
     display: inline-block;
 }
 
-.aligned label+div input[type=checkbox]+label {
+.aligned label + div input[type=checkbox] + label {
     width: 30px;
 }
 
@@ -270,7 +270,7 @@ label+div {
 
 
 /* For 2fa settings */
-#container #content>h1 {
+#container #content > h1 {
     display: block;
 }
 
@@ -414,7 +414,7 @@ html {
 }
 
 
-form .aligned .form-row label+p.help {
+form .aligned .form-row label + p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
 }
@@ -522,4 +522,8 @@ div.inline.radiolist {
 
 #login-form input[type=checkbox] {
     display: block;
+}
+
+.flex-row {
+    display: flex;
 }

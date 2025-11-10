@@ -36,7 +36,7 @@
             </div>
         </fieldset>
 
-        <div class="submit-row">
+        <div class="submit-row flex-row">
             <input type="submit" value="{% trans 'Translate page' %}" class="default"/>
             <a href="{% url opts|admin_urlname:'change' page.pk %}" class="button">{% trans 'Cancel' %}</a>
         </div>

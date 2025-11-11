@@ -325,7 +325,6 @@ class PageAdmin(PlaceholderFieldAdmin):
         """Translate a page to another language."""
         target_language = form.cleaned_data['target_language']
 
-        # Check if page with same slug and language already exists
         if Page.objects.filter(slug=page.slug, language=target_language).exists():
             messages.error(
                 request,

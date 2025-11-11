@@ -6,14 +6,14 @@
         <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
         &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
         &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
-        &rsaquo; <a href="{% url opts|admin_urlname:'change' page.pk %}">{{ page.title }}</a>
+        &rsaquo; <a href="{% url opts|admin_urlname:'change' obj.pk %}">{{ obj.title }}</a>
         &rsaquo; {% trans 'Translate page' %}
     </div>
 {% endblock %}
 
 {% block content %}
     <p>{% trans 'Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL.' %}</p>
-    <p><strong>{% trans 'Source page:' %}</strong> {{ page.title }} ({{ page.language }})</p>
+    <p><strong>{% trans 'Source page:' %}</strong> {{ obj.title }} ({{ obj.language }})</p>
 
     <form method="post">
         {% csrf_token %}
@@ -37,8 +37,8 @@
         </fieldset>
 
         <div class="submit-row flex-row">
-            <input type="submit" value="{% trans 'Translate page' %}" class="default"/>
-            <a href="{% url opts|admin_urlname:'change' page.pk %}" class="button">{% trans 'Cancel' %}</a>
+            <input type="submit" name="confirm" value="{% trans 'Translate page' %}" class="default"/>
+            <a href="{% url opts|admin_urlname:'change' obj.pk %}" class="button">{% trans 'Cancel' %}</a>
         </div>
     </form>
 {% endblock %}

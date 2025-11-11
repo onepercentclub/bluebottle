@@ -38,9 +38,28 @@ def import_pages_from_data(data):
     )
 
 
+def create_translated_page(source_page, target_language, author):
+    translated_title = translate_text_cached(source_page.title, target_language)['value']
+
+    new_page = source_page.__class__.objects.create(
+        title=translated_title,
+        slug=source_page.slug,
+        language=target_language,
+        author=author,
+        status=source_page.status,
+        full_page=source_page.full_page,
+        show_title=source_page.show_title,
+        publication_date=source_page.publication_date,
+        publication_end_date=source_page.publication_end_date,
+    )
+    
+    copy_and_translate_blocks(source_page, new_page, target_language)
+    
+    return new_page
+
+
 def copy_and_translate_blocks(source_page, target_page, target_language):
     """Copy blocks from source page to target page and translate text fields."""
-    # Get source placeholder (it should exist, but handle gracefully)
     source_content_type = ContentType.objects.get_for_model(source_page)
     try:
         Placeholder.objects.get(
@@ -58,7 +77,6 @@ def copy_and_translate_blocks(source_page, target_page, target_language):
         )
         return
 
-    # Get or create target placeholder
     target_content_type = ContentType.objects.get_for_model(target_page)
     target_placeholder, _ = Placeholder.objects.get_or_create(
         parent_id=target_page.pk,
@@ -67,18 +85,14 @@ def copy_and_translate_blocks(source_page, target_page, target_language):
         role='m'
     )
 
-    # Get all content blocks from source
     source_blocks = dump_content(source_page.body)
 
-    # Process and translate each block
     for block_data in source_blocks:
-        # Translate text fields in block
         translated_fields = _translate_block_fields(
             block_data['fields'], target_language
         )
         block_data['fields'] = translated_fields
 
-        # Translate items if they exist
         if 'items' in block_data:
             for item_data in block_data['items']:
                 translated_item_fields = _translate_block_fields(
@@ -86,7 +100,6 @@ def copy_and_translate_blocks(source_page, target_page, target_language):
                 )
                 item_data['data'] = translated_item_fields
 
-        # Create the block in target placeholder
         create_content_block(block_data, target_placeholder)
 
 
@@ -103,20 +116,16 @@ def _translate_block_fields(fields, target_language):
             translated_fields[key] = None
             continue
 
-        # Skip image fields and non-text fields
         if isinstance(value, dict) and 'image_url' in value:
             translated_fields[key] = value
             continue
 
-        # Check if this looks like a text field
         is_text_field = any(pattern in key.lower() for pattern in text_field_patterns)
 
         if is_text_field and isinstance(value, str) and value.strip():
-            # Translate the entire block as-is (including HTML)
             translated_value = translate_text_cached(value, target_language)['value']
             translated_fields[key] = translated_value
         else:
-            # Keep non-text fields as-is
             translated_fields[key] = value
 
     return translated_fields

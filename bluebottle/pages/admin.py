@@ -9,12 +9,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.forms import Form
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
@@ -247,32 +248,22 @@ class PageAdmin(PlaceholderFieldAdmin):
 
                     # Import pages using utility function
                     result = import_pages_from_data(data)
-                    imported_count = result['imported']
-                    updated_count = result['updated']
-                    last_page = result['last_item']
 
                     # Show success message
-                    parts = []
-                    if imported_count > 0:
-                        parts.append(ngettext(
-                            "1 page was imported",
-                            "{0} pages were imported",
-                            imported_count
-                        ).format(imported_count))
-                    if updated_count > 0:
-                        parts.append(ngettext(
-                            "1 page was updated",
-                            "{0} pages were updated",
-                            updated_count
-                        ).format(updated_count))
+                    message = render_to_string(
+                        'admin/pages/page/import_message.html',
+                        {'result': result},
+                        request=request
+                    ).strip()
 
-                    if parts:
-                        messages.success(request, ". ".join(parts) + ".")
+                    if result['imported'] > 0 or result['updated'] > 0:
+                        messages.success(request, message)
                     else:
-                        messages.info(request, _("No pages were imported or updated."))
+                        messages.info(request, message)
 
                     # Redirect to the page if only one was imported/updated, otherwise changelist
-                    total_count = imported_count + updated_count
+                    total_count = result['imported'] + result['updated']
+                    last_page = result['last_item']
                     if total_count == 1 and last_page:
                         return redirect('admin:pages_page_change', last_page.pk)
                     else:

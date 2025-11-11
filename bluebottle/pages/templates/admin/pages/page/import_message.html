@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% if result.imported > 0 or result.updated > 0 %}
+    {% if result.imported > 0 %}
+        {% blocktrans count count=result.imported %}
+            1 page was imported
+        {% plural %}
+            {{ count }} pages were imported
+        {% endblocktrans %}{% if result.updated > 0 %}. {% endif %}
+    {% endif %}
+    {% if result.updated > 0 %}
+        {% blocktrans count count=result.updated %}
+            1 page was updated
+        {% plural %}
+            {{ count }} pages were updated
+        {% endblocktrans %}.
+    {% endif %}
+{% else %}
+    {% trans "No pages were imported or updated." %}
+{% endif %}
+

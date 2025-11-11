@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-10 11:21+0100\n"
-"PO-Revision-Date: 2025-11-10 10:23\n"
+"POT-Creation-Date: 2025-11-11 12:33+0100\n"
+"PO-Revision-Date: 2025-11-11 11:36\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -977,6 +977,7 @@ msgstr "Die Aktivität muss geändert werden, bevor sie genehmigt werden kann. I
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:138
 #: bluebottle/initiatives/states.py:181
+#: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
 #: bluebottle/time_based/states/participants.py:473
 #: bluebottle/time_based/states/slots.py:95
@@ -1195,6 +1196,7 @@ msgstr "Der Veranstalter ist immer noch damit beschäftigt, die Aktivität einzu
 #: bluebottle/news/templates/admin/news/newsitem/import.html:6
 #: bluebottle/notifications/templates/admin/change_confirmation.html:14
 #: bluebottle/pages/templates/admin/pages/page/import.html:6
+#: bluebottle/pages/templates/admin/pages/page/translate.html:6
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:6
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:6
 #: bluebottle/utils/templates/admin/confirmation.html:9
@@ -3901,7 +3903,7 @@ msgid "Grant applications"
 msgstr "Zuschussanträge"
 
 #: bluebottle/funding/admin.py:641 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:178 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:219 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -8311,72 +8313,54 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Erstelle dein Passwort"
 
-#: bluebottle/news/admin.py:23 bluebottle/pages/admin.py:26
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:29
 msgid "JSON file"
 msgstr "JSON-Datei"
 
-#: bluebottle/news/admin.py:23 bluebottle/pages/admin.py:26
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:29
 msgid "Select a JSON file exported from another platform"
 msgstr "Wählen Sie eine JSON-Datei, die von einer anderen Plattform exportiert wurde"
 
-#: bluebottle/news/admin.py:39 bluebottle/pages/admin.py:51
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:79
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Veröffentlichungseinstellungen"
 
-#: bluebottle/news/admin.py:80 bluebottle/pages/admin.py:63
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:91
 msgid "Online"
 msgstr "Online"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:64
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:92
 msgid "Offline"
 msgstr "Offline"
 
-#: bluebottle/news/admin.py:83 bluebottle/pages/admin.py:66
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:94
 msgid "Is this item currently visible online or not."
 msgstr "Ist dieses Element derzeit online sichtbar oder nicht."
 
-#: bluebottle/news/admin.py:158 bluebottle/pages/admin.py:190
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:231
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "Ausgewählte Einträge als veröffentlicht markieren"
 
-#: bluebottle/news/admin.py:167
+#: bluebottle/news/admin.py:168
 msgid "No news items were selected."
 msgstr "Es wurden keine Nachrichtenartikel ausgewählt."
 
-#: bluebottle/news/admin.py:179
+#: bluebottle/news/admin.py:180
 msgid "Export selected news items"
 msgstr "Ausgewählte Nachrichtenartikel exportieren"
 
-#: bluebottle/news/admin.py:222
-#, python-brace-format
-msgid "1 news item was imported"
-msgid_plural "{0} news items were imported"
-msgstr[0] "1 Nachrichtenartikel wurde importiert"
-msgstr[1] "{0} Nachrichtenartikel wurden importiert"
-
-#: bluebottle/news/admin.py:228
-#, python-brace-format
-msgid "1 news item was updated"
-msgid_plural "{0} news items were updated"
-msgstr[0] "1 Nachrichtenartikel wurde aktualisiert"
-msgstr[1] "{0} Nachrichtenartikel wurden aktualisiert"
-
-#: bluebottle/news/admin.py:236
-msgid "No news items were imported or updated."
-msgstr "Es wurden keine Nachrichtenartikel importiert oder aktualisiert."
-
-#: bluebottle/news/admin.py:245 bluebottle/pages/admin.py:278
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:302
 msgid "Invalid JSON file. Please check the file format."
 msgstr "Ungültige JSON-Datei. Bitte überprüfen Sie das Dateiformat."
 
-#: bluebottle/news/admin.py:247
+#: bluebottle/news/admin.py:234
 #, python-brace-format
 msgid "Error importing news items: {0}"
 msgstr "Fehler beim Importieren der Nachrichtenartikel: {0}"
 
-#: bluebottle/news/admin.py:258
+#: bluebottle/news/admin.py:245
 #: bluebottle/news/templates/admin/news/newsitem/change_list.html:8
 #: bluebottle/news/templates/admin/news/newsitem/import.html:9
 msgid "Import news items"
@@ -8448,6 +8432,32 @@ msgstr "Laden Sie eine JSON-Datei hoch, die von einer anderen Plattform exportie
 #: bluebottle/pages/templates/admin/pages/page/import.html:38
 msgid "Import"
 msgstr "Importieren"
+
+#: bluebottle/news/templates/admin/news/newsitem/import_message.html:5
+#, python-format
+msgid "\n"
+"            1 news item was imported\n"
+"        "
+msgid_plural "\n"
+"            %(count)s news items were imported\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/news/templates/admin/news/newsitem/import_message.html:12
+#, python-format
+msgid "\n"
+"            1 news item was updated\n"
+"        "
+msgid_plural "\n"
+"            %(count)s news items were updated\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/news/templates/admin/news/newsitem/import_message.html:19
+msgid "No news items were imported or updated."
+msgstr "Es wurden keine Nachrichtenartikel importiert oder aktualisiert."
 
 #: bluebottle/notifications/admin.py:141
 msgid "URL of the platform"
@@ -8697,42 +8707,54 @@ msgstr "Webseite"
 msgid "Phone Number"
 msgstr "Telefonnummer"
 
-#: bluebottle/pages/admin.py:199
+#: bluebottle/pages/admin.py:34
+msgid "Target Language"
+msgstr ""
+
+#: bluebottle/pages/admin.py:35
+msgid "Select the language to translate this page to"
+msgstr ""
+
+#: bluebottle/pages/admin.py:37
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/translate.html:10
+#: bluebottle/pages/templates/admin/pages/page/translate.html:40
+msgid "Translate page"
+msgstr ""
+
+#: bluebottle/pages/admin.py:240
 msgid "No pages were selected."
 msgstr "Es wurden keine Seiten ausgewählt."
 
-#: bluebottle/pages/admin.py:211
+#: bluebottle/pages/admin.py:252
 msgid "Export selected pages"
 msgstr "Ausgewählte Seiten exportieren"
 
-#: bluebottle/pages/admin.py:255
-#, python-brace-format
-msgid "1 page was imported"
-msgid_plural "{0} pages were imported"
-msgstr[0] "1 Seite wurde importiert"
-msgstr[1] "{0} Seiten wurden importiert"
-
-#: bluebottle/pages/admin.py:261
-#, python-brace-format
-msgid "1 page was updated"
-msgid_plural "{0} pages were updated"
-msgstr[0] "1 Seite wurde aktualisiert"
-msgstr[1] "{0} Seiten wurden aktualisiert"
-
-#: bluebottle/pages/admin.py:269
-msgid "No pages were imported or updated."
-msgstr "Es wurden keine Seiten importiert oder aktualisiert."
-
-#: bluebottle/pages/admin.py:280
+#: bluebottle/pages/admin.py:304
 #, python-brace-format
 msgid "Error importing pages: {0}"
 msgstr "Fehler beim Importieren von Seiten: {0}"
 
-#: bluebottle/pages/admin.py:291
+#: bluebottle/pages/admin.py:315
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
 msgstr "Seiten importieren"
+
+#: bluebottle/pages/admin.py:331
+#, python-brace-format
+msgid "A page with slug \"{slug}\" already exists for language {language}."
+msgstr ""
+
+#: bluebottle/pages/admin.py:343
+#, python-brace-format
+msgid "Page \"{title}\" has been translated to {language}."
+msgstr ""
+
+#: bluebottle/pages/admin.py:352
+#, python-brace-format
+msgid "Error translating page: {error}"
+msgstr ""
 
 #: bluebottle/pages/models.py:27
 msgid "Link title"
@@ -8813,13 +8835,59 @@ msgstr "Diese Seite in voller Breite anzeigen und die Unternavigation ausblenden
 msgid "Show the title of this page in the header"
 msgstr "Den Titel dieser Seite in der Kopfzeile anzeigen"
 
-#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:12
 msgid "Export page"
 msgstr "Seite exportieren"
 
 #: bluebottle/pages/templates/admin/pages/page/import.html:14
 msgid "Upload a JSON file exported from another platform to import pages."
 msgstr "Laden Sie eine JSON-Datei hoch, die von einer anderen Plattform exportiert wurde, um Seiten zu importieren."
+
+#: bluebottle/pages/templates/admin/pages/page/import_message.html:5
+#, python-format
+msgid "\n"
+"            1 page was imported\n"
+"        "
+msgid_plural "\n"
+"            %(count)s pages were imported\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/pages/templates/admin/pages/page/import_message.html:12
+#, python-format
+msgid "\n"
+"            1 page was updated\n"
+"        "
+msgid_plural "\n"
+"            %(count)s pages were updated\n"
+"        "
+msgstr[0] ""
+msgstr[1] ""
+
+#: bluebottle/pages/templates/admin/pages/page/import_message.html:19
+msgid "No pages were imported or updated."
+msgstr "Es wurden keine Seiten importiert oder aktualisiert."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:15
+msgid "Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL."
+msgstr ""
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:16
+msgid "Source page:"
+msgstr ""
+
+#: bluebottle/pages/templates/admin/pages/page/translate_error_message.html:3
+#, python-format
+msgid "\n"
+"A page with slug \"%(slug)s\" already exists for language %(language)s.\n"
+msgstr ""
+
+#: bluebottle/pages/templates/admin/pages/page/translate_success_message.html:3
+#, python-format
+msgid "\n"
+"Page \"%(title)s\" has been translated to %(language)s.\n"
+msgstr ""
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9087,7 +9155,7 @@ msgstr "Einstellungen"
 msgid "Manage Reporting"
 msgstr "Berichte verwalten"
 
-#: bluebottle/settings/local.py:732 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9109,9 +9177,8 @@ msgstr "Berichte verwalten"
 #: tenants/navara/settings.py:27 tenants/nexteconomy/settings.py:29
 #: tenants/nlcares/settings.py:27 tenants/nlmtd/settings.py:30
 #: tenants/nn/settings.py:27 tenants/nola-connects/settings.py:26
-#: tenants/nordea/settings.py:27 tenants/onepercent/settings.py:26
-#: tenants/partos/settings.py:26 tenants/pggm/settings.py:27
-#: tenants/purpose-in-action/settings.py:27
+#: tenants/nordea/settings.py:27 tenants/partos/settings.py:26
+#: tenants/pggm/settings.py:27 tenants/purpose-in-action/settings.py:27
 #: tenants/rhi-magnesita/settings.py:25
 #: tenants/shell-disaster-relief/settings.py:26 tenants/shell-uk/settings.py:26
 #: tenants/startsomething/settings.py:29 tenants/studentbattle/settings.py:27
@@ -9120,7 +9187,7 @@ msgstr "Berichte verwalten"
 msgid "English"
 msgstr "Englisch"
 
-#: bluebottle/settings/local.py:733 tenants/abn/settings.py:26
+#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
 #: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26
@@ -9136,9 +9203,9 @@ msgstr "Englisch"
 #: tenants/mars/settings.py:27 tenants/maximising-potential/settings.py:26
 #: tenants/navara/settings.py:26 tenants/nl2025/settings.py:25
 #: tenants/nlcares/settings.py:26 tenants/nlmtd/settings.py:29
-#: tenants/nn/settings.py:26 tenants/onepercent/settings.py:25
-#: tenants/ouderenfonds/settings.py:26 tenants/peer/settings.py:26
-#: tenants/pggm/settings.py:26 tenants/purpose-in-action/settings.py:26
+#: tenants/nn/settings.py:26 tenants/ouderenfonds/settings.py:26
+#: tenants/peer/settings.py:26 tenants/pggm/settings.py:26
+#: tenants/purpose-in-action/settings.py:26
 #: tenants/rabobank-cooperatief/settings.py:25
 #: tenants/rabobank-noordwest/settings.py:26 tenants/rabobank/settings.py:28
 #: tenants/regiobank/settings.py:26 tenants/rooftop-revolution/settings.py:25
@@ -9154,15 +9221,19 @@ msgstr "Englisch"
 msgid "Dutch"
 msgstr "Niederländisch"
 
-#: bluebottle/settings/local.py:734 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:727 tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanisch"
 
-#: bluebottle/settings/local.py:735 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:728 tenants/mars/settings.py:29
 msgid "German"
 msgstr "Deutsch"
 
-#: bluebottle/settings/local.py:736 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:729
+msgid "Bulgarian"
+msgstr ""
+
+#: bluebottle/settings/local.py:730 tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Ungarisch"
 

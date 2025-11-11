@@ -52,9 +52,9 @@ def create_translated_page(source_page, target_language, author):
         publication_date=source_page.publication_date,
         publication_end_date=source_page.publication_end_date,
     )
-    
+
     copy_and_translate_blocks(source_page, new_page, target_language)
-    
+
     return new_page
 
 

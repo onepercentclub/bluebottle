@@ -7,11 +7,12 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.forms import Form
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.urls import re_path
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 
 from bluebottle.utils.models import PublishedStatus
@@ -187,10 +188,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                 "NewsItem object with primary key '%s' does not exist." % pk
             )
 
-        # Export news item data using utility function (request is used for absolute image URLs)
         export_data = [export_news_item_to_dict(news_item)]
 
-        # Create JSON response
         response = HttpResponse(
             json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
             content_type='application/json'
@@ -209,34 +208,22 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     json_file.seek(0)
                     data = json.load(json_file)
 
-                    # Import news items using utility function
                     result = import_news_items_from_data(data)
-                    imported_count = result['imported']
-                    updated_count = result['updated']
-                    last_item = result['last_item']
 
-                    # Show success message
-                    parts = []
-                    if imported_count > 0:
-                        parts.append(ngettext(
-                            "1 news item was imported",
-                            "{0} news items were imported",
-                            imported_count
-                        ).format(imported_count))
-                    if updated_count > 0:
-                        parts.append(ngettext(
-                            "1 news item was updated",
-                            "{0} news items were updated",
-                            updated_count
-                        ).format(updated_count))
+                    message = render_to_string(
+                        'admin/news/newsitem/import_message.html',
+                        {'result': result},
+                        request=request
+                    ).strip()
 
-                    if parts:
-                        messages.success(request, ". ".join(parts) + ".")
+                    if result['imported'] > 0 or result['updated'] > 0:
+                        messages.success(request, message)
                     else:
-                        messages.info(request, _("No news items were imported or updated."))
+                        messages.info(request, message)
 
                     # Redirect to the item if only one was imported/updated, otherwise changelist
-                    total_count = imported_count + updated_count
+                    total_count = result['imported'] + result['updated']
+                    last_item = result['last_item']
                     if total_count == 1 and last_item:
                         return redirect('admin:news_newsitem_change', last_item.pk)
                     else:

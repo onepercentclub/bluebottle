@@ -242,14 +242,10 @@ class PageAdmin(PlaceholderFieldAdmin):
             if form.is_valid():
                 json_file = form.cleaned_data['json_file']
                 try:
-                    # Read the uploaded file
                     json_file.seek(0)  # Reset file pointer
                     data = json.load(json_file)
-
-                    # Import pages using utility function
                     result = import_pages_from_data(data)
 
-                    # Show success message
                     message = render_to_string(
                         'admin/pages/page/import_message.html',
                         {'result': result},
@@ -261,7 +257,6 @@ class PageAdmin(PlaceholderFieldAdmin):
                     else:
                         messages.info(request, message)
 
-                    # Redirect to the page if only one was imported/updated, otherwise changelist
                     total_count = result['imported'] + result['updated']
                     last_page = result['last_item']
                     if total_count == 1 and last_page:

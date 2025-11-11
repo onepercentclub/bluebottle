@@ -188,10 +188,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                 "NewsItem object with primary key '%s' does not exist." % pk
             )
 
-        # Export news item data using utility function (request is used for absolute image URLs)
         export_data = [export_news_item_to_dict(news_item)]
 
-        # Create JSON response
         response = HttpResponse(
             json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
             content_type='application/json'
@@ -210,10 +208,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
                     json_file.seek(0)
                     data = json.load(json_file)
 
-                    # Import news items using utility function
                     result = import_news_items_from_data(data)
 
-                    # Show success message
                     message = render_to_string(
                         'admin/news/newsitem/import_message.html',
                         {'result': result},

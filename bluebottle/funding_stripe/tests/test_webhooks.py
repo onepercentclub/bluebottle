@@ -336,9 +336,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
             data = json.load(hook_file)
             data['object']['id'] = intent_id
 
-        transfer = stripe.Transfer(data['object']['charges']['data'][0]['transfer'])
+        transfer = stripe.Transfer(data['object']['latest_charge']['transfer'])
         transfer.update({
-            'id': data['object']['charges']['data'][0]['transfer'],
+            'id': data['object']['latest_charge']['transfer'],
             'amount': 2500,
             'currency': 'eur'
         })
@@ -356,11 +356,9 @@ class IntentWebhookTestCase(BluebottleTestCase):
         })
 
         payment_intent = stripe.PaymentIntent(intent_id)
-        charges = stripe.ListObject()
-        charges.data = [charge]
         payment_intent.update({
             'status': 'succeeded',
-            'charges': charges
+            'latest_charge': charge
         })
         checkout = stripe.checkout.Session(
             checkout_id

@@ -63,11 +63,13 @@ def run(*args):
                 contributor__teamscheduleparticipant__isnull=False,
                 contributor__activity__team_activity='teams'
             ).exclude(
-                Q(contributor__teamscheduleparticipant__team_member__status__in=('active', )) &
-                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
-                    'succeeded', 'scheduled', 'unscheduled'
+                Q(contributor__teamscheduleparticipant__team_member__status__in=(
+                    'active',
                 )) &
-                Q(contributor__status__in=('succeeded', 'new', 'accepted')) &
+                Q(contributor__teamscheduleparticipant__team_member__team__status__in=(
+                    'succeeded', 'scheduled', 'accepted'
+                )) &
+                Q(contributor__status__in=('succeeded', 'new', 'accepted', 'scheduled')) &
                 Q(contributor__activity__status__in=('open', 'succeeded', 'full'))
             )
             succeeded_contributions = (

@@ -197,7 +197,7 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
         self.manager = BlueBottleUserFactory.create()
         self.admin = BlueBottleUserFactory.create(is_staff=True)
         self.user = BlueBottleUserFactory.create()
-        self.participant = BlueBottleUserFactory.create()
+        self.participant_user = BlueBottleUserFactory.create()
         self.activity = ScheduleActivityFactory.create(
             initiative=InitiativeFactory.create(status='approved'),
             status='open',
@@ -206,16 +206,26 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
         )
         registration = ScheduleRegistrationFactory.create(
             activity=self.activity,
-            user=self.participant,
+            user=self.participant_user,
         )
-        participant = registration.participants.first()
-        self.model = participant.slot
+        self.participant = registration.participants.first()
+        self.contribution = self.participant.contributions.first()
+        self.model = self.participant.slot
         self.url = reverse(self.url_name, args=(self.model.pk,))
 
     def test_set_date_activity_manager(self):
+        self.assertResourceStatus(self.contribution, 'new')
+        self.assertResourceStatus(self.participant, 'new')
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
         self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.manager)
         self.assertStatus(status.HTTP_200_OK)
+        self.assertResourceStatus(self.participant, 'scheduled')
+        self.assertResourceStatus(self.contribution, 'new')
+        start = (date.today() - timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.manager)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertResourceStatus(self.participant, 'succeeded')
+        self.assertResourceStatus(self.contribution, 'succeeded')
 
     def test_set_date_admin(self):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
@@ -224,7 +234,7 @@ class ScheduleSlotDetailAPITestCase(APITestCase):
 
     def test_set_date_participant(self):
         start = (date.today() + timedelta(days=10)).strftime('%Y-%m-%d %H:00:00')
-        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.participant)
+        self.perform_update({'start': start, 'duration': '4:0:0'}, user=self.participant_user)
         self.assertStatus(status.HTTP_403_FORBIDDEN)
 
     def test_set_date_user(self):

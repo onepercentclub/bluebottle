@@ -6,8 +6,7 @@ from bluebottle.fsm.state import (
     ModelStateMachine,
     State,
     Transition,
-    register,
-)
+    register, )
 from bluebottle.initiatives.models import InitiativePlatformSettings
 from bluebottle.utils.utils import is_api_request
 
@@ -256,6 +255,7 @@ class ActivityStateMachine(ModelStateMachine):
         description=_(
             "The activity will be published and visible in the frontend for people to contribute to,"
         ),
+        conditions=[is_complete, is_valid, should_auto_approve],
     )
 
     request_changes = Transition(
@@ -274,8 +274,10 @@ class ActivityStateMachine(ModelStateMachine):
 
     cancel = Transition(
         [
+            draft,
+            submitted,
             open,
-            succeeded,
+            needs_work,
         ],
         cancelled,
         name=_("Cancel"),
@@ -291,6 +293,18 @@ class ActivityStateMachine(ModelStateMachine):
         ),
         permission=is_owner,
         automatic=False,
+    )
+
+    auto_cancel = Transition(
+        [draft, needs_work, submitted, open],
+        cancelled,
+        name=_("Auto cancel"),
+        description=_(
+            "Cancel the activity automatically, because the initiative is cancelled."
+        ),
+        automatic=True,
+        premissop=is_owner,
+        conditions=[],
     )
 
     restore = Transition(

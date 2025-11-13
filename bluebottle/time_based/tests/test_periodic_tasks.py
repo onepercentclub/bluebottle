@@ -1,6 +1,7 @@
+from datetime import timedelta, date, datetime, time
+
 import mock
 import pytz
-from datetime import timedelta, date, datetime, time
 from django.contrib.gis.geos import Point
 from django.core import mail
 from django.db import connection
@@ -8,6 +9,7 @@ from django.template import defaultfilters
 from django.utils import timezone
 from django.utils.timezone import now, get_current_timezone, make_aware
 from pytz import UTC
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.initiatives.tests.factories import (
@@ -38,7 +40,6 @@ from bluebottle.time_based.tests.factories import (
     TeamMemberFactory,
 )
 from bluebottle.time_based.triggers import slots
-from tenant_extras.utils import TenantLanguage
 
 
 class TimeBasedActivityPeriodicTasksTestCase():
@@ -354,7 +355,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(self.activity.status, 'succeeded')
 
     def test_finished_started_slot(self):
-
         activity = DateActivityFactory.create(
             owner=BlueBottleUserFactory.create(),
             review=False,
@@ -532,7 +532,6 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
         self.assertEqual(len(mail.outbox), 0, "Should only send reminders once")
 
     def test_finished_withdrawn_slot(self):
-
         activity = DateActivityFactory.create(
             owner=BlueBottleUserFactory.create(),
             review=False,
@@ -573,6 +572,29 @@ class DateActivityPeriodicTasksTest(TimeBasedActivityPeriodicTasksTestCase, Blue
 
         self.assertStatus(splitter, 'withdrawn')
         self.assertStatus(contribution, 'failed')
+
+    def test_does_not_expire_with_accepted_registrations(self):
+        """Test that DateActivity doesn't expire when there are accepted registrations."""
+        registration = DateRegistrationFactory.create(
+            status='accepted', activity=self.activity
+        )
+        DateParticipantFactory.create(
+            registration=registration,
+            slot=self.slot
+        )
+
+        # Verify initial state
+        self.assertEqual(self.activity.status, 'open')
+
+        # Run task after registration deadline
+        self.run_task(self.after_registration_deadline)
+
+        with LocalTenant(self.tenant, clear_tenant=True):
+            self.activity.refresh_from_db()
+
+        # Activity should NOT expire - it should be 'full' instead
+        self.assertNotEqual(self.activity.status, 'expired')
+        self.assertEqual(self.activity.status, 'full')
 
 
 class SlotActivityPeriodicTasksTest(BluebottleTestCase):

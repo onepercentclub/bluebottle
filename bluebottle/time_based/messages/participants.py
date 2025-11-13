@@ -21,6 +21,9 @@ class ManagerParticipantNotification(TransitionMessage):
         """manager"""
         return [self.obj.activity.owner]
 
+    class Meta:
+        abstract = True
+
 
 class ManagerParticipantRemovedNotification(ManagerParticipantNotification):
     """
@@ -64,6 +67,9 @@ class UserParticipantNotification(TransitionMessage):
     def get_recipients(self):
         """participant"""
         return [self.obj.user]
+
+    class Meta:
+        abstract = True
 
 
 class UserParticipantRemovedNotification(UserParticipantNotification):

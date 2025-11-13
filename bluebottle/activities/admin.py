@@ -1076,12 +1076,12 @@ class ActivityQuestionAdmin(TranslatableAdmin, PolymorphicParentModelAdmin):
         SegmentQuestion,
         FileUploadQuestion
     )
-    list_display = ['name', 'question', 'activity_types']
+    list_display = ['name', 'question', 'visibility', 'activity_types']
 
 
 class ActivityQuestionChildAdmin(TranslatableAdmin, PolymorphicChildModelAdmin):
     base_model = ActivityQuestion
-    fields = ['name', 'question', 'help_text', 'required', 'activity_types']
+    fields = ['name', 'question', 'help_text', 'required', 'visibility', 'activity_types']
     list_fields = ['question', 'help_text']
 
 

@@ -41,9 +41,11 @@
 
       {% include "two_factor/_wizard_actions.html" %}
 
-      {% if properties.TOKEN_AUTH.admin_login and wizard.steps.current == 'auth' %}
-          <p>or</p>
-          <a href="/token/redirect/?url={{request.GET.next}}" class="button default">{% trans "Login using SSO" %}</a>
+      {%  if wizard.steps.current == 'auth' %}
+        {% if properties.TOKEN_AUTH.admin_login or client_ip == VPN_CLIENT_IP or client_ip == '127.0.0.1' %}
+            <p>or</p>
+            <a href="/token/redirect/?url={{request.GET.next}}" class="button default">{% trans "Login using SSO" %}</a>
+        {% endif %}
       {% endif %}
     </div>
 

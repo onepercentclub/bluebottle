@@ -148,6 +148,15 @@ class RegistrationTriggers(TriggerManager):
             ]
         ),
         TransitionTrigger(
+            RegistrationStateMachine.restore,
+            effects=[
+                TransitionEffect(
+                    RegistrationStateMachine.accept,
+                    conditions=[no_review_needed]
+                ),
+            ]
+        ),
+        TransitionTrigger(
             RegistrationStateMachine.reject,
             effects=[
                 RelatedTransitionEffect(
@@ -167,8 +176,7 @@ class RegistrationTriggers(TriggerManager):
                 ),
                 UnFollowActivityEffect,
             ]
-        )
-
+        ),
     ]
 
 

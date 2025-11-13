@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-13 14:13+0100\n"
-"PO-Revision-Date: 2025-11-13 13:18\n"
+"PO-Revision-Date: 2025-11-13 13:24\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
 "Language: nl_NL\n"
@@ -12927,7 +12927,7 @@ msgstr "publicatie einddatum"
 
 #: bluebottle/utils/models.py:279 bluebottle/utils/models.py:280
 msgid "translation settings"
-msgstr ""
+msgstr "vertalingsinstellingen"
 
 #: bluebottle/utils/monkey_patch_object_not_found.py:17
 #, python-format

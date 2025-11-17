@@ -210,7 +210,6 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/media', '/downloads', '/login-with',
                           '/surveys', '/token', '/jet')
 
-SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
 PASSWORD_HASHERS = (
@@ -226,7 +225,7 @@ PASSWORD_HASHERS = (
 AUTHENTICATION_BACKENDS = (
     'axes.backends.AxesBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
-    'social.backends.facebook.FacebookAppOAuth2',
+    'bluebottle.social.backends.NoStateGoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
     'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
@@ -246,23 +245,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     'bluebottle.auth.utils.user_from_request',
-    'social.pipeline.social_auth.social_details',
-    'social.pipeline.social_auth.social_uid',
-    'social.pipeline.social_auth.auth_allowed',
-    'social.pipeline.social_auth.social_user',
-    'bluebottle.auth.utils.fallback_email',
-    'social.pipeline.user.get_username',
-    'social.pipeline.social_auth.associate_by_email',
-    'social.pipeline.user.create_user',
-    'social.pipeline.social_auth.associate_user',
-    'bluebottle.auth.utils.refresh',
-    'social.pipeline.social_auth.load_extra_data',
-    'social.pipeline.user.user_details',
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.social_auth.associate_by_email',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
     'bluebottle.auth.utils.set_language',
-    'bluebottle.auth.utils.save_profile_picture',
-    'bluebottle.auth.utils.get_extra_facebook_data',
+    'bluebottle.auth.utils.set_last_login',
 )
 
 AFOM_ENABLED = False

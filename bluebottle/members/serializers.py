@@ -863,12 +863,19 @@ class UserVerificationSerializer(serializers.Serializer):
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
     background = SorlImageField('1408x1080', crop='center')
     read_only_fields = serializers.SerializerMethodField()
+    social_login_methods = serializers.SerializerMethodField()
 
     def get_read_only_fields(self, obj):
         try:
             return properties.TOKEN_AUTH['assertion_mapping'].keys()
         except (AttributeError, IndexError):
             return []
+
+    def get_social_login_methods(self, obj):
+        return [
+            {'key': method.client_id, 'backend': method.backend}
+            for method in obj.social_login_methods.all()
+        ]
 
     class Meta(object):
         model = MemberPlatformSettings
@@ -900,7 +907,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'retention_anonymize',
             'retention_delete',
             'read_only_fields',
-            'translate_user_content'
+            'translate_user_content',
+            'social_login_methods'
         )
 
 

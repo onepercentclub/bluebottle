@@ -1,24 +1,7 @@
+from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connection
 from tenant_schemas.management.commands import InteractiveTenantOption
-
-from bluebottle.collect.models import CollectActivity
-from bluebottle.deeds.models import Deed
-from bluebottle.funding.models import Funding, Donor
-from bluebottle.time_based.models import (
-    DateActivity,
-    DateActivitySlot,
-    PeriodActivity,
-    TeamSlot,
-    DateParticipant,
-    PeriodParticipant,
-    TimeContribution,
-    DeadlineActivity,
-    DeadlineParticipant,
-    PeriodicParticipant,
-    PeriodicActivity,
-    PeriodicSlot,
-)
 
 
 class Command(InteractiveTenantOption, BaseCommand):
@@ -34,21 +17,16 @@ class Command(InteractiveTenantOption, BaseCommand):
             schema_name=schema_name, **options
         )
         connection.set_tenant(tenant)
-        models = [
-            DateActivity, DateActivitySlot, DateParticipant,
-            PeriodActivity, TeamSlot, PeriodParticipant,
-            TimeContribution,
-            Funding,
-            Donor,
-            Deed,
-            CollectActivity,
-            DeadlineActivity,
-            DeadlineParticipant,
-            PeriodicActivity,
-            PeriodicParticipant,
-            PeriodicSlot,
-        ]
 
-        for model in models:
-            for task in model.get_periodic_tasks():
-                task.execute()
+        # Find all models that have the get_periodic_tasks method and execute their tasks
+        for model in apps.get_models():
+            if hasattr(model, 'get_periodic_tasks') and callable(getattr(model, 'get_periodic_tasks', None)):
+                try:
+                    if model.get_periodic_tasks():
+                        print(f"Running tasks for {model.__name__}")
+                    for task in model.get_periodic_tasks():
+                        print(f"- {task}")
+                        task.execute()
+                except Exception:
+                    # Skip models that raise exceptions when calling get_periodic_tasks
+                    continue

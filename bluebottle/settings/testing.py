@@ -415,3 +415,8 @@ MAP_WIDGETS = {
 
 
 DISABLE_TWO_FACTOR = True
+
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale/'),
+    os.path.join(BASE_DIR, 'bluebottle/notifications/tests/locale/'),
+)

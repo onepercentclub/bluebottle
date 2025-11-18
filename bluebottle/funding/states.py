@@ -510,7 +510,7 @@ class PayoutStateMachine(ModelStateMachine):
     )
 
     approve = Transition(
-        [new, approved],
+        [new],
         approved,
         name=_('Approve'),
         description=_(

@@ -62,9 +62,10 @@ class SAMLAuthentication(BaseTokenAuthentication):
 
             if (
                 (parsed.scheme.startswith('http') and parsed.netloc == self.request.get_host()) or
-                (not parsed.scheme and not parsed.netloc and parsed.path.startswith('/'))
+                (((not parsed.scheme and not parsed.netloc) or parsed.scheme == 'https') and
+                 parsed.path.startswith('/'))
             ):
-                return relay_state
+                return parsed.path
 
     def get_metadata(self):
         base_path = self.settings.get('base_path', None)

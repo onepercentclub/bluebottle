@@ -1,4 +1,5 @@
 from datetime import date
+
 from django.utils.timezone import now
 
 from bluebottle.activities.messages.activity_manager import (
@@ -24,6 +25,7 @@ from bluebottle.time_based.effects import RelatedPreparationTimeContributionEffe
 from bluebottle.time_based.effects.contributions import (
     RescheduleActivityDurationsEffect, RescheduleRelatedTimeContributionsEffect,
 )
+
 from bluebottle.time_based.messages.activity_manager import (
     PastActivityRegisteredNotification,
     PastActivityApprovedNotification,
@@ -41,7 +43,8 @@ from bluebottle.time_based.states import (
     ParticipantStateMachine,
     TimeBasedStateMachine,
     TimeContributionStateMachine,
-    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine
+    RegisteredDateActivityStateMachine, RegisteredDateParticipantStateMachine, SlotStateMachine,
+    DateActivitySlotStateMachine
 )
 from bluebottle.time_based.states.participants import (
     RegistrationParticipantStateMachine,
@@ -267,6 +270,14 @@ class TimeBasedTriggers(ActivityTriggers):
                 NotificationEffect(ActivityCancelledNotification),
                 ActiveTimeContributionsTransitionEffect(TimeContributionStateMachine.fail),
                 RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+            ]
+        ),
+        TransitionTrigger(
+            TimeBasedStateMachine.auto_cancel,
+            effects=[
+                RelatedTransitionEffect('organizer', OrganizerStateMachine.fail),
+                RelatedTransitionEffect('slots', SlotStateMachine.auto_cancel),
+                RelatedTransitionEffect('slots', DateActivitySlotStateMachine.auto_cancel),
             ]
         ),
 

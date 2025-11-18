@@ -36,6 +36,9 @@ class ReviewerActivityNotification(TransitionMessage):
             )
         return list(recipients)
 
+    class Meta:
+        abstract = True
+
 
 class ActivitySubmittedReviewerNotification(ReviewerActivityNotification):
 

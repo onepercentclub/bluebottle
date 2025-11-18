@@ -97,11 +97,11 @@ class SlotStateMachine(ModelStateMachine):
     )
 
     auto_cancel = Transition(
-        [new, running, scheduled],
+        [new, running, scheduled, finished, scheduled],
         cancelled,
         automatic=True,
         name=_("Auto cancel"),
-        description=_("The slot was cancelled because a parent object was cancelled"),
+        description=_("The slot was cancelled because the activity was cancelled"),
     )
 
     restore = Transition(
@@ -204,7 +204,7 @@ class DateActivitySlotStateMachine(ModelStateMachine):
     )
 
     cancel = Transition(
-        [open, finished, full],
+        [draft, running, full, finished, open],
         cancelled,
         name=_('Cancel'),
         automatic=False,
@@ -212,6 +212,14 @@ class DateActivitySlotStateMachine(ModelStateMachine):
         description=_(
             'This time slot will not take place. People can no longer join and contributions will not be counted.'
         ),
+    )
+
+    auto_cancel = Transition(
+        [draft, running, full, finished, open],
+        cancelled,
+        automatic=True,
+        name=_("Auto cancel"),
+        description=_("The slot was cancelled because the activity was cancelled"),
     )
 
     restore = Transition(

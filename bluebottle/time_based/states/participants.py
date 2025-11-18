@@ -189,6 +189,7 @@ class ParticipantStateMachine(ContributorStateMachine):
         passed_label=_('cancelled'),
         description=_("Cancel the participant, because the activity was cancelled."),
         automatic=True,
+        permission=can_accept_participant
     )
 
     restore = Transition(

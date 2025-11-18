@@ -20,9 +20,11 @@ msgstr ""
 
 #: bluebottle/notifications/tests/test_messages.py:14
 #, python-brace-format
+msgctxt "email"
 msgid "Test message for {title}"
 msgstr "Test bericht voor {title}"
 
 #: bluebottle/notifications/tests/test_messages.py:25
+msgctxt "email"
 msgid "Test message"
 msgstr "Test bericht"

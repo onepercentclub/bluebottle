@@ -402,6 +402,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
     'bluebottle.scim',
     'bluebottle.updates',
+    'bluebottle.translations',
 
     # Custom dashboard
     # 'fluent_dashboard',
@@ -812,3 +813,6 @@ IBAN_CHECK_API = {
     "private_key": "path-to-private-key",
     "public_cert": "path-to-public-cert",
 }
+
+DEEPL_API_KEY = "deepl-key"
+DEEPL_API_URL = "https://api-free.deepl.com/v2/translate"

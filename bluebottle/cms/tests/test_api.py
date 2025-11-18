@@ -19,15 +19,16 @@ from bluebottle.cms.models import (
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.initiatives.tests.test_api import get_include
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.pages.models import DocumentItem, ImageTextItem
+from bluebottle.pages.models import DocumentItem, ImageTextItem, PlatformPage
 from bluebottle.statistics.tests.factories import ManualStatisticFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.cms import (
     HomePageFactory, StepFactory,
     SlideFactory
 )
 from bluebottle.test.factory_models.news import NewsItemFactory
-from bluebottle.test.factory_models.pages import PageFactory
+from bluebottle.test.factory_models.pages import PageFactory, PlatformPageFactory
 from bluebottle.test.utils import BluebottleTestCase, APITestCase
 
 
@@ -511,6 +512,104 @@ class PageTestCase(BluebottleTestCase):
 
         data = response.json()['data']
         self.assertEqual(data['attributes']['title'], 'Over ons')
+
+
+class PlatformPageTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(PlatformPageTestCase, self).setUp()
+        self.init_projects()
+        PlatformPage.objects.all().delete()
+        self.page = PlatformPageFactory.create(title='Start your activity')
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
+        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+
+    def test_page(self):
+        RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
+        TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            DocumentItem.objects.create_for_placeholder(
+                self.placeholder,
+                document=image,
+                text='Some file upload'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            PictureItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                align='center'
+            )
+
+        with open('./bluebottle/cms/tests/test_images/upload.png', 'rb') as f:
+            image = File(f)
+            ImageTextItem.objects.create_for_placeholder(
+                self.placeholder,
+                image=image,
+                text='some text',
+                align='center'
+            )
+
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()['data']
+
+        self.assertEqual(data['attributes']['title'], self.page.title)
+        self.assertEqual(data['attributes']['full-page'], self.page.full_page)
+
+        self.assertEqual(
+            data['relationships']['blocks']['data'][0]['type'], 'pages/blocks/raw-html'
+        )
+        self.assertEqual(
+            data['relationships']['blocks']['data'][1]['type'], 'pages/blocks/text'
+        )
+        self.assertEqual(
+            data['relationships']['blocks']['data'][2]['type'], 'pages/blocks/document'
+        )
+        self.assertEqual(
+            data['relationships']['blocks']['data'][3]['type'], 'pages/blocks/picture'
+        )
+        self.assertEqual(
+            data['relationships']['blocks']['data'][4]['type'], 'pages/blocks/image-text'
+        )
+
+    def test_get_start_closed(self):
+        settings = MemberPlatformSettings.load()
+        settings.closed = True
+        settings.save()
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response.status_code, 401)
+        user = BlueBottleUserFactory.create()
+        response = self.client.get(
+            self.url, HTTP_ACCEPT_LANGUAGE='en',
+            HTTP_AUTHORIZATION="JWT {0}".format(user.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_privacy_closed(self):
+        self.page.slug = 'privacy'
+        self.page.save()
+        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+        settings = MemberPlatformSettings.load()
+        settings.closed = True
+        settings.save()
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_terms_closed(self):
+        self.page.slug = 'terms'
+        self.page.save()
+        self.url = reverse('platform-page-detail', args=(self.page.slug, ))
+        settings = MemberPlatformSettings.load()
+        settings.closed = True
+        settings.save()
+        response = self.client.get(self.url, HTTP_ACCEPT_LANGUAGE='en')
+        self.assertEqual(response.status_code, 200)
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

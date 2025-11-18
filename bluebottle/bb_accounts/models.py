@@ -183,11 +183,18 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded
-    primary_language = models.CharField(_('primary language'),
-                                        choices=lazy(get_language_choices, tuple)(),
-                                        default=lazy(get_default_language, str)(),
-                                        help_text=_('Language used for website and emails.'),
-                                        max_length=7)
+    primary_language = models.CharField(
+        _('primary language'),
+        choices=lazy(get_language_choices, tuple)(),
+        default=lazy(get_default_language, str)(),
+        help_text=_('Language used for website and emails.'),
+        max_length=7
+    )
+    translate_user_content = models.BooleanField(
+        _('Translate user content'),
+        default=True,
+    )
+
     share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
     newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))

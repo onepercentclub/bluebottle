@@ -50,6 +50,8 @@ frontend/static/refactor-sass/lib
 bluebottle/settings/local.py
 bluebottle/settings/secrets.py
 
+mails/++
+
 # Misc stuff
 data
 env
@@ -126,3 +128,4 @@ reef-prod-current.sql.bz2
 bluebottle-data
 elasticsearch-data
 postgres-data
+

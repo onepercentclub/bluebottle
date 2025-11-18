@@ -226,7 +226,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
     def test_verify(self):
         self.simulate_webhook([], verification_status="verified")
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified")
+        self.assertEqual(mail.outbox[0].subject, "Your identity has been verified on Test")
 
     def test_needs_verification_pending(self):
         self.test_needs_verification()
@@ -235,7 +235,7 @@ class StripePayoutAccountStateMachineTests(BluebottleTestCase):
         self.simulate_webhook([], verification_status="verified")
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified')
+        self.assertEqual(mail.outbox[0].subject, 'Your identity has been verified on Test')
 
     def test_reject(self):
         self.test_verify()

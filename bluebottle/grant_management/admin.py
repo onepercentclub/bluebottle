@@ -1,8 +1,8 @@
 from __future__ import division
 
 import logging
-from django import forms
 
+from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.template import loader
@@ -232,6 +232,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             })
         except StripeError as e:
             return "Error retrieving details: {}".format(e)
+
     bank_details.short_description = _('Bank details')
 
     def account_details(self, obj):
@@ -249,6 +250,7 @@ class GrantPayoutAdmin(StateMachineAdmin):
             )
             return template.render({'info': business})
         return _("Bank account details not available")
+
     account_details.short_description = _('KYC details')
 
     def get_fieldsets(self, request, obj=None):
@@ -288,7 +290,6 @@ class GrantPayoutAdmin(StateMachineAdmin):
 
 
 class GrantPayoutInline(StateMachineAdminMixin, admin.TabularInline):
-
     model = GrantPayout
     readonly_fields = [
         "payout_link",
@@ -396,6 +397,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
         "grant_provider",
         "state_name",
         "checkout_id",
+        "intent_id",
         "get_payment_link",
     ]
     fields = readonly_fields
@@ -410,7 +412,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
                 )
             title = _("Pay now")
             return format_html(
-                f'<a class="button default" href="{obj.checkout_link }" target="_blank">{title}</a>'
+                f'<a class="button default" href="{obj.checkout_link}" target="_blank">{title}</a>'
             )
         return "-"
 

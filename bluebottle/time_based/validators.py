@@ -64,10 +64,12 @@ class CompletedSlotsValidator(Validator):
     message = _('At least one time slot should have all required fields filled out.')
 
     def is_valid(self):
-        slots = self.instance.slots.all()
-        if slots.exists():
-            return slots[0].is_complete
-        return not self.instance.pk or len([slot for slot in self.instance.slots.all() if slot.is_complete]) > 0
+        if self.instance.pk:
+            slots = self.instance.slots.all()
+            if slots.exists():
+                return slots[0].is_complete
+            return not self.instance.pk or len([slot for slot in self.instance.slots.all() if slot.is_complete]) > 0
+        return False
 
 
 class HasSlotValidator(Validator):

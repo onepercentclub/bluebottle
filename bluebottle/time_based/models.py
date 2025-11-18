@@ -3,13 +3,11 @@ from html import unescape
 from urllib.parse import urlencode
 
 import pytz
-
 from django.core.validators import MaxValueValidator
 from django.db import connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.timezone import now
-
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from polymorphic.models import PolymorphicModel
@@ -243,6 +241,13 @@ class DateActivity(TimeBasedActivity):
     def active_durations(self):
         # Avoid the effects of activity setting duration status directly, participants should do that
         return []
+
+    @property
+    def active_participants(self):
+        if self.pk:
+            return self.registrations.filter(status__in=["new", "accepted", "succeeded"])
+        else:
+            return DateParticipant.objects.none()
 
     class Meta:
         verbose_name = _("Activity on a date")

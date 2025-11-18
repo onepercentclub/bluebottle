@@ -59,7 +59,7 @@ from bluebottle.utils.admin import (
 )
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-from .models import Member, UserSegment
+from .models import Member, SocialLoginSettings, UserSegment
 from ..grant_management.models import GrantApplication
 from ..offices.admin import RegionManagerAdminMixin
 from ..offices.models import OfficeSubRegion
@@ -120,7 +120,13 @@ class MemberCreationForm(MemberForm):
         return user
 
 
+class SocialLoginSettingsInline(admin.TabularInline):
+    extra = 1
+    model = SocialLoginSettings
+
+
 class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin, DynamicArrayMixin):
+    inlines = [SocialLoginSettingsInline]
 
     def reminder_info(self, obj):
         return admin_info_box(

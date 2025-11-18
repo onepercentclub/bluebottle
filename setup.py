@@ -107,7 +107,6 @@ install_requires = [
     'python-dateutil==2.6.1',
     'python-magic==0.4.15',
     'python-memcached==1.58',
-    'python-social-auth==0.3.6',
     'python3-saml==1.9.0',
     'qrcode==7.4.2',
     'rave-python==1.0.2',

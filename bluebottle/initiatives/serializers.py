@@ -35,7 +35,6 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
-from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -49,7 +48,6 @@ from bluebottle.utils.utils import get_current_language
 
 
 class ThemeSerializer(ModelSerializer):
-
     class Meta(object):
         model = Theme
         fields = ('id', 'slug', 'name', 'description')
@@ -129,7 +127,7 @@ class ProfileLinkField(HyperlinkedRelatedField):
         super().__init__(*args, source='*', read_only=True, **kwargs)
 
     def get_url(self, rel, link_view_name, self_kwargs, request):
-        return reverse(self.related_link_view_name, args=(self_kwargs['pk'], ))
+        return reverse(self.related_link_view_name, args=(self_kwargs['pk'],))
 
 
 class CurrentMemberSerializer(MemberSerializer):
@@ -168,7 +166,7 @@ class CurrentMemberSerializer(MemberSerializer):
             "primary_language",
             "translate_user_content"
         )
-        meta_fields = ('permissions', )
+        meta_fields = ('permissions',)
 
     class JSONAPIMeta:
         resource_name = 'members'
@@ -241,7 +239,7 @@ class InitiativePreviewSerializer(ModelSerializer):
     def get_image(self, obj):
         if obj.image:
             hash = hashlib.md5(obj.image.file.encode('utf-8')).hexdigest()
-            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'], ))
+            url = reverse('initiative-image', args=(obj.image.id, IMAGE_SIZES['large'],))
 
             return f'{url}?_={hash}'
 
@@ -292,7 +290,6 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
 
     activities = ActivitiesField()
-    translations = TranslationsSerializer(fields=['title', 'pitch', 'story'])
 
     segments = SerializerMethodResourceRelatedField(
         ActivityListSerializer,
@@ -393,7 +390,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status', 'translations'
+            'errors', 'stats', 'current_status'
         )
 
     class JSONAPIMeta(object):
@@ -472,7 +469,7 @@ class RelatedInitiativeImageSerializer(ModelSerializer):
 
     class Meta(object):
         model = RelatedImage
-        fields = ('image', 'resource', )
+        fields = ('image', 'resource',)
 
     class JSONAPIMeta(object):
         included_resources = [
@@ -496,7 +493,7 @@ class OrganizationSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = Organization
-        fields = ('name', )
+        fields = ('name',)
 
 
 class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
@@ -511,7 +508,7 @@ class OrganizationContactSubmitSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = OrganizationContact
-        fields = ('name', 'email', 'phone', )
+        fields = ('name', 'email', 'phone',)
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
@@ -527,14 +524,12 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
 
 class ActivitySearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ActivitySearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']
 
 
 class InitiativeSearchFilterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = InitiativeSearchFilter
         fields = ['type', 'name', 'highlight', 'placeholder']

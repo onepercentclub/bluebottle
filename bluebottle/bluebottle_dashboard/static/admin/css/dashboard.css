@@ -18,12 +18,12 @@
     clear: both;
 }
 
-form .aligned strong+p.help {
+form .aligned strong + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
 
-form .aligned p.file-upload+p.help {
+form .aligned p.file-upload + p.help {
     margin-left: 12.85714rem;
     padding-top: 4px;
 }
@@ -50,11 +50,11 @@ form .aligned p.file-upload+p.help {
     content: ''
 }
 
-label+div {
+label + div {
     display: inline-block;
 }
 
-.aligned label+div input[type=checkbox]+label {
+.aligned label + div input[type=checkbox] + label {
     width: 30px;
 }
 
@@ -270,7 +270,7 @@ label+div {
 
 
 /* For 2fa settings */
-#container #content>h1 {
+#container #content > h1 {
     display: block;
 }
 
@@ -414,7 +414,7 @@ html {
 }
 
 
-form .aligned .form-row label+p.help {
+form .aligned .form-row label + p.help {
     margin-left: 12.85714rem;
     padding-left: 0;
 }
@@ -522,4 +522,85 @@ div.inline.radiolist {
 
 #login-form input[type=checkbox] {
     display: block;
+}
+
+/* Radio button styling */
+input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #777;
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    background-color: #fff;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-color: #777;
+}
+
+input[type="radio"]:checked {
+    border-color: #281E50;
+}
+
+input[type="radio"]:checked::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #34323d;
+}
+
+input[type="radio"]:hover {
+    border-color: #333;
+}
+
+input[type="radio"]:focus {
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Radio button labels */
+.radiolist label,
+ul.radiolist label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+ul.radiolist {
+    padding-left: 0;
+    list-style: none;
+}
+
+ul.radiolist li {
+    padding: 4px 0;
+}
+
+.radiolist.inline {
+    margin-bottom: 8px;
+}
+
+.checkbox_help {
+    display: block;
+}
+
+.checkbox_help + .checkbox_help {
+    display: block;
+    margin-left: 12.85714rem;
+    color: #9b9b9b;
+    font-size: 0.85714rem;
+    margin-top: 8px;
+}
+
+form .aligned p.help {
+    margin-top: 8px;
 }

@@ -1,10 +1,8 @@
 import functools
+from builtins import object
+
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import NonSortableParentAdmin
-from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
-
-from bluebottle.segments.filters import MemberSegmentAdminMixin
-from builtins import object
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
@@ -23,6 +21,7 @@ from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 from rest_framework.authtoken.models import Token
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -44,6 +43,7 @@ from bluebottle.members.forms import (
 from bluebottle.members.models import MemberPlatformSettings, UserActivity
 from bluebottle.notifications.models import Message
 from bluebottle.segments.admin import SegmentAdminFormMetaClass
+from bluebottle.segments.filters import MemberSegmentAdminMixin
 from bluebottle.segments.models import Segment, SegmentType
 from bluebottle.time_based.models import (
     DateParticipant,
@@ -146,8 +146,11 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             _('Login'),
             {
                 'fields': (
-                    'closed', 'confirm_signup', 'login_methods',
-                    'moderate_signup', 'email_domains',
+                    'closed', 'login_methods', 'confirm_signup',
+                    'account_creation_rules', 'email_domains',
+                    'request_access_method',
+                    'request_access_instructions',
+                    'request_access_email',
                     'background',
                 )
             }
@@ -211,6 +214,11 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             }
         )
     )
+
+    radio_fields = {
+        'account_creation_rules': admin.HORIZONTAL,
+        'request_access_method': admin.HORIZONTAL,
+    }
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = self.fieldsets
@@ -287,9 +295,9 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
             data = request.POST
             if (
-                    data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
+                data['retention_anonymize'] and str(obj.retention_anonymize) != data['retention_anonymize']
             ) or (
-                    data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
+                data['retention_delete'] and str(obj.retention_delete) != data['retention_delete']
             ):
                 context = dict(
                     obj=obj,
@@ -436,7 +444,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def get_list_filter(self, request):
         filters = super().get_list_filter(request)
         settings = MemberPlatformSettings.load()
-        if settings.moderate_signup:
+        if settings.account_creation_rules == 'whitelist_and_request':
             filters += ('accepted',)
         return filters
 
@@ -463,7 +471,7 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
     def get_permission_fields(self, request, obj=None):
         fields = self.permission_fields.copy()
         settings = MemberPlatformSettings.load()
-        if settings.moderate_signup:
+        if settings.account_creation_rules == 'whitelist_and_request':
             fields.insert(2, 'accepted')
         if OfficeSubRegion.objects.count():
             fields.insert(4, 'subregion_manager')
@@ -476,12 +484,12 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             fieldsets = (
                 (
                     None, {
-                        'classes': ('wide',),
-                        'fields': [
-                            'first_name', 'last_name', 'email', 'is_active',
-                            'is_staff', 'groups'
-                        ]
-                    }
+                    'classes': ('wide',),
+                    'fields': [
+                        'first_name', 'last_name', 'email', 'is_active',
+                        'is_staff', 'groups'
+                    ]
+                }
                 ),
             )
         else:
@@ -563,11 +571,11 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
             if SegmentType.objects.count():
                 extra = (
                     _('Segments'), {
-                        'fields': [
-                            segment_type.field_name
-                            for segment_type in SegmentType.objects.all()
-                        ]
-                    }
+                    'fields': [
+                        segment_type.field_name
+                        for segment_type in SegmentType.objects.all()
+                    ]
+                }
                 )
 
                 fieldsets.insert(2, extra)

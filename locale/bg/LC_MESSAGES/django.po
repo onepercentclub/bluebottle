@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-19 11:22+0100\n"
-"PO-Revision-Date: 2025-11-19 10:35\n"
+"PO-Revision-Date: 2025-11-19 10:56\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -4368,7 +4368,7 @@ msgstr "Проверете IBAN номера на банковата сметк�
 
 #: bluebottle/funding/models.py:842
 msgid "In the KYC flow do a check to see if bank account number and name match. This will be done by the Surepay API, and only Dutch IBANs are supported. "
-msgstr "В процеса на KYC направете проверка дали IBAN номерът на банковата сметка и името съвпадат. Това ще бъде направено от API на Surepay и само холандските IBAN са поддържани."
+msgstr "В процеса на KYC направете проверка дали IBAN номерът на банковата сметка и името съвпадат. Това ще бъде направено от API на Surepay и само холандските IBAN са поддържани. "
 
 #: bluebottle/funding/models.py:848
 msgid "Name to use for match funding"
@@ -5093,6 +5093,7 @@ msgstr "\n"
 "За съжаление, вашата кампания за финансиране \"%(title)s\" беше отхвърлена.\n"
 "<br /><br />\n"
 "Ако имате въпроси, можете да се свържете с управляващия платформа на %(contact_email)s.\n"
+"        "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/campaign_submitted.html:5
 #, python-format
@@ -5388,7 +5389,7 @@ msgstr "\n"
 "    информация. Ако все още имате проблеми, свържете се с управляващия платформа на %(contact_email)s.\n"
 "    <br />\n"
 "    <br />\n"
-"    Моля, направете това възможно най-скоро."
+"    Моля, направете това възможно най-скоро. "
 
 #: bluebottle/funding/templates/mails/messages/funding/activity_manager/public_payout_account_rejected.html:22
 msgctxt "email"
@@ -5862,7 +5863,7 @@ msgstr "Държава на основната сметка в stripe"
 
 #: bluebottle/funding_stripe/models.py:243
 msgid "Normally this is NL, but by overriding the stripe key, another primary stripe account can be select. "
-msgstr "Обикновено това е Нидерландия, но чрез заместване на ключа на stripe, може да се избере друга основна сметка в stripe."
+msgstr "Обикновено това е Нидерландия, но чрез заместване на ключа на stripe, може да се избере друга основна сметка в stripe. "
 
 #: bluebottle/funding_stripe/models.py:251
 msgid "Stripe publishable key"
@@ -11361,7 +11362,7 @@ msgstr "Вашият екип вече няма да участва в тази 
 
 #: bluebottle/time_based/states/teams.py:109
 msgid "Your team will no longer participate in this activity. "
-msgstr "Вашият екип вече няма да участва в тази активност."
+msgstr "Вашият екип вече няма да участва в тази активност. "
 
 #: bluebottle/time_based/states/teams.py:115
 msgid "Rejoin"

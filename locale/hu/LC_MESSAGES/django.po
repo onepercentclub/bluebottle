@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-17 08:50+0100\n"
-"PO-Revision-Date: 2025-11-17 07:52\n"
+"POT-Creation-Date: 2025-11-19 11:22+0100\n"
+"PO-Revision-Date: 2025-11-19 10:35\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: bluebottle/activities/admin.py:119 bluebottle/activities/admin.py:967
 #: bluebottle/contact/models.py:24 bluebottle/fsm/admin.py:228
-#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:166
+#: bluebottle/fsm/admin.py:236 bluebottle/utils/models.py:160
 msgid "status"
 msgstr "állapot"
 
@@ -977,6 +977,7 @@ msgstr "Az aktivitásnak szüksége van változtatásokra a jóváhagyás előtt
 #: bluebottle/collect/states.py:80 bluebottle/deeds/states.py:86
 #: bluebottle/funding/states.py:121 bluebottle/grant_management/states.py:138
 #: bluebottle/initiatives/states.py:181
+#: bluebottle/pages/templates/admin/pages/page/translate.html:41
 #: bluebottle/time_based/states/participants.py:188
 #: bluebottle/time_based/states/participants.py:473
 #: bluebottle/time_based/states/slots.py:95
@@ -1195,6 +1196,7 @@ msgstr "A szervező még mindig éppen az aktivitás beállításán dolgozik."
 #: bluebottle/news/templates/admin/news/newsitem/import.html:6
 #: bluebottle/notifications/templates/admin/change_confirmation.html:14
 #: bluebottle/pages/templates/admin/pages/page/import.html:6
+#: bluebottle/pages/templates/admin/pages/page/translate.html:6
 #: bluebottle/time_based/templates/admin/time_based/bulk_add.html:6
 #: bluebottle/time_based/templates/admin/time_based/duplicate_slot.html:6
 #: bluebottle/utils/templates/admin/confirmation.html:9
@@ -1794,7 +1796,7 @@ msgstr "A %(site_name)s csapat"
 
 #: bluebottle/auth/views.py:40
 msgid "Authentication was cancelled"
-msgstr ""
+msgstr "Az autentikációt lemondták"
 
 #: bluebottle/auth/views.py:47
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
@@ -1973,7 +1975,7 @@ msgstr "A weboldal és az e-mailek számára használt nyelv."
 
 #: bluebottle/bb_accounts/models.py:194
 msgid "Translate user content"
-msgstr ""
+msgstr "Felhasználói tartalom fordítása"
 
 #: bluebottle/bb_accounts/models.py:198
 msgid "share time and knowledge"
@@ -3472,7 +3474,7 @@ msgstr "Folyamatban"
 msgid "Closed"
 msgstr "Lezárva"
 
-#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:181
+#: bluebottle/contact/models.py:29 bluebottle/utils/models.py:175
 msgid "author"
 msgstr "szerző"
 
@@ -3481,12 +3483,12 @@ msgid "Message"
 msgstr "Üzenet"
 
 #: bluebottle/contact/models.py:35 bluebottle/statistics/models.py:248
-#: bluebottle/utils/models.py:185
+#: bluebottle/utils/models.py:179
 msgid "creation date"
 msgstr "létrehozás dátuma"
 
 #: bluebottle/contact/models.py:36 bluebottle/statistics/models.py:249
-#: bluebottle/utils/models.py:186
+#: bluebottle/utils/models.py:180
 msgid "last modification"
 msgstr "utolsó módosítás"
 
@@ -3893,7 +3895,7 @@ msgid "Grant applications"
 msgstr "Támogatási kérelmek"
 
 #: bluebottle/funding/admin.py:641 bluebottle/funding/filters.py:11
-#: bluebottle/pages/admin.py:179 bluebottle/time_based/admin.py:242
+#: bluebottle/pages/admin.py:219 bluebottle/time_based/admin.py:242
 #: bluebottle/time_based/admin.py:331 bluebottle/time_based/admin.py:374
 #: bluebottle/time_based/admin.py:484 bluebottle/time_based/admin.py:542
 #: bluebottle/time_based/admin.py:919 bluebottle/time_based/admin.py:1132
@@ -7361,17 +7363,17 @@ msgstr "téma"
 msgid "themes"
 msgstr "témák"
 
-#: bluebottle/initiatives/serializers.py:486
-#: bluebottle/initiatives/serializers.py:503
+#: bluebottle/initiatives/serializers.py:483
+#: bluebottle/initiatives/serializers.py:500
 msgid "Name is required"
 msgstr "Név megadása kötelező"
 
-#: bluebottle/initiatives/serializers.py:504
+#: bluebottle/initiatives/serializers.py:501
 msgid "Email is required"
 msgstr "E-mail megadása kötelező"
 
 #: bluebottle/initiatives/states.py:19 bluebottle/pages/models.py:229
-#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:161
+#: bluebottle/slides/models.py:25 bluebottle/utils/models.py:155
 msgid "Draft"
 msgstr "Pályázat"
 
@@ -7685,7 +7687,7 @@ msgstr "Profil"
 
 #: bluebottle/members/admin.py:163
 msgid "Translations"
-msgstr ""
+msgstr "Fordítások"
 
 #: bluebottle/members/admin.py:171
 msgid "Privacy"
@@ -7841,19 +7843,19 @@ msgstr "Facebook"
 
 #: bluebottle/members/models.py:29
 msgid "Google"
-msgstr ""
+msgstr "Google"
 
 #: bluebottle/members/models.py:37
 msgid "Platform"
-msgstr ""
+msgstr "Platform"
 
 #: bluebottle/members/models.py:38
 msgid "Secret"
-msgstr ""
+msgstr "Titok"
 
 #: bluebottle/members/models.py:39
 msgid "Client id"
-msgstr ""
+msgstr "Klient azonosító"
 
 #: bluebottle/members/models.py:44
 msgid "Email/password combination"
@@ -7985,11 +7987,11 @@ msgstr "háttér"
 
 #: bluebottle/members/models.py:155
 msgid "translate user content"
-msgstr ""
+msgstr "felhasználói tartalom fordítása"
 
 #: bluebottle/members/models.py:156
 msgid "Give users the option to translate user generated content."
-msgstr ""
+msgstr "Adj lehetőséget a felhasználóknak, hogy lefordítsák a felhasználók által generált tartalmakat."
 
 #: bluebottle/members/models.py:161
 msgid "enable gender"
@@ -8317,58 +8319,58 @@ msgctxt "email"
 msgid "Create your password"
 msgstr "Hozza létre jelszavát"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:29
 msgid "JSON file"
-msgstr ""
+msgstr "JSON fájl"
 
-#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:27
+#: bluebottle/news/admin.py:24 bluebottle/pages/admin.py:29
 msgid "Select a JSON file exported from another platform"
-msgstr ""
+msgstr "Válassz egy JSON fájlt, amelyet egy másik platformról exportáltál"
 
-#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:52
+#: bluebottle/news/admin.py:40 bluebottle/pages/admin.py:79
 #: bluebottle/slides/admin.py:39
 msgid "Publication settings"
 msgstr "Közzétételi beállítások"
 
-#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:64
+#: bluebottle/news/admin.py:81 bluebottle/pages/admin.py:91
 msgid "Online"
 msgstr "Online"
 
-#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:65
+#: bluebottle/news/admin.py:82 bluebottle/pages/admin.py:92
 msgid "Offline"
 msgstr "Offline"
 
-#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:67
+#: bluebottle/news/admin.py:84 bluebottle/pages/admin.py:94
 msgid "Is this item currently visible online or not."
 msgstr "Ez az elem jelenleg látható online vagy sem."
 
-#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:191
+#: bluebottle/news/admin.py:159 bluebottle/pages/admin.py:231
 #: bluebottle/slides/admin.py:111
 msgid "Mark selected entries as published"
 msgstr "A kiválasztott bejegyzések megjelölése közzéteszéseként"
 
 #: bluebottle/news/admin.py:168
 msgid "No news items were selected."
-msgstr ""
+msgstr "Nem választottál hír elemeket."
 
 #: bluebottle/news/admin.py:180
 msgid "Export selected news items"
-msgstr ""
+msgstr "Exportáld a kiválasztott hír elemeket"
 
-#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:264
+#: bluebottle/news/admin.py:232 bluebottle/pages/admin.py:302
 msgid "Invalid JSON file. Please check the file format."
-msgstr ""
+msgstr "Érvénytelen JSON fájl. Kérlek, ellenőrizd a fájlformátumot."
 
 #: bluebottle/news/admin.py:234
 #, python-brace-format
 msgid "Error importing news items: {0}"
-msgstr ""
+msgstr "Hiba a hírek importálásakor: {0}"
 
 #: bluebottle/news/admin.py:245
 #: bluebottle/news/templates/admin/news/newsitem/change_list.html:8
 #: bluebottle/news/templates/admin/news/newsitem/import.html:9
 msgid "Import news items"
-msgstr ""
+msgstr "Hírek importálása"
 
 #: bluebottle/news/models.py:27
 msgid "Main image"
@@ -8426,16 +8428,16 @@ msgstr "most"
 
 #: bluebottle/news/templates/admin/news/newsitem/change_form.html:7
 msgid "Export news item"
-msgstr ""
+msgstr "Hír elem exportálása"
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:14
 msgid "Upload a JSON file exported from another platform to import news items."
-msgstr ""
+msgstr "Tölts fel egy JSON fájlt, amelyet egy másik platformról exportáltál, hogy híreket importálhass."
 
 #: bluebottle/news/templates/admin/news/newsitem/import.html:38
 #: bluebottle/pages/templates/admin/pages/page/import.html:38
 msgid "Import"
-msgstr ""
+msgstr "Importálás"
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:5
 #, python-format
@@ -8445,8 +8447,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 hír elem importálva volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s hír elem importálva volt\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:12
 #, python-format
@@ -8456,12 +8462,16 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s news items were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 hír elem frissítve volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s hír elem frissítve volt\n"
+"        "
 
 #: bluebottle/news/templates/admin/news/newsitem/import_message.html:19
 msgid "No news items were imported or updated."
-msgstr ""
+msgstr "Nem importáltak vagy frissítettek hír elemeket."
 
 #: bluebottle/notifications/admin.py:141
 msgid "URL of the platform"
@@ -8707,24 +8717,54 @@ msgstr "Weboldal"
 msgid "Phone Number"
 msgstr "Telefonszám"
 
-#: bluebottle/pages/admin.py:200
+#: bluebottle/pages/admin.py:34
+msgid "Target Language"
+msgstr "Cél nyelv"
+
+#: bluebottle/pages/admin.py:35
+msgid "Select the language to translate this page to"
+msgstr "Válaszd ki a nyelvet, amelyre le akarod fordítani ezt az oldalát"
+
+#: bluebottle/pages/admin.py:37
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/translate.html:10
+#: bluebottle/pages/templates/admin/pages/page/translate.html:40
+msgid "Translate page"
+msgstr "Oldal fordítása"
+
+#: bluebottle/pages/admin.py:240
 msgid "No pages were selected."
-msgstr ""
+msgstr "Nem választottál oldalakat."
 
-#: bluebottle/pages/admin.py:212
+#: bluebottle/pages/admin.py:252
 msgid "Export selected pages"
-msgstr ""
+msgstr "Válaszd ki a látogatott oldalakat"
 
-#: bluebottle/pages/admin.py:266
+#: bluebottle/pages/admin.py:304
 #, python-brace-format
 msgid "Error importing pages: {0}"
-msgstr ""
+msgstr "Hiba az oldalak importálásakor: {0}"
 
-#: bluebottle/pages/admin.py:277
+#: bluebottle/pages/admin.py:315
 #: bluebottle/pages/templates/admin/pages/page/change_list.html:8
 #: bluebottle/pages/templates/admin/pages/page/import.html:9
 msgid "Import pages"
-msgstr ""
+msgstr "Oldalak importálása"
+
+#: bluebottle/pages/admin.py:331
+#, python-brace-format
+msgid "A page with slug \"{slug}\" already exists for language {language}."
+msgstr "Már létezik egy \"{slug}\" sluggal rendelkező oldal a {language} nyelven."
+
+#: bluebottle/pages/admin.py:343
+#, python-brace-format
+msgid "Page \"{title}\" has been translated to {language}."
+msgstr "A \"{title}\" című oldal le lett fordítva {language} nyelvre."
+
+#: bluebottle/pages/admin.py:352
+#, python-brace-format
+msgid "Error translating page: {error}"
+msgstr "Hiba az oldal fordítása során: {error}"
 
 #: bluebottle/pages/models.py:27
 msgid "Link title"
@@ -8789,7 +8829,7 @@ msgid "Text + Scaled Image"
 msgstr "Szöveg + Méretezett Kép"
 
 #: bluebottle/pages/models.py:228 bluebottle/slides/models.py:24
-#: bluebottle/utils/models.py:160
+#: bluebottle/utils/models.py:154
 msgid "Published"
 msgstr "Megjelent"
 
@@ -8805,13 +8845,13 @@ msgstr "Mutassa ezt az oldalt teljes szélességben és rejtse el az al-navigác
 msgid "Show the title of this page in the header"
 msgstr "Mutassa ennek az oldalnak a címét a fejlécben"
 
-#: bluebottle/pages/templates/admin/pages/page/change_form.html:7
+#: bluebottle/pages/templates/admin/pages/page/change_form.html:12
 msgid "Export page"
-msgstr ""
+msgstr "Oldal exportálása"
 
 #: bluebottle/pages/templates/admin/pages/page/import.html:14
 msgid "Upload a JSON file exported from another platform to import pages."
-msgstr ""
+msgstr "Tölts fel egy JSON fájlt, amelyet egy másik platformról exportáltál, hogy oldalakat importálhass."
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:5
 #, python-format
@@ -8821,8 +8861,12 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were imported\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 oldal importálva volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s oldal importálva volt\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:12
 #, python-format
@@ -8832,12 +8876,38 @@ msgid "\n"
 msgid_plural "\n"
 "            %(count)s pages were updated\n"
 "        "
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "\n"
+"            1 oldal frissítve volt\n"
+"        "
+msgstr[1] "\n"
+"            %(count)s oldal frissítve volt\n"
+"        "
 
 #: bluebottle/pages/templates/admin/pages/page/import_message.html:19
 msgid "No pages were imported or updated."
-msgstr ""
+msgstr "Nem importáltak vagy frissítettek oldalakat."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:15
+msgid "Select the target language to translate this page. All blocks will be copied and text fields will be translated using DeepL."
+msgstr "Válaszd ki a célnyelvet, hogy lefordíthasd ezt az oldalt. Minden blokk másolatban lesz, és a szöveges mezők a DeepL segítségével lesznek lefordítva."
+
+#: bluebottle/pages/templates/admin/pages/page/translate.html:16
+msgid "Source page:"
+msgstr "Forrás oldal:"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_error_message.html:3
+#, python-format
+msgid "\n"
+"A page with slug \"%(slug)s\" already exists for language %(language)s.\n"
+msgstr "\n"
+"Már létezik egy \"%(slug)s\" sluggal rendelkező oldal a %(language)s nyelven.\n"
+
+#: bluebottle/pages/templates/admin/pages/page/translate_success_message.html:3
+#, python-format
+msgid "\n"
+"Page \"%(title)s\" has been translated to %(language)s.\n"
+msgstr "\n"
+"A \"%(title)s\" című oldal le lett fordítva a %(language)s nyelvre.\n"
 
 #: bluebottle/redirects/models.py:8
 msgid "redirect from"
@@ -9097,7 +9167,7 @@ msgstr "Fejléc és lábléc"
 msgid "Email templates"
 msgstr "Email sablonok"
 
-#: bluebottle/settings/admin_dashboard.py:254 bluebottle/utils/models.py:149
+#: bluebottle/settings/admin_dashboard.py:254 bluebottle/utils/models.py:143
 msgid "Settings"
 msgstr "Beállítások"
 
@@ -9140,7 +9210,7 @@ msgstr "Angol"
 #: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
 #: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
 #: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
-#: tenants/bedrijven-voor-amsterdam/settings.py:26
+#: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
 #: tenants/crowdfunding-voornatuur/settings.py:26
@@ -9173,19 +9243,23 @@ msgstr "Holland"
 
 #: bluebottle/settings/local.py:727 tenants/mars/settings.py:28
 msgid "Spanish"
-msgstr ""
+msgstr "Spanyol"
 
 #: bluebottle/settings/local.py:728 tenants/mars/settings.py:29
 msgid "German"
-msgstr ""
+msgstr "Német"
 
 #: bluebottle/settings/local.py:729
-msgid "Bulgarian"
-msgstr ""
+msgid "Portuguese"
+msgstr "Portugál"
 
-#: bluebottle/settings/local.py:730 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:730
+msgid "Bulgarian"
+msgstr "Bolgár"
+
+#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
 msgid "Hungarian"
-msgstr ""
+msgstr "Magyar"
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"
@@ -13162,15 +13236,15 @@ msgstr "Válasz megtekintése"
 msgid "Transition"
 msgstr "Átmenet"
 
-#: bluebottle/utils/models.py:170
+#: bluebottle/utils/models.py:164
 msgid "publication date"
 msgstr "publikációs dátum"
 
-#: bluebottle/utils/models.py:173
+#: bluebottle/utils/models.py:167
 msgid "To go live, status must be 'Published'."
 msgstr "Ahhoz, hogy éljen, a státuszának \"Megjelent\"-nek kell lennie."
 
-#: bluebottle/utils/models.py:175
+#: bluebottle/utils/models.py:169
 msgid "publication end date"
 msgstr "publikációs végdátum"
 
@@ -13299,7 +13373,7 @@ msgstr[1] "Másodpercek"
 
 #: tenants/goodup-nl/settings.py:27
 msgid "Nederlands"
-msgstr ""
+msgstr "Holland"
 
 #: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"

@@ -204,7 +204,8 @@ class MemberPlatformSettings(BasePlatformSettings):
     )
 
     background = models.ImageField(
-        _('background'),
+        _('Sign up image'),
+        help_text=_('This image will be displayed on the sign up and log in pages.'),
         null=True, blank=True, upload_to='site_content/',
         validators=[
             FileMimetypeValidator(

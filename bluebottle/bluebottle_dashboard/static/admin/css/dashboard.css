@@ -531,15 +531,15 @@ input[type="radio"] {
     -moz-appearance: none;
     width: 16px;
     height: 16px;
-    border: 2px solid #777;
+    border: 2px solid #281E50;
     border-radius: 50%;
     outline: none;
     cursor: pointer;
     position: relative;
     background-color: #fff;
     vertical-align: middle;
-    margin-right: 8px;
-    border-color: #777;
+    margin: 0 8px 0 0;
+    border-color: #281E50;
 }
 
 input[type="radio"]:checked {

@@ -507,11 +507,6 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                     'A member with this email address already exists.',
                     code='email_in_use',
                 )
-            else:
-                raise serializers.ValidationError(
-                    _('Your account has not been activated, please check your e-mail or contact us to request access.'),
-                    code='account_inactive',
-                )
 
         if (
             settings.account_creation_rules in ['whitelist', 'whitelist_and_request']

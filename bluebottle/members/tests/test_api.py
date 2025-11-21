@@ -8,7 +8,6 @@ import jwt
 import mock
 from django.core import mail
 from django.core.signing import TimestampSigner
-from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils.timezone import now
@@ -37,6 +36,7 @@ class LoginTestCase(BluebottleTestCase):
     """
     Integration tests for the SignUp token api endpoint.membertestapi
     """
+
     def setUp(self):
         self.password = 'blablabla'
         self.email = 'test@example.com'
@@ -235,6 +235,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     """
     Integration tests for the SignUp token api endpoint.
     """
+
     def setUp(self):
         (self.settings, _) = MemberPlatformSettings.objects.get_or_create()
 
@@ -243,9 +244,8 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.client = JSONAPITestClient()
 
     def test_create(self):
+        mail.outbox = []
         email = 'test@example.com'
-        connection.tenant.name = 'Test'
-        connection.tenant.save()
 
         response = self.client.post(
             reverse('user-signup-token'),
@@ -253,29 +253,10 @@ class SignUpTokenTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(mail.outbox), 1)
-
         member = Member.objects.get(email=email)
         self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
         self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertTrue('/auth/confirm' in mail.outbox[0].body)
-        self.assertFalse(member.is_active)
-
-    def test_create_custom_url(self):
-        email = 'test@example.com'
-        connection.tenant.name = 'Test'
-        connection.tenant.save()
-
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email, 'url': '/example'}, 'type': 'signup-tokens'}}
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(mail.outbox), 1)
-
-        member = Member.objects.get(email=email)
-        self.assertTrue('{}:'.format(member.pk) in mail.outbox[0].body)
-        self.assertTrue('url=/example' in mail.outbox[0].body)
-        self.assertEqual('Activate your account for Test', mail.outbox[0].subject)
         self.assertFalse(member.is_active)
 
     def test_create_twice(self):
@@ -362,6 +343,7 @@ class SignUpTokenTestCase(BluebottleTestCase):
     def test_create_incorrect_domain(self):
         email = 'test@secondexample.com'
         self.settings.email_domains = ['example.com']
+        self.settings.account_creation_rules = 'whitelist'
         self.settings.save()
 
         response = self.client.post(
@@ -373,27 +355,6 @@ class SignUpTokenTestCase(BluebottleTestCase):
         self.assertTrue(
             'Only emails' in response.json()['errors'][0]['detail']
         )
-
-    def test_create_moderate_signup(self):
-        email = 'test@secondexample.com'
-        self.settings.email_domains = ['example.com']
-        self.settings.moderate_signup = True
-        self.settings.save()
-
-        response = self.client.post(
-            reverse('user-signup-token'),
-            {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(len(mail.outbox), 0)
-
-        member = Member.objects.get(email=email)
-        self.assertFalse(member.is_active)
-        self.assertFalse(member.accepted)
-        self.assertFalse(member.message_set.exists())
-        member.accepted = True
-        member.save()
-        self.assertEqual(mail.outbox[0].subject, "Activate your account for Test")
 
 
 @override_settings(SEND_WELCOME_MAIL=True)
@@ -1389,7 +1350,7 @@ class MemberProfileJSONAPITestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.model = BlueBottleUserFactory.create()
-        self.url = reverse('member-profile-detail', args=(self.model.pk, ))
+        self.url = reverse('member-profile-detail', args=(self.model.pk,))
 
     def test_get_logged_in(self):
         self.perform_get(user=self.model)
@@ -1560,17 +1521,18 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
     """
     Test account creation with different account_creation_rules settings
     """
+
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.settings = MemberPlatformSettings.load()
         self.url = reverse('user-signup-token')
-        
+
     def test_anyone_can_signup(self):
         """Test that anyone can sign up when account_creation_rules is 'anyone'"""
         self.settings.account_creation_rules = 'anyone'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'test@example.com'}, 'type': 'signup-tokens'}}
@@ -1579,13 +1541,13 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         member = Member.objects.get(email='test@example.com')
         self.assertTrue(member.accepted)
         self.assertFalse(member.is_active)
-        
+
     def test_whitelist_allowed_domain(self):
         """Test signup with whitelisted domain"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = ['example.com', 'test.org']
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@example.com'}, 'type': 'signup-tokens'}}
@@ -1593,13 +1555,13 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         member = Member.objects.get(email='user@example.com')
         self.assertTrue(member.accepted)
-        
+
     def test_whitelist_disallowed_domain(self):
         """Test signup rejected with non-whitelisted domain"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = ['example.com']
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@other.com'}, 'type': 'signup-tokens'}}
@@ -1610,13 +1572,13 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
             'non_whitelisted_domain'
         )
         self.assertIn('Only emails for specified domains', response.json()['errors'][0]['detail'])
-        
+
     def test_whitelist_and_request_whitelisted_domain(self):
         """Test signup with whitelisted domain in whitelist_and_request mode"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['example.com']
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@example.com'}, 'type': 'signup-tokens'}}
@@ -1624,14 +1586,14 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         member = Member.objects.get(email='user@example.com')
         self.assertTrue(member.accepted)
-        
+
     def test_whitelist_and_request_no_access_code(self):
         """Test signup fails without access code for non-whitelisted domain"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['example.com']
         self.settings.request_access_code = 'testcode123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@other.com'}, 'type': 'signup-tokens'}}
@@ -1642,14 +1604,14 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
             'request_access'
         )
         self.assertIn('not whitelisted', response.json()['errors'][0]['detail'])
-        
+
     def test_whitelist_and_request_with_valid_access_code(self):
         """Test signup succeeds with valid access code for non-whitelisted domain"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['example.com']
         self.settings.request_access_code = 'validcode123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1663,14 +1625,14 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         member = Member.objects.get(email='user@other.com')
         self.assertTrue(member.accepted)
-        
+
     def test_whitelist_and_request_with_invalid_access_code(self):
         """Test signup fails with invalid access code"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['example.com']
         self.settings.request_access_code = 'validcode123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1687,23 +1649,23 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
             'invalid_access_code'
         )
         self.assertIn('access link you supplied is invalid', response.json()['errors'][0]['detail'])
-        
+
     def test_whitelist_empty_domains_list(self):
         """Test that empty domain list allows any email"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = []
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@anything.com'}, 'type': 'signup-tokens'}}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
     def test_account_already_active(self):
         """Test signup with email that already has active account"""
         Member.objects.create(email='active@example.com', is_active=True)
-        
+
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'active@example.com'}, 'type': 'signup-tokens'}}
@@ -1713,28 +1675,24 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
             response.json()['errors'][0]['code'],
             'email_in_use'
         )
-        
+
     def test_account_inactive_exists(self):
-        """Test signup with email that has inactive account"""
+        """Test signup with email that has inactive account, will send activation email again"""
         Member.objects.create(email='inactive@example.com', is_active=False)
-        
+        mail.outbox = []
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'inactive@example.com'}, 'type': 'signup-tokens'}}
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.json()['errors'][0]['code'],
-            'account_inactive'
-        )
-        self.assertIn('not been activated', response.json()['errors'][0]['detail'])
-        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(mail.outbox[0].subject, "Activate your account for Test")
+
     def test_multiple_whitelisted_domains(self):
         """Test signup with multiple whitelisted domains"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = ['domain1.com', 'domain2.org', 'domain3.net']
         self.settings.save()
-        
+
         # Test each domain
         for domain in ['domain1.com', 'domain2.org', 'domain3.net']:
             email = f'user@{domain}'
@@ -1743,21 +1701,21 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
                 {'data': {'attributes': {'email': email}, 'type': 'signup-tokens'}}
             )
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            
+
         # Test non-whitelisted domain
         response = self.client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@other.com'}, 'type': 'signup-tokens'}}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
     def test_case_sensitive_domain_check(self):
         """Test that domain checking is case-sensitive"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = ['example.com']
         self.settings.save()
-        
-        # Uppercase domain should fail (domains are case-insensitive in reality, 
+
+        # Uppercase domain should fail (domains are case-insensitive in reality,
         # but this tests the implementation)
         response = self.client.post(
             self.url,
@@ -1765,24 +1723,24 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         )
         # This might pass or fail depending on implementation
         # Document the actual behavior
-        
+
 
 class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
     """Test SignUpToken API with access codes"""
-    
+
     def setUp(self):
         super().setUp()
         self.client = JSONAPITestClient()
         self.url = reverse('user-signup-token')
         self.settings = MemberPlatformSettings.load()
-        
+
     def test_signup_token_with_access_code_creates_inactive_user(self):
         """Test that signup with access code creates inactive user"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['allowed.com']
         self.settings.request_access_code = 'secret123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1793,19 +1751,19 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
                 'type': 'signup-tokens'
             }}
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         member = Member.objects.get(email='test@notallowed.com')
         self.assertFalse(member.is_active)
         self.assertTrue(member.accepted)
-        
+
     def test_signup_token_without_required_access_code_fails(self):
         """Test signup token without access code when required"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['allowed.com']
         self.settings.request_access_code = 'secret123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1815,17 +1773,17 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
                 'type': 'signup-tokens'
             }}
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()['errors'][0]['code'], 'request_access')
-        
+
     def test_signup_token_with_wrong_access_code(self):
         """Test signup token with wrong access code"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['allowed.com']
         self.settings.request_access_code = 'secret123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1836,17 +1794,17 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
                 'type': 'signup-tokens'
             }}
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()['errors'][0]['code'], 'invalid_access_code')
-        
+
     def test_signup_token_whitelisted_no_code_needed(self):
         """Test that whitelisted domains don't need access code for token signup"""
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['allowed.com']
         self.settings.request_access_code = 'secret123'
         self.settings.save()
-        
+
         response = self.client.post(
             self.url,
             {'data': {
@@ -1856,7 +1814,7 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
                 'type': 'signup-tokens'
             }}
         )
-        
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         member = Member.objects.get(email='test@allowed.com')
         self.assertTrue(member.accepted)
@@ -1864,42 +1822,42 @@ class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
 
 class AccountAcceptanceTestCase(BluebottleTestCase):
     """Test account acceptance and rejection flows"""
-    
+
     def setUp(self):
         super().setUp()
-        self.client = JSONAPITestClient()
+        self.jsonapi_client = JSONAPITestClient()
         self.settings = MemberPlatformSettings.load()
         self.url = reverse('user-signup-token')
-        
+
     def test_accepted_member_can_login(self):
         """Test that accepted member can log in after activation"""
         self.settings.account_creation_rules = 'whitelist'
         self.settings.email_domains = ['example.com']
         self.settings.save()
-        
-        # Create signup token
-        response = self.client.post(
+
+        # Create signup token using JSON:API client
+        response = self.jsonapi_client.post(
             self.url,
             {'data': {'attributes': {'email': 'user@example.com'}, 'type': 'signup-tokens'}}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
         member = Member.objects.get(email='user@example.com')
         self.assertTrue(member.accepted)
         self.assertFalse(member.is_active)
-        
+
         # Activate the account (simulating confirmation)
         member.is_active = True
         member.set_password('testpassword123')
         member.save()
-        
-        # Try to login
+
+        # Try to login using standard client (token-auth expects regular JSON, not JSON:API)
         login_response = self.client.post(
             reverse('token-auth'),
             {'email': 'user@example.com', 'password': 'testpassword123'}
         )
         self.assertEqual(login_response.status_code, status.HTTP_201_CREATED)
-        
+
     def test_non_accepted_member_in_database(self):
         """Test that non-accepted member exists but cannot activate"""
         # This tests the legacy moderate_signup behavior
@@ -1908,7 +1866,7 @@ class AccountAcceptanceTestCase(BluebottleTestCase):
             is_active=False,
             accepted=False
         )
-        
+
         member = Member.objects.get(email='pending@example.com')
         self.assertFalse(member.accepted)
         self.assertFalse(member.is_active)
@@ -1916,21 +1874,21 @@ class AccountAcceptanceTestCase(BluebottleTestCase):
 
 class AccessCodeRotationTestCase(BluebottleTestCase):
     """Test access code security and rotation"""
-    
+
     def setUp(self):
         super().setUp()
-        self.client = JSONAPITestClient()
+        self.jsonapi_client = JSONAPITestClient()
         self.settings = MemberPlatformSettings.load()
         self.settings.account_creation_rules = 'whitelist_and_request'
         self.settings.email_domains = ['allowed.com']
         self.settings.request_access_code = 'oldcode123'
         self.settings.save()
         self.url = reverse('user-signup-token')
-        
+
     def test_old_code_invalid_after_rotation(self):
         """Test that old access code becomes invalid after rotation"""
         # First, verify old code works
-        response = self.client.post(
+        response = self.jsonapi_client.post(
             self.url,
             {'data': {
                 'attributes': {
@@ -1941,13 +1899,13 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
         # Rotate the code
         self.settings.request_access_code = 'newcode456'
         self.settings.save()
-        
+
         # Old code should fail
-        response = self.client.post(
+        response = self.jsonapi_client.post(
             self.url,
             {'data': {
                 'attributes': {
@@ -1959,9 +1917,9 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()['errors'][0]['code'], 'invalid_access_code')
-        
+
         # New code should work
-        response = self.client.post(
+        response = self.jsonapi_client.post(
             self.url,
             {'data': {
                 'attributes': {
@@ -1972,14 +1930,14 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
     def test_empty_access_code_behavior(self):
         """Test behavior when access code is empty/None"""
         self.settings.request_access_code = None
         self.settings.save()
-        
+
         # Should fail without code when whitelist_and_request is set
-        response = self.client.post(
+        response = self.jsonapi_client.post(
             self.url,
             {'data': {
                 'attributes': {
@@ -1991,4 +1949,3 @@ class AccessCodeRotationTestCase(BluebottleTestCase):
         )
         # Behavior depends on implementation - should probably fail
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-

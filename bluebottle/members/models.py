@@ -171,6 +171,14 @@ class MemberPlatformSettings(BasePlatformSettings):
         blank=True
     )
 
+    request_access_code = models.CharField(
+        _('Request access code'),
+        help_text=_('With this code people can sign-up without a white-listed email address.'),
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     required_questions_location = models.CharField(
         _('required questions location'),
         choices=REQUIRED_QUESTIONS_OPTIONS,

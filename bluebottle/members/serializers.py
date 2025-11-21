@@ -468,13 +468,17 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
     url = serializers.CharField(required=False, allow_blank=True)
     segment_id = serializers.CharField(required=False, allow_blank=True)
     accepted = serializers.BooleanField(read_only=True)
+    access_code = serializers.CharField(required=False)
 
     def create(self, validated_data):
         member_settings = MemberPlatformSettings.load()
         email = validated_data.get('email', '')
         email_domain = email.split('@')[-1]
         accepted = True
-        if member_settings.moderate_signup and email_domain not in member_settings.email_domains:
+        if (
+            member_settings.account_creation_rules == 'whitelist'
+            and email_domain not in member_settings.email_domains
+        ):
             accepted = False
         (instance, _) = BB_USER_MODEL.objects.get_or_create(
             email__iexact=validated_data['email'],
@@ -488,24 +492,52 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
 
     class Meta(object):
         model = BB_USER_MODEL
-        fields = ('id', 'email', 'url', 'segment_id', 'accepted',)
+        fields = ('id', 'email', 'url', 'segment_id', 'accepted', 'access_code')
 
-    def validate_email(self, email):
+    def validate(self, attrs):
+        email = attrs.get('email', '')
+        access_code = attrs.get('access_code', '')
         settings = MemberPlatformSettings.objects.get()
         email_domain = email.split('@')[1]
         email_domains = settings.email_domains
-        if not settings.moderate_signup and len(email_domains) and email_domain not in email_domains:
-            raise serializers.ValidationError(
-                ('Only emails for the domain {} are allowed').format(
-                    settings.email_domain)
-            )
+        if (
+            settings.account_creation_rules in ['whitelist', 'whitelist_and_request']
+            and len(email_domains)
+            and email_domain not in email_domains
+        ):
+            if settings.account_creation_rules == 'whitelist_and_request':
+                if access_code:
+                    if settings.request_access_code != access_code:
+                        raise serializers.ValidationError(
+                            _('The access link you supplied is invalid. '
+                              'Please contact us to request a new access link.'),
+                            code='invalid_access_code'
+                        )
+                else:
+                    raise serializers.ValidationError(
+                        _('This email is not whitelisted, please contact us to request access.'),
+                        code='request_access'
+                    )
+            else:
+                raise serializers.ValidationError(
+                    _('Only emails for specified domains are allowed. Please use your work e-mail address.'),
+                    code='non_whitelisted_domain'
+                )
 
-        if len(BB_USER_MODEL.objects.filter(email__iexact=email, is_active=True)):
-            raise serializers.ValidationError(
-                'A member with this email address already exists.',
-                code='email_in_use',
-            )
-        return email
+        member = Member.objects.filter(email__iexact=email).first()
+        if member:
+            if member.is_active:
+                raise serializers.ValidationError(
+                    'A member with this email address already exists.',
+                    code='email_in_use',
+                )
+            else:
+                raise serializers.ValidationError(
+                    _('Your account has not been activated, please check your e-mail or contact us to request access.'),
+                    code='account_inactive',
+                )
+
+        return attrs
 
     class JSONAPIMeta:
         resource_name = 'signup-tokens'
@@ -900,7 +932,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'account_creation_rules',
             'request_access_method',
             'request_access_instructions',
-            'request_access_instructions',
+            'request_access_email',
+            'login_methods',
             'background',
             'enable_gender',
             'enable_address',

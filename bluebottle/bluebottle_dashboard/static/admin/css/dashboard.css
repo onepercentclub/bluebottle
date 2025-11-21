@@ -604,3 +604,8 @@ ul.radiolist li {
 form .aligned p.help {
     margin-top: 8px;
 }
+
+input[type=email],
+.vTextField {
+    width: 400px
+}

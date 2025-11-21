@@ -141,17 +141,26 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
               'users are encouraged to spend making an impact each year.')
         )
 
+    def request_access_info(self, obj):
+        return admin_info_box(
+            _('If at "Account creation rules" you selected that people can request access to the platform, you have fill out instructions how to do so in the next section.')
+        )
+
     fieldsets = (
         (
             _('Login'),
             {
                 'fields': (
-                    'closed', 'login_methods', 'confirm_signup',
-                    'account_creation_rules', 'email_domains',
-                    'request_access_method',
+                    'closed',
+                    'login_methods',
+                    'confirm_signup',
+                    'background',
+                    'account_creation_rules',
+                    'email_domains',
+                    'request_access_info',
                     'request_access_instructions',
                     'request_access_email',
-                    'background',
+                    'request_access_code_display'
                 )
             }
         ),
@@ -257,7 +266,10 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return fieldsets
 
-    readonly_fields = ('segment_types', 'reminder_info', 'impact_hours_info')
+    readonly_fields = (
+        'segment_types', 'reminder_info', 'impact_hours_info', 'request_access_info',
+        'request_access_code', 'request_access_code_display',
+    )
 
     def get_readonly_fields(self, request, obj=None):
         read_only_fields = super(MemberPlatformSettingsAdmin, self).get_readonly_fields(request, obj)
@@ -269,6 +281,22 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
         return read_only_fields
 
+    def request_access_code_display(self, obj):
+        template = loader.get_template('admin/members/request_access_code_display.html')
+        renew_url = reverse('admin:members_memberplatformsettings_renew_code')
+        
+        context = {
+            'code': obj.request_access_code if obj else None,
+            'renew_url': renew_url,
+        }
+        
+        if obj and obj.request_access_code:
+            context['signup_url'] = tenant_url(f'/auth/signup-with-code?code={obj.request_access_code}')
+        
+        return template.render(context)
+    
+    request_access_code_display.short_description = _('Access link')
+
     def segment_types(self, obj):
         template = loader.get_template('segments/admin/required_segment_types.html')
         context = {
@@ -276,6 +304,33 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
             'link': reverse('admin:segments_segmenttype_changelist')
         }
         return template.render(context)
+
+    def get_urls(self):
+        urls = super(MemberPlatformSettingsAdmin, self).get_urls()
+        
+        extra_urls = [
+            re_path(
+                r'^renew-access-code/$',
+                self.admin_site.admin_view(self.renew_access_code),
+                name='members_memberplatformsettings_renew_code'
+            ),
+        ]
+        return extra_urls + urls
+
+    def renew_access_code(self, request):
+        import secrets
+        import string
+        
+        obj = MemberPlatformSettings.load()
+        
+        alphabet = string.ascii_letters + string.digits
+        new_code = ''.join(secrets.choice(alphabet) for _ in range(12))
+        
+        obj.request_access_code = new_code
+        obj.save()
+        
+        self.message_user(request, _('Access code has been renewed successfully.'))
+        return HttpResponseRedirect(reverse('admin:members_memberplatformsettings_change', args=(obj.id,)))
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         """

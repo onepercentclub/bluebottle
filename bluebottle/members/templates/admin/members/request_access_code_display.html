@@ -1,0 +1,30 @@
+{% load i18n %}
+
+{% if code %}
+
+<div class="related-widget-wrapper">
+    <div style="margin-bottom: 10px;">
+        <a href="{{ signup_url }}" target="_blank" style="color: #417690;">
+            {{ signup_url }}
+        </a>
+    </div>
+
+    <div>
+        <a class="button" href="{{ renew_url }}" onclick="return confirm('{% trans "Are you sure you want to generate a new access code? The old code will no longer work." %}');">
+            {% trans "Re-new link" %}
+        </a>
+    </div>
+</div>
+<p class="help">
+    {% trans "Share this link with people who are allowed to get access." %}
+</p>
+{% else %}
+
+<div>
+    <a class="button" href="{{ renew_url }}">
+        {% trans "Generate link" %}
+    </a>
+</div>
+
+{% endif %}
+

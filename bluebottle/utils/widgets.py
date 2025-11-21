@@ -11,9 +11,29 @@ from django.contrib.admin.widgets import AdminURLFieldWidget
 from datetime import timedelta
 from gettext import ngettext
 
+from django import forms
 from django.forms import MultiWidget
 from django.forms.widgets import Input
 from django.utils.dateparse import parse_duration
+from django.utils.html import format_html
+
+
+class CheckboxWithInlineLabelWidget(forms.CheckboxInput):
+    """Custom checkbox widget that adds an inline label after the checkbox."""
+
+    def __init__(self, inline_label='', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.inline_label = inline_label
+
+    def render(self, name, value, attrs=None, renderer=None):
+        checkbox_html = super().render(name, value, attrs, renderer)
+        if self.inline_label:
+            return format_html(
+                '{} <span class="checkbox_help">{}</span>',
+                checkbox_html,
+                self.inline_label
+            )
+        return checkbox_html
 
 
 class SecureAdminURLFieldWidget(AdminURLFieldWidget):

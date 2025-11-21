@@ -500,6 +500,19 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
         settings = MemberPlatformSettings.objects.get()
         email_domain = email.split('@')[1]
         email_domains = settings.email_domains
+        member = Member.objects.filter(email__iexact=email).first()
+        if member:
+            if member.is_active:
+                raise serializers.ValidationError(
+                    'A member with this email address already exists.',
+                    code='email_in_use',
+                )
+            else:
+                raise serializers.ValidationError(
+                    _('Your account has not been activated, please check your e-mail or contact us to request access.'),
+                    code='account_inactive',
+                )
+
         if (
             settings.account_creation_rules in ['whitelist', 'whitelist_and_request']
             and len(email_domains)
@@ -522,19 +535,6 @@ class SignUpTokenSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     _('Only emails for specified domains are allowed. Please use your work e-mail address.'),
                     code='non_whitelisted_domain'
-                )
-
-        member = Member.objects.filter(email__iexact=email).first()
-        if member:
-            if member.is_active:
-                raise serializers.ValidationError(
-                    'A member with this email address already exists.',
-                    code='email_in_use',
-                )
-            else:
-                raise serializers.ValidationError(
-                    _('Your account has not been activated, please check your e-mail or contact us to request access.'),
-                    code='account_inactive',
                 )
 
         return attrs

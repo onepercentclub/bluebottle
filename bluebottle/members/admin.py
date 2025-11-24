@@ -164,13 +164,20 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
                 )
             }
         ),
-
         (
             _('Profile'),
             {
                 'fields': (
                     'enable_gender', 'enable_birthdate',
                     'enable_address', 'create_segments'
+                )
+            }
+        ),
+        (
+            _('Translations'),
+            {
+                'fields': (
+                    'translate_user_content',
                 )
             }
         ),
@@ -284,17 +291,17 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
     def request_access_code_display(self, obj):
         template = loader.get_template('admin/members/request_access_code_display.html')
         renew_url = reverse('admin:members_memberplatformsettings_renew_code')
-        
+
         context = {
             'code': obj.request_access_code if obj else None,
             'renew_url': renew_url,
         }
-        
+
         if obj and obj.request_access_code:
             context['signup_url'] = tenant_url(f'/auth/signup-with-code?code={obj.request_access_code}')
-        
+
         return template.render(context)
-    
+
     request_access_code_display.short_description = _('Access link')
 
     def segment_types(self, obj):
@@ -307,7 +314,7 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
 
     def get_urls(self):
         urls = super(MemberPlatformSettingsAdmin, self).get_urls()
-        
+
         extra_urls = [
             re_path(
                 r'^renew-access-code/$',
@@ -320,15 +327,15 @@ class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAd
     def renew_access_code(self, request):
         import secrets
         import string
-        
+
         obj = MemberPlatformSettings.load()
-        
+
         alphabet = string.ascii_letters + string.digits
         new_code = ''.join(secrets.choice(alphabet) for _ in range(12))
-        
+
         obj.request_access_code = new_code
         obj.save()
-        
+
         self.message_user(request, _('Access code has been renewed successfully.'))
         return HttpResponseRedirect(reverse('admin:members_memberplatformsettings_change', args=(obj.id,)))
 

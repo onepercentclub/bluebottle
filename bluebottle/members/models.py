@@ -223,6 +223,12 @@ class MemberPlatformSettings(BasePlatformSettings):
         ]
     )
 
+    translate_user_content = models.BooleanField(
+        _('translate user content'),
+        help_text=_('Give users the option to translate user generated content.'),
+        default=False
+    )
+
     enable_gender = models.BooleanField(
         _('enable gender'),
         default=False,

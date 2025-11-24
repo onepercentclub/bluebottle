@@ -1,5 +1,6 @@
 import hashlib
 from builtins import object
+
 from django.db.models import Q
 from django.urls.base import reverse
 from django.utils.translation import gettext_lazy as _
@@ -20,7 +21,7 @@ from bluebottle.categories.models import Category
 from bluebottle.files.models import RelatedImage
 from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.fsm.serializers import (
-    AvailableTransitionsField, TransitionSerializer, CurrentStatusField
+    AvailableTransitionsField, CurrentStatusField, TransitionSerializer
 )
 from bluebottle.funding.states import FundingStateMachine
 from bluebottle.funding_stripe.models import StripePayoutAccount
@@ -34,6 +35,7 @@ from bluebottle.members.serializers import UserPermissionsSerializer
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.segments.models import Segment
 from bluebottle.time_based.states import TimeBasedStateMachine
+from bluebottle.translations.serializers import TranslationsSerializer
 from bluebottle.utils.fields import (
     RichTextField,
     ValidationErrorsField,
@@ -163,6 +165,8 @@ class CurrentMemberSerializer(MemberSerializer):
             "can_pledge",
             "can_do_bank_transfer",
             "payout_account",
+            "primary_language",
+            "translate_user_content"
         )
         meta_fields = ('permissions', )
 
@@ -288,6 +292,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
     current_status = CurrentStatusField(source='states.current_state')
 
     activities = ActivitiesField()
+    translations = TranslationsSerializer(fields=['title', 'pitch', 'story'])
 
     segments = SerializerMethodResourceRelatedField(
         ActivityListSerializer,
@@ -388,7 +393,7 @@ class InitiativeSerializer(NoCommitMixin, ModelSerializer):
 
         meta_fields = (
             'permissions', 'transitions', 'status', 'created', 'required',
-            'errors', 'stats', 'current_status'
+            'errors', 'stats', 'current_status', 'translations'
         )
 
     class JSONAPIMeta(object):

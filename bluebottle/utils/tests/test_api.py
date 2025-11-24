@@ -1,8 +1,8 @@
 from django.urls import reverse
 from rest_framework import status
 
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.models import TranslationPlatformSettings
 
 
 class TestLanguageApi(BluebottleTestCase):
@@ -25,21 +25,17 @@ class TranslationSettingsTestCase(BluebottleTestCase):
     def test_no_translations(self):
         response = self.client.get(self.settings_url)
         self.assertEqual(
-            response.data['platform']['translations'],
-            {}
+            response.data['platform']['members']['translate_user_content'],
+            False
         )
 
     def test_with_translation(self):
-        TranslationPlatformSettings.objects.create(
-            office='Site',
-            whats_the_location_of_your_office='What is your office site'
-        )
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
+
         response = self.client.get(self.settings_url)
         self.assertEqual(
-            response.data['platform']['translations']['Office'],
-            'Site'
-        )
-        self.assertEqual(
-            response.data['platform']['translations'][u'What\u2019s the location of your office?'],
-            'What is your office site'
+            response.data['platform']['members']['translate_user_content'],
+            True
         )

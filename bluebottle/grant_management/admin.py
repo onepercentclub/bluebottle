@@ -462,6 +462,7 @@ class GrantPaymentAdmin(StateMachineAdminMixin, admin.ModelAdmin):
             payment.check_status()
             self.message_user(request, _("Successfully checked payment status"))
         except Exception as e:
+            logger.error(e)
             self.message_user(request, str(e), level=messages.ERROR)
 
         return HttpResponseRedirect(

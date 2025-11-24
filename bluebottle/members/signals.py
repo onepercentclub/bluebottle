@@ -1,13 +1,10 @@
 import logging
 
-from django.core.signing import TimestampSigner
-from django.db.models.signals import post_save, m2m_changed
 from django.contrib.auth.models import Group
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
 
-from bluebottle.members.messages import SignUpTokenMessage
 from bluebottle.members.models import Member
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,19 +22,6 @@ def member_created_groups(sender, instance, created, **kwargs):
             logger.error('Group \'{}\' could not be found'.format('Authenticated'))
 
 
-@receiver(post_save, sender=Member)
-def member_accepted(sender, instance, created, **kwargs):
-    token = TimestampSigner().sign(instance.pk)
-    signup_message_sent = instance.message_set.filter(template='messages/sign_up_token').exists()
-    if instance.accepted and not instance.is_active and not signup_message_sent:
-        SignUpTokenMessage(
-            instance,
-            custom_message={
-                'token': token,
-            },
-        ).compose_and_send()
-
-
 @receiver(m2m_changed, sender=Member.segments.through)
 def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
     """
@@ -46,7 +30,7 @@ def segments_changed(sender, instance, action, pk_set, *args, **kwargs):
     All closed or succeeded activities remain untouched, so that historical data
     will stay accurate.
     """
-    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full', )
+    open_statuses = ('draft', 'needs_work', 'submitted', 'open', 'running', 'full',)
     if action == 'post_add':
         for activity in instance.activities.filter(
             status__in=open_statuses

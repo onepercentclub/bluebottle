@@ -114,7 +114,9 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     login_methods = MultiSelectField(
         _('login methods'),
         help_text=_(
-            'People can use any selected method to sign up or log in. For social log in options, see the ‘Social log in’ tab.'),
+            'People can use any selected method to sign up or log in. '
+            'For social log in options, see the ‘Social log in’ tab.'
+        ),
         max_length=100,
         choices=LOGIN_METHODS,
         default=['password']

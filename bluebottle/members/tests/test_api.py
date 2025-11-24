@@ -1709,21 +1709,6 @@ class AccountCreationRulesTestCase(BluebottleTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_case_sensitive_domain_check(self):
-        """Test that domain checking is case-sensitive"""
-        self.settings.account_creation_rules = 'whitelist'
-        self.settings.email_domains = ['example.com']
-        self.settings.save()
-
-        # Uppercase domain should fail (domains are case-insensitive in reality,
-        # but this tests the implementation)
-        response = self.client.post(
-            self.url,
-            {'data': {'attributes': {'email': 'user@EXAMPLE.COM'}, 'type': 'signup-tokens'}}
-        )
-        # This might pass or fail depending on implementation
-        # Document the actual behavior
-
 
 class SignUpTokenWithAccessCodeTestCase(BluebottleTestCase):
     """Test SignUpToken API with access codes"""

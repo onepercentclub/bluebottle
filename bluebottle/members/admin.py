@@ -147,7 +147,10 @@ class MemberPlatformSettingsAdmin(
 
     def request_access_info(self, obj):
         return admin_info_box(
-            _('If at "Account creation rules" you selected that people can request access to the platform, you have fill out instructions how to do so in the next section.')
+            _(
+                'If at "Account creation rules" you selected that people can request access '
+                'to the platform, you have fill out instructions how to do so in the next section.'
+            )
         )
 
     fieldsets = (
@@ -549,13 +552,14 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
         if not obj:
             fieldsets = (
                 (
-                    None, {
-                    'classes': ('wide',),
-                    'fields': [
-                        'first_name', 'last_name', 'email', 'is_active',
-                        'is_staff', 'groups'
-                    ]
-                }
+                    None,
+                    {
+                        'classes': ('wide',),
+                        'fields': [
+                            'first_name', 'last_name', 'email', 'is_active',
+                            'is_staff', 'groups'
+                        ]
+                    }
                 ),
             )
         else:
@@ -636,12 +640,13 @@ class MemberAdmin(RegionManagerAdminMixin, MemberSegmentAdminMixin, UserAdmin):
 
             if SegmentType.objects.count():
                 extra = (
-                    _('Segments'), {
-                    'fields': [
-                        segment_type.field_name
-                        for segment_type in SegmentType.objects.all()
-                    ]
-                }
+                    _('Segments'),
+                    {
+                        'fields': [
+                            segment_type.field_name
+                            for segment_type in SegmentType.objects.all()
+                        ]
+                    }
                 )
 
                 fieldsets.insert(2, extra)

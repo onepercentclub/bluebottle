@@ -22,6 +22,7 @@ from django.utils.http import int_to_base36
 from django.utils.translation import gettext_lazy as _
 from django_admin_inline_paginator.admin import TabularInlinePaginated
 from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+from parler.admin import TranslatableAdmin
 from rest_framework.authtoken.models import Token
 
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -125,7 +126,10 @@ class SocialLoginSettingsInline(admin.TabularInline):
     model = SocialLoginSettings
 
 
-class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin, DynamicArrayMixin):
+class MemberPlatformSettingsAdmin(
+    TranslatableAdmin, BasePlatformSettingsAdmin, NonSortableParentAdmin,
+    DynamicArrayMixin
+):
     inlines = [SocialLoginSettingsInline]
 
     def reminder_info(self, obj):

@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from django_better_admin_arrayfield.models.fields import ArrayField
 from future.utils import python_2_unicode_compatible
 from multiselectfield import MultiSelectField
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.files.fields import ImageField
@@ -41,7 +42,7 @@ class SocialLoginSettings(models.Model):
     client_id = models.CharField(_('Client id'))
 
 
-class MemberPlatformSettings(BasePlatformSettings):
+class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     LOGIN_METHODS = (
         ('password', _('Email/password combination')),
         ('SSO', _('Company SSO')),
@@ -156,12 +157,14 @@ class MemberPlatformSettings(BasePlatformSettings):
         default='email',
     )
 
-    request_access_instructions = models.CharField(
-        _('request access instructions'),
-        help_text=_('Explain how people can request access to the platform.'),
-        max_length=2000,
-        null=True,
-        blank=True
+    translations = TranslatedFields(
+        request_access_instructions=models.CharField(
+            _('request access instructions'),
+            help_text=_('Explain how people can request access to the platform.'),
+            max_length=2000,
+            null=True,
+            blank=True
+        ),
     )
 
     request_access_email = models.EmailField(

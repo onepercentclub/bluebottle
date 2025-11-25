@@ -694,10 +694,12 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
     show_in_index = True
 
     def document(self, obj):
-        if obj.connect_account and \
-            isinstance(obj.connect_account, PlainPayoutAccount) and \
-            obj.connect_account.document and \
-            obj.connect_account.document.file:
+        if (
+            obj.connect_account and
+            isinstance(obj.connect_account, PlainPayoutAccount) and
+            obj.connect_account.document and
+            obj.connect_account.document.file
+        ):
             template = loader.get_template(
                 'admin/document_button.html'
             )
@@ -718,7 +720,7 @@ class IbanCheckAdmin(admin.ModelAdmin):
     search_fields = ['name', 'result']
 
     fields = readonly_fields
-    
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -734,9 +736,10 @@ class IbanCheckAdmin(admin.ModelAdmin):
         except (TypeError, ValueError):
             return obj.result
         formatted = json.dumps(data, indent=2, sort_keys=True)
-        return format_html('<div style="display:flex-table"><pre style="white-space: pre-wrap;">{}</pre></div>', formatted)
+        return format_html('<div style="display:flex-table"><pre style="white-space: pre-wrap;">{}</pre></div>',
+                           formatted)
 
-    pretty_result.short_description = _('result')
+    pretty_result.short_description = 'Response'
 
 
 @admin.register(BankAccount)
@@ -824,10 +827,7 @@ class PayoutAdmin(StateMachineAdmin):
     list_display = ['created', 'activity_link', 'status']
     list_filter = ['status']
 
-    fields = [
-                 'activity',
-                 'states',
-             ] + readonly_fields
+    fields = ['activity', 'states'] + readonly_fields
 
     export_to_csv_fields = (
         ('id', 'Id'),

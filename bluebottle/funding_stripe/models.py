@@ -184,8 +184,10 @@ class StripeSourcePayment(Payment):
     def update(self):
         try:
             # Update donation amount if it differs
-            if old_div(self.source.amount, 100) != self.donation.amount.amount \
-                or self.source.currency != self.donation.amount.currency:
+            if (
+                old_div(self.source.amount, 100) != self.donation.amount.amount
+                or self.source.currency != self.donation.amount.currency
+            ):
                 self.donation.amount = Money(old_div(self.source.amount, 100), self.source.currency)
                 self.donation.save()
             if not self.charge_token and self.source.status == 'chargeable':

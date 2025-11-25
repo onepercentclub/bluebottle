@@ -1,9 +1,11 @@
 from __future__ import division
 
+import json
 import logging
-from babel.numbers import get_currency_symbol
 from builtins import object
 from datetime import timedelta
+
+from babel.numbers import get_currency_symbol
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import SimpleListFilter, TabularInline
@@ -118,7 +120,6 @@ class RewardAdmin(admin.ModelAdmin):
 
 
 class CurrencyFilter(SimpleListFilter):
-
     title = _('Currency')
     parameter_name = 'currency'
 
@@ -135,7 +136,6 @@ class CurrencyFilter(SimpleListFilter):
 
 
 class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
-
     model = Payout
     readonly_fields = [
         'payout_link', 'total_amount', 'status', 'provider', 'currency',
@@ -149,7 +149,7 @@ class PayoutInline(StateMachineAdminMixin, admin.TabularInline):
         return False
 
     def payout_link(self, obj):
-        url = reverse('admin:funding_payout_change', args=(obj.id, ))
+        url = reverse('admin:funding_payout_change', args=(obj.id,))
         return format_html(u'<a href="{}">{}</a>', url, obj)
 
 
@@ -256,6 +256,7 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_donated.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+
     # Translators: xgettext:no-python-format
     percentage_donated.short_description = _('% donated')
 
@@ -264,15 +265,18 @@ class FundingAdmin(ActivityChildAdmin):
             return '{:.2f}%'.format((old_div(obj.amount_matching.amount, obj.target.amount)) * 100)
         else:
             return '0%'
+
     # Translators: xgettext:no-python-format
     percentage_matching.short_description = _('% matching')
 
     def amount_raised(self, obj):
         return obj.amount_raised
+
     amount_raised.short_description = _('amount donated + matched')
 
     def amount_donated(self, obj):
         return obj.amount_donated
+
     amount_donated.short_description = _('amount donated')
 
     export_to_csv_fields = (
@@ -299,6 +303,7 @@ class FundingAdmin(ActivityChildAdmin):
         url = reverse('admin:funding_donor_changelist')
         total = obj.donations.filter(status=DonorStateMachine.succeeded.value).count()
         return format_html('<a href="{}?activity_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+
     donors_link.short_description = _("Donations")
 
 
@@ -382,18 +387,20 @@ class DonorAdmin(ContributorChildAdmin, PaymentLinkMixin):
 
     def get_exclude(self, request, obj=None):
         if not request.user.is_superuser:
-            return ('amount', 'payout_amount', )
+            return ('amount', 'payout_amount',)
         else:
             return []
 
     def amount_value(self, obj):
         if obj:
             return obj.amount
+
     amount_value.short_description = _('Amount')
 
     def payout_amount_value(self, obj):
         if obj:
             return obj.payout_amount
+
     payout_amount_value.short_description = _('Payout amount')
 
     actions = [export_as_csv_action(fields=export_to_csv_fields)]
@@ -688,9 +695,9 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 
     def document(self, obj):
         if obj.connect_account and \
-                isinstance(obj.connect_account, PlainPayoutAccount) and \
-                obj.connect_account.document and \
-                obj.connect_account.document.file:
+            isinstance(obj.connect_account, PlainPayoutAccount) and \
+            obj.connect_account.document and \
+            obj.connect_account.document.file:
             template = loader.get_template(
                 'admin/document_button.html'
             )
@@ -705,7 +712,31 @@ class BankAccountChildAdmin(StateMachineAdminMixin, PayoutAccountActivityLinkMix
 @admin.register(IbanCheck)
 class IbanCheckAdmin(admin.ModelAdmin):
     model = IbanCheck
-    readonly_fields = ['id', 'hashed_iban', 'fingerprint', 'matched', 'name', 'result']
+    readonly_fields = ['id', 'hashed_iban', 'fingerprint', 'matched', 'name', 'pretty_result']
+    list_display = ('name', 'matched')
+    list_filter = ('matched',)
+    search_fields = ['name', 'result']
+
+    fields = readonly_fields
+    
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def pretty_result(self, obj):
+        """Render result JSON with indentation for readability."""
+        if not obj.result:
+            return "-"
+        try:
+            data = obj.result if isinstance(obj.result, dict) else json.loads(obj.result)
+        except (TypeError, ValueError):
+            return obj.result
+        formatted = json.dumps(data, indent=2, sort_keys=True)
+        return format_html('<div style="display:flex-table"><pre style="white-space: pre-wrap;">{}</pre></div>', formatted)
+
+    pretty_result.short_description = _('result')
 
 
 @admin.register(BankAccount)
@@ -779,7 +810,7 @@ class DonorInline(PaymentLinkMixin, admin.TabularInline):
 class PayoutAdmin(StateMachineAdmin):
     model = Payout
     inlines = [DonorInline]
-    raw_id_fields = ('activity', )
+    raw_id_fields = ('activity',)
     readonly_fields = [
         'status',
         'total_amount',
@@ -794,9 +825,9 @@ class PayoutAdmin(StateMachineAdmin):
     list_filter = ['status']
 
     fields = [
-        'activity',
-        'states',
-    ] + readonly_fields
+                 'activity',
+                 'states',
+             ] + readonly_fields
 
     export_to_csv_fields = (
         ('id', 'Id'),

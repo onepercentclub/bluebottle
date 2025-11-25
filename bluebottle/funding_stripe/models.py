@@ -100,9 +100,9 @@ class StripePayment(Payment):
             if intent.status == 'failed' and self.status != self.states.failed.value:
                 self.states.require_action(save=True)
         elif (
-                intent.latest_charge and
-                stripe.Charge.retrieve(intent.latest_charge).refunded and
-                self.status != self.states.refunded.value
+            intent.latest_charge and
+            stripe.Charge.retrieve(intent.latest_charge).refunded and
+            self.status != self.states.refunded.value
         ):
             self.states.refund(save=True)
         elif intent.status == 'pending' and self.status != self.states.pending.value:
@@ -123,8 +123,8 @@ class StripePayment(Payment):
                 )
 
             if (
-                    self.donation.amount.currency == self.donation.payout_amount.currency
-                    and self.donation.amount.amount != self.donation.payout_amount.amount
+                self.donation.amount.currency == self.donation.payout_amount.currency
+                and self.donation.amount.amount != self.donation.payout_amount.amount
             ):
                 self.donation.amount = Money(
                     self.donation.payout_amount.amount,
@@ -184,8 +184,10 @@ class StripeSourcePayment(Payment):
     def update(self):
         try:
             # Update donation amount if it differs
-            if old_div(self.source.amount, 100) != self.donation.amount.amount \
-                    or self.source.currency != self.donation.amount.currency:
+            if (
+                old_div(self.source.amount, 100) != self.donation.amount.amount
+                or self.source.currency != self.donation.amount.currency
+            ):
                 self.donation.amount = Money(old_div(self.source.amount, 100), self.source.currency)
                 self.donation.save()
             if not self.charge_token and self.source.status == 'chargeable':
@@ -394,9 +396,9 @@ class StripePayoutAccount(PayoutAccount):
             if business_profile:
                 stripe = get_stripe()
                 if (
-                        self.business_type == BusinessTypeChoices.company
-                        and company
-                        and getattr(company, 'structure', None) == 'incorporated_non_profit'
+                    self.business_type == BusinessTypeChoices.company
+                    and company
+                    and getattr(company, 'structure', None) == 'incorporated_non_profit'
                 ):
                     stripe.Account.modify(
                         self.account_id,
@@ -529,22 +531,31 @@ class StripePayoutAccount(PayoutAccount):
         if self.tos_accepted and 'tos_acceptance.date' in self.requirements:
             self.tos_accepted = False
 
-        try:
-            self.verified = data.individual.verification.status == "verified"
-        except AttributeError:
-            stripe = get_stripe()
-            persons = stripe.Account.persons(data.id)
-            self.verified = len(persons) and all(
-                person.verification.status == 'verified' for person in persons
-            )
+        if data.business_type != self.business_type:
+            self.business_type = data.business_type
+
+        if self.business_type == BusinessTypeChoices.individual:
+            try:
+                self.verified = data.individual.verification.status == "verified"
+            except AttributeError:
+                stripe = get_stripe()
+                persons = stripe.Account.persons(data.id)
+                self.verified = len(persons) and all(
+                    person.verification.status == 'verified' for person in persons
+                )
+        else:
+            try:
+                self.verified = data.company.verification.status == "verified"
+            except AttributeError:
+                pass
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled
 
         if (
-                self.verified and self.payouts_enabled
-                and self.payments_enabled
-                and self.status != self.states.verified.value
+            self.verified and self.payouts_enabled
+            and self.payments_enabled
+            and self.status != self.states.verified.value
         ):
             self.states.verify()
 
@@ -589,13 +600,13 @@ class StripePayoutAccount(PayoutAccount):
         for external_account in external_accounts:
             status = 'unverified'
             if (
-                    self.status == 'verified' and
-                    external_account.requirements.currently_due == [] and
-                    external_account.requirements.past_due == [] and
-                    external_account.requirements.pending_verification == [] and
-                    external_account.future_requirements.currently_due == [] and
-                    external_account.future_requirements.past_due == [] and
-                    external_account.future_requirements.pending_verification == []
+                self.status == 'verified' and
+                external_account.requirements.currently_due == [] and
+                external_account.requirements.past_due == [] and
+                external_account.requirements.pending_verification == [] and
+                external_account.future_requirements.currently_due == [] and
+                external_account.future_requirements.past_due == [] and
+                external_account.future_requirements.pending_verification == []
             ):
                 status = 'verified'
 

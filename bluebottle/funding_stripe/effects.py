@@ -72,7 +72,7 @@ class UpdateBusinessTypeEffect(Effect):
         stripe = get_stripe()
         account = self.instance
 
-        if account.pk and account.account_id:
+        if account.pk and account.account_id and account.account.business_type != account.business_type:
             stripe_account = stripe.Account.modify(
                 account.account_id,
                 business_type=account.business_type
@@ -80,4 +80,4 @@ class UpdateBusinessTypeEffect(Effect):
             account.update(stripe_account, save=False)
 
     def __str__(self):
-        return "Update bussiness type at stripe. This might result in addiontional verfication requirements"
+        return "Update business type at stripe. This might result in additional verification requirements"

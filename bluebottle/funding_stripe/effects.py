@@ -70,14 +70,15 @@ class UpdateBusinessTypeEffect(Effect):
 
     def pre_save(self, **kwargs):
         stripe = get_stripe()
-        account = self.instance
+        payout_account = self.instance
+        stripe_account = payout_account.retrieve_account()
 
-        if account.pk and account.account_id and account.account.business_type != account.business_type:
+        if payout_account.pk and payout_account.account_id and stripe_account.business_type != payout_account.business_type:
             stripe_account = stripe.Account.modify(
-                account.account_id,
-                business_type=account.business_type
+                payout_account.account_id,
+                business_type=payout_account.business_type
             )
-            account.update(stripe_account, save=False)
+            payout_account.update(stripe_account, save=False)
 
     def __str__(self):
         return "Update business type at stripe. This might result in additional verification requirements"

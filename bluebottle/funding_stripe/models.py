@@ -544,10 +544,14 @@ class StripePayoutAccount(PayoutAccount):
                     person.verification.status == 'verified' for person in persons
                 )
         else:
-            try:
-                self.verified = data.company.verification.status == "verified"
-            except AttributeError:
-                pass
+            requirements = data.requirements
+            if (
+                requirements.disabled_reason is None
+                and len(requirements.currently_due) == 0
+                and len(requirements.past_due) == 0
+                and len(requirements.pending_verification) == 0
+            ):
+                self.verified = True
 
         self.payments_enabled = data.charges_enabled
         self.payouts_enabled = data.payouts_enabled

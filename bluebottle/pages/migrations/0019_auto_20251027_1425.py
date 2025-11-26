@@ -24,8 +24,10 @@ def migrate_start_page(apps, schema_editor):
                 old_slug = 'terms-and-conditions'
             if new_slug == 'start':
                 settings, _ = SitePlatformSettings.objects.get_or_create()
-                settings_trans = SitePlatformSettingsTrans.objects.filter(master_id=settings.id, language_code=lang_code).first()
-                settings_fallback = SitePlatformSettingsTrans.objects.filter(master_id=settings.id, start_page__gt='').first()
+                settings_trans = SitePlatformSettingsTrans.objects.filter(master_id=settings.id,
+                                                                          language_code=lang_code).first()
+                settings_fallback = SitePlatformSettingsTrans.objects.filter(master_id=settings.id,
+                                                                             start_page__gt='').first()
                 if settings_fallback and settings_fallback.start_page:
                     old_slug = settings_fallback.start_page
                 if settings_trans and settings_trans.start_page:
@@ -42,6 +44,9 @@ def migrate_start_page(apps, schema_editor):
                 continue
 
             new_page.set_current_language(lang_code)
+            if not Language.objects.filter(pk=lang_code).exists():
+                continue
+
             if not new_page.has_translation(lang_code):
                 new_page.create_translation(lang_code)
 
@@ -65,7 +70,6 @@ def migrate_start_page(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('pages', '0018_platformpage'),
     ]

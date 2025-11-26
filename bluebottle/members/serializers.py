@@ -765,7 +765,8 @@ class MemberProfileSerializer(ModelSerializer):
             'search_distance', 'any_search_distance', 'exclude_online',
             'matching_options_set', 'remote_id', 'avatar',
             'subscribed', 'receive_reminder_emails', 'campaign_notifications',
-            'has_usable_password', 'avatar', 'gender', 'translate_user_content'
+            'has_usable_password', 'avatar', 'gender', 'translate_user_content',
+            'terms_accepted'
         )
 
     class JSONAPIMeta():
@@ -950,7 +951,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'retention_delete',
             'read_only_fields',
             'translate_user_content',
-            'social_login_methods'
+            'social_login_methods',
+            'explicit_terms'
         )
 
 

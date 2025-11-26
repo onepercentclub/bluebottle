@@ -152,6 +152,12 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
         help_text=_('Limit user session to browser session')
     )
 
+    explicit_terms = models.BooleanField(
+        _('Explicit terms'),
+        default=False,
+        help_text=_('Users have to explicitly accept terms when logging in')
+    )
+
     request_access_method = models.CharField(
         _('request access method'),
         help_text=_('This rule only applies when requesting access is allowed.'),
@@ -426,6 +432,12 @@ class Member(BlueBottleBaseUser):
     )
 
     avatar = ImageField(blank=True, null=True)
+
+    terms_accepted = models.BooleanField(
+        _('Terms accepted'),
+        default=False,
+        help_text=_('User has explicitly accepted the terms')
+    )
 
     @classmethod
     def create_by_email(cls, email, **kwargs):

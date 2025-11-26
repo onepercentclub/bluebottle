@@ -2,15 +2,13 @@ import json
 
 from adminsortable.admin import NonSortableParentAdmin
 from django import forms
-import json
-
-from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.forms import Form
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.urls import re_path
@@ -24,10 +22,8 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
 
-from .models import Page, PlatformPage
-from .utils import export_page_to_dict, import_pages_from_data
-
 from .models import Page
+from .models import PlatformPage
 from .utils import export_page_to_dict, import_pages_from_data
 
 
@@ -46,8 +42,11 @@ class PageAdmin(PlaceholderFieldAdmin):
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author',)
-    readonly_fields = ('online',)
+    raw_id_fields = ('author', )
+    readonly_fields = ('online', )
+
+    # Reserved slugs for platform pages
+    RESERVED_SLUGS = ['terms', 'terms-and-conditions', 'privacy', 'start']
 
     radio_fields = {
         'status': admin.HORIZONTAL,
@@ -165,10 +164,36 @@ class PageAdmin(PlaceholderFieldAdmin):
                                                          change, form_url, obj)
 
     def save_model(self, request, obj, form, change):
+        # Check if slug is reserved for platform pages
+        if obj.slug in self.RESERVED_SLUGS:
+            platform_page_url = reverse('admin:pages_platformpage_changelist')
+            message = format_html(
+                _('You are trying to create a platform page. Please do so at <a href="{}">Platform pages</a>.'),
+                platform_page_url
+            )
+            messages.error(request, message)
+            # Store flag to prevent saving and redirect
+            request._reserved_slug_error = True
+            return
+
         # Automatically store the user in the author field.
         if not obj.author:
             obj.author = request.user
         obj.save()
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # Check if we need to redirect due to reserved slug
+        if getattr(request, '_reserved_slug_error', False):
+            page_list_url = reverse('admin:pages_page_changelist')
+            return HttpResponseRedirect(page_list_url)
+        return super().response_add(request, obj, post_url_continue)
+
+    def response_change(self, request, obj):
+        # Check if we need to redirect due to reserved slug
+        if getattr(request, '_reserved_slug_error', False):
+            page_list_url = reverse('admin:pages_page_changelist')
+            return HttpResponseRedirect(page_list_url)
+        return super().response_change(request, obj)
 
     STATUS_ICONS = {
         Page.PageStatus.published: 'icon-yes.gif',

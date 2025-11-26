@@ -361,9 +361,9 @@ class TestPageTranslationAdmin(BluebottleAdminTestCase):
                 'target_language': 'nl',
                 'confirm': 'Translate page'
             })
-            
+
             self.assertEqual(response.status_code, 302)
-            
+
             new_page = Page.objects.get(slug=source_page.slug, language='nl')
             new_placeholder = Placeholder.objects.get(
                 parent_id=new_page.pk,

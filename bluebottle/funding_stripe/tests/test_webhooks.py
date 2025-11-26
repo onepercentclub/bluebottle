@@ -421,6 +421,7 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
             connect_account=self.payout_account,
             account_id='some-bank-token'
         )
+        self.external_account = external_account
         self.funding = FundingFactory.create(bank_account=external_account)
         self.funding.initiative.states.submit(save=True)
         BudgetLineFactory.create(activity=self.funding)
@@ -505,6 +506,19 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
                 }
             )
         )
+
+    def load_connect_account_fixture(self, filename):
+        fixture_path = f"bluebottle/funding_stripe/tests/files/{filename}"
+        with open(fixture_path) as hook_file:
+            data = munch.munchify(json.load(hook_file))
+
+        data.id = self.payout_account.account_id
+
+        if data.external_accounts.data:
+            data.external_accounts.data[0].id = self.external_account.account_id
+            data.external_accounts.data[0].account = data.id
+
+        self.connect_account = data
 
     def execute_hook(self):
         mail.outbox = []
@@ -648,3 +662,26 @@ class StripeConnectWebhookTestCase(BluebottleTestCase):
         })
         self.execute_hook()
         self.assertFalse(self.payout_account.tos_accepted)
+
+    def test_company_non_profit_verified(self):
+        self.load_connect_account_fixture("connect_webhook_company_verified.json")
+
+        with mock.patch(
+            'stripe.Account.retrieve',
+            return_value=self.connect_account
+        ):
+            self.execute_hook()
+
+        self.assertEqual(self.payout_account.status, 'verified')
+        self.assertTrue(self.payout_account.verified)
+        self.assertEqual(self.payout_account.business_type, 'non_profit')
+
+    def test_individual_fixture_verified(self):
+        self.load_connect_account_fixture("connect_webhook_indinvidual_verified.json")
+
+        self.execute_hook()
+
+        self.assertEqual(self.payout_account.status, 'verified')
+        self.assertTrue(self.payout_account.verified)
+        self.assertEqual(self.payout_account.business_type, 'individual')
+        self.assertEqual(self.payout_account.requirements, [])

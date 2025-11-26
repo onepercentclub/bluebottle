@@ -9,7 +9,6 @@ BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 PROJECT_ROOT = BASE_DIR
 
-
 DEBUG = True
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
@@ -190,7 +189,6 @@ REST_FRAMEWORK = {
 if not DEBUG:
     REST_FRAMEWORK['DEFAULT_METADATA_CLASS'] = None
 
-
 JWT_AUTH = {
     'JWT_LEEWAY': 0,
     'JWT_VERIFY': True,
@@ -213,7 +211,6 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api',
                           '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
-
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
@@ -443,7 +440,6 @@ TENANT_APPS = (
     'django_quill',
 )
 
-
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 CSRF_USE_SESSIONS = True
@@ -460,7 +456,6 @@ THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_PRESERVE_FORMAT = True
 THUMBNAIL_ENGINE = 'bluebottle.files.engines.Engine'
-
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
@@ -626,7 +621,6 @@ SEND_MAIL = False
 
 DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
-
 # Sometimes images crash projects
 # Error: Exception Value: image file is truncated (26 bytes not processed)
 # This fixes it
@@ -647,7 +641,6 @@ PRIVATE_FILE_ALLOWED_MIME_TYPES = (
     'application/pdf', 'application/vnd.oasis.opendocument.text',
     'text/rtf'
 )
-
 
 TOKEN_AUTH_SETTINGS = 'bluebottle.clients.properties'
 
@@ -776,7 +769,6 @@ AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = datetime.timedelta(minutes=10)
 AXES_CLIENT_IP_CALLABLE = "bluebottle.utils.utils.get_client_ip"
 
-
 AXES_USERNAME_FORM_FIELD = 'email'
 
 USE_X_FORWARDED_HOST = True
@@ -803,7 +795,7 @@ TWO_FACTOR_REMEMBER_COOKIE_AGE = 60 * 60 * 24 * 30
 TWO_FACTOR_REMEMBER_COOKIE_SECURE = False if DEBUG else True
 TWO_FACTOR_REMEMBER_COOKIE_HTTPONLY = True
 
-LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'), )
+LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale/'),)
 
 IBAN_CHECK_API = {
     "token_url": "https://auth-mtls-sandbox.abnamro.com/as/token.oauth2",
@@ -815,4 +807,4 @@ IBAN_CHECK_API = {
 }
 
 DEEPL_API_KEY = "deepl-key"
-DEEPL_API_URL = "https://api-free.deepl.com/v2/translate"
+DEEPL_API_URL = "deepl-url"

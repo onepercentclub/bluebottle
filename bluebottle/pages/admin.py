@@ -69,8 +69,8 @@ class PageAdmin(PlaceholderFieldAdmin):
     actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
-    raw_id_fields = ('author', )
-    readonly_fields = ('online', )
+    raw_id_fields = ('author',)
+    readonly_fields = ('online',)
 
     # Reserved slugs for platform pages
     RESERVED_SLUGS = ['terms', 'terms-and-conditions', 'privacy', 'start']
@@ -268,7 +268,7 @@ class PageAdmin(PlaceholderFieldAdmin):
         """Export selected pages to JSON file."""
         export_data = []
         for page in queryset:
-            export_data.append(export_page_to_dict(page, request=request))
+            export_data.append(export_page_to_dict(page))
 
         if not export_data:
             self.message_user(request, _("No pages were selected."), messages.WARNING)

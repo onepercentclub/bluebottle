@@ -1,29 +1,26 @@
 from builtins import object
 from datetime import timedelta
+from operator import attrgetter
 
-from memoize import memoize
-
-from django.conf import settings
-from django.core.cache import cache
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, ProgrammingError, OperationalError
 from django.db.models.manager import Manager
 from django.utils.timezone import now
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
-from operator import attrgetter
-from solo.models import SingletonModel
 from future.utils import python_2_unicode_compatible
-from parler.models import TranslatableModel, TranslatedFields
+from memoize import memoize
+from parler.models import TranslatableModel
+from solo.models import SingletonModel
 
 from bluebottle.utils.managers import (
     SortableTranslatableManager,
     PublishedManager
 )
-
 
 TIMEOUT = 5 * 60
 
@@ -85,11 +82,6 @@ class Language(models.Model):
     class Meta(object):
         ordering = ['language_name']
 
-    def save(self, *args, **kwargs):
-        if self.code and self.code not in (code for (code, _) in settings.LANGUAGES):
-            raise ValidationError(f'Unknown language code: {self.code}')
-        super().save(*args, **kwargs)
-
     @property
     def full_code(self):
         if self.sub_code:
@@ -121,7 +113,6 @@ class Address(models.Model):
 
 
 class MailLog(models.Model):
-
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -132,7 +123,6 @@ class MailLog(models.Model):
 
 @python_2_unicode_compatible
 class BasePlatformSettings(SingletonModel):
-
     update = models.DateTimeField(auto_now=True)
 
     class Meta(object):
@@ -166,7 +156,6 @@ class PublishedStatus(DjangoChoices):
 
 
 class PublishableModel(models.Model):
-
     # Publication
     status = models.CharField(_('status'), max_length=20,
                               choices=PublishedStatus.choices,
@@ -251,30 +240,3 @@ class AnonymizationMixin(object):
     @property
     def anonymized(self):
         return False
-
-
-class TranslationPlatformSettings(TranslatableModel, BasePlatformSettings):
-    translations = TranslatedFields(
-        office=models.CharField(
-            'Office',
-            max_length=100, null=True, blank=True
-        ),
-
-        office_location=models.CharField(
-            'Office location',
-            max_length=100, null=True, blank=True
-        ),
-        select_an_office_location=models.CharField(
-            'Select an office location',
-            max_length=100, null=True, blank=True
-        ),
-        whats_the_location_of_your_office=models.CharField(
-            u'What\u2019s the location of your office?',
-            max_length=100, null=True, blank=True
-        ),
-
-    )
-
-    class Meta(object):
-        verbose_name_plural = _('translation settings')
-        verbose_name = _('translation settings')

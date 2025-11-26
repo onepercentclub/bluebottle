@@ -292,10 +292,6 @@ JET_SIDE_MENU_ITEMS = [
                 "name": "looker.lookerembed",
             },
             {
-                "name": "utils.translationplatformsettings",
-                "permissions": ["utils.change_translationplatformsettings"],
-            },
-            {
                 "name": "scim.scimplatformsettings",
                 "permissions": ["scim.change_scimplatformsettings"],
             },

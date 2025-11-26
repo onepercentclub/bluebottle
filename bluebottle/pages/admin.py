@@ -1,9 +1,18 @@
+import json
+
 from adminsortable.admin import NonSortableParentAdmin
+from django import forms
 from django.conf import settings
-from django.contrib import admin, messages
+from django.contrib import admin
+from django.contrib import messages
+from django.core.serializers.json import DjangoJSONEncoder
+from django.forms import Form
+from django.http import HttpResponse
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from django.urls import re_path, reverse
+from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
+from django.urls import re_path
+from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
@@ -13,7 +22,40 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
 from parler.admin import TranslatableAdmin
 
-from .models import Page, PlatformPage
+from bluebottle.utils.models import Language
+from .models import Page
+from .models import PlatformPage
+from .utils import export_page_to_dict, import_pages_from_data, create_translated_page
+from ..bluebottle_dashboard.decorators import admin_form
+
+
+class PageImportForm(Form):
+    json_file = forms.FileField(label=_('JSON file'), help_text=_('Select a JSON file exported from another platform'))
+
+
+class PageTranslateForm(Form):
+    target_language = forms.ChoiceField(
+        label=_('Target Language'),
+        help_text=_('Select the language to translate this page to')
+    )
+    title = _('Translate page')
+
+    def __init__(self, *args, **kwargs):
+        obj = kwargs.pop('obj', None)
+        current_language = kwargs.pop('current_language', None)
+        # If obj is provided, use its language
+        if obj and hasattr(obj, 'language'):
+            current_language = obj.language
+        super().__init__(*args, **kwargs)
+
+        # Get all available languages except the current one
+        languages = Language.objects.all().order_by('language_name')
+        choices = []
+        for lang in languages:
+            if lang.full_code != current_language:
+                choices.append((lang.full_code, lang.language_name))
+
+        self.fields['target_language'].choices = choices
 
 
 @admin.register(Page)
@@ -24,12 +66,12 @@ class PageAdmin(PlaceholderFieldAdmin):
     list_filter = ('status', 'language')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
-    actions = ['make_published']
+    actions = ['make_published', 'export_selected']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
     raw_id_fields = ('author', )
     readonly_fields = ('online', )
-    
+
     # Reserved slugs for platform pages
     RESERVED_SLUGS = ['terms', 'terms-and-conditions', 'privacy', 'start']
 
@@ -48,12 +90,15 @@ class PageAdmin(PlaceholderFieldAdmin):
     )
 
     def online(self, obj):
-        if obj.status == 'published' and \
-                obj.publication_date and \
-                obj.publication_date < now() and \
-                (obj.publication_end_date is None or obj.publication_end_date > now()):
+        if (
+            obj.status == 'published' and
+            obj.publication_date and
+            obj.publication_date < now() and
+            (obj.publication_end_date is None or obj.publication_end_date > now())
+        ):
             return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+
     online.help_text = _("Is this item currently visible online or not.")
 
     def preview_slide(self, obj):
@@ -70,6 +115,27 @@ class PageAdmin(PlaceholderFieldAdmin):
                     self.preview_canvas
                 ),
                 name="{0}_{1}_preview".format(*info)
+            ),
+            re_path(
+                r'^(?P<pk>\d+)/export/$',
+                self.admin_site.admin_view(
+                    self.export_page
+                ),
+                name="{0}_{1}_export".format(*info)
+            ),
+            re_path(
+                r'^import/$',
+                self.admin_site.admin_view(
+                    self.import_pages
+                ),
+                name="{0}_{1}_import".format(*info)
+            ),
+            re_path(
+                r'^(?P<pk>\d+)/translate/$',
+                self.admin_site.admin_view(
+                    self.translate_page
+                ),
+                name="{0}_{1}_translate".format(*info)
             ),
         ]
 
@@ -123,6 +189,17 @@ class PageAdmin(PlaceholderFieldAdmin):
             'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
                                           kwargs={'pk': obj.pk if obj else 0}),
         })
+        if change and obj and request.user.is_superuser:
+            context.update({
+                'export_url': reverse(
+                    'admin:{0}_{1}_export'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
+                'translate_url': reverse(
+                    'admin:{0}_{1}_translate'.format(*info),
+                    kwargs={'pk': obj.pk}
+                ),
+            })
         return super(PageAdmin, self).render_change_form(request, context, add,
                                                          change, form_url, obj)
 
@@ -138,19 +215,19 @@ class PageAdmin(PlaceholderFieldAdmin):
             # Store flag to prevent saving and redirect
             request._reserved_slug_error = True
             return
-        
+
         # Automatically store the user in the author field.
         if not obj.author:
             obj.author = request.user
         obj.save()
-    
+
     def response_add(self, request, obj, post_url_continue=None):
         # Check if we need to redirect due to reserved slug
         if getattr(request, '_reserved_slug_error', False):
             page_list_url = reverse('admin:pages_page_changelist')
             return HttpResponseRedirect(page_list_url)
         return super().response_add(request, obj, post_url_continue)
-    
+
     def response_change(self, request, obj):
         # Check if we need to redirect due to reserved slug
         if getattr(request, '_reserved_slug_error', False):
@@ -186,6 +263,137 @@ class PageAdmin(PlaceholderFieldAdmin):
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
+
+    def export_selected(self, request, queryset):
+        """Export selected pages to JSON file."""
+        export_data = []
+        for page in queryset:
+            export_data.append(export_page_to_dict(page, request=request))
+
+        if not export_data:
+            self.message_user(request, _("No pages were selected."), messages.WARNING)
+            return
+
+        # Create JSON response
+        response = HttpResponse(
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
+            content_type='application/json'
+        )
+        filename = f"pages_export_{now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    export_selected.short_description = _("Export selected pages")
+
+    def export_page(self, request, pk):
+        """Export a single page to JSON file."""
+        page = self.get_object(request, pk)
+        if page is None:
+            from django.contrib.admin.exceptions import DisallowedModelAdminToField
+            raise DisallowedModelAdminToField(
+                "Page object with primary key '%s' does not exist." % pk
+            )
+
+        export_data = [export_page_to_dict(page)]
+
+        response = HttpResponse(
+            json.dumps(export_data, indent=2, cls=DjangoJSONEncoder),
+            content_type='application/json'
+        )
+        filename = f"page_{page.slug}_{page.pk}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    def import_pages(self, request):
+        """Import pages from JSON file."""
+        if request.method == 'POST':
+            form = PageImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                json_file = form.cleaned_data['json_file']
+                try:
+                    json_file.seek(0)  # Reset file pointer
+                    data = json.load(json_file)
+                    result = import_pages_from_data(data)
+
+                    message = render_to_string(
+                        'admin/pages/page/import_message.html',
+                        {'result': result},
+                        request=request
+                    ).strip()
+
+                    if result['imported'] > 0 or result['updated'] > 0:
+                        messages.success(request, message)
+                    else:
+                        messages.info(request, message)
+
+                    total_count = result['imported'] + result['updated']
+                    last_page = result['last_item']
+                    if total_count == 1 and last_page:
+                        return redirect('admin:pages_page_change', last_page.pk)
+                    else:
+                        return redirect('admin:pages_page_changelist')
+                except json.JSONDecodeError:
+                    messages.error(request, _("Invalid JSON file. Please check the file format."))
+                except Exception as e:
+                    messages.error(request, _("Error importing pages: {0}").format(str(e)))
+        else:
+            form = PageImportForm()
+
+        context = {
+            'form': form,
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request),
+            'has_add_permission': self.has_add_permission(request),
+            'has_change_permission': self.has_change_permission(request),
+            'has_delete_permission': self.has_delete_permission(request),
+            'title': _('Import pages'),
+        }
+        return render(request, 'admin/pages/page/import.html', context)
+
+    @admin_form(
+        PageTranslateForm,
+        Page,
+        'admin/pages/page/translate.html'
+    )
+    def translate_page(self, request, page, form):
+        """Translate a page to another language."""
+        target_language = form.cleaned_data['target_language']
+
+        if Page.objects.filter(slug=page.slug, language=target_language).exists():
+            messages.error(
+                request,
+                _('A page with slug "{slug}" already exists for language {language}.').format(
+                    slug=page.slug,
+                    language=target_language
+                )
+            )
+            return redirect('admin:pages_page_change', page.pk)
+
+        try:
+            new_page = create_translated_page(page, target_language, request.user)
+
+            messages.success(
+                request,
+                _('Page "{title}" has been translated to {language}.').format(
+                    title=new_page.title,
+                    language=target_language
+                )
+            )
+            return redirect('admin:pages_page_change', new_page.pk)
+        except Exception as e:
+            messages.error(
+                request,
+                _('Error translating page: {error}').format(error=str(e))
+            )
+            return redirect('admin:pages_page_change', page.pk)
+
+    def changelist_view(self, request, extra_context=None):
+        """Override to add import URL to context."""
+        extra_context = extra_context or {}
+        info = self.model._meta.app_label, self.model._meta.model_name
+        if request.user.is_superuser:
+            extra_context['import_url'] = reverse('admin:{0}_{1}_import'.format(*info))
+        return super(PageAdmin, self).changelist_view(request, extra_context)
 
 
 @admin.register(PlatformPage)

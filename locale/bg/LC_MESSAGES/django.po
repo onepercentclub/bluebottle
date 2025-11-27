@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-27 09:13+0100\n"
-"PO-Revision-Date: 2025-11-27 08:25\n"
+"POT-Creation-Date: 2025-11-27 11:02+0100\n"
+"PO-Revision-Date: 2025-11-27 10:03\n"
 "Last-Translator: \n"
 "Language-Team: Bulgarian\n"
 "Language: bg_BG\n"
@@ -1792,15 +1792,15 @@ msgstr "Благодарим ви, че използвате нашия сайт
 msgid "The %(site_name)s team"
 msgstr "Екипът на %(site_name)s"
 
-#: bluebottle/auth/views.py:40
+#: bluebottle/auth/views.py:37
 msgid "Authentication was cancelled"
 msgstr "Аутентификацията беше отменена"
 
-#: bluebottle/auth/views.py:47
+#: bluebottle/auth/views.py:44
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Моля, разреши на Facebook достъп до твоя имейл адрес, ако желаеш да се регистрираш/влезеш през Facebook."
 
-#: bluebottle/auth/views.py:51
+#: bluebottle/auth/views.py:48
 msgid "User account is disabled"
 msgstr "Потребителският акаунт е деактивиран"
 
@@ -8251,47 +8251,47 @@ msgstr "Не може да се влезе с предоставените crede
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr "Трябва да се включи \"{username_field}\" и \"парола\"."
 
-#: bluebottle/members/serializers.py:521
+#: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
 msgstr "Линкът за достъп, който предоставихте, е невалиден. Моля, свържете се с нас, за да поискате нов линк за достъп."
 
-#: bluebottle/members/serializers.py:527
+#: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
 msgstr "Този имейл не е в белия списък, моля свържете се с нас, за да поискате достъп."
 
-#: bluebottle/members/serializers.py:532
+#: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
 msgstr "Позволени са само имейли за определени домейни. Моля, използвайте работния си имейл адрес."
 
-#: bluebottle/members/serializers.py:589
+#: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
 msgstr "Потребител с този имейл адрес вече съществува"
 
-#: bluebottle/members/serializers.py:629
+#: bluebottle/members/serializers.py:632
 msgid "Signup requires a confirmation token."
 msgstr "Регистрацията изисква токен за потвърждение."
 
-#: bluebottle/members/serializers.py:634
+#: bluebottle/members/serializers.py:637
 msgid "The platform is closed."
 msgstr "Платформата е затворена."
 
-#: bluebottle/members/serializers.py:664
+#: bluebottle/members/serializers.py:667
 msgid "email_confirmation"
 msgstr "имейл_потвърждение"
 
-#: bluebottle/members/serializers.py:708
+#: bluebottle/members/serializers.py:711
 msgid "Email confirmation mismatch"
 msgstr "Несъответствие в потвърждението на имейла"
 
-#: bluebottle/members/serializers.py:715
+#: bluebottle/members/serializers.py:718
 msgid "Signup requires a confirmation token"
 msgstr "Регистрацията изисква токен за потвърждение"
 
-#: bluebottle/members/serializers.py:821
+#: bluebottle/members/serializers.py:824
 msgid "Password does not match"
 msgstr "Паролата не съвпада"
 
-#: bluebottle/members/serializers.py:884
+#: bluebottle/members/serializers.py:887
 msgid "The two password fields didn't match."
 msgstr "Двете полета за парола не съвпадат."
 
@@ -9254,7 +9254,8 @@ msgstr "Настройки"
 msgid "Manage Reporting"
 msgstr "Управление на отчетност"
 
-#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9286,9 +9287,10 @@ msgstr "Управление на отчетност"
 msgid "English"
 msgstr "Английски"
 
-#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
+#: tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
@@ -9320,26 +9322,33 @@ msgstr "Английски"
 msgid "Dutch"
 msgstr "Холандски"
 
-#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Френски"
 
-#: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Испански"
 
-#: bluebottle/settings/local.py:729 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Немски"
 
-#: bluebottle/settings/local.py:730
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Португалски"
 
-#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Унгарски"
+
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
+msgid "Bulgarian"
+msgstr ""
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

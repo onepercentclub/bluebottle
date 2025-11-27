@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-27 09:13+0100\n"
-"PO-Revision-Date: 2025-11-27 08:25\n"
+"POT-Creation-Date: 2025-11-27 11:02+0100\n"
+"PO-Revision-Date: 2025-11-27 10:03\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -1792,15 +1792,15 @@ msgstr "Merci d'utiliser notre site!"
 msgid "The %(site_name)s team"
 msgstr "L'équipe %(site_name)s"
 
-#: bluebottle/auth/views.py:40
+#: bluebottle/auth/views.py:37
 msgid "Authentication was cancelled"
 msgstr "L'authentification a été annulée"
 
-#: bluebottle/auth/views.py:47
+#: bluebottle/auth/views.py:44
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Veuillez autoriser Facebook à accéder à votre adresse e-mail si vous souhaitez vous inscrire/connecter via Facebook."
 
-#: bluebottle/auth/views.py:51
+#: bluebottle/auth/views.py:48
 msgid "User account is disabled"
 msgstr "Le compte utilisateur est désactivé"
 
@@ -8253,47 +8253,47 @@ msgstr "Impossible de se connecter avec les identifiants fournis."
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr "Doit inclure \"{username_field}\" et \"password\"."
 
-#: bluebottle/members/serializers.py:521
+#: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
 msgstr "Le lien d'accès que vous avez fourni est invalide. Veuillez nous contacter pour demander un nouveau lien d'accès."
 
-#: bluebottle/members/serializers.py:527
+#: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
 msgstr "Cet e-mail n'est pas sur liste blanche, veuillez nous contacter pour demander l'accès."
 
-#: bluebottle/members/serializers.py:532
+#: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
 msgstr "Seules les adresses e-mail pour les domaines spécifiés sont autorisées. Veuillez utiliser votre adresse e-mail professionnelle."
 
-#: bluebottle/members/serializers.py:589
+#: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
 msgstr "Un utilisateur avec cette adresse e-mail existe déjà"
 
-#: bluebottle/members/serializers.py:629
+#: bluebottle/members/serializers.py:632
 msgid "Signup requires a confirmation token."
 msgstr "L'inscription nécessite un jeton de confirmation."
 
-#: bluebottle/members/serializers.py:634
+#: bluebottle/members/serializers.py:637
 msgid "The platform is closed."
 msgstr "La plateforme est fermée."
 
-#: bluebottle/members/serializers.py:664
+#: bluebottle/members/serializers.py:667
 msgid "email_confirmation"
 msgstr "Email de confirmation"
 
-#: bluebottle/members/serializers.py:708
+#: bluebottle/members/serializers.py:711
 msgid "Email confirmation mismatch"
 msgstr "Incompatibilité de la confirmation de l'e-mail"
 
-#: bluebottle/members/serializers.py:715
+#: bluebottle/members/serializers.py:718
 msgid "Signup requires a confirmation token"
 msgstr "L'inscription nécessite un jeton de confirmation"
 
-#: bluebottle/members/serializers.py:821
+#: bluebottle/members/serializers.py:824
 msgid "Password does not match"
 msgstr "Le mot de passe ne correspond pas"
 
-#: bluebottle/members/serializers.py:884
+#: bluebottle/members/serializers.py:887
 msgid "The two password fields didn't match."
 msgstr "Les deux champs de mot de passe ne correspondent pas."
 
@@ -9261,7 +9261,8 @@ msgstr "Réglages"
 msgid "Manage Reporting"
 msgstr "Gérer les rapports"
 
-#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9293,9 +9294,10 @@ msgstr "Gérer les rapports"
 msgid "English"
 msgstr "Anglais"
 
-#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
+#: tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
@@ -9327,26 +9329,33 @@ msgstr "Anglais"
 msgid "Dutch"
 msgstr "Néerlandais"
 
-#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Français"
 
-#: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: bluebottle/settings/local.py:729 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Allemand"
 
-#: bluebottle/settings/local.py:730
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Portugais"
 
-#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Hongrois"
+
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
+msgid "Bulgarian"
+msgstr ""
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

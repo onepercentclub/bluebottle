@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bluebottle\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-27 09:13+0100\n"
-"PO-Revision-Date: 2025-11-27 08:25\n"
+"POT-Creation-Date: 2025-11-27 11:02+0100\n"
+"PO-Revision-Date: 2025-11-27 10:03\n"
 "Last-Translator: \n"
 "Language-Team: Hungarian\n"
 "Language: hu_HU\n"
@@ -1792,15 +1792,15 @@ msgstr "Köszönjük, hogy használod az oldalunkat!"
 msgid "The %(site_name)s team"
 msgstr "A %(site_name)s csapat"
 
-#: bluebottle/auth/views.py:40
+#: bluebottle/auth/views.py:37
 msgid "Authentication was cancelled"
 msgstr "Az autentikációt lemondták"
 
-#: bluebottle/auth/views.py:47
+#: bluebottle/auth/views.py:44
 msgid "Please allow Facebook access to your email address if you wish to sign up/log in via Facebook."
 msgstr "Kérjük, engedélyezze a Facebook hozzáférést az e-mail címéhez, ha szeretne regisztrálni/bejelentkezni a Facebook segítségével."
 
-#: bluebottle/auth/views.py:51
+#: bluebottle/auth/views.py:48
 msgid "User account is disabled"
 msgstr "A felhasználói fiók le van tiltva"
 
@@ -8245,47 +8245,47 @@ msgstr "Nem lehet bejelentkezni a megadott hitelesítő adatokkal."
 msgid "Must include \"{username_field}\" and \"password\"."
 msgstr "Kötelező megadni a \"{username_field}\" és a \"jelszó\" mezőket."
 
-#: bluebottle/members/serializers.py:521
+#: bluebottle/members/serializers.py:524
 msgid "The access link you supplied is invalid. Please contact us to request a new access link."
 msgstr "A megadott hozzáférési link érvénytelen. Kérlek, lépj velünk kapcsolatba, hogy új hozzáférési linket kérj."
 
-#: bluebottle/members/serializers.py:527
+#: bluebottle/members/serializers.py:530
 msgid "This email is not whitelisted, please contact us to request access."
 msgstr "Ez az e-mail nincs fehérlistázva, kérlek, lépj velünk kapcsolatba a hozzáférés kéréséhez."
 
-#: bluebottle/members/serializers.py:532
+#: bluebottle/members/serializers.py:535
 msgid "Only emails for specified domains are allowed. Please use your work e-mail address."
 msgstr "Csak meghatározott domainekhez tartozó e-mailek engedélyezettek. Kérlek, használd a munkahelyi e-mail címedet."
 
-#: bluebottle/members/serializers.py:589
+#: bluebottle/members/serializers.py:592
 msgid "A user with this email address already exists"
 msgstr "Ezzel az e-mail címmel már létezik felhasználó"
 
-#: bluebottle/members/serializers.py:629
+#: bluebottle/members/serializers.py:632
 msgid "Signup requires a confirmation token."
 msgstr "A regisztrációhoz megerősítő token szükséges."
 
-#: bluebottle/members/serializers.py:634
+#: bluebottle/members/serializers.py:637
 msgid "The platform is closed."
 msgstr "A platform zárva van."
 
-#: bluebottle/members/serializers.py:664
+#: bluebottle/members/serializers.py:667
 msgid "email_confirmation"
 msgstr "e-mail_megerősítés"
 
-#: bluebottle/members/serializers.py:708
+#: bluebottle/members/serializers.py:711
 msgid "Email confirmation mismatch"
 msgstr "E-mail megerősítési eltérés"
 
-#: bluebottle/members/serializers.py:715
+#: bluebottle/members/serializers.py:718
 msgid "Signup requires a confirmation token"
 msgstr "A regisztrációhoz megerősítő token szükséges"
 
-#: bluebottle/members/serializers.py:821
+#: bluebottle/members/serializers.py:824
 msgid "Password does not match"
 msgstr "A jelszavak nem egyeznek."
 
-#: bluebottle/members/serializers.py:884
+#: bluebottle/members/serializers.py:887
 msgid "The two password fields didn't match."
 msgstr "A két jelszómező nem egyezett."
 
@@ -9250,7 +9250,8 @@ msgstr "Beállítások"
 msgid "Manage Reporting"
 msgstr "Jelentéskezelés"
 
-#: bluebottle/settings/local.py:725 tenants/accenture/settings.py:30
+#: bluebottle/settings/local.py:725 bluebottle/settings/testing.py:425
+#: tenants/accenture/settings.py:30
 #: tenants/action-against-corona/settings.py:25 tenants/apg/settings.py:27
 #: tenants/bedrijven-voor-amsterdam/settings.py:27
 #: tenants/booking-community/settings.py:24 tenants/booking/settings.py:31
@@ -9282,9 +9283,10 @@ msgstr "Jelentéskezelés"
 msgid "English"
 msgstr "Angol"
 
-#: bluebottle/settings/local.py:726 tenants/abn/settings.py:26
-#: tenants/achmea-voor-elkaar/settings.py:26 tenants/almelo/settings.py:25
-#: tenants/apg/settings.py:26 tenants/athlon/settings.py:26
+#: bluebottle/settings/local.py:726 bluebottle/settings/testing.py:426
+#: tenants/abn/settings.py:26 tenants/achmea-voor-elkaar/settings.py:26
+#: tenants/almelo/settings.py:25 tenants/apg/settings.py:26
+#: tenants/athlon/settings.py:26
 #: tenants/bedrijven-voor-amsterdam/settings.py:26 tenants/bmw/settings.py:26
 #: tenants/brabant/settings.py:25 tenants/buurt-aed/settings.py:26
 #: tenants/corona/settings.py:25 tenants/crowdfunding-010/settings.py:26
@@ -9316,26 +9318,33 @@ msgstr "Angol"
 msgid "Dutch"
 msgstr "Holland"
 
-#: bluebottle/settings/local.py:727 tenants/nexteconomy/settings.py:30
-#: tenants/twoscale/settings.py:27
+#: bluebottle/settings/local.py:727 bluebottle/settings/testing.py:427
+#: tenants/nexteconomy/settings.py:30 tenants/twoscale/settings.py:27
 msgid "French"
 msgstr "Francia"
 
-#: bluebottle/settings/local.py:728 tenants/mars/settings.py:28
+#: bluebottle/settings/local.py:728 bluebottle/settings/testing.py:428
+#: tenants/mars/settings.py:28
 msgid "Spanish"
 msgstr "Spanyol"
 
-#: bluebottle/settings/local.py:729 tenants/mars/settings.py:29
+#: bluebottle/settings/local.py:729 bluebottle/settings/testing.py:429
+#: tenants/mars/settings.py:29
 msgid "German"
 msgstr "Német"
 
-#: bluebottle/settings/local.py:730
+#: bluebottle/settings/local.py:730 bluebottle/settings/testing.py:430
 msgid "Portuguese"
 msgstr "Portugál"
 
-#: bluebottle/settings/local.py:731 tenants/mars/settings.py:30
+#: bluebottle/settings/local.py:731 bluebottle/settings/testing.py:431
+#: tenants/mars/settings.py:30
 msgid "Hungarian"
 msgstr "Magyar"
+
+#: bluebottle/settings/local.py:732 bluebottle/settings/testing.py:432
+msgid "Bulgarian"
+msgstr ""
 
 #: bluebottle/slides/admin.py:34
 msgid "Contents"

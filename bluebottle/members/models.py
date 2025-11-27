@@ -73,8 +73,8 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     closed = CheckboxField(
-        _('closed'), default=False,
-        inline_label=_('Require users to verify their email on sign-up'),
+        _('Platform access'), default=False,
+        inline_label=_('Require log in before accessing the platform'),
         help_text=_('Only logged-in users can view the platform.')
     )
     create_initiatives = models.BooleanField(
@@ -129,16 +129,12 @@ class MemberPlatformSettings(TranslatableModel, BasePlatformSettings):
     )
 
     account_creation_rules = CharField(
-        _('account create rules'),
+        _('account creation rules'),
         help_text=_('This rule only applies to email + password sign-ups.'),
         choices=ACCOUNT_CREATION_RULES,
         default='anyone',
     )
 
-    email_domain = models.CharField(
-        _('Old email domain'),
-        blank=True, null=True,
-    )
     email_domains = ArrayField(
         models.CharField(),
         verbose_name=_('Whitelisted email domains'),

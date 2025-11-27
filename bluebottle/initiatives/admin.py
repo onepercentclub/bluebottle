@@ -1,5 +1,4 @@
 from adminsortable.admin import NonSortableParentAdmin, SortableTabularInline
-from bluebottle.segments.filters import ActivitySegmentAdminMixin
 from django.contrib import admin
 from django.urls import reverse
 from django.utils import translation
@@ -20,6 +19,8 @@ from bluebottle.initiatives.models import (
 )
 from bluebottle.notifications.admin import MessageAdminInline, NotificationAdminMixin
 from bluebottle.offices.admin import RegionManagerAdminMixin
+from bluebottle.segments.filters import ActivitySegmentAdminMixin
+from bluebottle.translations.admin import TranslatableLabelAdminMixin
 from bluebottle.utils.admin import (
     BasePlatformSettingsAdmin,
     TranslatableAdminOrderingMixin,
@@ -350,7 +351,7 @@ class InitiativePlatformSettingsAdmin(
 
 
 @admin.register(Theme)
-class ThemeAdmin(TranslatableAdminOrderingMixin, TranslatableAdmin):
+class ThemeAdmin(TranslatableLabelAdminMixin, TranslatableAdminOrderingMixin, TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + (
         "slug",
         "disabled",

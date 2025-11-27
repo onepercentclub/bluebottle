@@ -162,7 +162,7 @@ class SitePlatformSettingsAdmin(TranslatableAdmin, BasePlatformSettingsAdmin):
             _('Contact'),
             {
                 'fields': (
-                    'contact_email', 'contact_phone', 'start_page'
+                    'translatable_info', 'contact_email', 'contact_phone', 'start_page'
                 )
             }
         ),

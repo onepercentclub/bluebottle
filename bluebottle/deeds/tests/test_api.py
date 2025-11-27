@@ -1,12 +1,15 @@
-import json
 import io
+import json
 from datetime import timedelta, date
+from unittest import mock
 
 from django.core import mail
 from django.urls import reverse
 from openpyxl import load_workbook
 from rest_framework import status
 
+from bluebottle.activities.tests.factories import TextQuestionFactory, \
+    TextAnswerFactory
 from bluebottle.deeds.serializers import (
     DeedSerializer, DeedTransitionSerializer,
     DeedParticipantSerializer, DeedParticipantTransitionSerializer
@@ -59,6 +62,22 @@ class DeedsListViewAPITestCase(APITestCase):
 
         self.assertTransition('publish')
         self.assertTransition('delete')
+
+    def test_custom_question_not_required(self):
+        TextQuestionFactory.create(
+            required=False
+        )
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertTransition('publish')
+
+    def test_custom_question_required(self):
+        TextQuestionFactory.create(
+            required=True
+        )
+        self.perform_create(user=self.user)
+        self.assertStatus(status.HTTP_201_CREATED)
+        self.assertNotTransition('publish')
 
     def test_create_incomplete(self):
         self.defaults['description'] = ''
@@ -170,6 +189,48 @@ class DeedsDetailViewAPITestCase(APITestCase):
                 reverse('activity-update-list', args=(self.model.pk,))
             ),
         )
+
+    def test_get_with_answer(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='all',
+        )
+        answer = TextAnswerFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [answer])
+
+    def test_get_with_answer_hidden(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='managers',
+        )
+        TextAnswerFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get()
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [])
+
+    def test_get_with_answer_manager(self):
+
+        question = TextQuestionFactory.create(
+            required=False,
+            visibility='managers',
+        )
+        answer = TextAnswerFactory.create(
+            question=question,
+            activity=self.model,
+        )
+        self.perform_get(self.model.owner)
+        self.assertStatus(status.HTTP_200_OK)
+        self.assertRelationship('answers', [answer])
 
     def test_get_with_segments(self):
         segment = SegmentFactory.create(
@@ -395,6 +456,98 @@ class DeedsDetailViewAPITestCase(APITestCase):
         self.perform_update({'description': new_description})
 
         self.assertStatus(status.HTTP_401_UNAUTHORIZED)
+
+    def test_meta_translations_in_response(self):
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
+        mock_translation_response = {
+            'value': 'In het Nederlands',
+            'source_language': 'en'
+        }
+
+        with mock.patch(
+            'bluebottle.translations.utils.get_translation_response',
+            return_value=mock_translation_response
+        ):
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+
+            self.assertIn('meta', data['data'])
+
+            self.assertIn('translations', data['data']['meta'])
+
+            self.assertIn('description', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['description']['value'], 'In het Nederlands')
+            self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
+
+    def test_meta_translations_advanced_mock(self):
+        from bluebottle.test.factory_models.utils import LanguageFactory
+        member_settings = MemberPlatformSettings.load()
+        member_settings.translate_user_content = True
+        member_settings.save()
+
+        # Create Language objects for testing
+        LanguageFactory.create(code='nl', language_name='Dutch', native_name='Nederlands')
+        LanguageFactory.create(code='en', language_name='English', native_name='English')
+
+        # Set explicit title and description
+        self.model.title = 'This is my activity'
+        self.model.description = json.dumps({"html": "We're going to change the world!", "delta": ""})
+        self.model.save()
+
+        # Mock function that reverses string for 'nl' language and uppercases for 'de' language
+        def mock_translation_side_effect(text, target_language):
+            if target_language == 'nl':
+                # Reverse the string
+                return {
+                    'value': text[::-1],
+                    'source_language': 'en'
+                }
+            elif target_language == 'en':
+                # Uppercase the string
+                return {
+                    'value': text.upper(),
+                    'source_language': 'bg'
+                }
+            return {
+                'value': text,
+                'source_language': 'bg'
+            }
+
+        with mock.patch(
+            'bluebottle.translations.utils.get_translation_response',
+            side_effect=mock_translation_side_effect
+        ):
+            # Test with 'nl' language - should reverse the strings
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+
+            self.assertIn('meta', data['data'])
+            self.assertIn('translations', data['data']['meta'])
+
+            self.assertIn('description', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['description']['value'],
+                             "!dlrow eht egnahc ot gniog er'eW")
+            self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'en')
+
+            # Test with 'de' language - should uppercase the strings
+            response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='en')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            data = json.loads(response.content)
+
+            self.assertIn('meta', data['data'])
+            self.assertIn('translations', data['data']['meta'])
+
+            self.assertIn('description', data['data']['meta']['translations'])
+            self.assertEqual(data['data']['meta']['translations']['description']['value'],
+                             "WE'RE GOING TO CHANGE THE WORLD!")
+            self.assertEqual(data['data']['meta']['translations']['description']['source_language'], 'bg')
 
 
 class DeedTransitionListViewAPITestCase(APITestCase):

@@ -561,6 +561,44 @@ class TestSAMLTokenAuthentication(TestCase):
 
             self.assertEqual(auth_backend.target_url, '/test')
 
+    def test_auth_absolute_custom_target(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response, 'RelayState': 'https://example.com/test'}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            self.assertEqual(auth_backend.target_url, '/test')
+
+    def test_auth_admin_target(self):
+        with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
+            filename = os.path.join(
+                os.path.dirname(__file__), 'data/valid_response.xml.base64'
+            )
+            with open(filename) as response_file:
+                response = response_file.read()
+
+            request = self._request(
+                'post',
+                '/sso/auth',
+                session={'saml_request_id': '_6273d77b8cde0c333ec79d22a9fa0003b9fe2d75cb'},
+                HTTP_HOST='www.stuff.com',
+                data={'SAMLResponse': response, 'RelayState': '/en/admin'}
+            )
+            auth_backend = SAMLAuthentication(request, properties.TOKEN_AUTH)
+
+            self.assertEqual(auth_backend.target_url, '/en/admin')
+
     def test_auth_custom_target_non_http(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             filename = os.path.join(

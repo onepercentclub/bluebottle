@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import logging
 from builtins import object
 
@@ -106,6 +107,7 @@ class GrantPayment(TriggerMixin, models.Model):
         on_delete=models.SET_NULL
     )
     checkout_id = models.CharField(max_length=500, null=True, blank=True)
+    intent_id = models.CharField(max_length=500, null=True, blank=True)
     payment_link = models.URLField(max_length=500, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -136,15 +138,50 @@ class GrantPayment(TriggerMixin, models.Model):
         return None
 
     def check_status(self):
-        if self.checkout_id:
-            stripe = get_stripe()
-            session = stripe.checkout.Session.retrieve(self.checkout_id)
-            if session.payment_intent:
-                intent = stripe.PaymentIntent.retrieve(session.payment_intent)
-                if intent.status == "succeeded":
+        if not self.checkout_id:
+            return None
+
+        stripe = get_stripe()
+        session = stripe.checkout.Session.retrieve(self.checkout_id)
+        if not session.payment_intent:
+            return None
+
+        intent = stripe.PaymentIntent.retrieve(
+            session.payment_intent,
+            expand=['latest_charge']
+        )
+        if not self.intent_id:
+            self.intent_id = intent.id
+            self.save()
+
+        if intent.status == "requires_action":
+            self.states.wait(save=True)
+            return None
+
+        if intent.status == "succeeded":
+            charge_id = intent.latest_charge.id if intent.latest_charge else None
+            if not charge_id:
+                return None
+
+            charge = stripe.Charge.retrieve(
+                charge_id,
+                expand=["balance_transaction"]
+            )
+            balance_transaction = charge.balance_transaction
+
+            if balance_transaction and balance_transaction.available_on:
+                import time
+                now = int(time.time())
+                if balance_transaction.available_on <= now:
+                    # Funds are actually available for payout
                     self.states.succeed(save=True)
-                if intent.status == "requires_action":
+                elif self.status != 'pending':
+                    date = datetime.datetime.fromtimestamp(
+                        balance_transaction.available_on
+                    ).strftime('%Y-%m-%d %H:%M:%S')
                     self.states.wait(save=True)
+                    raise Exception(f"Will become available on {date}")
+
         return None
 
     def generate_payment_link(self):

@@ -504,6 +504,19 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             count = 0
             capacity = None
 
+        upcoming_participants = 0
+        for slot in slots:
+            upcoming_participants += slot.contributor_count
+
+        spots_left = None
+
+        if capacity:
+            spots_left = capacity - upcoming_participants
+
+        if slots.count() == 0 or slots.filter(capacity__isnull=True).exists():
+            spots_left = None
+            capacity = None
+
         return {
             'total': total,
             'has_multiple': total > 1,
@@ -513,6 +526,7 @@ class DateActivitySerializer(TimeBasedBaseSerializer):
             'end': end,
             'duration': duration,
             'capacity': capacity,
+            'spots_left': spots_left,
         }
 
     def get_location_info(self, obj):

@@ -162,7 +162,7 @@ class UpdateImageSerializer(ImageSerializer):
                 return dict(
                     (
                         key,
-                        reverse(self.content_view_name, args=(obj.pk, size, )) + '?_={}'.format(hash)
+                        reverse(self.content_view_name, args=(obj.pk, size,)) + '?_={}'.format(hash)
                     ) for key, size in list(self.sizes.items())
                 )
 

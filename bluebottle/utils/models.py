@@ -27,7 +27,43 @@ TIMEOUT = 5 * 60
 
 @memoize(timeout=TIMEOUT)
 def get_languages():
-    return Language.objects.all()
+    """
+    Return the configured languages for the current tenant.
+
+    During tenant creation the Language table might not be populated yet, which
+    previously resulted in an empty PARLER configuration and crashes when
+    migrations touched translatable models.  Fall back to settings.LANGUAGES so
+    we always expose at least one language definition.
+    """
+    try:
+        languages = list(Language.objects.all())
+        if languages:
+            return languages
+    except (ProgrammingError, OperationalError):
+        # Database table might not be ready yet (e.g. during migrate_schemas)
+        languages = []
+
+    if not languages:
+        fallback = []
+        for code, title in getattr(settings, 'LANGUAGES', []):
+            base, _, sub = code.partition('-')
+            fallback.append(
+                Language(
+                    code=base,
+                    sub_code=sub,
+                    language_name=title,
+                    native_name=title,
+                )
+            )
+
+        if not fallback:
+            fallback = [
+                Language(code='en', sub_code='', language_name='English', native_name='English')
+            ]
+
+        return fallback
+
+    return languages
 
 
 @memoize(timeout=TIMEOUT)
